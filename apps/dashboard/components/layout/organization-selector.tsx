@@ -204,7 +204,7 @@ export function OrganizationSelector() {
 
 	if (isLoading) {
 		return (
-			<div className="flex h-12 w-full items-center bg-sidebar-accent px-3 py-3">
+			<div className="flex h-12 w-full items-center border-b bg-sidebar-accent px-3 py-3">
 				<div className="flex w-full min-w-0 items-center justify-between">
 					<div className="flex min-w-0 items-center gap-3">
 						<div className="shrink-0 rounded-lg border bg-sidebar/80 p-1.5">
