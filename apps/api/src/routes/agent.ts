@@ -49,20 +49,27 @@ function getLastMessagePreview(
 		.join("");
 }
 
+const MAX_MESSAGES = 100;
+const MAX_PARTS_PER_MESSAGE = 50;
+const MAX_PROPERTIES_PER_PART = 20;
+
 /**
  * Schema uses t.Any() for message parts because UIMessage parts
  * are polymorphic (text, tool, reasoning, etc.) and validated
  * at the AI SDK level via convertToModelMessages.
+ * Limits prevent resource exhaustion from oversized payloads.
  */
 const UIMessageSchema = t.Object({
 	id: t.String(),
 	role: t.Union([t.Literal("user"), t.Literal("assistant")]),
-	parts: t.Array(t.Record(t.String(), t.Any())),
+	parts: t.Array(t.Record(t.String(), t.Any(), { maxProperties: MAX_PROPERTIES_PER_PART }), {
+		maxItems: MAX_PARTS_PER_MESSAGE,
+	}),
 });
 
 const AgentRequestSchema = t.Object({
 	websiteId: t.String(),
-	messages: t.Array(UIMessageSchema),
+	messages: t.Array(UIMessageSchema, { maxItems: MAX_MESSAGES }),
 	id: t.Optional(t.String()),
 	timezone: t.Optional(t.String()),
 	model: t.Optional(

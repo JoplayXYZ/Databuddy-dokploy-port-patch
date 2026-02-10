@@ -16,8 +16,13 @@ export async function getMessages(
 		return [];
 	}
 
-	const messages = JSON.parse(raw as string) as UIMessage[];
-	return messages.slice(-limit);
+	try {
+		const parsed = JSON.parse(raw as string);
+		const messages = Array.isArray(parsed) ? parsed : [];
+		return messages.slice(-limit);
+	} catch {
+		return [];
+	}
 }
 
 export async function saveMessages(

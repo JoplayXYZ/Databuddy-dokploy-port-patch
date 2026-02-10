@@ -183,13 +183,18 @@ export function useChatList(websiteId: string) {
 
 	const saveChat = useCallback(
 		(chat: Omit<ChatRecord, "updatedAt"> & { updatedAt?: string }) => {
+			const id = chat.id && typeof chat.id === "string" ? chat.id : null;
+			if (!id) {
+				return;
+			}
 			const record: ChatRecord = {
 				...chat,
+				id,
 				websiteId,
 				updatedAt: chat.updatedAt ?? new Date().toISOString(),
 			};
 			upsertChat(record);
-			setLastChatId(websiteId, chat.id);
+			setLastChatId(websiteId, id);
 			refreshChatList(websiteId);
 		},
 		[websiteId]
