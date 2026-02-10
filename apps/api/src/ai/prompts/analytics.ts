@@ -164,11 +164,19 @@ const MCP_DISCOVERY_PREAMBLE = `<mcp-context>
 
 `;
 
+const MCP_OUTPUT_RULES = `<mcp-output>
+- Return minimal boilerplate: lead with the answer, no intro or sign-off
+- Never use markdown: no **bold**, ## headings, code blocks, or markdown tables
+- Plain text only. Be concise. Use line breaks for structure.
+</mcp-output>
+
+`;
+
 /**
  * Builds the instruction prompt for the analytics agent.
  */
 export function buildAnalyticsInstructions(ctx: AppContext): string {
-  return `You are Databunny, an analytics assistant for ${ctx.websiteDomain}. Your goal is to analyze website traffic, user behavior, and performance metrics.
+	return `You are Databunny, an analytics assistant for ${ctx.websiteDomain}. Your goal is to analyze website traffic, user behavior, and performance metrics.
 
 ${COMMON_AGENT_RULES}
 
@@ -186,13 +194,15 @@ ${CLICKHOUSE_SCHEMA_DOCS}`;
  * Reuses COMMON_AGENT_RULES, ANALYTICS_RULES, and CLICKHOUSE_SCHEMA_DOCS.
  */
 export function buildAnalyticsInstructionsForMcp(ctx: {
-  timezone?: string;
-  currentDateTime: string;
+	timezone?: string;
+	currentDateTime: string;
 }): string {
-  const timezone = ctx.timezone ?? "UTC";
-  return `You are Databunny, an analytics assistant for Databuddy. Your goal is to analyze website traffic, user behavior, and performance metrics.
+	const timezone = ctx.timezone ?? "UTC";
+	return `You are Databunny, an analytics assistant for Databuddy. Your goal is to analyze website traffic, user behavior, and performance metrics.
 
 ${MCP_DISCOVERY_PREAMBLE}
+
+${MCP_OUTPUT_RULES}
 
 ${COMMON_AGENT_RULES}
 

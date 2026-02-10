@@ -58,8 +58,13 @@ const app = new Elysia()
 	)
 	.use(publicApi)
 	.use(health)
-	.get("/.well-known/oauth-authorization-server", () =>
-		new Response(null, { status: 404, headers: { "Cache-Control": "no-store" } })
+	.get(
+		"/.well-known/oauth-authorization-server",
+		() =>
+			new Response(null, {
+				status: 404,
+				headers: { "Cache-Control": "no-store" },
+			})
 	)
 	.use(webhooks)
 	.onBeforeHandle(function startTrace({ request, path, store }) {
