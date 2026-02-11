@@ -1,11 +1,18 @@
-export type ApiScope = "read:data" | "write:llm" | "track:events";
+import type { API_SCOPES, ApiScope } from "@databuddy/api-keys/scopes";
+
+export const SCOPE_OPTIONS: { value: ApiScope; label: string }[] = [
+	{ value: "read:data", label: "Read Data" },
+	{ value: "write:llm", label: "LLM Tracking" },
+	{ value: "track:events", label: "Event Tracking" },
+	{ value: "read:links", label: "Read Links" },
+	{ value: "write:links", label: "Write Links" },
+] as const satisfies { value: (typeof API_SCOPES)[number]; label: string }[];
 
 export type ApiResourceType =
 	| "global"
 	| "website"
 	| "ab_experiment"
 	| "feature_flag"
-	// New resource types for data categories
 	| "analytics_data"
 	| "error_data"
 	| "web_vitals"

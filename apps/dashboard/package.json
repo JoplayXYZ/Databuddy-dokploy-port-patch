@@ -12,6 +12,7 @@
     "@ai-sdk/react": "^3.0.0",
     "@cossistant/next": "^0.0.29",
     "@cossistant/react": "^0.0.29",
+    "@databuddy/api-keys": "workspace:*",
     "@databuddy/auth": "workspace:*",
     "@databuddy/db": "workspace:*",
     "@databuddy/env": "workspace:*",

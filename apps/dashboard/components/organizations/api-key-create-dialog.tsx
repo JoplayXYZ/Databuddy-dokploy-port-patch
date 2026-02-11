@@ -1,5 +1,6 @@
 "use client";
 
+import type { ApiScope } from "@databuddy/api-keys/scopes";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
 	CheckCircleIcon,
@@ -35,7 +36,7 @@ import {
 	SheetHeader,
 	SheetTitle,
 } from "../ui/sheet";
-import type { ApiKeyAccessEntry, ApiScope } from "./api-key-types";
+import { type ApiKeyAccessEntry, SCOPE_OPTIONS } from "./api-key-types";
 
 interface ApiKeyCreateDialogProps {
 	open: boolean;
@@ -48,12 +49,6 @@ interface ApiKeyCreateDialogProps {
 		start: string;
 	}) => void;
 }
-
-const SCOPES: { value: ApiScope; label: string }[] = [
-	{ value: "read:data", label: "Read Data" },
-	{ value: "write:llm", label: "LLM Tracking" },
-	{ value: "track:events", label: "Event Tracking" },
-];
 
 const formSchema = z.object({
 	name: z.string().min(1, "Name is required").max(100),
@@ -287,7 +282,7 @@ export function ApiKeyCreateDialog({
 							</p>
 							<div className="rounded border bg-card p-1">
 								<div className="grid grid-cols-2 gap-1">
-									{SCOPES.map((scope) => {
+									{SCOPE_OPTIONS.map((scope) => {
 										const isSelected = globalScopes.includes(scope.value);
 										return (
 											<button
@@ -393,7 +388,7 @@ export function ApiKeyCreateDialog({
 														</Button>
 													</div>
 													<div className="grid grid-cols-2 gap-1">
-														{SCOPES.slice(0, 6).map((scope) => {
+														{SCOPE_OPTIONS.slice(0, 6).map((scope) => {
 															const isSelected = entry.scopes.includes(
 																scope.value
 															);

@@ -29,19 +29,13 @@ import {
 	SheetTitle,
 } from "../ui/sheet";
 import { Switch } from "../ui/switch";
-import type { ApiKeyListItem, ApiScope } from "./api-key-types";
+import { type ApiKeyListItem, SCOPE_OPTIONS } from "./api-key-types";
 
 interface ApiKeyDetailDialogProps {
 	apiKey: ApiKeyListItem | null;
 	open: boolean;
 	onOpenChangeAction: (open: boolean) => void;
 }
-
-const SCOPES: { value: ApiScope; label: string }[] = [
-	{ value: "read:data", label: "Read Data" },
-	{ value: "write:llm", label: "LLM Tracking" },
-	{ value: "track:events", label: "Event Tracking" },
-];
 
 const formSchema = z.object({
 	name: z.string().min(1, "Name is required"),
@@ -258,7 +252,7 @@ export function ApiKeyDetailDialog({
 										</Label>
 										<div className="rounded border bg-card p-1">
 											<div className="grid grid-cols-2 gap-1">
-												{SCOPES.map((scope) => {
+												{SCOPE_OPTIONS.map((scope) => {
 													const hasScope = apiKey.scopes.includes(scope.value);
 													return (
 														<div
