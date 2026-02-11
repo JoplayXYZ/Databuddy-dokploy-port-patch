@@ -41,7 +41,7 @@ import { type ApiKeyAccessEntry, SCOPE_OPTIONS } from "./api-key-types";
 interface ApiKeyCreateDialogProps {
 	open: boolean;
 	onOpenChangeAction: (open: boolean) => void;
-	organizationId?: string;
+	organizationId: string;
 	onSuccessAction: (data: {
 		id: string;
 		secret: string;
@@ -76,6 +76,7 @@ export function ApiKeyCreateDialog({
 
 	const { data: websites } = useQuery({
 		...orpc.websites.list.queryOptions({ input: { organizationId } }),
+		enabled: !!organizationId && open,
 	});
 
 	const form = useForm<FormData>({

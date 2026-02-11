@@ -49,7 +49,7 @@ export interface ApiKeyDetail extends ApiKeyListItem {
 
 export interface CreateApiKeyInput {
 	name: string;
-	organizationId?: string;
+	organizationId: string;
 	type?: "user" | "sdk" | "automation";
 	globalScopes?: ApiScope[];
 	access?: ApiKeyAccessEntry[];

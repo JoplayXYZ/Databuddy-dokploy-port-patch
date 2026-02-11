@@ -1,7 +1,6 @@
 import { KeyIcon, PlusIcon } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
 import dayjs from "dayjs";
-import type { ApiKeyRowItem } from "@/app/(main)/organizations/settings/api-keys/api-key-row";
 import { orpc } from "@/lib/orpc";
 import { EmptyState } from "../empty-state";
 import { Badge } from "../ui/badge";
@@ -18,7 +17,7 @@ import {
 import type { ApiKeyListItem } from "./api-key-types";
 
 interface ApiKeyListProps {
-	organizationId?: string;
+	organizationId: string;
 	onCreateNew?: () => void;
 	onSelect?: (apiKey: ApiKeyListItem) => void;
 }
@@ -69,6 +68,7 @@ export function ApiKeyList({
 }: ApiKeyListProps) {
 	const { data, isLoading, isError } = useQuery({
 		...orpc.apikeys.list.queryOptions({ input: { organizationId } }),
+		enabled: !!organizationId,
 		refetchOnMount: true,
 		refetchOnReconnect: true,
 		staleTime: 0,
@@ -89,7 +89,7 @@ export function ApiKeyList({
 		);
 	}
 
-	const items = (data ?? []) as ApiKeyRowItem[];
+	const items = (data ?? []) as ApiKeyListItem[];
 
 	return (
 		<div className="h-full space-y-6">

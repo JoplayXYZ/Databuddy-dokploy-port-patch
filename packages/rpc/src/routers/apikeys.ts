@@ -5,7 +5,7 @@ import {
 } from "@databuddy/api-keys/resolve";
 import { API_SCOPES } from "@databuddy/api-keys/scopes";
 import { websitesApi } from "@databuddy/auth";
-import { and, apikey, desc, eq, isNull } from "@databuddy/db";
+import { apikey, desc, eq } from "@databuddy/db";
 import { invalidateCacheableKey } from "@databuddy/redis";
 import { ORPCError } from "@orpc/server";
 import {
@@ -38,7 +38,7 @@ const rateLimitSchema = z.object({
 const getMeta = (key: ApiKey): Metadata => (key.metadata as Metadata) ?? {};
 
 async function verifyOrganizationAccess(
-	ctx: Context & { user: NonNullable<Context["user"]> },
+	ctx: Pick<Context, "headers">,
 	organizationId: string
 ) {
 	try {
@@ -67,21 +67,17 @@ async function verifyOrganizationAccess(
 	}
 }
 
-async function getKeyWithAuth(
-	ctx: Context & { user: NonNullable<Context["user"]> },
-	id: string
-) {
+async function getKeyWithAuth(ctx: Context, id: string) {
 	const key = await ctx.db.query.apikey.findFirst({ where: eq(apikey.id, id) });
 	if (!key) {
 		throw new ORPCError("NOT_FOUND", { message: "API key not found" });
 	}
-
-	if (key.organizationId) {
-		await verifyOrganizationAccess(ctx, key.organizationId);
-	} else if (key.userId !== ctx.user.id) {
-		throw new ORPCError("FORBIDDEN", { message: "Not authorized" });
+	if (!key.organizationId) {
+		throw new ORPCError("NOT_FOUND", {
+			message: "API key not found",
+		});
 	}
-
+	await verifyOrganizationAccess(ctx, key.organizationId);
 	return key;
 }
 
@@ -115,39 +111,53 @@ function mapKey(key: ApiKey, full = false) {
 
 export const apikeysRouter = {
 	list: protectedProcedure
-		.input(z.object({ organizationId: z.string().optional() }).default({}))
+		.route({
+			method: "POST",
+			path: "/apikeys/list",
+			tags: ["API Keys"],
+			summary: "List API keys",
+			description:
+				"Returns API keys for the organization. Requires website configure permission.",
+		})
+		.input(z.object({ organizationId: z.string() }))
 		.handler(async ({ context, input }) => {
-			if (input.organizationId) {
-				await verifyOrganizationAccess(context, input.organizationId);
-			}
-
+			await verifyOrganizationAccess(context, input.organizationId);
 			const rows = await context.db
 				.select()
 				.from(apikey)
-				.where(
-					input.organizationId
-						? eq(apikey.organizationId, input.organizationId)
-						: and(
-								eq(apikey.userId, context.user.id),
-								isNull(apikey.organizationId)
-							)
-				)
+				.where(eq(apikey.organizationId, input.organizationId))
 				.orderBy(desc(apikey.createdAt));
 			return rows.map((r) => mapKey(r));
 		}),
 
 	getById: protectedProcedure
+		.route({
+			method: "POST",
+			path: "/apikeys/getById",
+			tags: ["API Keys"],
+			summary: "Get API key",
+			description:
+				"Returns a single API key by id with full details. Requires organization website configure permission.",
+		})
 		.input(z.object({ id: z.string() }))
 		.handler(async ({ context, input }) =>
 			mapKey(await getKeyWithAuth(context, input.id), true)
 		),
 
 	create: protectedProcedure
+		.route({
+			method: "POST",
+			path: "/apikeys/create",
+			tags: ["API Keys"],
+			summary: "Create API key",
+			description:
+				"Creates a new API key. Returns the secret once; store it securely. Requires organization website configure permission.",
+		})
 		.input(
 			z.object({
 				name: z.string().min(1).max(100),
 				description: z.string().max(500).optional(),
-				organizationId: z.string().optional(),
+				organizationId: z.string(),
 				type: z.enum(["user", "sdk", "automation"]).default("user"),
 				scopes: z.array(scopeEnum).default([]),
 				resources: resourcesSchema.optional(),
@@ -157,12 +167,10 @@ export const apikeysRouter = {
 			})
 		)
 		.handler(async ({ context, input }) => {
-			if (input.organizationId) {
-				await verifyOrganizationAccess(context, input.organizationId);
-			}
+			await verifyOrganizationAccess(context, input.organizationId);
 
 			const { key: secret, record } = await keys.create({
-				ownerId: input.organizationId ?? context.user.id,
+				ownerId: input.organizationId,
 				name: input.name,
 				scopes: input.scopes,
 				resources: input.resources,
@@ -178,8 +186,8 @@ export const apikeysRouter = {
 					prefix: secret.split("_")[0] ?? "dbdy",
 					start: secret.slice(0, 8),
 					keyHash: record.keyHash,
-					userId: input.organizationId ? null : context.user.id,
-					organizationId: input.organizationId ?? null,
+					userId: null,
+					organizationId: input.organizationId,
 					type: input.type,
 					scopes: input.scopes,
 					enabled: true,
@@ -204,6 +212,14 @@ export const apikeysRouter = {
 		}),
 
 	update: protectedProcedure
+		.route({
+			method: "POST",
+			path: "/apikeys/update",
+			tags: ["API Keys"],
+			summary: "Update API key",
+			description:
+				"Updates an existing API key. Requires organization website configure permission.",
+		})
 		.input(
 			z.object({
 				id: z.string(),
@@ -259,6 +275,14 @@ export const apikeysRouter = {
 		}),
 
 	revoke: protectedProcedure
+		.route({
+			method: "POST",
+			path: "/apikeys/revoke",
+			tags: ["API Keys"],
+			summary: "Revoke API key",
+			description:
+				"Revokes an API key. The key is disabled and cannot be used. Requires organization website configure permission.",
+		})
 		.input(z.object({ id: z.string() }))
 		.handler(async ({ context, input }) => {
 			const key = await getKeyWithAuth(context, input.id);
@@ -274,13 +298,27 @@ export const apikeysRouter = {
 		}),
 
 	rotate: protectedProcedure
+		.route({
+			method: "POST",
+			path: "/apikeys/rotate",
+			tags: ["API Keys"],
+			summary: "Rotate API key",
+			description:
+				"Rotates an API key, issuing a new secret. The old key is invalidated immediately. Returns the new secret once. Requires organization website configure permission.",
+		})
 		.input(z.object({ id: z.string() }))
 		.handler(async ({ context, input }) => {
 			const key = await getKeyWithAuth(context, input.id);
 			const meta = getMeta(key);
 
+			const ownerId = key.organizationId;
+			if (!ownerId) {
+				throw new ORPCError("INTERNAL_SERVER_ERROR", {
+					message: "Organization key required for rotate",
+				});
+			}
 			const { key: secret, record } = await keys.create({
-				ownerId: key.organizationId ?? key.userId ?? context.user.id,
+				ownerId,
 				name: key.name,
 				scopes: key.scopes,
 				resources: meta.resources,
@@ -314,6 +352,14 @@ export const apikeysRouter = {
 		}),
 
 	delete: protectedProcedure
+		.route({
+			method: "POST",
+			path: "/apikeys/delete",
+			tags: ["API Keys"],
+			summary: "Delete API key",
+			description:
+				"Permanently deletes an API key. Requires organization website configure permission.",
+		})
 		.input(z.object({ id: z.string() }))
 		.handler(async ({ context, input }) => {
 			const key = await getKeyWithAuth(context, input.id);
@@ -326,6 +372,14 @@ export const apikeysRouter = {
 		}),
 
 	verify: publicProcedure
+		.route({
+			method: "POST",
+			path: "/apikeys/verify",
+			tags: ["API Keys"],
+			summary: "Verify API key",
+			description:
+				"Validates an API key (from header or body) and optionally checks scopes. Can be used without auth to test a key.",
+		})
 		.input(
 			z.object({
 				secret: z.string().optional(),
@@ -406,7 +460,7 @@ export const apikeysRouter = {
 			return {
 				valid: true,
 				keyId: key.id,
-				ownerId: key.organizationId ?? key.userId,
+				ownerId: key.organizationId,
 				scopes,
 			};
 		}),
