@@ -151,6 +151,10 @@ export const contents: SidebarSection[] = [
 						href: "/docs/api/custom-queries",
 					},
 					{
+						title: "MCP (Model Context Protocol)",
+						href: "/docs/api/mcp",
+					},
+					{
 						title: "Error Handling",
 						href: "/docs/api/errors",
 					},
