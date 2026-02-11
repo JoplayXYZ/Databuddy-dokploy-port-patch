@@ -13,8 +13,9 @@ import {
 } from "@phosphor-icons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { z } from "zod";
 import { orpc } from "@/lib/orpc";
 import { Badge } from "../ui/badge";
@@ -52,9 +53,7 @@ function getEffectiveScopes(
 	key: ApiKeyListItem | { scopes: string[] }
 ): ApiScope[] {
 	const scopes = key.scopes ?? [];
-	return scopes.filter((s) =>
-		API_SCOPES.includes(s as ApiScope)
-	) as ApiScope[];
+	return scopes.filter((s) => API_SCOPES.includes(s as ApiScope)) as ApiScope[];
 }
 
 export function ApiKeyDetailDialog({
@@ -82,22 +81,29 @@ export function ApiKeyDetailDialog({
 		},
 	});
 
-	const displayKey = fullKey ?? apiKey;
+	const lastResetKeyId = useRef<string | null>(null);
 
 	useEffect(() => {
-		if (displayKey) {
-			form.reset({
-				name: displayKey.name,
-				enabled: displayKey.enabled && !displayKey.revokedAt,
-				expiresAt: displayKey.expiresAt?.slice(0, 10) ?? "",
-				scopes: getEffectiveScopes(displayKey),
-			});
+		if (!apiKey?.id) {
+			return;
 		}
-	}, [displayKey, form]);
+		if (lastResetKeyId.current === apiKey.id) {
+			return;
+		}
+		lastResetKeyId.current = apiKey.id;
+		const keyToUse = fullKey?.id === apiKey.id ? fullKey : apiKey;
+		form.reset({
+			name: keyToUse.name,
+			enabled: keyToUse.enabled && !keyToUse.revokedAt,
+			expiresAt: keyToUse.expiresAt?.slice(0, 10) ?? "",
+			scopes: getEffectiveScopes(keyToUse),
+		});
+	}, [apiKey?.id, apiKey, fullKey, form]);
 
 	const handleClose = () => {
 		onOpenChangeAction(false);
 		setTimeout(() => {
+			lastResetKeyId.current = null;
 			setNewSecret(null);
 			setCopied(false);
 			form.reset();
@@ -123,7 +129,13 @@ export function ApiKeyDetailDialog({
 
 	const updateMutation = useMutation({
 		...orpc.apikeys.update.mutationOptions(),
-		onSuccess: invalidateQueries,
+		onSuccess: () => {
+			invalidateQueries();
+			toast.success("API key updated");
+		},
+		onError: () => {
+			toast.error("Failed to update API key");
+		},
 	});
 
 	const rotateMutation = useMutation({
@@ -159,9 +171,7 @@ export function ApiKeyDetailDialog({
 		if (!apiKey) {
 			return;
 		}
-		const payload: Parameters<
-			typeof updateMutation.mutate
-		>[0] = {
+		const payload: Parameters<typeof updateMutation.mutate>[0] = {
 			id: apiKey.id,
 			name: values.name,
 			enabled: values.enabled,
@@ -306,14 +316,15 @@ export function ApiKeyDetailDialog({
 											Permissions
 										</Label>
 										<p className="text-muted-foreground text-xs">
-											Changes take effect immediately and may affect integrations
+											Changes take effect immediately and may affect
+											integrations
 										</p>
 										<div className="rounded border bg-card p-1">
 											<div className="grid grid-cols-2 gap-1">
 												{SCOPE_OPTIONS.map((scope) => {
-												const selectedScopes = form.watch(
-													"scopes"
-												) as ApiScope[];
+													const selectedScopes = form.watch(
+														"scopes"
+													) as ApiScope[];
 													const hasScope = selectedScopes.includes(scope.value);
 													return (
 														<button
