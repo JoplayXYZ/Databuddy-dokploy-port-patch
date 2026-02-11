@@ -68,8 +68,11 @@ function isAuthError(error: unknown): boolean {
 const queryClient = new QueryClient({
 	defaultOptions: defaultQueryClientOptions.defaultOptions,
 	queryCache: new QueryCache({
-		onError: (error) => {
+		onError: (error, query) => {
 			if (isAuthError(error)) {
+				return;
+			}
+			if (query.queryKey[0] === "og-preview") {
 				return;
 			}
 

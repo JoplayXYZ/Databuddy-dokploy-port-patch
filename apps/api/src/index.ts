@@ -98,6 +98,7 @@ const openApiHandler = new OpenAPIHandler(docsRouter, {
 			docsTitle: "Databuddy API",
 			docsConfig: { theme: "deepSpace" },
 			specGenerateOptions: {
+				servers: [{ url: "https://api.databuddy.cc" }],
 				info: {
 					title: "Databuddy API",
 					version: "1.0.0",
@@ -312,11 +313,11 @@ const app = new Elysia()
 		{ parse: "none" }
 	)
 	.all(
-		"/api/*",
+		"/*",
 		(ctx) =>
 			handleRpcRoute(ctx, (request, rpcContext) =>
 				openApiHandler.handle(request, {
-					prefix: "/api",
+					prefix: "/",
 					context: rpcContext,
 				})
 			),

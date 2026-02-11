@@ -10,6 +10,7 @@ import {
 	VideoIcon,
 	WarningCircleIcon,
 } from "@phosphor-icons/react";
+import { useDebouncedValue } from "@tanstack/react-pacer";
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -111,6 +112,8 @@ function useImageValidation(imageUrl: string) {
 const TITLE_MAX = 120;
 const DESCRIPTION_MAX = 240;
 
+const OG_FETCH_DEBOUNCE_MS = 500;
+
 export function OgPreview({
 	targetUrl,
 	value,
@@ -118,10 +121,14 @@ export function OgPreview({
 	useCustomOg,
 	onUseCustomOgChange,
 }: OgPreviewProps) {
+	const [debouncedTargetUrl] = useDebouncedValue(targetUrl, {
+		wait: OG_FETCH_DEBOUNCE_MS,
+	});
+
 	const { data: fetchedOg, isLoading } = useQuery({
-		queryKey: ["og-preview", targetUrl],
-		queryFn: () => fetchOgData(targetUrl),
-		enabled: !!targetUrl && targetUrl.length > 3,
+		queryKey: ["og-preview", debouncedTargetUrl],
+		queryFn: () => fetchOgData(debouncedTargetUrl),
+		enabled: !!debouncedTargetUrl && debouncedTargetUrl.length > 3,
 		staleTime: 5 * 60 * 1000,
 		retry: 1,
 	});
