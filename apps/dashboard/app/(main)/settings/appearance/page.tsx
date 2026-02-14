@@ -1,9 +1,11 @@
 "use client";
 
 import {
+	CalendarBlankIcon,
 	CaretDownIcon,
 	ChartBarIcon,
 	ChartLineIcon,
+	ClockIcon,
 	CursorClickIcon,
 	DesktopIcon,
 	FunnelIcon,
@@ -43,6 +45,11 @@ import {
 	type ChartLocation,
 	useAllChartPreferences,
 } from "@/hooks/use-chart-preferences";
+import {
+	type DefaultDateRangePreset,
+	getPresetLabel,
+	useDefaultDateRange,
+} from "@/hooks/use-default-date-range";
 import { cn } from "@/lib/utils";
 import { SettingsSection } from "../_components/settings-section";
 
@@ -89,6 +96,18 @@ const STEP_TYPE_OPTIONS: { id: ChartStepType; name: string }[] = [
 	{ id: "stepAfter", name: "Step After" },
 ];
 
+const DEFAULT_DATE_RANGE_OPTIONS: {
+	id: DefaultDateRangePreset;
+	icon: typeof ClockIcon;
+}[] = [
+	{ id: "24h", icon: ClockIcon },
+	{ id: "7d", icon: CalendarBlankIcon },
+	{ id: "30d", icon: CalendarBlankIcon },
+	{ id: "90d", icon: CalendarBlankIcon },
+	{ id: "180d", icon: CalendarBlankIcon },
+	{ id: "365d", icon: CalendarBlankIcon },
+];
+
 const LOCATION_ICONS: Record<ChartLocation, typeof ChartLineIcon> = {
 	"overview-stats": SquaresFourIcon,
 	"overview-main": PresentationChartIcon,
@@ -100,6 +119,7 @@ const LOCATION_ICONS: Record<ChartLocation, typeof ChartLineIcon> = {
 
 export default function AppearanceSettingsPage() {
 	const { theme, setTheme } = useTheme();
+	const { defaultDateRange, setDefaultDateRange } = useDefaultDateRange();
 	const { preferences, updateLocationPreferences, updateAllPreferences } =
 		useAllChartPreferences();
 	const [previewLocation, setPreviewLocation] =
@@ -159,6 +179,52 @@ export default function AppearanceSettingsPage() {
 										<p className="font-medium text-sm">{name}</p>
 										<p className="text-muted-foreground text-xs">
 											{description}
+										</p>
+									</div>
+								</button>
+							);
+						})}
+					</div>
+				</SettingsSection>
+
+				{/* Default date range */}
+				<SettingsSection
+					description="Default time range when opening analytics pages"
+					title="Default date range"
+				>
+					<div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+						{DEFAULT_DATE_RANGE_OPTIONS.map(({ id, icon: Icon }) => {
+							const isActive = defaultDateRange === id;
+							return (
+								<button
+									className={cn(
+										"flex flex-col items-center gap-2 rounded border p-4",
+										isActive
+											? "border-primary bg-primary/5"
+											: "border-border hover:bg-accent"
+									)}
+									key={id}
+									onClick={() => setDefaultDateRange(id)}
+									type="button"
+								>
+									<div
+										className={cn(
+											"flex size-10 items-center justify-center rounded-full",
+											isActive ? "bg-primary/10" : "bg-accent"
+										)}
+									>
+										<Icon
+											className={cn(
+												"size-5",
+												isActive ? "text-foreground" : "text-muted-foreground"
+											)}
+											weight="duotone"
+										/>
+									</div>
+									<div className="text-center">
+										<p className="font-medium text-sm">{getPresetLabel(id)}</p>
+										<p className="text-muted-foreground text-xs">
+											Last {id === "24h" ? "24 hours" : id.replace("d", " days")}
 										</p>
 									</div>
 								</button>
@@ -431,9 +497,19 @@ export default function AppearanceSettingsPage() {
 
 			<RightSidebar className="gap-0 p-0">
 				<RightSidebar.Section border title="Current Settings">
-					<div className="flex items-center justify-between">
-						<span className="text-muted-foreground text-sm">Theme</span>
-						<span className="font-medium text-sm capitalize">{theme}</span>
+					<div className="space-y-2">
+						<div className="flex items-center justify-between">
+							<span className="text-muted-foreground text-sm">Theme</span>
+							<span className="font-medium text-sm capitalize">{theme}</span>
+						</div>
+						<div className="flex items-center justify-between">
+							<span className="text-muted-foreground text-sm">
+								Default date range
+							</span>
+							<span className="font-medium text-sm">
+								{getPresetLabel(defaultDateRange)}
+							</span>
+						</div>
 					</div>
 				</RightSidebar.Section>
 

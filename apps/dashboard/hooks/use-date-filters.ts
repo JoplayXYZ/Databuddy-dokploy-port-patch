@@ -5,21 +5,26 @@ import type {
 	DateRangeState,
 	TimeGranularity,
 } from "@/stores/jotai/filterAtoms";
+import {
+	getDefaultDateRangePresetSync,
+	getDefaultDatesFromPreset,
+} from "@/hooks/use-default-date-range";
 
 const MAX_HOURLY_DAYS = 7;
 const AUTO_HOURLY_DAYS = 2;
 
-const initialStartDate = dayjs().subtract(30, "day").format("YYYY-MM-DD");
-const initialEndDate = dayjs().format("YYYY-MM-DD");
-
 export function useDateFilters() {
+	const defaultPreset = getDefaultDateRangePresetSync();
+	const { startDate: defaultStartDate, endDate: defaultEndDate } =
+		getDefaultDatesFromPreset(defaultPreset);
+
 	const [startDateStr, setStartDateStr] = useQueryState(
 		"startDate",
-		parseAsString.withDefault(initialStartDate)
+		parseAsString.withDefault(defaultStartDate)
 	);
 	const [endDateStr, setEndDateStr] = useQueryState(
 		"endDate",
-		parseAsString.withDefault(initialEndDate)
+		parseAsString.withDefault(defaultEndDate)
 	);
 	const [granularityStr, setGranularityStr] = useQueryState(
 		"granularity",
