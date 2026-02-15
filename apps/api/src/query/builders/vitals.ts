@@ -119,9 +119,16 @@ export const VitalsBuilders: Record<string, SimpleQueryConfig> = {
 			endDate: string,
 			_filters?,
 			_granularity?,
-			_limit?: number
+			_limit?: number,
+			_offset?,
+			_timezone?,
+			filterConditions?: string[],
+			filterParams?: Record<string, unknown>
 		) => {
 			const limit = _limit ?? 100;
+			const filterClause = filterConditions?.length
+				? `AND ${filterConditions.join(" AND ")}`
+				: "";
 			return {
 				sql: `
 					SELECT 
@@ -144,11 +151,12 @@ export const VitalsBuilders: Record<string, SimpleQueryConfig> = {
 						AND wv.timestamp >= toDateTime({startDate:String})
 						AND wv.timestamp <= toDateTime(concat({endDate:String}, ' 23:59:59'))
 						AND e.country != ''
+						${filterClause}
 					GROUP BY e.country
 					ORDER BY samples DESC
 					LIMIT {limit:UInt32}
 				`,
-				params: { websiteId, startDate, endDate, limit },
+				params: { websiteId, startDate, endDate, limit, ...filterParams },
 			};
 		},
 		timeField: "timestamp",
@@ -163,9 +171,16 @@ export const VitalsBuilders: Record<string, SimpleQueryConfig> = {
 			endDate: string,
 			_filters?,
 			_granularity?,
-			_limit?: number
+			_limit?: number,
+			_offset?,
+			_timezone?,
+			filterConditions?: string[],
+			filterParams?: Record<string, unknown>
 		) => {
 			const limit = _limit ?? 100;
+			const filterClause = filterConditions?.length
+				? `AND ${filterConditions.join(" AND ")}`
+				: "";
 			return {
 				sql: `
 					SELECT 
@@ -188,11 +203,12 @@ export const VitalsBuilders: Record<string, SimpleQueryConfig> = {
 						AND wv.timestamp >= toDateTime({startDate:String})
 						AND wv.timestamp <= toDateTime(concat({endDate:String}, ' 23:59:59'))
 						AND e.browser_name != ''
+						${filterClause}
 					GROUP BY e.browser_name
 					ORDER BY samples DESC
 					LIMIT {limit:UInt32}
 				`,
-				params: { websiteId, startDate, endDate, limit },
+				params: { websiteId, startDate, endDate, limit, ...filterParams },
 			};
 		},
 		timeField: "timestamp",
@@ -206,9 +222,16 @@ export const VitalsBuilders: Record<string, SimpleQueryConfig> = {
 			endDate: string,
 			_filters?,
 			_granularity?,
-			_limit?: number
+			_limit?: number,
+			_offset?,
+			_timezone?,
+			filterConditions?: string[],
+			filterParams?: Record<string, unknown>
 		) => {
 			const limit = _limit ?? 100;
+			const filterClause = filterConditions?.length
+				? `AND ${filterConditions.join(" AND ")}`
+				: "";
 			return {
 				sql: `
 					SELECT 
@@ -231,11 +254,12 @@ export const VitalsBuilders: Record<string, SimpleQueryConfig> = {
 						AND wv.timestamp >= toDateTime({startDate:String})
 						AND wv.timestamp <= toDateTime(concat({endDate:String}, ' 23:59:59'))
 						AND e.region != ''
+						${filterClause}
 					GROUP BY e.region, e.country
 					ORDER BY samples DESC
 					LIMIT {limit:UInt32}
 				`,
-				params: { websiteId, startDate, endDate, limit },
+				params: { websiteId, startDate, endDate, limit, ...filterParams },
 			};
 		},
 		timeField: "timestamp",
@@ -250,9 +274,16 @@ export const VitalsBuilders: Record<string, SimpleQueryConfig> = {
 			endDate: string,
 			_filters?,
 			_granularity?,
-			_limit?: number
+			_limit?: number,
+			_offset?,
+			_timezone?,
+			filterConditions?: string[],
+			filterParams?: Record<string, unknown>
 		) => {
 			const limit = _limit ?? 100;
+			const filterClause = filterConditions?.length
+				? `AND ${filterConditions.join(" AND ")}`
+				: "";
 			return {
 				sql: `
 					SELECT 
@@ -275,11 +306,12 @@ export const VitalsBuilders: Record<string, SimpleQueryConfig> = {
 						AND wv.timestamp >= toDateTime({startDate:String})
 						AND wv.timestamp <= toDateTime(concat({endDate:String}, ' 23:59:59'))
 						AND e.city != ''
+						${filterClause}
 					GROUP BY e.city, e.country
 					ORDER BY samples DESC
 					LIMIT {limit:UInt32}
 				`,
-				params: { websiteId, startDate, endDate, limit },
+				params: { websiteId, startDate, endDate, limit, ...filterParams },
 			};
 		},
 		timeField: "timestamp",

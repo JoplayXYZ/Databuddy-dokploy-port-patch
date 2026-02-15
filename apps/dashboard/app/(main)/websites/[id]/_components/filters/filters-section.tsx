@@ -8,6 +8,7 @@ import { XIcon } from "@phosphor-icons/react/dist/ssr/X";
 import { useAtom } from "jotai";
 import { useParams } from "next/navigation";
 import { useCallback, useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { DeleteDialog } from "@/components/ui/delete-dialog";
 import { getOperatorLabel } from "@/hooks/use-filters";
@@ -77,6 +78,7 @@ export function FiltersSection() {
 	const handleSave = useCallback(
 		(name: string) => {
 			if (filters.length === 0) {
+				toast.error("No filters to save");
 				return;
 			}
 			setIsSaving(true);
@@ -88,6 +90,8 @@ export function FiltersSection() {
 			if (result.success) {
 				setIsSaveDialogOpen(false);
 				setEditing(null);
+			} else if (result.error) {
+				toast.error(result.error.message);
 			}
 			setIsSaving(false);
 		},

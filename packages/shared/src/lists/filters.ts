@@ -3,6 +3,10 @@ export const filterOptions = [
 	{ value: "query_string", label: "Query String" },
 	{ value: "referrer", label: "Referrer" },
 	{ value: "country", label: "Country" },
+	{ value: "region", label: "Region/State" },
+	{ value: "city", label: "City" },
+	{ value: "timezone", label: "Timezone" },
+	{ value: "language", label: "Language" },
 	{ value: "device_type", label: "Device Type" },
 	{ value: "browser_name", label: "Browser" },
 	{ value: "os_name", label: "Operating System" },
@@ -25,4 +29,7 @@ export const tableFilterMapping: Record<string, string> = {
 	Devices: "device_type",
 	Browsers: "browser_name",
 	"Operating Systems": "os_name",
+	Regions: "region",
+	Cities: "city",
+	Countries: "country",
 };
