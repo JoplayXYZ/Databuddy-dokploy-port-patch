@@ -169,7 +169,7 @@ export function AnnotationPreviewRenderer({
 					)}
 					{annotation.isPublic && (
 						<p className="text-muted-foreground text-xs">
-							This annotation will be visible to all team members
+							Visible to everyone who can view this chart
 						</p>
 					)}
 				</div>

@@ -260,29 +260,49 @@ export function evaluateValueRule(value: unknown, rule: FlagRule): boolean {
 	}
 }
 
+function getContextValue(
+	rule: FlagRule,
+	context: UserContext
+): string | undefined {
+	if (rule.type === "user_id") {
+		return context.userId;
+	}
+	if (rule.type === "email") {
+		return context.email;
+	}
+	if (rule.field) {
+		return String(context.properties?.[rule.field] ?? "");
+	}
+	return undefined;
+}
+
 export function evaluateRule(rule: FlagRule, context: UserContext): boolean {
 	if (rule.batch && rule.batchValues?.length) {
-		switch (rule.type) {
-			case "user_id": {
-				return context.userId
-					? rule.batchValues.includes(context.userId)
-					: false;
-			}
-			case "email": {
-				return context.email ? rule.batchValues.includes(context.email) : false;
-			}
-			case "property": {
-				if (!rule.field) {
-					return false;
-				}
-				const propertyValue = context.properties?.[rule.field];
-				return propertyValue
-					? rule.batchValues.includes(String(propertyValue))
-					: false;
-			}
-			default:
-				return false;
+		const contextValue = getContextValue(rule, context);
+
+		if (rule.operator === "in" || rule.operator === "not_in") {
+			const isInList = contextValue
+				? rule.batchValues.includes(contextValue)
+				: false;
+			return rule.operator === "not_in" ? !isInList : isInList;
 		}
+
+		if (!contextValue) {
+			return false;
+		}
+
+		for (const batchVal of rule.batchValues) {
+			if (
+				evaluateStringRule(contextValue, {
+					...rule,
+					value: batchVal,
+					values: undefined,
+				})
+			) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	// Regular evaluation

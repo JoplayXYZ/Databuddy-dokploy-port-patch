@@ -215,6 +215,42 @@ describe("evaluateRule", () => {
 		);
 	});
 
+	it("handles batch rules with ends_with for email domain targeting", () => {
+		const emailEndsWithRule = {
+			type: "email" as const,
+			operator: "ends_with" as const,
+			batch: true,
+			batchValues: ["@databuddy.cc"],
+			enabled: true,
+		};
+		expect(evaluateRule(emailEndsWithRule, { email: "user@databuddy.cc" })).toBe(
+			true
+		);
+		expect(evaluateRule(emailEndsWithRule, { email: "admin@databuddy.cc" })).toBe(
+			true
+		);
+		expect(evaluateRule(emailEndsWithRule, { email: "user@other.com" })).toBe(
+			false
+		);
+		expect(evaluateRule(emailEndsWithRule, {})).toBe(false);
+	});
+
+	it("handles batch rules with not_in", () => {
+		const emailNotInRule = {
+			type: "email" as const,
+			operator: "not_in" as const,
+			batch: true,
+			batchValues: ["blocked@spam.com"],
+			enabled: true,
+		};
+		expect(evaluateRule(emailNotInRule, { email: "user@company.com" })).toBe(
+			true
+		);
+		expect(evaluateRule(emailNotInRule, { email: "blocked@spam.com" })).toBe(
+			false
+		);
+	});
+
 	it("handles non-batch rules", () => {
 		const userRule = {
 			type: "user_id" as const,
