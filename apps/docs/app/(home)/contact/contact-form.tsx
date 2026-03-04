@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 interface ContactData {
 	fullName: string;
 	businessName: string;
+	website: string;
 	email: string;
 	phone: string;
 }
@@ -19,6 +20,7 @@ interface ContactData {
 const initialFormData: ContactData = {
 	fullName: "",
 	businessName: "",
+	website: "",
 	email: "",
 	phone: "",
 };
@@ -72,6 +74,20 @@ export default function ContactForm() {
 			newErrors.businessName = "Business or website name is required";
 		} else if (formData.businessName.trim().length < 2) {
 			newErrors.businessName = "Must be at least 2 characters";
+		}
+
+		if (formData.website.trim()) {
+			const url =
+				formData.website.startsWith("http") || formData.website.startsWith("//")
+					? formData.website
+					: `https://${formData.website}`;
+			try {
+				new URL(url);
+			} catch {
+				newErrors.website = "Please enter a valid website URL";
+			}
+		} else {
+			newErrors.website = "Website is required";
 		}
 
 		if (!formData.email.trim()) {
@@ -211,6 +227,21 @@ export default function ContactForm() {
 						required
 						type="text"
 						value={formData.businessName}
+					/>
+				</FormField>
+
+				<FormField error={errors.website} label="Website" required>
+					<Input
+						aria-invalid={!!errors.website}
+						autoComplete="url"
+						className={errors.website ? "border-destructive" : ""}
+						maxLength={500}
+						name="website"
+						onChange={handleInputChange}
+						placeholder="example.com"
+						required
+						type="text"
+						value={formData.website}
 					/>
 				</FormField>
 

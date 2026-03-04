@@ -8,6 +8,7 @@ const MIN_NAME_LENGTH = 2;
 interface ContactFormData {
 	fullName: string;
 	businessName: string;
+	website: string;
 	email: string;
 	phone?: string;
 }
@@ -42,6 +43,19 @@ function isValidEmail(email: string): boolean {
 	return email.includes("@") && email.includes(".") && email.length > 3;
 }
 
+function isValidUrl(value: string): boolean {
+	const url =
+		value.startsWith("http") || value.startsWith("//")
+			? value
+			: `https://${value}`;
+	try {
+		new URL(url);
+		return true;
+	} catch {
+		return false;
+	}
+}
+
 function validateFormData(data: unknown): ValidationResult {
 	if (!data || typeof data !== "object") {
 		return { valid: false, errors: ["Invalid form data"] };
@@ -70,6 +84,11 @@ function validateFormData(data: unknown): ValidationResult {
 		);
 	}
 
+	const website = formData.website;
+	if (!website || typeof website !== "string" || !isValidUrl(website.trim())) {
+		errors.push("Valid website URL is required");
+	}
+
 	const email = formData.email;
 	if (!email || typeof email !== "string" || !isValidEmail(email)) {
 		errors.push("Valid email is required");
@@ -81,11 +100,18 @@ function validateFormData(data: unknown): ValidationResult {
 
 	const phone = formData.phone;
 
+	const normalizedWebsite = String(website).trim();
+	const websiteUrl =
+		normalizedWebsite.startsWith("http") || normalizedWebsite.startsWith("//")
+			? normalizedWebsite
+			: `https://${normalizedWebsite}`;
+
 	return {
 		valid: true,
 		data: {
 			fullName: String(fullName).trim(),
 			businessName: String(businessName).trim(),
+			website: websiteUrl,
 			email: String(email).trim(),
 			phone:
 				phone && typeof phone === "string" && phone.trim().length > 0
@@ -106,6 +132,7 @@ function buildSlackBlocks(data: ContactFormData, ip: string): unknown[] {
 	const fields = [
 		createSlackField("Full Name", data.fullName),
 		createSlackField("Business / Website", data.businessName),
+		createSlackField("Website", data.website),
 		createSlackField("Email", data.email),
 		createSlackField("Phone", data.phone || "Not provided"),
 		createSlackField("IP", ip),
