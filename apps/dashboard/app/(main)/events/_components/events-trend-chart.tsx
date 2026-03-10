@@ -554,29 +554,6 @@ export function EventsTrendChart({
 								onMouseMove={handleMouseMove}
 								onMouseUp={handleMouseUp}
 							>
-								<defs>
-									{eventNames.map((name, idx) => {
-										const color =
-											EVENT_COLORS[idx % EVENT_COLORS.length] ?? "#888";
-										return (
-											<linearGradient
-												id={`eventGrad-${idx}`}
-												key={name}
-												x1="0"
-												x2="0"
-												y1="0"
-												y2="1"
-											>
-												<stop offset="5%" stopColor={color} stopOpacity={0.3} />
-												<stop
-													offset="95%"
-													stopColor={color}
-													stopOpacity={0.05}
-												/>
-											</linearGradient>
-										);
-									})}
-								</defs>
 								<CartesianGrid {...GRID_PROPS} />
 								<XAxis
 									axisLine={false}
@@ -622,8 +599,8 @@ export function EventsTrendChart({
 									return (
 										<Area
 											dataKey={name}
-											fill={`url(#eventGrad-${idx})`}
-											fillOpacity={1}
+											fill={color}
+											fillOpacity={0.15}
 											hide={hiddenEvents.has(name)}
 											key={name}
 											name={name}
