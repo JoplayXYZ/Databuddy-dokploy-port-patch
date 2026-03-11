@@ -18,13 +18,13 @@ export const COMMON_RESOLUTION_DEVICE_TYPE: Record<string, DeviceType> = {
 	"667x375": "mobile",
 	"640x360": "mobile",
 	"568x320": "mobile",
-	// Tablets
+	// Tablets (aspect ratio < 1.5, squarish screens)
 	"1366x1024": "tablet",
-	"1280x800": "tablet",
 	"1180x820": "tablet",
 	"1024x768": "tablet",
-	"1280x720": "tablet",
-	// Laptops
+	// Laptops (widescreen ratios: 16:9 = 1.78, 16:10 = 1.6)
+	"1280x800": "laptop",
+	"1280x720": "laptop",
 	"1366x768": "laptop",
 	"1440x900": "laptop",
 	"1536x864": "laptop",
@@ -92,16 +92,13 @@ function classifyResolution(w: number, h: number): DeviceType {
 	if (shortSide <= 480) {
 		return "mobile";
 	}
-	const laptopAspect = aspect >= 1.5 && aspect <= 1.95;
-	const laptopDimensions =
-		longSide >= 1300 && shortSide >= 600 && shortSide <= 1200;
-	if (laptopAspect && laptopDimensions) {
+	if (aspect >= 1.5 && longSide >= 1100 && shortSide > 480) {
 		return "laptop";
 	}
-	if (shortSide <= 800) {
+	if (shortSide <= 1024 && aspect < 1.5) {
 		return "tablet";
 	}
-	if (longSide <= 1600) {
+	if (longSide <= 1920) {
 		return "laptop";
 	}
 

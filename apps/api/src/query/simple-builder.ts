@@ -136,9 +136,9 @@ function buildDeviceTypeSQL(deviceType: DeviceType): string {
 
 	const heuristics: Record<DeviceType, string> = {
 		mobile: `(${shortSide} <= 480 AND ${shortSide} IS NOT NULL)`,
-		tablet: `(${shortSide} <= 900 AND ${shortSide} > 480 AND ${shortSide} IS NOT NULL)`,
-		laptop: `(${longSide} <= 1600 AND ${shortSide} > 900 AND ${longSide} IS NOT NULL)`,
-		desktop: `(${longSide} <= 3000 AND ${longSide} > 1600 AND ${longSide} IS NOT NULL)`,
+		tablet: `(${shortSide} <= 1024 AND ${shortSide} > 480 AND ${aspect} < 1.5 AND ${shortSide} IS NOT NULL)`,
+		laptop: `(${aspect} >= 1.5 AND ${longSide} >= 1100 AND ${shortSide} > 480 AND ${longSide} <= 1920 AND ${longSide} IS NOT NULL)`,
+		desktop: `(${longSide} > 1920 AND ${longSide} <= 3000 AND ${longSide} IS NOT NULL)`,
 		ultrawide: `(${aspect} >= 2.0 AND ${longSide} >= 2560 AND ${longSide} IS NOT NULL)`,
 		watch: `(${longSide} <= 400 AND ${aspect} >= 0.85 AND ${aspect} <= 1.15 AND ${longSide} IS NOT NULL)`,
 		unknown: "1 = 0",

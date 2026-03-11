@@ -84,7 +84,7 @@ const getGradientConfig = (percentage: number) => {
 	};
 };
 
-const getDeviceInfo = (width: number, isValid: boolean) => {
+const getDeviceInfo = (width: number, height: number, isValid: boolean) => {
 	if (!isValid) {
 		return {
 			type: "Unknown",
@@ -93,7 +93,11 @@ const getDeviceInfo = (width: number, isValid: boolean) => {
 			isTablet: false,
 		};
 	}
-	if (width <= 480) {
+	const longSide = Math.max(width, height);
+	const shortSide = Math.min(width, height);
+	const aspect = longSide / shortSide;
+
+	if (shortSide <= 480) {
 		return {
 			type: "Mobile",
 			Icon: DeviceMobileIcon,
@@ -101,7 +105,15 @@ const getDeviceInfo = (width: number, isValid: boolean) => {
 			isTablet: false,
 		};
 	}
-	if (width <= 1024) {
+	if (aspect >= 1.5 && longSide >= 1100) {
+		return {
+			type: longSide > 1920 ? "Desktop" : "Laptop",
+			Icon: longSide > 1920 ? MonitorIcon : LaptopIcon,
+			isMobile: false,
+			isTablet: false,
+		};
+	}
+	if (shortSide <= 1024 && aspect < 1.5) {
 		return {
 			type: "Tablet",
 			Icon: DeviceTabletIcon,
@@ -109,7 +121,7 @@ const getDeviceInfo = (width: number, isValid: boolean) => {
 			isTablet: true,
 		};
 	}
-	if (width <= 1440) {
+	if (longSide <= 1920) {
 		return {
 			type: "Laptop",
 			Icon: LaptopIcon,
@@ -574,6 +586,7 @@ export function WebsiteAudienceTab({
 										const percentage = item.percentage || 0;
 										const { type, Icon, isMobile, isTablet } = getDeviceInfo(
 											width,
+											height,
 											isValid
 										);
 										const display = getDisplayDimensions(
