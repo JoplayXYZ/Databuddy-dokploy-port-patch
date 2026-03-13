@@ -1,7 +1,6 @@
 import { Databuddy } from "@databuddy/sdk/node";
 import { isValidPhoneNumber, parsePhoneNumber } from "libphonenumber-js";
 import { type NextRequest, NextResponse } from "next/server";
-import { HONEYPOT_FIELD } from "@/app/(home)/contact/constants";
 
 const SLACK_WEBHOOK_URL = process.env.SLACK_WEBHOOK_URL || "";
 const SLACK_TIMEOUT_MS = 10_000;
@@ -237,9 +236,8 @@ export async function POST(request: NextRequest) {
 		}
 
 		const body = formData as Record<string, unknown>;
-		const honeypotValue = body[HONEYPOT_FIELD];
 		const honeypotDetected =
-			(typeof honeypotValue === "string" && honeypotValue.length > 0) ||
+			(typeof body.company === "string" && body.company.length > 0) ||
 			body.honeypot === true;
 
 		const validation = validateFormData(formData);

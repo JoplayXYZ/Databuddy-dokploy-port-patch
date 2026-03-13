@@ -13,13 +13,12 @@ import { SciFiButton } from "@/components/landing/scifi-btn";
 import { SciFiCard } from "@/components/scifi-card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { HONEYPOT_FIELD } from "./constants";
 import { PhoneInput } from "./phone-input";
 
 const URL_TLD_REGEX = /\.[a-z]{2,}$/i;
 
 const contactSchema = z.object({
-	[HONEYPOT_FIELD]: z.string().max(0).optional(),
+	company: z.string().max(0).optional(),
 	fullName: z
 		.string()
 		.min(1, "Full name is required")
@@ -69,12 +68,14 @@ const contactSchema = z.object({
 type ContactFormValues = z.infer<typeof contactSchema>;
 
 function FormField({
+	id,
 	label,
 	required = false,
 	children,
 	description,
 	error,
 }: {
+	id: string;
 	label: string;
 	required?: boolean;
 	children: React.ReactNode;
@@ -83,7 +84,7 @@ function FormField({
 }) {
 	return (
 		<div className="space-y-1.5">
-			<Label className="text-foreground text-sm">
+			<Label className="text-foreground text-sm" htmlFor={id}>
 				{label}
 				{required ? <span className="ml-1 text-destructive">*</span> : null}
 			</Label>
@@ -108,7 +109,7 @@ export default function ContactForm() {
 	} = useForm<ContactFormValues>({
 		resolver: zodResolver(contactSchema),
 		defaultValues: {
-			[HONEYPOT_FIELD]: "",
+			company: "",
 			fullName: "",
 			businessName: "",
 			website: "",
@@ -132,7 +133,7 @@ export default function ContactForm() {
 					...data,
 					anonId,
 					sessionId,
-					...(data[HONEYPOT_FIELD] ? { honeypot: true } : {}),
+					...(data.company ? { honeypot: true } : {}),
 				}),
 				signal: controller.signal,
 			});
@@ -200,22 +201,30 @@ export default function ContactForm() {
 
 	return (
 		<SciFiCard className="rounded border border-border bg-card/50 p-5 backdrop-blur-sm sm:p-6">
-			<form className="space-y-4" onSubmit={handleSubmit(submitForm)}>
+			<form
+				autoComplete="off"
+				className="space-y-4"
+				onSubmit={handleSubmit(submitForm)}
+			>
 				<div aria-hidden="true" className="absolute -left-[9999px] opacity-0">
-					<label htmlFor={HONEYPOT_FIELD}>Leave blank</label>
 					<input
 						autoComplete="off"
-						id={HONEYPOT_FIELD}
 						tabIndex={-1}
 						type="text"
-						{...register(HONEYPOT_FIELD)}
+						{...register("company")}
 					/>
 				</div>
-
-				<FormField error={errors.fullName?.message} label="Full Name" required>
+				<FormField
+					error={errors.fullName?.message}
+					id="full-name"
+					label="Full Name"
+					required
+				>
 					<Input
 						aria-invalid={!!errors.fullName}
+						autoComplete="off"
 						className={errors.fullName ? "border-destructive" : ""}
+						id="full-name"
 						maxLength={100}
 						placeholder="Jane Doe"
 						type="text"
@@ -225,12 +234,15 @@ export default function ContactForm() {
 
 				<FormField
 					error={errors.businessName?.message}
+					id="business-name"
 					label="Business or Website Name"
 					required
 				>
 					<Input
 						aria-invalid={!!errors.businessName}
+						autoComplete="off"
 						className={errors.businessName ? "border-destructive" : ""}
+						id="business-name"
 						maxLength={200}
 						placeholder="Acme Inc. or acme.com"
 						type="text"
@@ -238,11 +250,17 @@ export default function ContactForm() {
 					/>
 				</FormField>
 
-				<FormField error={errors.website?.message} label="Website" required>
+				<FormField
+					error={errors.website?.message}
+					id="domain"
+					label="Website"
+					required
+				>
 					<Input
 						aria-invalid={!!errors.website}
-						autoComplete="url"
+						autoComplete="off"
 						className={errors.website ? "border-destructive" : ""}
+						id="domain"
 						maxLength={500}
 						placeholder="example.com"
 						type="text"
@@ -250,10 +268,17 @@ export default function ContactForm() {
 					/>
 				</FormField>
 
-				<FormField error={errors.email?.message} label="Contact Email" required>
+				<FormField
+					error={errors.email?.message}
+					id="email"
+					label="Contact Email"
+					required
+				>
 					<Input
 						aria-invalid={!!errors.email}
+						autoComplete="off"
 						className={errors.email ? "border-destructive" : ""}
+						id="email"
 						maxLength={255}
 						placeholder="jane@acme.com"
 						type="email"
@@ -264,6 +289,7 @@ export default function ContactForm() {
 				<FormField
 					description="Optional — we'll only call if needed"
 					error={errors.phone?.message}
+					id="phone"
 					label="Phone Number"
 				>
 					<Controller
@@ -272,6 +298,7 @@ export default function ContactForm() {
 						render={({ field }) => (
 							<PhoneInput
 								error={!!errors.phone}
+								id="phone"
 								onChangeAction={(val) => field.onChange(val)}
 								value={field.value}
 							/>
