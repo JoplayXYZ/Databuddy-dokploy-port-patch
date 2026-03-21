@@ -247,7 +247,6 @@ export const insights = new Elysia({ prefix: "/v1/insights" })
 
 			const { organizationId, timezone = "UTC" } = body;
 			mergeWideEvent({
-				route: "insights_ai",
 				insights_org_id: organizationId,
 				insights_timezone: timezone,
 			});

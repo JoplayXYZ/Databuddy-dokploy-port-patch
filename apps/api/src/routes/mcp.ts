@@ -69,7 +69,6 @@ export const mcp = new Elysia({ prefix: "/v1/mcp" })
 	})
 	.all("/", async ({ request, user, apiKey }) => {
 		mergeWideEvent({
-			route: "mcp",
 			mcp_session: Boolean(user),
 			mcp_api_key: Boolean(apiKey),
 		});

@@ -17,6 +17,7 @@ import { autumnHandler } from "autumn-js/elysia";
 import { Elysia } from "elysia";
 import { initLogger, log, parseError } from "evlog";
 import { evlog, useLogger } from "evlog/elysia";
+import { applyAuthWideEvent } from "@/lib/auth-wide-event";
 import {
 	apiLoggerDrain,
 	enrichApiWideEvent,
@@ -245,6 +246,9 @@ const app = new Elysia()
 			enrich: enrichApiWideEvent,
 		})
 	)
+	.onBeforeHandle(async ({ request }) => {
+		await applyAuthWideEvent(request.headers);
+	})
 	.use(
 		cors({
 			credentials: true,

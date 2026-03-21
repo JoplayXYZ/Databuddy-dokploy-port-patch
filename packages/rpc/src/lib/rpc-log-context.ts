@@ -3,45 +3,29 @@ import { useLogger as getRequestLogger } from "evlog/elysia";
 import type { Context } from "../orpc";
 
 /**
- * Merge RPC context into the active request wide event (evlog).
+ * Merge RPC-specific fields into the active request wide event.
+ * Auth and API key context is handled globally by applyAuthWideEvent.
  */
 export function enrichRpcWideEventContext(context: Context): void {
-	const fields: Record<string, string | number | boolean> = {};
-
-	if (context.user) {
-		fields.rpc_user_id = context.user.id;
-		if (context.user.email) {
-			fields.rpc_user_email = context.user.email;
-		}
-		if (context.user.role) {
-			fields.rpc_user_role = context.user.role;
-		}
+	if (!context.headers) {
+		return;
 	}
 
-	if (context.session) {
-		fields.rpc_session_id = context.session.id;
+	const fields: Record<string, string> = {};
+
+	const clientId = context.headers.get("databuddy-client-id");
+	if (clientId) {
+		fields.rpc_client_id = clientId;
 	}
 
-	if (context.headers) {
-		const userAgent = context.headers.get("user-agent");
-		if (userAgent) {
-			fields.http_user_agent = userAgent;
-		}
+	const sdkName = context.headers.get("databuddy-sdk-name");
+	if (sdkName) {
+		fields.rpc_sdk_name = sdkName;
+	}
 
-		const clientId = context.headers.get("databuddy-client-id");
-		if (clientId) {
-			fields.rpc_client_id = clientId;
-		}
-
-		const sdkName = context.headers.get("databuddy-sdk-name");
-		if (sdkName) {
-			fields.rpc_sdk_name = sdkName;
-		}
-
-		const sdkVersion = context.headers.get("databuddy-sdk-version");
-		if (sdkVersion) {
-			fields.rpc_sdk_version = sdkVersion;
-		}
+	const sdkVersion = context.headers.get("databuddy-sdk-version");
+	if (sdkVersion) {
+		fields.rpc_sdk_version = sdkVersion;
 	}
 
 	if (Object.keys(fields).length === 0) {
