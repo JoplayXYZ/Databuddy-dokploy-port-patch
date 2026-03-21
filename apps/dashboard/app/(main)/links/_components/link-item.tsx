@@ -38,7 +38,7 @@ const LINKS_BASE_URL = "https://dby.sh";
 function formatTarget(targetUrl: string): string {
 	try {
 		const parsed = new URL(targetUrl);
-		return parsed.host + (parsed.pathname !== "/" ? parsed.pathname : "");
+		return parsed.host + (parsed.pathname === "/" ? "" : parsed.pathname);
 	} catch {
 		return targetUrl;
 	}

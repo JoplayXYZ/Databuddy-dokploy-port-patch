@@ -81,10 +81,10 @@ interface WebhookEvent {
 	type: string;
 	data: {
 		object:
-		| WebhookPaymentIntent
-		| WebhookCharge
-		| WebhookInvoice
-		| WebhookSubscription;
+			| WebhookPaymentIntent
+			| WebhookCharge
+			| WebhookInvoice
+			| WebhookSubscription;
 	};
 }
 
@@ -219,7 +219,14 @@ async function handlePaymentIntent(
 	const currency = pi.currency.toUpperCase();
 
 	log.set({
-		revenue: { type, status: "completed", amount, currency, customerId, transactionId: pi.id },
+		revenue: {
+			type,
+			status: "completed",
+			amount,
+			currency,
+			customerId,
+			transactionId: pi.id,
+		},
 	});
 
 	await clickHouse.insert({
@@ -262,7 +269,14 @@ async function handleFailedPayment(
 	const type: "sale" | "subscription" = pi.invoice ? "subscription" : "sale";
 
 	log.set({
-		revenue: { type, status, amount, currency, customerId, transactionId: pi.id },
+		revenue: {
+			type,
+			status,
+			amount,
+			currency,
+			customerId,
+			transactionId: pi.id,
+		},
 	});
 
 	await clickHouse.insert({
@@ -299,7 +313,13 @@ async function handleInvoicePaid(
 	const log = useLogger();
 
 	if (invoice.payment_intent) {
-		log.set({ revenue: { skipped: true, reason: "has_payment_intent", invoiceId: invoice.id } });
+		log.set({
+			revenue: {
+				skipped: true,
+				reason: "has_payment_intent",
+				invoiceId: invoice.id,
+			},
+		});
 		return;
 	}
 
@@ -477,7 +497,12 @@ async function handleRefund(
 	const refunds = charge.refunds?.data || [];
 
 	log.set({
-		revenue: { type: "refund", currency, customerId, refundCount: refunds.length },
+		revenue: {
+			type: "refund",
+			currency,
+			customerId,
+			refundCount: refunds.length,
+		},
 	});
 
 	for (const refund of refunds) {

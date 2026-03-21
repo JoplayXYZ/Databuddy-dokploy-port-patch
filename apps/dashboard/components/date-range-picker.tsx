@@ -5,7 +5,6 @@ import {
 	CaretRightIcon,
 	CheckIcon,
 } from "@phosphor-icons/react";
-import dayjs from "@/lib/dayjs";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { DateRange } from "react-day-picker";
 import { Button } from "@/components/ui/button";
@@ -16,6 +15,7 @@ import {
 	PopoverTrigger,
 } from "@/components/ui/popover";
 import { useIsMobile } from "@/hooks/use-mobile";
+import dayjs from "@/lib/dayjs";
 import { formatMonthDay } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
 
@@ -291,7 +291,7 @@ export function DateRangePicker({
 								</div>
 								{daysDiff > 0 && (
 									<span className="rounded-full bg-primary/15 px-2 py-0.5 font-semibold text-primary text-xs tabular-nums">
-										{daysDiff} day{daysDiff !== 1 ? "s" : ""}
+										{daysDiff} day{daysDiff === 1 ? "" : "s"}
 									</span>
 								)}
 							</div>

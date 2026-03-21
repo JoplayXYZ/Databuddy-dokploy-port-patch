@@ -1037,10 +1037,7 @@ export const feedback = pgTable(
 			"btree",
 			table.organizationId.asc().nullsLast().op("text_ops")
 		),
-		index("feedback_status_idx").using(
-			"btree",
-			table.status.asc().nullsLast()
-		),
+		index("feedback_status_idx").using("btree", table.status.asc().nullsLast()),
 		foreignKey({
 			columns: [table.userId],
 			foreignColumns: [user.id],

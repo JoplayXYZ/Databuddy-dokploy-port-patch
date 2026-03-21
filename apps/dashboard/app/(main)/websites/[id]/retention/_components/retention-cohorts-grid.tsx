@@ -2,9 +2,9 @@
 
 import { SpinnerIcon } from "@phosphor-icons/react/dist/ssr/Spinner";
 import { TableIcon } from "@phosphor-icons/react/dist/ssr/Table";
-import dayjs from "@/lib/dayjs";
 import { useMemo } from "react";
 import { EmptyState } from "@/components/empty-state";
+import dayjs from "@/lib/dayjs";
 
 interface RetentionCohort {
 	cohort: string;
@@ -136,9 +136,9 @@ export function RetentionCohortsGrid({
 						return (
 							<tr
 								className={`hover:bg-accent ${
-									rowIndex !== sortedCohorts.length - 1
-										? "border-border border-b"
-										: ""
+									rowIndex === sortedCohorts.length - 1
+										? ""
+										: "border-border border-b"
 								}`}
 								key={cohort.cohort}
 							>
@@ -163,9 +163,9 @@ export function RetentionCohortsGrid({
 											<div
 												className={`flex h-8 items-center justify-center rounded font-medium text-xs tabular-nums ${className}`}
 											>
-												{percentage !== null
-													? `${percentage.toFixed(0)}%`
-													: "—"}
+												{percentage === null
+													? "—"
+													: `${percentage.toFixed(0)}%`}
 											</div>
 										</td>
 									);

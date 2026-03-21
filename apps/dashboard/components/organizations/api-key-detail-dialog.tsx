@@ -12,11 +12,11 @@ import {
 	TrashIcon,
 } from "@phosphor-icons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import dayjs from "@/lib/dayjs";
 import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
+import dayjs from "@/lib/dayjs";
 import { orpc } from "@/lib/orpc";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
@@ -178,7 +178,9 @@ export function ApiKeyDetailDialog({
 			expiresAt: values.expiresAt || null,
 		};
 		const scopes = values.scopes ?? [];
-		if (fullKey?.resources !== undefined) {
+		if (fullKey?.resources === undefined) {
+			payload.scopes = scopes;
+		} else {
 			const existing = fullKey.resources as Record<string, ApiScope[]>;
 			const websiteResources = Object.fromEntries(
 				Object.entries(existing).filter(([k]) => k !== "global")
@@ -188,8 +190,6 @@ export function ApiKeyDetailDialog({
 				...websiteResources,
 				...(scopes.length > 0 && { global: scopes }),
 			};
-		} else {
-			payload.scopes = scopes;
 		}
 		updateMutation.mutate(payload);
 	});

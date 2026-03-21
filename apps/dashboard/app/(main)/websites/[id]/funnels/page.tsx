@@ -173,7 +173,7 @@ export default function FunnelsPage() {
 					subtitle={
 						isLoading
 							? undefined
-							: `${funnels.length} funnel${funnels.length !== 1 ? "s" : ""}`
+							: `${funnels.length} funnel${funnels.length === 1 ? "" : "s"}`
 					}
 					title="Conversion Funnels"
 					websiteId={websiteId}

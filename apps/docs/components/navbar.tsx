@@ -3,11 +3,11 @@
 import Link from "next/link";
 import { useState } from "react";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { Logo } from "./logo";
+import { NavLink } from "./nav-link";
 import { NavbarGithubDesktopLink } from "./navbar-github-desktop-link";
 import { NavbarGithubMobileLink } from "./navbar-github-mobile-link";
 import { NavbarMobileMenuButton } from "./navbar-mobile-menu-button";
-import { Logo } from "./logo";
-import { NavLink } from "./nav-link";
 
 export interface NavbarProps {
 	stars?: number | null;
@@ -45,9 +45,7 @@ export const Navbar = ({ stars }: NavbarProps) => {
 
 						<NavbarMobileMenuButton
 							isOpen={isMobileMenuOpen}
-							onToggleAction={() =>
-								setIsMobileMenuOpen((open) => !open)
-							}
+							onToggleAction={() => setIsMobileMenuOpen((open) => !open)}
 						/>
 					</div>
 				</div>
@@ -73,9 +71,7 @@ export const Navbar = ({ stars }: NavbarProps) => {
 								key={menu.path}
 								onClick={() => setIsMobileMenuOpen(false)}
 								style={{
-									transitionDelay: isMobileMenuOpen
-										? `${index * 50}ms`
-										: "0ms",
+									transitionDelay: isMobileMenuOpen ? `${index * 50}ms` : "0ms",
 								}}
 								{...(menu.external && {
 									target: "_blank",

@@ -35,10 +35,10 @@ export default async function MainLayout({
 							<div className="h-dvh overflow-y-auto overflow-x-hidden pt-12 md:pt-0">
 								{children}
 							</div>
+						</div>
+						<FeedbackPrompt />
 					</div>
-					<FeedbackPrompt />
-				</div>
-			</CommandSearchProvider>
+				</CommandSearchProvider>
 			</BillingProvider>
 		</AutumnProvider>
 	);

@@ -611,4 +611,4 @@ function GatedFeatureItem({
 	);
 }
 
-export { PricingCard, FeatureItem as PricingFeatureItem };
+export { FeatureItem as PricingFeatureItem, PricingCard };

@@ -25,7 +25,15 @@ export function checkAutumnUsage(
 			const data = result.data;
 
 			if (data) {
-				log.set({ billing: { allowed: true, usage: data.usage, usageLimit: data.usage_limit, includedUsage: data.included_usage, unlimited: data.unlimited } });
+				log.set({
+					billing: {
+						allowed: true,
+						usage: data.usage,
+						usageLimit: data.usage_limit,
+						includedUsage: data.included_usage,
+						unlimited: data.unlimited,
+					},
+				});
 				const usage = data.usage ?? 0;
 				const usageLimit = data.usage_limit ?? data.included_usage ?? 0;
 				const isUnlimited = data.unlimited ?? false;
@@ -33,7 +41,9 @@ export function checkAutumnUsage(
 					!isUnlimited && usageLimit > 0 && usage >= usageLimit * 1.5;
 
 				if (usageExceeds150Percent) {
-					log.set({ billing: { allowed: false, usage, usageLimit, exceeded: true } });
+					log.set({
+						billing: { allowed: false, usage, usageLimit, exceeded: true },
+					});
 					return {
 						exceeded: true,
 						response: new Response(

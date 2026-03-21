@@ -5,7 +5,6 @@ import {
 	NoteIcon,
 	XIcon,
 } from "@phosphor-icons/react";
-import dayjs from "@/lib/dayjs";
 import { useAtom } from "jotai";
 import { useMemo, useState } from "react";
 import {
@@ -29,6 +28,7 @@ import {
 	CHART_ANNOTATION_STYLES,
 } from "@/lib/annotation-constants";
 import { isSingleDayAnnotation } from "@/lib/annotation-utils";
+import dayjs from "@/lib/dayjs";
 import { cn } from "@/lib/utils";
 import {
 	metricVisibilityAtom,
@@ -230,8 +230,7 @@ export function MetricsChart({
 		() =>
 			rawData.map((row) => {
 				const raw = (row as ChartDataRow & { rawDate?: string }).rawDate;
-				const xKey =
-					typeof raw === "string" && raw.length > 0 ? raw : row.date;
+				const xKey = typeof raw === "string" && raw.length > 0 ? raw : row.date;
 				return { ...row, xKey };
 			}),
 		[rawData]
@@ -324,7 +323,9 @@ export function MetricsChart({
 	};
 
 	if (isLoading) {
-		return <SkeletonChart className={cn("w-full", className)} height={height} />;
+		return (
+			<SkeletonChart className={cn("w-full", className)} height={height} />
+		);
 	}
 
 	if (!chartData.length) {
@@ -373,9 +374,7 @@ export function MetricsChart({
 							{onToggleAnnotations !== undefined && (
 								<Button
 									aria-label={
-										showAnnotations
-											? "Hide annotations"
-											: "Show annotations"
+										showAnnotations ? "Hide annotations" : "Show annotations"
 									}
 									className="size-7 text-muted-foreground hover:text-foreground"
 									onClick={() => onToggleAnnotations(!showAnnotations)}
@@ -485,9 +484,6 @@ export function MetricsChart({
 										justFinishedDragging={suppressTooltip}
 									/>
 								}
-								labelFormatter={(value) =>
-									formatAxisTickLabel(String(value), granularity)
-								}
 								cursor={
 									suppressTooltip
 										? false
@@ -496,6 +492,9 @@ export function MetricsChart({
 												strokeDasharray: "4 4",
 												strokeOpacity: 0.5,
 											}
+								}
+								labelFormatter={(value) =>
+									formatAxisTickLabel(String(value), granularity)
 								}
 							/>
 							{refAreaLeft !== null && refAreaRight !== null && (
@@ -549,7 +548,10 @@ export function MetricsChart({
 										? chartLastD.toDate()
 										: chartLastD.endOf("day").toDate();
 
-									if (rangeEnd < chartDomainStart || rangeStart > chartDomainEnd) {
+									if (
+										rangeEnd < chartDomainStart ||
+										rangeStart > chartDomainEnd
+									) {
 										return null;
 									}
 

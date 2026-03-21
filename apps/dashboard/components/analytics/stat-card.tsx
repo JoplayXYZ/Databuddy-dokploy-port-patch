@@ -1,5 +1,4 @@
 import { MinusIcon, TrendDownIcon, TrendUpIcon } from "@phosphor-icons/react";
-import dayjs from "@/lib/dayjs";
 import { type ElementType, memo } from "react";
 import {
 	Area,
@@ -21,6 +20,7 @@ import {
 	HoverCardTrigger,
 } from "@/components/ui/hover-card";
 import { Skeleton } from "@/components/ui/skeleton";
+import dayjs from "@/lib/dayjs";
 import { formatMetricNumber } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
 

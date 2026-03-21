@@ -155,7 +155,7 @@ export default function GoalsPage() {
 					subtitle={
 						goalsLoading
 							? undefined
-							: `${goals.length} goal${goals.length !== 1 ? "s" : ""}`
+							: `${goals.length} goal${goals.length === 1 ? "" : "s"}`
 					}
 					title="Goals"
 					websiteId={websiteId}

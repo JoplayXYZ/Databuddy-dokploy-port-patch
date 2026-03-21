@@ -192,7 +192,9 @@ export function insertOutgoingLink(
 			return;
 		}
 
-		log.set({ event: { id: eventId, type: "outgoing_link", href: linkData.href } });
+		log.set({
+			event: { id: eventId, type: "outgoing_link", href: linkData.href },
+		});
 
 		const now = Date.now();
 
@@ -452,9 +454,9 @@ export function insertCustomEvents(
 		const spans = events.map((event) => {
 			const rawId = event.anonymous_id
 				? sanitizeString(
-					event.anonymous_id,
-					VALIDATION_LIMITS.SHORT_STRING_MAX_LENGTH
-				)
+						event.anonymous_id,
+						VALIDATION_LIMITS.SHORT_STRING_MAX_LENGTH
+					)
 				: undefined;
 
 			return {
@@ -467,9 +469,9 @@ export function insertCustomEvents(
 				),
 				namespace: event.namespace
 					? sanitizeString(
-						event.namespace,
-						VALIDATION_LIMITS.SHORT_STRING_MAX_LENGTH
-					)
+							event.namespace,
+							VALIDATION_LIMITS.SHORT_STRING_MAX_LENGTH
+						)
 					: undefined,
 				path: event.path
 					? sanitizeString(event.path, VALIDATION_LIMITS.STRING_MAX_LENGTH)
@@ -481,9 +483,9 @@ export function insertCustomEvents(
 					: undefined,
 				source: event.source
 					? sanitizeString(
-						event.source,
-						VALIDATION_LIMITS.SHORT_STRING_MAX_LENGTH
-					)
+							event.source,
+							VALIDATION_LIMITS.SHORT_STRING_MAX_LENGTH
+						)
 					: undefined,
 			};
 		});

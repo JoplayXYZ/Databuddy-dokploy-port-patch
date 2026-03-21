@@ -2,7 +2,6 @@
 
 import { ChartLineIcon } from "@phosphor-icons/react/dist/ssr/ChartLine";
 import { SpinnerIcon } from "@phosphor-icons/react/dist/ssr/Spinner";
-import dayjs from "@/lib/dayjs";
 import { useMemo } from "react";
 import {
 	Area,
@@ -14,6 +13,7 @@ import {
 	YAxis,
 } from "recharts";
 import { EmptyState } from "@/components/empty-state";
+import dayjs from "@/lib/dayjs";
 
 interface RetentionRate {
 	date: string;

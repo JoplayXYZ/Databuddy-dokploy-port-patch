@@ -29,12 +29,12 @@ process.on("uncaughtException", (error) => {
 });
 
 process.on("SIGTERM", async () => {
-	await shutdownTracing().catch(() => { });
+	await shutdownTracing().catch(() => {});
 	process.exit(0);
 });
 
 process.on("SIGINT", async () => {
-	await shutdownTracing().catch(() => { });
+	await shutdownTracing().catch(() => {});
 	process.exit(0);
 });
 
@@ -190,7 +190,13 @@ const app = new Elysia()
 				});
 				useLogger().error(
 					error instanceof Error ? error : new Error(String(error)),
-					{ uptime: { monitorId, step: "producer", httpCode: result.data.http_code } }
+					{
+						uptime: {
+							monitorId,
+							step: "producer",
+							httpCode: result.data.http_code,
+						},
+					}
 				);
 			}
 

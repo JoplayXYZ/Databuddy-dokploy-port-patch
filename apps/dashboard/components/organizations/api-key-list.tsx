@@ -101,7 +101,7 @@ export function ApiKeyList({
 						<div>
 							<h1 className="font-medium text-base">API Keys</h1>
 							<p className="text-muted-foreground text-xs">
-								{items.length} active key{items.length !== 1 ? "s" : ""}
+								{items.length} active key{items.length === 1 ? "" : "s"}
 							</p>
 						</div>
 						<Button onClick={onCreateNew} size="sm" type="button">

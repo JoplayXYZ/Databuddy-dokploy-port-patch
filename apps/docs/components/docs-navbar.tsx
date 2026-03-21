@@ -5,12 +5,12 @@ import { AnimatePresence, motion } from "motion/react";
 import Link from "next/link";
 import { useState } from "react";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { NavbarGithubDesktopLink } from "./navbar-github-desktop-link";
-import { NavbarGithubMobileLink } from "./navbar-github-mobile-link";
-import { NavbarMobileMenuButton } from "./navbar-mobile-menu-button";
 import { Logo } from "./logo";
 import { NavLink } from "./nav-link";
 import { navMenu } from "./navbar";
+import { NavbarGithubDesktopLink } from "./navbar-github-desktop-link";
+import { NavbarGithubMobileLink } from "./navbar-github-mobile-link";
+import { NavbarMobileMenuButton } from "./navbar-mobile-menu-button";
 import { contents } from "./sidebar-content";
 
 export interface DocsNavbarProps {
@@ -27,8 +27,7 @@ export const DocsNavbar = ({ stars }: DocsNavbarProps) => {
 		setOpenSection(openSection === index ? -1 : index);
 	};
 
-	const githubDelayMs =
-		(contents.length * 5 + docsSecondaryNav.length) * 30;
+	const githubDelayMs = (contents.length * 5 + docsSecondaryNav.length) * 30;
 
 	return (
 		<div className="sticky top-0 z-30 flex flex-col border-b bg-background/60 backdrop-blur-xl">
@@ -59,9 +58,7 @@ export const DocsNavbar = ({ stars }: DocsNavbarProps) => {
 
 						<NavbarMobileMenuButton
 							isOpen={isMobileMenuOpen}
-							onToggleAction={() =>
-								setIsMobileMenuOpen((open) => !open)
-							}
+							onToggleAction={() => setIsMobileMenuOpen((open) => !open)}
 						/>
 					</div>
 				</div>
@@ -75,9 +72,7 @@ export const DocsNavbar = ({ stars }: DocsNavbarProps) => {
 				}`}
 			>
 				<div className="bg-background/95 backdrop-blur-sm">
-					<div
-						className="mx-auto max-h-[70dvh] max-w-7xl overflow-y-auto px-4 py-4 sm:px-6 lg:px-8"
-					>
+					<div className="mx-auto max-h-[70dvh] max-w-7xl overflow-y-auto px-4 py-4 sm:px-6 lg:px-8">
 						<div className="space-y-2">
 							{contents.map((section, sectionIndex) => (
 								<div key={section.title}>

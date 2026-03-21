@@ -296,7 +296,7 @@ export function CardSheet({
 				title: customTitle.trim() || undefined,
 				category: selectedQueryType.category,
 				dateRangePreset:
-					dateRangePreset !== "global" ? dateRangePreset : undefined,
+					dateRangePreset === "global" ? undefined : dateRangePreset,
 				filters: filters.length > 0 ? filters : undefined,
 				dataSourceMode: "predefined",
 			};
@@ -324,7 +324,7 @@ export function CardSheet({
 				title: customTitle.trim() || undefined,
 				category: "Custom",
 				dateRangePreset:
-					dateRangePreset !== "global" ? dateRangePreset : undefined,
+					dateRangePreset === "global" ? undefined : dateRangePreset,
 				dataSourceMode: "custom",
 				customQuery,
 			};
