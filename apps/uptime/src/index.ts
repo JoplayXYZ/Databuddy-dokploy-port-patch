@@ -1,7 +1,7 @@
 import { Receiver } from "@upstash/qstash";
 import { Elysia } from "elysia";
 import { initLogger } from "evlog";
-import { evlog, useLogger } from "evlog/elysia";
+import { evlog, useLogger as logRequest } from "evlog/elysia";
 import { z } from "zod";
 import { type CheckOptions, checkUptime, lookupSchedule } from "./actions";
 import type { JsonParsingConfig } from "./json-parser";
@@ -13,6 +13,10 @@ import {
 	shutdownTracing,
 	startRequestSpan,
 } from "./lib/tracing";
+import {
+	getPreviousMonitorStatus,
+	sendUptimeTransitionEmailsIfNeeded,
+} from "./uptime-transition-emails";
 
 initLogger({
 	env: { service: "uptime" },
@@ -174,21 +178,28 @@ const app = new Elysia()
 					monitorId,
 					url: schedule.data.url,
 				});
-				useLogger().error(new Error(result.error), {
+				logRequest().error(new Error(result.error), {
 					uptime: { monitorId, url: schedule.data.url, step: "check" },
 				});
 				return new Response("Failed to check uptime", { status: 500 });
 			}
 
+			const previousStatus = await getPreviousMonitorStatus(monitorId);
+
 			try {
 				await sendUptimeEvent(result.data, monitorId);
+				await sendUptimeTransitionEmailsIfNeeded({
+					schedule: schedule.data,
+					data: result.data,
+					previousStatus,
+				});
 			} catch (error) {
 				captureError(error, {
 					type: "producer_error",
 					monitorId,
 					httpCode: result.data.http_code,
 				});
-				useLogger().error(
+				logRequest().error(
 					error instanceof Error ? error : new Error(String(error)),
 					{
 						uptime: {
@@ -203,7 +214,7 @@ const app = new Elysia()
 			return new Response("Uptime check complete", { status: 200 });
 		} catch (error) {
 			captureError(error, { type: "unexpected_error" });
-			useLogger().error(
+			logRequest().error(
 				error instanceof Error ? error : new Error(String(error)),
 				{ uptime: { step: "post_handler" } }
 			);

@@ -43,10 +43,13 @@ interface FetchFailure {
 	error: string;
 }
 
-interface ScheduleData {
+export interface ScheduleData {
 	id: string;
 	url: string;
 	websiteId: string | null;
+	organizationId: string;
+	name: string | null;
+	website: { name: string | null; domain: string } | null;
 	jsonParsingConfig: unknown;
 	timeout: number | null;
 	cacheBust: boolean;
@@ -59,6 +62,7 @@ export function lookupSchedule(
 		try {
 			const schedule = await db.query.uptimeSchedules.findFirst({
 				where: eq(uptimeSchedules.id, id),
+				with: { website: true },
 			});
 
 			if (!schedule) {
@@ -78,6 +82,14 @@ export function lookupSchedule(
 					id: schedule.id,
 					url: schedule.url,
 					websiteId: schedule.websiteId,
+					organizationId: schedule.organizationId,
+					name: schedule.name,
+					website: schedule.website
+						? {
+								name: schedule.website.name,
+								domain: schedule.website.domain,
+							}
+						: null,
 					jsonParsingConfig: schedule.jsonParsingConfig,
 					timeout: schedule.timeout,
 					cacheBust: schedule.cacheBust,
@@ -118,7 +130,7 @@ function buildHeaders(acceptEncoding: string): Record<string, string> {
 
 function applyCacheBust(url: string): string {
 	const parsed = new URL(url);
-	parsed.searchParams.set("_cb", Math.random().toString(36).substring(2, 10));
+	parsed.searchParams.set("_cb", Math.random().toString(36).slice(2, 10));
 	return parsed.toString();
 }
 
