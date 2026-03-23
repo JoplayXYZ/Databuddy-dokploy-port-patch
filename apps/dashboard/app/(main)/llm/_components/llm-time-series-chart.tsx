@@ -33,7 +33,7 @@ const METRICS: MetricConfig[] = [
 	{
 		key: "total_cost",
 		label: "Cost",
-		color: "hsl(var(--primary))",
+		color: "var(--chart-1)",
 		gradient: "llm-cost",
 		formatValue: formatCurrency,
 	},
@@ -272,7 +272,7 @@ export function LLMTimeSeriesChart({
 									<Tooltip
 										content={<CustomTooltip />}
 										cursor={{
-											stroke: "var(--color-primary)",
+											stroke: "var(--color-chart-1)",
 											strokeDasharray: "4 4",
 											strokeOpacity: 0.5,
 										}}

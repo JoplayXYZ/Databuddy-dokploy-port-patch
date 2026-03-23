@@ -488,7 +488,7 @@ export function MetricsChart({
 									suppressTooltip
 										? false
 										: {
-												stroke: "var(--color-primary)",
+												stroke: "var(--color-chart-1)",
 												strokeDasharray: "4 4",
 												strokeOpacity: 0.5,
 											}
@@ -499,9 +499,9 @@ export function MetricsChart({
 							/>
 							{refAreaLeft !== null && refAreaRight !== null && (
 								<ReferenceArea
-									fill="var(--color-primary)"
+									fill="var(--color-chart-1)"
 									fillOpacity={0.2}
-									stroke="var(--color-primary)"
+									stroke="var(--color-chart-1)"
 									strokeOpacity={0.6}
 									strokeWidth={1}
 									x1={refAreaLeft}

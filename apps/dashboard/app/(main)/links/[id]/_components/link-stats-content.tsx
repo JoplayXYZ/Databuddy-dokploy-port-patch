@@ -194,12 +194,12 @@ function ClicksChart({
 							<linearGradient id="clicksGradient" x1="0" x2="0" y1="0" y2="1">
 								<stop
 									offset="0%"
-									stopColor="var(--color-primary)"
+									stopColor="var(--color-chart-1)"
 									stopOpacity={0.3}
 								/>
 								<stop
 									offset="100%"
-									stopColor="var(--color-primary)"
+									stopColor="var(--color-chart-1)"
 									stopOpacity={0.02}
 								/>
 							</linearGradient>
@@ -240,7 +240,7 @@ function ClicksChart({
 											<div className="flex items-center gap-2">
 												<div
 													className="size-2.5 rounded-full"
-													style={{ backgroundColor: "var(--color-primary)" }}
+													style={{ backgroundColor: "var(--color-chart-1)" }}
 												/>
 												<span className="text-muted-foreground text-xs">
 													Clicks
@@ -254,7 +254,7 @@ function ClicksChart({
 								) : null
 							}
 							cursor={{
-								stroke: "var(--color-primary)",
+								stroke: "var(--color-chart-1)",
 								strokeDasharray: "4 4",
 								strokeOpacity: 0.5,
 							}}
@@ -262,14 +262,14 @@ function ClicksChart({
 						<Area
 							activeDot={{
 								r: 4,
-								fill: "var(--color-primary)",
+								fill: "var(--color-chart-1)",
 								stroke: "var(--color-background)",
 								strokeWidth: 2,
 							}}
 							dataKey="clicks"
 							dot={false}
 							fill="url(#clicksGradient)"
-							stroke="var(--color-primary)"
+							stroke="var(--color-chart-1)"
 							strokeWidth={2.5}
 							type="monotone"
 						/>

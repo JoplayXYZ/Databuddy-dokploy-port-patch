@@ -165,17 +165,17 @@ export function RetentionRateChart({
 							>
 								<stop
 									offset="0%"
-									stopColor="var(--color-primary)"
+									stopColor="var(--color-chart-1)"
 									stopOpacity={0.35}
 								/>
 								<stop
 									offset="50%"
-									stopColor="var(--color-primary)"
+									stopColor="var(--color-chart-1)"
 									stopOpacity={0.12}
 								/>
 								<stop
 									offset="100%"
-									stopColor="var(--color-primary)"
+									stopColor="var(--color-chart-1)"
 									stopOpacity={0}
 								/>
 							</linearGradient>
@@ -208,7 +208,7 @@ export function RetentionRateChart({
 						<Tooltip content={<CustomTooltip />} />
 						<Area
 							activeDot={{
-								fill: "var(--color-primary)",
+								fill: "var(--color-chart-1)",
 								r: 5,
 								stroke: "var(--color-background)",
 								strokeWidth: 2,
@@ -217,7 +217,7 @@ export function RetentionRateChart({
 							dataKey="retention_rate"
 							fill="url(#retentionGradient)"
 							fillOpacity={1}
-							stroke="var(--color-primary)"
+							stroke="var(--color-chart-1)"
 							strokeWidth={2}
 							type="monotone"
 						/>
