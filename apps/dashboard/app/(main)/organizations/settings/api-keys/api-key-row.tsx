@@ -76,7 +76,7 @@ export function ApiKeyRow({ apiKey, onSelect }: ApiKeyRowProps) {
 				</div>
 				<div className="flex items-center gap-3 text-muted-foreground text-sm">
 					<code className="rounded border bg-secondary px-1.5 py-0.5 font-mono text-foreground text-xs">
-						{apiKey.prefix}_{apiKey.start}…
+						{apiKey.start}
 					</code>
 					<span className="flex items-center gap-1 text-xs">
 						<CalendarIcon size={12} />

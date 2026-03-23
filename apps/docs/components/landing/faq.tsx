@@ -14,7 +14,7 @@ const faqs = [
 	{
 		question: "How is this different from Google Analytics?",
 		answer:
-			"Databuddy is under 1KB (vs GA4's 45KB+), requires no cookies, and is GDPR compliant by default. Beyond analytics, it includes error tracking, web vitals, funnels, and feature flags. Things you'd need separate tools for with GA.",
+			"Databuddy is under 30 KB (vs GA4's 45KB+), requires no cookies, and is GDPR compliant by default. Beyond analytics, it includes error tracking, web vitals, funnels, and feature flags. Things you'd need separate tools for with GA.",
 	},
 	{
 		question: "Do I need cookie consent banners?",

@@ -14,7 +14,7 @@ import { QueryTypesGrid } from "./query-types-grid";
 
 export const metadata: Metadata = {
 	title:
-		"Privacy-first web analytics (Google Analytics alternative) — 3 KB, GDPR-compliant | Databuddy",
+		"Privacy-first web analytics (Google Analytics alternative) — under 30 KB, GDPR-compliant | Databuddy",
 	description:
 		"Experience powerful, privacy-first analytics that matches Google Analytics feature-for-feature without compromising user data. Zero cookies required, 100% data ownership, and AI-powered insights to help your business grow while staying compliant.",
 	alternates: {
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
 	},
 	openGraph: {
 		title:
-			"Privacy-first web analytics (Google Analytics alternative) — 3 KB, GDPR-compliant | Databuddy",
+			"Privacy-first web analytics (Google Analytics alternative) — under 30 KB, GDPR-compliant | Databuddy",
 		description:
 			"Experience powerful, privacy-first analytics that matches Google Analytics feature-for-feature without compromising user data. Zero cookies required, 100% data ownership, and AI-powered insights to help your business grow while staying compliant.",
 		url: "https://www.databuddy.cc/api",
@@ -34,7 +34,7 @@ export default async function ApiPlaygroundPage() {
 	const queryTypesData = await getQueryTypes();
 
 	const title =
-		"Privacy-first web analytics (Google Analytics alternative) — 3 KB, GDPR-compliant | Databuddy";
+		"Privacy-first web analytics (Google Analytics alternative) — under 30 KB, GDPR-compliant | Databuddy";
 	const description =
 		"Experience powerful, privacy-first analytics that matches Google Analytics feature-for-feature without compromising user data. Zero cookies required, 100% data ownership, and AI-powered insights to help your business grow while staying compliant.";
 	const url = "https://www.databuddy.cc/api";

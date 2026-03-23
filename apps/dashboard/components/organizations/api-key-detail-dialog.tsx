@@ -209,11 +209,7 @@ export function ApiKeyDetailDialog({
 					<SheetHeader className="shrink-0 pr-5">
 						<div className="flex items-start gap-4">
 							<div className="flex size-11 items-center justify-center rounded border bg-secondary-brighter">
-								<KeyIcon
-									className="text-foreground"
-									size={22}
-									weight="fill"
-								/>
+								<KeyIcon className="text-foreground" size={22} weight="fill" />
 							</div>
 							<div className="min-w-0 flex-1">
 								<SheetTitle className="truncate text-lg">
@@ -299,9 +295,7 @@ export function ApiKeyDetailDialog({
 								<div className="rounded border bg-card p-1">
 									<div className="grid grid-cols-2 gap-1">
 										{SCOPE_OPTIONS.map((scope) => {
-											const selectedScopes = form.watch(
-												"scopes"
-											) as ApiScope[];
+											const selectedScopes = form.watch("scopes") as ApiScope[];
 											const hasScope = selectedScopes.includes(scope.value);
 											const isDefault = scope.value === "read:data";
 											return (
@@ -318,9 +312,7 @@ export function ApiKeyDetailDialog({
 																: "border-muted-foreground/30"
 														}`}
 													>
-														{hasScope && (
-															<CheckIcon size={12} weight="bold" />
-														)}
+														{hasScope && <CheckIcon size={12} weight="bold" />}
 													</div>
 													<span className="truncate">{scope.label}</span>
 													{isDefault && (
@@ -337,19 +329,16 @@ export function ApiKeyDetailDialog({
 
 							<div className="flex flex-wrap gap-x-4 gap-y-1 text-muted-foreground text-xs">
 								<span>
-									Created{" "}
-									{dayjs(apiKey.createdAt).format("MMM D, YYYY")}
+									Created {dayjs(apiKey.createdAt).format("MMM D, YYYY")}
 								</span>
 								{apiKey.expiresAt && (
 									<span>
-										Expires{" "}
-										{dayjs(apiKey.expiresAt).format("MMM D, YYYY")}
+										Expires {dayjs(apiKey.expiresAt).format("MMM D, YYYY")}
 									</span>
 								)}
 								{apiKey.revokedAt && (
 									<span className="text-destructive">
-										Revoked{" "}
-										{dayjs(apiKey.revokedAt).format("MMM D, YYYY")}
+										Revoked {dayjs(apiKey.revokedAt).format("MMM D, YYYY")}
 									</span>
 								)}
 							</div>
@@ -357,9 +346,7 @@ export function ApiKeyDetailDialog({
 							<div className="flex items-center gap-2 border-t pt-4">
 								<Button
 									disabled={rotateMutation.isPending}
-									onClick={() =>
-										rotateMutation.mutate({ id: apiKey.id })
-									}
+									onClick={() => rotateMutation.mutate({ id: apiKey.id })}
 									size="sm"
 									type="button"
 									variant="outline"
@@ -369,9 +356,7 @@ export function ApiKeyDetailDialog({
 								</Button>
 								<Button
 									disabled={revokeMutation.isPending || !isActive}
-									onClick={() =>
-										revokeMutation.mutate({ id: apiKey.id })
-									}
+									onClick={() => revokeMutation.mutate({ id: apiKey.id })}
 									size="sm"
 									type="button"
 									variant="outline"
