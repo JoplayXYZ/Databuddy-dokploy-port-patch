@@ -218,9 +218,7 @@ export function Sidebar() {
 				/>
 			</div>
 
-			<nav
-				className="fixed inset-y-0 left-12 z-50 hidden w-64 overflow-hidden border-r bg-sidebar md:block lg:w-72"
-			>
+			<nav className="fixed inset-y-0 left-12 z-50 hidden w-64 overflow-hidden border-r bg-sidebar md:block lg:w-72">
 				<ScrollArea className="h-full">
 					<div className="flex h-full flex-col">
 						{header}

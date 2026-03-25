@@ -10,9 +10,9 @@ import {
 	SignOutIcon,
 	SunIcon,
 } from "@phosphor-icons/react";
-import { useTheme } from "next-themes";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useTheme } from "next-themes";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -303,8 +303,7 @@ export function MobileSidebar({
 										<NavigationSection
 											accordionStates={accordionStates}
 											className={cn(
-												navigation.length > 1 &&
-													idx === navigation.length - 1
+												navigation.length > 1 && idx === navigation.length - 1
 													? "border-t"
 													: idx === 0 && navigation.length < 2
 														? "border-b"

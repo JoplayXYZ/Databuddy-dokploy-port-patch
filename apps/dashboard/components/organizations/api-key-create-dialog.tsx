@@ -14,7 +14,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import type { Website } from "@/hooks/use-websites";
 import { orpc } from "@/lib/orpc";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
@@ -323,7 +322,7 @@ export function ApiKeyCreateDialog({
 													(w) =>
 														!websiteAccess.some((e) => e.resourceId === w.id)
 												)
-												.map((w: Website) => (
+												.map((w) => (
 													<SelectItem key={w.id} value={w.id}>
 														{w.name || w.domain}
 													</SelectItem>

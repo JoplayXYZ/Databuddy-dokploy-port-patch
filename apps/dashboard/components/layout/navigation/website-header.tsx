@@ -1,11 +1,11 @@
-import type { Website } from "@databuddy/shared/types/website";
+import type { WebsiteBasic } from "@databuddy/shared/types/website";
 import { CaretLeftIcon, PlanetIcon } from "@phosphor-icons/react";
 import Link from "next/link";
 import { FaviconImage } from "@/components/analytics/favicon-image";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface WebsiteHeaderProps {
-	website: Website | null | undefined;
+	website: WebsiteBasic | null | undefined;
 	showBackButton?: boolean;
 }
 

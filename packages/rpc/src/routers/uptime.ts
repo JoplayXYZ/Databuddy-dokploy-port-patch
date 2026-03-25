@@ -84,7 +84,6 @@ function triggerInitialCheck(scheduleId: string) {
 		);
 }
 
-/** Full schedule row + QStash status (getSchedule). Typed so clients don't get `unknown` fields. */
 const getScheduleOutputSchema = z
 	.object({
 		id: z.string(),
@@ -107,11 +106,11 @@ const getScheduleOutputSchema = z
 				name: z.string().nullable(),
 				domain: z.string(),
 			})
-			.passthrough()
+			.loose()
 			.nullable()
 			.optional(),
 	})
-	.passthrough();
+	.loose();
 
 const scheduleOutputSchema = z.record(z.string(), z.unknown());
 

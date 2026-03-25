@@ -98,7 +98,19 @@ const calculateAverage = (values: { value: number }[]) =>
 		? values.reduce((sum, item) => sum + item.value, 0) / values.length
 		: 0;
 
-const websiteOutputSchema = z.record(z.string(), z.unknown());
+const websiteOutputSchema = z.object({
+	id: z.string(),
+	domain: z.string(),
+	name: z.string().nullable(),
+	status: z.string(),
+	isPublic: z.boolean(),
+	createdAt: z.union([z.date(), z.string()]),
+	updatedAt: z.union([z.date(), z.string()]),
+	organizationId: z.string().optional(),
+	deletedAt: z.union([z.date(), z.string()]).nullable().optional(),
+	integrations: z.unknown().nullable().optional(),
+	settings: z.unknown().nullable().optional(),
+});
 const successOutputSchema = z.object({ success: z.literal(true) });
 
 const calculateTrend = (dataPoints: { date: string; value: number }[]) => {
@@ -335,19 +347,24 @@ export const websitesRouter = {
 				allowPublicAccess: true,
 			});
 
+			const site = workspace.website;
+			if (!site) {
+				throw rpcError.notFound("website");
+			}
+
 			if (workspace.isPublicAccess) {
 				return {
-					id: workspace.website!.id,
-					domain: workspace.website!.domain,
-					name: workspace.website!.name,
-					status: workspace.website!.status,
-					isPublic: workspace.website!.isPublic,
-					createdAt: workspace.website!.createdAt,
-					updatedAt: workspace.website!.updatedAt,
+					id: site.id,
+					domain: site.domain,
+					name: site.name,
+					status: site.status,
+					isPublic: site.isPublic,
+					createdAt: site.createdAt,
+					updatedAt: site.updatedAt,
 				};
 			}
 
-			return workspace.website!;
+			return site;
 		}),
 
 	create: protectedProcedure
