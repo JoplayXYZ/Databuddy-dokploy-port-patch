@@ -4,6 +4,7 @@ import { BatchSpanProcessor } from "@opentelemetry/sdk-trace-node";
 import { Elysia, redirect } from "elysia";
 import { initLogger, log } from "evlog";
 import { evlog } from "evlog/elysia";
+import { flushBatchedLinksDrain, linksLoggerDrain } from "./lib/evlog-links";
 import { disconnectProducer } from "./lib/producer";
 import { shutdownTracing } from "./lib/tracing";
 import { expiredRoute } from "./routes/expired";
@@ -26,6 +27,10 @@ const batchSpanProcessor = new BatchSpanProcessor(exporter, {
 
 initLogger({
 	env: { service: "links" },
+	drain: linksLoggerDrain,
+	sampling: {
+		rates: { info: 20, warn: 50, debug: 5 },
+	},
 });
 
 const app = new Elysia()
@@ -80,6 +85,12 @@ const app = new Elysia()
 
 async function gracefulShutdown(signal: string) {
 	log.info("lifecycle", `${signal} received, shutting down gracefully`);
+	await flushBatchedLinksDrain().catch((error) =>
+		log.error({
+			lifecycle: "drainFlush",
+			error: error instanceof Error ? error.message : String(error),
+		})
+	);
 	await Promise.all([disconnectProducer(), shutdownTracing()]);
 	process.exit(0);
 }

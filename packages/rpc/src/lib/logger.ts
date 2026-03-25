@@ -11,7 +11,9 @@ function emit(
 ): void {
 	if (typeof fieldsOrMessage === "string") {
 		log[level]({ ...base, message: fieldsOrMessage });
-	} else if (message !== undefined) {
+	} else if (message === undefined) {
+		log[level]({ ...base, ...fieldsOrMessage });
+	} else {
 		log[level]({ ...base, ...fieldsOrMessage, message });
 	}
 }
