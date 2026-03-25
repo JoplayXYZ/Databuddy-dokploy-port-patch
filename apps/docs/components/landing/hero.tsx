@@ -1,7 +1,6 @@
 "use client";
 
 import { ArrowsOutSimpleIcon } from "@phosphor-icons/react";
-import { AnimatePresence, motion } from "motion/react";
 import Link from "next/link";
 import { useRef, useState } from "react";
 import { SciFiButton } from "./scifi-btn";
@@ -87,14 +86,14 @@ export default function Hero({
 
 			<div className="mx-auto w-full max-w-7xl px-4 pt-16 pb-8 sm:px-6 sm:pt-20 lg:px-8 lg:pt-24">
 				<div className="mx-auto flex max-w-4xl flex-col items-center space-y-8 text-center">
-					<h1 className="fade-in slide-in-from-bottom-6 animate-in text-balance font-bold text-4xl leading-[1.1] tracking-tight delay-100 duration-700 sm:text-5xl md:text-6xl lg:text-7xl">
+					<h1 className="text-balance font-bold text-4xl leading-[1.1] tracking-tight sm:text-5xl md:text-6xl lg:text-7xl">
 						Analytics that{" "}
 						<span className="underline decoration-2 decoration-wavy underline-offset-8">
 							runs <span className="text-muted-foreground">itself</span>
 						</span>
 					</h1>
 
-					<p className="fade-in slide-in-from-bottom-6 max-w-2xl animate-in text-pretty font-medium text-muted-foreground text-sm leading-relaxed delay-200 duration-700 sm:text-base lg:text-lg">
+					<p className="max-w-2xl text-pretty font-medium text-muted-foreground text-sm leading-relaxed sm:text-base lg:text-lg">
 						Usage, errors, and experiments in one layer.{" "}
 						<Link
 							className="text-foreground"
@@ -105,7 +104,7 @@ export default function Hero({
 						and autonomous.
 					</p>
 
-					<div className="fade-in slide-in-from-bottom-6 animate-in delay-300 duration-700">
+					<div>
 						<SciFiButton asChild className="px-6 py-5 text-base sm:px-8">
 							<a
 								href="https://app.databuddy.cc/login"
@@ -118,9 +117,7 @@ export default function Hero({
 					</div>
 				</div>
 
-				{/* Feature Tabs Section */}
-				<div className="fade-in slide-in-from-bottom-8 mt-8 animate-in space-y-8 delay-400 duration-1000">
-					{/* Tabs Navigation */}
+				<div className="mt-8 space-y-8">
 					<div className="flex justify-center">
 						<div className="relative flex items-center gap-0 border-border border-b">
 							{tabs.map((tab) => {
@@ -138,15 +135,7 @@ export default function Hero({
 									>
 										{tab.label}
 										{isActive && (
-											<motion.div
-												className="absolute right-0 bottom-0 left-0 h-0.5 bg-foreground"
-												layoutId="hero-tab-underline"
-												transition={{
-													type: "spring",
-													stiffness: 500,
-													damping: 35,
-												}}
-											/>
+											<div className="absolute right-0 bottom-0 left-0 h-0.5 bg-foreground" />
 										)}
 									</button>
 								);
@@ -154,29 +143,18 @@ export default function Hero({
 						</div>
 					</div>
 
-					{/* Iframe Container */}
 					<div className="group relative rounded border border-border/50 bg-card/30 p-1.5 shadow-2xl backdrop-blur-sm sm:p-2">
-						<AnimatePresence mode="wait">
-							<motion.div
-								animate={{ opacity: 1 }}
-								className="relative"
-								exit={{ opacity: 0 }}
-								initial={{ opacity: 0 }}
-								key={activeTab}
-								transition={{ duration: 0.15 }}
-							>
-								<iframe
-									allowFullScreen
-									className="h-[400px] w-full rounded border-0 bg-background shadow-inner sm:h-[500px] lg:h-[600px]"
-									loading="lazy"
-									ref={iframeRef}
-									src={iframeSrc}
-									title={`Databuddy ${activeTabData.label} Demo`}
-								/>
-							</motion.div>
-						</AnimatePresence>
+						<div className="relative">
+							<iframe
+								allowFullScreen
+								className="h-[400px] w-full rounded border-0 bg-background shadow-inner sm:h-[500px] lg:h-[600px]"
+								loading="lazy"
+								ref={iframeRef}
+								src={iframeSrc}
+								title={`Databuddy ${activeTabData.label} Demo`}
+							/>
+						</div>
 
-						{/* Fullscreen Button Overlay */}
 						<button
 							aria-label="Open demo in fullscreen"
 							className="absolute inset-1.5 flex items-center justify-center rounded bg-background/10 opacity-0 transition-opacity duration-300 group-hover:opacity-100 sm:inset-2"
