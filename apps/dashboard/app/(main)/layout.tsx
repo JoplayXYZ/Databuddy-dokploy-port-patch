@@ -4,6 +4,8 @@ import { Sidebar } from "@/components/layout/sidebar";
 import { BillingProvider } from "@/components/providers/billing-provider";
 import { CommandSearchProvider } from "@/components/ui/command-search";
 
+export const dynamic = "force-dynamic";
+
 export default function MainLayout({
 	children,
 }: {
