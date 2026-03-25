@@ -47,16 +47,16 @@ function WebsitePageHeaderSubtitle({
 	}
 	if (subtitle) {
 		return typeof subtitle === "string" ? (
-			<p className="h-5 truncate text-muted-foreground text-sm sm:h-6 sm:text-base">
+			<p className="text-pretty text-muted-foreground text-sm sm:h-6 sm:truncate sm:text-base">
 				{subtitle}
 			</p>
 		) : (
-			<div className="h-5 sm:h-6">{subtitle}</div>
+			<div className="sm:h-6">{subtitle}</div>
 		);
 	}
 	if (description) {
 		return (
-			<p className="h-5 truncate text-muted-foreground text-sm sm:h-6 sm:text-base">
+			<p className="text-pretty text-muted-foreground text-sm sm:h-6 sm:truncate sm:text-base">
 				{description}
 			</p>
 		);
@@ -277,19 +277,27 @@ export function WebsitePageHeader({
 	}
 
 	return (
-		<div className="flex h-20 shrink-0 items-center border-b px-3 sm:px-4">
-			<div className="flex w-full flex-col justify-between gap-4 sm:flex-row sm:items-center">
-				<div className="space-y-2">
-					<div className="flex items-center gap-3">
+		<div className="flex shrink-0 flex-col border-b px-3 py-3 sm:px-4 sm:py-3">
+			<div className="flex w-full min-w-0 flex-col justify-between gap-3 sm:flex-row sm:items-center sm:gap-4">
+				<div className="min-w-0 space-y-2">
+					<div className="flex items-start gap-3 sm:items-center">
 						{showBackButton ? (
-							<Button asChild className="mr-2" size="sm" variant="ghost">
-								<Link href={`/websites/${websiteId}`}>
+							<Button
+								asChild
+								className="mr-2 shrink-0"
+								size="sm"
+								variant="ghost"
+							>
+								<Link
+									aria-label="Back to website overview"
+									href={`/websites/${websiteId}`}
+								>
 									<ArrowLeftIcon size={16} />
-									Back
+									<span className="hidden sm:inline">Back</span>
 								</Link>
 							</Button>
 						) : null}
-						<div className="rounded-lg border border-accent-foreground/10 bg-secondary p-2.5">
+						<div className="shrink-0 rounded-lg border border-accent-foreground/10 bg-secondary p-2.5">
 							{cloneElement(icon, {
 								...icon.props,
 								className: cn(
@@ -301,9 +309,9 @@ export function WebsitePageHeader({
 								weight: icon.props.weight ?? "duotone",
 							})}
 						</div>
-						<div>
-							<div className="flex items-center gap-2">
-								<h1 className="truncate font-medium text-foreground text-xl sm:text-2xl">
+						<div className="min-w-0 flex-1">
+							<div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+								<h1 className="min-w-0 max-w-full text-balance font-medium text-foreground text-xl sm:text-2xl">
 									{title}
 								</h1>
 								{usageBadge}
@@ -316,7 +324,7 @@ export function WebsitePageHeader({
 						</div>
 					</div>
 				</div>
-				<div className="flex items-center gap-3">
+				<div className="flex w-full min-w-0 flex-wrap items-center gap-2 sm:w-auto sm:shrink-0 sm:justify-end sm:gap-3">
 					{docsUrl ? (
 						<Button asChild variant="outline">
 							<Link
@@ -326,7 +334,8 @@ export function WebsitePageHeader({
 								target="_blank"
 							>
 								<BookIcon size={16} />
-								Documentation
+								<span className="sm:hidden">Docs</span>
+								<span className="hidden sm:inline">Documentation</span>
 							</Link>
 						</Button>
 					) : null}
@@ -340,7 +349,8 @@ export function WebsitePageHeader({
 								className={isRefreshing ? "animate-spin" : ""}
 								size={16}
 							/>
-							Refresh Data
+							<span className="sm:hidden">Refresh</span>
+							<span className="hidden sm:inline">Refresh Data</span>
 						</Button>
 					) : null}
 					{onCreateAction ? (

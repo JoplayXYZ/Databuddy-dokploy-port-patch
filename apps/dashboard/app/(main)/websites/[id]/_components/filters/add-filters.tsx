@@ -423,7 +423,7 @@ export function AddFilterForm({
 			</Button>
 
 			<Dialog onOpenChange={setIsOpen} open={isOpen}>
-				<DialogContent className="max-w-md p-4">
+				<DialogContent className="max-h-[min(90dvh,calc(100dvh-2rem))] max-w-md overflow-y-auto p-4">
 					<FilterDialogContent
 						addFilter={addFilter}
 						autocompleteData={autocompleteQuery.data}
