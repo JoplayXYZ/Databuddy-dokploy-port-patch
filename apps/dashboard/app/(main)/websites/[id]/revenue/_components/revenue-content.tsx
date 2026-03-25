@@ -609,7 +609,7 @@ function RevenueSettingsSheet({
 					<Button
 						onClick={() => onOpenChangeAction(false)}
 						type="button"
-						variant="ghost"
+						variant="outline"
 					>
 						Cancel
 					</Button>

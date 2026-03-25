@@ -145,7 +145,7 @@ export function HelpDialog({ open, onOpenChangeAction }: HelpDialogProps) {
 							onOpenChangeAction(false);
 						}}
 						type="button"
-						variant="secondary"
+						variant="outline"
 					>
 						Close
 					</Button>

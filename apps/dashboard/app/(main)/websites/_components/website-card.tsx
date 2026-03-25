@@ -161,101 +161,106 @@ export const WebsiteCard = memo(
 		return (
 			<>
 				<ContextMenu>
+					{/* Wrapper trigger: avoid merging Radix handlers onto Link (fixes stray click on RMB). */}
 					<ContextMenuTrigger asChild>
-						<Link
-							aria-label={`Open ${website.name} analytics`}
-							className="group block rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-							data-section="website-grid"
-							data-track="website-card-click"
-							data-website-id={website.id}
-							data-website-name={website.name}
-							href={`/websites/${website.id}`}
-						>
-							<Card className="flex h-full select-none flex-col gap-0 overflow-hidden bg-background p-0 transition-all duration-300 ease-in-out group-hover:border-primary/60 motion-reduce:transform-none motion-reduce:transition-none">
-								<CardHeader className="dotted-bg relative gap-0! border-b bg-accent px-0 pt-4 pb-0!">
-									{activeUsers !== undefined && activeUsers > 0 && (
-										<div className="absolute top-2 right-2 z-10 flex items-center gap-1.5 rounded-full bg-success/10 px-2 py-0.5 font-medium text-success text-xs tabular-nums backdrop-blur-sm">
-											<span className="relative flex size-1.5">
-												<span className="absolute inline-flex size-full animate-ping rounded-full bg-success opacity-75" />
-												<span className="relative inline-flex size-1.5 rounded-full bg-success" />
-											</span>
-											{activeUsers}
-										</div>
-									)}
-									{isLoadingChart ? (
-										<div className="px-3">
-											<Skeleton className="mx-auto h-24 w-full rounded sm:h-28" />
-										</div>
-									) : chartData ? (
-										chartData.hasAnyData ? (
-											<div className="h-28 space-y-2">
-												<div className="h-full duration-300 [--chart-color:var(--color-chart-1)] motion-reduce:transition-none group-hover:[--chart-color:theme(colors.primary.600)]">
-													<MiniChart
-														data={chartData.data}
-														days={chartData.data.length}
-														id={website.id}
-													/>
-												</div>
-											</div>
-										) : (
-											<div className="flex h-28 flex-col items-center justify-center gap-2 px-4 text-center">
-												<div className="flex size-8 items-center justify-center rounded bg-amber-500/10">
-													<CodeIcon
-														className="size-4 text-amber-500"
-														weight="duotone"
-													/>
-												</div>
-												<div className="space-y-0.5">
-													<p className="font-medium text-foreground text-xs">
-														Tracking not set up
-													</p>
-													<p className="text-[11px] text-muted-foreground">
-														Click to add tracking code
-													</p>
-												</div>
-											</div>
-										)
-									) : (
-										<div className="flex h-28 items-center justify-center text-center text-muted-foreground text-xs">
-											Failed to load
-										</div>
-									)}
-								</CardHeader>
-								<CardContent className="space-y-1 px-4 py-3">
-									<div className="flex items-center gap-3">
-										<FaviconImage
-											altText={`${website.name} favicon`}
-											className="shrink-0"
-											domain={website.domain}
-											size={28}
-										/>
-										<div className="flex min-w-0 flex-1 items-center justify-between gap-2">
-											<div className="min-w-0 space-y-0.5">
-												<CardTitle className="truncate font-semibold text-sm leading-tight">
-													{website.name}
-												</CardTitle>
-												<CardDescription className="truncate text-muted-foreground text-xs">
-													{website.domain}
-												</CardDescription>
-											</div>
-											<div className="flex shrink-0 flex-col items-end space-y-0.5">
-												<span className="flex items-center gap-1 font-semibold text-foreground text-xs tabular-nums">
-													<EyeIcon
-														className="size-4 shrink-0 text-muted-foreground"
-														weight="duotone"
-													/>
-													{chartData ? formatNumber(chartData.totalViews) : "0"}
+						<div className="block h-full rounded outline-none focus-visible:outline-none">
+							<Link
+								aria-label={`Open ${website.name} analytics`}
+								className="group block h-full rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+								data-section="website-grid"
+								data-track="website-card-click"
+								data-website-id={website.id}
+								data-website-name={website.name}
+								href={`/websites/${website.id}`}
+							>
+								<Card className="flex h-full select-none flex-col gap-0 overflow-hidden bg-background p-0 transition-all duration-300 ease-in-out group-hover:border-primary/60 motion-reduce:transform-none motion-reduce:transition-none">
+									<CardHeader className="dotted-bg relative gap-0! border-b bg-accent px-0 pt-4 pb-0!">
+										{activeUsers !== undefined && activeUsers > 0 && (
+											<div className="absolute top-2 right-2 z-10 flex items-center gap-1.5 rounded-full bg-success/10 px-2 py-0.5 font-medium text-success text-xs tabular-nums backdrop-blur-sm">
+												<span className="relative flex size-1.5">
+													<span className="absolute inline-flex size-full animate-ping rounded-full bg-success opacity-75" />
+													<span className="relative inline-flex size-1.5 rounded-full bg-success" />
 												</span>
-												<TrendStat
-													className="flex items-center gap-1 font-semibold text-xs"
-													trend={chartData?.trend}
-												/>
+												{activeUsers}
+											</div>
+										)}
+										{isLoadingChart ? (
+											<div className="px-3">
+												<Skeleton className="mx-auto h-24 w-full rounded sm:h-28" />
+											</div>
+										) : chartData ? (
+											chartData.hasAnyData ? (
+												<div className="h-28 space-y-2">
+													<div className="h-full duration-300 [--chart-color:var(--color-chart-1)] motion-reduce:transition-none group-hover:[--chart-color:theme(colors.primary.600)]">
+														<MiniChart
+															data={chartData.data}
+															days={chartData.data.length}
+															id={website.id}
+														/>
+													</div>
+												</div>
+											) : (
+												<div className="flex h-28 flex-col items-center justify-center gap-2 px-4 text-center">
+													<div className="flex size-8 items-center justify-center rounded bg-amber-500/10">
+														<CodeIcon
+															className="size-4 text-amber-500"
+															weight="duotone"
+														/>
+													</div>
+													<div className="space-y-0.5">
+														<p className="font-medium text-foreground text-xs">
+															Tracking not set up
+														</p>
+														<p className="text-[11px] text-muted-foreground">
+															Click to add tracking code
+														</p>
+													</div>
+												</div>
+											)
+										) : (
+											<div className="flex h-28 items-center justify-center text-center text-muted-foreground text-xs">
+												Failed to load
+											</div>
+										)}
+									</CardHeader>
+									<CardContent className="space-y-1 px-4 py-3">
+										<div className="flex items-center gap-3">
+											<FaviconImage
+												altText={`${website.name} favicon`}
+												className="shrink-0"
+												domain={website.domain}
+												size={28}
+											/>
+											<div className="flex min-w-0 flex-1 items-center justify-between gap-2">
+												<div className="min-w-0 space-y-0.5">
+													<CardTitle className="truncate font-semibold text-sm leading-tight">
+														{website.name}
+													</CardTitle>
+													<CardDescription className="truncate text-muted-foreground text-xs">
+														{website.domain}
+													</CardDescription>
+												</div>
+												<div className="flex shrink-0 flex-col items-end space-y-0.5">
+													<span className="flex items-center gap-1 font-semibold text-foreground text-xs tabular-nums">
+														<EyeIcon
+															className="size-4 shrink-0 text-muted-foreground"
+															weight="duotone"
+														/>
+														{chartData
+															? formatNumber(chartData.totalViews)
+															: "0"}
+													</span>
+													<TrendStat
+														className="flex items-center gap-1 font-semibold text-xs"
+														trend={chartData?.trend}
+													/>
+												</div>
 											</div>
 										</div>
-									</div>
-								</CardContent>
-							</Card>
-						</Link>
+									</CardContent>
+								</Card>
+							</Link>
+						</div>
 					</ContextMenuTrigger>
 					<ContextMenuContent className="min-w-48 rounded border-border/50 bg-popover/95 p-0 shadow-lg backdrop-blur-sm">
 						<ContextMenuItem

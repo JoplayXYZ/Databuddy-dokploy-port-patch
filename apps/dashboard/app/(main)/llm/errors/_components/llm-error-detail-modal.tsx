@@ -390,7 +390,7 @@ Context:
 				</SheetBody>
 
 				<SheetFooter>
-					<Button onClick={onCloseAction} variant="ghost">
+					<Button onClick={onCloseAction} type="button" variant="outline">
 						Close
 					</Button>
 					<Button

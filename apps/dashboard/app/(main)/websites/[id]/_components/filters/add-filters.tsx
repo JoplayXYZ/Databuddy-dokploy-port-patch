@@ -214,7 +214,7 @@ function FilterDialogContent({
 					</p>
 				</div>
 				<DialogFooter>
-					<Button className="flex-1" onClick={onClose} variant="secondary">
+					<Button className="flex-1" onClick={onClose} variant="outline">
 						Close
 					</Button>
 				</DialogFooter>
@@ -272,7 +272,7 @@ function FilterDialogContent({
 				)}
 
 				<DialogFooter>
-					<Button className="flex-1" onClick={onClose} variant="secondary">
+					<Button className="flex-1" onClick={onClose} variant="outline">
 						Cancel
 					</Button>
 				</DialogFooter>
@@ -369,7 +369,7 @@ function FilterDialogContent({
 							className="flex-1"
 							onClick={onClose}
 							type="button"
-							variant="secondary"
+							variant="outline"
 						>
 							Cancel
 						</Button>

@@ -402,7 +402,7 @@ export function EditGoalDialog({
 				</SheetBody>
 
 				<SheetFooter>
-					<Button onClick={handleClose} variant="ghost">
+					<Button onClick={handleClose} type="button" variant="outline">
 						Cancel
 					</Button>
 					<Button disabled={!isFormValid || isSaving} onClick={handleSubmit}>

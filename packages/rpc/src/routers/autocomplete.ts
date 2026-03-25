@@ -133,7 +133,17 @@ const categorizeAutocompleteResults = (
 		.map((r) => r.value),
 });
 
-const autocompleteOutputSchema = z.record(z.string(), z.array(z.string()));
+const autocompleteOutputSchema = z.object({
+	customEvents: z.array(z.string()),
+	pagePaths: z.array(z.string()),
+	browsers: z.array(z.string()),
+	operatingSystems: z.array(z.string()),
+	countries: z.array(z.string()),
+	deviceTypes: z.array(z.string()),
+	utmSources: z.array(z.string()),
+	utmMediums: z.array(z.string()),
+	utmCampaigns: z.array(z.string()),
+});
 
 export const autocompleteRouter = {
 	get: publicProcedure
