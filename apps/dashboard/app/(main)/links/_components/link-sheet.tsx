@@ -7,7 +7,7 @@ import {
 	LinkSimpleIcon,
 	QrCodeIcon,
 } from "@phosphor-icons/react";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { type SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { useOrganizationsContext } from "@/components/providers/organizations-provider";
@@ -26,13 +26,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { type Link, useCreateLink, useUpdateLink } from "@/hooks/use-links";
 import dayjs from "@/lib/dayjs";
 import { LINKS_BASE_URL, LINKS_FULL_URL } from "./link-constants";
+import { LinkFormFields } from "./link-form-fields";
 import type { ExpandedSection, LinkFormData } from "./link-form-schema";
 import { linkFormSchema } from "./link-form-schema";
-import { LinkFormFields } from "./link-form-fields";
 import { LinkQrCode } from "./link-qr-code";
 import { buildLinkPayload, mapLinkApiError, stripProtocol } from "./link-utils";
 import type { OgData } from "./og-preview";
-import { parseUtmFromUrl, stripUtmFromUrl, type UtmParams } from "./utm-builder";
+import {
+	parseUtmFromUrl,
+	stripUtmFromUrl,
+	type UtmParams,
+} from "./utm-builder";
 
 const DEFAULT_UTM_PARAMS: UtmParams = {
 	utm_source: "",
@@ -134,17 +138,24 @@ function LinkSheetInner({ open, onOpenChange, link, onSave }: LinkSheetProps) {
 			}
 			setExpandedSection(null);
 		},
-		[form],
+		[form]
 	);
+
+	const linkRef = useRef(link);
+	linkRef.current = link;
+
+	useLayoutEffect(() => {
+		if (!open) {
+			return;
+		}
+		resetForm(linkRef.current);
+	}, [open, link?.id, resetForm]);
 
 	const handleOpenChange = useCallback(
 		(isOpen: boolean) => {
-			if (isOpen) {
-				resetForm(link);
-			}
 			onOpenChange(isOpen);
 		},
-		[onOpenChange, resetForm, link],
+		[onOpenChange]
 	);
 
 	const slugValue = form.watch("slug");
@@ -165,7 +176,12 @@ function LinkSheetInner({ open, onOpenChange, link, onSave }: LinkSheetProps) {
 			return;
 		}
 
-		const payload = buildLinkPayload({ formData, utmParams, ogData, useCustomOg });
+		const payload = buildLinkPayload({
+			formData,
+			utmParams,
+			ogData,
+			useCustomOg,
+		});
 
 		try {
 			if (link?.id) {
@@ -234,10 +250,10 @@ function LinkSheetInner({ open, onOpenChange, link, onSave }: LinkSheetProps) {
 
 	const hasExpiration = !!expiresAtValue;
 	const deviceTargetingCount = [iosUrlValue, androidUrlValue].filter((v) =>
-		v?.trim(),
+		v?.trim()
 	).length;
 	const utmParamsCount = Object.values(utmParams).filter((v) =>
-		v?.trim(),
+		v?.trim()
 	).length;
 
 	const formFieldsProps = {
@@ -260,7 +276,11 @@ function LinkSheetInner({ open, onOpenChange, link, onSave }: LinkSheetProps) {
 
 	const footer = (
 		<SheetFooter>
-			<Button onClick={() => onOpenChange(false)} type="button" variant="outline">
+			<Button
+				onClick={() => onOpenChange(false)}
+				type="button"
+				variant="outline"
+			>
 				Cancel
 			</Button>
 			<Button
@@ -320,7 +340,11 @@ function LinkSheetInner({ open, onOpenChange, link, onSave }: LinkSheetProps) {
 							>
 								<TabsList className="shrink-0">
 									<TabsTrigger value="details">
-										<LinkSimpleIcon aria-hidden="true" size={16} weight="duotone" />
+										<LinkSimpleIcon
+											aria-hidden="true"
+											size={16}
+											weight="duotone"
+										/>
 										Details
 									</TabsTrigger>
 									<TabsTrigger value="qr-code">
@@ -329,11 +353,16 @@ function LinkSheetInner({ open, onOpenChange, link, onSave }: LinkSheetProps) {
 									</TabsTrigger>
 								</TabsList>
 
-								<TabsContent className="mt-0 flex-1 overflow-y-auto" value="details">
+								<TabsContent
+									className="mt-0 flex-1 overflow-y-auto"
+									value="details"
+								>
 									<SheetBody className="space-y-6">
 										<div className="flex items-center justify-between gap-3 rounded border border-primary/20 bg-primary/5 px-3 py-2.5">
 											<div className="min-w-0 flex-1">
-												<p className="text-muted-foreground text-xs">Short URL</p>
+												<p className="text-muted-foreground text-xs">
+													Short URL
+												</p>
 												<p className="truncate font-mono text-sm tabular-nums">
 													https://{LINKS_BASE_URL}/{link.slug}
 												</p>
@@ -354,7 +383,10 @@ function LinkSheetInner({ open, onOpenChange, link, onSave }: LinkSheetProps) {
 									</SheetBody>
 								</TabsContent>
 
-								<TabsContent className="mt-0 flex-1 overflow-y-auto" value="qr-code">
+								<TabsContent
+									className="mt-0 flex-1 overflow-y-auto"
+									value="qr-code"
+								>
 									<SheetBody>
 										<LinkQrCode name={link.name} slug={link.slug} />
 									</SheetBody>
