@@ -84,6 +84,35 @@ function triggerInitialCheck(scheduleId: string) {
 		);
 }
 
+/** Full schedule row + QStash status (getSchedule). Typed so clients don't get `unknown` fields. */
+const getScheduleOutputSchema = z
+	.object({
+		id: z.string(),
+		websiteId: z.string().nullable(),
+		organizationId: z.string(),
+		url: z.string(),
+		name: z.string().nullable(),
+		granularity: z.string(),
+		cron: z.string(),
+		isPaused: z.boolean(),
+		timeout: z.number().nullable().optional(),
+		cacheBust: z.boolean(),
+		jsonParsingConfig: z.unknown().nullable(),
+		createdAt: z.union([z.date(), z.string()]),
+		updatedAt: z.union([z.date(), z.string()]),
+		qstashStatus: z.enum(["active", "missing"]),
+		website: z
+			.object({
+				id: z.string(),
+				name: z.string().nullable(),
+				domain: z.string(),
+			})
+			.passthrough()
+			.nullable()
+			.optional(),
+	})
+	.passthrough();
+
 const scheduleOutputSchema = z.record(z.string(), z.unknown());
 
 export const uptimeRouter = {
@@ -160,7 +189,7 @@ export const uptimeRouter = {
 			tags: ["Uptime"],
 		})
 		.input(z.object({ scheduleId: z.string() }))
-		.output(scheduleOutputSchema)
+		.output(getScheduleOutputSchema)
 		.handler(async ({ context, input }) => {
 			const [dbSchedule, qstashSchedule] = await Promise.all([
 				db.query.uptimeSchedules.findFirst({
