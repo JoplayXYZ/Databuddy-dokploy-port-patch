@@ -45,7 +45,8 @@
     "db:seed": "dotenv -- sh -c 'cd packages/db && bun run db:seed \"$@\"' --",
     "email:dev": "dotenv -- sh -c 'cd packages/email && bun run dev'",
     "sdk:build": "turbo run build --filter @databuddy/sdk --filter @databuddy/cache",
-    "dev:dashboard": "dotenv -- turbo dev --filter @databuddy/dashboard --filter @databuddy/api"
+    "dev:dashboard": "dotenv -- turbo dev --filter @databuddy/dashboard --filter @databuddy/api",
+    "git:setup-aliases": "git config --local include.path ../gitconfig"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx,json,jsonc,css,scss,md,mdx}": [
