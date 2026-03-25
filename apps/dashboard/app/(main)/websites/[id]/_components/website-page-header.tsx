@@ -277,7 +277,7 @@ export function WebsitePageHeader({
 	}
 
 	return (
-		<div className="flex shrink-0 flex-col border-b px-3 py-3 sm:px-4 sm:py-3">
+		<div className="flex min-h-[88px] shrink-0 flex-col border-b px-3 py-3 sm:px-4 sm:py-3">
 			<div className="flex w-full min-w-0 flex-col justify-between gap-3 sm:flex-row sm:items-center sm:gap-4">
 				<div className="min-w-0 space-y-2">
 					<div className="flex items-start gap-3 sm:items-center">
