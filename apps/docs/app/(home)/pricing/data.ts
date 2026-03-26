@@ -10,34 +10,34 @@ export interface RawFeature {
 }
 export type RawItem =
 	| {
-			type: "price";
-			interval: "month";
-			price: number;
-			feature_id: null;
-			feature: null;
-	  }
+		type: "price";
+		interval: "month";
+		price: number;
+		feature_id: null;
+		feature: null;
+	}
 	| {
-			type: "feature";
-			feature_id: string;
-			feature_type: "single_use";
-			feature: RawFeature;
-			included_usage: number | "inf";
-			interval: "day" | "month" | null;
-	  }
+		type: "feature";
+		feature_id: string;
+		feature_type: "single_use";
+		feature: RawFeature;
+		included_usage: number | "inf";
+		interval: "day" | "month" | null;
+	}
 	| {
-			type: "priced_feature";
-			feature_id: string;
-			feature_type: "single_use";
-			feature: RawFeature;
-			included_usage: number | "inf";
-			interval: "month" | null;
-			price?: number;
-			tiers?: Array<{ to: number | "inf"; amount: number }>;
-			usage_model: "pay_per_use";
-	  }
+		type: "priced_feature";
+		feature_id: string;
+		feature_type: "single_use";
+		feature: RawFeature;
+		included_usage: number | "inf";
+		interval: "month" | null;
+		price?: number;
+		tiers?: Array<{ to: number | "inf"; amount: number }>;
+		usage_model: "pay_per_use";
+	}
 	| {
-			type: "enterprise";
-	  };
+		type: "enterprise";
+	};
 
 export interface RawPlan {
 	id: string;
@@ -79,19 +79,6 @@ export const RAW_PLANS: RawPlan[] = [
 				included_usage: 10_000,
 				interval: "month",
 			},
-			{
-				type: "feature",
-				feature_id: "websites",
-				feature_type: "single_use",
-				feature: {
-					id: "websites",
-					name: "Websites",
-					type: "single_use",
-					display: { singular: "website", plural: "websites" },
-				},
-				included_usage: 3,
-				interval: null,
-			},
 		],
 	},
 	{
@@ -124,21 +111,6 @@ export const RAW_PLANS: RawPlan[] = [
 					{ to: 250_000_000, amount: 0.000_015 },
 					{ to: "inf", amount: 0.000_01 },
 				],
-				usage_model: "pay_per_use",
-			},
-			{
-				type: "priced_feature",
-				feature_id: "websites",
-				feature_type: "single_use",
-				feature: {
-					id: "websites",
-					name: "Websites",
-					type: "single_use",
-					display: { singular: "website", plural: "websites" },
-				},
-				included_usage: 5,
-				interval: "month",
-				price: 0.5,
 				usage_model: "pay_per_use",
 			},
 			{
@@ -206,20 +178,7 @@ export const RAW_PLANS: RawPlan[] = [
 				},
 				included_usage: 75,
 				interval: "day",
-			},
-			{
-				type: "feature",
-				feature_id: "websites",
-				feature_type: "single_use",
-				feature: {
-					id: "websites",
-					name: "Websites",
-					type: "single_use",
-					display: { singular: "website", plural: "websites" },
-				},
-				included_usage: "inf",
-				interval: null,
-			},
+			}
 		],
 	},
 	{
