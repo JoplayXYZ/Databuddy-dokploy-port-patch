@@ -29,18 +29,26 @@ export function Footer() {
 					</div>
 				</div>
 
+				<div className="mb-10 flex flex-col items-start justify-between gap-4 border border-border bg-card/30 p-5 sm:flex-row sm:items-center sm:p-6">
+					<div className="space-y-1">
+						<p className="font-medium text-foreground text-sm">
+							Get product updates
+						</p>
+						<p className="text-muted-foreground text-xs">
+							New features, tips, and privacy-first analytics insights. No spam.
+						</p>
+					</div>
+					<div className="w-full sm:w-auto">
+						<NewsletterForm />
+					</div>
+				</div>
+
 				<div className="grid grid-cols-2 gap-8 sm:gap-10 md:grid-cols-4">
 					<div className="col-span-2 space-y-4 md:col-span-1">
 						<LogoContent />
 						<p className="text-muted-foreground text-sm sm:text-base">
 							Privacy-first web analytics without compromising user data.
 						</p>
-						<div className="space-y-1.5 pt-1">
-							<p className="font-medium text-foreground text-xs uppercase tracking-wider">
-								Product updates
-							</p>
-							<NewsletterForm />
-						</div>
 					</div>
 
 					<div className="space-y-4">

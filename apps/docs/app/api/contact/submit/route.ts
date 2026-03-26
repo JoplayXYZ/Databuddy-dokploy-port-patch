@@ -1,4 +1,5 @@
 import { Databuddy } from "@databuddy/sdk/node";
+import { checkBotId } from "botid/server";
 import { isValidPhoneNumber, parsePhoneNumber } from "libphonenumber-js";
 import { type NextRequest, NextResponse } from "next/server";
 
@@ -209,6 +210,11 @@ async function sendToSlack(data: ContactFormData, ip: string): Promise<void> {
 }
 
 export async function POST(request: NextRequest) {
+	const verification = await checkBotId();
+	if (verification.isBot) {
+		return NextResponse.json({ error: "Access denied" }, { status: 403 });
+	}
+
 	const clientIP = getClientIP(request);
 
 	try {

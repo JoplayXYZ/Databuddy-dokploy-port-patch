@@ -58,7 +58,7 @@ export function NewsletterForm() {
 		<div className="space-y-2">
 			<form className="flex gap-2" onSubmit={handleSubmit}>
 				<input
-					className="h-9 flex-1 rounded border border-border bg-background px-3 text-foreground text-sm placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-primary"
+					className="h-9 w-full min-w-0 rounded border border-border bg-background px-3 text-foreground text-sm placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-primary sm:w-56"
 					disabled={status === "loading"}
 					placeholder="you@company.com"
 					ref={inputRef}

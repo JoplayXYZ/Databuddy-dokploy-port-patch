@@ -1,3 +1,4 @@
+import { checkBotId } from "botid/server";
 import { type NextRequest, NextResponse } from "next/server";
 
 const SLACK_WEBHOOK_URL = process.env.SLACK_WEBHOOK_URL || "";
@@ -225,6 +226,11 @@ async function sendToSlack(
 }
 
 export async function POST(request: NextRequest) {
+	const verification = await checkBotId();
+	if (verification.isBot) {
+		return NextResponse.json({ error: "Access denied" }, { status: 403 });
+	}
+
 	const clientIP = getClientIP(request);
 
 	try {

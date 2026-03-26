@@ -1,3 +1,4 @@
+import { checkBotId } from "botid/server";
 import { type NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
 
@@ -8,6 +9,11 @@ const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 export async function POST(request: NextRequest) {
 	try {
+		const verification = await checkBotId();
+		if (verification.isBot) {
+			return NextResponse.json({ error: "Access denied" }, { status: 403 });
+		}
+
 		let body: Record<string, unknown>;
 		try {
 			body = (await request.json()) as Record<string, unknown>;
