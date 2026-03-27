@@ -52,7 +52,7 @@ export function EventsPageProvider({
 }: {
 	children: React.ReactNode;
 }) {
-	const { activeOrganization, isLoading: isLoadingOrg } =
+	const { activeOrganization, activeOrganizationId, isLoading: isLoadingOrg } =
 		useOrganizationsContext();
 	const { websites: rawWebsites, isLoading: isLoadingWebsites } =
 		useWebsitesLight();
@@ -77,11 +77,10 @@ export function EventsPageProvider({
 		if (isSpecificWebsite) {
 			return { websiteId: websiteFilterMode };
 		}
-		if (activeOrganization?.id) {
-			return { organizationId: activeOrganization.id };
-		}
+		// Org scope: `/v1/query` resolves active org from the session cookie when
+		// organization_id is omitted.
 		return {};
-	}, [isSpecificWebsite, websiteFilterMode, activeOrganization?.id]);
+	}, [isSpecificWebsite, websiteFilterMode]);
 
 	const websiteFilters = useMemo<DynamicQueryFilter[]>(() => {
 		if (websiteFilterMode === "no-website") {
@@ -90,7 +89,11 @@ export function EventsPageProvider({
 		return [];
 	}, [websiteFilterMode]);
 
-	const hasQueryId = !!(isSpecificWebsite || activeOrganization?.id);
+	const hasQueryId = !!(
+		isSpecificWebsite ||
+		activeOrganization?.id ||
+		activeOrganizationId
+	);
 
 	const query = useGlobalCustomEventsData(
 		queryOptions,

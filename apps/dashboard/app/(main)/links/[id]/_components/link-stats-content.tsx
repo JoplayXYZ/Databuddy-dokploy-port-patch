@@ -8,7 +8,6 @@ import { useParams, useRouter } from "next/navigation";
 import { useMemo } from "react";
 import { StatCard } from "@/components/analytics";
 import { EmptyState } from "@/components/empty-state";
-import { useOrganizationsContext } from "@/components/providers/organizations-provider";
 import { DataTable } from "@/components/table/data-table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useDateFilters } from "@/hooks/use-date-filters";
@@ -100,16 +99,12 @@ export function LinkStatsContent() {
 	const params = useParams();
 	const router = useRouter();
 	const linkId = params.id as string;
-	const { activeOrganization } = useOrganizationsContext();
 	const { dateRange, currentGranularity } = useDateFilters();
 
 	const isMobile = useMediaQuery("(max-width: 640px)");
 	const isHourly = currentGranularity === "hourly";
 
-	const { data: link, isLoading: isLoadingLink } = useLink(
-		linkId,
-		activeOrganization?.id ?? "",
-	);
+	const { data: link, isLoading: isLoadingLink } = useLink(linkId);
 
 	const { data: stats, isLoading: isLoadingStats } = useLinkStats(
 		linkId,

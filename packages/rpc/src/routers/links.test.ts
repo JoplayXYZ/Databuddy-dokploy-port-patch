@@ -1,11 +1,10 @@
 import { describe, expect, it } from "bun:test";
 import { z } from "zod";
 
-// Re-create schemas locally for testing (matching the router)
 const slugRegex = /^[a-zA-Z0-9_-]+$/;
 
 const createLinkSchema = z.object({
-	organizationId: z.string(),
+	organizationId: z.string().optional(),
 	name: z.string().min(1).max(255),
 	targetUrl: z.url(),
 	slug: z
@@ -46,21 +45,21 @@ const updateLinkSchema = z.object({
 	externalId: z.string().max(255).nullable().optional(),
 });
 
-const listLinksSchema = z.object({
-	organizationId: z.string(),
-	externalId: z.string().optional(),
-});
+const listLinksSchema = z
+	.object({
+		organizationId: z.string().optional(),
+		externalId: z.string().optional(),
+	})
+	.default({});
 
 const getLinkSchema = z.object({
 	id: z.string(),
-	organizationId: z.string(),
 });
 
 const deleteLinkSchema = z.object({
 	id: z.string(),
 });
 
-// Slug generation helper
 const SLUG_ALPHABET =
 	"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 const SLUG_LENGTH = 8;
@@ -291,7 +290,15 @@ describe("updateLinkSchema validation", () => {
 });
 
 describe("listLinksSchema validation", () => {
-	it("accepts valid organization id", () => {
+	it("accepts empty input (defaults for active org on server)", () => {
+		const result = listLinksSchema.safeParse({});
+		expect(result.success).toBe(true);
+		if (result.success) {
+			expect(result.data).toEqual({});
+		}
+	});
+
+	it("accepts explicit organization id", () => {
 		const result = listLinksSchema.safeParse({
 			organizationId: "org-123",
 		});
@@ -305,27 +312,18 @@ describe("listLinksSchema validation", () => {
 		});
 		expect(result.success).toBe(true);
 	});
-
-	it("requires organizationId", () => {
-		const result = listLinksSchema.safeParse({});
-		expect(result.success).toBe(false);
-	});
 });
 
 describe("getLinkSchema validation", () => {
-	it("accepts valid id and organizationId", () => {
+	it("accepts valid id", () => {
 		const result = getLinkSchema.safeParse({
 			id: "link-123",
-			organizationId: "org-456",
 		});
 		expect(result.success).toBe(true);
 	});
 
-	it("requires both id and organizationId", () => {
-		expect(getLinkSchema.safeParse({ id: "link-123" }).success).toBe(false);
-		expect(
-			getLinkSchema.safeParse({ organizationId: "org-123" }).success
-		).toBe(false);
+	it("requires id", () => {
+		expect(getLinkSchema.safeParse({}).success).toBe(false);
 	});
 });
 

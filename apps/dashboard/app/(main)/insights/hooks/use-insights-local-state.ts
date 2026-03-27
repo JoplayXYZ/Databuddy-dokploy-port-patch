@@ -20,7 +20,7 @@ export function useInsightsLocalState(
 		...orpc.insights.getVotes.queryOptions({
 			input: { insightIds },
 		}),
-		enabled: Boolean(organizationId) && insightIds.length > 0,
+		enabled: insightIds.length > 0,
 	});
 
 	const setVoteMutation = useMutation({

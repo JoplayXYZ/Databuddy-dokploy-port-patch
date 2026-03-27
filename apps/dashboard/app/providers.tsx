@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { OrganizationsProvider } from "@/components/providers/organizations-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useToastTracking } from "@/hooks/toast-hooks";
+import { isAbortError } from "@/lib/is-abort-error";
 
 const defaultQueryClientOptions = {
 	defaultOptions: {
@@ -69,6 +70,9 @@ const queryClient = new QueryClient({
 	defaultOptions: defaultQueryClientOptions.defaultOptions,
 	queryCache: new QueryCache({
 		onError: (error, query) => {
+			if (isAbortError(error)) {
+				return;
+			}
 			if (isAuthError(error)) {
 				return;
 			}
@@ -87,6 +91,9 @@ const queryClient = new QueryClient({
 	}),
 	mutationCache: new MutationCache({
 		onError: (error) => {
+			if (isAbortError(error)) {
+				return;
+			}
 			if (isAuthError(error)) {
 				return;
 			}

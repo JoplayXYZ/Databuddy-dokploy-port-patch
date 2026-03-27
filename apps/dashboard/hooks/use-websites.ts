@@ -5,7 +5,6 @@ import type { ProcessedMiniChartData } from "@databuddy/shared/types/website";
 
 import type { QueryKey } from "@tanstack/react-query";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useOrganizationsContext } from "@/components/providers/organizations-provider";
 import { orpc } from "@/lib/orpc";
 
 export type { Website } from "@databuddy/db";
@@ -19,9 +18,9 @@ export interface WebsitesListData {
 export const getWebsiteByIdKey = (id: string): QueryKey =>
 	orpc.websites.getById.queryKey({ input: { id } });
 
-export const getWebsitesListKey = (organizationId?: string): QueryKey =>
+export const getWebsitesListKey = (): QueryKey =>
 	orpc.websites.listWithCharts.queryKey({
-		input: { organizationId },
+		input: {},
 	});
 
 export const updateWebsiteInList = (
@@ -87,21 +86,18 @@ const removeWebsiteFromList = (
 };
 
 export function useWebsites(options?: { enabled?: boolean }) {
-	const { activeOrganization, isLoading: isLoadingOrganization } =
-		useOrganizationsContext();
-
 	const query = useQuery({
 		...orpc.websites.listWithCharts.queryOptions({
-			input: { organizationId: activeOrganization?.id },
+			input: {},
 		}),
-		enabled: options?.enabled !== false && !isLoadingOrganization,
+		enabled: options?.enabled !== false,
 	});
 
 	return {
 		websites: query.data?.websites ?? [],
 		chartData: query.data?.chartData,
 		activeUsers: query.data?.activeUsers,
-		isLoading: query.isLoading || isLoadingOrganization,
+		isLoading: query.isLoading,
 		isFetching: query.isFetching,
 		isError: query.isError,
 		refetch: query.refetch,
@@ -109,20 +105,17 @@ export function useWebsites(options?: { enabled?: boolean }) {
 }
 
 export function useWebsitesLight(options?: { enabled?: boolean }) {
-	const { activeOrganization, isLoading: isLoadingOrganization } =
-		useOrganizationsContext();
-
 	const query = useQuery({
 		...orpc.websites.list.queryOptions({
-			input: { organizationId: activeOrganization?.id },
+			input: {},
 		}),
-		enabled: options?.enabled !== false && !isLoadingOrganization,
+		enabled: options?.enabled !== false,
 		staleTime: 5 * 60 * 1000,
 	});
 
 	return {
 		websites: query.data ?? [],
-		isLoading: query.isLoading || isLoadingOrganization,
+		isLoading: query.isLoading,
 		isFetching: query.isFetching,
 		isError: query.isError,
 		refetch: query.refetch,
@@ -143,9 +136,9 @@ export function useCreateWebsite() {
 
 	return useMutation({
 		...orpc.websites.create.mutationOptions(),
-		onSuccess: (data, variables) => {
+		onSuccess: (data) => {
 			const newWebsite = data as Website;
-			const listKey = getWebsitesListKey(variables.organizationId ?? undefined);
+			const listKey = getWebsitesListKey();
 			queryClient.setQueryData<WebsitesListData>(listKey, (old) =>
 				addWebsiteToList(old, newWebsite)
 			);
@@ -158,9 +151,7 @@ export const updateWebsiteCache = (
 	updatedWebsite: Website
 ) => {
 	const getByIdKey = getWebsiteByIdKey(updatedWebsite.id);
-	const listKey = getWebsitesListKey(
-		updatedWebsite.organizationId ?? undefined
-	);
+	const listKey = getWebsitesListKey();
 
 	queryClient.setQueryData<WebsitesListData>(listKey, (old) =>
 		updateWebsiteInList(old, updatedWebsite)
@@ -188,9 +179,7 @@ export function useDeleteWebsite() {
 			const getByIdKey = getWebsiteByIdKey(id);
 			const previousWebsite = queryClient.getQueryData<Website>(getByIdKey);
 
-			const listKey = getWebsitesListKey(
-				previousWebsite?.organizationId ?? undefined
-			);
+			const listKey = getWebsitesListKey();
 
 			await queryClient.cancelQueries({ queryKey: listKey });
 			const previousData = queryClient.getQueryData<WebsitesListData>(listKey);

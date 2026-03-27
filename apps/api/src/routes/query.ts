@@ -238,6 +238,8 @@ interface AuthContext {
 	user: { id: string; name: string; email: string; role?: string } | null;
 	isAuthenticated: boolean;
 	authMethod: "api_key" | "session" | "none";
+	/** Session active org; used when query omits organization_id. */
+	activeOrganizationId: string | null;
 }
 
 function isAdminUser(user: AuthContext["user"]): boolean {
@@ -650,9 +652,17 @@ async function resolveProjectAccess(
 		return { success: true, projectId: websiteId, projectType: "website" };
 	}
 
-	// Check organization access (for org-level queries like LLM analytics)
-	if (organizationId) {
-		const hasAccess = await verifyOrganizationAccess(ctx, organizationId);
+	const resolvedOrganizationId =
+		organizationId ??
+		(websiteId || scheduleId || linkId
+			? null
+			: (ctx.activeOrganizationId ?? ctx.apiKey?.organizationId ?? null));
+	=
+	if (resolvedOrganizationId) {
+		const hasAccess = await verifyOrganizationAccess(
+			ctx,
+			resolvedOrganizationId
+		);
 		if (!hasAccess) {
 			return {
 				success: false,
@@ -665,7 +675,7 @@ async function resolveProjectAccess(
 		}
 		return {
 			success: true,
-			projectId: organizationId,
+			projectId: resolvedOrganizationId,
 			projectType: "organization",
 		};
 	}
@@ -933,9 +943,14 @@ export const query = new Elysia({ prefix: "/v1/query" })
 					user: null,
 					isAuthenticated: false,
 					authMethod: "none",
+					activeOrganizationId: null,
 				},
 			};
 		}
+
+		const activeOrganizationId =
+			(session?.session as { activeOrganizationId?: string | null } | undefined)
+				?.activeOrganizationId ?? null;
 
 		return {
 			auth: {
@@ -943,6 +958,7 @@ export const query = new Elysia({ prefix: "/v1/query" })
 				user,
 				isAuthenticated: Boolean(user ?? apiKey),
 				authMethod: apiKey ? "api_key" : user ? "session" : "none",
+				activeOrganizationId,
 			},
 		};
 	})

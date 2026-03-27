@@ -13,7 +13,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
 import { EmptyState } from "@/components/empty-state";
-import { useOrganizationsContext } from "@/components/providers/organizations-provider";
 import { RightSidebar } from "@/components/right-sidebar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -103,7 +102,6 @@ function parseAlarms(rows: readonly Record<string, unknown>[]): Alarm[] {
 }
 
 export default function NotificationsSettingsPage() {
-	const { activeOrganization } = useOrganizationsContext();
 	const queryClient = useQueryClient();
 	const [sheetOpen, setSheetOpen] = useState(false);
 	const [editingAlarm, setEditingAlarm] = useState<Alarm | null>(null);
@@ -112,9 +110,8 @@ export default function NotificationsSettingsPage() {
 
 	const { data: alarms, isLoading } = useQuery({
 		...orpc.alarms.list.queryOptions({
-			input: { organizationId: activeOrganization?.id },
+			input: {},
 		}),
-		enabled: !!activeOrganization?.id,
 	});
 
 	const deleteMutation = useMutation({

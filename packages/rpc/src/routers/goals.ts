@@ -96,27 +96,27 @@ export const goalsRouter = {
 			tags: ["Goals"],
 			summary: "Get goal",
 			description:
-				"Returns a single goal by id. Requires website read permission.",
+				"Returns a single goal by id; website is resolved from the goal. Requires website read permission.",
 		})
-		.input(z.object({ id: z.string(), websiteId: z.string() }))
+		.input(z.object({ id: z.string() }))
 		.output(goalOutputSchema)
-		.use(withWebsiteRead)
 		.handler(async ({ context, input }) => {
 			const [goal] = await context.db
 				.select()
 				.from(goals)
-				.where(
-					and(
-						eq(goals.id, input.id),
-						eq(goals.websiteId, input.websiteId),
-						isNull(goals.deletedAt)
-					)
-				)
+				.where(and(eq(goals.id, input.id), isNull(goals.deletedAt)))
 				.limit(1);
 
 			if (!goal) {
 				throw rpcError.notFound("goal", input.id);
 			}
+
+			await withWorkspace(context, {
+				websiteId: goal.websiteId,
+				permissions: ["read"],
+				allowPublicAccess: true,
+			});
+
 			return goal;
 		}),
 

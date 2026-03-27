@@ -43,7 +43,7 @@ export const DEFAULT_DATE_RANGE = {
 };
 
 export function LLMPageProvider({ children }: { children: React.ReactNode }) {
-	const { activeOrganization, isLoading: isLoadingOrg } =
+	const { activeOrganization, activeOrganizationId, isLoading: isLoadingOrg } =
 		useOrganizationsContext();
 	const { websites, isLoading: isLoadingWebsites } = useWebsitesLight();
 	const [selectedWebsiteId, setSelectedWebsiteId] = useState<string | null>(
@@ -69,13 +69,14 @@ export function LLMPageProvider({ children }: { children: React.ReactNode }) {
 		if (selectedWebsiteId) {
 			return { websiteId: selectedWebsiteId };
 		}
-		if (activeOrganization?.id) {
-			return { organizationId: activeOrganization.id };
-		}
 		return {};
-	}, [selectedWebsiteId, activeOrganization?.id]);
+	}, [selectedWebsiteId]);
 
-	const hasQueryId = !!(selectedWebsiteId || activeOrganization?.id);
+	const hasQueryId = !!(
+		selectedWebsiteId ||
+		activeOrganization?.id ||
+		activeOrganizationId
+	);
 	const selectedWebsite = websites.find((w) => w.id === selectedWebsiteId);
 
 	const value = useMemo(

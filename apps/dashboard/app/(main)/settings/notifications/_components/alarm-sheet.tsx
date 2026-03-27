@@ -140,14 +140,15 @@ export function AlarmSheet({
 	alarm,
 }: AlarmSheetProps) {
 	const isEditing = !!alarm;
-	const { activeOrganization } = useOrganizationsContext();
+	const { activeOrganization, activeOrganizationId } =
+		useOrganizationsContext();
 	const queryClient = useQueryClient();
 
 	const { data: websites } = useQuery({
 		...orpc.websites.list.queryOptions({
-			input: { organizationId: activeOrganization?.id },
+			input: {},
 		}),
-		enabled: !!activeOrganization?.id && open,
+		enabled: open,
 	});
 
 	const form = useForm<AlarmFormData>({
@@ -176,7 +177,9 @@ export function AlarmSheet({
 	const isPending = createMutation.isPending || updateMutation.isPending;
 
 	const handleSubmit = async (data: AlarmFormData) => {
-		if (!activeOrganization?.id) {
+		const organizationId =
+			activeOrganization?.id ?? activeOrganizationId ?? null;
+		if (!organizationId) {
 			return;
 		}
 
@@ -194,7 +197,7 @@ export function AlarmSheet({
 				toast.success("Alert updated");
 			} else {
 				await createMutation.mutateAsync({
-					organizationId: activeOrganization.id,
+					organizationId,
 					name: data.name,
 					description: data.description,
 					enabled: data.enabled,

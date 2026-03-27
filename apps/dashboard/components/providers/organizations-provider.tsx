@@ -1,6 +1,6 @@
 "use client";
 
-import { authClient } from "@databuddy/auth/client";
+import { authClient, useSession } from "@databuddy/auth/client";
 import { useQuery } from "@tanstack/react-query";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { type ReactNode, useEffect, useMemo } from "react";
@@ -16,7 +16,6 @@ export type Organization = NonNullable<
 >[number];
 
 export const AUTH_QUERY_KEYS = {
-	session: ["auth", "session"] as const,
 	organizations: ["auth", "organizations"] as const,
 	activeOrganization: ["auth", "activeOrganization"] as const,
 } as const;
@@ -26,15 +25,7 @@ export function OrganizationsProvider({ children }: { children: ReactNode }) {
 	const setActiveOrganization = useSetAtom(activeOrganizationAtom);
 	const setIsLoading = useSetAtom(isLoadingOrganizationsAtom);
 
-	const { data: session, isPending: isLoadingSession } = useQuery({
-		queryKey: AUTH_QUERY_KEYS.session,
-		queryFn: async () => {
-			const result = await authClient.getSession();
-			return result.data;
-		},
-		staleTime: 2 * 60 * 1000,
-		gcTime: 5 * 60 * 1000,
-	});
+	const { data: session, isPending: isLoadingSession } = useSession();
 
 	const { data: organizationsData, isPending: isLoadingOrgs } = useQuery({
 		queryKey: AUTH_QUERY_KEYS.organizations,
@@ -79,9 +70,19 @@ export function useOrganizationsContext() {
 	const isLoading = useAtomValue(isLoadingOrganizationsAtom);
 	const [getOrganizationBySlug] = useAtom(getOrganizationBySlugAtom);
 
+	const { data: sessionData } = useSession();
+
+	const activeOrganizationId =
+		(
+			sessionData?.session as
+				| { activeOrganizationId?: string | null }
+				| undefined
+		)?.activeOrganizationId ?? null;
+
 	return {
 		organizations,
 		activeOrganization,
+		activeOrganizationId,
 		isLoading,
 		getOrganization: getOrganizationBySlug,
 	};

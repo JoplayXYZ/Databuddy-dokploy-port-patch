@@ -93,9 +93,9 @@ export function MonitorSheet({
 	schedule,
 }: MonitorSheetProps) {
 	const isEditing = !!schedule;
-	// Only fetch website if websiteId is provided
 	const { data: website } = useWebsite(websiteId || "");
-	const { activeOrganization } = useOrganizationsContext();
+	const { activeOrganization, activeOrganizationId } =
+		useOrganizationsContext();
 	const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
 
 	const form = useForm<MonitorFormData>({
@@ -180,14 +180,12 @@ export function MonitorSheet({
 				});
 				toast.success("Monitor updated successfully");
 			} else {
-				if (!activeOrganization?.id) {
-					toast.error(
-						"No workspace selected. Please select a workspace first."
-					);
-					return;
-				}
+				const resolvedOrganizationId =
+					activeOrganization?.id ?? activeOrganizationId ?? null;
 				await createMutation.mutateAsync({
-					organizationId: activeOrganization.id,
+					...(resolvedOrganizationId
+						? { organizationId: resolvedOrganizationId }
+						: {}),
 					websiteId,
 					url: data.url,
 					name: data.name || undefined,

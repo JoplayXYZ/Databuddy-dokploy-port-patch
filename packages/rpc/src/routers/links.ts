@@ -10,24 +10,22 @@ import { z } from "zod";
 import { rpcError } from "../errors";
 import { logger } from "../lib/logger";
 import { protectedProcedure } from "../orpc";
-import {
-	withLinksAccess,
-	workspaceInputSchema,
-} from "../procedures/with-workspace";
+import { withLinksAccess } from "../procedures/with-workspace";
 
 const generateSlug = customAlphabet(
 	"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",
 	8
 );
 
-const listLinksSchema = workspaceInputSchema.extend({
-	organizationId: z.string(),
-	externalId: z.string().optional(),
-});
+const listLinksSchema = z
+	.object({
+		organizationId: z.string().optional(),
+		externalId: z.string().optional(),
+	})
+	.default({});
 
-const getLinkSchema = workspaceInputSchema.extend({
+const getLinkSchema = z.object({
 	id: z.string(),
-	organizationId: z.string(),
 });
 
 const slugSchema = z
@@ -40,7 +38,7 @@ const slugSchema = z
 	);
 
 const createLinkSchema = z.object({
-	organizationId: z.string(),
+	organizationId: z.string().optional(),
 	name: z.string().min(1).max(255),
 	targetUrl: z.url(),
 	slug: slugSchema.optional(),
@@ -139,18 +137,24 @@ export const linksRouter = {
 			tags: ["Links"],
 			summary: "List links",
 			description:
-				"Returns all links for the given organization. Requires read:links scope.",
+				"Returns all links for the workspace. Optional organizationId defaults to the active organization from the session. Requires read:links scope.",
 			spec: (s) => ({ ...s, "x-required-scopes": ["read:links"] as const }),
 		})
 		.input(listLinksSchema)
 		.output(z.array(linkOutputSchema))
 		.handler(async ({ context, input }) => {
+			const organizationId =
+				input.organizationId ?? context.organizationId ?? null;
+			if (!organizationId) {
+				throw rpcError.badRequest("Organization ID is required");
+			}
+
 			await withLinksAccess(context, {
-				organizationId: input.organizationId,
+				organizationId,
 				permission: "read",
 			});
 
-			const conditions = [eq(links.organizationId, input.organizationId)];
+			const conditions = [eq(links.organizationId, organizationId)];
 			if (input.externalId) {
 				conditions.push(eq(links.externalId, input.externalId));
 			}
@@ -168,33 +172,30 @@ export const linksRouter = {
 			path: "/links/get",
 			tags: ["Links"],
 			summary: "Get link",
-			description: "Returns a single link by id. Requires read:links scope.",
+			description:
+				"Returns a single link by id; workspace is resolved from the link. Requires read:links scope.",
 			spec: (s) => ({ ...s, "x-required-scopes": ["read:links"] as const }),
 		})
 		.input(getLinkSchema)
 		.output(linkOutputSchema)
 		.handler(async ({ context, input }) => {
-			await withLinksAccess(context, {
-				organizationId: input.organizationId,
-				permission: "read",
-			});
-
 			const result = await context.db
 				.select()
 				.from(links)
-				.where(
-					and(
-						eq(links.id, input.id),
-						eq(links.organizationId, input.organizationId)
-					)
-				)
+				.where(eq(links.id, input.id))
 				.limit(1);
 
 			if (result.length === 0) {
 				throw rpcError.notFound("link", input.id);
 			}
 
-			return result[0];
+			const linkRow = result[0];
+			await withLinksAccess(context, {
+				organizationId: linkRow.organizationId,
+				permission: "read",
+			});
+
+			return linkRow;
 		}),
 
 	create: protectedProcedure
@@ -209,8 +210,14 @@ export const linksRouter = {
 		.input(createLinkSchema)
 		.output(linkOutputSchema)
 		.handler(async ({ context, input }) => {
+			const organizationId =
+				input.organizationId?.trim() || context.organizationId || null;
+			if (!organizationId) {
+				throw rpcError.badRequest("Organization ID is required");
+			}
+
 			const workspace = await withLinksAccess(context, {
-				organizationId: input.organizationId,
+				organizationId,
 				permission: "create",
 			});
 
@@ -228,7 +235,7 @@ export const linksRouter = {
 						.values({
 							id: randomUUIDv7(),
 							slug,
-							organizationId: input.organizationId,
+							organizationId,
 							createdBy,
 							name: input.name,
 							targetUrl: input.targetUrl,

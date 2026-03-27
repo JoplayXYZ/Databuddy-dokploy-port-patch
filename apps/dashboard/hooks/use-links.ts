@@ -5,7 +5,6 @@ import type { DateRange } from "@databuddy/shared/types/analytics";
 import type { QueryKey } from "@tanstack/react-query";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo } from "react";
-import { useOrganizationsContext } from "@/components/providers/organizations-provider";
 import { useBatchDynamicQuery } from "@/hooks/use-dynamic-query";
 import { orpc } from "@/lib/orpc";
 
@@ -50,13 +49,11 @@ export interface LinkStats {
 	topDevices: DeviceEntry[];
 }
 
-export const getLinksListKey = (organizationId?: string): QueryKey =>
-	orpc.links.list.queryKey({
-		input: { organizationId: organizationId ?? "" },
-	});
+export const getLinksListKey = (): QueryKey =>
+	orpc.links.list.queryKey({ input: {} });
 
-export const getLinkByIdKey = (id: string, organizationId: string): QueryKey =>
-	orpc.links.get.queryKey({ input: { id, organizationId } });
+export const getLinkByIdKey = (id: string): QueryKey =>
+	orpc.links.get.queryKey({ input: { id } });
 
 const addLinkToList = (old: Link[] | undefined, newLink: Link): Link[] => {
 	if (!old) {
@@ -89,34 +86,28 @@ const removeLinkFromList = (
 };
 
 export function useLinks(options?: { enabled?: boolean }) {
-	const { activeOrganization, isLoading: isLoadingOrganization } =
-		useOrganizationsContext();
-
 	const query = useQuery({
 		...orpc.links.list.queryOptions({
-			input: { organizationId: activeOrganization?.id ?? "" },
+			input: {},
 		}),
-		enabled:
-			options?.enabled !== false &&
-			!isLoadingOrganization &&
-			!!activeOrganization?.id,
+		enabled: options?.enabled !== false,
 	});
 
 	return {
 		links: query.data ?? [],
-		isLoading: query.isLoading || isLoadingOrganization,
+		isLoading: query.isLoading,
 		isFetching: query.isFetching,
 		isError: query.isError,
 		refetch: query.refetch,
 	};
 }
 
-export function useLink(id: string, organizationId: string) {
+export function useLink(id: string) {
 	return useQuery({
 		...orpc.links.get.queryOptions({
-			input: { id, organizationId },
+			input: { id },
 		}),
-		enabled: !!id && !!organizationId,
+		enabled: !!id,
 	});
 }
 
@@ -230,12 +221,11 @@ export function useLinkStats(linkId: string, dateRange: DateRange) {
 
 export function useCreateLink() {
 	const queryClient = useQueryClient();
-	const { activeOrganization } = useOrganizationsContext();
 
 	return useMutation({
 		...orpc.links.create.mutationOptions(),
 		onSuccess: (newLink: Link) => {
-			const listKey = getLinksListKey(activeOrganization?.id);
+			const listKey = getLinksListKey();
 			queryClient.setQueryData<Link[]>(listKey, (old) =>
 				addLinkToList(old, newLink)
 			);
@@ -245,35 +235,27 @@ export function useCreateLink() {
 
 export function useUpdateLink() {
 	const queryClient = useQueryClient();
-	const { activeOrganization } = useOrganizationsContext();
 
 	return useMutation({
 		...orpc.links.update.mutationOptions(),
 		onSuccess: (updatedLink: Link) => {
-			const listKey = getLinksListKey(activeOrganization?.id);
+			const listKey = getLinksListKey();
 			queryClient.setQueryData<Link[]>(listKey, (old) =>
 				updateLinkInList(old, updatedLink)
 			);
 
-			if (activeOrganization?.id) {
-				const getByIdKey = getLinkByIdKey(
-					updatedLink.id,
-					activeOrganization.id
-				);
-				queryClient.setQueryData(getByIdKey, updatedLink);
-			}
+			queryClient.setQueryData(getLinkByIdKey(updatedLink.id), updatedLink);
 		},
 	});
 }
 
 export function useDeleteLink() {
 	const queryClient = useQueryClient();
-	const { activeOrganization } = useOrganizationsContext();
 
 	return useMutation({
 		...orpc.links.delete.mutationOptions(),
 		onMutate: async ({ id }) => {
-			const listKey = getLinksListKey(activeOrganization?.id);
+			const listKey = getLinksListKey();
 			await queryClient.cancelQueries({ queryKey: listKey });
 			const previousData = queryClient.getQueryData<Link[]>(listKey);
 

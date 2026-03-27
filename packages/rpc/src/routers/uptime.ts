@@ -228,7 +228,7 @@ export const uptimeRouter = {
 			z.object({
 				url: z.string().url(),
 				name: z.string().optional(),
-				organizationId: z.string(),
+				organizationId: z.string().optional(),
 				websiteId: z.string().optional(),
 				granularity: granularityEnum,
 				isPublic: z.boolean().optional(),
@@ -243,8 +243,14 @@ export const uptimeRouter = {
 		)
 		.output(scheduleOutputSchema)
 		.handler(async ({ context, input }) => {
+			const organizationId =
+				input.organizationId?.trim() || context.organizationId || null;
+			if (!organizationId) {
+				throw rpcError.badRequest("Organization ID is required");
+			}
+
 			await withWorkspace(context, {
-				organizationId: input.organizationId,
+				organizationId,
 				resource: "website",
 				permissions: ["update"],
 			});
@@ -252,7 +258,7 @@ export const uptimeRouter = {
 			const existing = await db.query.uptimeSchedules.findFirst({
 				where: and(
 					eq(uptimeSchedules.url, input.url),
-					eq(uptimeSchedules.organizationId, input.organizationId)
+					eq(uptimeSchedules.organizationId, organizationId)
 				),
 			});
 
@@ -266,7 +272,7 @@ export const uptimeRouter = {
 
 			await db.insert(uptimeSchedules).values({
 				id: scheduleId,
-				organizationId: input.organizationId,
+				organizationId,
 				websiteId: input.websiteId ?? null,
 				url: input.url,
 				name: input.name ?? null,

@@ -2,7 +2,6 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { Suspense, useMemo, useState } from "react";
-import { useOrganizationsContext } from "@/components/providers/organizations-provider";
 import { Skeleton } from "@/components/ui/skeleton";
 import { orpc } from "@/lib/orpc";
 import { ConsumptionChart } from "./components/consumption-chart";
@@ -41,18 +40,14 @@ function calculateOverageInfo(
 
 export default function CostBreakdownPage() {
 	const [dateRange, setDateRange] = useState(getDefaultDateRange);
-	const { activeOrganization, isLoading: isOrgLoading } =
-		useOrganizationsContext();
 
 	const { data: usageData, isLoading: isUsageLoading } = useQuery({
 		...orpc.billing.getUsage.queryOptions({
 			input: {
 				startDate: dateRange.startDate,
 				endDate: dateRange.endDate,
-				organizationId: activeOrganization?.id || null,
 			},
 		}),
-		enabled: !isOrgLoading,
 	});
 
 	const { data: orgUsage } = useQuery({

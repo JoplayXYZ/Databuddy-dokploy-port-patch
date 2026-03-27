@@ -3,6 +3,7 @@ import { createORPCClient, onError } from "@orpc/client";
 import { RPCLink } from "@orpc/client/fetch";
 import type { RouterClient } from "@orpc/server";
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
+import { isAbortError } from "@/lib/is-abort-error";
 
 declare global {
 	// eslint-disable-next-line no-var
@@ -18,7 +19,9 @@ const link = new RPCLink({
 		}),
 	interceptors: [
 		onError((error) => {
-			// Suppress JSON parse errors for non-JSON responses (common in demo mode)
+			if (isAbortError(error)) {
+				return;
+			}
 			if (
 				error instanceof Error &&
 				(error.message.includes("Unexpected token") ||

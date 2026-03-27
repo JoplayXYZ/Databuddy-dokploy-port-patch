@@ -10,7 +10,6 @@ import { useHotkeys } from "react-hotkeys-hook";
 import { toast } from "sonner";
 import { DateRangePicker } from "@/components/date-range-picker";
 import { PageNavigation } from "@/components/layout/page-navigation";
-import { useOrganizationsContext } from "@/components/providers/organizations-provider";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useDateFilters } from "@/hooks/use-date-filters";
@@ -51,12 +50,8 @@ export default function LinkStatsLayout({ children }: LinkStatsLayoutProps) {
 	const linkId = id as string;
 	const queryClient = useQueryClient();
 	const [isRefreshing, setIsRefreshing] = useState(false);
-	const { activeOrganization } = useOrganizationsContext();
 
-	const { data: link, isLoading: isLoadingLink } = useLink(
-		linkId,
-		activeOrganization?.id ?? ""
-	);
+	const { data: link, isLoading: isLoadingLink } = useLink(linkId);
 
 	const {
 		currentDateRange,

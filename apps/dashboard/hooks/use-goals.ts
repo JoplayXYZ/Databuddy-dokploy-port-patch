@@ -150,10 +150,10 @@ export function useGoals(websiteId: string, enabled = true) {
 	};
 }
 
-export function useGoal(websiteId: string, goalId: string, enabled = true) {
+export function useGoal(goalId: string, enabled = true) {
 	return useQuery({
-		...orpc.goals.getById.queryOptions({ input: { id: goalId, websiteId } }),
-		enabled: enabled && !!websiteId && !!goalId,
+		...orpc.goals.getById.queryOptions({ input: { id: goalId } }),
+		enabled: enabled && !!goalId,
 	});
 }
 

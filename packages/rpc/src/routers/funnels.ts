@@ -224,32 +224,27 @@ export const funnelsRouter = {
 	getById: protectedProcedure
 		.route({
 			description:
-				"Returns a single funnel by id. Requires website read permission.",
+				"Returns a single funnel by id; website is resolved from the funnel. Requires website read permission.",
 			method: "POST",
 			path: "/funnels/getById",
 			summary: "Get funnel",
 			tags: ["Funnels"],
 		})
-		.input(z.object({ id: z.string(), websiteId: z.string() }))
+		.input(z.object({ id: z.string() }))
 		.output(funnelOutputSchema)
 		.handler(({ context, input }) =>
 			cache.withCache({
-				key: `byId:${input.id}:${input.websiteId}`,
+				key: `byId:${input.id}`,
 				disabled: true, // TODO: Remove this once we have a way to invalidate the cache
 				ttl: CACHE_TTL,
 				tables: ["funnelDefinitions"],
 				queryFn: async () => {
-					await withWorkspace(context, {
-						websiteId: input.websiteId,
-						permissions: ["read"],
-					});
 					const [funnel] = await context.db
 						.select()
 						.from(funnelDefinitions)
 						.where(
 							and(
 								eq(funnelDefinitions.id, input.id),
-								eq(funnelDefinitions.websiteId, input.websiteId),
 								isNull(funnelDefinitions.deletedAt)
 							)
 						)
@@ -258,6 +253,12 @@ export const funnelsRouter = {
 					if (!funnel) {
 						throw rpcError.notFound("funnel", input.id);
 					}
+
+					await withWorkspace(context, {
+						websiteId: funnel.websiteId,
+						permissions: ["read"],
+					});
+
 					return funnel;
 				},
 			})

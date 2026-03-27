@@ -113,10 +113,10 @@ function mergeAiWithHistoryPages(
 
 export function useInsightsFeed() {
 	const queryClient = useQueryClient();
-	const { activeOrganization, isLoading: isOrgLoading } =
+	const { activeOrganization, activeOrganizationId } =
 		useOrganizationsContext();
 
-	const orgId = activeOrganization?.id;
+	const orgId = activeOrganization?.id ?? activeOrganizationId ?? undefined;
 
 	const historyInfinite = useInfiniteQuery({
 		queryKey: [QUERY_HISTORY_INFINITE, orgId],
@@ -129,7 +129,7 @@ export function useInsightsFeed() {
 			}
 			return (lastPageParam as number) + HISTORY_PAGE_SIZE;
 		},
-		enabled: !isOrgLoading && !!orgId,
+		enabled: !!orgId,
 		staleTime: HISTORY_STALE_TIME,
 		gcTime: GC_TIME,
 		refetchOnWindowFocus: false,
@@ -141,7 +141,7 @@ export function useInsightsFeed() {
 	const aiQuery = useQuery({
 		queryKey: [QUERY_AI, orgId],
 		queryFn: () => fetchInsightsAi(orgId ?? ""),
-		enabled: !isOrgLoading && !!orgId,
+		enabled: !!orgId,
 		staleTime: STALE_TIME,
 		gcTime: GC_TIME,
 		refetchInterval: STALE_TIME,
@@ -176,7 +176,7 @@ export function useInsightsFeed() {
 		aiQuery.isPending &&
 		mergedInsights.length === 0;
 
-	const isInitialLoading = isOrgLoading || bothPending;
+	const isInitialLoading = bothPending;
 
 	const showAnalyzing =
 		mergedInsights.length === 0 && aiQuery.isPending && !isInitialLoading;

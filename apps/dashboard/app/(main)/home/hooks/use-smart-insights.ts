@@ -186,15 +186,15 @@ function mergeInsights(fresh: Insight[], stored: Insight[]): Insight[] {
 
 export function useSmartInsights() {
 	const queryClient = useQueryClient();
-	const { activeOrganization, isLoading: isOrgLoading } =
+	const { activeOrganization, activeOrganizationId } =
 		useOrganizationsContext();
 
-	const orgId = activeOrganization?.id;
+	const orgId = activeOrganization?.id ?? activeOrganizationId ?? undefined;
 
 	const historyQuery = useQuery({
 		queryKey: [QUERY_HISTORY, orgId],
 		queryFn: () => fetchInsightsHistory(orgId ?? ""),
-		enabled: !isOrgLoading && !!orgId,
+		enabled: !!orgId,
 		staleTime: HISTORY_STALE_TIME,
 		gcTime: GC_TIME,
 		refetchOnWindowFocus: false,
@@ -206,7 +206,7 @@ export function useSmartInsights() {
 	const aiQuery = useQuery({
 		queryKey: [QUERY_AI, orgId],
 		queryFn: () => fetchInsightsAi(orgId ?? ""),
-		enabled: !isOrgLoading && !!orgId,
+		enabled: !!orgId,
 		staleTime: STALE_TIME,
 		gcTime: GC_TIME,
 		refetchInterval: STALE_TIME,
@@ -239,7 +239,7 @@ export function useSmartInsights() {
 	const bothQueriesPending =
 		historyQuery.isPending && aiQuery.isPending && mergedInsights.length === 0;
 
-	const isInitialLoading = isOrgLoading || bothQueriesPending;
+	const isInitialLoading = bothQueriesPending;
 
 	const showAnalyzing =
 		mergedInsights.length === 0 && aiQuery.isPending && !isInitialLoading;

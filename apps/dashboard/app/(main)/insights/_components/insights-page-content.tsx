@@ -59,8 +59,9 @@ function groupInsightsByWebsite(
 }
 
 export function InsightsPageContent() {
-	const { activeOrganization } = useOrganizationsContext();
-	const orgId = activeOrganization?.id;
+	const { activeOrganization, activeOrganizationId } =
+		useOrganizationsContext();
+	const orgId = activeOrganization?.id ?? activeOrganizationId ?? undefined;
 
 	const {
 		insights,

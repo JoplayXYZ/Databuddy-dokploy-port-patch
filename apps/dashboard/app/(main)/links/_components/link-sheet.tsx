@@ -62,7 +62,8 @@ interface LinkSheetProps {
 
 function LinkSheetInner({ open, onOpenChange, link, onSave }: LinkSheetProps) {
 	const isEditing = !!link;
-	const { activeOrganization } = useOrganizationsContext();
+	const { activeOrganization, activeOrganizationId } =
+		useOrganizationsContext();
 
 	const createLinkMutation = useCreateLink();
 	const updateLinkMutation = useUpdateLink();
@@ -171,10 +172,8 @@ function LinkSheetInner({ open, onOpenChange, link, onSave }: LinkSheetProps) {
 	}, [targetUrlValue]);
 
 	const handleSubmit: SubmitHandler<LinkFormData> = async (formData) => {
-		if (!activeOrganization?.id) {
-			toast.error("No organization selected");
-			return;
-		}
+		const resolvedOrganizationId =
+			activeOrganization?.id ?? activeOrganizationId ?? null;
 
 		const payload = buildLinkPayload({
 			formData,
@@ -204,7 +203,9 @@ function LinkSheetInner({ open, onOpenChange, link, onSave }: LinkSheetProps) {
 				toast.success("Link updated successfully!");
 			} else {
 				const result = await createLinkMutation.mutateAsync({
-					organizationId: activeOrganization.id,
+					...(resolvedOrganizationId
+						? { organizationId: resolvedOrganizationId }
+						: {}),
 					name: payload.name,
 					targetUrl: payload.targetUrl,
 					slug: payload.slug,
