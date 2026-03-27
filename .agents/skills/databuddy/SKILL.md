@@ -7,6 +7,14 @@ description: Work effectively in the Databuddy monorepo. Use when the user asks 
 
 Databuddy is a Bun + Turborepo TypeScript monorepo. Start by locating the user request in one product surface, then trace its shared dependencies before editing.
 
+For **external** integrations (SDK, CDN, public APIs), use the **`databuddy-integration`** skill; this skill is for **this repository**.
+
+## Skill maintenance (required)
+
+When a mistake could have been avoided with better repo context (wrong app, package, port, or pattern), or when the user corrects you or asks you to fix something you got wrong, **update this skill** (`SKILL.md` or `references/codebase-map.md`) in the same turn when practical.
+
+Keep additions **minimal**: one bullet, a new `rg` hint, or a routing note—enough that the next session does not repeat it. If the lesson is for SDK/API customers, add it under `.agents/skills/databuddy-integration/` instead.
+
 ## Quick Map
 
 - `apps/dashboard`: Next.js app on port `3000`
