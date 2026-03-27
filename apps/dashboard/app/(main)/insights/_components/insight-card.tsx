@@ -361,15 +361,16 @@ export function InsightCard({
 						</DropdownMenu>
 
 						{onFeedbackAction && (
-							<div className="ml-auto flex items-center gap-1">
+							<div className="ml-auto flex items-center gap-1.5">
+								<span className="text-muted-foreground text-xs">Useful?</span>
 								<button
 									aria-label="Mark as helpful"
 									aria-pressed={feedbackVote === "up"}
 									className={cn(
-										"flex size-6 items-center justify-center rounded transition-colors",
+										"flex size-7 items-center justify-center rounded border transition-colors",
 										feedbackVote === "up"
-											? "bg-primary/10 text-primary"
-											: "text-muted-foreground/50 hover:text-foreground"
+											? "border-primary bg-primary/10 text-primary"
+											: "text-muted-foreground hover:bg-accent hover:text-foreground"
 									)}
 									onClick={() =>
 										onFeedbackAction(feedbackVote === "up" ? null : "up")
@@ -382,10 +383,10 @@ export function InsightCard({
 									aria-label="Mark as not helpful"
 									aria-pressed={feedbackVote === "down"}
 									className={cn(
-										"flex size-6 items-center justify-center rounded transition-colors",
+										"flex size-7 items-center justify-center rounded border transition-colors",
 										feedbackVote === "down"
-											? "bg-destructive/10 text-destructive"
-											: "text-muted-foreground/50 hover:text-foreground"
+											? "border-destructive bg-destructive/10 text-destructive"
+											: "text-muted-foreground hover:bg-accent hover:text-foreground"
 									)}
 									onClick={() =>
 										onFeedbackAction(feedbackVote === "down" ? null : "down")
