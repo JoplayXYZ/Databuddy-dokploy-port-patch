@@ -7,82 +7,18 @@ import {
 	useQueryClient,
 } from "@tanstack/react-query";
 import { useCallback, useMemo } from "react";
-import {
-	type HistoryInsightRow,
-	type Insight,
-	mapHistoryRowToInsight,
-} from "@/app/(main)/home/hooks/use-smart-insights";
 import { useOrganizationsContext } from "@/components/providers/organizations-provider";
-import { getUserTimezone } from "@/lib/timezone";
+import {
+	fetchInsightsAi,
+	fetchInsightsHistoryPage,
+	INSIGHT_CACHE,
+	INSIGHT_QUERY_KEYS,
+	type InsightsHistoryPage,
+} from "@/lib/insight-api";
+import type { Insight } from "@/lib/insight-types";
+import { mapHistoryRowToInsight } from "@/lib/insight-types";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
-const STALE_TIME = 15 * 60 * 1000;
-const GC_TIME = 30 * 60 * 1000;
-const HISTORY_STALE_TIME = 5 * 60 * 1000;
 const HISTORY_PAGE_SIZE = 50;
-
-const QUERY_AI = "ai-insights";
-const QUERY_HISTORY_INFINITE = "insights-history-infinite";
-
-interface InsightsHistoryPage {
-	success: boolean;
-	insights: HistoryInsightRow[];
-	hasMore: boolean;
-}
-
-interface InsightsAiResponse {
-	success: boolean;
-	insights: Insight[];
-	source: "ai" | "fallback";
-}
-
-async function fetchInsightsAi(
-	organizationId: string
-): Promise<InsightsAiResponse> {
-	const res = await fetch(`${API_URL}/v1/insights/ai`, {
-		method: "POST",
-		credentials: "include",
-		headers: { "Content-Type": "application/json" },
-		body: JSON.stringify({ organizationId, timezone: getUserTimezone() }),
-		signal: AbortSignal.timeout(90_000),
-	});
-
-	if (!res.ok) {
-		throw new Error(`Insights request failed: ${res.status}`);
-	}
-
-	const data = (await res.json()) as InsightsAiResponse;
-
-	if (!data.success) {
-		throw new Error("Insights response unsuccessful");
-	}
-
-	return data;
-}
-
-async function fetchInsightsHistoryPage(
-	organizationId: string,
-	offset: number
-): Promise<InsightsHistoryPage> {
-	const params = new URLSearchParams({
-		organizationId,
-		limit: String(HISTORY_PAGE_SIZE),
-		offset: String(offset),
-	});
-	const res = await fetch(
-		`${API_URL}/v1/insights/history?${params.toString()}`,
-		{
-			credentials: "include",
-			signal: AbortSignal.timeout(30_000),
-		}
-	);
-
-	if (!res.ok) {
-		throw new Error(`Insights history failed: ${res.status}`);
-	}
-
-	return (await res.json()) as InsightsHistoryPage;
-}
 
 function mergeAiWithHistoryPages(
 	ai: Insight[],
@@ -119,9 +55,9 @@ export function useInsightsFeed() {
 	const orgId = activeOrganization?.id ?? activeOrganizationId ?? undefined;
 
 	const historyInfinite = useInfiniteQuery({
-		queryKey: [QUERY_HISTORY_INFINITE, orgId],
+		queryKey: [INSIGHT_QUERY_KEYS.historyInfinite, orgId],
 		queryFn: ({ pageParam }) =>
-			fetchInsightsHistoryPage(orgId ?? "", pageParam as number),
+			fetchInsightsHistoryPage(orgId ?? "", pageParam as number, HISTORY_PAGE_SIZE),
 		initialPageParam: 0,
 		getNextPageParam: (lastPage, _allPages, lastPageParam) => {
 			if (!lastPage.hasMore) {
@@ -130,8 +66,8 @@ export function useInsightsFeed() {
 			return (lastPageParam as number) + HISTORY_PAGE_SIZE;
 		},
 		enabled: !!orgId,
-		staleTime: HISTORY_STALE_TIME,
-		gcTime: GC_TIME,
+		staleTime: INSIGHT_CACHE.historyStaleTime,
+		gcTime: INSIGHT_CACHE.gcTime,
 		refetchOnWindowFocus: false,
 		placeholderData: keepPreviousData,
 		retry: 2,
@@ -139,12 +75,12 @@ export function useInsightsFeed() {
 	});
 
 	const aiQuery = useQuery({
-		queryKey: [QUERY_AI, orgId],
+		queryKey: [INSIGHT_QUERY_KEYS.ai, orgId],
 		queryFn: () => fetchInsightsAi(orgId ?? ""),
 		enabled: !!orgId,
-		staleTime: STALE_TIME,
-		gcTime: GC_TIME,
-		refetchInterval: STALE_TIME,
+		staleTime: INSIGHT_CACHE.staleTime,
+		gcTime: INSIGHT_CACHE.gcTime,
+		refetchInterval: INSIGHT_CACHE.staleTime,
 		refetchOnWindowFocus: false,
 		placeholderData: keepPreviousData,
 		retry: 2,
@@ -165,9 +101,11 @@ export function useInsightsFeed() {
 	const refetchAll = useCallback(async () => {
 		await Promise.all([
 			queryClient.invalidateQueries({
-				queryKey: [QUERY_HISTORY_INFINITE, orgId],
+				queryKey: [INSIGHT_QUERY_KEYS.historyInfinite, orgId],
 			}),
-			queryClient.invalidateQueries({ queryKey: [QUERY_AI, orgId] }),
+			queryClient.invalidateQueries({
+				queryKey: [INSIGHT_QUERY_KEYS.ai, orgId],
+			}),
 		]);
 	}, [queryClient, orgId]);
 

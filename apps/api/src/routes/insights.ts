@@ -27,6 +27,7 @@ const CACHE_KEY_PREFIX = "ai-insights";
 const TIMEOUT_MS = 60_000;
 const MAX_WEBSITES = 5;
 const CONCURRENCY = 3;
+const GENERATION_COOLDOWN_HOURS = 6;
 
 const insightSchema = z.object({
 	title: z
@@ -60,6 +61,8 @@ const insightSchema = z.object({
 	type: z.enum([
 		"error_spike",
 		"new_errors",
+		"vitals_degraded",
+		"custom_event_spike",
 		"traffic_drop",
 		"traffic_spike",
 		"bounce_rate_change",
@@ -68,6 +71,7 @@ const insightSchema = z.object({
 		"page_trend",
 		"positive_trend",
 		"performance",
+		"uptime_issue",
 	]),
 	changePercent: z
 		.number()
@@ -345,6 +349,62 @@ async function processInBatches<T, R>(
 	return results;
 }
 
+async function getRecentInsightsFromDb(
+	organizationId: string
+): Promise<WebsiteInsight[] | null> {
+	const cutoff = dayjs().subtract(GENERATION_COOLDOWN_HOURS, "hour").toDate();
+
+	const rows = await db
+		.select({
+			id: analyticsInsights.id,
+			websiteId: analyticsInsights.websiteId,
+			websiteName: websites.name,
+			websiteDomain: websites.domain,
+			title: analyticsInsights.title,
+			description: analyticsInsights.description,
+			suggestion: analyticsInsights.suggestion,
+			severity: analyticsInsights.severity,
+			sentiment: analyticsInsights.sentiment,
+			type: analyticsInsights.type,
+			priority: analyticsInsights.priority,
+			changePercent: analyticsInsights.changePercent,
+			createdAt: analyticsInsights.createdAt,
+		})
+		.from(analyticsInsights)
+		.innerJoin(websites, eq(analyticsInsights.websiteId, websites.id))
+		.where(
+			and(
+				eq(analyticsInsights.organizationId, organizationId),
+				gte(analyticsInsights.createdAt, cutoff),
+				isNull(websites.deletedAt)
+			)
+		)
+		.orderBy(desc(analyticsInsights.priority))
+		.limit(10);
+
+	if (rows.length === 0) {
+		return null;
+	}
+
+	return rows.map(
+		(r): WebsiteInsight => ({
+			id: r.id,
+			websiteId: r.websiteId,
+			websiteName: r.websiteName,
+			websiteDomain: r.websiteDomain,
+			link: `/websites/${r.websiteId}`,
+			title: r.title,
+			description: r.description,
+			suggestion: r.suggestion,
+			severity: r.severity as ParsedInsight["severity"],
+			sentiment: r.sentiment as ParsedInsight["sentiment"],
+			type: r.type as ParsedInsight["type"],
+			priority: r.priority,
+			changePercent: r.changePercent ?? undefined,
+		})
+	);
+}
+
 function getRedis() {
 	try {
 		return getRedisCache();
@@ -485,7 +545,7 @@ export const insights = new Elysia({ prefix: "/v1/insights" })
 	)
 	.post(
 		"/ai",
-		async ({ body, user }) => {
+		async ({ body, user, set }) => {
 			const userId = user?.id;
 			if (!userId) {
 				mergeWideEvent({ insights_ai_error: "missing_user_id" });
@@ -499,7 +559,7 @@ export const insights = new Elysia({ prefix: "/v1/insights" })
 			});
 
 			const redis = getRedis();
-			const cacheKey = `${CACHE_KEY_PREFIX}:${organizationId}`;
+			const cacheKey = `${CACHE_KEY_PREFIX}:${organizationId}:${timezone}`;
 
 			if (redis) {
 				try {
@@ -524,6 +584,7 @@ export const insights = new Elysia({ prefix: "/v1/insights" })
 			const orgIds = new Set(memberships.map((m) => m.organizationId));
 			if (!orgIds.has(organizationId)) {
 				mergeWideEvent({ insights_access: "denied" });
+				set.status = 403;
 				return {
 					success: false,
 					error: "Access denied to this organization",
@@ -531,8 +592,29 @@ export const insights = new Elysia({ prefix: "/v1/insights" })
 				};
 			}
 
+			const recentInsights = await getRecentInsightsFromDb(organizationId);
+			if (recentInsights) {
+				mergeWideEvent({
+					insights_returned: recentInsights.length,
+					insights_source: "db_cooldown",
+				});
+				const payload: InsightsPayload = {
+					insights: recentInsights,
+					source: "ai",
+				};
+				if (redis) {
+					redis
+						.setex(cacheKey, CACHE_TTL, JSON.stringify(payload))
+						.catch(() => {});
+				}
+				return { success: true, ...payload };
+			}
+
 			const sites = await db.query.websites.findMany({
-				where: eq(websites.organizationId, organizationId),
+				where: and(
+					eq(websites.organizationId, organizationId),
+					isNull(websites.deletedAt)
+				),
 				columns: { id: true, name: true, domain: true },
 			});
 
@@ -610,11 +692,7 @@ export const insights = new Elysia({ prefix: "/v1/insights" })
 					});
 				}
 
-				for (const site of sites.slice(0, MAX_WEBSITES) as Array<{
-					id: string;
-					name: string;
-					domain: string;
-				}>) {
+				for (const site of sites.slice(0, MAX_WEBSITES)) {
 					const siteInsights = finalInsights.filter(
 						(s) => s.websiteId === site.id
 					);

@@ -3,6 +3,7 @@
 import {
 	ArrowRightIcon,
 	BugIcon,
+	CaretDownIcon,
 	ChartLineUpIcon,
 	CopyIcon,
 	GaugeIcon,
@@ -17,16 +18,15 @@ import {
 	WarningCircleIcon,
 	XIcon,
 } from "@phosphor-icons/react";
-import { generateId } from "ai";
 import Link from "next/link";
-import { type ReactNode, useMemo } from "react";
+import { type ReactNode, useMemo, useState } from "react";
 import { toast } from "sonner";
 import type {
 	Insight,
 	InsightSentiment,
 	InsightSeverity,
 	InsightType,
-} from "@/app/(main)/home/hooks/use-smart-insights";
+} from "@/lib/insight-types";
 import {
 	buildInsightCopyText,
 	buildInsightShareUrl,
@@ -110,22 +110,19 @@ const TYPE_STYLES: Record<
 
 const SEVERITY_STYLES: Record<
 	InsightSeverity,
-	{ label: string; color: string; bg: string }
+	{ label: string; color: string }
 > = {
 	critical: {
 		label: "Critical",
 		color: "text-red-600 dark:text-red-400",
-		bg: "bg-red-500/10",
 	},
 	warning: {
 		label: "Warning",
 		color: "text-amber-600 dark:text-amber-400",
-		bg: "bg-amber-500/10",
 	},
 	info: {
 		label: "Info",
 		color: "text-blue-600 dark:text-blue-400",
-		bg: "bg-blue-500/10",
 	},
 };
 
@@ -173,12 +170,13 @@ export function InsightCard({
 	feedbackVote,
 	onFeedbackAction,
 }: InsightCardProps) {
+	const [expanded, setExpanded] = useState(false);
 	const typeStyle = TYPE_STYLES[insight.type];
 	const severityStyle = SEVERITY_STYLES[insight.severity];
 	const sentimentStyle = SENTIMENT_STYLES[insight.sentiment];
 
 	const agentHref = useMemo(() => {
-		const chatId = generateId();
+		const chatId = crypto.randomUUID();
 		const prompt = encodeURIComponent(buildDiagnosticPrompt(insight));
 		return `/websites/${insight.websiteId}/agent/${chatId}?prompt=${prompt}`;
 	}, [insight]);
@@ -186,7 +184,8 @@ export function InsightCard({
 	const comparisonLine = formatComparisonWindow(insight);
 	const freshnessLine = formatInsightFreshness(insight);
 
-	const copySummaryAction = async () => {
+	const copySummaryAction = async (e: React.MouseEvent) => {
+		e.stopPropagation();
 		try {
 			await navigator.clipboard.writeText(buildInsightCopyText(insight));
 			toast.success("Copied insight to clipboard");
@@ -195,7 +194,8 @@ export function InsightCard({
 		}
 	};
 
-	const copyLinkAction = async () => {
+	const copyLinkAction = async (e: React.MouseEvent) => {
+		e.stopPropagation();
 		const url = buildInsightShareUrl(insight.id);
 		if (!url) {
 			return;
@@ -210,13 +210,20 @@ export function InsightCard({
 
 	return (
 		<div
-			className="scroll-mt-24 rounded border bg-card"
+			className={cn(
+				"scroll-mt-24 transition-colors",
+				expanded ? "bg-accent/20" : "hover:bg-accent/40"
+			)}
 			id={`insight-${insight.id}`}
 		>
-			<div className="flex items-start gap-3 p-4">
+			<button
+				className="flex w-full items-start gap-3 px-4 py-3 text-left sm:px-6"
+				onClick={() => setExpanded((v) => !v)}
+				type="button"
+			>
 				<div
 					className={cn(
-						"mt-0.5 flex size-8 shrink-0 items-center justify-center rounded",
+						"mt-0.5 flex size-7 shrink-0 items-center justify-center rounded",
 						typeStyle.bg,
 						typeStyle.color
 					)}
@@ -224,36 +231,27 @@ export function InsightCard({
 					{typeStyle.icon}
 				</div>
 				<div className="min-w-0 flex-1">
-					<div className="flex items-start justify-between gap-2">
-						<p className="font-medium text-foreground text-sm">
+					<div className="flex items-center justify-between gap-2">
+						<p className="truncate font-medium text-foreground text-sm">
 							{insight.title}
 						</p>
-						<div className="flex shrink-0 items-center gap-1">
-							{onDismissAction && (
-								<button
-									aria-label="Dismiss insight"
-									className="flex size-7 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-									onClick={onDismissAction}
-									type="button"
-								>
-									<XIcon className="size-3.5" weight="bold" />
-								</button>
-							)}
-							<span
-								className={cn(
-									"rounded px-1.5 py-0.5 font-medium text-[11px]",
-									severityStyle.bg,
-									severityStyle.color
-								)}
-							>
+						<div className="flex shrink-0 items-center gap-1.5">
+							<span className={cn("text-[11px]", severityStyle.color)}>
 								{severityStyle.label}
 							</span>
 							<span className="font-mono text-[11px] text-muted-foreground tabular-nums">
 								{insight.priority}/10
 							</span>
+							<CaretDownIcon
+								className={cn(
+									"size-3 text-muted-foreground transition-transform",
+									expanded && "rotate-180"
+								)}
+								weight="fill"
+							/>
 						</div>
 					</div>
-					<div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs">
+					<div className="mt-0.5 flex items-center gap-1.5 text-xs">
 						<span className="truncate text-muted-foreground">
 							{insight.websiteName ?? insight.websiteDomain}
 						</span>
@@ -276,137 +274,143 @@ export function InsightCard({
 									</span>
 								</>
 							)}
+						<span className="text-muted-foreground/30">&middot;</span>
+						<span className="text-muted-foreground">{freshnessLine}</span>
 					</div>
-					<p className="mt-1.5 text-pretty text-muted-foreground text-xs leading-relaxed">
-						{freshnessLine}
-						{comparisonLine ? (
-							<>
-								<br />
-								<span className="text-balance">{comparisonLine}</span>
-							</>
-						) : null}
-					</p>
+					{!expanded && (
+						<p className="mt-1 line-clamp-1 text-muted-foreground text-xs">
+							{insight.description}
+						</p>
+					)}
 				</div>
-			</div>
+			</button>
 
-			<div className="space-y-3 border-t px-4 py-3">
-				<p className="text-pretty text-muted-foreground text-sm leading-relaxed">
-					{insight.description}
-				</p>
-				<div className="flex items-start gap-2 rounded bg-accent/60 px-3 py-2.5">
-					<SparkleIcon
-						className="mt-px size-3.5 shrink-0 text-primary"
-						weight="duotone"
-					/>
-					<p className="text-pretty text-foreground text-sm leading-relaxed">
-						{insight.suggestion}
+			{expanded && (
+				<div className="space-y-2.5 px-4 pb-3 pl-14 sm:pl-15">
+					<p className="text-pretty text-muted-foreground text-xs leading-relaxed">
+						{insight.description}
 					</p>
-				</div>
 
-				{onFeedbackAction && (
+					{comparisonLine && (
+						<p className="text-balance text-muted-foreground/70 text-[11px]">
+							{comparisonLine}
+						</p>
+					)}
+
+					<div className="flex items-start gap-2 rounded bg-accent/60 px-2.5 py-2">
+						<SparkleIcon
+							className="mt-px size-3 shrink-0 text-primary"
+							weight="duotone"
+						/>
+						<p className="text-pretty text-foreground text-xs leading-relaxed">
+							{insight.suggestion}
+						</p>
+					</div>
+
 					<div className="flex flex-wrap items-center gap-2">
-						<span className="text-muted-foreground text-xs">
-							Was this useful?
-						</span>
+						<Link
+							className="inline-flex items-center gap-1.5 rounded bg-primary px-3 py-1.5 font-medium text-primary-foreground text-xs transition-opacity hover:opacity-90"
+							href={agentHref}
+							onClick={(e) => e.stopPropagation()}
+						>
+							Investigate with Databunny
+							<ArrowRightIcon className="size-3" weight="fill" />
+						</Link>
+						<Link
+							className="inline-flex items-center gap-1.5 rounded border px-3 py-1.5 font-medium text-foreground text-xs transition-colors hover:bg-accent"
+							href={insight.link}
+							onClick={(e) => e.stopPropagation()}
+						>
+							View analytics
+						</Link>
 						<button
-							aria-label="Mark as helpful"
-							aria-pressed={feedbackVote === "up"}
-							className={cn(
-								"flex size-8 items-center justify-center rounded border transition-colors",
-								feedbackVote === "up"
-									? "border-primary bg-primary/10 text-primary"
-									: "border-transparent bg-accent/50 text-muted-foreground hover:text-foreground"
-							)}
-							onClick={() =>
-								onFeedbackAction(feedbackVote === "up" ? null : "up")
-							}
+							className="inline-flex items-center gap-1 rounded border px-2 py-1.5 text-muted-foreground text-xs transition-colors hover:bg-accent hover:text-foreground"
+							onClick={copySummaryAction}
 							type="button"
 						>
-							<ThumbsUpIcon className="size-4" weight="duotone" />
+							<CopyIcon aria-hidden className="size-3.5" weight="duotone" />
 						</button>
 						<button
-							aria-label="Mark as not helpful"
-							aria-pressed={feedbackVote === "down"}
-							className={cn(
-								"flex size-8 items-center justify-center rounded border transition-colors",
-								feedbackVote === "down"
-									? "border-destructive bg-destructive/10 text-destructive"
-									: "border-transparent bg-accent/50 text-muted-foreground hover:text-foreground"
-							)}
-							onClick={() =>
-								onFeedbackAction(feedbackVote === "down" ? null : "down")
-							}
+							className="inline-flex items-center gap-1 rounded border px-2 py-1.5 text-muted-foreground text-xs transition-colors hover:bg-accent hover:text-foreground"
+							onClick={copyLinkAction}
 							type="button"
 						>
-							<ThumbsDownIcon className="size-4" weight="duotone" />
+							<LinkIcon aria-hidden className="size-3.5" weight="duotone" />
 						</button>
-					</div>
-				)}
 
-				<div className="flex flex-wrap items-center gap-2">
-					<Link
-						className="inline-flex items-center gap-1.5 rounded bg-primary px-3 py-1.5 font-medium text-primary-foreground text-xs transition-opacity hover:opacity-90"
-						href={agentHref}
-					>
-						Investigate with Databunny
-						<ArrowRightIcon className="size-3" weight="fill" />
-					</Link>
-					<Link
-						className="inline-flex items-center gap-1.5 rounded border px-3 py-1.5 font-medium text-foreground text-xs transition-colors hover:bg-accent"
-						href={insight.link}
-					>
-						View analytics
-					</Link>
-					<button
-						className="inline-flex items-center gap-1.5 rounded border px-2.5 py-1.5 font-medium text-foreground text-xs transition-colors hover:bg-accent"
-						onClick={copySummaryAction}
-						type="button"
-					>
-						<CopyIcon
-							aria-hidden
-							className="size-3.5 text-muted-foreground"
-							weight="duotone"
-						/>
-						Copy
-					</button>
-					<button
-						className="inline-flex items-center gap-1.5 rounded border px-2.5 py-1.5 font-medium text-foreground text-xs transition-colors hover:bg-accent"
-						onClick={copyLinkAction}
-						type="button"
-					>
-						<LinkIcon
-							aria-hidden
-							className="size-3.5 text-muted-foreground"
-							weight="duotone"
-						/>
-						Copy link
-					</button>
+						{onDismissAction && (
+							<button
+								aria-label="Dismiss insight"
+								className="inline-flex items-center gap-1 rounded border px-2 py-1.5 text-muted-foreground text-xs transition-colors hover:bg-accent hover:text-foreground"
+								onClick={(e) => {
+									e.stopPropagation();
+									onDismissAction();
+								}}
+								type="button"
+							>
+								<XIcon aria-hidden className="size-3.5" weight="bold" />
+							</button>
+						)}
+
+						{onFeedbackAction && (
+							<>
+								<span className="mx-0.5 h-4 w-px bg-border" />
+								<button
+									aria-label="Mark as helpful"
+									aria-pressed={feedbackVote === "up"}
+									className={cn(
+										"inline-flex size-7 items-center justify-center rounded border transition-colors",
+										feedbackVote === "up"
+											? "border-primary bg-primary/10 text-primary"
+											: "text-muted-foreground hover:bg-accent hover:text-foreground"
+									)}
+									onClick={(e) => {
+										e.stopPropagation();
+										onFeedbackAction(feedbackVote === "up" ? null : "up");
+									}}
+									type="button"
+								>
+									<ThumbsUpIcon className="size-3.5" weight="duotone" />
+								</button>
+								<button
+									aria-label="Mark as not helpful"
+									aria-pressed={feedbackVote === "down"}
+									className={cn(
+										"inline-flex size-7 items-center justify-center rounded border transition-colors",
+										feedbackVote === "down"
+											? "border-destructive bg-destructive/10 text-destructive"
+											: "text-muted-foreground hover:bg-accent hover:text-foreground"
+									)}
+									onClick={(e) => {
+										e.stopPropagation();
+										onFeedbackAction(feedbackVote === "down" ? null : "down");
+									}}
+									type="button"
+								>
+									<ThumbsDownIcon className="size-3.5" weight="duotone" />
+								</button>
+							</>
+						)}
+					</div>
 				</div>
-			</div>
+			)}
 		</div>
 	);
 }
 
 export function InsightCardSkeleton() {
 	return (
-		<div className="rounded border bg-card">
-			<div className="flex items-start gap-3 p-4">
-				<Skeleton className="mt-0.5 size-8 shrink-0 rounded" />
-				<div className="min-w-0 flex-1 space-y-2">
-					<div className="flex items-start justify-between gap-2">
+		<div className="flex items-start gap-3 px-4 py-3 sm:px-6">
+			<Skeleton className="mt-0.5 size-7 shrink-0 rounded" />
+			<div className="min-w-0 flex-1 space-y-2">
+				<div className="flex items-start justify-between gap-2">
+					<div className="flex-1 space-y-1">
 						<Skeleton className="h-4 w-48 rounded" />
-						<Skeleton className="h-5 w-16 shrink-0 rounded" />
+						<Skeleton className="h-3 w-32 rounded" />
 					</div>
-					<Skeleton className="h-3 w-32 rounded" />
+					<Skeleton className="h-4 w-12 rounded" />
 				</div>
-			</div>
-			<div className="space-y-3 border-t px-4 py-3">
-				<div className="space-y-1.5">
-					<Skeleton className="h-3 w-full rounded" />
-					<Skeleton className="h-3 w-3/4 rounded" />
-				</div>
-				<Skeleton className="h-12 w-full rounded" />
-				<Skeleton className="h-7 w-44 rounded" />
+				<Skeleton className="h-3 w-56 rounded" />
 			</div>
 		</div>
 	);

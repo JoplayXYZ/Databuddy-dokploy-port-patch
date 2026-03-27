@@ -1,4 +1,4 @@
-import type { Insight } from "@/app/(main)/home/hooks/use-smart-insights";
+import type { Insight } from "@/lib/insight-types";
 import dayjs from "@/lib/dayjs";
 
 /** Human-readable comparison window when DB persisted period fields exist. */

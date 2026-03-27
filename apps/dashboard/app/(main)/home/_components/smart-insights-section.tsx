@@ -14,7 +14,6 @@ import {
 	TrendUpIcon,
 	WarningCircleIcon,
 } from "@phosphor-icons/react";
-import { generateId } from "ai";
 import Link from "next/link";
 import { type ReactNode, useMemo, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -23,7 +22,7 @@ import type {
 	Insight,
 	InsightSentiment,
 	InsightType,
-} from "../hooks/use-smart-insights";
+} from "@/lib/insight-types";
 
 function buildDiagnosticPrompt(insight: Insight): string {
 	const parts = [
@@ -109,7 +108,7 @@ function InsightRow({ insight }: { insight: Insight }) {
 		SENTIMENT_STYLE[insight.sentiment] ?? SENTIMENT_STYLE.neutral;
 
 	const agentHref = useMemo(() => {
-		const chatId = generateId();
+		const chatId = crypto.randomUUID();
 		const prompt = encodeURIComponent(buildDiagnosticPrompt(insight));
 		return `/websites/${insight.websiteId}/agent/${chatId}?prompt=${prompt}`;
 	}, [insight]);
