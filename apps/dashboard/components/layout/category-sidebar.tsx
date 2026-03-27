@@ -14,6 +14,7 @@ import {
 	TooltipContent,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useHasMounted } from "@/hooks/use-has-mounted";
 import { useWebsitesLight } from "@/hooks/use-websites";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/button";
@@ -21,6 +22,7 @@ import {
 	categoryConfig,
 	createLoadingWebsitesNavigation,
 	createWebsitesNavigation,
+	filterCategoriesByFlags,
 	filterCategoriesForRoute,
 	getContextConfig,
 	getDefaultCategory,
@@ -54,7 +56,8 @@ export function CategorySidebar({
 		enabled: user !== null,
 	});
 	const [helpOpen, setHelpOpen] = useState(false);
-	const { isOn } = useFlags();
+	const { getFlag } = useFlags();
+	const hasMounted = useHasMounted();
 	const openCommandSearchAction = useCommandSearchOpenAction();
 
 	const { categories, defaultCategory } = useMemo(() => {
@@ -73,18 +76,14 @@ export function CategorySidebar({
 				: baseConfig;
 
 		const defaultCat = getDefaultCategory(pathname);
-		const filteredCategories = filterCategoriesForRoute(
-			config.categories,
-			pathname
-		).filter((category) => {
-			if (category.flag && !isOn(category.flag)) {
-				return false;
-			}
-			return true;
-		});
+		const filteredCategories = filterCategoriesByFlags(
+			filterCategoriesForRoute(config.categories, pathname),
+			hasMounted,
+			getFlag
+		);
 
 		return { categories: filteredCategories, defaultCategory: defaultCat };
-	}, [pathname, websites, isLoadingWebsites, isOn]);
+	}, [pathname, websites, isLoadingWebsites, hasMounted, getFlag]);
 
 	const activeCategory = selectedCategory || defaultCategory;
 

@@ -5,6 +5,7 @@ import { useFlags } from "@databuddy/sdk/react";
 import { CaretDownIcon } from "@phosphor-icons/react";
 import { usePathname } from "next/navigation";
 import { useMemo } from "react";
+import { useHasMounted } from "@/hooks/use-has-mounted";
 import { Button } from "@/components/ui/button";
 import {
 	DropdownMenu,
@@ -18,6 +19,7 @@ import {
 	categoryConfig,
 	createLoadingWebsitesNavigation,
 	createWebsitesNavigation,
+	filterCategoriesByFlags,
 	filterCategoriesForRoute,
 	getContextConfig,
 	getDefaultCategory,
@@ -39,7 +41,8 @@ export function MobileCategorySelector({
 	const { websites, isLoading: isLoadingWebsites } = useWebsitesLight({
 		enabled: user !== null,
 	});
-	const { isOn } = useFlags();
+	const { getFlag } = useFlags();
+	const hasMounted = useHasMounted();
 
 	const { categories, defaultCategory } = useMemo(() => {
 		const baseConfig = getContextConfig(pathname);
@@ -57,19 +60,14 @@ export function MobileCategorySelector({
 				: baseConfig;
 
 		const defaultCat = getDefaultCategory(pathname);
-		const filteredCategories = filterCategoriesForRoute(
-			config.categories,
-			pathname
-		).filter((category) => {
-			if (category.flag) {
-				const flagState = isOn(category.flag);
-				return flagState;
-			}
-			return true;
-		});
+		const filteredCategories = filterCategoriesByFlags(
+			filterCategoriesForRoute(config.categories, pathname),
+			hasMounted,
+			getFlag
+		);
 
 		return { categories: filteredCategories, defaultCategory: defaultCat };
-	}, [pathname, websites, isLoadingWebsites, isOn]);
+	}, [pathname, websites, isLoadingWebsites, hasMounted, getFlag]);
 
 	const activeCategory = selectedCategory || defaultCategory;
 	const currentCategory = categories.find((cat) => cat.id === activeCategory);

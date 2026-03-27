@@ -22,6 +22,7 @@ import { useCommandSearchOpenAction } from "@/components/ui/command-search";
 import { Drawer, DrawerContent } from "@/components/ui/drawer";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { useAccordionStates } from "@/hooks/use-persistent-state";
+import { useHasMounted } from "@/hooks/use-has-mounted";
 import { useWebsitesLight } from "@/hooks/use-websites";
 import { cn } from "@/lib/utils";
 import { Branding } from "./logo";
@@ -29,6 +30,7 @@ import {
 	categoryConfig,
 	createLoadingWebsitesNavigation,
 	createWebsitesNavigation,
+	filterCategoriesByFlags,
 	filterCategoriesForRoute,
 	getContextConfig,
 	getDefaultCategory,
@@ -117,7 +119,8 @@ export function MobileSidebar({
 	const pathname = usePathname();
 	const router = useRouter();
 	const openCommandSearchAction = useCommandSearchOpenAction();
-	const { isOn } = useFlags();
+	const { getFlag } = useFlags();
+	const hasMounted = useHasMounted();
 
 	const { websites, isLoading: isLoadingWebsites } = useWebsitesLight({
 		enabled: user !== null,
@@ -142,15 +145,12 @@ export function MobileSidebar({
 					}
 				: baseConfig;
 
-		return filterCategoriesForRoute(config.categories, pathname).filter(
-			(category) => {
-				if (category.flag) {
-					return isOn(category.flag);
-				}
-				return true;
-			}
+		return filterCategoriesByFlags(
+			filterCategoriesForRoute(config.categories, pathname),
+			hasMounted,
+			getFlag
 		);
-	}, [pathname, websites, isLoadingWebsites, isOn]);
+	}, [pathname, websites, isLoadingWebsites, hasMounted, getFlag]);
 
 	const defaultCategory = useMemo(
 		() => getDefaultCategory(pathname),

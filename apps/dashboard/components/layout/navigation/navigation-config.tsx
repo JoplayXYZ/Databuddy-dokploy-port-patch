@@ -79,6 +79,28 @@ export const filterCategoriesForRoute = (
 	return categories.filter((category) => !(category.hideFromDemo && isDemo));
 };
 
+/**
+ * Hides flag-gated categories until the client has mounted, then applies the same
+ * rule as main navigation: only show when the flag is ready and on. Prevents
+ * hydration mismatches from `isOn` / flag store differing between SSR and first paint.
+ */
+export function filterCategoriesByFlags(
+	categories: Category[],
+	hasMounted: boolean,
+	getFlag: (key: string) => { status: string; on: boolean }
+): Category[] {
+	return categories.filter((category) => {
+		if (!category.flag) {
+			return true;
+		}
+		if (!hasMounted) {
+			return false;
+		}
+		const flagState = getFlag(category.flag);
+		return flagState.status === "ready" && flagState.on;
+	});
+}
+
 const createDynamicNavigation = <T extends { id: string; name: string | null }>(
 	items: T[],
 	title: string,
@@ -480,4 +502,12 @@ export const createLoadingWebsitesNavigation = (): NavigationEntry[] => [
 		"Loading websites...",
 		GlobeIcon
 	),
+	createNavSection("Observability", ActivityIcon, [
+		createNavItem("Links", LinkIcon, "/links", {
+			highlight: true,
+		}),
+		createNavItem("Custom Events", LightningIcon, "/events", {
+			highlight: true,
+		}),
+	]),
 ];
