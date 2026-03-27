@@ -19,6 +19,7 @@ Use this file when the task spans multiple packages or when the right edit locat
 
 - Elysia API service
 - Default dev port: `3001`
+- AI insights: [`apps/api/src/routes/insights.ts`](/Users/iza/Dev/Databuddy/apps/api/src/routes/insights.ts) — loads last ~14d insight titles per site into the model prompt to reduce repeat narratives; true “living” dedupe/merge would need schema or upsert work. Funnel/MRR/retention insights require those metrics in query data—do not invent in prompts alone.
 - Handles routes such as public endpoints, webhooks, health, query, MCP, and agent-related APIs
 - Typical work:
   - route handlers

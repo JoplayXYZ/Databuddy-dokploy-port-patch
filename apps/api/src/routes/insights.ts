@@ -28,6 +28,8 @@ const TIMEOUT_MS = 60_000;
 const MAX_WEBSITES = 5;
 const CONCURRENCY = 3;
 const GENERATION_COOLDOWN_HOURS = 6;
+const RECENT_INSIGHTS_LOOKBACK_DAYS = 14;
+const RECENT_INSIGHTS_PROMPT_LIMIT = 12;
 
 const insightSchema = z.object({
 	title: z
@@ -38,12 +40,12 @@ const insightSchema = z.object({
 	description: z
 		.string()
 		.describe(
-			"2-3 sentences with specific numbers from BOTH periods. Always include the actual values and the delta."
+			"2-3 sentences: what changed and why it might matter, with specific numbers from BOTH periods. Explain cause only when grounded in the data or annotations."
 		),
 	suggestion: z
 		.string()
 		.describe(
-			'One concrete, specific action. Good: "Your /blog/seo-guide drove 40% of traffic - share it on social." Bad: "Monitor your traffic."'
+			"Required prescriptive 'now what': one or two sentences telling the user what to do next (product, marketing, or ops). Tie to the metric (e.g. add a CTA, capture email from volatile channel, prioritize top error). Never generic: no 'monitor', 'keep watching', or 'consider reviewing' without a concrete step."
 		),
 	severity: z.enum(["critical", "warning", "info"]),
 	sentiment: z
@@ -56,7 +58,7 @@ const insightSchema = z.object({
 		.min(1)
 		.max(10)
 		.describe(
-			"1-10. Errors affecting users = 8-10, significant traffic change = 5-7, stable/informational = 1-4"
+			"1-10 from actionability × business impact, NOT raw % magnitude. User-facing errors, conversion/session drops, or reliability issues outrank vanity traffic spikes. A 5% drop in a meaningful engagement metric can score higher than a 70% visitor increase with no conversion context. Reserve 8-10 for issues that hurt users or revenue signals in the data."
 		),
 	type: z.enum([
 		"error_spike",
@@ -84,7 +86,7 @@ const insightsOutputSchema = z.object({
 		.array(insightSchema)
 		.max(3)
 		.describe(
-			"1-3 insights ranked by surprise-factor x impact. Focus on what changed and why it matters."
+			"1-3 insights ranked by actionability × business impact. Skip repeating a narrative already listed under recently reported insights unless the change is materially new."
 		),
 });
 
@@ -227,21 +229,71 @@ async function fetchRecentAnnotations(websiteId: string): Promise<string> {
 	return `\n\nUser annotations (known events that may explain changes):\n${lines.join("\n")}`;
 }
 
-const INSIGHTS_SYSTEM_PROMPT = `You are an analytics insights engine. Your job is to find the 1-3 most significant, actionable findings from week-over-week website data.
+async function fetchRecentInsightsForPrompt(
+	organizationId: string,
+	websiteId: string
+): Promise<string> {
+	const since = dayjs().subtract(RECENT_INSIGHTS_LOOKBACK_DAYS, "day").toDate();
 
-Significance thresholds:
-- Traffic (pageviews/visitors/sessions): <5% change = only mention if nothing else notable. 5-15% = worth noting. >15% = significant. >30% = critical.
+	const rows = await db
+		.select({
+			title: analyticsInsights.title,
+			type: analyticsInsights.type,
+			createdAt: analyticsInsights.createdAt,
+		})
+		.from(analyticsInsights)
+		.where(
+			and(
+				eq(analyticsInsights.organizationId, organizationId),
+				eq(analyticsInsights.websiteId, websiteId),
+				gte(analyticsInsights.createdAt, since)
+			)
+		)
+		.orderBy(desc(analyticsInsights.createdAt))
+		.limit(RECENT_INSIGHTS_PROMPT_LIMIT);
+
+	if (rows.length === 0) {
+		return "";
+	}
+
+	const lines = rows.map(
+		(r) =>
+			`- [${r.type}] ${r.title} (${dayjs(r.createdAt).format("YYYY-MM-DD")})`
+	);
+
+	return `\n\n## Recently reported insights for this website (avoid repeating the same narrative unless something materially changed)\n${lines.join("\n")}`;
+}
+
+const INSIGHTS_SYSTEM_PROMPT = `You are an analytics insights engine. Your job is to find the 1-3 most significant findings from week-over-week website data, written like an analyst: descriptive where needed, but every insight MUST include a prescriptive "so what / now what" in the suggestion field.
+
+Priority scoring (priority 1-10):
+- Score by actionability × business impact, NOT by how large the percentage move is. Traffic spikes without conversion or outcome context are lower priority than errors, session/engagement collapses, or clear negative trends affecting users.
+- Operational health (errors, reliability) often matters more than vanity traffic growth. A moderate error-rate improvement during high traffic can be high value.
+- Do not assign 8-10 to pure volume spikes unless the data also shows a linked risk or opportunity worth acting on.
+
+Significance thresholds (for what to mention):
+- Traffic (pageviews/visitors/sessions): <5% change = only mention if nothing else notable. 5-15% = worth noting. >15% = significant. >30% = notable volume change.
 - Errors: new error types = always report. Error rate up >0.5% = warning. Error rate up >2% = critical.
 - Bounce rate: change >5 percentage points = notable.
 - Pages: new page entering top 10 or page dropping out = notable. Individual page change >25% = significant.
 - Referrers: new source appearing or major source declining >20% = notable.
 
+Anti-redundancy:
+- If the user message includes a "Recently reported insights" section, treat those as already surfaced. Do NOT output a new insight that tells the same story (same underlying signal and direction) unless the narrative would be materially different (e.g. new root cause, reversal, or threshold crossed). Prefer novel angles or omit.
+
+Data boundaries:
+- Only use metrics present in the JSON (summary, pages, errors, referrers). Do not invent funnel conversion rates, MRR, revenue, cohort retention, or signup counts unless they appear in the data.
+- If conversion or goal data appears in summary_metrics, you may connect traffic to outcomes. If absent, do not fabricate funnel or revenue insights.
+
+Suggestion field (required quality):
+- Must answer "what should we do next?" in one or two sentences: concrete product, marketing, or engineering action tied to the numbers.
+- Bad: "Monitor traffic", "Keep an eye on this", "Consider reviewing analytics."
+- Good: tie to pages, channels, CTAs, error classes, or experiments suggested by the data.
+
 Rules:
-- Every insight MUST include specific numbers from both periods (e.g. "1,234 visitors, up from 987 last week")
-- Every suggestion MUST be a concrete next step, not generic advice
-- If annotations explain a change, mention it but still report the data
-- If everything is stable, return ONE positive/neutral insight (e.g. "Steady at 2,400 weekly visitors")
-- Rank by surprise-factor x business-impact
+- Every insight MUST include specific numbers from both periods where applicable.
+- If annotations explain a change, mention it but still report the data.
+- If everything is stable, return ONE positive/neutral insight (e.g. "Steady at 2,400 weekly visitors") with a light suggestion if appropriate.
 - Never fabricate or round numbers beyond what's in the data`;
 
 async function analyzeWebsite(
@@ -255,23 +307,25 @@ async function analyzeWebsite(
 	const currentRange = period.current;
 	const previousRange = period.previous;
 
-	const [current, previous, annotationContext] = await Promise.all([
-		fetchPeriodData(
-			websiteId,
-			domain,
-			currentRange.from,
-			currentRange.to,
-			timezone
-		),
-		fetchPeriodData(
-			websiteId,
-			domain,
-			previousRange.from,
-			previousRange.to,
-			timezone
-		),
-		fetchRecentAnnotations(websiteId),
-	]);
+	const [current, previous, annotationContext, recentInsightsBlock] =
+		await Promise.all([
+			fetchPeriodData(
+				websiteId,
+				domain,
+				currentRange.from,
+				currentRange.to,
+				timezone
+			),
+			fetchPeriodData(
+				websiteId,
+				domain,
+				previousRange.from,
+				previousRange.to,
+				timezone
+			),
+			fetchRecentAnnotations(websiteId),
+			fetchRecentInsightsForPrompt(organizationId, websiteId),
+		]);
 
 	const hasData = current.summary.length > 0 || current.topPages.length > 0;
 	if (!hasData) {
@@ -285,7 +339,7 @@ async function analyzeWebsite(
 		previousRange
 	);
 
-	const prompt = `Analyze this website's week-over-week data and return insights.\n\n${dataSection}${annotationContext}`;
+	const prompt = `Analyze this website's week-over-week data and return insights.\n\n${dataSection}${annotationContext}${recentInsightsBlock}`;
 
 	try {
 		const result = await generateText({
