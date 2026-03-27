@@ -25,7 +25,6 @@ import { toast } from "sonner";
 import type {
 	Insight,
 	InsightSentiment,
-	InsightSeverity,
 	InsightType,
 } from "@/lib/insight-types";
 import {
@@ -114,12 +113,6 @@ const TYPE_STYLES: Record<
 	},
 };
 
-const SEVERITY_BORDER: Record<InsightSeverity, string> = {
-	critical: "border-l-red-500",
-	warning: "border-l-amber-500",
-	info: "border-l-blue-400",
-};
-
 const SENTIMENT_STYLES: Record<
 	InsightSentiment,
 	{ label: string; color: string }
@@ -203,8 +196,7 @@ export function InsightCard({
 	return (
 		<div
 			className={cn(
-				"group scroll-mt-24 border-b border-l-2 transition-colors",
-				SEVERITY_BORDER[insight.severity],
+				"group scroll-mt-24 border-b transition-colors",
 				expanded ? "bg-accent/20" : "hover:bg-accent/40"
 			)}
 			id={`insight-${insight.id}`}
@@ -335,8 +327,16 @@ export function InsightCard({
 							Investigate
 							<ArrowRightIcon className="size-3" weight="fill" />
 						</Link>
+						<button
+							className="inline-flex items-center gap-1.5 rounded border px-3 py-1.5 font-medium text-foreground text-xs transition-colors hover:bg-accent"
+							onClick={copySummaryAction}
+							type="button"
+						>
+							<CopyIcon aria-hidden className="size-3.5" weight="duotone" />
+							Copy
+						</button>
 						<Link
-							className="text-muted-foreground text-xs transition-colors hover:text-foreground"
+							className="inline-flex items-center gap-1.5 rounded border px-3 py-1.5 text-muted-foreground text-xs transition-colors hover:bg-accent hover:text-foreground"
 							href={insight.link}
 						>
 							View analytics
@@ -353,10 +353,6 @@ export function InsightCard({
 								</button>
 							</DropdownMenuTrigger>
 							<DropdownMenuContent align="start" className="w-40">
-								<DropdownMenuItem onClick={copySummaryAction}>
-									<CopyIcon className="size-4" weight="duotone" />
-									Copy insight
-								</DropdownMenuItem>
 								<DropdownMenuItem onClick={copyLinkAction}>
 									<LinkIcon className="size-4" weight="duotone" />
 									Copy link
