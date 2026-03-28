@@ -55,10 +55,11 @@ export function CalculatorSection() {
 					Cookie Banner Cost Calculator
 				</p>
 				<h2 className="mb-3 font-bold text-2xl tracking-tight sm:text-3xl">
-					How much is your cookie banner costing you?
+					Model the measurement gap
 				</h2>
 				<p className="mx-auto max-w-2xl text-balance text-muted-foreground text-sm">
-					Adjust the inputs below. Every output updates in real time.
+					Labels say unmeasured and unattributed — not money walking out the
+					door. Adjust inputs; outputs update live.
 				</p>
 			</div>
 
@@ -143,21 +144,21 @@ export function CalculatorSection() {
 					<SciFiCard>
 						<div className="flex h-full flex-col rounded border border-border bg-card/70 p-5 backdrop-blur-sm sm:p-6">
 							<h3 className="mb-5 font-semibold text-sm uppercase tracking-wider">
-								What You're Losing
+								Unmeasured in cookie analytics
 							</h3>
 
 							<div className="flex flex-1 flex-col justify-between gap-4">
 								<ResultRow
-									label="Lost Visitors / mo"
+									label="Unmeasured visitors / mo"
 									value={formatNumber(results.lostVisitors)}
 								/>
 								<ResultRow
-									label="Lost Paying Customers / mo"
+									label="Unattributed conversions / mo (modeled)"
 									value={formatNumber(results.lostConversions)}
 								/>
 								<ResultRow
 									highlight
-									label="Opportunity Cost / mo"
+									label="Modeled unattributed revenue / mo"
 									value={formatCurrencyFull(results.lostRevenueMonthly)}
 								/>
 
@@ -165,7 +166,7 @@ export function CalculatorSection() {
 
 								<div className="rounded border border-destructive/20 bg-destructive/5 p-4">
 									<p className="mb-1 text-muted-foreground text-xs uppercase tracking-wider">
-										Opportunity Cost / Year
+										Modeled unattributed revenue / year
 									</p>
 									<p className="font-bold text-2xl text-destructive tabular-nums tracking-tight sm:text-3xl">
 										{formatCurrencyFull(results.lostRevenueYearly)}
@@ -178,7 +179,8 @@ export function CalculatorSection() {
 											{formatCurrencyFull(results.lostRevenueYearlyRangeLow)} –{" "}
 											{formatCurrencyFull(results.lostRevenueYearlyRangeHigh)}
 										</span>
-										/year
+										/year. Not literal profit-and-loss impact — assumes
+										conversions scale with traffic.
 									</p>
 								</div>
 
@@ -189,7 +191,7 @@ export function CalculatorSection() {
 									<div className="flex flex-col gap-1.5 text-sm">
 										<div className="flex justify-between gap-2">
 											<span className="text-muted-foreground">
-												Banner opportunity cost
+												Modeled measurement gap
 											</span>
 											<span className="font-semibold tabular-nums">
 												{formatCurrencyFull(results.lostRevenueMonthly)}
@@ -224,8 +226,9 @@ export function CalculatorSection() {
 			<div className="mt-4 text-center">
 				<p className="text-pretty text-muted-foreground text-xs">
 					Yearly range: {formatPercent(VISITOR_DATA_LOSS_RANGE_LOW)}–
-					{formatPercent(VISITOR_DATA_LOSS_RANGE_HIGH)} data loss. Sources
-					below. Databuddy needs no cookies.
+					{formatPercent(VISITOR_DATA_LOSS_RANGE_HIGH)} unmeasured share.
+					Sources below. Databuddy needs no consent cookie; any JS can still be
+					blocked.
 				</p>
 			</div>
 		</section>

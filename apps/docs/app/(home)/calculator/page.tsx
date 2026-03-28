@@ -8,7 +8,7 @@ import { ScenariosSection } from "./_components/scenarios-section";
 
 const TITLE = "Cookie Banner Cost Calculator";
 const DESCRIPTION =
-	"Estimate opportunity cost from visitor data loss: your traffic, visitor-to-paid rate, revenue per conversion, and a 40–70% range.";
+	"Model unattributed revenue from the cookie-consent measurement gap: traffic, visitor-to-paid, revenue per conversion, and a 40–70% band. Not P&L impact.";
 
 /** Matches defaults: 50k visitors, 55% data loss, 1.5% visitor-to-paid, $50 — ~$248k/yr; ~$11/mo Databuddy at this volume */
 const DEFAULT_OG_PARAMS = "revenue=247500&visitors=50000&cost=11";
@@ -34,7 +34,7 @@ export async function generateMetadata({
 	const ogImageUrl = `${SITE_URL}/calculator/og?${ogParams}`;
 
 	const personalizedDescription = hasPersonalizedParams
-		? `Estimated opportunity cost ~$${Number(revenue).toLocaleString()}/year vs Databuddy ~$${Number(cost).toLocaleString()}/month. Model yours.`
+		? `Modeled unattributed revenue ~$${Number(revenue).toLocaleString()}/year (measurement gap) vs Databuddy ~$${Number(cost).toLocaleString()}/month — not literal loss.`
 		: DESCRIPTION;
 
 	return {
@@ -74,9 +74,13 @@ export default function CalculatorPage() {
 						Cookie Banner Cost Calculator
 					</h1>
 					<p className="mx-auto max-w-2xl text-balance text-pretty text-muted-foreground text-sm sm:text-base">
-						Without consent, those visits do not show up in cookie-based
-						analytics. Model opportunity cost with a visitor data loss rate
-						(default 55%) and a 40–70% sensitivity band on the yearly figure.
+						Without consent, visits often do not show up in cookie-based
+						analytics — a measurement gap, not people abandoning your site. The
+						model estimates unattributed revenue if conversions scale with
+						traffic the same way across measured and unmeasured visits (default
+						55% unmeasured; 40–70% band on the yearly figure). Popular scripts
+						can still be blocked: think cookie + consent + adblock vs cookieless
+						+ adblock, not recovering every dollar.
 					</p>
 				</header>
 

@@ -6,7 +6,8 @@ export function CalculatorSources() {
 			</p>
 			<p className="mb-4 text-pretty text-muted-foreground text-xs leading-relaxed sm:text-sm">
 				<span className="text-foreground/90">Visitor data loss</span> means
-				visits that do not send consent to cookie-based analytics.
+				visits that do not send consent to cookie-based analytics — a
+				measurement gap, not customers who left your site.
 			</p>
 			<div className="space-y-4 text-pretty text-muted-foreground text-xs leading-relaxed sm:text-sm">
 				<div>

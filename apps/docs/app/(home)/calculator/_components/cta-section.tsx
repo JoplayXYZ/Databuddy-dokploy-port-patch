@@ -16,9 +16,10 @@ export function CtaSection() {
 						Drop the cookie banner. Keep the insights.
 					</h2>
 					<p className="mx-auto mb-6 max-w-xl text-pretty text-muted-foreground text-sm sm:text-base">
-						Databuddy is privacy-first analytics that needs no cookies, no
-						consent banners, and no GDPR headaches. Under 30 KB. You stop losing
-						measurable traffic the day you switch.
+						Databuddy is privacy-first analytics with no cookies and no consent
+						banners. Under 30 KB. You get visibility into traffic cookie stacks
+						often miss — cookieless scripts can still be blocked, but you skip
+						consent loss on measurement.
 					</p>
 
 					<div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -31,7 +32,7 @@ export function CtaSection() {
 							title="Under 30 KB"
 						/>
 						<ValueProp
-							description="Starts at $10/mo — compare to the number above"
+							description="Starts at $10/mo — compare to modeled gap above"
 							title="Predictable pricing"
 						/>
 					</div>

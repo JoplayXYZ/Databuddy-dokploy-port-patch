@@ -29,7 +29,7 @@ function buildTwitterShareUrl(
 		monthlyVisitors,
 		databuddyMonthlyCost
 	);
-	const text = `🍪 My cookie banner hides a huge share of visitors from analytics — ~${formatCurrencyFull(lostRevenueYearly)}/year in modeled opportunity cost. Model yours →`;
+	const text = `🍪 ~${formatCurrencyFull(lostRevenueYearly)}/yr modeled unattributed revenue (cookie-consent measurement gap, not literal loss). Model yours →`;
 	const params = new URLSearchParams({ text, url: shareUrl });
 	return `https://x.com/intent/tweet?${params.toString()}`;
 }
@@ -44,7 +44,7 @@ function buildRedditShareUrl(
 		monthlyVisitors,
 		databuddyMonthlyCost
 	);
-	const title = `Cookie consent & visitor data loss: ${formatCurrencyFull(lostRevenueYearly)}/year modeled opportunity cost`;
+	const title = `Modeled unattributed revenue (measurement gap): ${formatCurrencyFull(lostRevenueYearly)}/year`;
 	const params = new URLSearchParams({ url: shareUrl, title });
 	return `https://www.reddit.com/submit?${params.toString()}`;
 }

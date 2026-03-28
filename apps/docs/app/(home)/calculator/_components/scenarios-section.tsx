@@ -20,8 +20,9 @@ export function ScenariosSection() {
 					The numbers across 5 real-world profiles
 				</h2>
 				<p className="mx-auto max-w-2xl text-balance text-muted-foreground text-sm">
-					Opportunity cost at realistic visitor data loss and visitor-to-paid
-					assumptions. Your mileage will vary.
+					Modeled unattributed revenue at realistic visitor data loss and
+					visitor-to-paid assumptions — not literal profit-and-loss impact. Your
+					mileage will vary.
 				</p>
 			</div>
 
@@ -92,7 +93,7 @@ function ScenarioCard({ scenario }: { scenario: Scenario }) {
 				<div className="mt-auto space-y-3 border-border border-t pt-3">
 					<div className="flex items-baseline justify-between">
 						<span className="text-muted-foreground text-xs">
-							Opportunity cost / year
+							Modeled unattributed revenue / year
 						</span>
 						<span className="font-bold text-destructive text-lg tabular-nums">
 							{formatCurrencyFull(scenario.outputs.lostRevenueYearly)}
