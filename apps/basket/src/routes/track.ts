@@ -8,34 +8,7 @@ import { VALIDATION_LIMITS, validatePayloadSize } from "@utils/validation";
 import { Elysia } from "elysia";
 import { createError, EvlogError } from "evlog";
 import { useLogger } from "evlog/elysia";
-import { z } from "zod";
-
-const trackEventSchema = z.union([
-	z.object({
-		name: z.string().min(1).max(256),
-		namespace: z.string().max(64).optional(),
-		timestamp: z.union([z.number(), z.string(), z.date()]).optional(),
-		properties: z.record(z.string(), z.unknown()).optional(),
-		anonymousId: z.string().max(256).optional(),
-		sessionId: z.string().max(256).optional(),
-		websiteId: z.uuid().optional(),
-		source: z.string().max(64).optional(),
-	}),
-	z
-		.array(
-			z.object({
-				name: z.string().min(1).max(256),
-				namespace: z.string().max(64).optional(),
-				timestamp: z.union([z.number(), z.string(), z.date()]).optional(),
-				properties: z.record(z.string(), z.unknown()).optional(),
-				anonymousId: z.string().max(256).optional(),
-				sessionId: z.string().max(256).optional(),
-				websiteId: z.uuid().optional(),
-				source: z.string().max(64).optional(),
-			})
-		)
-		.max(VALIDATION_LIMITS.BATCH_MAX_SIZE),
-]);
+import { trackEventSchema } from "./track-event-schema";
 
 interface ResolvedAuth {
 	ownerId: string;

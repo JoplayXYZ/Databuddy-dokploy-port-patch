@@ -17,7 +17,7 @@ export interface DatabuddyConfig {
 	 * Your Databuddy project client ID.
 	 * If not provided, will automatically detect from NEXT_PUBLIC_DATABUDDY_CLIENT_ID environment variable.
 	 * Get this from your Databuddy dashboard.
-	 * Example: '3ed1fce1-5a56-4cbc-a917-66864f6d18e3'
+	 * Example: UUID-style or short public id (dashboard client ID).
 	 */
 	clientId?: string;
 

@@ -100,10 +100,10 @@ export class Databuddy {
 	 *   properties: { plan: 'pro', source: 'web' }
 	 * });
 	 *
-	 * // With website scope
+	 * // With website scope (use your public client id from the dashboard)
 	 * await client.track({
 	 *   name: 'page_view',
-	 *   websiteId: 'website-uuid',
+	 *   websiteId: 'your-public-client-id',
 	 *   properties: { path: '/pricing' }
 	 * });
 	 * ```
