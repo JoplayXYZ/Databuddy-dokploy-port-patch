@@ -174,30 +174,26 @@ function PendingQueue({
 	return (
 		<Queue className="mb-3 rounded shadow-none">
 			<QueueSection>
-				<QueueSectionTrigger className="rounded">
-					<QueueSectionLabel
-						count={messages.length}
-						icon={
-							<ClockCountdownIcon
-								className="size-3.5"
-								weight="duotone"
-							/>
-						}
-						label="queued"
-					/>
+				<div className="flex items-center gap-2">
+					<QueueSectionTrigger className="flex-1 rounded">
+						<QueueSectionLabel
+							count={messages.length}
+							icon={
+								<ClockCountdownIcon className="size-3.5" weight="duotone" />
+							}
+							label="queued"
+						/>
+					</QueueSectionTrigger>
 					{messages.length > 1 ? (
 						<button
 							className="text-muted-foreground/60 text-xs hover:text-foreground"
-							onClick={(e) => {
-								e.stopPropagation();
-								onClear();
-							}}
+							onClick={onClear}
 							type="button"
 						>
 							Clear all
 						</button>
 					) : null}
-				</QueueSectionTrigger>
+				</div>
 				<QueueSectionContent>
 					<QueueList>
 						{messages.map((text, index) => (
@@ -207,9 +203,7 @@ function PendingQueue({
 							>
 								<div className="flex items-center gap-2">
 									<QueueItemIndicator />
-									<QueueItemContent className="flex-1">
-										{text}
-									</QueueItemContent>
+									<QueueItemContent className="flex-1">{text}</QueueItemContent>
 									<QueueItemActions>
 										<QueueItemAction
 											aria-label="Remove queued message"
