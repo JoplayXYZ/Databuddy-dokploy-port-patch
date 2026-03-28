@@ -1,28 +1,11 @@
-"use client";
-
 import {
 	CheckCircleIcon,
 	MinusCircleIcon,
 	XCircleIcon,
-} from "@phosphor-icons/react";
-import dynamic from "next/dynamic";
-import { useMemo } from "react";
-import { formatDateOnly, fromNow } from "@/lib/time";
-import { buildUptimeHeatmapDays } from "@/lib/uptime/heatmap-days";
-import { UptimeHeatmapStrip } from "@/lib/uptime/heatmap-strip";
-import { LatencyChartChunkPlaceholder } from "@/lib/uptime/latency-chart-chunk-placeholder";
+} from "@phosphor-icons/react/ssr";
 import { cn } from "@/lib/utils";
-
-const LatencyChart = dynamic(
-	() =>
-		import("@/lib/uptime/latency-chart").then((m) => ({
-			default: m.LatencyChart,
-		})),
-	{
-		ssr: false,
-		loading: () => <LatencyChartChunkPlaceholder />,
-	}
-);
+import { LastChecked } from "./last-checked";
+import { MonitorRowInteractive } from "./monitor-row-interactive";
 
 interface DailyData {
 	date: string;
@@ -40,8 +23,6 @@ interface MonitorRowProps {
 	dailyData: DailyData[];
 	lastCheckedAt: string | null;
 }
-
-const DAYS = 90;
 
 const STATUS_ICON = {
 	up: {
@@ -66,20 +47,10 @@ export function MonitorRow({
 	dailyData,
 	lastCheckedAt,
 }: MonitorRowProps) {
-	const heatmapData = useMemo(
-		() => buildUptimeHeatmapDays(dailyData, DAYS),
-		[dailyData]
-	);
-
-	const hasLatencyData = useMemo(
-		() =>
-			dailyData.some(
-				(d) => d.avg_response_time != null || d.p95_response_time != null
-			),
-		[dailyData]
-	);
-
 	const statusConfig = STATUS_ICON[currentStatus];
+	const hasLatencyData = dailyData.some(
+		(d) => d.avg_response_time != null || d.p95_response_time != null
+	);
 
 	return (
 		<div className="overflow-hidden rounded border bg-card">
@@ -99,31 +70,16 @@ export function MonitorRow({
 						{uptimePercentage.toFixed(2)}%
 					</p>
 					{lastCheckedAt ? (
-						<p className="text-muted-foreground text-xs">
-							{fromNow(lastCheckedAt)}
-						</p>
+						<LastChecked timestamp={lastCheckedAt} />
 					) : null}
 				</div>
 			</div>
 
-			<div className="px-4 pb-4">
-				<UptimeHeatmapStrip
-					days={heatmapData}
-					emptyLabel="No data recorded"
-					getDateLabel={(d) => formatDateOnly(d)}
-					interactive
-					isActive
-					stripClassName="flex h-8 w-full gap-px sm:gap-[2px]"
-				/>
-				<div className="mt-1.5 flex justify-between text-[10px] text-muted-foreground">
-					<span>{DAYS} days ago</span>
-					<span>Today</span>
-				</div>
-			</div>
-
-			{hasLatencyData && (
-				<LatencyChart data={dailyData} storageKey={`status-latency-${id}`} />
-			)}
+			<MonitorRowInteractive
+				dailyData={dailyData}
+				hasLatencyData={hasLatencyData}
+				id={id}
+			/>
 		</div>
 	);
 }

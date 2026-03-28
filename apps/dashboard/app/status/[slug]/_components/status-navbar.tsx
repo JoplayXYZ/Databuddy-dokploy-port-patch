@@ -1,6 +1,4 @@
-"use client";
-
-import { BookOpenTextIcon } from "@phosphor-icons/react";
+import { BookOpenTextIcon } from "@phosphor-icons/react/ssr";
 import Link from "next/link";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { Branding } from "@/components/logo/branding";
