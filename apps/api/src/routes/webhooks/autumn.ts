@@ -1,9 +1,6 @@
 import { and, db, eq, gt, usageAlertLog, user } from "@databuddy/db";
-import { UsageLimitEmail } from "@databuddy/email";
-import {
-	type NotificationResult,
-	sendSlackWebhook,
-} from "@databuddy/notifications";
+import { UsageAlertEmail, UsageLimitEmail } from "@databuddy/email";
+import { sendSlackWebhook } from "@databuddy/notifications";
 import { cacheable } from "@databuddy/redis";
 import { createId } from "@databuddy/shared/utils/ids";
 import { Elysia } from "elysia";
@@ -13,38 +10,51 @@ import { Webhook } from "svix";
 import { mergeWideEvent } from "../../lib/tracing";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-const SVIX_WEBHOOK_SECRET = process.env.AUTUMN_WEBHOOK_SECRET;
-const SLACK_WEBHOOK_URL = process.env.SLACK_WEBHOOK_URL ?? "";
-const ALERT_COOLDOWN_DAYS = 7;
+const SVIX_SECRET = process.env.AUTUMN_WEBHOOK_SECRET;
+const SLACK_URL = process.env.SLACK_WEBHOOK_URL ?? "";
+const COOLDOWN_DAYS = 7;
 
-interface AutumnCustomer {
-	id: string;
-	email: string | null;
-	name: string | null;
-	env: string;
-	features: Record<
-		string,
-		{
-			id: string;
-			name: string;
-			balance: number;
-			usage: number;
-			included_usage: number;
-			unlimited: boolean;
-			overage_allowed: boolean;
-			interval: string | null;
-		}
-	>;
-	products?: Array<{ id: string; status: string }>;
+// ── Types ───────────────────────────────────────────────────────────
+
+interface LimitReachedData {
+	customer_id: string;
+	feature_id: string;
+	entity_id?: string;
+	limit_type: "included" | "max_purchase" | "spend_limit";
 }
 
-interface AutumnFeature {
-	id: string;
-	name: string;
-	type: string;
+interface UsageAlertData {
+	customer_id: string;
+	feature_id: string;
+	entity_id?: string;
+	usage_alert: {
+		name?: string;
+		threshold: number;
+		threshold_type: string;
+	};
 }
 
-type ThresholdType = "limit_reached" | "allowance_used";
+interface ProductsUpdatedData {
+	scenario: ProductScenario;
+	customer: {
+		id: string | null;
+		name: string | null;
+		email: string | null;
+		env: string;
+		features: Record<
+			string,
+			{
+				id: string;
+				name: string;
+				usage: number;
+				included_usage: number;
+				unlimited: boolean;
+			}
+		>;
+		products: Array<{ id: string; name: string; status: string }>;
+	};
+	updated_product: { id: string; name: string | null };
+}
 
 type ProductScenario =
 	| "new"
@@ -56,286 +66,263 @@ type ProductScenario =
 	| "past_due"
 	| "scheduled";
 
-interface ThresholdData {
-	customer: AutumnCustomer;
-	feature: AutumnFeature;
-	threshold_type: ThresholdType;
+interface WebhookResult {
+	success: boolean;
+	message: string;
 }
 
-interface ProductsUpdatedData {
-	scenario: ProductScenario;
-	customer: AutumnCustomer;
-	updated_product: { id: string; name: string };
-}
+// ── Shared helpers ──────────────────────────────────────────────────
 
-const PLAN_PURCHASE_SLACK_SCENARIOS = new Set<ProductScenario>([
-	"new",
-	"upgrade",
-	"renew",
-]);
-
-function getPlanPurchaseVerb(scenario: ProductScenario): string {
-	if (scenario === "new") {
-		return "subscribed";
-	}
-	if (scenario === "upgrade") {
-		return "upgraded";
-	}
-	return "renewed";
-}
-
-async function _getUserEmail(customerId: string): Promise<string | null> {
-	const dbUser = await db.query.user.findFirst({
+async function _getUserData(
+	customerId: string
+): Promise<{ email: string | null; name: string | null }> {
+	const row = await db.query.user.findFirst({
 		where: eq(user.id, customerId),
-		columns: { email: true },
+		columns: { email: true, name: true },
 	});
-	return dbUser?.email ?? null;
+	return { email: row?.email ?? null, name: row?.name ?? null };
 }
 
-const getUserEmail = cacheable(_getUserEmail, {
+const getUserData = cacheable(_getUserData, {
 	expireInSec: 300,
-	prefix: "user_email",
+	prefix: "user_data",
 	staleWhileRevalidate: true,
 	staleTime: 60,
 });
 
-function formatFeatureName(featureId: string, featureName: string): string {
-	if (featureName) {
-		return featureName;
-	}
-	return featureId
-		.replace(/_/g, " ")
-		.replace(/\b\w/g, (char) => char.toUpperCase());
+function formatFeatureId(id: string): string {
+	return id.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-async function wasAlertSentRecently(
-	userId: string,
-	featureId: string
-): Promise<boolean> {
-	const cooldownDate = new Date();
-	cooldownDate.setDate(cooldownDate.getDate() - ALERT_COOLDOWN_DAYS);
+async function wasRecentlySent(userId: string, key: string): Promise<boolean> {
+	const since = new Date();
+	since.setDate(since.getDate() - COOLDOWN_DAYS);
 
-	const recentAlert = await db.query.usageAlertLog.findFirst({
+	const row = await db.query.usageAlertLog.findFirst({
 		where: and(
 			eq(usageAlertLog.userId, userId),
-			eq(usageAlertLog.featureId, featureId),
-			gt(usageAlertLog.createdAt, cooldownDate)
+			eq(usageAlertLog.featureId, key),
+			gt(usageAlertLog.createdAt, since)
 		),
 		columns: { id: true },
 	});
-
-	return Boolean(recentAlert);
+	return Boolean(row);
 }
 
-async function logAlertSent(
+async function recordAlert(
 	userId: string,
-	featureId: string,
+	key: string,
 	alertType: string,
-	emailSentTo: string
+	email: string
 ): Promise<void> {
 	await db.insert(usageAlertLog).values({
 		id: createId(),
 		userId,
-		featureId,
+		featureId: key,
 		alertType,
-		emailSentTo,
+		emailSentTo: email,
 	});
 }
 
-async function handleThresholdReached(
-	payload: ThresholdData
-): Promise<{ success: boolean; message: string }> {
-	const { customer, feature, threshold_type } = payload;
+async function sendAlertEmailAction(opts: {
+	customerId: string;
+	cooldownKey: string;
+	alertType: string;
+	subject: string;
+	react: React.ReactElement;
+}): Promise<WebhookResult> {
+	const { customerId, cooldownKey, alertType, subject, react } = opts;
 
-	if (process.env.NODE_ENV === "production" && customer.env === "sandbox") {
-		useLogger().info("Skipping sandbox threshold event in production", {
-			autumn: { customerId: customer.id, feature: feature.id },
+	if (await wasRecentlySent(customerId, cooldownKey)) {
+		useLogger().info("Skipping alert - sent recently", {
+			autumn: { customerId, cooldownKey },
 		});
-		return { success: true, message: "Skipped sandbox event" };
+		return { success: true, message: "Already sent recently" };
 	}
 
-	const featureData = customer.features[feature.id];
-	if (featureData?.overage_allowed) {
-		useLogger().info("Skipping alert - overage allowed (paid plan)", {
-			autumn: { customerId: customer.id, feature: feature.id },
+	const userData = await getUserData(customerId);
+	if (!userData.email) {
+		useLogger().warn("No email for customer", {
+			autumn: { customerId, cooldownKey },
 		});
-		return { success: true, message: "Skipped - overage allowed" };
+		return { success: false, message: "No email found" };
 	}
-
-	if (featureData?.unlimited) {
-		useLogger().info("Skipping alert - unlimited feature", {
-			autumn: { customerId: customer.id, feature: feature.id },
-		});
-		return { success: true, message: "Skipped - unlimited feature" };
-	}
-
-	// Don't send limit emails to paid plan users - they have overage or can upgrade in-app
-	const activeProduct = customer.products?.find((p) => p.status === "active");
-	const planId = activeProduct?.id
-		? String(activeProduct.id).toLowerCase()
-		: "free";
-	if (planId !== "free") {
-		useLogger().info(
-			"Skipping alert - paid plan (limit emails only for free tier)",
-			{ autumn: { customerId: customer.id, feature: feature.id, planId } }
-		);
-		return { success: true, message: "Skipped - paid plan" };
-	}
-
-	const recentlySent = await wasAlertSentRecently(customer.id, feature.id);
-	if (recentlySent) {
-		useLogger().info("Skipping alert - already sent within cooldown period", {
-			autumn: { customerId: customer.id, feature: feature.id },
-		});
-		return {
-			success: true,
-			message: `Alert already sent within ${ALERT_COOLDOWN_DAYS} days`,
-		};
-	}
-
-	const email = customer.email ?? (await getUserEmail(customer.id));
-	if (!email) {
-		useLogger().warn("No email found for customer", {
-			autumn: { customerId: customer.id, feature: feature.id },
-		});
-		return { success: false, message: "No email found for customer" };
-	}
-
-	const usageAmount = featureData?.usage ?? 0;
-	const limitAmount = featureData?.included_usage ?? 0;
-	const featureName = formatFeatureName(feature.id, feature.name);
-
-	mergeWideEvent({
-		customer_id: customer.id,
-		feature_id: feature.id,
-		threshold_type,
-		usage: usageAmount,
-		limit: limitAmount,
-	});
 
 	const result = await resend.emails.send({
 		from: "Databuddy <alerts@databuddy.cc>",
-		to: email,
-		subject: `You've reached your ${featureName} limit`,
-		react: UsageLimitEmail({
-			featureName,
-			usageAmount,
-			limitAmount,
-			userName: customer.name ?? undefined,
-			thresholdType: threshold_type,
-		}),
+		to: userData.email,
+		subject,
+		react,
 	});
 
 	if (result.error) {
 		useLogger().error(new Error(result.error.message), {
-			autumn: { customerId: customer.id, resend: result.error },
+			autumn: { customerId, resend: result.error },
 		});
 		return { success: false, message: result.error.message };
 	}
 
-	await logAlertSent(customer.id, feature.id, threshold_type, email);
+	await recordAlert(customerId, cooldownKey, alertType, userData.email);
 
-	useLogger().info("Sent usage limit alert email", {
-		autumn: {
-			customerId: customer.id,
-			feature: feature.id,
-			emailId: result.data?.id,
-		},
+	useLogger().info("Alert email sent", {
+		autumn: { customerId, cooldownKey, emailId: result.data?.id },
 	});
-
-	return { success: true, message: "Email sent successfully" };
+	return { success: true, message: "Email sent" };
 }
 
-function notifyPlanPurchaseSlackAction(payload: ProductsUpdatedData): void {
-	if (!SLACK_WEBHOOK_URL) {
-		return;
+// ── Handlers ────────────────────────────────────────────────────────
+
+function handleLimitReached(
+	data: LimitReachedData
+): WebhookResult | Promise<WebhookResult> {
+	const { customer_id, feature_id, limit_type } = data;
+
+	if (limit_type !== "included") {
+		return { success: true, message: `Skipped ${limit_type} limit` };
 	}
 
-	const { scenario, customer, updated_product } = payload;
+	const featureName = formatFeatureId(feature_id);
 
-	if (!PLAN_PURCHASE_SLACK_SCENARIOS.has(scenario)) {
-		return;
-	}
+	mergeWideEvent({ customer_id, feature_id, limit_type });
 
-	if (process.env.NODE_ENV === "production" && customer.env === "sandbox") {
-		return;
-	}
+	return sendAlertEmailAction({
+		customerId: customer_id,
+		cooldownKey: feature_id,
+		alertType: limit_type,
+		subject: `You've reached your ${featureName} limit`,
+		react: UsageLimitEmail({
+			featureName,
+			thresholdType: "limit_reached",
+		}),
+	});
+}
 
-	sendSlackWebhook(SLACK_WEBHOOK_URL, {
-		title: "Plan purchase",
-		message: `Customer ${getPlanPurchaseVerb(scenario)} to a plan.`,
+function handleUsageAlert(data: UsageAlertData): Promise<WebhookResult> {
+	const { customer_id, feature_id, usage_alert } = data;
+	const featureName = formatFeatureId(feature_id);
+	const isPercentage =
+		usage_alert.threshold_type === "usage_percentage_threshold";
+	const label = isPercentage
+		? `${usage_alert.threshold}%`
+		: String(usage_alert.threshold);
+
+	mergeWideEvent({
+		customer_id,
+		feature_id,
+		usage_alert_threshold: usage_alert.threshold,
+		usage_alert_type: usage_alert.threshold_type,
+	});
+
+	return sendAlertEmailAction({
+		customerId: customer_id,
+		cooldownKey: `${feature_id}_alert_${usage_alert.threshold}`,
+		alertType: `usage_alert_${usage_alert.threshold_type}`,
+		subject: `${featureName} usage alert: ${label} reached`,
+		react: UsageAlertEmail({
+			featureName,
+			threshold: usage_alert.threshold,
+			thresholdType: isPercentage ? "usage_percentage_threshold" : "usage",
+			alertName: usage_alert.name ?? undefined,
+		}),
+	});
+}
+
+const SCENARIO_LABELS: Record<
+	ProductScenario,
+	{ verb: string; title: string; priority: "normal" | "high" }
+> = {
+	new: { verb: "subscribed to", title: "New subscription", priority: "normal" },
+	upgrade: { verb: "upgraded to", title: "Plan upgrade", priority: "normal" },
+	downgrade: {
+		verb: "downgraded to",
+		title: "Plan downgrade",
 		priority: "normal",
-		metadata: {
-			scenario,
-			productId: updated_product.id,
-			productName: updated_product.name,
-			customerId: customer.id,
-			email: customer.email ?? "—",
-			name: customer.name ?? "—",
-			env: customer.env,
-		},
-	})
-		.then((result: NotificationResult) => {
-			if (!result.success) {
-				useLogger().error(
-					new Error(result.error ?? "Slack notification failed"),
-					{ autumn: { slackPlanPurchase: true, customerId: customer.id } }
-				);
-			}
-		})
-		.catch((error) => {
+	},
+	renew: { verb: "renewed", title: "Subscription renewed", priority: "normal" },
+	cancel: {
+		verb: "canceled",
+		title: "Subscription canceled",
+		priority: "high",
+	},
+	expired: {
+		verb: "expired on",
+		title: "Subscription expired",
+		priority: "high",
+	},
+	past_due: {
+		verb: "is past due on",
+		title: "Payment past due",
+		priority: "high",
+	},
+	scheduled: {
+		verb: "scheduled a change to",
+		title: "Plan change scheduled",
+		priority: "normal",
+	},
+};
+
+function handleProductsUpdated(data: ProductsUpdatedData): WebhookResult {
+	const { scenario, customer, updated_product } = data;
+
+	useLogger().info("Products updated", {
+		autumn: { customerId: customer.id, scenario, product: updated_product.id },
+	});
+
+	if (
+		SLACK_URL &&
+		!(process.env.NODE_ENV === "production" && customer.env === "sandbox")
+	) {
+		const info = SCENARIO_LABELS[scenario];
+
+		sendSlackWebhook(SLACK_URL, {
+			title: info.title,
+			message: `Customer ${info.verb} *${updated_product.name ?? updated_product.id}*.`,
+			priority: info.priority,
+			metadata: {
+				scenario,
+				product: updated_product.name ?? updated_product.id,
+				customerId: customer.id ?? "—",
+				email: customer.email ?? "—",
+				name: customer.name ?? "—",
+				env: customer.env,
+			},
+		}).catch((error) => {
 			useLogger().error(
 				error instanceof Error ? error : new Error(String(error)),
-				{ autumn: { slackPlanPurchase: true, customerId: customer.id } }
+				{ autumn: { slack: true, customerId: customer.id } }
 			);
 		});
+	}
+
+	return { success: true, message: `Processed ${scenario}` };
 }
 
-function handleProductsUpdated(payload: ProductsUpdatedData): {
-	success: boolean;
-	message: string;
-} {
-	const { scenario, customer, updated_product } = payload;
+// ── Svix verification ───────────────────────────────────────────────
 
-	useLogger().info("Received products updated webhook", {
-		autumn: {
-			customerId: customer.id,
-			scenario,
-			product: updated_product.id,
-		},
-	});
-
-	notifyPlanPurchaseSlackAction(payload);
-
-	return { success: true, message: `Processed ${scenario} event` };
-}
-
-function verifyWebhookSignature(
-	payload: string,
+function verifySvix(
+	body: string,
 	headers: Record<string, string | null>
 ): boolean {
-	if (!SVIX_WEBHOOK_SECRET) {
+	if (!SVIX_SECRET) {
 		throw new Error("AUTUMN_WEBHOOK_SECRET not configured");
 	}
 
-	const svixId = headers["svix-id"];
-	const svixTimestamp = headers["svix-timestamp"];
-	const svixSignature = headers["svix-signature"];
+	const id = headers["svix-id"];
+	const ts = headers["svix-timestamp"];
+	const sig = headers["svix-signature"];
 
-	if (!(svixId && svixTimestamp && svixSignature)) {
-		useLogger().error(
-			new Error("Missing Svix headers for webhook verification"),
-			{ autumn: { step: "verify" } }
-		);
+	if (!(id && ts && sig)) {
+		useLogger().error(new Error("Missing Svix headers"), {
+			autumn: { step: "verify" },
+		});
 		return false;
 	}
 
 	try {
-		const wh = new Webhook(SVIX_WEBHOOK_SECRET);
-		wh.verify(payload, {
-			"svix-id": svixId,
-			"svix-timestamp": svixTimestamp,
-			"svix-signature": svixSignature,
+		new Webhook(SVIX_SECRET).verify(body, {
+			"svix-id": id,
+			"svix-timestamp": ts,
+			"svix-signature": sig,
 		});
 		return true;
 	} catch (error) {
@@ -347,98 +334,50 @@ function verifyWebhookSignature(
 	}
 }
 
-type WebhookBody =
-	| { type: string; data: ThresholdData | ProductsUpdatedData }
-	| {
-			customer: AutumnCustomer;
-			feature?: AutumnFeature;
-			threshold_type?: ThresholdType;
-			scenario?: ProductScenario;
-			updated_product?: { id: string; name: string };
-	  };
+// ── Route ───────────────────────────────────────────────────────────
+
+const handlers: Record<
+	string,
+	(data: never) => WebhookResult | Promise<WebhookResult>
+> = {
+	"balances.limit_reached": handleLimitReached,
+	"balances.usage_alert_triggered": handleUsageAlert,
+	"customer.products.updated": handleProductsUpdated,
+};
 
 export const autumnWebhook = new Elysia().post(
 	"/autumn",
 	async ({ headers, request }) => {
 		const rawBody = await request.text();
-		const parsedBody = JSON.parse(rawBody) as WebhookBody;
 
-		const isValid = verifyWebhookSignature(rawBody, {
-			"svix-id": headers["svix-id"] ?? null,
-			"svix-timestamp": headers["svix-timestamp"] ?? null,
-			"svix-signature": headers["svix-signature"] ?? null,
-		});
-
-		if (!isValid) {
+		if (
+			!verifySvix(rawBody, {
+				"svix-id": headers["svix-id"] ?? null,
+				"svix-timestamp": headers["svix-timestamp"] ?? null,
+				"svix-signature": headers["svix-signature"] ?? null,
+			})
+		) {
 			return new Response(
 				JSON.stringify({ success: false, message: "Invalid signature" }),
 				{ status: 401, headers: { "Content-Type": "application/json" } }
 			);
 		}
 
-		return (async () => {
-			// Svix-wrapped format: { type: "...", data: {...} }
-			if ("type" in parsedBody && "data" in parsedBody) {
-				const { type, data } = parsedBody;
+		const { type, data } = JSON.parse(rawBody) as { type: string; data: never };
 
-				mergeWideEvent({
-					webhook_type: type,
-					svix_id: headers["svix-id"] ?? "unknown",
-				});
+		mergeWideEvent({
+			webhook_type: type,
+			svix_id: headers["svix-id"] ?? "unknown",
+		});
+		useLogger().info("Autumn webhook", { autumn: { type } });
 
-				useLogger().info("Received Autumn webhook", { autumn: { type } });
+		const handler = handlers[type];
+		if (handler) {
+			return await handler(data);
+		}
 
-				if (type === "customer.threshold_reached") {
-					return await handleThresholdReached(data as ThresholdData);
-				}
-				if (type === "customer.products.updated") {
-					return handleProductsUpdated(data as ProductsUpdatedData);
-				}
-
-				useLogger().warn("Unknown webhook type", { autumn: { type } });
-				return { success: true, message: "Unknown event type, ignored" };
-			}
-
-			// Direct format: { customer: {...}, feature: {...}, threshold_type: "..." }
-			if ("customer" in parsedBody) {
-				const { customer, feature, threshold_type, scenario, updated_product } =
-					parsedBody;
-
-				mergeWideEvent({
-					webhook_type: threshold_type
-						? "customer.threshold_reached"
-						: "customer.products.updated",
-					svix_id: headers["svix-id"] ?? "unknown",
-				});
-
-				if (threshold_type && feature) {
-					useLogger().info("Received Autumn threshold webhook", {
-						autumn: { threshold_type },
-					});
-					return await handleThresholdReached({
-						customer,
-						feature,
-						threshold_type,
-					});
-				}
-
-				if (scenario && updated_product) {
-					useLogger().info("Received Autumn products updated webhook", {
-						autumn: { scenario },
-					});
-					return handleProductsUpdated({
-						scenario,
-						customer,
-						updated_product,
-					});
-				}
-			}
-
-			useLogger().warn("Unknown webhook payload format", {
-				autumn: { body: parsedBody },
-			});
-			return { success: true, message: "Unknown payload format, ignored" };
-		})();
+		useLogger().warn("Unknown webhook type", { autumn: { type } });
+		return { success: true, message: "Unknown event type" };
 	},
 	{ parse: "none" }
 );

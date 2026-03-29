@@ -77,6 +77,17 @@ Read [codebase-map.md](./references/codebase-map.md) when you need deeper routin
 
 - Start in `apps/basket/src`
 - Request validation, billing checks, geo/IP parsing, producer logic, and structured errors are important here
+
+## Billing (Autumn)
+
+- `autumn-js` v1.2.2+ — import `autumnHandler` from `autumn-js/fetch` (NOT `autumn-js/elysia`, that export was removed in v1.0)
+- For Elysia, mount with `.mount(autumnHandler(...))` — NOT `.use()`
+- `identify` callback receives `(request: Request)` directly, not `({ request })`
+- Webhook event types: `balances.limit_reached` (replaces old `customer.threshold_reached`), `customer.products.updated`, `balances.usage_alert_triggered`
+- `balances.limit_reached` payload is flat: `{ customer_id, feature_id, entity_id?, limit_type }` — no full customer object
+- SDK `Customer` type uses camelCase (`balances`, `subscriptions`, `overageAllowed`), but **webhook payloads are snake_case** and use old field names (`features`, `products`, `included_usage`, `overage_allowed`) — do NOT use the SDK `Customer` type for webhooks
+- SDK class is `new Autumn()` (reads `AUTUMN_SECRET_KEY` from env); methods use camelCase: `customerId`, `featureId`, `sendEvent`
+- `autumn-js` catalog version is in root `package.json` — update it when bumping
 - Storage and schema concerns usually continue into `packages/db`
 - **evlog → Axiom:** never use top-level `error` as a **string** on `log.error({ ... })` (e.g. process handlers); it overwrites structured `error.message` on the wide event. Use `error_message` instead. Basket/API drains run `normalizeWideEventForAxiom` before ingest; 4xx `EvlogError` rows are emitted as `level: "warn"` with `client_http_error: true` so Axiom “errors” are not inflated by expected client failures.
 

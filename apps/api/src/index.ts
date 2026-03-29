@@ -13,7 +13,7 @@ import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins";
 import { ORPCError, onError } from "@orpc/server";
 import { RPCHandler } from "@orpc/server/fetch";
 import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4";
-import { autumnHandler } from "autumn-js/elysia";
+import { autumnHandler } from "autumn-js/fetch";
 import { Elysia } from "elysia";
 import { initLogger, log, parseError } from "evlog";
 import { evlog, useLogger } from "evlog/elysia";
@@ -278,9 +278,9 @@ const app = new Elysia({ precompile: true })
 			})
 	)
 	.use(webhooks)
-	.use(
+	.mount(
 		autumnHandler({
-			identify: async ({ request }) => {
+			identify: async (request) => {
 				try {
 					const session = await auth.api.getSession({
 						headers: request.headers,
