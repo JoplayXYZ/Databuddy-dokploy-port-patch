@@ -112,12 +112,6 @@ const TOOL_LABELS: Record<string, (input: Input) => string> = {
 		const query = input.query as string | undefined;
 		return query ? `Searching: ${query.slice(0, 40)}` : "Searching the web";
 	},
-	x_search: (input) => {
-		const query = input.query as string | undefined;
-		return query
-			? `Searching X: ${query.slice(0, 40)}`
-			: "Searching X (Twitter)";
-	},
 
 	competitor_analysis: () => "Analyzing competitors",
 

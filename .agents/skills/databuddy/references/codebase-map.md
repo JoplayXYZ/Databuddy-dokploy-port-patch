@@ -15,8 +15,8 @@ Use this file when the task spans multiple packages or when the right edit locat
   - client hooks
   - auth-aware frontend flows
   - query and mutation consumers
-- Agent chat: [`contexts/chat-context.tsx`](/Users/iza/Dev/Databuddy/apps/dashboard/contexts/chat-context.tsx) — `useChat` must start with `messages: []` on server **and** first client paint; restore `getMessagesFromLocal` in `useLayoutEffect` and gate `saveMessagesToLocal` until `hasRestoredFromLocal`, or SSR/hydration will disagree (empty vs persisted thread).
-- Analytics agent X/Twitter: [`apps/api/src/ai/tools/x-search.ts`](/Users/iza/Dev/Databuddy/apps/api/src/ai/tools/x-search.ts) (`x_search`, Grok `x-ai/grok-4.1-fast`) vs [`web-search.ts`](/Users/iza/Dev/Databuddy/apps/api/src/ai/tools/web-search.ts) (Perplexity). Prompts in [`analytics.ts` prompts](/Users/iza/Dev/Databuddy/apps/api/src/ai/prompts/analytics.ts) must steer “Twitter sentiment / what people say on X” to **x_search**, not web_search.
+- Agent chat: [`contexts/chat-context.tsx`](/Users/iza/Dev/Databuddy/apps/dashboard/contexts/chat-context.tsx) — `useChat` must start with `messages: []` on server **and** first client paint; restore `getMessagesFromLocal` in `useLayoutEffect` and gate `saveMessagesToLocal` until `hasRestoredFromLocal`, or SSR/hydration will disagree (empty vs persisted thread). UI: [`agent-messages.tsx`](/Users/iza/Dev/Databuddy/apps/dashboard/app/(main)/websites/[id]/agent/_components/agent-messages.tsx) merges consecutive identical tool labels (`formatToolLabel`) when the same tool+input repeats (`· 2×`); bottom `StreamingIndicator` only when no assistant text **and** no active tool label (`displayMessage`), so the in-message `ToolStep` is not duplicated by the shimmer.
+- Analytics agent web search: [`web-search.ts`](/Users/iza/Dev/Databuddy/apps/api/src/ai/tools/web-search.ts) (Perplexity). Tool labels in dashboard [`tool-display.tsx`](/Users/iza/Dev/Databuddy/apps/dashboard/lib/tool-display.tsx).
 
 ### `apps/api`
 
@@ -71,7 +71,7 @@ Use this file when the task spans multiple packages or when the right edit locat
 - Key files:
   - [`packages/db/src/drizzle/schema.ts`](/Users/iza/Dev/Databuddy/packages/db/src/drizzle/schema.ts)
   - [`packages/db/src/drizzle/relations.ts`](/Users/iza/Dev/Databuddy/packages/db/src/drizzle/relations.ts)
-  - [`packages/db/src/client.ts`](/Users/iza/Dev/Databuddy/packages/db/src/client.ts)
+  - [`packages/db/src/client.ts`](/Users/iza/Dev/Databuddy/packages/db/src/client.ts) — strips `sslrootcert=system` from `DATABASE_URL` before `pg` Pool: libpq uses it for the OS trust store, but node-postgres treats `sslrootcert` as a file path and throws `ENOENT` on path `"system"`.
   - [`packages/db/src/clickhouse/client.ts`](/Users/iza/Dev/Databuddy/packages/db/src/clickhouse/client.ts)
 
 ### `packages/rpc`

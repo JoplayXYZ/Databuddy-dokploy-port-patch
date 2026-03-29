@@ -1,88 +1,49 @@
 import { type App, reactive } from "vue";
 import { BrowserFlagStorage } from "@/core/flags/browser-storage";
-import { CoreFlagsManager } from "@/core/flags/flags-manager";
+import { BrowserFlagsManager } from "@/core/flags/flags-manager";
 import type { FlagResult, FlagState, FlagsConfig } from "@/core/flags/types";
 
-const FLAGS_SYMBOL = Symbol("flags");
-
-interface VueFlagsState {
-	memoryFlags: Record<string, FlagResult>;
-	pendingFlags: Set<string>;
-}
-
-let globalState: VueFlagsState | null = null;
-let globalManager: CoreFlagsManager | null = null;
+let manager: BrowserFlagsManager | null = null;
+let state: { flags: Record<string, FlagResult> } | null = null;
 
 export interface FlagsPluginOptions extends FlagsConfig {}
 
 export function createFlagsPlugin(options: FlagsPluginOptions) {
 	return {
-		install(app: App) {
+		install(_app: App) {
 			const storage = options.skipStorage
 				? undefined
 				: new BrowserFlagStorage();
-
-			const state = reactive<VueFlagsState>({
-				memoryFlags: {},
-				pendingFlags: new Set(),
+			state = reactive({ flags: {} });
+			manager = new BrowserFlagsManager({ config: options, storage });
+			manager.subscribe(() => {
+				if (state) {
+					state.flags = manager?.getSnapshot().flags ?? {};
+				}
 			});
-
-			const manager = new CoreFlagsManager({
-				config: options,
-				storage,
-				onFlagsUpdate: (flags) => {
-					state.memoryFlags = flags;
-				},
-			});
-
-			globalManager = manager;
-			globalState = state;
-
-			app.provide(FLAGS_SYMBOL, state);
 		},
 	};
 }
 
 export function useFlags() {
-	if (!globalState) {
+	if (!manager) {
 		throw new Error(
-			"Flags plugin not installed. Install with app.use(createFlagsPlugin(config))"
+			"Flags plugin not installed. Call app.use(createFlagsPlugin(config)) first."
 		);
 	}
 
-	if (!globalManager) {
-		throw new Error(
-			"Flags manager not initialized. Please reinstall the plugin."
-		);
-	}
-
-	const state = globalState;
-	const manager = globalManager;
-
-	const getFlag = (key: string): FlagState => manager.isEnabled(key);
-
-	const fetchAllFlags = () => manager.fetchAllFlags();
-
-	const updateUser = (user: FlagsConfig["user"]) => {
-		if (user) {
-			manager.updateUser(user);
-		}
-	};
-
-	const refresh = (forceClear = false): void => {
-		manager.refresh(forceClear);
-	};
-
-	const updateConfig = (config: FlagsConfig): void => {
-		manager.updateConfig(config);
-	};
-
+	const m = manager;
+	const s = state;
 	return {
-		getFlag,
-		fetchAllFlags,
-		updateUser,
-		refresh,
-		updateConfig,
-		memoryFlags: state.memoryFlags,
+		getFlag: (key: string): FlagState => m.isEnabled(key),
+		fetchAllFlags: () => m.fetchAllFlags(),
+		updateUser: (user: FlagsConfig["user"]) => {
+			if (user) {
+				m.updateUser(user);
+			}
+		},
+		refresh: (forceClear = false) => m.refresh(forceClear),
+		updateConfig: (config: FlagsConfig) => m.updateConfig(config),
+		memoryFlags: s?.flags ?? {},
 	};
 }

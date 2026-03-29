@@ -20,6 +20,7 @@ import { useChat } from "@/contexts/chat-context";
 import { parseContentSegments } from "@/lib/ai-components";
 import { formatToolLabel } from "@/lib/tool-display";
 import { cn } from "@/lib/utils";
+import { AgentErrorMessage } from "./agent-error-message";
 import { useChatStatus } from "./hooks/use-chat-status";
 
 type MessagePart = UIMessage["parts"][number];
@@ -80,6 +81,28 @@ function ReasoningMessage({
 	);
 }
 
+/** Merge consecutive identical tool UI labels (same model re-calling the tool). */
+function mergeConsecutiveToolStepsForDisplay(
+	tools: ToolMessagePart[]
+): Array<{ repeatCount: number; tool: ToolMessagePart }> {
+	const merged: Array<{ repeatCount: number; tool: ToolMessagePart }> = [];
+	for (const tool of tools) {
+		const toolName = getToolName(tool);
+		const label = formatToolLabel(toolName, tool.input ?? {});
+		const last = merged.at(-1);
+		if (
+			last &&
+			formatToolLabel(getToolName(last.tool), last.tool.input ?? {}) === label
+		) {
+			last.repeatCount += 1;
+			last.tool = tool;
+		} else {
+			merged.push({ repeatCount: 1, tool });
+		}
+	}
+	return merged;
+}
+
 function collectToolGroups(parts: MessagePart[]) {
 	const result: Array<MessagePart | ToolMessagePart[]> = [];
 	let toolBuffer: ToolMessagePart[] = [];
@@ -109,17 +132,25 @@ function renderToolGroup(
 	isLastGroup: boolean,
 	isStreaming: boolean
 ) {
+	const merged = mergeConsecutiveToolStepsForDisplay(tools);
+
 	return (
 		<div className="space-y-0 py-1" key={key}>
-			{tools.map((tool, idx) => {
-				const toolName = getToolName(tool);
-				const toolInput = tool.input ?? {};
-				const isLast = idx === tools.length - 1;
-				const isActive = isLastGroup && isStreaming && isLast && !tool.output;
+			{merged.map((entry, idx) => {
+				const toolName = getToolName(entry.tool);
+				const toolInput = entry.tool.input ?? {};
+				const isLast = idx === merged.length - 1;
+				const isActive =
+					isLastGroup && isStreaming && isLast && !entry.tool.output;
+				const baseLabel = formatToolLabel(toolName, toolInput);
+				const label =
+					entry.repeatCount > 1
+						? `${baseLabel} · ${entry.repeatCount}×`
+						: baseLabel;
 				return (
 					<ToolStep
 						key={`${key}-${idx}`}
-						label={formatToolLabel(toolName, toolInput)}
+						label={label}
 						status={isActive ? "active" : "complete"}
 					/>
 				);
@@ -208,15 +239,59 @@ function renderMessagePart(
 	return null;
 }
 
+function AgentChatErrorPanel({
+	clearError,
+	error,
+	onRetryAction,
+}: {
+	clearError: () => void;
+	error: Error | undefined;
+	onRetryAction: () => Promise<void>;
+}) {
+	return (
+		<AgentErrorMessage
+			error={error}
+			onDismissAction={clearError}
+			onRetryAction={onRetryAction}
+		/>
+	);
+}
+
+function getTextFromUserMessage(message: UIMessage): string {
+	if (!message.parts?.length) {
+		return "";
+	}
+	return message.parts
+		.filter((p): p is { type: "text"; text: string } => p.type === "text")
+		.map((p) => p.text)
+		.join("");
+}
+
 export function AgentMessages() {
-	const { status, messages } = useChat();
+	const { status, messages, error, regenerate, clearError, sendMessage } =
+		useChat();
 	const hasError = status === "error";
 	const chatStatus = useChatStatus(messages, status);
 	const isStreaming = status === "streaming" || status === "submitted";
+	const lastMessage = messages.at(-1);
+	const errorAfterUser =
+		hasError && lastMessage?.role === "user" && messages.length > 0;
 
 	if (messages.length === 0) {
 		return null;
 	}
+
+	const retry = async () => {
+		const last = messages.at(-1);
+		if (last?.role === "user") {
+			const text = getTextFromUserMessage(last);
+			if (text.trim()) {
+				await sendMessage({ messageId: last.id, text });
+				return;
+			}
+		}
+		await regenerate();
+	};
 
 	return (
 		<>
@@ -245,35 +320,40 @@ export function AgentMessages() {
 								)
 							)}
 
-							{showError ? <ErrorMessage /> : null}
+							{showError ? (
+								<AgentChatErrorPanel
+									clearError={clearError}
+									error={error}
+									onRetryAction={retry}
+								/>
+							) : null}
 						</MessageContent>
 					</Message>
 				);
 			})}
 
-			{isStreaming && !chatStatus.hasTextContent ? (
-				<StreamingIndicator
-					statusText={chatStatus.displayMessage ?? undefined}
-				/>
+			{errorAfterUser ? (
+				<Message from="assistant">
+					<MessageContent className="w-full">
+						<AgentChatErrorPanel
+							clearError={clearError}
+							error={error}
+							onRetryAction={retry}
+						/>
+					</MessageContent>
+				</Message>
+			) : null}
+
+			{isStreaming &&
+			!chatStatus.hasTextContent &&
+			chatStatus.displayMessage == null ? (
+				<StreamingIndicator />
 			) : null}
 		</>
 	);
 }
 
-function ErrorMessage() {
-	return (
-		<div className="space-y-2">
-			<p className="font-medium text-destructive text-sm">
-				Failed to generate response
-			</p>
-			<p className="text-muted-foreground text-xs">
-				There was an error processing your request. Please try again.
-			</p>
-		</div>
-	);
-}
-
-function StreamingIndicator({ statusText }: { statusText?: string }) {
+function StreamingIndicator() {
 	return (
 		<div
 			className="fade-in flex w-full animate-in items-center gap-2 duration-200"
@@ -284,7 +364,7 @@ function StreamingIndicator({ statusText }: { statusText?: string }) {
 				weight="duotone"
 			/>
 			<Shimmer as="span" className="text-sm" duration={1} spread={4}>
-				{statusText || "Thinking"}
+				Thinking
 			</Shimmer>
 		</div>
 	);

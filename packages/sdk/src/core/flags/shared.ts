@@ -1,6 +1,5 @@
 import type { FlagResult, FlagsConfig, UserContext } from "./types";
 
-/** Default flag result for errors/not found */
 export const DEFAULT_RESULT: FlagResult = {
 	enabled: false,
 	value: false,
@@ -8,9 +7,6 @@ export const DEFAULT_RESULT: FlagResult = {
 	reason: "DEFAULT",
 };
 
-/**
- * Generate cache key for a flag + user combination
- */
 export function getCacheKey(key: string, user?: UserContext): string {
 	if (!(user?.userId || user?.email)) {
 		return key;
@@ -18,9 +14,6 @@ export function getCacheKey(key: string, user?: UserContext): string {
 	return `${key}:${user.userId ?? ""}:${user.email ?? ""}`;
 }
 
-/**
- * Build query params for API requests
- */
 export function buildQueryParams(
 	config: FlagsConfig,
 	user?: UserContext
@@ -51,34 +44,11 @@ export function buildQueryParams(
 	return params;
 }
 
-/**
- * Fetch a single flag from API
- */
-export async function fetchFlag(
-	apiUrl: string,
-	key: string,
-	params: URLSearchParams
-): Promise<FlagResult> {
-	const url = `${apiUrl}/public/v1/flags/evaluate?${params}&key=${encodeURIComponent(key)}`;
-
-	const response = await fetch(url);
-
-	if (!response.ok) {
-		return { ...DEFAULT_RESULT, reason: "ERROR" };
-	}
-
-	return response.json() as Promise<FlagResult>;
-}
-
-/**
- * Fetch multiple flags in a single request (batch)
- */
 export async function fetchFlags(
 	apiUrl: string,
 	keys: string[],
 	params: URLSearchParams
 ): Promise<Record<string, FlagResult>> {
-	// Add keys to params
 	const batchParams = new URLSearchParams(params);
 	batchParams.set("keys", keys.join(","));
 
@@ -87,7 +57,6 @@ export async function fetchFlags(
 	const response = await fetch(url);
 
 	if (!response.ok) {
-		// Return defaults for all keys on error
 		const result: Record<string, FlagResult> = {};
 		for (const key of keys) {
 			result[key] = { ...DEFAULT_RESULT, reason: "ERROR" };
@@ -101,9 +70,6 @@ export async function fetchFlags(
 	return data.flags ?? {};
 }
 
-/**
- * Fetch all flags from API
- */
 export async function fetchAllFlags(
 	apiUrl: string,
 	params: URLSearchParams
@@ -122,55 +88,6 @@ export async function fetchAllFlags(
 	return data.flags ?? {};
 }
 
-/**
- * Cache entry with expiration and stale tracking
- */
-export interface CacheEntry {
-	result: FlagResult;
-	expiresAt: number;
-	staleAt: number;
-}
-
-/**
- * Check if cache entry is valid (not expired)
- */
-export function isCacheValid(
-	entry: CacheEntry | undefined
-): entry is CacheEntry {
-	if (!entry) {
-		return false;
-	}
-	return Date.now() <= entry.expiresAt;
-}
-
-/**
- * Check if cache entry is stale (should revalidate but can still use)
- */
-export function isCacheStale(entry: CacheEntry): boolean {
-	return Date.now() > entry.staleAt;
-}
-
-/**
- * Create cache entry with TTL and stale time
- * staleTime = when to start background revalidation
- * ttl = when entry is completely invalid
- */
-export function createCacheEntry(
-	result: FlagResult,
-	ttl: number,
-	staleTime?: number
-): CacheEntry {
-	const now = Date.now();
-	return {
-		result,
-		staleAt: now + (staleTime ?? ttl / 2),
-		expiresAt: now + ttl,
-	};
-}
-
-/**
- * Request batcher - collects individual flag requests and batches them
- */
 export class RequestBatcher {
 	private readonly pending = new Map<
 		string,
@@ -196,7 +113,6 @@ export class RequestBatcher {
 				this.pending.set(key, [{ resolve, reject }]);
 			}
 
-			// Schedule batch flush
 			if (!this.timer) {
 				this.timer = setTimeout(() => this.flush(), this.batchDelayMs);
 			}
@@ -243,30 +159,4 @@ export class RequestBatcher {
 		}
 		this.pending.clear();
 	}
-}
-
-/**
- * Retry with exponential backoff
- */
-export async function retryWithBackoff<T>(
-	fn: () => Promise<T>,
-	maxRetries = 3,
-	baseDelayMs = 100
-): Promise<T> {
-	let lastError: Error | undefined;
-
-	for (let attempt = 0; attempt <= maxRetries; attempt++) {
-		try {
-			return await fn();
-		} catch (err) {
-			lastError = err instanceof Error ? err : new Error("Unknown error");
-
-			if (attempt < maxRetries) {
-				const delay = baseDelayMs * 2 ** attempt;
-				await new Promise((r) => setTimeout(r, delay));
-			}
-		}
-	}
-
-	throw lastError;
 }

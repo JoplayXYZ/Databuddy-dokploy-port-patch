@@ -110,7 +110,10 @@ Read [codebase-map.md](./references/codebase-map.md) when you need deeper routin
 
 ## Pitfalls
 
-- The `:online` model suffix is a **Perplexity-only** convention (e.g. `perplexity/sonar-pro`). Never add `:online` to non-Perplexity models — xAI/Grok models use plain IDs like `x-ai/grok-4.1-fast`.
+- The `:online` model suffix is a **Perplexity-only** convention (e.g. `perplexity/sonar-pro`). Never add `:online` to non-Perplexity models.
+- **Vercel AI Gateway** model IDs in `apps/api/src/ai/config/models.ts` use gateway-style names (e.g. `anthropic/claude-sonnet-4.5`), not OpenRouter catalog strings.
+- **Bun HTTP** default `idleTimeout` is **10 seconds**; agent streams can look idle during slow tools. `apps/api/src/index.ts` exports `idleTimeout` on the server (Bun caps at **255** seconds).
+- **AI SDK UI (`useChat`)** does not document automatic HTTP retries on `DefaultChatTransport`—retry UX is **`regenerate()`** + `error` ([chatbot error state](https://ai-sdk.dev/docs/ai-sdk-ui/chatbot#error-state), [error handling](https://ai-sdk.dev/docs/ai-sdk-ui/error-handling)). `maxRetries` on **`streamText`/`generateText`** is server-side model calls, not the browser chat `fetch`. Mid-stream disconnect: **`resumeStream()`** ([useChat](https://ai-sdk.dev/docs/reference/ai-sdk-ui/use-chat)).
 
 ## Search Hints
 

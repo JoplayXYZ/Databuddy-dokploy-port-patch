@@ -1,6 +1,6 @@
 "use client";
 
-import { useFeature } from "@databuddy/sdk/react";
+import { useFlag } from "@databuddy/sdk/react";
 import { GATED_FEATURES } from "@databuddy/shared/types/features";
 import {
 	ArchiveIcon,
@@ -83,7 +83,7 @@ export default function FlagsLayout({
 			: flagsLoading;
 
 	const { on: isExperimentOn, loading: experimentLoading } =
-		useFeature("experiment-50");
+		useFlag("experiment-50");
 	const isHydrated = useHydrated();
 
 	const showExperimentBanner =
@@ -229,15 +229,7 @@ export default function FlagsLayout({
 
 			{/* Experiment Flag Banner — defer until hydrated so SDK/flags match SSR */}
 			<div className="flex h-10 items-center border-border border-b bg-accent px-4">
-				{!showExperimentBanner ? (
-					<div className="flex items-center gap-3">
-						<div className="flex items-center gap-2">
-							<Skeleton className="size-4 rounded" />
-							<Skeleton className="h-5 w-20 rounded" />
-						</div>
-						<Skeleton className="h-4 w-32 rounded sm:w-40" />
-					</div>
-				) : (
+				{showExperimentBanner ? (
 					<div className="flex items-center gap-3">
 						<div className="flex items-center gap-2">
 							{isExperimentOn ? (
@@ -273,6 +265,14 @@ export default function FlagsLayout({
 								</div>
 							</TooltipContent>
 						</Tooltip>
+					</div>
+				) : (
+					<div className="flex items-center gap-3">
+						<div className="flex items-center gap-2">
+							<Skeleton className="size-4 rounded" />
+							<Skeleton className="h-5 w-20 rounded" />
+						</div>
+						<Skeleton className="h-4 w-32 rounded sm:w-40" />
 					</div>
 				)}
 			</div>

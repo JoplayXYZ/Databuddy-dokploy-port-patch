@@ -129,28 +129,28 @@ function ImplementationExamples({
 	const codeExamples = useMemo(() => {
 		const safeKey = flagKey || "my-feature";
 
-		const basicExample = `import { useFeature } from '@databuddy/sdk/react';
+		const basicExample = `import { useFlag } from '@databuddy/sdk/react';
 
 function MyComponent() {
-  const { on, loading } = useFeature('${safeKey}');
+  const { on, loading } = useFlag('${safeKey}');
 
   if (loading) return <Skeleton />;
   return on ? <NewFeature /> : <OldFeature />;
 }`;
 
-		const ssrExample = `import { useFeatureOn } from '@databuddy/sdk/react';
+		const ssrExample = `import { useFlag } from '@databuddy/sdk/react';
 
 function MyComponent() {
-  // Returns false while loading, then the actual value
-  const isEnabled = useFeatureOn('${safeKey}', false);
+  const { on, loading } = useFlag('${safeKey}');
 
-  return isEnabled ? <NewFeature /> : <OldFeature />;
+  if (loading) return <FallbackUI />;
+  return on ? <NewFeature /> : <OldFeature />;
 }`;
 
-		const variantExample = `import { useVariant } from '@databuddy/sdk/react';
+		const variantExample = `import { useFlag } from '@databuddy/sdk/react';
 
 function MyComponent() {
-  const variant = useVariant('${safeKey}');
+  const { variant } = useFlag('${safeKey}');
 
   switch (variant) {
     case 'control':

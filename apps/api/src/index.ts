@@ -366,9 +366,12 @@ const app = new Elysia()
 		);
 	});
 
+const BUN_IDLE_TIMEOUT_SECONDS = 255;
+
 export default {
 	fetch: app.fetch,
 	port: Number.parseInt(process.env.PORT ?? "3001", 10),
+	idleTimeout: BUN_IDLE_TIMEOUT_SECONDS,
 };
 
 process.on("SIGINT", async () => {

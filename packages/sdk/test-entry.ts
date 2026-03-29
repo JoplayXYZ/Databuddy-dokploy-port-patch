@@ -4,20 +4,16 @@
  */
 
 import { BrowserFlagStorage } from "./src/core/flags/browser-storage";
-import { CoreFlagsManager } from "./src/core/flags/flags-manager";
+import { BrowserFlagsManager } from "./src/core/flags/flags-manager";
 import {
 	buildQueryParams,
-	createCacheEntry,
 	DEFAULT_RESULT,
 	fetchAllFlags,
-	fetchFlag,
 	fetchFlags,
 	getCacheKey,
-	isCacheStale,
-	isCacheValid,
 	RequestBatcher,
-	retryWithBackoff,
 } from "./src/core/flags/shared";
+import type { FlagResult } from "./src/core/flags/types";
 import { createScript, isScriptInjected } from "./src/core/script";
 import {
 	clear,
@@ -33,6 +29,26 @@ import {
 } from "./src/core/tracker";
 import { detectClientId } from "./src/utils";
 
+function createCacheEntry(result: FlagResult, ttl: number, staleTime?: number) {
+	const now = Date.now();
+	return {
+		result,
+		staleAt: now + (staleTime ?? ttl / 2),
+		expiresAt: now + ttl,
+	};
+}
+
+function isCacheValid(entry: { expiresAt: number } | undefined): boolean {
+	if (!entry) {
+		return false;
+	}
+	return Date.now() <= entry.expiresAt;
+}
+
+function isCacheStale(entry: { staleAt: number }): boolean {
+	return Date.now() > entry.staleAt;
+}
+
 declare global {
 	interface Window {
 		__SDK__: typeof sdkExports;
@@ -40,7 +56,7 @@ declare global {
 }
 
 const sdkExports = {
-	CoreFlagsManager,
+	BrowserFlagsManager,
 	BrowserFlagStorage,
 	getCacheKey,
 	buildQueryParams,
@@ -49,10 +65,8 @@ const sdkExports = {
 	createCacheEntry,
 	isCacheValid,
 	isCacheStale,
-	fetchFlag,
 	fetchFlags,
 	fetchAllFlags,
-	retryWithBackoff,
 	track,
 	clear,
 	flush,

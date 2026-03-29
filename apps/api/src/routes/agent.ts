@@ -9,9 +9,11 @@ import {
 	type UIMessage,
 } from "ai";
 import { Elysia, t } from "elysia";
+import { log, parseError } from "evlog";
 import { useLogger } from "evlog/elysia";
 import type { AgentConfig, AgentType } from "../ai/agents";
 import { createAgentConfig } from "../ai/agents";
+import { AI_MODEL_MAX_RETRIES } from "../ai/config/retry";
 import { trackAgentEvent } from "../lib/databuddy";
 import {
 	formatMemoryForPrompt,
@@ -63,11 +65,11 @@ const MAX_MESSAGES = 100;
 const MAX_PARTS_PER_MESSAGE = 50;
 const MAX_PROPERTIES_PER_PART = 20;
 
-type AgentExperimentalTelemetry = {
+interface AgentExperimentalTelemetry {
 	isEnabled: true;
 	functionId: string;
 	metadata?: Record<string, string>;
-};
+}
 
 /**
  * Schema uses t.Any() for message parts because UIMessage parts
@@ -109,6 +111,7 @@ function createToolLoopAgent(
 		tools: config.tools,
 		stopWhen: config.stopWhen,
 		temperature: config.temperature,
+		maxRetries: AI_MODEL_MAX_RETRIES,
 		experimental_context: config.experimental_context,
 		experimental_telemetry: experimentalTelemetry,
 	});
@@ -303,6 +306,41 @@ export const agent = new Elysia({ prefix: "/v1/agent" })
 						originalMessages: validation.data,
 					});
 				} catch (error) {
+					const parsed = parseError(error);
+					const err = error instanceof Error ? error : new Error(String(error));
+					try {
+						useLogger().error(err, {
+							agent: {
+								chatId,
+								model: body.model ?? "agent",
+								phase: "dashboard_chat_stream",
+								userId: user?.id ?? null,
+								websiteId: body.websiteId,
+							},
+							...(parsed.fix !== "" && parsed.fix != null
+								? { fix: parsed.fix }
+								: {}),
+							...(parsed.why !== "" && parsed.why != null
+								? { why: parsed.why }
+								: {}),
+						});
+					} catch {
+						log.error({
+							agent: "dashboard_chat",
+							chatId,
+							error_message: err.message,
+							error_name: err.name,
+							service: "api",
+							websiteId: body.websiteId,
+							...(parsed.fix !== "" && parsed.fix != null
+								? { fix: parsed.fix }
+								: {}),
+							...(parsed.why !== "" && parsed.why != null
+								? { why: parsed.why }
+								: {}),
+						});
+					}
+
 					trackAgentEvent("agent_activity", {
 						action: "chat_error",
 						source: "dashboard",

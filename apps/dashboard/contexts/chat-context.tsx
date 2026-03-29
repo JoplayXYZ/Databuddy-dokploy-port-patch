@@ -55,14 +55,16 @@ export function ChatProvider({
 	children: React.ReactNode;
 }) {
 	const transport = useAgentChatTransport(chatId);
+	/** Set synchronously after `useChat`; used by the send queue. */
+	const chatRef = useRef<ChatApi>(null as unknown as ChatApi);
+
 	/** Empty on server and first client render so SSR HTML matches hydration; restored in useLayoutEffect. */
 	const chat = useAiSdkChat<UIMessage>({
 		id: chatId,
-		transport,
 		messages: [],
+		transport,
 	});
 
-	const chatRef = useRef(chat);
 	chatRef.current = chat;
 
 	const [hasRestoredFromLocal, setHasRestoredFromLocal] = useState(false);

@@ -1,6 +1,7 @@
 /** biome-ignore-all lint/performance/noNamespaceImport: "Required" */
 
 import { drizzle } from "drizzle-orm/node-postgres";
+import { Pool } from "pg";
 import * as relations from "./drizzle/relations";
 import * as schema from "./drizzle/schema";
 
@@ -12,6 +13,26 @@ if (!databaseUrl) {
 	throw new Error("DATABASE_URL is not set");
 }
 
-export const db = drizzle(databaseUrl, {
+/**
+ * libpq accepts `sslrootcert=system` (use OS trust store). node-postgres treats
+ * `sslrootcert` as a file path and tries to open `system`, causing ENOENT.
+ */
+function connectionStringForNodePg(connectionString: string): string {
+	try {
+		const parsed = new URL(connectionString);
+		if (parsed.searchParams.get("sslrootcert") === "system") {
+			parsed.searchParams.delete("sslrootcert");
+		}
+		return parsed.toString();
+	} catch {
+		return connectionString;
+	}
+}
+
+const pool = new Pool({
+	connectionString: connectionStringForNodePg(databaseUrl),
+});
+
+export const db = drizzle(pool, {
 	schema: fullSchema,
 });
