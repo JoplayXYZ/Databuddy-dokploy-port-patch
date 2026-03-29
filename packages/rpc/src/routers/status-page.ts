@@ -79,7 +79,8 @@ interface LatestCheckRow {
 }
 
 async function _fetchStatusPageData(
-	slug: string
+	slug: string,
+	days = 90
 ): Promise<StatusPageOutput | null> {
 	const rows = await db
 		.select({
@@ -121,7 +122,7 @@ async function _fetchStatusPageData(
 
 	const today = new Date();
 	const ninetyDaysAgo = new Date(today);
-	ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 89);
+	ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - (days - 1));
 
 	const startDate = ninetyDaysAgo.toISOString().split("T").at(0) ?? "";
 	const endDate = today.toISOString().split("T").at(0) ?? "";
@@ -249,10 +250,15 @@ export const statusPageRouter = {
 			summary: "Get public status page",
 			tags: ["StatusPage"],
 		})
-		.input(z.object({ slug: z.string().min(1) }))
+		.input(
+			z.object({
+				slug: z.string().min(1),
+				days: z.number().int().min(7).max(90).optional().default(90),
+			})
+		)
 		.output(statusPageOutputSchema)
 		.handler(async ({ input }) => {
-			const data = await fetchStatusPageData(input.slug);
+			const data = await fetchStatusPageData(input.slug, input.days);
 
 			if (!data) {
 				throw rpcError.notFound("StatusPage", input.slug);
