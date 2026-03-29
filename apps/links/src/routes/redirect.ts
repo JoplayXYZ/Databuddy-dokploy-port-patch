@@ -23,6 +23,9 @@ const EXPIRED_URL = "https://app.databuddy.cc/dby/expired";
 const NOT_FOUND_URL = "https://app.databuddy.cc/dby/not-found";
 const PROXY_URL = "https://app.databuddy.cc/dby/l";
 
+/** Set to `true` to enforce per-IP Redis rate limits (100 req / 60s). */
+const RATE_LIMIT_ENABLED = false;
+
 function defaultRateLimit() {
 	return {
 		success: true,
@@ -221,10 +224,12 @@ export const redirectRoute = new Elysia().get(
 		}
 
 		const tRl = performance.now();
-		const rl = await rateLimit(`redirect:${ipHash}`, 100, 60).catch((err) => {
-			captureError(err, { error_step: "rate_limit" });
-			return defaultRateLimit();
-		});
+		const rl = RATE_LIMIT_ENABLED
+			? await rateLimit(`redirect:${ipHash}`, 100, 60).catch((err) => {
+					captureError(err, { error_step: "rate_limit" });
+					return defaultRateLimit();
+				})
+			: defaultRateLimit();
 		event.latency_rate_limit_ms = Math.round(performance.now() - tRl);
 		event.rate_limit_remaining = rl.remaining;
 		const headers = getRateLimitHeaders(rl);
