@@ -31,9 +31,18 @@ This file is **intentionally small**. It grows as we lock patterns. **Interactio
 - Actions: `size-7` ghost button, `opacity-0 group-hover:opacity-100 data-[state=open]:opacity-100`, wrapped in a stop-propagation `div`.
 - Canonical reference: `components/monitors/monitor-row.tsx`, `apps/dashboard/app/(main)/links/_components/link-item.tsx`.
 
+## Component reuse principle
+
+Before building any new UI — a section, a pattern, a data display — **search the codebase for an existing component that does the same thing**. If one exists, use it. If it almost fits, extend it with props instead of forking. Duplicate implementations drift in styling and behavior over time.
+
+- When the same structural pattern appears in **2+ places**, extract it into a shared location (`components/` or the relevant shared folder) and use it everywhere.
+- Feature pages should reuse the **same components, sizing, spacing, and visual language** as the main landing page — they are subpages of the same product, not standalone sites.
+- **Never use `Math.random()`** in SSR-rendered components — it causes hydration mismatches. Use deterministic functions for generated visual data.
+
 ## Where patterns live
 
 - Dashboard UI: `apps/dashboard/` (components co-located with features unless shared).
+- Docs / marketing: `apps/docs/components/landing/` for shared section-level components; page-specific components stay co-located in their route folder.
 - Shared primitives: existing `@/components/ui` and layout folders—reuse before adding parallel systems.
 
 ## Maintaining this rule (required)

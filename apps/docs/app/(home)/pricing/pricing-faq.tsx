@@ -1,9 +1,4 @@
-import {
-	Accordion,
-	AccordionContent,
-	AccordionItem,
-	AccordionTrigger,
-} from "@/components/ui/accordion";
+import { FaqSection } from "@/components/landing/faq-section";
 
 export const pricingFaqItems = [
 	{
@@ -45,29 +40,8 @@ export const pricingFaqItems = [
 
 export function PricingFaq() {
 	return (
-		<div className="mx-auto w-full max-w-4xl py-16 lg:py-24">
-			<div className="mb-8 text-center lg:mb-12">
-				<h2 className="font-semibold text-2xl leading-tight sm:text-3xl">
-					Pricing FAQ
-				</h2>
-			</div>
-
-			<Accordion className="w-full" collapsible type="single">
-				{pricingFaqItems.map((faq) => (
-					<AccordionItem
-						className="border-l-4 border-l-transparent bg-background/50 duration-200 hover:border-l-primary/20 hover:bg-background/80"
-						key={faq.question}
-						value={faq.question}
-					>
-						<AccordionTrigger className="px-6 py-4 text-left font-normal text-base hover:no-underline sm:px-8 sm:py-5 sm:text-lg">
-							{faq.question}
-						</AccordionTrigger>
-						<AccordionContent className="px-6 pb-4 text-muted-foreground text-sm leading-relaxed sm:px-8 sm:pb-5 sm:text-base">
-							{faq.answer}
-						</AccordionContent>
-					</AccordionItem>
-				))}
-			</Accordion>
+		<div className="py-16 lg:py-24">
+			<FaqSection items={pricingFaqItems} title="Pricing FAQ" />
 		</div>
 	);
 }
