@@ -144,33 +144,39 @@ export function FunnelItem({
 					tabIndex={0}
 					type="button"
 				>
-					<DataList.Cell className="w-8 pt-0.5">
-						<CaretRightIcon
+					<DataList.Cell>
+						<div
 							className={cn(
-								"size-4 text-muted-foreground transition-transform duration-200",
-								isExpanded && "rotate-90"
+								"flex size-8 shrink-0 items-center justify-center rounded border transition-colors",
+								isExpanded
+									? "border-border bg-accent/40 text-foreground"
+									: "border-transparent bg-muted text-muted-foreground"
 							)}
-							weight="fill"
-						/>
+						>
+							<CaretRightIcon
+								className={cn(
+									"size-4 transition-transform duration-200",
+									isExpanded && "rotate-90"
+								)}
+								weight="fill"
+							/>
+						</div>
 					</DataList.Cell>
 
-					<DataList.Cell className="w-40 min-w-0 lg:w-52">
-						<p className="wrap-break-word text-pretty font-medium text-foreground text-sm">
-							{funnel.name}
-						</p>
-					</DataList.Cell>
-
-					<DataList.Cell grow>
-						{funnel.description ? (
-							<p className="wrap-break-word text-pretty text-muted-foreground text-xs">
-								{funnel.description}
+					<DataList.Cell className="min-w-0" grow>
+						<div className="w-full text-start">
+							<p className="wrap-break-word text-pretty font-medium text-foreground text-sm">
+								{funnel.name}
 							</p>
-						) : (
-							<p className="text-muted-foreground text-xs">—</p>
-						)}
+							{funnel.description ? (
+								<p className="wrap-break-word mt-1 text-pretty text-muted-foreground text-xs">
+									{funnel.description}
+								</p>
+							) : null}
+						</div>
 					</DataList.Cell>
 
-					<DataList.Cell className="hidden items-start gap-3 pt-0.5 lg:flex">
+					<DataList.Cell className="hidden items-center gap-3 lg:flex">
 						{isLoadingAnalytics ? (
 							<>
 								<Skeleton className="h-5 w-32 rounded lg:w-44" />
@@ -204,7 +210,7 @@ export function FunnelItem({
 						)}
 					</DataList.Cell>
 
-					<DataList.Cell className="w-14 pt-0.5 text-right lg:hidden">
+					<DataList.Cell className="w-14 text-right lg:hidden">
 						{isLoadingAnalytics ? (
 							<Skeleton className="ms-auto h-4 w-12 rounded" />
 						) : (
@@ -214,7 +220,7 @@ export function FunnelItem({
 						)}
 					</DataList.Cell>
 
-					<DataList.Cell action className="pt-0.5">
+					<DataList.Cell action>
 						<DropdownMenu>
 							<DropdownMenuTrigger asChild>
 								<Button
@@ -264,10 +270,10 @@ export function FunnelItem({
 
 export function FunnelItemSkeleton() {
 	return (
-		<div className="flex h-15 items-center gap-4 border-border/80 border-b px-4 last:border-b-0">
-			<Skeleton className="size-4 shrink-0 rounded" />
+		<div className="flex h-15 items-center gap-4 border-border/80 border-b px-4 py-3 last:border-b-0">
+			<Skeleton className="size-8 shrink-0 rounded" />
 			<div className="min-w-0 flex-1 space-y-1.5">
-				<Skeleton className="h-4 w-36" />
+				<Skeleton className="h-4 w-36 max-w-full" />
 				<Skeleton className="h-3 w-48 max-w-full" />
 			</div>
 			<div className="hidden shrink-0 items-center gap-3 lg:flex">

@@ -28,7 +28,7 @@ This file is **intentionally small**. It grows as we lock patterns. **Interactio
 
 All list views use the `DataList` compound component (`components/data-list.tsx`). Wrap in `<DataList className="rounded bg-card">` — no border on root.
 
-- **Row defaults:** `align="start"` for wrapping text, `align="center"` for single-line rows (e.g. flags). `w-full` is built-in — don't repeat it.
+- **Row defaults:** `DataList.Row` defaults to `align="center"` (vertical center). Use `align="start"` when multi-line text should stay top-aligned (monitors, goals, anomalies). `w-full` is built-in — don't repeat it.
 - **Cell defaults:** `shrink-0` and `min-w-0` are built-in — don't repeat them. `text-start` is the browser default — don't add it.
 - **Inactive/paused state:** `opacity-50` on the Row, not a badge.
 - **`pt-0.5`** on non-text cells (icons, stats, actions) to align with text baseline in `items-start` rows. Omit in `items-center` rows.

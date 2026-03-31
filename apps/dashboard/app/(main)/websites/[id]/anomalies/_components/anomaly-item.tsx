@@ -86,7 +86,7 @@ export function AnomalyItem({ anomaly }: AnomalyItemProps) {
 		anomaly.type === "spike" ? "text-destructive" : "text-blue-500";
 
 	return (
-		<DataList.Row>
+		<DataList.Row align="start">
 			<DataList.Cell className="pt-0.5">
 				<div
 					className={cn(

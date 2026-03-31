@@ -297,7 +297,6 @@ function FlagRow({
 
 	return (
 		<DataList.Row
-			align="center"
 			asChild
 			className={cn("min-w-full", flag.status === "archived" && "opacity-50")}
 		>

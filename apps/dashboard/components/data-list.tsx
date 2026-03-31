@@ -60,7 +60,7 @@ interface DataListRowProps {
 }
 
 function DataListRow({
-	align = "start",
+	align = "center",
 	asChild = false,
 	children,
 	className,

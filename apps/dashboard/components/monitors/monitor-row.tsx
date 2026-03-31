@@ -309,7 +309,11 @@ export function MonitorRow({
 	};
 
 	return (
-		<DataList.Row asChild className={cn(!isActive && "opacity-50")}>
+		<DataList.Row
+			align="start"
+			asChild
+			className={cn(!isActive && "opacity-50")}
+		>
 			<Link href={`/monitors/${schedule.id}`} onClick={handleClick}>
 				<DataList.Cell className="pt-0.5">
 					<div

@@ -87,7 +87,7 @@ export function GoalItem({
 	const TypeIcon = config.icon;
 
 	return (
-		<DataList.Row className={cn(!goal.isActive && "opacity-50")}>
+		<DataList.Row align="start" className={cn(!goal.isActive && "opacity-50")}>
 			<DataList.Cell className="pt-0.5">
 				<div
 					className={cn(
