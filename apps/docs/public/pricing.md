@@ -1,8 +1,8 @@
 # Databuddy Pricing
 
-Product analytics, web analytics, feature flags, and AI assistant in one platform. Start free and scale with usage-based event pricing.
+Analytics, feature flags, and AI—usage-based events when you outgrow included volume.
 
-Source: [databuddy.cc/pricing](https://www.databuddy.cc/pricing)
+[Website](https://www.databuddy.cc/pricing) · [This file](https://www.databuddy.cc/pricing.md) · [JSON API](https://www.databuddy.cc/api/pricing) · [Sign up](https://app.databuddy.cc/login). Same Markdown from **GET `/pricing`** with `Accept: text/markdown` (see `Vary: Accept`).
 
 ---
 
@@ -66,13 +66,6 @@ Limits below come from the product’s plan matrix (the **Enterprise** plan in c
 For custom volume, security reviews, SLAs, and onboarding, Databuddy offers **Enterprise** agreements.
 
 Contact: use the options on [databuddy.cc/pricing](https://www.databuddy.cc/pricing) or your account team.
-
----
-
-## Machine-readable pricing
-
-JSON: [databuddy.cc/api/pricing](https://www.databuddy.cc/api/pricing)  
-Sign up: [app.databuddy.cc/login](https://app.databuddy.cc/login)
 
 ---
 
