@@ -12,6 +12,8 @@ interface RangeSelectionPopupProps {
 	onCloseAction: () => void;
 	onZoomAction: (dateRange: { startDate: Date; endDate: Date }) => void;
 	onAddAnnotationAction: () => void;
+	/** When false, only “Zoom to range” is shown (e.g. annotations disabled on chart). Default: true. */
+	showAnnotationAction?: boolean;
 }
 
 export function RangeSelectionPopup({
@@ -20,6 +22,7 @@ export function RangeSelectionPopup({
 	onCloseAction,
 	onZoomAction,
 	onAddAnnotationAction,
+	showAnnotationAction = true,
 }: RangeSelectionPopupProps) {
 	const handleZoom = () => {
 		onZoomAction(dateRange);
@@ -46,8 +49,8 @@ export function RangeSelectionPopup({
 				onAddAnnotationAction();
 			}
 		},
-		{ preventDefault: false, enabled: isOpen },
-		[onAddAnnotationAction]
+		{ preventDefault: false, enabled: isOpen && showAnnotationAction },
+		[onAddAnnotationAction, showAnnotationAction]
 	);
 
 	useHotkeys("escape", () => onCloseAction(), { enabled: isOpen }, [
@@ -101,22 +104,24 @@ export function RangeSelectionPopup({
 							Z
 						</kbd>
 					</button>
-					<button
-						className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm hover:bg-accent"
-						onClick={onAddAnnotationAction}
-						type="button"
-					>
-						<NoteIcon
-							className="size-3.5 text-muted-foreground"
-							weight="duotone"
-						/>
-						<span className="flex-1 text-foreground text-xs">
-							Add annotation…
-						</span>
-						<kbd className="rounded border px-1 py-px text-[10px] text-muted-foreground">
-							A
-						</kbd>
-					</button>
+					{showAnnotationAction ? (
+						<button
+							className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm hover:bg-accent"
+							onClick={onAddAnnotationAction}
+							type="button"
+						>
+							<NoteIcon
+								className="size-3.5 text-muted-foreground"
+								weight="duotone"
+							/>
+							<span className="flex-1 text-foreground text-xs">
+								Add annotation…
+							</span>
+							<kbd className="rounded border px-1 py-px text-[10px] text-muted-foreground">
+								A
+							</kbd>
+						</button>
+					) : null}
 				</div>
 			</div>
 		</div>

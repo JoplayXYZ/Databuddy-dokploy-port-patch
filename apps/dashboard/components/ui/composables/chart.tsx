@@ -10,6 +10,20 @@ import type {
 import { chartQueryOutcomeFromQuery } from "@/lib/chart-query-outcome";
 import { cn } from "@/lib/utils";
 
+export interface ChartInteractiveFeatures {
+	annotations?: boolean;
+	rangeSelection?: boolean;
+}
+
+export function mergeChartInteractiveFeatures(
+	features?: ChartInteractiveFeatures
+): { annotations: boolean; rangeSelection: boolean } {
+	return {
+		annotations: features?.annotations ?? true,
+		rangeSelection: features?.rangeSelection ?? true,
+	};
+}
+
 interface ChartRootProps {
 	children: ReactNode;
 	className?: string;

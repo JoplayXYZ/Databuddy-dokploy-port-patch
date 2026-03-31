@@ -12,12 +12,12 @@ import {
 	YAxis,
 } from "recharts";
 import type { ChartStepType } from "@/components/analytics/stat-card";
-import { Chart } from "@/components/ui/composables/chart";
 import {
 	ChartTooltip,
 	createTooltipEntries,
 	formatTooltipDate,
 } from "@/components/ui/chart-tooltip";
+import { Chart } from "@/components/ui/composables/chart";
 import type { ChartQueryOutcome } from "@/lib/chart-query-outcome";
 import { cn } from "@/lib/utils";
 import { useDynamicDasharray } from "./use-dynamic-dasharray";
@@ -42,7 +42,7 @@ interface SimpleMetricsChartProps {
 	height?: number;
 	isLoading?: boolean;
 	className?: string;
-	/** When true, the last segment (incomplete period) uses a dashed stroke, matching `MetricsChart` / overview traffic trends. */
+	/** When true, the last segment (incomplete period) uses a dashed stroke, matching the overview traffic trends chart. */
 	partialLastSegment?: boolean;
 	chartStepType?: ChartStepType;
 }

@@ -32,7 +32,7 @@ type ChartTooltipProps = {
 
 /**
  * Reusable chart tooltip component
- * Supports both single-value (stat-card style) and multi-value (metrics-chart style)
+ * Supports both single-value (stat-card style) and multi-value (traffic trends style)
  */
 export function ChartTooltip({
 	active,
@@ -66,7 +66,7 @@ export function ChartTooltip({
 		);
 	}
 
-	// Multi-value mode (like metrics-chart)
+	// Multi-value mode (like traffic trends)
 	if (!entries?.length) return null;
 
 	return (
