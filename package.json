@@ -15,7 +15,7 @@
     "husky": "^9.1.7",
     "knip": "^5.88.1",
     "lint-staged": "^16.4.0",
-    "turbo": "^2.8.19",
+    "turbo": "^2.9.3",
     "typescript": "^5.9.3",
     "ultracite": "^6.5.1"
   },
