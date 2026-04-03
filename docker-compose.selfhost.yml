@@ -77,8 +77,8 @@ services:
       DATABASE_URL: postgres://databuddy:${DB_PASSWORD:-changeme}@postgres:5432/databuddy
       REDIS_URL: redis://:${REDIS_PASSWORD:-changeme}@redis:6379
       CLICKHOUSE_URL: http://default:${CLICKHOUSE_PASSWORD:-changeme}@clickhouse:8123/databuddy_analytics
-      BETTER_AUTH_URL: ${BETTER_AUTH_URL:?Set BETTER_AUTH_URL to your dashboard public URL}
-      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?Set BETTER_AUTH_SECRET (openssl rand -base64 32)}
+      BETTER_AUTH_URL: ${BETTER_AUTH_URL}
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET}
       DASHBOARD_URL: ${DASHBOARD_URL:-}
       AI_API_KEY: ${AI_API_KEY:-}
       RESEND_API_KEY: ${RESEND_API_KEY:-}
