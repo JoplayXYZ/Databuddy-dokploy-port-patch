@@ -90,9 +90,8 @@ services:
 
   # ── Application Services ─────────────────────────────────────────────
   #
-  # Note: api uses bun:slim, basket/links/uptime use distroless images with
-  # no shell, wget, or curl. Container-level healthchecks are omitted for
-  # app services. Monitor /health endpoints externally (reverse proxy, etc.).
+  # All service images include built-in HEALTHCHECK instructions that
+  # probe their /health endpoints.
 
   api:
     image: ghcr.io/databuddy-analytics/databuddy-api:latest
