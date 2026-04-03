@@ -23,7 +23,7 @@ async function getStatusData(slug: string, days: number) {
 		{
 			revalidate: 60,
 			tags: ["status-page", `status-page-${slug}`],
-		},
+		}
 	)();
 }
 
