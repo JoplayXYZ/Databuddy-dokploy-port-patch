@@ -1,13 +1,5 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import { CodeIcon, GearIcon, InfoIcon } from "@phosphor-icons/react";
-import { useMutation } from "@tanstack/react-query";
-import clsx from "clsx";
-import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import { toast } from "sonner";
-import { z } from "zod";
 import { useOrganizationsContext } from "@/components/providers/organizations-provider";
 import { Button } from "@/components/ui/button";
 import {
@@ -36,6 +28,14 @@ import {
 } from "@/components/ui/tooltip";
 import { useWebsite } from "@/hooks/use-websites";
 import { orpc } from "@/lib/orpc";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { CodeIcon, GearIcon, InfoIcon } from "@phosphor-icons/react";
+import { useMutation } from "@tanstack/react-query";
+import clsx from "clsx";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { z } from "zod";
 import { CollapsibleSection } from "./collapsible-section";
 
 const granularityOptions = [
@@ -70,6 +70,7 @@ interface MonitorSheetProps {
 	onCloseAction: (open: boolean) => void;
 	websiteId?: string;
 	onSaveAction?: () => void;
+	onCreatedAction?: (scheduleId: string) => void;
 	schedule?: {
 		id: string;
 		url: string;
@@ -88,6 +89,7 @@ export function MonitorSheet({
 	onCloseAction,
 	websiteId,
 	onSaveAction,
+	onCreatedAction,
 	schedule,
 }: MonitorSheetProps) {
 	const isEditing = !!schedule;
@@ -177,7 +179,7 @@ export function MonitorSheet({
 			} else {
 				const resolvedOrganizationId =
 					activeOrganization?.id ?? activeOrganizationId ?? null;
-				await createMutation.mutateAsync({
+				const result = await createMutation.mutateAsync({
 					...(resolvedOrganizationId
 						? { organizationId: resolvedOrganizationId }
 						: {}),
@@ -190,6 +192,8 @@ export function MonitorSheet({
 					jsonParsingConfig,
 				});
 				toast.success("Monitor created successfully");
+				const newId = result.scheduleId as string;
+				onCreatedAction?.(newId);
 			}
 			onSaveAction?.();
 			onCloseAction(false);

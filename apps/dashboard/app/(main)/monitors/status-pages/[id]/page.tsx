@@ -1,5 +1,20 @@
 "use client";
 
+import { PageHeader } from "@/app/(main)/websites/_components/page-header";
+import { EmptyState } from "@/components/empty-state";
+import { ErrorBoundary } from "@/components/error-boundary";
+import { FeatureLockedPanel } from "@/components/feature-access-gate";
+import { PageNavigation } from "@/components/layout/page-navigation";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { List } from "@/components/ui/composables/list";
+import { DeleteDialog } from "@/components/ui/delete-dialog";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useFeatureAccess } from "@/hooks/use-feature-access";
+import { getStatusPageUrl } from "@/lib/app-url";
+import { orpc } from "@/lib/orpc";
+import { cn } from "@/lib/utils";
 import {
 	ArrowClockwiseIcon,
 	BrowserIcon,
@@ -12,32 +27,17 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import { toast } from "sonner";
-import { PageHeader } from "@/app/(main)/websites/_components/page-header";
-import { EmptyState } from "@/components/empty-state";
-import { ErrorBoundary } from "@/components/error-boundary";
-import { FeatureLockedPanel } from "@/components/feature-access-gate";
-import { PageNavigation } from "@/components/layout/page-navigation";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { List } from "@/components/ui/composables/list";
-import { Skeleton } from "@/components/ui/skeleton";
-import { DeleteDialog } from "@/components/ui/delete-dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useFeatureAccess } from "@/hooks/use-feature-access";
-import { getStatusPageUrl } from "@/lib/app-url";
-import { orpc } from "@/lib/orpc";
-import { cn } from "@/lib/utils";
 import { AddMonitorDialog } from "./_components/add-monitor-dialog";
 import {
-	type StatusPageMonitor,
 	StatusPageMonitorRow,
+	type StatusPageMonitor,
 } from "./_components/status-page-monitor-row";
 
 export default function StatusPageDetailsPage() {
 	const params = useParams();
 	const statusPageId = params.id as string;
 	const queryClient = useQueryClient();
-	const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+	const [isDialogOpen, setIsDialogOpen] = useState(false);
 	const [monitorToRemove, setMonitorToRemove] = useState<string | null>(null);
 
 	const statusPageQuery = useQuery({
@@ -48,9 +48,7 @@ export default function StatusPageDetailsPage() {
 	const removeMutation = useMutation({
 		...orpc.statusPage.removeMonitor.mutationOptions(),
 		onSuccess: () => {
-			queryClient.invalidateQueries({
-				queryKey: orpc.statusPage.get.key({ input: { statusPageId } }),
-			});
+			invalidate();
 			toast.success("Monitor removed");
 			setMonitorToRemove(null);
 		},
@@ -64,6 +62,12 @@ export default function StatusPageDetailsPage() {
 	const monitorToRemoveData = statusPage?.monitors.find(
 		(m: StatusPageMonitor) => m.id === monitorToRemove
 	);
+
+	const invalidate = () => {
+		queryClient.invalidateQueries({
+			queryKey: orpc.statusPage.get.key({ input: { statusPageId } }),
+		});
+	};
 
 	const handleConfirmRemove = () => {
 		if (!monitorToRemoveData) {
@@ -103,9 +107,9 @@ export default function StatusPageDetailsPage() {
 				<EmptyState
 					action={{
 						label: "Add Monitor",
-						onClick: () => setIsAddDialogOpen(true),
+						onClick: () => setIsDialogOpen(true),
 					}}
-					description="Add monitors to this status page to display their uptime and latency."
+					description="Add an existing monitor or create a new one to display on this status page."
 					icon={<HeartbeatIcon weight="duotone" />}
 					title="No monitors added"
 					variant="minimal"
@@ -162,7 +166,7 @@ export default function StatusPageDetailsPage() {
 										)}
 									/>
 								</Button>
-								<Button onClick={() => setIsAddDialogOpen(true)} size="sm">
+								<Button onClick={() => setIsDialogOpen(true)} size="sm">
 									<PlusIcon />
 									Add Monitor
 								</Button>
@@ -174,7 +178,7 @@ export default function StatusPageDetailsPage() {
 							>
 								<Skeleton className="h-9 w-22 rounded sm:w-24" />
 								<Skeleton className="size-9 rounded" />
-								<Skeleton className="h-9 w-29 rounded sm:w-32" />
+								<Skeleton className="h-9 w-28 rounded" />
 							</div>
 						)
 					}
@@ -235,9 +239,9 @@ export default function StatusPageDetailsPage() {
 							(m: StatusPageMonitor) => m.uptimeScheduleId
 						) ?? []
 					}
-					onAddComplete={() => statusPageQuery.refetch()}
-					onOpenChange={setIsAddDialogOpen}
-					open={isAddDialogOpen}
+					onCompleteAction={invalidate}
+					onOpenChangeAction={setIsDialogOpen}
+					open={isDialogOpen}
 					statusPageId={statusPageId}
 				/>
 

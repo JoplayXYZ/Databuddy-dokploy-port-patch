@@ -17,7 +17,7 @@ export default function StatusPageDetailLoading() {
 				>
 					<Skeleton className="h-9 w-22 rounded sm:w-24" />
 					<Skeleton className="size-9 rounded" />
-					<Skeleton className="h-9 w-29 rounded sm:w-32" />
+					<Skeleton className="h-9 w-28 rounded" />
 				</div>
 			</div>
 
