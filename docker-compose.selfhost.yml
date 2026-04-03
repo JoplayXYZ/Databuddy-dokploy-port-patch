@@ -1,0 +1,205 @@
+# ─────────────────────────────────────────────────────────────────────
+# Databuddy · Self-Hosting Docker Compose
+# ─────────────────────────────────────────────────────────────────────
+#
+# Usage:
+#   1. Copy .env.example → .env and fill in your values
+#      ⚠ IMPORTANT: Change DB_PASSWORD, REDIS_PASSWORD, and
+#        CLICKHOUSE_PASSWORD before deploying to production!
+#   2. docker compose -f docker-compose.selfhost.yml up -d
+#   3. Initialize databases (first run only):
+#      docker compose -f docker-compose.selfhost.yml exec api bun run db:push
+#      docker compose -f docker-compose.selfhost.yml exec api bun run clickhouse:init
+#
+# Images: ghcr.io/databuddy-analytics/databuddy-{api,basket,links,uptime}
+# ─────────────────────────────────────────────────────────────────────
+
+services:
+
+  # ── Infrastructure ───────────────────────────────────────────────────
+  # Ports are bound to 127.0.0.1 (localhost only) for security.
+  # App services reach them via the internal Docker network.
+  # Remove the 127.0.0.1 prefix if you need external access.
+
+  postgres:
+    image: postgres:17-alpine
+    container_name: databuddy-postgres
+    environment:
+      POSTGRES_DB: databuddy
+      POSTGRES_USER: databuddy
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-changeme}
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U databuddy -d databuddy"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - databuddy
+
+  clickhouse:
+    image: clickhouse/clickhouse-server:25.5.1-alpine
+    container_name: databuddy-clickhouse
+    environment:
+      CLICKHOUSE_DB: databuddy_analytics
+      CLICKHOUSE_USER: default
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:-changeme}
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
+    ports:
+      - "127.0.0.1:${CLICKHOUSE_PORT:-8123}:8123"
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8123/ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - databuddy
+
+  redis:
+    image: redis:7-alpine
+    container_name: databuddy-redis
+    ports:
+      - "127.0.0.1:${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    command: >
+      redis-server
+      --appendonly yes
+      --maxmemory 512mb
+      --maxmemory-policy noeviction
+      --requirepass ${REDIS_PASSWORD:-changeme}
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-changeme}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - databuddy
+
+  # ── Application Services ─────────────────────────────────────────────
+  #
+  # Note: api uses bun:slim, basket/links/uptime use distroless images with
+  # no shell, wget, or curl. Container-level healthchecks are omitted for
+  # app services. Monitor /health endpoints externally (reverse proxy, etc.).
+
+  api:
+    image: ghcr.io/databuddy-analytics/databuddy-api:latest
+    container_name: databuddy-api
+    ports:
+      - "${API_PORT:-3001}:3001"
+    environment:
+      NODE_ENV: production
+      PORT: "3001"
+      DATABASE_URL: postgres://databuddy:${DB_PASSWORD:-changeme}@postgres:5432/databuddy
+      REDIS_URL: redis://:${REDIS_PASSWORD:-changeme}@redis:6379
+      CLICKHOUSE_URL: http://default:${CLICKHOUSE_PASSWORD:-changeme}@clickhouse:8123/databuddy_analytics
+      BETTER_AUTH_URL: ${BETTER_AUTH_URL:?Set BETTER_AUTH_URL to your dashboard public URL}
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?Set BETTER_AUTH_SECRET (openssl rand -base64 32)}
+      DASHBOARD_URL: ${DASHBOARD_URL:-}
+      AI_API_KEY: ${AI_API_KEY:-}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      clickhouse:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - databuddy
+
+  basket:
+    image: ghcr.io/databuddy-analytics/databuddy-basket:latest
+    container_name: databuddy-basket
+    ports:
+      - "${BASKET_PORT:-4000}:4000"
+    environment:
+      NODE_ENV: production
+      PORT: "4000"
+      DATABASE_URL: postgres://databuddy:${DB_PASSWORD:-changeme}@postgres:5432/databuddy
+      REDIS_URL: redis://:${REDIS_PASSWORD:-changeme}@redis:6379
+      CLICKHOUSE_URL: http://default:${CLICKHOUSE_PASSWORD:-changeme}@clickhouse:8123/databuddy_analytics
+      # SELFHOST=true → basket writes directly to ClickHouse (no Kafka/Redpanda needed)
+      SELFHOST: "true"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      clickhouse:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - databuddy
+
+  # Note: links service hardcodes port 2500 internally (not configurable via env var)
+  links:
+    image: ghcr.io/databuddy-analytics/databuddy-links:latest
+    container_name: databuddy-links
+    ports:
+      - "${LINKS_PORT:-2500}:2500"
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgres://databuddy:${DB_PASSWORD:-changeme}@postgres:5432/databuddy
+      REDIS_URL: redis://:${REDIS_PASSWORD:-changeme}@redis:6379
+      # APP_URL: public URL of your dashboard — used for expired/not-found link redirect pages
+      APP_URL: ${APP_URL:?Set APP_URL to your dashboard public URL (e.g. https://app.example.com)}
+      LINKS_ROOT_REDIRECT_URL: ${LINKS_ROOT_REDIRECT_URL:-https://databuddy.cc}
+      # GEOIP_DB_URL: fetches MaxMind GeoLite2-City DB on startup from this URL.
+      # Defaults to cdn.databuddy.cc — override with your own hosted copy to avoid the external dependency.
+      GEOIP_DB_URL: ${GEOIP_DB_URL:-https://cdn.databuddy.cc/mmdb/GeoLite2-City.mmdb}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - databuddy
+
+  # ── Optional: Uptime Monitoring ──────────────────────────────────────
+  # Requires Upstash QStash. Uncomment and set QSTASH keys to enable.
+  # Port mapped to 4001 externally to avoid conflict with basket (both use 4000 internally).
+  #
+  # uptime:
+  #   image: ghcr.io/databuddy-analytics/databuddy-uptime:latest
+  #   container_name: databuddy-uptime
+  #   ports:
+  #     - "${UPTIME_PORT:-4001}:4000"
+  #   environment:
+  #     NODE_ENV: production
+  #     DATABASE_URL: postgres://databuddy:${DB_PASSWORD:-changeme}@postgres:5432/databuddy
+  #     REDIS_URL: redis://:${REDIS_PASSWORD:-changeme}@redis:6379
+  #     QSTASH_CURRENT_SIGNING_KEY: ${QSTASH_CURRENT_SIGNING_KEY}
+  #     QSTASH_NEXT_SIGNING_KEY: ${QSTASH_NEXT_SIGNING_KEY}
+  #     RESEND_API_KEY: ${RESEND_API_KEY:-}
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #     redis:
+  #       condition: service_healthy
+  #   restart: unless-stopped
+  #   networks:
+  #     - databuddy
+
+volumes:
+  postgres_data:
+  clickhouse_data:
+  redis_data:
+
+networks:
+  databuddy:
+    driver: bridge
