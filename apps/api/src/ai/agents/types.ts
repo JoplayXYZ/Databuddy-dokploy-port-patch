@@ -26,5 +26,6 @@ export interface AgentConfig {
 	tools: ToolSet;
 	stopWhen: StopCondition<ToolSet>;
 	temperature: number;
+	providerOptions?: Record<string, Record<string, unknown>>;
 	experimental_context?: unknown;
 }

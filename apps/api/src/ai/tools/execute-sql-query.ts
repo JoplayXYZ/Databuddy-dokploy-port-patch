@@ -53,6 +53,15 @@ export const executeSqlQueryTool = tool({
 			...(params ?? {}),
 		});
 
+		// Truncate large results to save context tokens.
+		const MAX_MODEL_ROWS = 50;
+		if (result.data.length > MAX_MODEL_ROWS) {
+			return {
+				...result,
+				data: result.data.slice(0, MAX_MODEL_ROWS),
+			};
+		}
+
 		return result;
 	},
 });

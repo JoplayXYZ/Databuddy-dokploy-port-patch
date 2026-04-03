@@ -46,7 +46,9 @@
     "email:dev": "dotenv -- sh -c 'cd packages/email && bun run dev'",
     "sdk:build": "turbo run build --filter @databuddy/sdk --filter @databuddy/cache",
     "dev:dashboard": "dotenv -- turbo dev --filter @databuddy/dashboard --filter @databuddy/api",
-    "git:setup-aliases": "git config --local include.path ../gitconfig"
+    "git:setup-aliases": "git config --local include.path ../gitconfig",
+    "eval": "dotenv -- bun run --cwd packages/evals src/cli.ts",
+    "eval:ui": "dotenv -- bun run --cwd packages/evals ui/serve.ts"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx,json,jsonc,css,scss,md,mdx}": [

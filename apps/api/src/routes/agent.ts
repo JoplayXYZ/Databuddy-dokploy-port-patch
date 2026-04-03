@@ -14,7 +14,13 @@ import { useLogger } from "evlog/elysia";
 import type { AgentConfig, AgentType } from "../ai/agents";
 import { createAgentConfig } from "../ai/agents";
 import { enrichAgentContext } from "../ai/config/enrich-context";
+import { ANTHROPIC_CACHE_1H } from "../ai/config/prompt-cache";
 import { AI_MODEL_MAX_RETRIES } from "../ai/config/retry";
+import {
+	getApiKeyFromHeader,
+	hasKeyScope,
+	isApiKeyPresent,
+} from "../lib/api-key";
 import { trackAgentEvent } from "../lib/databuddy";
 import {
 	formatMemoryForPrompt,
@@ -100,19 +106,9 @@ const AgentRequestSchema = t.Object({
 });
 
 /**
- * Estimated token count for a message (rough heuristic: 1 token ~4 chars).
- */
-function estimateTokens(messages: unknown[]): number {
-	return Math.ceil(JSON.stringify(messages).length / 4);
-}
-
-/** Threshold at which we start pruning old messages (~100K tokens). */
-const CONTEXT_PRUNE_THRESHOLD = 100_000;
-
-/**
  * Create a ToolLoopAgent from AgentConfig.
- * Includes a prepareStep hook that prunes old tool results and reasoning
- * from the conversation when the estimated context size exceeds the threshold.
+ * Uses server-side context management (Anthropic) for automatic pruning
+ * and caches the conversation prefix across steps for cost reduction.
  */
 function createToolLoopAgent(
 	config: AgentConfig,
@@ -125,21 +121,23 @@ function createToolLoopAgent(
 		stopWhen: config.stopWhen,
 		temperature: config.temperature,
 		maxRetries: AI_MODEL_MAX_RETRIES,
+		providerOptions: config.providerOptions,
 		experimental_context: config.experimental_context,
 		experimental_telemetry: experimentalTelemetry,
-		prepareStep: ({ messages }) => {
-			if (estimateTokens(messages) < CONTEXT_PRUNE_THRESHOLD) {
+		prepareStep({ messages }) {
+			if (messages.length === 0) {
 				return { messages };
 			}
-			// Prune: keep first 2 messages + last 10, drop tool-result
-			// content from middle messages to free context space.
-			const pruned = pruneMessages({
-				messages,
-				reasoning: "before-last-message",
-				toolCalls: "before-last-2-messages",
-				emptyMessages: "remove",
-			});
-			return { messages: pruned };
+			const last = messages.at(-1);
+			if (last && last.role === "user" && !last.providerOptions) {
+				return {
+					messages: [
+						...messages.slice(0, -1),
+						{ ...last, providerOptions: ANTHROPIC_CACHE_1H },
+					],
+				};
+			}
+			return { messages };
 		},
 	});
 }
@@ -152,11 +150,24 @@ const MODEL_TO_AGENT: Record<string, AgentType> = {
 
 export const agent = new Elysia({ prefix: "/v1/agent" })
 	.derive(async ({ request }) => {
-		const session = await auth.api.getSession({ headers: request.headers });
-		return { user: session?.user ?? null };
+		const hasApiKey = isApiKeyPresent(request.headers);
+		const [apiKey, session] = await Promise.all([
+			hasApiKey ? getApiKeyFromHeader(request.headers) : null,
+			auth.api.getSession({ headers: request.headers }),
+		]);
+
+		const user = session?.user ?? null;
+		const validApiKey =
+			apiKey && hasKeyScope(apiKey, "read:data") ? apiKey : null;
+
+		return {
+			user,
+			apiKey: validApiKey,
+			isAuthenticated: Boolean(user ?? validApiKey),
+		};
 	})
-	.onBeforeHandle(({ user, set }) => {
-		if (!user) {
+	.onBeforeHandle(({ isAuthenticated, set }) => {
+		if (!isAuthenticated) {
 			set.status = 401;
 			return {
 				success: false,
@@ -167,7 +178,7 @@ export const agent = new Elysia({ prefix: "/v1/agent" })
 	})
 	.post(
 		"/chat",
-		function agentChat({ body, user, request }) {
+		function agentChat({ body, user, apiKey, request }) {
 			return (async () => {
 				const chatId = body.id ?? generateId();
 				let organizationId: string | null = null;
@@ -191,8 +202,12 @@ export const agent = new Elysia({ prefix: "/v1/agent" })
 					const { website } = websiteValidation;
 					organizationId = website.organizationId ?? null;
 
+					// API key auth: key's org must match the website's org
+					const apiKeyOrg = (apiKey as Record<string, unknown> | null)
+						?.organizationId as string | undefined;
 					const hasPermission =
 						website.isPublic ||
+						(apiKey && apiKeyOrg && apiKeyOrg === website.organizationId) ||
 						(website.organizationId &&
 							(
 								await websitesApi.hasPermission({
@@ -209,10 +224,7 @@ export const agent = new Elysia({ prefix: "/v1/agent" })
 						);
 					}
 
-					if (!user?.id) {
-						return jsonError(401, "AUTH_REQUIRED", "User ID required");
-					}
-					const userId = user.id;
+					const userId = user?.id ?? apiKeyOrg ?? "api-key";
 
 					const model = body.model ?? "agent";
 					const agentType: AgentType = MODEL_TO_AGENT[model] ?? "reflection";

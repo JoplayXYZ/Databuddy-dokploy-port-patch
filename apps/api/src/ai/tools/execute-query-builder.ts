@@ -155,11 +155,15 @@ export const executeQueryBuilderTool = tool({
 				to: input.to,
 			});
 
+			// Truncate large results to save context tokens.
+			const MAX_MODEL_ROWS = 50;
+			const truncated = data.length > MAX_MODEL_ROWS;
 			return {
-				data,
+				data: truncated ? data.slice(0, MAX_MODEL_ROWS) : data,
 				executionTime,
 				rowCount: data.length,
 				type: input.type,
+				...(truncated && { truncated: true }),
 			};
 		} catch (error) {
 			const executionTime = Date.now() - queryStart;

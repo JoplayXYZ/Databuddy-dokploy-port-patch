@@ -12,12 +12,10 @@ export const gateway = createGateway({
 	headers,
 });
 
-const overrideModel: string | null = null;
-
 const modelNames = {
-	triage: overrideModel ?? "openai/gpt-oss-120b",
-	analytics: overrideModel ?? "anthropic/claude-sonnet-4.5",
-	advanced: overrideModel ?? "anthropic/claude-sonnet-4.5",
+	triage: "openai/gpt-oss-120b",
+	analytics: "anthropic/claude-sonnet-4.6",
+	advanced: "anthropic/claude-sonnet-4.6",
 	perplexity: "perplexity/sonar-pro",
 } as const;
 

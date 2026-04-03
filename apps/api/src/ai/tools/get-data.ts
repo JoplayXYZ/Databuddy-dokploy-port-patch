@@ -182,8 +182,22 @@ export const getDataTool = tool({
 			resultMap[r.type] = r;
 		}
 
+		// Truncate large results per query to save context tokens.
+		const MAX_MODEL_ROWS = 50;
+		const truncatedMap: Record<string, QueryItemResult> = {};
+		for (const [type, result] of Object.entries(resultMap)) {
+			if (result.data.length > MAX_MODEL_ROWS) {
+				truncatedMap[type] = {
+					...result,
+					data: result.data.slice(0, MAX_MODEL_ROWS),
+				};
+			} else {
+				truncatedMap[type] = result;
+			}
+		}
+
 		return {
-			results: resultMap,
+			results: truncatedMap,
 			queryCount: queries.length,
 			totalExecutionTime: totalTime,
 		};

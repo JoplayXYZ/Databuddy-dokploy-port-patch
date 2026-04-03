@@ -51,6 +51,12 @@ export function createConfig(context: AgentContext): AgentConfig {
 		tools: createTools(),
 		stopWhen: stepCountIs(20),
 		temperature: 0.1,
+		providerOptions: {
+			anthropic: {
+				thinking: { type: "adaptive" },
+				effort: "medium",
+			},
+		},
 		experimental_context: appContext,
 	};
 }
