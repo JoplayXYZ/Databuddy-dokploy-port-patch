@@ -30,7 +30,7 @@
     "build": "dotenv -- turbo run build",
     "dev": "dotenv -- turbo run dev",
     "start": "dotenv -- turbo run start",
-    "test": "dotenv -- bun test ./apps",
+    "test": "dotenv -- turbo run test",
     "test:watch": "dotenv -- bun test --watch ./apps",
     "test:coverage": "dotenv -- bun test --coverage ./apps",
     "lint": "bunx ultracite@latest check",
@@ -103,12 +103,5 @@
       "nanoid": "^5.1.6",
       "ua-parser-js": "^2.0.8"
     }
-  },
-  "dependencies": {
-    "@maxmind/geoip2-node": "^6.3.4",
-    "@opentelemetry/api": "^1.9.0",
-    "@opentelemetry/resources": "^2.6.0",
-    "@opentelemetry/sdk-node": "^0.210.0",
-    "@opentelemetry/semantic-conventions": "^1.40.0"
   }
 }
