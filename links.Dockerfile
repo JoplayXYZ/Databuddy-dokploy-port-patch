@@ -1,4 +1,4 @@
-FROM oven/bun:1.3.4-slim AS build
+FROM oven/bun:1.3.11-slim AS build
 
 WORKDIR /app
 
@@ -28,20 +28,15 @@ RUN bun build \
 	--bytecode \
 	./src/index.ts
 
-FROM oven/bun:1.3.4-distroless
+FROM oven/bun:1.3.11-distroless
 
 WORKDIR /app
 
 COPY --from=build /app/server server
-COPY healthcheck.ts healthcheck.ts
 
 ENV NODE_ENV=production
-ENV HEALTHCHECK_PORT=2500
 
-HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
-  CMD ["bun", "/app/healthcheck.ts"]
+EXPOSE 2500
 
 ENTRYPOINT []
 CMD ["./server"]
-
-EXPOSE 2500

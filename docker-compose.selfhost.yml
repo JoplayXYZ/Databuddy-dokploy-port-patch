@@ -90,11 +90,11 @@ services:
 
   # ── Application Services ─────────────────────────────────────────────
   #
-  # All service images include built-in HEALTHCHECK instructions that
-  # probe their /health endpoints.
+  # All services expose /health endpoints. Monitor them via your reverse
+  # proxy or orchestrator.
 
   api:
-    image: ghcr.io/databuddy-analytics/databuddy-api:latest
+    image: ghcr.io/databuddy-analytics/databuddy-api:edge
     container_name: databuddy-api
     ports:
       - "${API_PORT:-3001}:3001"
@@ -121,7 +121,7 @@ services:
       - databuddy
 
   basket:
-    image: ghcr.io/databuddy-analytics/databuddy-basket:latest
+    image: ghcr.io/databuddy-analytics/databuddy-basket:edge
     container_name: databuddy-basket
     ports:
       - "${BASKET_PORT:-4000}:4000"
@@ -146,7 +146,7 @@ services:
 
   # Note: links service hardcodes port 2500 internally (not configurable via env var)
   links:
-    image: ghcr.io/databuddy-analytics/databuddy-links:latest
+    image: ghcr.io/databuddy-analytics/databuddy-links:edge
     container_name: databuddy-links
     ports:
       - "${LINKS_PORT:-2500}:2500"
@@ -155,7 +155,7 @@ services:
       DATABASE_URL: postgres://databuddy:${DB_PASSWORD:-changeme}@postgres:5432/databuddy
       REDIS_URL: redis://:${REDIS_PASSWORD:-changeme}@redis:6379
       # APP_URL: public URL of your dashboard — used for expired/not-found link redirect pages
-      APP_URL: ${APP_URL:?Set APP_URL to your dashboard public URL (e.g. https://app.example.com)}
+      APP_URL: ${APP_URL:-https://app.databuddy.cc}
       LINKS_ROOT_REDIRECT_URL: ${LINKS_ROOT_REDIRECT_URL:-https://databuddy.cc}
       # GEOIP_DB_URL: fetches MaxMind GeoLite2-City DB on startup from this URL.
       # Defaults to cdn.databuddy.cc — override with your own hosted copy to avoid the external dependency.
@@ -174,7 +174,7 @@ services:
   # Port mapped to 4001 externally to avoid conflict with basket (both use 4000 internally).
   #
   # uptime:
-  #   image: ghcr.io/databuddy-analytics/databuddy-uptime:latest
+  #   image: ghcr.io/databuddy-analytics/databuddy-uptime:edge
   #   container_name: databuddy-uptime
   #   ports:
   #     - "${UPTIME_PORT:-4001}:4000"
