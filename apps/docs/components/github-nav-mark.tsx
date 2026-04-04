@@ -27,7 +27,7 @@ export type GithubStarsBadgeProps = { stars: number };
 export function GithubStarsBadge({ stars }: GithubStarsBadgeProps) {
 	return (
 		<span
-			className="rounded-full border border-border/50 bg-muted/50 px-2.5 py-0.5 font-medium text-foreground/90 text-xs"
+			className="rounded-full px-1 py-0.5 pt-1 font-medium text-foreground text-md"
 			title="GitHub stars"
 		>
 			{stars.toLocaleString()} ★

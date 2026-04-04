@@ -23,18 +23,18 @@ export const Navbar = ({ stars }: NavbarProps) => {
 
 	return (
 		<>
-			<header className="fixed inset-x-0 top-0 z-40 flex flex-col border-border/50 border-b bg-background/60 pt-[env(safe-area-inset-top,0px)] backdrop-blur-xl">
+			<header className="fixed inset-x-0 top-0 z-40 flex flex-col bg-background pt-[env(safe-area-inset-top,0px)] backdrop-blur-xl">
 				<nav>
 					<div className="mx-auto w-full px-2 md:px-6 lg:px-8">
-						<div className="flex h-16 items-center justify-between">
+						<div className="relative flex h-20 items-center">
 							<BrandContextMenu>
 								<div className="shrink-0 transition-opacity hover:opacity-90">
 									<Logo />
 								</div>
 							</BrandContextMenu>
 
-							<div className="hidden md:block">
-								<ul className="flex items-center gap-1">
+							<div className="pointer-events-none absolute inset-x-0 hidden justify-center md:flex">
+								<ul className="pointer-events-auto flex h-16 items-center gap-6">
 									<NavbarFeaturesMenu />
 									{navMenu.map((menu) => (
 										<NavLink
@@ -45,13 +45,18 @@ export const Navbar = ({ stars }: NavbarProps) => {
 											{menu.name}
 										</NavLink>
 									))}
+								</ul>
+							</div>
+
+							<div className="ml-auto hidden md:block">
+								<ul className="flex items-center gap-1">
 									<NavbarGithubDesktopLink stars={stars} />
 									<li className="ml-2">
 										<ThemeToggle />
 									</li>
 									<li className="ml-2">
 										<a
-											className="inline-flex items-center rounded bg-primary px-4 py-2 font-medium text-primary-foreground text-sm transition-opacity hover:opacity-90"
+											className="inline-flex items-center rounded bg-primary px-6 py-2 font-semibold text-md text-primary-foreground shadow-[inset_0_-2px_3px_rgba(0,0,0,0.25),inset_0_1px_0_rgba(255,255,255,0.2)] transition-opacity hover:opacity-90"
 											href="https://app.databuddy.cc/login"
 										>
 											Start free
@@ -60,10 +65,12 @@ export const Navbar = ({ stars }: NavbarProps) => {
 								</ul>
 							</div>
 
-							<NavbarMobileMenuButton
-								isOpen={isMobileMenuOpen}
-								onToggleAction={() => setIsMobileMenuOpen((open) => !open)}
-							/>
+							<div className="ml-auto md:hidden">
+								<NavbarMobileMenuButton
+									isOpen={isMobileMenuOpen}
+									onToggleAction={() => setIsMobileMenuOpen((open) => !open)}
+								/>
+							</div>
 						</div>
 					</div>
 				</nav>
