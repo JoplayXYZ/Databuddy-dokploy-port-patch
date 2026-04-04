@@ -1,123 +1,146 @@
-import { describe, expect, test } from "bun:test";
-import { detectBot, parseUserAgent } from "./user-agent";
+import { describe, expect, mock, test } from "bun:test";
+
+// ── Mock the shared bot-detection to isolate the wrapper's logic ──
+
+const mockDetectBotShared = mock(() => ({
+	isBot: false,
+	category: undefined,
+	action: undefined,
+	confidence: 0,
+	reason: undefined,
+	name: undefined,
+}));
+
+const mockParseUserAgentShared = mock(() => ({
+	browserName: "Chrome",
+	browserVersion: "120.0",
+	osName: "Windows",
+	osVersion: "10",
+	deviceType: "desktop",
+	deviceBrand: undefined,
+	deviceModel: undefined,
+}));
+
+mock.module("@databuddy/shared/bot-detection", () => ({
+	detectBot: mockDetectBotShared,
+	parseUserAgent: mockParseUserAgentShared,
+	BotCategory: {
+		AI_CRAWLER: "ai_crawler",
+		AI_ASSISTANT: "ai_assistant",
+		SEARCH_ENGINE: "search_engine",
+		SOCIAL_MEDIA: "social_media",
+		MONITORING: "monitoring",
+		UNKNOWN_BOT: "unknown_bot",
+	},
+}));
+
+mock.module("@lib/tracing", () => ({
+	record: (_n: string, fn: Function) => Promise.resolve().then(() => fn()),
+	captureError: mock(),
+}));
+
+const { detectBot, parseUserAgent } = await import("./user-agent");
 
 const dummyReq = new Request("https://example.com");
 
-// ── detectBot ──
+// ── detectBot wrapper — tests the legacy category mapping ──
 
 describe("detectBot", () => {
-	const bots: [string, string][] = [
-		["Googlebot", "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"],
-		["Bingbot", "Mozilla/5.0 (compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm)"],
-		["GPTBot", "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; GPTBot/1.0; +https://openai.com/gptbot"],
-		["ClaudeBot", "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ClaudeBot/1.0"],
-		["ChatGPT-User", "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko) ChatGPT-User/1.0"],
-	];
-
-	for (const [name, ua] of bots) {
-		test(`detects ${name}`, () => {
-			const result = detectBot(ua, dummyReq);
-			expect(result.isBot).toBe(true);
+	test("not a bot → passes through", () => {
+		mockDetectBotShared.mockReturnValue({
+			isBot: false, category: undefined, action: undefined,
+			confidence: 0, reason: undefined, name: undefined,
 		});
-	}
-
-	const browsers: string[] = [
-		"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-		"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15",
-		"Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1",
-		"Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36",
-	];
-
-	for (const ua of browsers) {
-		test(`real browser not flagged: ${ua.slice(0, 50)}…`, () => {
-			const result = detectBot(ua, dummyReq);
-			expect(result.isBot).toBe(false);
-		});
-	}
-
-	test("empty UA → detected as bot (missing_user_agent)", () => {
-		const result = detectBot("", dummyReq);
-		expect(result.isBot).toBe(true);
-		expect(result.reason).toBe("missing_user_agent");
+		const result = detectBot("normal-browser", dummyReq);
+		expect(result.isBot).toBe(false);
+		expect(result.category).toBeUndefined();
 	});
 
-	test("Googlebot → allow action", () => {
-		const result = detectBot(
-			"Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)",
-			dummyReq
-		);
+	test("AI_CRAWLER → maps to 'AI Crawler'", () => {
+		mockDetectBotShared.mockReturnValue({
+			isBot: true, category: "ai_crawler", action: "track_only",
+			confidence: 90, reason: "ai_pattern", name: "GPTBot",
+		});
+		const result = detectBot("GPTBot/1.0", dummyReq);
+		expect(result.isBot).toBe(true);
+		expect(result.category).toBe("AI Crawler");
+		expect(result.botName).toBe("GPTBot");
+		expect(result.action).toBe("track_only");
+	});
+
+	test("AI_ASSISTANT → maps to 'AI Assistant'", () => {
+		mockDetectBotShared.mockReturnValue({
+			isBot: true, category: "ai_assistant", action: "track_only",
+			confidence: 90, reason: "ai_pattern", name: "ChatGPT",
+		});
+		const result = detectBot("ChatGPT-User/1.0", dummyReq);
+		expect(result.category).toBe("AI Assistant");
+	});
+
+	test("other bot category → maps to 'Known Bot'", () => {
+		mockDetectBotShared.mockReturnValue({
+			isBot: true, category: "search_engine", action: "allow",
+			confidence: 90, reason: "search_engine_pattern", name: "Googlebot",
+		});
+		const result = detectBot("Googlebot/2.1", dummyReq);
+		expect(result.category).toBe("Known Bot");
 		expect(result.action).toBe("allow");
 	});
 
-	test("GPTBot → category mapped to AI Crawler", () => {
-		const result = detectBot(
-			"Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; GPTBot/1.0",
-			dummyReq
-		);
-		expect(result.isBot).toBe(true);
-		expect(["AI Crawler", "AI Assistant"]).toContain(result.category);
+	test("passes through reason and full result", () => {
+		const sharedResult = {
+			isBot: true, category: "unknown_bot", action: "block" as const,
+			confidence: 80, reason: "suspicious_pattern", name: "BadBot",
+		};
+		mockDetectBotShared.mockReturnValue(sharedResult);
+		const result = detectBot("BadBot/1.0", dummyReq);
+		expect(result.reason).toBe("suspicious_pattern");
+		expect(result.result).toEqual(sharedResult);
 	});
 
-	test("result includes full BotDetectionResult", () => {
-		const result = detectBot(
-			"Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)",
-			dummyReq
-		);
-		expect(result.result).toBeDefined();
-		expect(result.result!.isBot).toBe(true);
+	test("non-bot has no category", () => {
+		mockDetectBotShared.mockReturnValue({
+			isBot: false, category: undefined, action: undefined,
+			confidence: 0, reason: undefined, name: undefined,
+		});
+		const result = detectBot("Chrome/120", dummyReq);
+		expect(result.category).toBeUndefined();
+		expect(result.botName).toBeUndefined();
 	});
 });
 
-// ── parseUserAgent ──
+// ── parseUserAgent wrapper ──
 
 describe("parseUserAgent", () => {
-	test("Chrome on Windows", async () => {
-		const result = await parseUserAgent(
-			"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-		);
-		expect(result.browserName).toBeTruthy();
-		expect(result.osName).toBeTruthy();
+	test("returns parsed fields from shared function", async () => {
+		mockParseUserAgentShared.mockReturnValue({
+			browserName: "Firefox",
+			browserVersion: "121.0",
+			osName: "Linux",
+			osVersion: "6.1",
+			deviceType: "desktop",
+			deviceBrand: undefined,
+			deviceModel: undefined,
+		});
+		const result = await parseUserAgent("Firefox/121.0");
+		expect(result.browserName).toBe("Firefox");
+		expect(result.osName).toBe("Linux");
+		expect(result.deviceType).toBe("desktop");
 	});
 
-	test("Safari on macOS", async () => {
-		const result = await parseUserAgent(
-			"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15"
-		);
-		expect(result.browserName).toBeTruthy();
-	});
-
-	test("Mobile Safari on iPhone", async () => {
-		const result = await parseUserAgent(
-			"Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1"
-		);
-		expect(result.deviceType).toBeTruthy();
-	});
-
-	test("empty string → all undefined", async () => {
+	test("empty UA → all undefined", async () => {
 		const result = await parseUserAgent("");
 		expect(result.browserName).toBeUndefined();
 		expect(result.osName).toBeUndefined();
 		expect(result.deviceType).toBeUndefined();
 	});
 
-	test("gibberish UA → doesn't crash", async () => {
-		const result = await parseUserAgent("totally-not-a-real-user-agent/1.0");
-		expect(typeof result).toBe("object");
-	});
-
-	test("50 real UAs → all return objects", async () => {
-		const uas = [
-			"Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0",
-			"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-			"Mozilla/5.0 (iPad; CPU OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1",
-			...Array.from({ length: 47 }, (_, i) =>
-				`Mozilla/5.0 (Test ${i}) AppleWebKit/537.36 Chrome/${100 + i}.0.0.0 Safari/537.36`
-			),
-		];
-		const results = await Promise.all(uas.map(parseUserAgent));
-		for (const r of results) {
-			expect(typeof r).toBe("object");
-			expect(r).toHaveProperty("browserName");
-		}
+	test("shared function throws → all undefined (doesn't crash)", async () => {
+		mockParseUserAgentShared.mockImplementation(() => {
+			throw new Error("parse failed");
+		});
+		const result = await parseUserAgent("broken-ua");
+		expect(result.browserName).toBeUndefined();
+		expect(result.osName).toBeUndefined();
 	});
 });
