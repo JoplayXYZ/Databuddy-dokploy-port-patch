@@ -10,7 +10,8 @@
       "!**/*.md",
       "!**/*.test.ts",
       "!**/*.spec.ts",
-      "!**/ui/**/*.tsx"
+      "!**/ui/**/*.tsx",
+      "!apps/dashboard/public/subdivisions.json"
     ]
   },
   "javascript": {
