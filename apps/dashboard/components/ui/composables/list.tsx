@@ -16,10 +16,7 @@ interface ListRootProps {
 
 function ListRoot({ children, className }: ListRootProps) {
 	return (
-		<div
-			className={cn("w-full overflow-x-auto", className)}
-			data-slot="list"
-		>
+		<div className={cn("w-full overflow-x-auto", className)} data-slot="list">
 			{children}
 		</div>
 	);
@@ -31,11 +28,7 @@ interface ListHeadProps {
 	sticky?: boolean;
 }
 
-function ListHead({
-	children,
-	className,
-	sticky = false,
-}: ListHeadProps) {
+function ListHead({ children, className, sticky = false }: ListHeadProps) {
 	return (
 		<div
 			className={cn(

@@ -48,8 +48,12 @@ const dummyReq = new Request("https://example.com");
 describe("detectBot", () => {
 	test("not a bot → passes through", () => {
 		mockDetectBotShared.mockReturnValue({
-			isBot: false, category: undefined, action: undefined,
-			confidence: 0, reason: undefined, name: undefined,
+			isBot: false,
+			category: undefined,
+			action: undefined,
+			confidence: 0,
+			reason: undefined,
+			name: undefined,
 		});
 		const result = detectBot("normal-browser", dummyReq);
 		expect(result.isBot).toBe(false);
@@ -58,8 +62,12 @@ describe("detectBot", () => {
 
 	test("AI_CRAWLER → maps to 'AI Crawler'", () => {
 		mockDetectBotShared.mockReturnValue({
-			isBot: true, category: "ai_crawler", action: "track_only",
-			confidence: 90, reason: "ai_pattern", name: "GPTBot",
+			isBot: true,
+			category: "ai_crawler",
+			action: "track_only",
+			confidence: 90,
+			reason: "ai_pattern",
+			name: "GPTBot",
 		});
 		const result = detectBot("GPTBot/1.0", dummyReq);
 		expect(result.isBot).toBe(true);
@@ -70,8 +78,12 @@ describe("detectBot", () => {
 
 	test("AI_ASSISTANT → maps to 'AI Assistant'", () => {
 		mockDetectBotShared.mockReturnValue({
-			isBot: true, category: "ai_assistant", action: "track_only",
-			confidence: 90, reason: "ai_pattern", name: "ChatGPT",
+			isBot: true,
+			category: "ai_assistant",
+			action: "track_only",
+			confidence: 90,
+			reason: "ai_pattern",
+			name: "ChatGPT",
 		});
 		const result = detectBot("ChatGPT-User/1.0", dummyReq);
 		expect(result.category).toBe("AI Assistant");
@@ -79,8 +91,12 @@ describe("detectBot", () => {
 
 	test("other bot category → maps to 'Known Bot'", () => {
 		mockDetectBotShared.mockReturnValue({
-			isBot: true, category: "search_engine", action: "allow",
-			confidence: 90, reason: "search_engine_pattern", name: "Googlebot",
+			isBot: true,
+			category: "search_engine",
+			action: "allow",
+			confidence: 90,
+			reason: "search_engine_pattern",
+			name: "Googlebot",
 		});
 		const result = detectBot("Googlebot/2.1", dummyReq);
 		expect(result.category).toBe("Known Bot");
@@ -89,8 +105,12 @@ describe("detectBot", () => {
 
 	test("passes through reason and full result", () => {
 		const sharedResult = {
-			isBot: true, category: "unknown_bot", action: "block" as const,
-			confidence: 80, reason: "suspicious_pattern", name: "BadBot",
+			isBot: true,
+			category: "unknown_bot",
+			action: "block" as const,
+			confidence: 80,
+			reason: "suspicious_pattern",
+			name: "BadBot",
 		};
 		mockDetectBotShared.mockReturnValue(sharedResult);
 		const result = detectBot("BadBot/1.0", dummyReq);
@@ -100,8 +120,12 @@ describe("detectBot", () => {
 
 	test("non-bot has no category", () => {
 		mockDetectBotShared.mockReturnValue({
-			isBot: false, category: undefined, action: undefined,
-			confidence: 0, reason: undefined, name: undefined,
+			isBot: false,
+			category: undefined,
+			action: undefined,
+			confidence: 0,
+			reason: undefined,
+			name: undefined,
 		});
 		const result = detectBot("Chrome/120", dummyReq);
 		expect(result.category).toBeUndefined();

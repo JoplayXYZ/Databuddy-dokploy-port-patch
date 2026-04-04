@@ -1,15 +1,15 @@
 import { describe, expect, test } from "bun:test";
-import { CONTROL_CHARS, XSS_PAYLOADS, longString } from "../test-helpers";
+import { CONTROL_CHARS, longString, XSS_PAYLOADS } from "../test-helpers";
 import { buildTrackEvent, type TrackEventContext } from "./event-service";
 
 // ── Fixtures ──
 
-const NOW = 1700000000000;
+const NOW = 1_700_000_000_000;
 
 const fullTrackData = {
 	name: "pageview",
-	timestamp: 1700000001000,
-	sessionStartTime: 1700000000500,
+	timestamp: 1_700_000_001_000,
+	sessionStartTime: 1_700_000_000_500,
 	sessionId: "sess_abc123",
 	anonymousId: "anon_1",
 	referrer: "https://google.com",
@@ -22,7 +22,7 @@ const fullTrackData = {
 	connection_type: "wifi",
 	rtt: 50,
 	downlink: 10.5,
-	time_on_page: 30000,
+	time_on_page: 30_000,
 	scroll_depth: 75,
 	interaction_count: 12,
 	page_count: 3,
@@ -47,8 +47,21 @@ const fullCtx: TrackEventContext = {
 	clientId: "ws_test",
 	eventId: "evt_123",
 	anonymousId: "salted_anon_1",
-	geo: { anonymizedIP: "abc123def456", country: "United States", region: "California", city: "San Francisco" },
-	ua: { browserName: "Chrome", browserVersion: "120.0", osName: "Windows", osVersion: "10", deviceType: "desktop", deviceBrand: "Dell", deviceModel: "XPS" },
+	geo: {
+		anonymizedIP: "abc123def456",
+		country: "United States",
+		region: "California",
+		city: "San Francisco",
+	},
+	ua: {
+		browserName: "Chrome",
+		browserVersion: "120.0",
+		osName: "Windows",
+		osVersion: "10",
+		deviceType: "desktop",
+		deviceBrand: "Dell",
+		deviceModel: "XPS",
+	},
 	now: NOW,
 };
 
@@ -76,9 +89,9 @@ describe("buildTrackEvent — field mapping", () => {
 		expect(result.session_id).toBe("sess_abc123");
 
 		// Timestamps — uses trackData values when numeric
-		expect(result.timestamp).toBe(1700000001000);
-		expect(result.time).toBe(1700000001000);
-		expect(result.session_start_time).toBe(1700000000500);
+		expect(result.timestamp).toBe(1_700_000_001_000);
+		expect(result.time).toBe(1_700_000_001_000);
+		expect(result.session_start_time).toBe(1_700_000_000_500);
 		expect(result.created_at).toBe(NOW);
 
 		// Geo
@@ -107,7 +120,7 @@ describe("buildTrackEvent — field mapping", () => {
 		expect(result.downlink).toBe(10.5);
 
 		// Engagement
-		expect(result.time_on_page).toBe(30000);
+		expect(result.time_on_page).toBe(30_000);
 		expect(result.scroll_depth).toBe(75);
 		expect(result.interaction_count).toBe(12);
 		expect(result.page_count).toBe(3);
@@ -178,7 +191,7 @@ describe("buildTrackEvent — field mapping", () => {
 
 	test("performance metrics validated (negative → undefined)", () => {
 		const result = buildTrackEvent(
-			{ name: "x", load_time: -1, ttfb: 999999 },
+			{ name: "x", load_time: -1, ttfb: 999_999 },
 			fullCtx
 		);
 		expect(result.load_time).toBeUndefined();
@@ -186,10 +199,7 @@ describe("buildTrackEvent — field mapping", () => {
 	});
 
 	test("event_name sanitized (truncated to 255)", () => {
-		const result = buildTrackEvent(
-			{ name: longString(300) },
-			fullCtx
-		);
+		const result = buildTrackEvent({ name: longString(300) }, fullCtx);
 		expect(result.event_name.length).toBeLessThanOrEqual(255);
 	});
 
@@ -231,7 +241,12 @@ describe("buildTrackEvent — sanitization boundary", () => {
 			},
 			fullCtx
 		);
-		for (const field of [result.event_name, result.referrer, result.path, result.title]) {
+		for (const field of [
+			result.event_name,
+			result.referrer,
+			result.path,
+			result.title,
+		]) {
 			expect(field).not.toContain("<script>");
 			expect(field).not.toContain("<");
 		}
@@ -243,7 +258,12 @@ describe("buildTrackEvent — sanitization boundary", () => {
 			{ name: dirty, referrer: dirty, path: dirty, title: dirty },
 			fullCtx
 		);
-		for (const field of [result.event_name, result.referrer, result.path, result.title]) {
+		for (const field of [
+			result.event_name,
+			result.referrer,
+			result.path,
+			result.title,
+		]) {
 			for (const char of CONTROL_CHARS) {
 				expect(field).not.toContain(char);
 			}
@@ -252,7 +272,7 @@ describe("buildTrackEvent — sanitization boundary", () => {
 
 	test("properties with XSS are JSON-stringified (not sanitized — stored as JSON)", () => {
 		const result = buildTrackEvent(
-			{ name: "x", properties: { evil: '<script>alert(1)</script>' } },
+			{ name: "x", properties: { evil: "<script>alert(1)</script>" } },
 			fullCtx
 		);
 		// Properties are JSON-stringified, not HTML-sanitized (they're stored as JSON in CH)
@@ -266,16 +286,16 @@ describe("buildTrackEvent — sanitization boundary", () => {
 		const result = buildTrackEvent(
 			{
 				name: "x",
-				screen_resolution: '<script>',
-				language: '<img onerror=alert(1)>',
+				screen_resolution: "<script>",
+				language: "<img onerror=alert(1)>",
 				timezone: "America/New_York",
 			},
 			fullCtx
 		);
 		// These pass through raw — this is the current behavior
 		// This test documents it so we notice if it changes
-		expect(result.screen_resolution).toBe('<script>');
-		expect(result.language).toBe('<img onerror=alert(1)>');
+		expect(result.screen_resolution).toBe("<script>");
+		expect(result.language).toBe("<img onerror=alert(1)>");
 	});
 
 	test("session_id validated (rejects special chars)", () => {
@@ -292,19 +312,59 @@ describe("buildTrackEvent — sanitization boundary", () => {
 
 describe("buildTrackEvent — output shape completeness", () => {
 	const REQUIRED_FIELDS = [
-		"id", "client_id", "event_name", "anonymous_id", "time",
-		"session_id", "event_type", "event_id", "session_start_time", "timestamp",
-		"referrer", "url", "path", "title",
-		"ip", "user_agent", "browser_name", "browser_version",
-		"os_name", "os_version", "device_type", "device_brand", "device_model",
-		"country", "region", "city",
-		"screen_resolution", "viewport_size", "language", "timezone",
-		"connection_type", "rtt", "downlink",
-		"time_on_page", "scroll_depth", "interaction_count", "page_count",
-		"utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content", "gclid",
-		"load_time", "dom_ready_time", "dom_interactive", "ttfb",
-		"connection_time", "render_time", "redirect_time", "domain_lookup_time",
-		"properties", "created_at",
+		"id",
+		"client_id",
+		"event_name",
+		"anonymous_id",
+		"time",
+		"session_id",
+		"event_type",
+		"event_id",
+		"session_start_time",
+		"timestamp",
+		"referrer",
+		"url",
+		"path",
+		"title",
+		"ip",
+		"user_agent",
+		"browser_name",
+		"browser_version",
+		"os_name",
+		"os_version",
+		"device_type",
+		"device_brand",
+		"device_model",
+		"country",
+		"region",
+		"city",
+		"screen_resolution",
+		"viewport_size",
+		"language",
+		"timezone",
+		"connection_type",
+		"rtt",
+		"downlink",
+		"time_on_page",
+		"scroll_depth",
+		"interaction_count",
+		"page_count",
+		"utm_source",
+		"utm_medium",
+		"utm_campaign",
+		"utm_term",
+		"utm_content",
+		"gclid",
+		"load_time",
+		"dom_ready_time",
+		"dom_interactive",
+		"ttfb",
+		"connection_time",
+		"render_time",
+		"redirect_time",
+		"domain_lookup_time",
+		"properties",
+		"created_at",
 	] as const;
 
 	test("output has all required fields", () => {

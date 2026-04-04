@@ -132,7 +132,9 @@ describe("validateRequest", () => {
 		const result = await validateRequest(
 			{},
 			{},
-			makeReq("https://example.com", { "databuddy-client-id": "ws_from_header" })
+			makeReq("https://example.com", {
+				"databuddy-client-id": "ws_from_header",
+			})
 		);
 		expect("clientId" in result && result.clientId).toBe("ws_from_header");
 	});
@@ -270,7 +272,9 @@ describe("validateRequest", () => {
 	test("logs blocked traffic on client_id miss", async () => {
 		try {
 			await validateRequest({}, {}, makeReq("https://example.com"));
-		} catch { /* expected */ }
+		} catch {
+			/* expected */
+		}
 		expect(mockLogBlockedTraffic).toHaveBeenCalled();
 	});
 });
@@ -289,7 +293,11 @@ describe("checkForBot", () => {
 	test("not a bot → returns undefined", async () => {
 		mockDetectBot.mockReturnValue({ isBot: false });
 		const result = await checkForBot(
-			makeReq(), {}, {}, "ws_1", "Mozilla/5.0 Chrome/120"
+			makeReq(),
+			{},
+			{},
+			"ws_1",
+			"Mozilla/5.0 Chrome/120"
 		);
 		expect(result).toBeUndefined();
 	});
@@ -302,7 +310,11 @@ describe("checkForBot", () => {
 			category: "Known Bot",
 		});
 		const result = await checkForBot(
-			makeReq(), {}, {}, "ws_1", "Googlebot/2.1"
+			makeReq(),
+			{},
+			{},
+			"ws_1",
+			"Googlebot/2.1"
 		);
 		expect(result).toBeUndefined();
 	});
@@ -379,9 +391,7 @@ describe("checkForBot", () => {
 			reason: "known_scraper",
 			category: "Known Bot",
 		});
-		const result = await checkForBot(
-			makeReq(), {}, {}, "ws_1", "BadBot/1.0"
-		);
+		const result = await checkForBot(makeReq(), {}, {}, "ws_1", "BadBot/1.0");
 		expect(result).toBeDefined();
 		expect(result!.error!.status).toBe(204);
 		expect(mockLogBlockedTraffic).toHaveBeenCalledWith(

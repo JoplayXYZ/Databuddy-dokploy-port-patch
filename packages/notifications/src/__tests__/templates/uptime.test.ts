@@ -11,7 +11,7 @@ function makeInput(
 		kind: "down",
 		siteLabel: "Acme Corp",
 		url: "https://acme.com",
-		checkedAt: 1700000000000,
+		checkedAt: 1_700_000_000_000,
 		httpCode: 503,
 		error: "Connection refused",
 		...overrides,
@@ -21,7 +21,9 @@ function makeInput(
 describe("buildUptimeNotificationPayload", () => {
 	describe("title and priority", () => {
 		test("down notification produces urgent priority", () => {
-			const result = buildUptimeNotificationPayload(makeInput({ kind: "down" }));
+			const result = buildUptimeNotificationPayload(
+				makeInput({ kind: "down" })
+			);
 			expect(result.title).toBe("Uptime: Acme Corp is down");
 			expect(result.priority).toBe("urgent");
 		});
@@ -80,7 +82,7 @@ describe("buildUptimeNotificationPayload", () => {
 
 		test("SSL valid with expiry", () => {
 			const result = buildUptimeNotificationPayload(
-				makeInput({ sslValid: true, sslExpiryMs: 1800000000000 })
+				makeInput({ sslValid: true, sslExpiryMs: 1_800_000_000_000 })
 			);
 			expect(result.message).toContain("SSL: valid (expires");
 		});
@@ -129,7 +131,7 @@ describe("buildUptimeNotificationPayload", () => {
 				kind: "down",
 				siteLabel: "Acme Corp",
 				url: "https://acme.com",
-				checkedAt: 1700000000000,
+				checkedAt: 1_700_000_000_000,
 				httpCode: 503,
 			});
 		});
@@ -141,14 +143,14 @@ describe("buildUptimeNotificationPayload", () => {
 					totalMs: 200,
 					ttfbMs: 50,
 					sslValid: true,
-					sslExpiryMs: 1800000000000,
+					sslExpiryMs: 1_800_000_000_000,
 				})
 			);
 			expect(result.metadata?.probeRegion).toBe("eu-west-1");
 			expect(result.metadata?.totalMs).toBe(200);
 			expect(result.metadata?.ttfbMs).toBe(50);
 			expect(result.metadata?.sslValid).toBe(true);
-			expect(result.metadata?.sslExpiryMs).toBe(1800000000000);
+			expect(result.metadata?.sslExpiryMs).toBe(1_800_000_000_000);
 		});
 
 		test("excludes optional keys when absent", () => {

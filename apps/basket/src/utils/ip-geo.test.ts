@@ -1,5 +1,5 @@
-import { afterAll, beforeAll, describe, expect, test } from "bun:test";
-import { randomIPv4, randomIPv6, randomPublicIPv4, req } from "../test-helpers";
+import { afterAll, describe, expect, test } from "bun:test";
+import { randomIPv4, randomPublicIPv4, req } from "../test-helpers";
 import {
 	anonymizeIp,
 	closeGeoIPReader,
@@ -27,12 +27,10 @@ describe("anonymizeIp", () => {
 	});
 
 	test("deterministic", () =>
-		expect(anonymizeIp("8.8.8.8")).toBe(anonymizeIp("8.8.8.8"))
-	);
+		expect(anonymizeIp("8.8.8.8")).toBe(anonymizeIp("8.8.8.8")));
 
 	test("different IPs → different hashes", () =>
-		expect(anonymizeIp("8.8.8.8")).not.toBe(anonymizeIp("1.1.1.1"))
-	);
+		expect(anonymizeIp("8.8.8.8")).not.toBe(anonymizeIp("1.1.1.1")));
 
 	test("1000 random IPs → all unique 12-char hex", () => {
 		const hashes = new Set<string>();
@@ -50,10 +48,26 @@ describe("anonymizeIp", () => {
 describe("extractIpFromRequest", () => {
 	const table: [string, Record<string, string>, string][] = [
 		["cf-connecting-ip", { "cf-connecting-ip": "1.2.3.4" }, "1.2.3.4"],
-		["x-forwarded-for first", { "x-forwarded-for": "5.6.7.8, 9.10.11.12" }, "5.6.7.8"],
+		[
+			"x-forwarded-for first",
+			{ "x-forwarded-for": "5.6.7.8, 9.10.11.12" },
+			"5.6.7.8",
+		],
 		["x-real-ip", { "x-real-ip": "13.14.15.16" }, "13.14.15.16"],
-		["cf > xff > real", { "cf-connecting-ip": "1.1.1.1", "x-forwarded-for": "2.2.2.2", "x-real-ip": "3.3.3.3" }, "1.1.1.1"],
-		["xff > real", { "x-forwarded-for": "2.2.2.2", "x-real-ip": "3.3.3.3" }, "2.2.2.2"],
+		[
+			"cf > xff > real",
+			{
+				"cf-connecting-ip": "1.1.1.1",
+				"x-forwarded-for": "2.2.2.2",
+				"x-real-ip": "3.3.3.3",
+			},
+			"1.1.1.1",
+		],
+		[
+			"xff > real",
+			{ "x-forwarded-for": "2.2.2.2", "x-real-ip": "3.3.3.3" },
+			"2.2.2.2",
+		],
 		["trims whitespace", { "cf-connecting-ip": "  1.2.3.4  " }, "1.2.3.4"],
 		["no headers → empty", {}, ""],
 	];
@@ -67,7 +81,9 @@ describe("extractIpFromRequest", () => {
 	test("100 random IPs round-trip", () => {
 		for (let i = 0; i < 100; i++) {
 			const ip = randomIPv4();
-			expect(extractIpFromRequest(req("https://x.com", { "cf-connecting-ip": ip }))).toBe(ip);
+			expect(
+				extractIpFromRequest(req("https://x.com", { "cf-connecting-ip": ip }))
+			).toBe(ip);
 		}
 	});
 });
@@ -99,13 +115,15 @@ describe("getGeo", () => {
 		}
 	});
 
-	test("200 random public IPs → valid structure", { timeout: 30_000 }, async () => {
+	test("200 random public IPs → valid structure", {
+		timeout: 30_000,
+	}, async () => {
 		// Probe whether GeoIP DB is reachable first
 		const probe = await Promise.race([
 			getGeo("8.8.8.8"),
 			new Promise<null>((r) => setTimeout(() => r(null), 10_000)),
 		]);
-		if (!probe || !probe.anonymizedIP) {
+		if (!(probe && probe.anonymizedIP)) {
 			console.log("Skipping: GeoIP CDN unreachable");
 			return;
 		}
@@ -115,9 +133,15 @@ describe("getGeo", () => {
 		);
 		for (const r of results) {
 			expect(typeof r.anonymizedIP).toBe("string");
-			if (r.country !== undefined) expect(typeof r.country).toBe("string");
-			if (r.region !== undefined) expect(typeof r.region).toBe("string");
-			if (r.city !== undefined) expect(typeof r.city).toBe("string");
+			if (r.country !== undefined) {
+				expect(typeof r.country).toBe("string");
+			}
+			if (r.region !== undefined) {
+				expect(typeof r.region).toBe("string");
+			}
+			if (r.city !== undefined) {
+				expect(typeof r.city).toBe("string");
+			}
 		}
 	});
 
@@ -129,7 +153,10 @@ describe("getGeo", () => {
 	});
 
 	test("Cloudflare country fallback", async () => {
-		const r = await getGeo("not-valid-ip", req("https://x.com", { "cf-ipcountry": "US" }));
+		const r = await getGeo(
+			"not-valid-ip",
+			req("https://x.com", { "cf-ipcountry": "US" })
+		);
 		// Should either return CF country or undefined (depends on reader state)
 		expect(typeof r.anonymizedIP).toBe("string");
 	});

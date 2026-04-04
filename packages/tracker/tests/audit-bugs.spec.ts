@@ -142,9 +142,7 @@ test.describe("Audit: Plugin event listeners cleaned up on destroy", () => {
 		});
 	});
 
-	test("interaction listeners should stop after destroy", async ({
-		page,
-	}) => {
+	test("interaction listeners should stop after destroy", async ({ page }) => {
 		await page.goto("/test");
 		await page.evaluate(() => {
 			(window as any).databuddyConfig = {
@@ -157,9 +155,7 @@ test.describe("Audit: Plugin event listeners cleaned up on destroy", () => {
 		await page.addScriptTag({ url: "/dist/databuddy-debug.js" });
 
 		await expect
-			.poll(
-				async () => await page.evaluate(() => !!(window as any).__tracker)
-			)
+			.poll(async () => await page.evaluate(() => !!(window as any).__tracker))
 			.toBeTruthy();
 
 		await page.mouse.move(100, 100);
@@ -187,9 +183,7 @@ test.describe("Audit: Plugin event listeners cleaned up on destroy", () => {
 		expect(countAfterInteractions).toBe(countAfterDestroy);
 	});
 
-	test("scroll depth listener should stop after destroy", async ({
-		page,
-	}) => {
+	test("scroll depth listener should stop after destroy", async ({ page }) => {
 		await page.goto("/test");
 		await page.evaluate(() => {
 			document.body.style.minHeight = "5000px";
@@ -202,9 +196,7 @@ test.describe("Audit: Plugin event listeners cleaned up on destroy", () => {
 		await page.addScriptTag({ url: "/dist/databuddy-debug.js" });
 
 		await expect
-			.poll(
-				async () => await page.evaluate(() => !!(window as any).__tracker)
-			)
+			.poll(async () => await page.evaluate(() => !!(window as any).__tracker))
 			.toBeTruthy();
 
 		await page.evaluate(() => {
@@ -248,9 +240,7 @@ test.describe("Audit: Plugin event listeners cleaned up on destroy", () => {
 		await page.addScriptTag({ url: "/dist/databuddy-debug.js" });
 
 		await expect
-			.poll(
-				async () => await page.evaluate(() => !!(window as any).__tracker)
-			)
+			.poll(async () => await page.evaluate(() => !!(window as any).__tracker))
 			.toBeTruthy();
 
 		await page.evaluate(() => {
@@ -317,9 +307,7 @@ test.describe("Audit: destroy() flushes pending data", () => {
 		await page.addScriptTag({ url: "/dist/databuddy-debug.js" });
 
 		await expect
-			.poll(
-				async () => await page.evaluate(() => !!(window as any).__tracker)
-			)
+			.poll(async () => await page.evaluate(() => !!(window as any).__tracker))
 			.toBeTruthy();
 
 		await page.evaluate(() => {
@@ -338,4 +326,3 @@ test.describe("Audit: destroy() flushes pending data", () => {
 		expect(sentEvents).toContain("queued_event_2");
 	});
 });
-

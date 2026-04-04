@@ -1,19 +1,19 @@
-'use client';
+"use client";
 
-import { ChevronDown, ChevronUp, X } from 'lucide-react';
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import { ChevronDown, ChevronUp, X } from "lucide-react";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 interface ClosableAlertProps {
-	id: string;
-	title: string;
+	children?: React.ReactNode;
+	className?: string;
 	description: string;
 	icon: React.ComponentType<{ className?: string }>;
-	variant?: 'warning' | 'error' | 'success' | 'info';
-	className?: string;
-	children?: React.ReactNode;
+	id: string;
 	onClose?: (id: string) => void;
+	title: string;
+	variant?: "warning" | "error" | "success" | "info";
 }
 
 export function ClosableAlert({
@@ -21,7 +21,7 @@ export function ClosableAlert({
 	title,
 	description,
 	icon: Icon,
-	variant = 'info',
+	variant = "info",
 	className,
 	children,
 	onClose,
@@ -39,13 +39,13 @@ export function ClosableAlert({
 	}
 
 	// Only use color for critical errors
-	const isError = variant === 'error';
+	const isError = variant === "error";
 
 	return (
 		<div
 			className={cn(
-				'rounded border bg-muted/50 transition-all duration-200',
-				isError && 'border-destructive/20 bg-destructive/5',
+				"rounded border bg-muted/50 transition-all duration-200",
+				isError && "border-destructive/20 bg-destructive/5",
 				className
 			)}
 		>
@@ -54,8 +54,8 @@ export function ClosableAlert({
 				<div className="flex min-w-0 flex-1 items-center gap-2">
 					<Icon
 						className={cn(
-							'size-4 shrink-0',
-							isError ? 'text-destructive' : 'text-muted-foreground'
+							"size-4 shrink-0",
+							isError ? "text-destructive" : "text-muted-foreground"
 						)}
 					/>
 					<div className="min-w-0 flex-1">

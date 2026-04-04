@@ -55,11 +55,12 @@ function Toaster({ ...props }: ToasterProps) {
 				classNames: {
 					toast:
 						"group toast group-[.toaster]:bg-background group-[.toaster]:text-foreground group-[.toaster]:border group-[.toaster]:border-border group-[.toaster]:shadow-xl group-[.toaster]:rounded",
-					title: "group-[.toast]:font-semibold group-[.toast]:text-foreground group-[.toast]:text-sm",
+					title:
+						"group-[.toast]:font-semibold group-[.toast]:text-foreground group-[.toast]:text-sm",
 					description:
 						"group-[.toast]:text-muted-foreground group-[.toast]:text-xs",
-				actionButton:
-					"group-[.toast]:bg-brand-purple group-[.toast]:text-white group-[.toast]:rounded group-[.toast]:text-xs group-[.toast]:font-medium",
+					actionButton:
+						"group-[.toast]:bg-brand-purple group-[.toast]:text-white group-[.toast]:rounded group-[.toast]:text-xs group-[.toast]:font-medium",
 					cancelButton:
 						"group-[.toast]:bg-muted group-[.toast]:text-muted-foreground group-[.toast]:rounded group-[.toast]:text-xs",
 					closeButton:

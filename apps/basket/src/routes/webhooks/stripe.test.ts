@@ -1,5 +1,5 @@
-import { createHmac } from "node:crypto";
 import { describe, expect, test } from "bun:test";
+import { createHmac } from "node:crypto";
 import { verifyStripeSignature } from "./stripe";
 
 const SECRET = "whsec_test_secret_key";
@@ -15,7 +15,14 @@ function sign(payload: string, secret = SECRET, timestamp?: number): string {
 const VALID_PAYLOAD = JSON.stringify({
 	id: "evt_1",
 	type: "payment_intent.succeeded",
-	data: { object: { id: "pi_1", amount: 1000, currency: "usd", created: 1700000000 } },
+	data: {
+		object: {
+			id: "pi_1",
+			amount: 1000,
+			currency: "usd",
+			created: 1_700_000_000,
+		},
+	},
 });
 
 describe("verifyStripeSignature", () => {
@@ -46,14 +53,18 @@ describe("verifyStripeSignature", () => {
 	test("missing timestamp → invalid", () => {
 		const result = verifyStripeSignature(VALID_PAYLOAD, "v1=abc123", SECRET);
 		expect(result.valid).toBe(false);
-		if (!result.valid) expect(result.error).toContain("timestamp");
+		if (!result.valid) {
+			expect(result.error).toContain("timestamp");
+		}
 	});
 
 	test("missing v1 signature → invalid", () => {
 		const ts = Math.floor(Date.now() / 1000);
 		const result = verifyStripeSignature(VALID_PAYLOAD, `t=${ts}`, SECRET);
 		expect(result.valid).toBe(false);
-		if (!result.valid) expect(result.error).toContain("No v1");
+		if (!result.valid) {
+			expect(result.error).toContain("No v1");
+		}
 	});
 
 	// ── Signature mismatch ──
@@ -62,7 +73,9 @@ describe("verifyStripeSignature", () => {
 		const header = sign(VALID_PAYLOAD, "wrong_secret");
 		const result = verifyStripeSignature(VALID_PAYLOAD, header, SECRET);
 		expect(result.valid).toBe(false);
-		if (!result.valid) expect(result.error).toContain("mismatch");
+		if (!result.valid) {
+			expect(result.error).toContain("mismatch");
+		}
 	});
 
 	test("tampered payload → mismatch", () => {
@@ -86,7 +99,9 @@ describe("verifyStripeSignature", () => {
 		const header = sign(VALID_PAYLOAD, SECRET, oldTs);
 		const result = verifyStripeSignature(VALID_PAYLOAD, header, SECRET);
 		expect(result.valid).toBe(false);
-		if (!result.valid) expect(result.error).toContain("tolerance");
+		if (!result.valid) {
+			expect(result.error).toContain("tolerance");
+		}
 	});
 
 	test("timestamp 4 minutes old → accepted", () => {
@@ -110,7 +125,9 @@ describe("verifyStripeSignature", () => {
 		const header = sign(broken);
 		const result = verifyStripeSignature(broken, header, SECRET);
 		expect(result.valid).toBe(false);
-		if (!result.valid) expect(result.error).toContain("JSON");
+		if (!result.valid) {
+			expect(result.error).toContain("JSON");
+		}
 	});
 
 	// ���─ Edge cases ──
@@ -156,7 +173,11 @@ describe("verifyStripeSignature", () => {
 
 	test("50 random payloads with wrong secret → all rejected", () => {
 		for (let i = 0; i < 50; i++) {
-			const payload = JSON.stringify({ id: `evt_${i}`, type: "x", data: { object: {} } });
+			const payload = JSON.stringify({
+				id: `evt_${i}`,
+				type: "x",
+				data: { object: {} },
+			});
 			const header = sign(payload, "wrong_secret_" + i);
 			const result = verifyStripeSignature(payload, header, SECRET);
 			expect(result.valid).toBe(false);

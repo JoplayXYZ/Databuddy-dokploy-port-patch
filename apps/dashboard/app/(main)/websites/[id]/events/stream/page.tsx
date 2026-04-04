@@ -32,7 +32,7 @@ export default function EventsStreamPage() {
 
 	const eventsKey = useMemo(
 		() => JSON.stringify({ dateRange, filters }),
-		[dateRange, filters],
+		[dateRange, filters]
 	);
 
 	const { events, pagination, isLoading, isError, error } = useEventsStream(
@@ -40,14 +40,14 @@ export default function EventsStreamPage() {
 		dateRange,
 		50,
 		page,
-		filters,
+		filters
 	);
 
 	const handleAddFilter = useCallback(
 		(eventName: string) => {
 			addFilter({ field: "event_name", operator: "eq", value: eventName });
 		},
-		[addFilter],
+		[addFilter]
 	);
 
 	const renderEventName = useCallback(
@@ -75,7 +75,7 @@ export default function EventsStreamPage() {
 				</div>
 			);
 		},
-		[websiteId, handleAddFilter],
+		[websiteId, handleAddFilter]
 	);
 
 	return (

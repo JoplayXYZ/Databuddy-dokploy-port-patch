@@ -1,13 +1,13 @@
 import { describe, expect, test } from "bun:test";
 import {
 	CONTROL_CHARS,
-	XSS_PAYLOADS,
 	cases,
 	longString,
+	XSS_PAYLOADS,
 } from "../test-helpers";
 import {
-	VALIDATION_LIMITS,
 	sanitizeString,
+	VALIDATION_LIMITS,
 	validateNumeric,
 	validatePayloadSize,
 	validatePerformanceMetric,
@@ -20,25 +20,20 @@ describe("sanitizeString", () => {
 	// non-string → ""
 	for (const input of [null, undefined, 123, true, {}, []]) {
 		test(`${JSON.stringify(input)} → ""`, () =>
-			expect(sanitizeString(input)).toBe("")
-		);
+			expect(sanitizeString(input)).toBe(""));
 	}
 
 	test("trims whitespace", () =>
-		expect(sanitizeString("  hello  ")).toBe("hello")
-	);
+		expect(sanitizeString("  hello  ")).toBe("hello"));
 
 	test("collapses internal whitespace", () =>
-		expect(sanitizeString("a   b   c")).toBe("a b c")
-	);
+		expect(sanitizeString("a   b   c")).toBe("a b c"));
 
 	test("strips control characters", () =>
-		expect(sanitizeString(`a${CONTROL_CHARS}b`)).toBe("ab")
-	);
+		expect(sanitizeString(`a${CONTROL_CHARS}b`)).toBe("ab"));
 
 	test("strips HTML tags", () =>
-		expect(sanitizeString("<b>bold</b> text")).toBe("bold text")
-	);
+		expect(sanitizeString("<b>bold</b> text")).toBe("bold text"));
 
 	test("strips dangerous chars <>'\",&", () => {
 		// Angle brackets in HTML-like patterns are removed by tag stripper,
@@ -51,7 +46,9 @@ describe("sanitizeString", () => {
 	test("respects default maxLength (2048)", () => {
 		const long = longString(3000);
 		const result = sanitizeString(long);
-		expect(result.length).toBeLessThanOrEqual(VALIDATION_LIMITS.STRING_MAX_LENGTH);
+		expect(result.length).toBeLessThanOrEqual(
+			VALIDATION_LIMITS.STRING_MAX_LENGTH
+		);
 	});
 
 	test("respects custom maxLength", () => {
@@ -93,11 +90,7 @@ cases(
 		["contains dots → ''", "abc.def", ""],
 		["empty string → ''", "", ""],
 		["max length truncation", longString(200, "a"), longString(128, "a")],
-		[
-			"HTML tags stripped, remaining is valid",
-			"abc<def>ghi",
-			"abcghi",
-		],
+		["HTML tags stripped, remaining is valid", "abc<def>ghi", "abcghi"],
 	],
 	(input) => validateSessionId(input)
 );
@@ -135,16 +128,13 @@ describe("validateNumeric", () => {
 
 describe("validatePayloadSize", () => {
 	test("small object → true", () =>
-		expect(validatePayloadSize({ a: 1 })).toBe(true)
-	);
+		expect(validatePayloadSize({ a: 1 })).toBe(true));
 
 	test("under custom max → true", () =>
-		expect(validatePayloadSize("abc", 10)).toBe(true)
-	);
+		expect(validatePayloadSize("abc", 10)).toBe(true));
 
 	test("over custom max → false", () =>
-		expect(validatePayloadSize(longString(100), 10)).toBe(false)
-	);
+		expect(validatePayloadSize(longString(100), 10)).toBe(false));
 
 	test("circular reference → false", () => {
 		const obj: any = {};

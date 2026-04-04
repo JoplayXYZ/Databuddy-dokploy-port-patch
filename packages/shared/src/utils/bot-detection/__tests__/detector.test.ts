@@ -111,7 +111,8 @@ describe("BotDetectorService", () => {
 		});
 
 		it("should detect LinkedInBot", () => {
-			const ua = "LinkedInBot/1.0 (compatible; Mozilla/5.0; Apache-HttpClient +http://www.linkedin.com)";
+			const ua =
+				"LinkedInBot/1.0 (compatible; Mozilla/5.0; Apache-HttpClient +http://www.linkedin.com)";
 			const result = detectBot(ua);
 
 			expect(result.isBot).toBe(true);
@@ -121,7 +122,8 @@ describe("BotDetectorService", () => {
 
 	describe("SEO Tools", () => {
 		it("should detect AhrefsBot", () => {
-			const ua = "Mozilla/5.0 (compatible; AhrefsBot/7.0; +http://ahrefs.com/robot/)";
+			const ua =
+				"Mozilla/5.0 (compatible; AhrefsBot/7.0; +http://ahrefs.com/robot/)";
 			const result = detectBot(ua);
 
 			expect(result.isBot).toBe(true);
@@ -130,7 +132,8 @@ describe("BotDetectorService", () => {
 		});
 
 		it("should detect SemrushBot", () => {
-			const ua = "Mozilla/5.0 (compatible; SemrushBot/7~bl; +http://www.semrush.com/bot.html)";
+			const ua =
+				"Mozilla/5.0 (compatible; SemrushBot/7~bl; +http://www.semrush.com/bot.html)";
 			const result = detectBot(ua);
 
 			expect(result.isBot).toBe(true);

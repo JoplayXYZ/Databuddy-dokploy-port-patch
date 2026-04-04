@@ -140,7 +140,9 @@ const { Elysia } = await import("elysia");
 const rawBasket = (await import("./basket")).default;
 const basketApp = new Elysia()
 	.onError(({ error, code }) => {
-		if (code === "NOT_FOUND") return new Response(null, { status: 404 });
+		if (code === "NOT_FOUND") {
+			return new Response(null, { status: 404 });
+		}
 		const { status, payload } = buildBasketErrorPayload(error, {
 			elysiaCode: code ?? "INTERNAL_SERVER_ERROR",
 		});
@@ -154,7 +156,9 @@ const basketApp = new Elysia()
 const rawTrack = (await import("./track")).trackRoute;
 const trackRoute = new Elysia()
 	.onError(({ error, code }) => {
-		if (code === "NOT_FOUND") return new Response(null, { status: 404 });
+		if (code === "NOT_FOUND") {
+			return new Response(null, { status: 404 });
+		}
 		const { status, payload } = buildBasketErrorPayload(error, {
 			elysiaCode: code ?? "INTERNAL_SERVER_ERROR",
 		});
@@ -169,7 +173,12 @@ const trackRoute = new Elysia()
 
 const now = Date.now();
 
-function post(app: any, path: string, body: unknown, headers?: Record<string, string>) {
+function post(
+	app: any,
+	path: string,
+	body: unknown,
+	headers?: Record<string, string>
+) {
 	return app.handle(
 		new Request(`http://localhost${path}`, {
 			method: "POST",
@@ -459,9 +468,7 @@ describe("GET /health", () => {
 	);
 
 	test("returns 200 with status ok", async () => {
-		const res = await healthApp.handle(
-			new Request("http://localhost/health")
-		);
+		const res = await healthApp.handle(new Request("http://localhost/health"));
 		expect(res.status).toBe(200);
 		const body = await json(res);
 		expect(body.status).toBe("ok");
@@ -498,8 +505,18 @@ describe("response contracts", () => {
 
 	test("POST /vitals → { status, type, count }", async () => {
 		const res = await post(basketApp, "/vitals", [
-			{ timestamp: now, path: "https://example.com", metricName: "LCP", metricValue: 2500 },
-			{ timestamp: now, path: "https://example.com", metricName: "FCP", metricValue: 1200 },
+			{
+				timestamp: now,
+				path: "https://example.com",
+				metricName: "LCP",
+				metricValue: 2500,
+			},
+			{
+				timestamp: now,
+				path: "https://example.com",
+				metricName: "FCP",
+				metricValue: 1200,
+			},
 		]);
 		const body = await json(res);
 		expect(body).toEqual({ status: "success", type: "web_vitals", count: 2 });
@@ -536,7 +553,10 @@ describe("response contracts", () => {
 		expect(body.batch).toBe(true);
 		expect(typeof body.processed).toBe("number");
 		expect(body.batched).toEqual(
-			expect.objectContaining({ track: expect.any(Number), outgoing_link: expect.any(Number) })
+			expect.objectContaining({
+				track: expect.any(Number),
+				outgoing_link: expect.any(Number),
+			})
 		);
 		expect(Array.isArray(body.results)).toBe(true);
 	});

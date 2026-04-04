@@ -42,7 +42,7 @@ function MobileThemeToggle() {
 						"flex h-7 flex-1 items-center justify-center gap-1.5 rounded text-xs transition-colors",
 						currentTheme === id
 							? "bg-background font-medium text-sidebar-accent-foreground shadow-sm"
-							: "text-sidebar-foreground/50 hover:text-sidebar-foreground",
+							: "text-sidebar-foreground/50 hover:text-sidebar-foreground"
 					)}
 					key={id}
 					onClick={() => setTheme(id)}
@@ -63,7 +63,7 @@ function MobileThemeToggle() {
 
 const getInitials = (
 	name: string | null | undefined,
-	email: string | null | undefined,
+	email: string | null | undefined
 ) => {
 	if (name) {
 		return name
@@ -174,7 +174,7 @@ export function MobileSidebar() {
 												"flex shrink-0 items-center gap-1.5 rounded px-2.5 py-1.5 font-medium text-xs transition-colors",
 												isActive
 													? "bg-sidebar-accent text-sidebar-accent-foreground"
-													: "text-sidebar-foreground/50 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground",
+													: "text-sidebar-foreground/50 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
 											)}
 											key={category.id}
 											onClick={() => setCategory(category.id)}

@@ -1,6 +1,6 @@
-import { afterEach, beforeEach, describe, expect, mock, test } from "bun:test";
-import type { NotificationPayload, NotificationResult } from "../../types";
+import { afterEach, describe, expect, mock, test } from "bun:test";
 import { BaseProvider } from "../../providers/base";
+import type { NotificationPayload, NotificationResult } from "../../types";
 
 class TestProvider extends BaseProvider {
 	async send(_payload: NotificationPayload): Promise<NotificationResult> {
@@ -72,7 +72,9 @@ describe("BaseProvider", () => {
 			let attempt = 0;
 			const fn = mock(() => {
 				attempt++;
-				if (attempt < 3) return Promise.reject(new Error("fail"));
+				if (attempt < 3) {
+					return Promise.reject(new Error("fail"));
+				}
 				return Promise.resolve("success");
 			});
 
@@ -115,7 +117,10 @@ describe("BaseProvider", () => {
 			globalThis.fetch = mock(
 				(_url: string, init?: RequestInit) =>
 					new Promise((_resolve, reject) => {
-						const id = setTimeout(() => reject(new Error("should not reach")), 10_000);
+						const id = setTimeout(
+							() => reject(new Error("should not reach")),
+							10_000
+						);
 						init?.signal?.addEventListener("abort", () => {
 							clearTimeout(id);
 							const abortError = new Error("The operation was aborted.");

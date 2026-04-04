@@ -128,8 +128,7 @@ test.describe("Error Tracking", () => {
 		const error = findError(
 			request,
 			(e) =>
-				typeof e.message === "string" &&
-				e.message.includes("String Rejection")
+				typeof e.message === "string" && e.message.includes("String Rejection")
 		);
 		expect(error).toBeTruthy();
 		expect(error?.message).toContain("String Rejection");
@@ -162,8 +161,7 @@ test.describe("Error Tracking", () => {
 		const error = findError(
 			request,
 			(e) =>
-				typeof e.message === "string" &&
-				e.message.includes("Object Rejection")
+				typeof e.message === "string" && e.message.includes("Object Rejection")
 		);
 		expect(error).toBeTruthy();
 		expect(error?.message).toContain(

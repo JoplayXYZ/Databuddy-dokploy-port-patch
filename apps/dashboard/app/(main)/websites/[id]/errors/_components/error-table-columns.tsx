@@ -18,7 +18,7 @@ interface CellInfo<T = unknown> {
 export const createNameColumn = (
 	header: string,
 	renderIcon?: (name: string) => React.ReactNode,
-	formatText?: (name: string) => string,
+	formatText?: (name: string) => string
 ) => ({
 	id: "name",
 	accessorKey: "name",
@@ -166,7 +166,7 @@ export const createErrorTypeColumns = () => [
 			const now = new Date();
 			const lastSeenDate = new Date(lastSeen);
 			const diffHours = Math.floor(
-				(now.getTime() - lastSeenDate.getTime()) / (1000 * 60 * 60),
+				(now.getTime() - lastSeenDate.getTime()) / (1000 * 60 * 60)
 			);
 
 			let timeAgo = "";

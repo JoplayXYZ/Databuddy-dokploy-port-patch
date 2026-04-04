@@ -86,10 +86,7 @@ test.describe("Sampling & Filtering", () => {
 				if (!req.url().includes("basket.databuddy.cc")) {
 					return;
 				}
-				customEventCount += countEvents(
-					req,
-					(e) => e.name === "custom_bypass"
-				);
+				customEventCount += countEvents(req, (e) => e.name === "custom_bypass");
 			});
 
 			await page.evaluate(() => {
@@ -138,7 +135,10 @@ test.describe("Sampling & Filtering", () => {
 					ignoreBotDetection: true,
 					batchTimeout: 200,
 					filter: (event: any) => {
-						if (event.name === "screen_view" && !(window as any).receivedPayload) {
+						if (
+							event.name === "screen_view" &&
+							!(window as any).receivedPayload
+						) {
 							(window as any).receivedPayload = event;
 						}
 						return true;

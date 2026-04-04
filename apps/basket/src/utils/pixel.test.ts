@@ -15,7 +15,9 @@ describe("createPixelResponse", () => {
 		const buf = await r.arrayBuffer();
 		expect(buf.byteLength).toBeGreaterThan(0);
 		// GIF89a magic bytes
-		expect(new Uint8Array(buf).slice(0, 3)).toEqual(new Uint8Array([0x47, 0x49, 0x46]));
+		expect(new Uint8Array(buf).slice(0, 3)).toEqual(
+			new Uint8Array([0x47, 0x49, 0x46])
+		);
 	});
 });
 
@@ -37,7 +39,7 @@ describe("parsePixelQuery", () => {
 			title: "Hello",
 		});
 		expect(eventData.name).toBe("pageview");
-		expect(eventData.timestamp).toBe(1700000000);
+		expect(eventData.timestamp).toBe(1_700_000_000);
 		expect(eventData.scroll_depth).toBe(75.5);
 		expect(eventData.is_bounce).toBe(true);
 		expect(eventData.title).toBe("Hello");

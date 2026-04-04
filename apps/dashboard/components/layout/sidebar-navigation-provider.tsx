@@ -36,15 +36,15 @@ import { WebsiteHeader } from "./navigation/website-header";
 import { OrganizationSelector } from "./organization-selector";
 
 interface SidebarNavigationContextValue {
-	navigation: NavigationEntry[];
-	categories: Category[];
+	accordionStates: ReturnType<typeof useAccordionStates>;
 	activeCategory: string;
-	setCategory: (id: string) => void;
-	header: ReactNode;
+	categories: Category[];
 	currentWebsiteId: string | null | undefined;
+	header: ReactNode;
+	navigation: NavigationEntry[];
 	pathname: string;
 	searchParams: ReadonlyURLSearchParams;
-	accordionStates: ReturnType<typeof useAccordionStates>;
+	setCategory: (id: string) => void;
 }
 
 const SidebarNavigationContext =
@@ -54,7 +54,7 @@ export function useSidebarNavigation() {
 	const ctx = use(SidebarNavigationContext);
 	if (!ctx) {
 		throw new Error(
-			"useSidebarNavigation must be used within SidebarNavigationProvider",
+			"useSidebarNavigation must be used within SidebarNavigationProvider"
 		);
 	}
 	return ctx;
@@ -75,7 +75,7 @@ export function SidebarNavigationProvider({
 	const accordionStates = useAccordionStates();
 
 	const [selectedCategory, setSelectedCategory] = useState<string | undefined>(
-		undefined,
+		undefined
 	);
 
 	const { websites, isLoading: isLoadingWebsites } = useWebsitesLight({
@@ -91,12 +91,14 @@ export function SidebarNavigationProvider({
 
 	const currentWebsite = useMemo(
 		() => (websiteId ? websites?.find((site) => site.id === websiteId) : null),
-		[websiteId, websites],
+		[websiteId, websites]
 	);
 
 	const populatedConfig = useMemo(() => {
 		const baseConfig = getContextConfig(pathname);
-		if (baseConfig !== categoryConfig.main) return baseConfig;
+		if (baseConfig !== categoryConfig.main) {
+			return baseConfig;
+		}
 
 		return {
 			...baseConfig,
@@ -126,14 +128,14 @@ export function SidebarNavigationProvider({
 			filterCategoriesByFlags(
 				filterCategoriesForRoute(populatedConfig.categories, pathname),
 				isHydrated,
-				getFlag,
+				getFlag
 			),
-		[populatedConfig.categories, pathname, isHydrated, getFlag],
+		[populatedConfig.categories, pathname, isHydrated, getFlag]
 	);
 
 	const defaultCategory = useMemo(
 		() => getDefaultCategory(pathname),
-		[pathname],
+		[pathname]
 	);
 	const previousDefaultCategoryRef = useRef<string | undefined>(undefined);
 
@@ -218,7 +220,7 @@ export function SidebarNavigationProvider({
 			pathname,
 			searchParams,
 			accordionStates,
-		],
+		]
 	);
 
 	return (

@@ -156,7 +156,9 @@ class DatabuddyMessages extends AnthropicOriginal.Messages {
 	}
 
 	create(
-		body: MessageCreateParamsNonStreaming & { databuddy?: AnthropicCallOptions }
+		body: MessageCreateParamsNonStreaming & {
+			databuddy?: AnthropicCallOptions;
+		}
 	): APIPromise<Message>;
 	create(
 		body: MessageCreateParamsStreaming & { databuddy?: AnthropicCallOptions }

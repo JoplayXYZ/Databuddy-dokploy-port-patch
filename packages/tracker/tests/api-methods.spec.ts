@@ -2,7 +2,9 @@ import { expect, test } from "@playwright/test";
 import { countEvents, findEvent, hasEvent } from "./test-utils";
 
 /** Flatten `properties` for /track payloads; batch events are already flat. */
-function eventPayloadForAssert(event: Record<string, unknown>): Record<string, unknown> {
+function eventPayloadForAssert(
+	event: Record<string, unknown>
+): Record<string, unknown> {
 	const nested = event.properties;
 	const fromNested =
 		nested && typeof nested === "object" && !Array.isArray(nested)
@@ -439,10 +441,7 @@ test.describe("API Methods", () => {
 			const requestPromise = page.waitForRequest(
 				(req) =>
 					req.url().includes("basket.databuddy.cc") &&
-					hasEvent(
-						req,
-						(e) => e.name === "screen_view" && e.page_count === 1
-					)
+					hasEvent(req, (e) => e.name === "screen_view" && e.page_count === 1)
 			);
 
 			await page.evaluate(() => {

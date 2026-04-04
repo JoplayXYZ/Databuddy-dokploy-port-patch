@@ -1,8 +1,8 @@
 "use client";
 
-import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { forwardRef, useState } from "react";
+import { cn } from "@/lib/utils";
 
 type InputProps = React.ComponentProps<"input"> & {
 	variant?: "default" | "ghost";
@@ -62,7 +62,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
 					{hasPrefix && (
 						<span
 							className={cn(
-								"inline-flex shrink-0 select-none items-center rounded-l border-r border-accent-brighter bg-muted/40 px-3 text-muted-foreground text-sm",
+								"inline-flex shrink-0 select-none items-center rounded-l border-accent-brighter border-r bg-muted/40 px-3 text-muted-foreground text-sm",
 								heightClass
 							)}
 						>
@@ -70,22 +70,23 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
 						</span>
 					)}
 					<input
-						ref={ref}
 						className={cn(
-							"peer flex h-9 min-w-0 flex-1 cursor-text border-none bg-transparent px-3 py-1 text-[13px] text-sm outline-none transition-colors placeholder:text-[13px] placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground file:inline-flex file:h-7 file:border-0 file:bg-transparent file:font-medium file:text-foreground file:text-sm disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50",
-							variant === "ghost" && "hover:bg-accent/30 focus-visible:bg-accent/50",
+							"peer flex h-9 min-w-0 flex-1 cursor-text border-none bg-transparent px-3 py-1 text-[13px] text-sm outline-none transition-colors selection:bg-primary selection:text-primary-foreground file:inline-flex file:h-7 file:border-0 file:bg-transparent file:font-medium file:text-foreground file:text-sm placeholder:text-[13px] placeholder:text-muted-foreground disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50",
+							variant === "ghost" &&
+								"hover:bg-accent/30 focus-visible:bg-accent/50",
 							className
 						)}
 						data-slot="input"
 						onBlur={handleBlur}
 						onFocus={handleFocus}
+						ref={ref}
 						type={type}
 						{...props}
 					/>
 					{hasSuffix && (
 						<span
 							className={cn(
-								"inline-flex shrink-0 select-none items-center rounded-r border-l border-accent-brighter bg-muted/40 px-3 text-muted-foreground text-sm",
+								"inline-flex shrink-0 select-none items-center rounded-r border-accent-brighter border-l bg-muted/40 px-3 text-muted-foreground text-sm",
 								heightClass
 							)}
 						>
@@ -118,9 +119,8 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
 		return (
 			<div className={cn("relative min-w-0 flex-1", wrapperClassName)}>
 				<input
-					ref={ref}
 					className={cn(
-						"peer flex h-9 w-full min-w-0 cursor-text rounded border border-accent-brighter bg-background px-3 py-1 text-[13px] text-sm outline-none transition-colors placeholder:text-[13px] placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground file:inline-flex file:h-7 file:border-0 file:bg-transparent file:font-medium file:text-foreground file:text-sm disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50",
+						"peer flex h-9 w-full min-w-0 cursor-text rounded border border-accent-brighter bg-background px-3 py-1 text-[13px] text-sm outline-none transition-colors selection:bg-primary selection:text-primary-foreground file:inline-flex file:h-7 file:border-0 file:bg-transparent file:font-medium file:text-foreground file:text-sm placeholder:text-[13px] placeholder:text-muted-foreground disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50",
 						"focus-visible:border-ring",
 						"aria-invalid:border-destructive/60 aria-invalid:focus-visible:border-destructive",
 						variant === "ghost" &&
@@ -130,6 +130,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
 					data-slot="input"
 					onBlur={handleBlur}
 					onFocus={handleFocus}
+					ref={ref}
 					type={type}
 					{...props}
 				/>
@@ -159,5 +160,5 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
 
 Input.displayName = "Input";
 
-export { Input };
 export type { InputProps };
+export { Input };

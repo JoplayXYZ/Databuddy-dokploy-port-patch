@@ -235,7 +235,7 @@ export const RecentErrorsTable = ({ recentErrors }: Props) => {
 				},
 			},
 		],
-		[],
+		[]
 	);
 
 	return (

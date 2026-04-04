@@ -137,7 +137,7 @@ export function DateRangePicker({
 			onChange?.(range);
 			setIsOpen(false);
 		},
-		[onChange],
+		[onChange]
 	);
 
 	const handleCalendarSelect = useCallback((range: DateRange | undefined) => {
@@ -158,7 +158,7 @@ export function DateRangePicker({
 				setTempRange(value);
 			}
 		},
-		[value],
+		[value]
 	);
 
 	const formatDisplayRange = useCallback((range: DateRange | undefined) => {
@@ -199,7 +199,7 @@ export function DateRangePicker({
 					<Button
 						className={cn(
 							"h-8 justify-start gap-2 whitespace-nowrap px-3 text-left font-medium text-xs",
-							!value?.from && "text-muted-foreground",
+							!value?.from && "text-muted-foreground"
 						)}
 						disabled={disabled}
 						variant="outline"
@@ -230,7 +230,7 @@ export function DateRangePicker({
 													"flex w-full items-center justify-between rounded px-2 py-1.5 text-left text-sm",
 													isActive
 														? "bg-brand-purple text-white"
-														: "text-muted-foreground hover:bg-secondary hover:text-foreground",
+														: "text-muted-foreground hover:bg-secondary hover:text-foreground"
 												)}
 												key={preset.label}
 												onClick={() => handlePresetSelect(preset)}
@@ -266,7 +266,7 @@ export function DateRangePicker({
 													"rounded px-2.5 py-1",
 													tempRange?.to
 														? "bg-background shadow-sm"
-														: "border border-muted-foreground/40 border-dashed",
+														: "border border-muted-foreground/40 border-dashed"
 												)}
 											>
 												<span
@@ -274,7 +274,7 @@ export function DateRangePicker({
 														"font-semibold text-sm tabular-nums",
 														tempRange?.to
 															? "text-foreground"
-															: "text-muted-foreground",
+															: "text-muted-foreground"
 													)}
 												>
 													{tempRange?.to
@@ -306,7 +306,7 @@ export function DateRangePicker({
 												"shrink-0 rounded px-2.5 py-1.5 font-medium text-xs",
 												isActive
 													? "bg-brand-purple text-white"
-													: "bg-secondary text-muted-foreground",
+													: "bg-secondary text-muted-foreground"
 											)}
 											key={preset.label}
 											onClick={() => handlePresetSelect(preset)}

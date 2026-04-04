@@ -128,7 +128,7 @@ test.describe("Feature Tracking", () => {
 			const outgoing = findEvent(request, (e) =>
 				Boolean(
 					e.href === "https://external-site.com/page" &&
-					e.text === "External Link"
+						e.text === "External Link"
 				)
 			);
 			expect(outgoing).toBeTruthy();

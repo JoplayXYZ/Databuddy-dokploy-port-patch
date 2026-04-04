@@ -171,7 +171,7 @@ test.describe("SPA Navigation", () => {
 						screenViewCount += 1;
 					}
 				}
-			} catch { }
+			} catch {}
 		});
 
 		await page.addScriptTag({ url: "/dist/databuddy-debug.js" });
@@ -268,7 +268,7 @@ test.describe("SPA Navigation", () => {
 						screenViewCount += 1;
 					}
 				}
-			} catch { }
+			} catch {}
 		});
 
 		await page.evaluate(() => {
@@ -314,7 +314,7 @@ test.describe("SPA Navigation", () => {
 						screenViewCount += 1;
 					}
 				}
-			} catch { }
+			} catch {}
 		});
 
 		await page.evaluate(() => {

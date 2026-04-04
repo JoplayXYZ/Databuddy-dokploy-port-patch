@@ -16,7 +16,7 @@ export default function EventsStreamPage() {
 
 	const eventsKey = useMemo(
 		() => JSON.stringify({ dateRange, queryOptions, websiteFilters }),
-		[dateRange, queryOptions, websiteFilters],
+		[dateRange, queryOptions, websiteFilters]
 	);
 
 	const { events, pagination, isLoading, isError, error } =

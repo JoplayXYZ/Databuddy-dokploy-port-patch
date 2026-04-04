@@ -24,7 +24,7 @@ const HelpDialog = dynamic(
 	{
 		ssr: false,
 		loading: () => null,
-	},
+	}
 );
 
 export function CategorySidebar() {
@@ -91,7 +91,7 @@ export function CategorySidebar() {
 										"relative flex h-10 w-full cursor-pointer items-center justify-center",
 										"focus:outline-none",
 										hoverClass,
-										boxClass,
+										boxClass
 									)}
 									onClick={() => setCategory(category.id)}
 									type="button"
@@ -99,7 +99,7 @@ export function CategorySidebar() {
 									{isActive ? (
 										<div
 											className={cn(
-												"absolute top-0 left-0 -z-10 h-full w-full bg-sidebar-accent-brighter",
+												"absolute top-0 left-0 -z-10 h-full w-full bg-sidebar-accent-brighter"
 											)}
 										/>
 									) : null}
@@ -108,7 +108,7 @@ export function CategorySidebar() {
 											"size-5",
 											isActive
 												? "text-sidebar-ring"
-												: "text-sidebar-foreground/75",
+												: "text-sidebar-foreground/75"
 										)}
 										weight={isActive ? "fill" : "duotone"}
 									/>

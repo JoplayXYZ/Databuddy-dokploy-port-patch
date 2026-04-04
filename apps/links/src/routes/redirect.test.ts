@@ -96,7 +96,9 @@ describe("redirect route logic", () => {
 			expect(event.referrer).toBe("https://google.com");
 			expect(event.browser_name).toBe("Chrome");
 			expect(event.device_type).toBe("desktop");
-			expect(event.timestamp).toMatch(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3}$/);
+			expect(event.timestamp).toMatch(
+				/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3}$/
+			);
 		});
 
 		test("should handle null referrer", () => {

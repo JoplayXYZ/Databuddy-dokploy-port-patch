@@ -63,7 +63,7 @@ export function MobileCategorySelector({
 		const filteredCategories = filterCategoriesByFlags(
 			filterCategoriesForRoute(config.categories, pathname),
 			isHydrated,
-			getFlag,
+			getFlag
 		);
 
 		return { categories: filteredCategories, defaultCategory: defaultCat };
@@ -105,7 +105,7 @@ export function MobileCategorySelector({
 									"flex cursor-pointer items-center gap-2",
 									isActive
 										? "bg-sidebar-accent text-sidebar-accent-foreground"
-										: "",
+										: ""
 								)}
 								key={category.id}
 								onClick={() => onCategoryChangeAction?.(category.id)}
@@ -113,7 +113,7 @@ export function MobileCategorySelector({
 								<Icon
 									className={cn(
 										"size-4",
-										isActive ? "text-sidebar-ring" : "text-muted-foreground",
+										isActive ? "text-sidebar-ring" : "text-muted-foreground"
 									)}
 									weight={isActive ? "fill" : "duotone"}
 								/>

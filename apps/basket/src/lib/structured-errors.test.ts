@@ -29,7 +29,11 @@ describe("basketErrors", () => {
 		["ingestInvalidClientId", "ingestInvalidClientId", 400],
 		["ingestOriginNotAuthorized", "ingestOriginNotAuthorized", 403],
 		["ingestIpNotAuthorized", "ingestIpNotAuthorized", 403],
-		["ingestWebsiteMissingOrganization", "ingestWebsiteMissingOrganization", 400],
+		[
+			"ingestWebsiteMissingOrganization",
+			"ingestWebsiteMissingOrganization",
+			400,
+		],
 		["ingestUnknownEventType", "ingestUnknownEventType", 400],
 		["ingestBatchNotArray", "ingestBatchNotArray", 400],
 		["ingestBatchTooLarge", "ingestBatchTooLarge", 400],
@@ -49,7 +53,9 @@ describe("basketErrors", () => {
 
 describe("IngestSchemaValidationError", () => {
 	test("create → EvlogError with issues", () => {
-		const issues = [{ message: "required", path: ["name"], code: "invalid_type" }];
+		const issues = [
+			{ message: "required", path: ["name"], code: "invalid_type" },
+		];
 		const err = createIngestSchemaValidationError(issues as any);
 		expect(err).toBeInstanceOf(EvlogError);
 		expect(err.status).toBe(400);
@@ -108,20 +114,32 @@ describe("rethrowOrWrap", () => {
 
 	test("calls log.error for non-EvlogError", () => {
 		let logged: Error | null = null;
-		const mockLog = { error: (err: Error) => { logged = err; } };
+		const mockLog = {
+			error: (err: Error) => {
+				logged = err;
+			},
+		};
 		try {
 			rethrowOrWrap(new Error("test"), mockLog);
-		} catch { /* expected */ }
+		} catch {
+			/* expected */
+		}
 		expect(logged).toBeInstanceOf(Error);
 		expect(logged!.message).toBe("test");
 	});
 
 	test("does NOT call log.error for EvlogError", () => {
 		let called = false;
-		const mockLog = { error: () => { called = true; } };
+		const mockLog = {
+			error: () => {
+				called = true;
+			},
+		};
 		try {
 			rethrowOrWrap(createError({ message: "x", status: 400 }), mockLog);
-		} catch { /* expected */ }
+		} catch {
+			/* expected */
+		}
 		expect(called).toBe(false);
 	});
 });
@@ -130,7 +148,12 @@ describe("rethrowOrWrap", () => {
 
 describe("buildBasketErrorPayload", () => {
 	test("4xx EvlogError → exposes why/fix", () => {
-		const err = createError({ message: "Missing ID", status: 400, why: "no id", fix: "add id" });
+		const err = createError({
+			message: "Missing ID",
+			status: 400,
+			why: "no id",
+			fix: "add id",
+		});
 		const { status, payload } = buildBasketErrorPayload(err);
 		expect(status).toBe(400);
 		expect(payload.success).toBe(false);
@@ -142,7 +165,9 @@ describe("buildBasketErrorPayload", () => {
 		const original = process.env.NODE_ENV;
 		process.env.NODE_ENV = "production";
 		try {
-			const { status, payload } = buildBasketErrorPayload(new Error("secret db info"));
+			const { status, payload } = buildBasketErrorPayload(
+				new Error("secret db info")
+			);
 			expect(status).toBe(500);
 			expect(payload.error).toBe("An internal server error occurred");
 			expect(payload.message).toBe("An internal server error occurred");

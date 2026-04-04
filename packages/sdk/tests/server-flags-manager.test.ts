@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, mock } from "bun:test";
-import { ServerFlagsManager } from "../src/node/flags/flags-manager";
-import { createServerFlagsManager } from "../src/node/flags/create-manager";
 import type { FlagResult, FlagsConfig } from "../src/core/flags/types";
+import { createServerFlagsManager } from "../src/node/flags/create-manager";
+import { ServerFlagsManager } from "../src/node/flags/flags-manager";
 
 const FLAG_ENABLED: FlagResult = {
 	enabled: true,
@@ -47,10 +47,7 @@ function mockFetch(flagsResponse: Record<string, FlagResult> = DEFAULT_FLAGS) {
 		if (keys) {
 			const requestedKeys = keys.split(",");
 			const filtered = Object.fromEntries(
-				requestedKeys.map((k) => [
-					k,
-					flagsResponse[k] ?? FLAG_DISABLED,
-				])
+				requestedKeys.map((k) => [k, flagsResponse[k] ?? FLAG_DISABLED])
 			);
 			return new Response(JSON.stringify({ flags: filtered }), {
 				status: 200,
@@ -93,7 +90,9 @@ describe("ServerFlagsManager", () => {
 	});
 
 	afterEach(() => {
-		for (const m of managers) m.destroy();
+		for (const m of managers) {
+			m.destroy();
+		}
 		managers.length = 0;
 		fetchMock.restore();
 	});
@@ -214,9 +213,7 @@ describe("ServerFlagsManager", () => {
 			expect(b.enabled).toBe(false);
 			expect(c.variant).toBe("treatment-a");
 
-			const bulkCalls = fetchMock.calls.filter((url) =>
-				url.includes("/bulk")
-			);
+			const bulkCalls = fetchMock.calls.filter((url) => url.includes("/bulk"));
 			expect(bulkCalls.length).toBe(1);
 
 			const url = new URL(bulkCalls.at(0) ?? "");
@@ -314,8 +311,7 @@ describe("ServerFlagsManager", () => {
 
 			const hasOrgTeam = fetchMock.calls.some(
 				(url) =>
-					url.includes("organizationId=org-1") &&
-					url.includes("teamId=team-1")
+					url.includes("organizationId=org-1") && url.includes("teamId=team-1")
 			);
 			expect(hasOrgTeam).toBe(true);
 		});
@@ -461,9 +457,7 @@ describe("ServerFlagsManager", () => {
 			const manager = await create({ clientId: "test-id" });
 
 			await manager.getFlag("feature-on");
-			expect(
-				Object.keys(manager.getMemoryFlags()).length
-			).toBeGreaterThan(0);
+			expect(Object.keys(manager.getMemoryFlags()).length).toBeGreaterThan(0);
 
 			manager.destroy();
 

@@ -3,7 +3,7 @@ import { countEvents, findEvent, hasEvent } from "./test-utils";
 
 test.describe("Mobile Tracking", () => {
 	// biome-ignore lint/correctness/noEmptyPattern: skip test if not mobile
-	test.beforeEach(({ }, testInfo) => {
+	test.beforeEach(({}, testInfo) => {
 		if (!testInfo.project.name.includes("mobile")) {
 			test.skip();
 		}
@@ -118,8 +118,7 @@ test.describe("Mobile Tracking", () => {
 			}
 			rapidEventCount += countEvents(
 				req,
-				(e) =>
-					typeof e.name === "string" && e.name.startsWith("rapid_")
+				(e) => typeof e.name === "string" && e.name.startsWith("rapid_")
 			);
 		});
 

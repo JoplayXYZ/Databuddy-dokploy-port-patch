@@ -177,7 +177,7 @@ export function EventsStreamContent({
 
 	const [allEvents, setAllEvents] = useState<RecentCustomEvent[]>([]);
 	const [loadMoreRef, setLoadMoreRef] = useState<HTMLTableCellElement | null>(
-		null,
+		null
 	);
 	const [scrollContainerRef, setScrollContainerRef] =
 		useState<HTMLDivElement | null>(null);
@@ -185,7 +185,7 @@ export function EventsStreamContent({
 
 	const [searchQuery, setSearchQuery] = useQueryState(
 		"search",
-		parseAsString.withDefault(""),
+		parseAsString.withDefault("")
 	);
 	const [searchInput, setSearchInput] = useState(searchQuery);
 
@@ -193,7 +193,7 @@ export function EventsStreamContent({
 		(value: string) => {
 			setSearchQuery(value);
 		},
-		{ wait: 300 },
+		{ wait: 300 }
 	);
 
 	const handleSearchInputChange = useCallback(
@@ -201,30 +201,28 @@ export function EventsStreamContent({
 			setSearchInput(value);
 			debouncedSetSearchQuery(value);
 		},
-		[debouncedSetSearchQuery],
+		[debouncedSetSearchQuery]
 	);
 
 	const [selectedEventType, setSelectedEventType] = useQueryState(
 		"event",
-		parseAsString.withDefault("all"),
+		parseAsString.withDefault("all")
 	);
 	const [selectedPath, setSelectedPath] = useQueryState(
 		"path",
-		parseAsString.withDefault("all"),
+		parseAsString.withDefault("all")
 	);
 	const [selectedPropertyKey, setSelectedPropertyKey] = useQueryState(
 		"propKey",
-		parseAsString.withDefault("all"),
+		parseAsString.withDefault("all")
 	);
 	const [selectedPropertyValue, setSelectedPropertyValue] = useQueryState(
 		"propVal",
-		parseAsString.withDefault("all"),
+		parseAsString.withDefault("all")
 	);
 	const [hasProperties, setHasProperties] = useQueryState(
 		"hasProps",
-		parseAsStringLiteral(["all", "with", "without"] as const).withDefault(
-			"all",
-		),
+		parseAsStringLiteral(["all", "with", "without"] as const).withDefault("all")
 	);
 
 	const pageRef = useRef(page);
@@ -245,7 +243,7 @@ export function EventsStreamContent({
 				onPageChange(pageRef.current + 1);
 			}
 		},
-		[pagination.hasNext, isLoading, onPageChange],
+		[pagination.hasNext, isLoading, onPageChange]
 	);
 
 	const observerRef = useRef<IntersectionObserver | null>(null);
@@ -280,7 +278,7 @@ export function EventsStreamContent({
 		}
 		setAllEvents((prev) => {
 			const existingKeys = new Set(
-				prev.map((e) => `${e.timestamp}-${e.event_name}-${e.session_id}`),
+				prev.map((e) => `${e.timestamp}-${e.event_name}-${e.session_id}`)
 			);
 			let hasNewEvents = false;
 			const newEvents = [...prev];
@@ -349,7 +347,7 @@ export function EventsStreamContent({
 			if (selectedPropertyValue !== "all") {
 				result = result.filter(
 					(e) =>
-						String(e.properties[selectedPropertyKey]) === selectedPropertyValue,
+						String(e.properties[selectedPropertyKey]) === selectedPropertyValue
 				);
 			}
 		}
@@ -360,8 +358,8 @@ export function EventsStreamContent({
 					e.event_name.toLowerCase().includes(query) ||
 					e.path?.toLowerCase().includes(query) ||
 					Object.values(e.properties).some((val) =>
-						String(val).toLowerCase().includes(query),
-					),
+						String(val).toLowerCase().includes(query)
+					)
 			);
 		}
 
@@ -465,7 +463,7 @@ export function EventsStreamContent({
 			setSelectedPropertyKey(value);
 			setSelectedPropertyValue("all");
 		},
-		[setSelectedPropertyKey, setSelectedPropertyValue],
+		[setSelectedPropertyKey, setSelectedPropertyValue]
 	);
 
 	const columns = useMemo<ColumnDef<RecentCustomEvent>[]>(
@@ -587,7 +585,7 @@ export function EventsStreamContent({
 			setSelectedPath,
 			setSelectedPropertyKey,
 			setSelectedPropertyValue,
-		],
+		]
 	);
 
 	const table = useReactTable({
@@ -699,7 +697,7 @@ export function EventsStreamContent({
 								className={cn(
 									"h-8 w-[140px] border-border/60 bg-background shadow-sm",
 									selectedEventType !== "all" &&
-										"border-primary/40 bg-primary/5 text-primary",
+										"border-primary/40 bg-primary/5 text-primary"
 								)}
 							>
 								<SelectValue placeholder="Event type" />
@@ -724,7 +722,7 @@ export function EventsStreamContent({
 								className={cn(
 									"h-8 w-[140px] border-border/60 bg-background shadow-sm",
 									selectedPath !== "all" &&
-										"border-primary/40 bg-primary/5 text-primary",
+										"border-primary/40 bg-primary/5 text-primary"
 								)}
 							>
 								<SelectValue placeholder="Page" />
@@ -752,7 +750,7 @@ export function EventsStreamContent({
 								className={cn(
 									"h-8 w-[135px] border-border/60 bg-background shadow-sm",
 									hasProperties !== "all" &&
-										"border-primary/40 bg-primary/5 text-primary",
+										"border-primary/40 bg-primary/5 text-primary"
 								)}
 							>
 								<SelectValue placeholder="Properties" />
@@ -775,7 +773,7 @@ export function EventsStreamContent({
 									className={cn(
 										"h-8 w-[130px] border-border/60 bg-background shadow-sm",
 										selectedPropertyKey !== "all" &&
-											"border-primary/40 bg-primary/5 text-primary",
+											"border-primary/40 bg-primary/5 text-primary"
 									)}
 								>
 									<SelectValue placeholder="Key" />
@@ -802,7 +800,7 @@ export function EventsStreamContent({
 										className={cn(
 											"h-8 w-[120px] border-border/60 bg-background shadow-sm",
 											selectedPropertyValue !== "all" &&
-												"border-primary/40 bg-primary/5 text-primary",
+												"border-primary/40 bg-primary/5 text-primary"
 										)}
 									>
 										<SelectValue placeholder="Value" />
@@ -828,7 +826,7 @@ export function EventsStreamContent({
 							className={cn(
 								"h-8 w-[160px] border-border/60 bg-background pl-8 text-sm shadow-sm",
 								searchQuery.trim() &&
-									"border-primary/40 bg-primary/5 text-primary",
+									"border-primary/40 bg-primary/5 text-primary"
 							)}
 							onChange={(e) => handleSearchInputChange(e.target.value)}
 							placeholder="Search…"
@@ -881,7 +879,7 @@ export function EventsStreamContent({
 											? null
 											: flexRender(
 													header.column.columnDef.header,
-													header.getContext(),
+													header.getContext()
 												)}
 									</TableHead>
 								))}
@@ -912,7 +910,7 @@ export function EventsStreamContent({
 										>
 											{flexRender(
 												cell.column.columnDef.cell,
-												cell.getContext(),
+												cell.getContext()
 											)}
 										</TableCell>
 									))}

@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import {
-	buildAnomalyNotificationPayload,
 	type AnomalyNotificationInput,
+	buildAnomalyNotificationPayload,
 } from "../../templates/anomaly";
 
 function makeInput(

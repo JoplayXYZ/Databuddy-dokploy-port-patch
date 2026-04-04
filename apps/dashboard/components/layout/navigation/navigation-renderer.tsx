@@ -43,7 +43,7 @@ export function NavigationRenderer({ className }: { className?: string }) {
 										? "border-b"
 										: idx !== 0 && navigation.length > 1
 											? "border-t"
-											: "border-transparent",
+											: "border-transparent"
 							)}
 							currentWebsiteId={currentWebsiteId}
 							flag={entry.flag}
@@ -72,7 +72,7 @@ export function NavigationRenderer({ className }: { className?: string }) {
 									entry,
 									pathname,
 									searchParams,
-									currentWebsiteId,
+									currentWebsiteId
 								)}
 								isExternal={entry.external}
 								isLocked={false}

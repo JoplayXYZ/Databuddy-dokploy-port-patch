@@ -26,7 +26,7 @@ export const formatMetricNumber = (num: number | undefined | null): string => {
 // Format currency values
 export const formatCurrency = (
 	amount: number | undefined | null,
-	currency = "USD",
+	currency = "USD"
 ): string => {
 	if (amount === undefined || amount === null || Number.isNaN(amount)) {
 		return "$0.00";
@@ -53,7 +53,7 @@ export const DATE_FORMATS = {
 // Global date formatting functions
 export const formatDate = (
 	dateString: string | Date | undefined | null,
-	format: string = DATE_FORMATS.DATE_ONLY,
+	format: string = DATE_FORMATS.DATE_ONLY
 ): string => {
 	if (!dateString) {
 		return "";
@@ -76,7 +76,7 @@ export const formatDate = (
 export const formatDateRange = (
 	startDate: string | Date | undefined | null,
 	endDate: string | Date | undefined | null,
-	format: string = DATE_FORMATS.DATE_ONLY,
+	format: string = DATE_FORMATS.DATE_ONLY
 ): string => {
 	const start = formatDate(startDate, format);
 	const end = formatDate(endDate, format);

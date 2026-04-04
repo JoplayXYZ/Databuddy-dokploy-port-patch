@@ -11,11 +11,7 @@ import {
 const keys = createKeys({ prefix: "dbdy_", length: 48 });
 
 // Constants matching the router
-const API_SCOPES = [
-	"read:data",
-	"write:llm",
-	"track:events",
-] as const;
+const API_SCOPES = ["read:data", "write:llm", "track:events"] as const;
 
 const RESOURCE_TYPES = [
 	"global",
@@ -394,9 +390,7 @@ describe("keypal hasAnyScope", () => {
 	});
 
 	it("returns false when no scopes match", () => {
-		expect(hasAnyScope(["write:llm"], ["read:data", "write:llm"])).toBe(
-			false
-		);
+		expect(hasAnyScope(["write:llm"], ["read:data", "write:llm"])).toBe(false);
 	});
 
 	it("handles empty required scopes", () => {
@@ -411,17 +405,12 @@ describe("keypal hasAnyScope", () => {
 describe("keypal hasAllScopes", () => {
 	it("returns true when all scopes match", () => {
 		expect(
-			hasAllScopes(
-				["read:data", "write:llm"],
-				["read:data", "write:llm"]
-			)
+			hasAllScopes(["read:data", "write:llm"], ["read:data", "write:llm"])
 		).toBe(true);
 	});
 
 	it("returns false when not all scopes match", () => {
-		expect(hasAllScopes(["read:data"], ["read:data", "write:llm"])).toBe(
-			false
-		);
+		expect(hasAllScopes(["read:data"], ["read:data", "write:llm"])).toBe(false);
 	});
 
 	it("returns true for empty required scopes", () => {
@@ -531,11 +520,7 @@ describe("checkAccess simulation (matches router logic)", () => {
 	});
 
 	it("returns all scopes when no specific scopes requested", () => {
-		const result = checkAccess(
-			["read:data", "write:llm"],
-			{},
-			{ valid: true }
-		);
+		const result = checkAccess(["read:data", "write:llm"], {}, { valid: true });
 		expect(result.valid).toBe(true);
 		expect(result.hasAccess).toBe(true);
 		expect(result.scopes).toContain("read:data");

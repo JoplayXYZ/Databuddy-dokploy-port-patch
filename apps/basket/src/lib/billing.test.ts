@@ -53,7 +53,7 @@ describe("checkAutumnUsage", () => {
 		mockCheck.mockResolvedValue({
 			allowed: false,
 			customerId: "cust_1",
-			balance: { usage: 10001, granted: 10000, unlimited: false },
+			balance: { usage: 10_001, granted: 10_000, unlimited: false },
 		});
 		const result = await checkAutumnUsage("cust_1", "events");
 		expect(result).toEqual({ allowed: true });
@@ -68,7 +68,11 @@ describe("checkAutumnUsage", () => {
 	// ── Still calls Autumn (metering for paying customers) ──
 
 	test("calls autumn.check with sendEvent: true", async () => {
-		mockCheck.mockResolvedValue({ allowed: true, customerId: "c", balance: null });
+		mockCheck.mockResolvedValue({
+			allowed: true,
+			customerId: "c",
+			balance: null,
+		});
 		await checkAutumnUsage("cust_1", "events", { website_id: "ws_1" });
 		expect(mockCheck).toHaveBeenCalledWith({
 			customerId: "cust_1",
@@ -84,7 +88,7 @@ describe("checkAutumnUsage", () => {
 		mockCheck.mockResolvedValue({
 			allowed: true,
 			customerId: "cust_1",
-			balance: { usage: 500, granted: 10000, unlimited: false },
+			balance: { usage: 500, granted: 10_000, unlimited: false },
 		});
 		await checkAutumnUsage("cust_1", "events");
 		expect(mockLoggerSet).toHaveBeenCalledWith(
@@ -92,7 +96,7 @@ describe("checkAutumnUsage", () => {
 				billing: expect.objectContaining({
 					allowed: true,
 					usage: 500,
-					granted: 10000,
+					granted: 10_000,
 				}),
 			})
 		);

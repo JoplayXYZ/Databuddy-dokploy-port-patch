@@ -17,7 +17,18 @@ schemaTable(
 	trackEventSchema,
 	[
 		["single event, minimal", { name: "signup" }],
-		["single event, full", { name: "purchase", namespace: "billing", timestamp: now, properties: { plan: "pro" }, anonymousId: "abc", sessionId: "sess", source: "api" }],
+		[
+			"single event, full",
+			{
+				name: "purchase",
+				namespace: "billing",
+				timestamp: now,
+				properties: { plan: "pro" },
+				anonymousId: "abc",
+				sessionId: "sess",
+				source: "api",
+			},
+		],
 		["single event, websiteId", { name: "ev", websiteId: "ws_123" }],
 		["array of events", [{ name: "a" }, { name: "b" }]],
 		["array, single element", [{ name: "a" }]],
@@ -29,7 +40,10 @@ schemaTable(
 		["empty name", { name: "" }],
 		["name too long (257)", { name: "a".repeat(257) }],
 		["namespace too long (65)", { name: "ev", namespace: "a".repeat(65) }],
-		["array too large (101)", Array.from({ length: 101 }, () => ({ name: "x" }))],
+		[
+			"array too large (101)",
+			Array.from({ length: 101 }, () => ({ name: "x" })),
+		],
 		["not an object", "string"],
 		["number", 42],
 		["null", null],
@@ -49,43 +63,58 @@ schemaTable(
 	analyticsEventSchema,
 	[
 		["minimal valid", validAnalyticsEvent],
-		["with optional fields", {
-			...validAnalyticsEvent,
-			anonymousId: "anon_1",
-			sessionId: "sess_1",
-			timestamp: now,
-			sessionStartTime: now,
-			title: "My Page",
-			screen_resolution: "1920x1080",
-			viewport_size: "1024x768",
-			language: "en-US",
-			timezone: "America/New_York",
-			connection_type: "wifi",
-			rtt: 50,
-			downlink: 10.5,
-		}],
-		["with UTM params", {
-			...validAnalyticsEvent,
-			utm_source: "google",
-			utm_medium: "cpc",
-			utm_campaign: "summer",
-		}],
-		["with performance metrics", {
-			...validAnalyticsEvent,
-			load_time: 1500,
-			ttfb: 200,
-			dom_ready_time: 800,
-		}],
-		["nullable fields set to null", {
-			...validAnalyticsEvent,
-			title: null,
-			screen_resolution: null,
-			language: null,
-		}],
-		["localhost path in dev-like scenario", {
-			...validAnalyticsEvent,
-			path: "http://localhost:3000/page",
-		}],
+		[
+			"with optional fields",
+			{
+				...validAnalyticsEvent,
+				anonymousId: "anon_1",
+				sessionId: "sess_1",
+				timestamp: now,
+				sessionStartTime: now,
+				title: "My Page",
+				screen_resolution: "1920x1080",
+				viewport_size: "1024x768",
+				language: "en-US",
+				timezone: "America/New_York",
+				connection_type: "wifi",
+				rtt: 50,
+				downlink: 10.5,
+			},
+		],
+		[
+			"with UTM params",
+			{
+				...validAnalyticsEvent,
+				utm_source: "google",
+				utm_medium: "cpc",
+				utm_campaign: "summer",
+			},
+		],
+		[
+			"with performance metrics",
+			{
+				...validAnalyticsEvent,
+				load_time: 1500,
+				ttfb: 200,
+				dom_ready_time: 800,
+			},
+		],
+		[
+			"nullable fields set to null",
+			{
+				...validAnalyticsEvent,
+				title: null,
+				screen_resolution: null,
+				language: null,
+			},
+		],
+		[
+			"localhost path in dev-like scenario",
+			{
+				...validAnalyticsEvent,
+				path: "http://localhost:3000/page",
+			},
+		],
 	],
 	[
 		["missing eventId", { name: "pageview", path: "https://example.com" }],
@@ -109,14 +138,17 @@ schemaTable(
 	outgoingLinkSchema,
 	[
 		["minimal valid", validOutgoingLink],
-		["with optional fields", {
-			...validOutgoingLink,
-			anonymousId: "anon",
-			sessionId: "sess",
-			timestamp: now,
-			text: "Click here",
-			properties: '{"key":"val"}',
-		}],
+		[
+			"with optional fields",
+			{
+				...validOutgoingLink,
+				anonymousId: "anon",
+				sessionId: "sess",
+				timestamp: now,
+				text: "Click here",
+				properties: '{"key":"val"}',
+			},
+		],
 		["nullable text", { ...validOutgoingLink, text: null }],
 	],
 	[
@@ -140,17 +172,26 @@ schemaTable(
 	batchedVitalsSchema,
 	[
 		["single vital", [validVital]],
-		["all metric types", ["FCP", "LCP", "CLS", "INP", "TTFB", "FPS"].map((m) => ({
-			...validVital,
-			metricName: m,
-			metricValue: Math.random() * 5000,
-		}))],
-		["with optional IDs", [{ ...validVital, anonymousId: "anon", sessionId: "sess" }]],
+		[
+			"all metric types",
+			["FCP", "LCP", "CLS", "INP", "TTFB", "FPS"].map((m) => ({
+				...validVital,
+				metricName: m,
+				metricValue: Math.random() * 5000,
+			})),
+		],
+		[
+			"with optional IDs",
+			[{ ...validVital, anonymousId: "anon", sessionId: "sess" }],
+		],
 		["empty array", []],
 	],
 	[
 		["invalid metric name", [{ ...validVital, metricName: "INVALID" }]],
-		["missing metricValue", [{ timestamp: now, path: "https://x.com", metricName: "LCP" }]],
+		[
+			"missing metricValue",
+			[{ timestamp: now, path: "https://x.com", metricName: "LCP" }],
+		],
 		["missing path", [{ timestamp: now, metricName: "LCP", metricValue: 100 }]],
 		["too many (21)", Array.from({ length: 21 }, () => validVital)],
 		["not an array", validVital],
@@ -170,16 +211,21 @@ schemaTable(
 	batchedErrorsSchema,
 	[
 		["single error", [validError]],
-		["with all optional fields", [{
-			...validError,
-			filename: "app.js",
-			lineno: 42,
-			colno: 10,
-			stack: "Error: ...\n  at foo (app.js:42)",
-			errorType: "TypeError",
-			anonymousId: "anon",
-			sessionId: "sess",
-		}]],
+		[
+			"with all optional fields",
+			[
+				{
+					...validError,
+					filename: "app.js",
+					lineno: 42,
+					colno: 10,
+					stack: "Error: ...\n  at foo (app.js:42)",
+					errorType: "TypeError",
+					anonymousId: "anon",
+					sessionId: "sess",
+				},
+			],
+		],
 		["empty array", []],
 	],
 	[
@@ -203,17 +249,25 @@ schemaTable(
 	batchedCustomEventSpansSchema,
 	[
 		["single event", [validCustomEvent]],
-		["with optional fields", [{
-			...validCustomEvent,
-			anonymousId: "anon",
-			sessionId: "sess",
-			properties: '{"key":"val"}',
-		}]],
+		[
+			"with optional fields",
+			[
+				{
+					...validCustomEvent,
+					anonymousId: "anon",
+					sessionId: "sess",
+					properties: '{"key":"val"}',
+				},
+			],
+		],
 		["empty array", []],
 	],
 	[
 		["missing eventName", [{ timestamp: now, path: "https://x.com" }]],
-		["empty eventName", [{ timestamp: now, path: "https://x.com", eventName: "" }]],
+		[
+			"empty eventName",
+			[{ timestamp: now, path: "https://x.com", eventName: "" }],
+		],
 		["missing path", [{ timestamp: now, eventName: "x" }]],
 		["too many (101)", Array.from({ length: 101 }, () => validCustomEvent)],
 		["not an array", validCustomEvent],

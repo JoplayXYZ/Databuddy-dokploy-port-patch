@@ -1,5 +1,5 @@
-import { afterEach, beforeEach, describe, expect, mock, test } from "bun:test";
-import { saltAnonymousId, checkDuplicate } from "./security";
+import { beforeEach, describe, expect, mock, test } from "bun:test";
+import { checkDuplicate, saltAnonymousId } from "./security";
 
 // ── saltAnonymousId (pure — no mocks needed) ──
 
@@ -81,7 +81,11 @@ describe("checkDuplicate", () => {
 		const result = await checkDuplicate("evt_1", "track");
 		expect(result).toBe(false);
 		expect(mockRedisSet).toHaveBeenCalledWith(
-			"dedup:track:evt_1", "1", "EX", 86_400, "NX"
+			"dedup:track:evt_1",
+			"1",
+			"EX",
+			86_400,
+			"NX"
 		);
 	});
 
@@ -95,7 +99,11 @@ describe("checkDuplicate", () => {
 		mockRedisSet.mockResolvedValue("OK");
 		await checkDuplicate("exit_abc", "track");
 		expect(mockRedisSet).toHaveBeenCalledWith(
-			"dedup:track:exit_abc", "1", "EX", 172_800, "NX"
+			"dedup:track:exit_abc",
+			"1",
+			"EX",
+			172_800,
+			"NX"
 		);
 	});
 
@@ -103,7 +111,11 @@ describe("checkDuplicate", () => {
 		mockRedisSet.mockResolvedValue("OK");
 		await checkDuplicate("normal_abc", "track");
 		expect(mockRedisSet).toHaveBeenCalledWith(
-			"dedup:track:normal_abc", "1", "EX", 86_400, "NX"
+			"dedup:track:normal_abc",
+			"1",
+			"EX",
+			86_400,
+			"NX"
 		);
 	});
 
@@ -111,7 +123,11 @@ describe("checkDuplicate", () => {
 		mockRedisSet.mockResolvedValue("OK");
 		await checkDuplicate("evt_1", "outgoing_link");
 		expect(mockRedisSet).toHaveBeenCalledWith(
-			"dedup:outgoing_link:evt_1", "1", "EX", 86_400, "NX"
+			"dedup:outgoing_link:evt_1",
+			"1",
+			"EX",
+			86_400,
+			"NX"
 		);
 	});
 

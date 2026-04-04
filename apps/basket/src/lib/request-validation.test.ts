@@ -18,28 +18,33 @@ mock.module("@lib/tracing", () => ({
 	captureError: mock(),
 }));
 
-const {
-	isValidIpFromSettings,
-	isValidOriginFromSettings,
-} = await import("@hooks/auth");
+const { isValidIpFromSettings, isValidOriginFromSettings } = await import(
+	"@hooks/auth"
+);
 const { getWebsiteSecuritySettings } = await import("./request-validation");
 
 // ── getWebsiteSecuritySettings ──
 
 describe("getWebsiteSecuritySettings", () => {
-	const nullInputs: unknown[] = [null, undefined, "string", 123, true, [], [1, 2]];
+	const nullInputs: unknown[] = [
+		null,
+		undefined,
+		"string",
+		123,
+		true,
+		[],
+		[1, 2],
+	];
 	for (const input of nullInputs) {
 		test(`returns null for ${JSON.stringify(input)}`, () =>
-			expect(getWebsiteSecuritySettings(input)).toBeNull()
-		);
+			expect(getWebsiteSecuritySettings(input)).toBeNull());
 	}
 
 	test("empty object → undefined fields", () =>
 		expect(getWebsiteSecuritySettings({})).toEqual({
 			allowedOrigins: undefined,
 			allowedIps: undefined,
-		})
-	);
+		}));
 
 	test("extracts string arrays, filters non-strings", () => {
 		const result = getWebsiteSecuritySettings({
@@ -70,25 +75,65 @@ truthTable(
 		["empty origin → true", "", ["cal.com"], true],
 		["whitespace origin → true", "   ", ["cal.com"], true],
 		["wildcard * → true", "https://anything.com", ["*"], true],
-		["localhost with port → true", "http://localhost:3000", ["localhost"], true],
+		[
+			"localhost with port → true",
+			"http://localhost:3000",
+			["localhost"],
+			true,
+		],
 		["localhost no port → true", "http://localhost", ["localhost"], true],
-		["non-localhost vs localhost → false", "https://example.com", ["localhost"], false],
+		[
+			"non-localhost vs localhost → false",
+			"https://example.com",
+			["localhost"],
+			false,
+		],
 		["exact match → true", "https://cal.com", ["cal.com"], true],
 		["mismatch → false", "https://cal.com", ["example.com"], false],
 		["http → true", "http://cal.com", ["cal.com"], true],
 		["https → true", "https://cal.com", ["cal.com"], true],
-		["*.cal.com matches app.cal.com", "https://app.cal.com", ["*.cal.com"], true],
+		[
+			"*.cal.com matches app.cal.com",
+			"https://app.cal.com",
+			["*.cal.com"],
+			true,
+		],
 		["*.cal.com matches cal.com", "https://cal.com", ["*.cal.com"], true],
 		["*.cal.com matches nested", "https://api.v1.cal.com", ["*.cal.com"], true],
-		["*.cal.com rejects example.com", "https://example.com", ["*.cal.com"], false],
-		["*.cal.com rejects cal.example.com", "https://cal.example.com", ["*.cal.com"], false],
+		[
+			"*.cal.com rejects example.com",
+			"https://example.com",
+			["*.cal.com"],
+			false,
+		],
+		[
+			"*.cal.com rejects cal.example.com",
+			"https://cal.example.com",
+			["*.cal.com"],
+			false,
+		],
 		["www stripped → true", "https://www.cal.com", ["cal.com"], true],
 		["case insensitive → true", "https://CAL.COM", ["cal.com"], true],
 		["port stripped → true", "https://cal.com:3000", ["cal.com"], true],
 		["not-a-url → false", "not-a-url", ["cal.com"], false],
-		["multi: exact match", "https://cal.com", ["cal.com", "*.example.com"], true],
-		["multi: wildcard match", "https://app.example.com", ["cal.com", "*.example.com"], true],
-		["multi: no match", "https://malicious.com", ["cal.com", "*.example.com"], false],
+		[
+			"multi: exact match",
+			"https://cal.com",
+			["cal.com", "*.example.com"],
+			true,
+		],
+		[
+			"multi: wildcard match",
+			"https://app.example.com",
+			["cal.com", "*.example.com"],
+			true,
+		],
+		[
+			"multi: no match",
+			"https://malicious.com",
+			["cal.com", "*.example.com"],
+			false,
+		],
 	],
 	(origin, allowed) => isValidOriginFromSettings(origin, allowed)
 );
@@ -124,7 +169,12 @@ truthTable(
 		["multi: CIDR match", "10.5.5.5", ["192.168.1.1", "10.0.0.0/8"], true],
 		["multi: no match", "8.8.8.8", ["192.168.1.1", "10.0.0.0/8"], false],
 		["0.0.0.0/32 → true", "0.0.0.0", ["0.0.0.0/32"], true],
-		["255.255.255.255/32 → true", "255.255.255.255", ["255.255.255.255/32"], true],
+		[
+			"255.255.255.255/32 → true",
+			"255.255.255.255",
+			["255.255.255.255/32"],
+			true,
+		],
 		["0.0.0.1 vs 0.0.0.0/32 → false", "0.0.0.1", ["0.0.0.0/32"], false],
 	],
 	(ip, allowed) => isValidIpFromSettings(ip, allowed)
