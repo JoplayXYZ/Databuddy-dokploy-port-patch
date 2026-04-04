@@ -83,13 +83,9 @@ const app = new Elysia().post("/llm", async (context) => {
 			throw basketErrors.llmBillingOwnerUnresolved();
 		}
 
-		const billing = await checkAutumnUsage(billingOwnerId, "events", {
+		await checkAutumnUsage(billingOwnerId, "events", {
 			api_key_id: apiKey.id,
 		});
-		if ("exceeded" in billing) {
-			log.set({ rejected: "billing_exceeded" });
-			return billing.response;
-		}
 
 		const parseResult = z
 			.union([aiCallSchema, z.array(aiCallSchema)])

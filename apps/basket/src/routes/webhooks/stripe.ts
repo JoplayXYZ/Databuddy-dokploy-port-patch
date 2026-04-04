@@ -1,9 +1,9 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
-import { clickHouse, db, eq, revenueConfig } from "@databuddy/db";
+import { clickHouse } from "@databuddy/db";
 import { Elysia } from "elysia";
 import { useLogger } from "evlog/elysia";
+import { formatDate, getWebhookConfig } from "./shared";
 
-const DATE_REGEX = /\.\d{3}Z$/;
 const SIGNATURE_TOLERANCE_SECONDS = 300;
 
 interface WebhookConfig {
@@ -176,35 +176,10 @@ function extractCustomerId(
 	return typeof customer === "string" ? customer : customer.id;
 }
 
-function formatDate(date: Date): string {
-	return date.toISOString().replace("T", " ").replace(DATE_REGEX, "");
-}
-
-async function getConfig(
-	hash: string
-): Promise<WebhookConfig | { error: string }> {
-	const config = await db.query.revenueConfig.findFirst({
-		where: eq(revenueConfig.webhookHash, hash),
-		columns: {
-			ownerId: true,
-			websiteId: true,
-			stripeWebhookSecret: true,
-		},
-	});
-
-	if (!config) {
-		return { error: "not_found" };
-	}
-
-	if (!config.stripeWebhookSecret) {
-		return { error: "stripe_not_configured" };
-	}
-
-	return {
-		ownerId: config.ownerId,
-		websiteId: config.websiteId,
-		stripeWebhookSecret: config.stripeWebhookSecret,
-	};
+function getConfig(hash: string): Promise<WebhookConfig | { error: string }> {
+	return getWebhookConfig(hash, "stripeWebhookSecret", "stripe") as Promise<
+		WebhookConfig | { error: string }
+	>;
 }
 
 async function handlePaymentIntent(

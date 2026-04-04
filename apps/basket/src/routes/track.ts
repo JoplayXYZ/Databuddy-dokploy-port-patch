@@ -157,13 +157,9 @@ export const trackRoute = new Elysia().post(
 				: auth.ownerId;
 
 			if (billingUserId) {
-				const billing = await checkAutumnUsage(billingUserId, "events", {
+				await checkAutumnUsage(billingUserId, "events", {
 					api_route: "track",
 				});
-				if ("exceeded" in billing) {
-					log.set({ rejected: "billing_exceeded" });
-					return billing.response;
-				}
 			}
 
 			const now = Date.now();
