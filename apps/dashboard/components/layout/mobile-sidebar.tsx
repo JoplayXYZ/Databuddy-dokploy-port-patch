@@ -1,5 +1,11 @@
 "use client";
 
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { useCommandSearchOpenAction } from "@/components/ui/command-search";
+import { Drawer, DrawerContent } from "@/components/ui/drawer";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { cn } from "@/lib/utils";
 import { authClient } from "@databuddy/auth/client";
 import {
 	ListIcon,
@@ -9,17 +15,11 @@ import {
 	SignOutIcon,
 	SunIcon,
 } from "@phosphor-icons/react";
-import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { useCommandSearchOpenAction } from "@/components/ui/command-search";
-import { Drawer, DrawerContent } from "@/components/ui/drawer";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { cn } from "@/lib/utils";
 import { Branding } from "./logo";
 import { NavigationRenderer } from "./navigation/navigation-renderer";
 import { useSidebarNavigation } from "./sidebar-navigation-provider";
@@ -84,13 +84,12 @@ export function MobileSidebar() {
 		useSidebarNavigation();
 
 	const [isOpen, setIsOpen] = useState(false);
-	const currentPathname = usePathname();
 	const router = useRouter();
 	const openCommandSearchAction = useCommandSearchOpenAction();
 
 	useEffect(() => {
 		setIsOpen(false);
-	}, [currentPathname]);
+	}, [pathname]);
 
 	const handleSignOut = useCallback(async () => {
 		setIsOpen(false);

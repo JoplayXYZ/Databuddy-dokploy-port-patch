@@ -5,6 +5,14 @@
     "ultracite/biome/react",
     "ultracite/biome/next"
   ],
+  "files": {
+    "includes": [
+      "!**/*.md",
+      "!**/*.test.ts",
+      "!**/*.spec.ts",
+      "!**/ui/**/*.tsx"
+    ]
+  },
   "javascript": {
     "formatter": {
       "indentStyle": "tab",
@@ -24,6 +32,13 @@
       }
     }
   ],
+  "assist": {
+    "actions": {
+      "source": {
+        "organizeImports": "off"
+      }
+    }
+  },
   "linter": {
     "rules": {
       "suspicious": {
