@@ -2,6 +2,7 @@ import { AutumnProvider } from "autumn-js/react";
 import { Suspense } from "react";
 import { FeedbackPrompt } from "@/components/feedback-prompt";
 import { Sidebar } from "@/components/layout/sidebar";
+import { SidebarNavigationProvider } from "@/components/layout/sidebar-navigation-provider";
 import { BillingProvider } from "@/components/providers/billing-provider";
 import { CommandSearchProvider } from "@/components/ui/command-search";
 
@@ -19,17 +20,19 @@ export default function MainLayout({
 		>
 			<BillingProvider>
 				<CommandSearchProvider>
-					<div className="flex min-h-0 flex-1 flex-col overflow-hidden text-foreground">
-						<Suspense fallback={null}>
-							<Sidebar />
-						</Suspense>
-						<div className="relative flex min-h-0 flex-1 flex-col pl-0 md:pl-76 lg:pl-84">
-							<div className="flex min-h-0 flex-1 flex-col overflow-hidden overflow-x-hidden overscroll-none pt-12 md:pt-0">
-								{children}
+					<SidebarNavigationProvider>
+						<div className="flex min-h-0 flex-1 flex-col overflow-hidden text-foreground">
+							<Suspense fallback={null}>
+								<Sidebar />
+							</Suspense>
+							<div className="relative flex min-h-0 flex-1 flex-col pl-0 md:pl-76 lg:pl-84">
+								<div className="flex min-h-0 flex-1 flex-col overflow-hidden overflow-x-hidden overscroll-none pt-12 md:pt-0">
+									{children}
+								</div>
 							</div>
+							<FeedbackPrompt />
 						</div>
-						<FeedbackPrompt />
-					</div>
+					</SidebarNavigationProvider>
 				</CommandSearchProvider>
 			</BillingProvider>
 		</AutumnProvider>
