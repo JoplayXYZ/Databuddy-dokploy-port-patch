@@ -17,19 +17,6 @@ mock.module("@lib/tracing", () => ({
 	record: (_n: string, fn: Function) => Promise.resolve().then(() => fn()),
 	captureError: mock(),
 }));
-mock.module("evlog", () => {
-	class EvlogError extends Error {
-		status: number;
-		constructor(opts: any) {
-			super(opts.message);
-			this.status = opts.status;
-		}
-	}
-	return {
-		createError: (opts: any) => new EvlogError(opts),
-		EvlogError,
-	};
-});
 
 const {
 	isValidIpFromSettings,
