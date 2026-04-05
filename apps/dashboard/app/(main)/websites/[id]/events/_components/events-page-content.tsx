@@ -22,6 +22,7 @@ import { useCustomEventsData } from "../use-custom-events";
 import { classifyEventProperties } from "./classify-properties";
 import { EventsTrendChart } from "./events-trend-chart";
 import { SummaryView } from "./summary-view";
+import type { CustomEventsTrendByEvent } from "@/app/(main)/events/_components/types";
 import type {
 	CustomEventItem,
 	CustomEventsSummary,
@@ -87,6 +88,9 @@ export function EventsPageContent({ params }: EventsPageContentProps) {
 
 	const summaryData = getRawData<CustomEventsSummary>("custom_events_summary");
 	const trendsData = getRawData<CustomEventsTrend>("custom_events_trends");
+	const trendsByEventData = getRawData<CustomEventsTrendByEvent>(
+		"custom_events_trends_by_event"
+	);
 	const eventsListData = getRawData<CustomEventItem>("custom_events");
 	const classificationsData = getRawData<PropertyClassification>(
 		"custom_events_property_classification"
@@ -147,6 +151,51 @@ export function EventsPageContent({ params }: EventsPageContentProps) {
 			})),
 		[trendsData, dateRange.granularity]
 	);
+
+	const perEventChartData = useMemo(() => {
+		if (trendsByEventData.length === 0) {
+			return {
+				data: [] as Record<string, string | number>[],
+				eventNames: [] as string[],
+			};
+		}
+
+		const normalizeDateKey = (date: string) =>
+			dateRange.granularity === "hourly" ? date : date.slice(0, 10);
+
+		const eventNamesSet = new Set<string>();
+		const dateMap = new Map<string, Record<string, string | number>>();
+
+		for (const row of trendsByEventData) {
+			const rawDate = normalizeDateKey(row.date);
+			eventNamesSet.add(row.event_name);
+
+			const existing = dateMap.get(rawDate) ?? {
+				date: formatDateByGranularity(rawDate, dateRange.granularity),
+			};
+			existing[row.event_name] =
+				((existing[row.event_name] as number) ?? 0) + row.total_events;
+			dateMap.set(rawDate, existing);
+		}
+
+		const eventNames = [...eventNamesSet];
+
+		// Build date list from trendsData to ensure consistent ordering
+		const allDates = trendsData.map((t) => normalizeDateKey(t.date));
+
+		const data = allDates.map((date) => {
+			const existing = dateMap.get(date);
+			const row: Record<string, string | number> = {
+				date: formatDateByGranularity(date, dateRange.granularity),
+			};
+			for (const name of eventNames) {
+				row[name] = (existing?.[name] as number) ?? 0;
+			}
+			return row;
+		});
+
+		return { data, eventNames };
+	}, [trendsByEventData, trendsData, dateRange.granularity]);
 
 	const todayDate = dayjs().format("YYYY-MM-DD");
 	const todayEvent = trendsData.find(
@@ -275,8 +324,10 @@ export function EventsPageContent({ params }: EventsPageContentProps) {
 
 					<EventsTrendChart
 						chartData={chartData}
+						eventNames={perEventChartData.eventNames}
 						isFetching={isFetching}
 						isLoading={isLoading}
+						perEventData={perEventChartData.data}
 					/>
 
 					<div className="rounded border bg-card">
