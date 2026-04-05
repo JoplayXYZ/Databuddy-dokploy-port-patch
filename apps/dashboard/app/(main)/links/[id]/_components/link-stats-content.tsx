@@ -1,9 +1,9 @@
 "use client";
 
-import { CursorClickIcon } from "@phosphor-icons/react/dist/csr/CursorClick";
-import { GlobeIcon } from "@phosphor-icons/react/dist/csr/Globe";
-import { LinkIcon } from "@phosphor-icons/react/dist/csr/Link";
-import { UsersIcon } from "@phosphor-icons/react/dist/csr/Users";
+import { CursorClickIcon } from "@phosphor-icons/react";
+import { GlobeIcon } from "@phosphor-icons/react";
+import { LinkIcon } from "@phosphor-icons/react";
+import { UsersIcon } from "@phosphor-icons/react";
 import { useParams, useRouter } from "next/navigation";
 import { useMemo } from "react";
 import { StatCard } from "@/components/analytics";

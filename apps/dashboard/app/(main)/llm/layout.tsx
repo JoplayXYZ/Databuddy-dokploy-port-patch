@@ -1,6 +1,6 @@
 "use client";
 
-import { BrainIcon, WarningIcon } from "@phosphor-icons/react/dist/ssr";
+import { BrainIcon, WarningIcon } from "@phosphor-icons/react";
 import { PageNavigation } from "@/components/layout/page-navigation";
 import { LLMPageProvider } from "./_components/llm-page-context";
 import { LLMPageHeader } from "./_components/llm-page-header";

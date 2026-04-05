@@ -1,7 +1,7 @@
 "use client";
 
-import { ChatTextIcon } from "@phosphor-icons/react/dist/csr/ChatText";
-import { ShoppingCartIcon } from "@phosphor-icons/react/dist/csr/ShoppingCart";
+import { ChatTextIcon } from "@phosphor-icons/react";
+import { ShoppingCartIcon } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";

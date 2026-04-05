@@ -1,7 +1,7 @@
 "use client";
 
 import { GATED_FEATURES } from "@databuddy/shared/types/features";
-import { FunnelIcon } from "@phosphor-icons/react/dist/csr/Funnel";
+import { FunnelIcon } from "@phosphor-icons/react";
 import dynamic from "next/dynamic";
 import { useParams } from "next/navigation";
 import { useState } from "react";

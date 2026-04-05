@@ -2,11 +2,11 @@
 
 import { useFlag } from "@databuddy/sdk/react";
 import { GATED_FEATURES } from "@databuddy/shared/types/features";
-import { ArchiveIcon } from "@phosphor-icons/react/dist/csr/Archive";
-import { FlagIcon } from "@phosphor-icons/react/dist/csr/Flag";
-import { InfoIcon } from "@phosphor-icons/react/dist/csr/Info";
-import { LayoutIcon } from "@phosphor-icons/react/dist/csr/Layout";
-import { UsersThreeIcon } from "@phosphor-icons/react/dist/csr/UsersThree";
+import { ArchiveIcon } from "@phosphor-icons/react";
+import { FlagIcon } from "@phosphor-icons/react";
+import { InfoIcon } from "@phosphor-icons/react";
+import { LayoutIcon } from "@phosphor-icons/react";
+import { UsersThreeIcon } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
 import { useAtom } from "jotai";
 import { useParams, usePathname } from "next/navigation";

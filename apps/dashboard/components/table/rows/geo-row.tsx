@@ -1,4 +1,4 @@
-import { MapPinIcon } from "@phosphor-icons/react/dist/ssr/MapPin";
+import { MapPinIcon } from "@phosphor-icons/react";
 import type { CellContext, ColumnDef } from "@tanstack/react-table";
 import { CountryFlag } from "@/components/icon";
 import { PercentageBadge } from "@/components/ui/percentage-badge";

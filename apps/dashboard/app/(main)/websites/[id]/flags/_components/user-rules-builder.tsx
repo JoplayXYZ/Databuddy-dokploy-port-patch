@@ -1,11 +1,11 @@
 "use client";
 
-import { EnvelopeIcon } from "@phosphor-icons/react/dist/csr/Envelope";
-import { PlusIcon } from "@phosphor-icons/react/dist/csr/Plus";
-import { TrashIcon } from "@phosphor-icons/react/dist/csr/Trash";
-import { UserIcon } from "@phosphor-icons/react/dist/csr/User";
-import { WrenchIcon } from "@phosphor-icons/react/dist/csr/Wrench";
-import { XIcon } from "@phosphor-icons/react/dist/csr/X";
+import { EnvelopeIcon } from "@phosphor-icons/react";
+import { PlusIcon } from "@phosphor-icons/react";
+import { TrashIcon } from "@phosphor-icons/react";
+import { UserIcon } from "@phosphor-icons/react";
+import { WrenchIcon } from "@phosphor-icons/react";
+import { XIcon } from "@phosphor-icons/react";
 import { useState } from "react";
 import { z } from "zod/mini";
 import { Button } from "@/components/ui/button";

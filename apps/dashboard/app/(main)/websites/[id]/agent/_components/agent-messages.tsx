@@ -1,6 +1,6 @@
 "use client";
 
-import { BrainIcon } from "@phosphor-icons/react/dist/csr/Brain";
+import { BrainIcon } from "@phosphor-icons/react";
 import type { UIMessage } from "ai";
 import { useEffect, useState } from "react";
 import { AIComponent } from "@/components/ai-elements/ai-component";

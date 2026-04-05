@@ -1,6 +1,6 @@
 "use client";
 
-import { ChartLineIcon } from "@phosphor-icons/react/dist/csr/ChartLine";
+import { ChartLineIcon } from "@phosphor-icons/react";
 import { Chart } from "@/components/ui/composables/chart";
 import dayjs from "@/lib/dayjs";
 

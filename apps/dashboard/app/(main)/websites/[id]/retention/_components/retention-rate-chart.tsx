@@ -1,7 +1,7 @@
 "use client";
 
-import { ChartLineIcon } from "@phosphor-icons/react/dist/csr/ChartLine";
-import { SpinnerIcon } from "@phosphor-icons/react/dist/csr/Spinner";
+import { ChartLineIcon } from "@phosphor-icons/react";
+import { SpinnerIcon } from "@phosphor-icons/react";
 import { useMemo } from "react";
 import { EmptyState } from "@/components/empty-state";
 import { Chart } from "@/components/ui/composables/chart";

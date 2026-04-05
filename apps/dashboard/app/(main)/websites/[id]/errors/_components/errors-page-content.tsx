@@ -1,7 +1,7 @@
 "use client";
 
 import { GATED_FEATURES } from "@databuddy/shared/types/features";
-import { BugIcon } from "@phosphor-icons/react/dist/csr/Bug";
+import { BugIcon } from "@phosphor-icons/react";
 import { useAtom, useAtomValue } from "jotai";
 import { use, useCallback } from "react";
 import { FeatureGate } from "@/components/feature-gate";

@@ -1,12 +1,12 @@
 "use client";
 
-import { ClockCountdownIcon } from "@phosphor-icons/react/dist/csr/ClockCountdown";
-import { CopyIcon } from "@phosphor-icons/react/dist/csr/Copy";
-import { DotsThreeIcon } from "@phosphor-icons/react/dist/csr/DotsThree";
-import { PencilSimpleIcon } from "@phosphor-icons/react/dist/csr/PencilSimple";
-import { QrCodeIcon } from "@phosphor-icons/react/dist/csr/QrCode";
-import { TrashIcon } from "@phosphor-icons/react/dist/csr/Trash";
-import { LinkIcon } from "@phosphor-icons/react/dist/csr/Link";
+import { ClockCountdownIcon } from "@phosphor-icons/react";
+import { CopyIcon } from "@phosphor-icons/react";
+import { DotsThreeIcon } from "@phosphor-icons/react";
+import { PencilSimpleIcon } from "@phosphor-icons/react";
+import { QrCodeIcon } from "@phosphor-icons/react";
+import { TrashIcon } from "@phosphor-icons/react";
+import { LinkIcon } from "@phosphor-icons/react";
 import NextLink from "next/link";
 import { toast } from "sonner";
 import { FaviconImage } from "@/components/analytics/favicon-image";

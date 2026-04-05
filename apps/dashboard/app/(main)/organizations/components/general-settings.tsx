@@ -1,9 +1,9 @@
 "use client";
 
-import { BuildingsIcon } from "@phosphor-icons/react/dist/csr/Buildings";
-import { CheckIcon } from "@phosphor-icons/react/dist/csr/Check";
-import { CopyIcon } from "@phosphor-icons/react/dist/csr/Copy";
-import { FloppyDiskIcon } from "@phosphor-icons/react/dist/csr/FloppyDisk";
+import { BuildingsIcon } from "@phosphor-icons/react";
+import { CheckIcon } from "@phosphor-icons/react";
+import { CopyIcon } from "@phosphor-icons/react";
+import { FloppyDiskIcon } from "@phosphor-icons/react";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { RightSidebar } from "@/components/right-sidebar";

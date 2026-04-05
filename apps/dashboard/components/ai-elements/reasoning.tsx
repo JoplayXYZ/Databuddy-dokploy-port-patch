@@ -1,7 +1,7 @@
 "use client";
 
-import { BrainIcon } from "@phosphor-icons/react/dist/csr/Brain";
-import { CaretDownIcon } from "@phosphor-icons/react/dist/csr/CaretDown";
+import { BrainIcon } from "@phosphor-icons/react";
+import { CaretDownIcon } from "@phosphor-icons/react";
 import { useControllableState } from "@radix-ui/react-use-controllable-state";
 import type { ComponentProps, ReactNode } from "react";
 import { createContext, memo, useContext, useEffect, useState } from "react";

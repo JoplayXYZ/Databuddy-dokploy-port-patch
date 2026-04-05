@@ -1,10 +1,10 @@
 "use client";
 
 import type { DateRange } from "@databuddy/shared/types/analytics";
-import { CalendarDotsIcon } from "@phosphor-icons/react/dist/csr/CalendarDots";
-import { FunnelIcon } from "@phosphor-icons/react/dist/csr/Funnel";
-import { PencilSimpleIcon } from "@phosphor-icons/react/dist/csr/PencilSimple";
-import { PlusIcon } from "@phosphor-icons/react/dist/csr/Plus";
+import { CalendarDotsIcon } from "@phosphor-icons/react";
+import { FunnelIcon } from "@phosphor-icons/react";
+import { PencilSimpleIcon } from "@phosphor-icons/react";
+import { PlusIcon } from "@phosphor-icons/react";
 import { useAtomValue } from "jotai";
 import { useParams } from "next/navigation";
 import { useMemo, useState } from "react";

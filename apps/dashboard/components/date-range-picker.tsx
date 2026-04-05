@@ -1,8 +1,8 @@
 "use client";
 
-import { CalendarDotsIcon } from "@phosphor-icons/react/dist/csr/CalendarDots";
-import { CaretRightIcon } from "@phosphor-icons/react/dist/csr/CaretRight";
-import { CheckIcon } from "@phosphor-icons/react/dist/csr/Check";
+import { CalendarDotsIcon } from "@phosphor-icons/react";
+import { CaretRightIcon } from "@phosphor-icons/react";
+import { CheckIcon } from "@phosphor-icons/react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { DateRange } from "react-day-picker";
 import { Button } from "@/components/ui/button";

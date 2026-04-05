@@ -1,5 +1,5 @@
-import { ArrowSquareOutIcon } from "@phosphor-icons/react/dist/ssr/ArrowSquareOut";
-import { LockSimpleIcon } from "@phosphor-icons/react/dist/ssr/LockSimple";
+import { ArrowSquareOutIcon } from "@phosphor-icons/react";
+import { LockSimpleIcon } from "@phosphor-icons/react";
 import Link from "next/link";
 import { useMemo } from "react";
 import { FaviconImage } from "@/components/analytics/favicon-image";

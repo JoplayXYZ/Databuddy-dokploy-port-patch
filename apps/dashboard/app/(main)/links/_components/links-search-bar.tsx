@@ -1,9 +1,9 @@
 "use client";
 
-import { FunnelIcon } from "@phosphor-icons/react/dist/csr/Funnel";
-import { MagnifyingGlassIcon } from "@phosphor-icons/react/dist/csr/MagnifyingGlass";
-import { SortAscendingIcon } from "@phosphor-icons/react/dist/csr/SortAscending";
-import { XIcon } from "@phosphor-icons/react/dist/csr/X";
+import { FunnelIcon } from "@phosphor-icons/react";
+import { MagnifyingGlassIcon } from "@phosphor-icons/react";
+import { SortAscendingIcon } from "@phosphor-icons/react";
+import { XIcon } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import {
 	DropdownMenu,

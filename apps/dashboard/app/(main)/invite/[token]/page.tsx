@@ -1,17 +1,17 @@
 "use client";
 
 import type { IconProps } from "@phosphor-icons/react";
-import { ArrowRightIcon } from "@phosphor-icons/react/dist/csr/ArrowRight";
-import { CheckCircleIcon } from "@phosphor-icons/react/dist/csr/CheckCircle";
-import { HeartbeatIcon } from "@phosphor-icons/react/dist/csr/Heartbeat";
-import { LightbulbFilamentIcon } from "@phosphor-icons/react/dist/csr/LightbulbFilament";
-import { LightningIcon } from "@phosphor-icons/react/dist/csr/Lightning";
-import { ProhibitIcon } from "@phosphor-icons/react/dist/csr/Prohibit";
-import { RobotIcon } from "@phosphor-icons/react/dist/csr/Robot";
-import { SpinnerGapIcon } from "@phosphor-icons/react/dist/csr/SpinnerGap";
-import { TrendUpIcon } from "@phosphor-icons/react/dist/csr/TrendUp";
-import { WaveformIcon } from "@phosphor-icons/react/dist/csr/Waveform";
-import { XCircleIcon } from "@phosphor-icons/react/dist/csr/XCircle";
+import { ArrowRightIcon } from "@phosphor-icons/react";
+import { CheckCircleIcon } from "@phosphor-icons/react";
+import { HeartbeatIcon } from "@phosphor-icons/react";
+import { LightbulbFilamentIcon } from "@phosphor-icons/react";
+import { LightningIcon } from "@phosphor-icons/react";
+import { ProhibitIcon } from "@phosphor-icons/react";
+import { RobotIcon } from "@phosphor-icons/react";
+import { SpinnerGapIcon } from "@phosphor-icons/react";
+import { TrendUpIcon } from "@phosphor-icons/react";
+import { WaveformIcon } from "@phosphor-icons/react";
+import { XCircleIcon } from "@phosphor-icons/react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
 import type { ForwardRefExoticComponent, RefAttributes } from "react";

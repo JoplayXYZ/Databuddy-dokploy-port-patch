@@ -1,6 +1,6 @@
 "use client";
 
-import { TrashIcon } from "@phosphor-icons/react/dist/csr/Trash";
+import { TrashIcon } from "@phosphor-icons/react";
 import { useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import {

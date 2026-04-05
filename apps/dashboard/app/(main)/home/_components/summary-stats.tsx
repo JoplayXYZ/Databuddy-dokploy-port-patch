@@ -1,12 +1,12 @@
 "use client";
 
-import { EyeIcon } from "@phosphor-icons/react/dist/csr/Eye";
-import { HeartbeatIcon } from "@phosphor-icons/react/dist/csr/Heartbeat";
-import { LockIcon } from "@phosphor-icons/react/dist/csr/Lock";
-import { MinusIcon } from "@phosphor-icons/react/dist/csr/Minus";
-import { TrendDownIcon } from "@phosphor-icons/react/dist/csr/TrendDown";
-import { TrendUpIcon } from "@phosphor-icons/react/dist/csr/TrendUp";
-import { UsersIcon } from "@phosphor-icons/react/dist/csr/Users";
+import { EyeIcon } from "@phosphor-icons/react";
+import { HeartbeatIcon } from "@phosphor-icons/react";
+import { LockIcon } from "@phosphor-icons/react";
+import { MinusIcon } from "@phosphor-icons/react";
+import { TrendDownIcon } from "@phosphor-icons/react";
+import { TrendUpIcon } from "@phosphor-icons/react";
+import { UsersIcon } from "@phosphor-icons/react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";

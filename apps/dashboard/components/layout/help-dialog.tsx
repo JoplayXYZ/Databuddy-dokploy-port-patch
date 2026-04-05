@@ -8,10 +8,10 @@ import {
 	DialogTitle,
 } from "@/components/ui/dialog";
 import { KeyboardShortcuts } from "@/components/ui/keyboard-shortcuts";
-import { BookOpenIcon } from "@phosphor-icons/react/dist/ssr/BookOpen";
-import { ChatCircleIcon } from "@phosphor-icons/react/dist/ssr/ChatCircle";
-import { KeyboardIcon } from "@phosphor-icons/react/dist/ssr/Keyboard";
-import { PlayIcon } from "@phosphor-icons/react/dist/ssr/Play";
+import { BookOpenIcon } from "@phosphor-icons/react";
+import { ChatCircleIcon } from "@phosphor-icons/react";
+import { KeyboardIcon } from "@phosphor-icons/react";
+import { PlayIcon } from "@phosphor-icons/react";
 import Link from "next/link";
 import { useState } from "react";
 

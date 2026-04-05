@@ -1,6 +1,6 @@
 "use client";
 
-import { RocketIcon } from "@phosphor-icons/react/dist/csr/Rocket";
+import { RocketIcon } from "@phosphor-icons/react";
 import { RightSidebar } from "@/components/right-sidebar";
 import { ComingSoon } from "../_components/settings-section";
 

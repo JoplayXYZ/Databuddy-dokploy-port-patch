@@ -1,10 +1,10 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CircleNotchIcon } from "@phosphor-icons/react/dist/csr/CircleNotch";
-import { CopyIcon } from "@phosphor-icons/react/dist/csr/Copy";
-import { LinkSimpleIcon } from "@phosphor-icons/react/dist/csr/LinkSimple";
-import { QrCodeIcon } from "@phosphor-icons/react/dist/csr/QrCode";
+import { CircleNotchIcon } from "@phosphor-icons/react";
+import { CopyIcon } from "@phosphor-icons/react";
+import { LinkSimpleIcon } from "@phosphor-icons/react";
+import { QrCodeIcon } from "@phosphor-icons/react";
 import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { type SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "sonner";

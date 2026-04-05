@@ -1,6 +1,6 @@
 "use client";
 
-import { ArchiveIcon } from "@phosphor-icons/react/dist/csr/Archive";
+import { ArchiveIcon } from "@phosphor-icons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAtom } from "jotai";
 import { useParams } from "next/navigation";

@@ -1,9 +1,9 @@
 "use client";
 
-import { DeviceMobileIcon } from "@phosphor-icons/react/dist/csr/DeviceMobile";
-import { DeviceTabletIcon } from "@phosphor-icons/react/dist/csr/DeviceTablet";
-import { LaptopIcon } from "@phosphor-icons/react/dist/csr/Laptop";
-import { MonitorIcon } from "@phosphor-icons/react/dist/csr/Monitor";
+import { DeviceMobileIcon } from "@phosphor-icons/react";
+import { DeviceTabletIcon } from "@phosphor-icons/react";
+import { LaptopIcon } from "@phosphor-icons/react";
+import { MonitorIcon } from "@phosphor-icons/react";
 import type { CellContext, ColumnDef } from "@tanstack/react-table";
 import { useCallback, useMemo } from "react";
 import { ErrorBoundary } from "@/components/error-boundary";

@@ -1,12 +1,12 @@
-import { ChartLineUpIcon } from "@phosphor-icons/react/dist/ssr/ChartLineUp";
-import { ClockIcon } from "@phosphor-icons/react/dist/ssr/Clock";
-import { CursorClickIcon } from "@phosphor-icons/react/dist/ssr/CursorClick";
-import { DevicesIcon } from "@phosphor-icons/react/dist/ssr/Devices";
-import { GlobeIcon } from "@phosphor-icons/react/dist/ssr/Globe";
-import { LinkIcon } from "@phosphor-icons/react/dist/ssr/Link";
-import { SquaresFourIcon } from "@phosphor-icons/react/dist/ssr/SquaresFour";
-import { UsersIcon } from "@phosphor-icons/react/dist/ssr/Users";
-import { WarningIcon } from "@phosphor-icons/react/dist/ssr/Warning";
+import { ChartLineUpIcon } from "@phosphor-icons/react";
+import { ClockIcon } from "@phosphor-icons/react";
+import { CursorClickIcon } from "@phosphor-icons/react";
+import { DevicesIcon } from "@phosphor-icons/react";
+import { GlobeIcon } from "@phosphor-icons/react";
+import { LinkIcon } from "@phosphor-icons/react";
+import { SquaresFourIcon } from "@phosphor-icons/react";
+import { UsersIcon } from "@phosphor-icons/react";
+import { WarningIcon } from "@phosphor-icons/react";
 import type { ElementType } from "react";
 
 /** Icon mapping for query type categories */

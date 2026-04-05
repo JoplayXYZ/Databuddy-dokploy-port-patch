@@ -1,7 +1,7 @@
 "use client";
 
-import { CheckCircleIcon } from "@phosphor-icons/react/dist/csr/CheckCircle";
-import { CircleNotchIcon } from "@phosphor-icons/react/dist/csr/CircleNotch";
+import { CheckCircleIcon } from "@phosphor-icons/react";
+import { CircleNotchIcon } from "@phosphor-icons/react";
 import type { ComponentProps, ReactNode } from "react";
 import { memo } from "react";
 import { cn } from "@/lib/utils";

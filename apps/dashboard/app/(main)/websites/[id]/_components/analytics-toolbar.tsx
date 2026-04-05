@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowClockwiseIcon } from "@phosphor-icons/react/dist/csr/ArrowClockwise";
+import { ArrowClockwiseIcon } from "@phosphor-icons/react";
 import clsx from "clsx";
 import { useAtom } from "jotai";
 import { useCallback, useMemo } from "react";

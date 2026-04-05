@@ -1,8 +1,8 @@
 "use client";
 
-import { CoinIcon } from "@phosphor-icons/react/dist/csr/Coin";
-import { ShoppingCartIcon } from "@phosphor-icons/react/dist/csr/ShoppingCart";
-import { TrendUpIcon } from "@phosphor-icons/react/dist/csr/TrendUp";
+import { CoinIcon } from "@phosphor-icons/react";
+import { ShoppingCartIcon } from "@phosphor-icons/react";
+import { TrendUpIcon } from "@phosphor-icons/react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface FeedbackCreditsCardProps {

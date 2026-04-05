@@ -1,9 +1,9 @@
 "use client";
 
-import { ArrowRightIcon } from "@phosphor-icons/react/dist/csr/ArrowRight";
-import { ArrowsLeftRightIcon } from "@phosphor-icons/react/dist/csr/ArrowsLeftRight";
-import { BuildingsIcon } from "@phosphor-icons/react/dist/csr/Buildings";
-import { GlobeIcon } from "@phosphor-icons/react/dist/csr/Globe";
+import { ArrowRightIcon } from "@phosphor-icons/react";
+import { ArrowsLeftRightIcon } from "@phosphor-icons/react";
+import { BuildingsIcon } from "@phosphor-icons/react";
+import { GlobeIcon } from "@phosphor-icons/react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { FaviconImage } from "@/components/analytics/favicon-image";

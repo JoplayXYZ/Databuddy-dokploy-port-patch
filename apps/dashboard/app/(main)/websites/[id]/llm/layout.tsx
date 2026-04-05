@@ -6,7 +6,7 @@ import {
 	CurrencyDollarIcon,
 	TableIcon,
 	WarningIcon,
-} from "@phosphor-icons/react/dist/ssr";
+} from "@phosphor-icons/react";
 import { useParams, usePathname } from "next/navigation";
 import { PageNavigation } from "@/components/layout/page-navigation";
 

@@ -2,7 +2,7 @@
 
 import { useSession } from "@/hooks/use-session";
 import { useFlags } from "@databuddy/sdk/react";
-import { CaretDownIcon } from "@phosphor-icons/react/dist/csr/CaretDown";
+import { CaretDownIcon } from "@phosphor-icons/react";
 import { usePathname } from "next/navigation";
 import { useMemo } from "react";
 import { Button } from "@/components/ui/button";

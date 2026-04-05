@@ -1,13 +1,13 @@
 "use client";
 
-import { ArrowCounterClockwiseIcon } from "@phosphor-icons/react/dist/csr/ArrowCounterClockwise";
-import { ArrowsClockwiseIcon } from "@phosphor-icons/react/dist/csr/ArrowsClockwise";
-import { CheckCircleIcon } from "@phosphor-icons/react/dist/csr/CheckCircle";
-import { CircleNotchIcon } from "@phosphor-icons/react/dist/csr/CircleNotch";
-import { XIcon as CloseIcon } from "@phosphor-icons/react/dist/csr/X";
-import { ImageIcon } from "@phosphor-icons/react/dist/csr/Image";
-import { VideoIcon } from "@phosphor-icons/react/dist/csr/Video";
-import { WarningCircleIcon } from "@phosphor-icons/react/dist/csr/WarningCircle";
+import { ArrowCounterClockwiseIcon } from "@phosphor-icons/react";
+import { ArrowsClockwiseIcon } from "@phosphor-icons/react";
+import { CheckCircleIcon } from "@phosphor-icons/react";
+import { CircleNotchIcon } from "@phosphor-icons/react";
+import { XIcon as CloseIcon } from "@phosphor-icons/react";
+import { ImageIcon } from "@phosphor-icons/react";
+import { VideoIcon } from "@phosphor-icons/react";
+import { WarningCircleIcon } from "@phosphor-icons/react";
 import { useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

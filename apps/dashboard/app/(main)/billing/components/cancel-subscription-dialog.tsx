@@ -1,14 +1,14 @@
 "use client";
 
-import { ArrowLeftIcon } from "@phosphor-icons/react/dist/csr/ArrowLeft";
-import { CalendarIcon } from "@phosphor-icons/react/dist/csr/Calendar";
-import { CircleNotchIcon } from "@phosphor-icons/react/dist/csr/CircleNotch";
-import { CurrencyDollarIcon } from "@phosphor-icons/react/dist/csr/CurrencyDollar";
-import { GearIcon } from "@phosphor-icons/react/dist/csr/Gear";
-import { LightningIcon } from "@phosphor-icons/react/dist/csr/Lightning";
-import { QuestionIcon } from "@phosphor-icons/react/dist/csr/Question";
-import { SmileyIcon } from "@phosphor-icons/react/dist/csr/Smiley";
-import { WarningCircleIcon } from "@phosphor-icons/react/dist/csr/WarningCircle";
+import { ArrowLeftIcon } from "@phosphor-icons/react";
+import { CalendarIcon } from "@phosphor-icons/react";
+import { CircleNotchIcon } from "@phosphor-icons/react";
+import { CurrencyDollarIcon } from "@phosphor-icons/react";
+import { GearIcon } from "@phosphor-icons/react";
+import { LightningIcon } from "@phosphor-icons/react";
+import { QuestionIcon } from "@phosphor-icons/react";
+import { SmileyIcon } from "@phosphor-icons/react";
+import { WarningCircleIcon } from "@phosphor-icons/react";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

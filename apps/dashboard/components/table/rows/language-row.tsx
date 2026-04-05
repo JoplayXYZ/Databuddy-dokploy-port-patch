@@ -1,4 +1,4 @@
-import { TranslateIcon } from "@phosphor-icons/react/dist/ssr/Translate";
+import { TranslateIcon } from "@phosphor-icons/react";
 import type { CellContext, ColumnDef } from "@tanstack/react-table";
 import { PercentageBadge } from "@/components/ui/percentage-badge";
 

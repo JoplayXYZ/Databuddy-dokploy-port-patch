@@ -1,9 +1,9 @@
 "use client";
 
-import { ChartBarIcon } from "@phosphor-icons/react/dist/csr/ChartBar";
-import { ChartLineIcon } from "@phosphor-icons/react/dist/csr/ChartLine";
-import { ChartPieIcon } from "@phosphor-icons/react/dist/csr/ChartPie";
-import { WaveformIcon } from "@phosphor-icons/react/dist/csr/Waveform";
+import { ChartBarIcon } from "@phosphor-icons/react";
+import { ChartLineIcon } from "@phosphor-icons/react";
+import { ChartPieIcon } from "@phosphor-icons/react";
+import { WaveformIcon } from "@phosphor-icons/react";
 import { StatCard } from "@/components/analytics/stat-card";
 import { MiniPieChart } from "@/components/charts/pie-chart";
 import {

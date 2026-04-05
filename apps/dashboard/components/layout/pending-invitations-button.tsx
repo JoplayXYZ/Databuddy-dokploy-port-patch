@@ -1,7 +1,7 @@
 "use client";
 
-import { BuildingsIcon } from "@phosphor-icons/react/dist/csr/Buildings";
-import { EnvelopeIcon } from "@phosphor-icons/react/dist/csr/Envelope";
+import { BuildingsIcon } from "@phosphor-icons/react";
+import { EnvelopeIcon } from "@phosphor-icons/react";
 import Link from "next/link";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";

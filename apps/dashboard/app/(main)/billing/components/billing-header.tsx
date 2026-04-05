@@ -1,6 +1,6 @@
 "use client";
 
-import { CreditCardIcon } from "@phosphor-icons/react/dist/csr/CreditCard";
+import { CreditCardIcon } from "@phosphor-icons/react";
 import { usePathname } from "next/navigation";
 import { PageHeader } from "../../websites/_components/page-header";
 

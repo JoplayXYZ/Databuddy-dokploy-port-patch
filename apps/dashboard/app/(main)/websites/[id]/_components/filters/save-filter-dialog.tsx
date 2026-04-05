@@ -3,7 +3,7 @@
 import { filterOptions } from "@databuddy/shared/lists/filters";
 import type { DynamicQueryFilter } from "@databuddy/shared/types/api";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { FloppyDiskIcon } from "@phosphor-icons/react/dist/csr/FloppyDisk";
+import { FloppyDiskIcon } from "@phosphor-icons/react";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";

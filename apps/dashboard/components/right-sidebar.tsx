@@ -1,5 +1,5 @@
 import type { IconProps } from "@phosphor-icons/react";
-import { BookOpenIcon } from "@phosphor-icons/react/dist/ssr/BookOpen";
+import { BookOpenIcon } from "@phosphor-icons/react";
 import type { VariantProps } from "class-variance-authority";
 import type { ComponentType } from "react";
 import { Badge, type badgeVariants } from "@/components/ui/badge";

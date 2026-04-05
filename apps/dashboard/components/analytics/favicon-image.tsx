@@ -1,6 +1,6 @@
 "use client";
 
-import { GlobeIcon } from "@phosphor-icons/react/dist/csr/Globe";
+import { GlobeIcon } from "@phosphor-icons/react";
 import Image from "next/image";
 import { useState } from "react";
 import { resolveFaviconCanonicalHost } from "@/lib/favicon-domain";

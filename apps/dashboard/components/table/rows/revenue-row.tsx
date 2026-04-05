@@ -1,6 +1,6 @@
-import { CurrencyDollarIcon } from "@phosphor-icons/react/dist/ssr/CurrencyDollar";
-import { MapPinIcon } from "@phosphor-icons/react/dist/ssr/MapPin";
-import { QuestionIcon } from "@phosphor-icons/react/dist/ssr/Question";
+import { CurrencyDollarIcon } from "@phosphor-icons/react";
+import { MapPinIcon } from "@phosphor-icons/react";
+import { QuestionIcon } from "@phosphor-icons/react";
 import type { CellContext, ColumnDef } from "@tanstack/react-table";
 import { BrowserIcon, CountryFlag, OSIcon } from "@/components/icon";
 import { PercentageBadge } from "@/components/ui/percentage-badge";

@@ -1,10 +1,10 @@
 "use client";
 
-import { CalendarIcon } from "@phosphor-icons/react/dist/csr/Calendar";
-import { CheckIcon } from "@phosphor-icons/react/dist/csr/Check";
-import { ClockIcon } from "@phosphor-icons/react/dist/csr/Clock";
-import { InfinityIcon } from "@phosphor-icons/react/dist/csr/Infinity";
-import { XIcon } from "@phosphor-icons/react/dist/csr/X";
+import { CalendarIcon } from "@phosphor-icons/react";
+import { CheckIcon } from "@phosphor-icons/react";
+import { ClockIcon } from "@phosphor-icons/react";
+import { InfinityIcon } from "@phosphor-icons/react";
+import { XIcon } from "@phosphor-icons/react";
 import { useCallback, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";

@@ -1,13 +1,13 @@
 "use client";
 
-import { BracketsSquareIcon } from "@phosphor-icons/react/dist/csr/BracketsSquare";
-import { CopyIcon } from "@phosphor-icons/react/dist/csr/Copy";
-import { FunnelIcon } from "@phosphor-icons/react/dist/csr/Funnel";
-import { LightningIcon } from "@phosphor-icons/react/dist/csr/Lightning";
-import { LinkIcon } from "@phosphor-icons/react/dist/csr/Link";
-import { MagnifyingGlassIcon } from "@phosphor-icons/react/dist/csr/MagnifyingGlass";
-import { TagIcon } from "@phosphor-icons/react/dist/csr/Tag";
-import { XIcon } from "@phosphor-icons/react/dist/csr/X";
+import { BracketsSquareIcon } from "@phosphor-icons/react";
+import { CopyIcon } from "@phosphor-icons/react";
+import { FunnelIcon } from "@phosphor-icons/react";
+import { LightningIcon } from "@phosphor-icons/react";
+import { LinkIcon } from "@phosphor-icons/react";
+import { MagnifyingGlassIcon } from "@phosphor-icons/react";
+import { TagIcon } from "@phosphor-icons/react";
+import { XIcon } from "@phosphor-icons/react";
 import { useDebouncedCallback } from "@tanstack/react-pacer";
 import type { ColumnDef } from "@tanstack/react-table";
 import {

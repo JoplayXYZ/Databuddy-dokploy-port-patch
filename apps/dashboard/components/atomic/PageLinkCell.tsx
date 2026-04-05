@@ -1,7 +1,7 @@
 "use client";
 
-import { ArrowSquareOutIcon } from "@phosphor-icons/react/dist/csr/ArrowSquareOut";
-import { FileTextIcon } from "@phosphor-icons/react/dist/csr/FileText";
+import { ArrowSquareOutIcon } from "@phosphor-icons/react";
+import { FileTextIcon } from "@phosphor-icons/react";
 import type React from "react";
 import { formatDomainLink } from "@/app/(main)/websites/[id]/_components/utils/analytics-helpers";
 import { cn } from "@/lib/utils";

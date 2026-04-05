@@ -1,12 +1,12 @@
 "use client";
 
-import { CalendarBlankIcon } from "@phosphor-icons/react/dist/csr/CalendarBlank";
-import { ClockIcon } from "@phosphor-icons/react/dist/csr/Clock";
-import { LightningIcon } from "@phosphor-icons/react/dist/csr/Lightning";
-import { LinkIcon } from "@phosphor-icons/react/dist/csr/Link";
-import { TagIcon } from "@phosphor-icons/react/dist/csr/Tag";
-import { UserIcon } from "@phosphor-icons/react/dist/csr/User";
-import { UsersIcon } from "@phosphor-icons/react/dist/csr/Users";
+import { CalendarBlankIcon } from "@phosphor-icons/react";
+import { ClockIcon } from "@phosphor-icons/react";
+import { LightningIcon } from "@phosphor-icons/react";
+import { LinkIcon } from "@phosphor-icons/react";
+import { TagIcon } from "@phosphor-icons/react";
+import { UserIcon } from "@phosphor-icons/react";
+import { UsersIcon } from "@phosphor-icons/react";
 import Link from "next/link";
 import { notFound, useParams } from "next/navigation";
 import { useMemo } from "react";

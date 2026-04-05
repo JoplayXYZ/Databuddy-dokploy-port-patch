@@ -2,9 +2,9 @@
 
 import { filterOptions } from "@databuddy/shared/lists/filters";
 import type { GoalFilter } from "@databuddy/shared/types/api";
-import { PlusIcon } from "@phosphor-icons/react/dist/csr/Plus";
-import { TargetIcon as Target } from "@phosphor-icons/react/dist/csr/Target";
-import { TrashIcon } from "@phosphor-icons/react/dist/csr/Trash";
+import { PlusIcon } from "@phosphor-icons/react";
+import { TargetIcon as Target } from "@phosphor-icons/react";
+import { TrashIcon } from "@phosphor-icons/react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AutocompleteInput } from "@/components/ui/autocomplete-input";
 import { Button } from "@/components/ui/button";

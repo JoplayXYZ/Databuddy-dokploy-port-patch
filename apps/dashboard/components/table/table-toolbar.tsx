@@ -1,4 +1,4 @@
-import { ArrowsOutSimpleIcon } from "@phosphor-icons/react/dist/ssr/ArrowsOutSimple";
+import { ArrowsOutSimpleIcon } from "@phosphor-icons/react";
 import { SectionBrandOverlay } from "@/components/logo/section-brand-overlay";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";

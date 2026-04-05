@@ -1,9 +1,9 @@
 "use client";
 
 import type { Icon } from "@phosphor-icons/react";
-import { ArrowSquareOutIcon } from "@phosphor-icons/react/dist/csr/ArrowSquareOut";
-import { CommandIcon } from "@phosphor-icons/react/dist/csr/Command";
-import { MagnifyingGlassIcon } from "@phosphor-icons/react/dist/csr/MagnifyingGlass";
+import { ArrowSquareOutIcon } from "@phosphor-icons/react";
+import { CommandIcon } from "@phosphor-icons/react";
+import { MagnifyingGlassIcon } from "@phosphor-icons/react";
 import { useDebouncedCallback } from "@tanstack/react-pacer";
 import { Command as CommandPrimitive } from "cmdk";
 import { usePathname, useRouter } from "next/navigation";

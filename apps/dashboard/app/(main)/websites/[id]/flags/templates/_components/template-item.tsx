@@ -1,10 +1,10 @@
 "use client";
 
-import { ArrowRightIcon } from "@phosphor-icons/react/dist/csr/ArrowRight";
-import { RocketLaunchIcon } from "@phosphor-icons/react/dist/csr/RocketLaunch";
-import { TestTubeIcon } from "@phosphor-icons/react/dist/csr/TestTube";
-import { UsersIcon } from "@phosphor-icons/react/dist/csr/Users";
-import { WarningIcon } from "@phosphor-icons/react/dist/csr/Warning";
+import { ArrowRightIcon } from "@phosphor-icons/react";
+import { RocketLaunchIcon } from "@phosphor-icons/react";
+import { TestTubeIcon } from "@phosphor-icons/react";
+import { UsersIcon } from "@phosphor-icons/react";
+import { WarningIcon } from "@phosphor-icons/react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {

@@ -1,6 +1,6 @@
 "use client";
 
-import { LightningIcon } from "@phosphor-icons/react/dist/csr/Lightning";
+import { LightningIcon } from "@phosphor-icons/react";
 import { TableEmptyState } from "@/components/table/table-empty-state";
 import { EVENT_COLORS } from "./events-trend-chart";
 import { formatCompactNumber } from "./events-utils";

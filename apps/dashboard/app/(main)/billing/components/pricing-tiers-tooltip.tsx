@@ -1,6 +1,6 @@
 "use client";
 
-import { Info } from "@phosphor-icons/react/dist/csr/Info";
+import { Info } from "@phosphor-icons/react";
 import {
 	HoverCard,
 	HoverCardContent,

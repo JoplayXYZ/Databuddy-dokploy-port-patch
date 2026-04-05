@@ -1,6 +1,6 @@
 "use client";
 
-import { ChatTextIcon } from "@phosphor-icons/react/dist/csr/ChatText";
+import { ChatTextIcon } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
 import { EmptyState } from "@/components/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";

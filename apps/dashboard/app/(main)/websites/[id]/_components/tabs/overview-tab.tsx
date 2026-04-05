@@ -1,10 +1,10 @@
 "use client";
 
-import { ChartLineIcon } from "@phosphor-icons/react/dist/csr/ChartLine";
-import { CursorIcon } from "@phosphor-icons/react/dist/csr/Cursor";
-import { GlobeIcon } from "@phosphor-icons/react/dist/csr/Globe";
-import { TimerIcon } from "@phosphor-icons/react/dist/csr/Timer";
-import { UsersIcon } from "@phosphor-icons/react/dist/csr/Users";
+import { ChartLineIcon } from "@phosphor-icons/react";
+import { CursorIcon } from "@phosphor-icons/react";
+import { GlobeIcon } from "@phosphor-icons/react";
+import { TimerIcon } from "@phosphor-icons/react";
+import { UsersIcon } from "@phosphor-icons/react";
 import type { ColumnDef } from "@tanstack/react-table";
 import { useAtom } from "jotai";
 import dynamic from "next/dynamic";

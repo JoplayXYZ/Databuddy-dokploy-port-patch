@@ -1,12 +1,12 @@
 "use client";
 
-import { DotsThreeIcon } from "@phosphor-icons/react/dist/csr/DotsThree";
-import { EnvelopeIcon } from "@phosphor-icons/react/dist/csr/Envelope";
-import { PencilSimpleIcon } from "@phosphor-icons/react/dist/csr/PencilSimple";
-import { TrashIcon } from "@phosphor-icons/react/dist/csr/Trash";
-import { UserIcon } from "@phosphor-icons/react/dist/csr/User";
-import { UsersThreeIcon } from "@phosphor-icons/react/dist/csr/UsersThree";
-import { WrenchIcon } from "@phosphor-icons/react/dist/csr/Wrench";
+import { DotsThreeIcon } from "@phosphor-icons/react";
+import { EnvelopeIcon } from "@phosphor-icons/react";
+import { PencilSimpleIcon } from "@phosphor-icons/react";
+import { TrashIcon } from "@phosphor-icons/react";
+import { UserIcon } from "@phosphor-icons/react";
+import { UsersThreeIcon } from "@phosphor-icons/react";
+import { WrenchIcon } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import {
 	DropdownMenu,

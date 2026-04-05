@@ -1,9 +1,9 @@
 "use client";
 
-import { CaretRightIcon } from "@phosphor-icons/react/dist/csr/CaretRight";
-import { DotsThreeIcon } from "@phosphor-icons/react/dist/csr/DotsThree";
-import { PencilSimpleIcon } from "@phosphor-icons/react/dist/csr/PencilSimple";
-import { TrashIcon } from "@phosphor-icons/react/dist/csr/Trash";
+import { CaretRightIcon } from "@phosphor-icons/react";
+import { DotsThreeIcon } from "@phosphor-icons/react";
+import { PencilSimpleIcon } from "@phosphor-icons/react";
+import { TrashIcon } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { List } from "@/components/ui/composables/list";
 import {

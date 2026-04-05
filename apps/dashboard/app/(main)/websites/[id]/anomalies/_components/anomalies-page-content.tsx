@@ -1,7 +1,7 @@
 "use client";
 
-import { CheckCircleIcon } from "@phosphor-icons/react/dist/csr/CheckCircle";
-import { WarningIcon } from "@phosphor-icons/react/dist/csr/Warning";
+import { CheckCircleIcon } from "@phosphor-icons/react";
+import { WarningIcon } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
 import { use, useMemo } from "react";
 import { List } from "@/components/ui/composables/list";

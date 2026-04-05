@@ -1,8 +1,8 @@
 "use client";
 
-import { ChatCircleDotsIcon } from "@phosphor-icons/react/dist/csr/ChatCircleDots";
-import { ClockCounterClockwiseIcon } from "@phosphor-icons/react/dist/csr/ClockCounterClockwise";
-import { TrashIcon } from "@phosphor-icons/react/dist/csr/Trash";
+import { ChatCircleDotsIcon } from "@phosphor-icons/react";
+import { ClockCounterClockwiseIcon } from "@phosphor-icons/react";
+import { TrashIcon } from "@phosphor-icons/react";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";

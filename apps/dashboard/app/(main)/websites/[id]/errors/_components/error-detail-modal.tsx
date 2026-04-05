@@ -1,15 +1,15 @@
 "use client";
 
-import { ArrowSquareOutIcon } from "@phosphor-icons/react/dist/csr/ArrowSquareOut";
-import { CheckIcon } from "@phosphor-icons/react/dist/csr/Check";
-import { ClockIcon } from "@phosphor-icons/react/dist/csr/Clock";
-import { CodeIcon } from "@phosphor-icons/react/dist/csr/Code";
-import { CopyIcon } from "@phosphor-icons/react/dist/csr/Copy";
-import { GlobeIcon } from "@phosphor-icons/react/dist/csr/Globe";
-import { HashIcon } from "@phosphor-icons/react/dist/csr/Hash";
-import { LinkIcon } from "@phosphor-icons/react/dist/csr/Link";
-import { StackIcon } from "@phosphor-icons/react/dist/csr/Stack";
-import { UserIcon } from "@phosphor-icons/react/dist/csr/User";
+import { ArrowSquareOutIcon } from "@phosphor-icons/react";
+import { CheckIcon } from "@phosphor-icons/react";
+import { ClockIcon } from "@phosphor-icons/react";
+import { CodeIcon } from "@phosphor-icons/react";
+import { CopyIcon } from "@phosphor-icons/react";
+import { GlobeIcon } from "@phosphor-icons/react";
+import { HashIcon } from "@phosphor-icons/react";
+import { LinkIcon } from "@phosphor-icons/react";
+import { StackIcon } from "@phosphor-icons/react";
+import { UserIcon } from "@phosphor-icons/react";
 import type { ReactNode } from "react";
 import { useState } from "react";
 import { toast } from "sonner";

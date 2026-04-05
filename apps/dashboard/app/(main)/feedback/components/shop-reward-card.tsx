@@ -1,6 +1,6 @@
 "use client";
 
-import { LightningIcon } from "@phosphor-icons/react/dist/csr/Lightning";
+import { LightningIcon } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 

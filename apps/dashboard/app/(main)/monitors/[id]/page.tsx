@@ -1,14 +1,14 @@
 "use client";
 
-import { ArrowClockwiseIcon } from "@phosphor-icons/react/dist/csr/ArrowClockwise";
-import { ArrowLeftIcon } from "@phosphor-icons/react/dist/csr/ArrowLeft";
-import { ArrowSquareOutIcon } from "@phosphor-icons/react/dist/csr/ArrowSquareOut";
-import { GlobeIcon } from "@phosphor-icons/react/dist/csr/Globe";
-import { HeartbeatIcon } from "@phosphor-icons/react/dist/csr/Heartbeat";
-import { PauseIcon } from "@phosphor-icons/react/dist/csr/Pause";
-import { PencilIcon } from "@phosphor-icons/react/dist/csr/Pencil";
-import { PlayIcon } from "@phosphor-icons/react/dist/csr/Play";
-import { TrashIcon } from "@phosphor-icons/react/dist/csr/Trash";
+import { ArrowClockwiseIcon } from "@phosphor-icons/react";
+import { ArrowLeftIcon } from "@phosphor-icons/react";
+import { ArrowSquareOutIcon } from "@phosphor-icons/react";
+import { GlobeIcon } from "@phosphor-icons/react";
+import { HeartbeatIcon } from "@phosphor-icons/react";
+import { PauseIcon } from "@phosphor-icons/react";
+import { PencilIcon } from "@phosphor-icons/react";
+import { PlayIcon } from "@phosphor-icons/react";
+import { TrashIcon } from "@phosphor-icons/react";
 import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
 import dynamic from "next/dynamic";
 import Link from "next/link";

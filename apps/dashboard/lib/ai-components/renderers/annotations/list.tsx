@@ -1,11 +1,11 @@
 "use client";
 
-import { CalendarIcon } from "@phosphor-icons/react/dist/csr/Calendar";
-import { DotsThreeIcon } from "@phosphor-icons/react/dist/csr/DotsThree";
-import { NoteIcon } from "@phosphor-icons/react/dist/csr/Note";
-import { PencilSimpleIcon } from "@phosphor-icons/react/dist/csr/PencilSimple";
-import { PlusIcon } from "@phosphor-icons/react/dist/csr/Plus";
-import { TrashIcon } from "@phosphor-icons/react/dist/csr/Trash";
+import { CalendarIcon } from "@phosphor-icons/react";
+import { DotsThreeIcon } from "@phosphor-icons/react";
+import { NoteIcon } from "@phosphor-icons/react";
+import { PencilSimpleIcon } from "@phosphor-icons/react";
+import { PlusIcon } from "@phosphor-icons/react";
+import { TrashIcon } from "@phosphor-icons/react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";

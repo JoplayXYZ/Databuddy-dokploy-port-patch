@@ -1,4 +1,4 @@
-import { CircleNotchIcon } from "@phosphor-icons/react/dist/ssr/CircleNotch";
+import { CircleNotchIcon } from "@phosphor-icons/react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";

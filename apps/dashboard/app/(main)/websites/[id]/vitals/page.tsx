@@ -1,6 +1,6 @@
 "use client";
 
-import { HeartbeatIcon } from "@phosphor-icons/react/dist/csr/Heartbeat";
+import { HeartbeatIcon } from "@phosphor-icons/react";
 import { useAtom } from "jotai";
 import { useParams } from "next/navigation";
 import { useCallback, useMemo } from "react";

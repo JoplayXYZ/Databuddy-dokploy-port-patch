@@ -1,6 +1,6 @@
 "use client";
 
-import { PlanetIcon } from "@phosphor-icons/react/dist/csr/Planet";
+import { PlanetIcon } from "@phosphor-icons/react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAtom, useSetAtom } from "jotai";
 import { useParams } from "next/navigation";

@@ -1,8 +1,8 @@
 "use client";
 
-import { ArrowLeftIcon } from "@phosphor-icons/react/dist/csr/ArrowLeft";
-import { ShieldWarningIcon } from "@phosphor-icons/react/dist/csr/ShieldWarning";
-import { SpinnerIcon } from "@phosphor-icons/react/dist/csr/Spinner";
+import { ArrowLeftIcon } from "@phosphor-icons/react";
+import { ShieldWarningIcon } from "@phosphor-icons/react";
+import { SpinnerIcon } from "@phosphor-icons/react";
 import Link from "next/link";
 import { parseAsString, useQueryState } from "nuqs";
 import { Suspense } from "react";

@@ -1,9 +1,9 @@
 "use client";
 
-import { ArrowClockwiseIcon } from "@phosphor-icons/react/dist/csr/ArrowClockwise";
-import { HeartbeatIcon } from "@phosphor-icons/react/dist/csr/Heartbeat";
-import { PlusIcon } from "@phosphor-icons/react/dist/csr/Plus";
-import { UserPlusIcon } from "@phosphor-icons/react/dist/csr/UserPlus";
+import { ArrowClockwiseIcon } from "@phosphor-icons/react";
+import { HeartbeatIcon } from "@phosphor-icons/react";
+import { PlusIcon } from "@phosphor-icons/react";
+import { UserPlusIcon } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
 import { Suspense, useState } from "react";
 import { PageHeader } from "@/app/(main)/websites/_components/page-header";

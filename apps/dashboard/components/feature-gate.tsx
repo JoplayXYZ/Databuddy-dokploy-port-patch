@@ -6,12 +6,12 @@ import {
 	getMinimumPlanForFeature,
 	PLAN_IDS,
 } from "@databuddy/shared/types/features";
-import { ArrowRightIcon } from "@phosphor-icons/react/dist/csr/ArrowRight";
-import { CrownIcon } from "@phosphor-icons/react/dist/csr/Crown";
-import { LockSimpleIcon } from "@phosphor-icons/react/dist/csr/LockSimple";
-import { RocketLaunchIcon } from "@phosphor-icons/react/dist/csr/RocketLaunch";
-import { SparkleIcon } from "@phosphor-icons/react/dist/csr/Sparkle";
-import { StarIcon } from "@phosphor-icons/react/dist/csr/Star";
+import { ArrowRightIcon } from "@phosphor-icons/react";
+import { CrownIcon } from "@phosphor-icons/react";
+import { LockSimpleIcon } from "@phosphor-icons/react";
+import { RocketLaunchIcon } from "@phosphor-icons/react";
+import { SparkleIcon } from "@phosphor-icons/react";
+import { StarIcon } from "@phosphor-icons/react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { useBillingContext } from "@/components/providers/billing-provider";

@@ -1,6 +1,6 @@
 "use client";
 
-import { WarningIcon } from "@phosphor-icons/react/dist/csr/Warning";
+import { WarningIcon } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { usePathname } from "next/navigation";

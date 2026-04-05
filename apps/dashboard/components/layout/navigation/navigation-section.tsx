@@ -1,6 +1,6 @@
 import { useFlags } from "@databuddy/sdk/react";
 import { FEATURE_METADATA } from "@databuddy/shared/types/features";
-import { CaretDownIcon } from "@phosphor-icons/react/dist/ssr/CaretDown";
+import { CaretDownIcon } from "@phosphor-icons/react";
 import clsx from "clsx";
 import { memo } from "react";
 import { useBillingContext } from "@/components/providers/billing-provider";

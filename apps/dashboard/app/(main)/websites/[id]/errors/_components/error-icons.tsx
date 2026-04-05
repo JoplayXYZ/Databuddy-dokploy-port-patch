@@ -1,12 +1,12 @@
-import { BugIcon } from "@phosphor-icons/react/dist/ssr/Bug";
-import { CodeIcon } from "@phosphor-icons/react/dist/ssr/Code";
-import { FileCodeIcon } from "@phosphor-icons/react/dist/ssr/FileCode";
-import { LaptopIcon } from "@phosphor-icons/react/dist/ssr/Laptop";
-import { MonitorIcon } from "@phosphor-icons/react/dist/ssr/Monitor";
-import { NetworkIcon } from "@phosphor-icons/react/dist/ssr/Network";
-import { PhoneIcon } from "@phosphor-icons/react/dist/ssr/Phone";
-import { TableIcon } from "@phosphor-icons/react/dist/ssr/Table";
-import { TerminalIcon } from "@phosphor-icons/react/dist/ssr/Terminal";
+import { BugIcon } from "@phosphor-icons/react";
+import { CodeIcon } from "@phosphor-icons/react";
+import { FileCodeIcon } from "@phosphor-icons/react";
+import { LaptopIcon } from "@phosphor-icons/react";
+import { MonitorIcon } from "@phosphor-icons/react";
+import { NetworkIcon } from "@phosphor-icons/react";
+import { PhoneIcon } from "@phosphor-icons/react";
+import { TableIcon } from "@phosphor-icons/react";
+import { TerminalIcon } from "@phosphor-icons/react";
 
 export const getErrorTypeIcon = (type: string) => {
 	if (!type) {

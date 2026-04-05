@@ -1,10 +1,10 @@
 "use client";
 
-import { CheckCircleIcon } from "@phosphor-icons/react/dist/csr/CheckCircle";
-import { InfoIcon } from "@phosphor-icons/react/dist/csr/Info";
-import { SpinnerIcon } from "@phosphor-icons/react/dist/csr/Spinner";
-import { WarningCircleIcon } from "@phosphor-icons/react/dist/csr/WarningCircle";
-import { XCircleIcon } from "@phosphor-icons/react/dist/csr/XCircle";
+import { CheckCircleIcon } from "@phosphor-icons/react";
+import { InfoIcon } from "@phosphor-icons/react";
+import { SpinnerIcon } from "@phosphor-icons/react";
+import { WarningCircleIcon } from "@phosphor-icons/react";
+import { XCircleIcon } from "@phosphor-icons/react";
 import { useTheme } from "next-themes";
 import { Toaster as Sonner, type ToasterProps } from "sonner";
 

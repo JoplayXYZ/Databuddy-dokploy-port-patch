@@ -1,10 +1,10 @@
 "use client";
 
 import type { SessionEvent } from "@databuddy/shared/types/sessions";
-import { CursorClickIcon } from "@phosphor-icons/react/dist/csr/CursorClick";
-import { FileTextIcon } from "@phosphor-icons/react/dist/csr/FileText";
-import { LightningIcon } from "@phosphor-icons/react/dist/csr/Lightning";
-import { SparkleIcon } from "@phosphor-icons/react/dist/csr/Sparkle";
+import { CursorClickIcon } from "@phosphor-icons/react";
+import { FileTextIcon } from "@phosphor-icons/react";
+import { LightningIcon } from "@phosphor-icons/react";
+import { SparkleIcon } from "@phosphor-icons/react";
 import { Badge } from "@/components/ui/badge";
 import { formatLocalTime } from "@/lib/time";
 import { cleanUrl, formatPropertyValue, getDisplayPath } from "./session-utils";

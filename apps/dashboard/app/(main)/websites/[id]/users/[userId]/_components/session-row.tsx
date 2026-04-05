@@ -7,9 +7,9 @@ import type {
 	SessionReferrer,
 	SessionRowProps,
 } from "@databuddy/shared/types/sessions";
-import { ArrowSquareOutIcon } from "@phosphor-icons/react/dist/csr/ArrowSquareOut";
-import { CaretDownIcon } from "@phosphor-icons/react/dist/csr/CaretDown";
-import { CaretRightIcon } from "@phosphor-icons/react/dist/csr/CaretRight";
+import { ArrowSquareOutIcon } from "@phosphor-icons/react";
+import { CaretDownIcon } from "@phosphor-icons/react";
+import { CaretRightIcon } from "@phosphor-icons/react";
 import React, { useCallback } from "react";
 import { FaviconImage } from "@/components/analytics/favicon-image";
 import { BrowserIcon, CountryFlag, OSIcon } from "@/components/icon";

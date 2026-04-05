@@ -1,10 +1,10 @@
 "use client";
 
-import { ArrowRightIcon } from "@phosphor-icons/react/dist/csr/ArrowRight";
-import { BrainIcon } from "@phosphor-icons/react/dist/csr/Brain";
-import { ChartBarIcon } from "@phosphor-icons/react/dist/csr/ChartBar";
-import { LightningIcon } from "@phosphor-icons/react/dist/csr/Lightning";
-import { TableIcon } from "@phosphor-icons/react/dist/csr/Table";
+import { ArrowRightIcon } from "@phosphor-icons/react";
+import { BrainIcon } from "@phosphor-icons/react";
+import { ChartBarIcon } from "@phosphor-icons/react";
+import { LightningIcon } from "@phosphor-icons/react";
+import { TableIcon } from "@phosphor-icons/react";
 import { useSetAtom } from "jotai";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useRef } from "react";

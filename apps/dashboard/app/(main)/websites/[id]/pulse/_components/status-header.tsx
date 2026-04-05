@@ -1,10 +1,10 @@
 "use client";
 
-import { CircleIcon } from "@phosphor-icons/react/dist/csr/Circle";
-import { PauseIcon } from "@phosphor-icons/react/dist/csr/Pause";
-import { PencilIcon } from "@phosphor-icons/react/dist/csr/Pencil";
-import { PlayIcon } from "@phosphor-icons/react/dist/csr/Play";
-import { TrashIcon } from "@phosphor-icons/react/dist/csr/Trash";
+import { CircleIcon } from "@phosphor-icons/react";
+import { PauseIcon } from "@phosphor-icons/react";
+import { PencilIcon } from "@phosphor-icons/react";
+import { PlayIcon } from "@phosphor-icons/react";
+import { TrashIcon } from "@phosphor-icons/react";
 import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";

@@ -1,5 +1,5 @@
-import { KeyIcon } from "@phosphor-icons/react/dist/ssr/Key";
-import { PlusIcon } from "@phosphor-icons/react/dist/ssr/Plus";
+import { KeyIcon } from "@phosphor-icons/react";
+import { PlusIcon } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
 import dayjs from "@/lib/dayjs";
 import { orpc } from "@/lib/orpc";

@@ -1,6 +1,6 @@
 "use client";
 
-import { WarningIcon } from "@phosphor-icons/react/dist/csr/Warning";
+import { WarningIcon } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {

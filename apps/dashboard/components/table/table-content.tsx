@@ -1,6 +1,6 @@
-import { ArrowDownIcon } from "@phosphor-icons/react/dist/ssr/ArrowDown";
-import { ArrowUpIcon } from "@phosphor-icons/react/dist/ssr/ArrowUp";
-import { DatabaseIcon } from "@phosphor-icons/react/dist/ssr/Database";
+import { ArrowDownIcon } from "@phosphor-icons/react";
+import { ArrowUpIcon } from "@phosphor-icons/react";
+import { DatabaseIcon } from "@phosphor-icons/react";
 import { flexRender, type Table } from "@tanstack/react-table";
 import type React from "react";
 import { Fragment, memo, useCallback, useState } from "react";

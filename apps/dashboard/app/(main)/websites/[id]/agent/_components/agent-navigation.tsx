@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeftIcon } from "@phosphor-icons/react/dist/csr/ArrowLeft";
+import { ArrowLeftIcon } from "@phosphor-icons/react";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 

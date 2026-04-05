@@ -1,8 +1,8 @@
 "use client";
 
-import { MinusIcon } from "@phosphor-icons/react/dist/csr/Minus";
-import { TrendDownIcon } from "@phosphor-icons/react/dist/csr/TrendDown";
-import { TrendUpIcon } from "@phosphor-icons/react/dist/csr/TrendUp";
+import { MinusIcon } from "@phosphor-icons/react";
+import { TrendDownIcon } from "@phosphor-icons/react";
+import { TrendUpIcon } from "@phosphor-icons/react";
 import type { ElementType } from "react";
 import {
 	Chart,

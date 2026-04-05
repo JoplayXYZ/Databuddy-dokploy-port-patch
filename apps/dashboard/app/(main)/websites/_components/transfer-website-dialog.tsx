@@ -2,9 +2,9 @@
 
 import type { WebsiteOutput } from "@databuddy/rpc";
 import type { Website } from "@databuddy/shared/types/website";
-import { ArrowRightIcon } from "@phosphor-icons/react/dist/csr/ArrowRight";
-import { ArrowSquareOutIcon } from "@phosphor-icons/react/dist/csr/ArrowSquareOut";
-import { WarningIcon } from "@phosphor-icons/react/dist/csr/Warning";
+import { ArrowRightIcon } from "@phosphor-icons/react";
+import { ArrowSquareOutIcon } from "@phosphor-icons/react";
+import { WarningIcon } from "@phosphor-icons/react";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";

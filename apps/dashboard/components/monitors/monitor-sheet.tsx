@@ -1,9 +1,9 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CodeIcon } from "@phosphor-icons/react/dist/csr/Code";
-import { GearIcon } from "@phosphor-icons/react/dist/csr/Gear";
-import { InfoIcon } from "@phosphor-icons/react/dist/csr/Info";
+import { CodeIcon } from "@phosphor-icons/react";
+import { GearIcon } from "@phosphor-icons/react";
+import { InfoIcon } from "@phosphor-icons/react";
 import { useMutation } from "@tanstack/react-query";
 import clsx from "clsx";
 import { useEffect, useState } from "react";

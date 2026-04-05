@@ -1,7 +1,7 @@
 "use client";
 
 import { GATED_FEATURES } from "@databuddy/shared/types/features";
-import { FlagIcon } from "@phosphor-icons/react/dist/csr/Flag";
+import { FlagIcon } from "@phosphor-icons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAtom } from "jotai";
 import { useParams } from "next/navigation";

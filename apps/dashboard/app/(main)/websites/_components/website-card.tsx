@@ -3,17 +3,17 @@ import type {
 	ProcessedMiniChartData,
 	Website,
 } from "@databuddy/shared/types/website";
-import { ArrowSquareOutIcon } from "@phosphor-icons/react/dist/ssr/ArrowSquareOut";
-import { ArrowsLeftRightIcon } from "@phosphor-icons/react/dist/ssr/ArrowsLeftRight";
-import { CodeIcon } from "@phosphor-icons/react/dist/ssr/Code";
-import { CopyIcon } from "@phosphor-icons/react/dist/ssr/Copy";
-import { EyeIcon } from "@phosphor-icons/react/dist/ssr/Eye";
-import { GearIcon } from "@phosphor-icons/react/dist/ssr/Gear";
-import { MinusIcon } from "@phosphor-icons/react/dist/ssr/Minus";
-import { PencilSimpleIcon } from "@phosphor-icons/react/dist/ssr/PencilSimple";
-import { TrashIcon } from "@phosphor-icons/react/dist/ssr/Trash";
-import { TrendDownIcon } from "@phosphor-icons/react/dist/ssr/TrendDown";
-import { TrendUpIcon } from "@phosphor-icons/react/dist/ssr/TrendUp";
+import { ArrowSquareOutIcon } from "@phosphor-icons/react";
+import { ArrowsLeftRightIcon } from "@phosphor-icons/react";
+import { CodeIcon } from "@phosphor-icons/react";
+import { CopyIcon } from "@phosphor-icons/react";
+import { EyeIcon } from "@phosphor-icons/react";
+import { GearIcon } from "@phosphor-icons/react";
+import { MinusIcon } from "@phosphor-icons/react";
+import { PencilSimpleIcon } from "@phosphor-icons/react";
+import { TrashIcon } from "@phosphor-icons/react";
+import { TrendDownIcon } from "@phosphor-icons/react";
+import { TrendUpIcon } from "@phosphor-icons/react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter } from "next/navigation";

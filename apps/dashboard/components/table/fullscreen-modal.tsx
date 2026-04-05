@@ -1,4 +1,4 @@
-import { XIcon } from "@phosphor-icons/react/dist/ssr/X";
+import { XIcon } from "@phosphor-icons/react";
 import {
 	type ColumnDef,
 	getCoreRowModel,

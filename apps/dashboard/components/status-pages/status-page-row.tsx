@@ -1,12 +1,12 @@
 "use client";
 
-import { ArrowSquareOutIcon } from "@phosphor-icons/react/dist/csr/ArrowSquareOut";
-import { BrowserIcon } from "@phosphor-icons/react/dist/csr/Browser";
-import { CopyIcon } from "@phosphor-icons/react/dist/csr/Copy";
-import { DotsThreeIcon } from "@phosphor-icons/react/dist/csr/DotsThree";
-import { HeartbeatIcon } from "@phosphor-icons/react/dist/csr/Heartbeat";
-import { PencilSimpleIcon } from "@phosphor-icons/react/dist/csr/PencilSimple";
-import { TrashIcon } from "@phosphor-icons/react/dist/csr/Trash";
+import { ArrowSquareOutIcon } from "@phosphor-icons/react";
+import { BrowserIcon } from "@phosphor-icons/react";
+import { CopyIcon } from "@phosphor-icons/react";
+import { DotsThreeIcon } from "@phosphor-icons/react";
+import { HeartbeatIcon } from "@phosphor-icons/react";
+import { PencilSimpleIcon } from "@phosphor-icons/react";
+import { TrashIcon } from "@phosphor-icons/react";
 import { useMutation } from "@tanstack/react-query";
 import Link from "next/link";
 import { useCallback, useState } from "react";
