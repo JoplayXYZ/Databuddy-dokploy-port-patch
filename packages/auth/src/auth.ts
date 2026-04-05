@@ -17,6 +17,7 @@ import {
 	type NotificationResult,
 	sendSlackWebhook,
 } from "@databuddy/notifications";
+import { rateLimit, getRedisCache } from "@databuddy/redis";
 import { createId } from "@databuddy/shared/utils/ids";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { betterAuth } from "better-auth/minimal";
@@ -93,6 +94,34 @@ export const auth = betterAuth({
 	database: drizzleAdapter(db, {
 		provider: "pg",
 	}),
+	secondaryStorage: {
+		get: async (key) => {
+			const value = await getRedisCache().get(key);
+			return value ?? null;
+		},
+		set: async (key, value, ttl) => {
+			if (ttl) {
+				await getRedisCache().set(key, value, "EX", ttl);
+			} else {
+				await getRedisCache().set(key, value);
+			}
+		},
+		delete: async (key) => {
+			await getRedisCache().del(key);
+		},
+	},
+	rateLimit: {
+		window: 60,
+		max: 100,
+		storage: "secondary-storage",
+		customRules: {
+			"/sign-up/email": { window: 60, max: 3 },
+			"/sign-in/email": { window: 10, max: 3 },
+			"/forget-password": { window: 60, max: 3 },
+			"/magic-link/send": { window: 60, max: 3 },
+			"/email-otp/send": { window: 60, max: 3 },
+		},
+	},
 	account: {
 		accountLinking: {
 			enabled: true,
@@ -212,6 +241,11 @@ export const auth = betterAuth({
 		autoSignIn: false,
 		requireEmailVerification: process.env.NODE_ENV === "production",
 		sendResetPassword: async ({ user, url }: { user: any; url: string }) => {
+			const { success } = await rateLimit(`reset:${user.email}`, 3, 3600);
+			if (!success) {
+				return;
+			}
+
 			const resend = new Resend(process.env.RESEND_API_KEY as string);
 			await resend.emails.send({
 				from: "no-reply@databuddy.cc",
@@ -232,6 +266,11 @@ export const auth = betterAuth({
 			user: any;
 			url: string;
 		}) => {
+			const { success } = await rateLimit(`verify:${user.email}`, 3, 900);
+			if (!success) {
+				return;
+			}
+
 			const resend = new Resend(process.env.RESEND_API_KEY as string);
 			await resend.emails.send({
 				from: "no-reply@databuddy.cc",
@@ -259,6 +298,11 @@ export const auth = betterAuth({
 		emailOTP({
 			// biome-ignore lint/suspicious/useAwait: we don't want to await here
 			async sendVerificationOTP({ email, otp, type }) {
+				const { success } = await rateLimit(`otp:${email}`, 3, 900);
+				if (!success) {
+					return;
+				}
+
 				const resend = new Resend(process.env.RESEND_API_KEY as string);
 
 				let subject = "Your verification code";
@@ -283,7 +327,12 @@ export const auth = betterAuth({
 			},
 		}),
 		magicLink({
-			sendMagicLink: ({ email, url }) => {
+			sendMagicLink: async ({ email, url }) => {
+				const { success } = await rateLimit(`magic:${email}`, 3, 900);
+				if (!success) {
+					return;
+				}
+
 				const resend = new Resend(process.env.RESEND_API_KEY as string);
 				resend.emails.send({
 					from: "no-reply@databuddy.cc",
@@ -334,6 +383,15 @@ export const auth = betterAuth({
 				organization,
 				invitation,
 			}) => {
+				const { success } = await rateLimit(
+					`invite:${organization.id}`,
+					5,
+					3600
+				);
+				if (!success) {
+					return;
+				}
+
 				const invitationLink = `https://app.databuddy.cc/invitations/${invitation.id}`;
 				const resend = new Resend(process.env.RESEND_API_KEY as string);
 				await resend.emails.send({
