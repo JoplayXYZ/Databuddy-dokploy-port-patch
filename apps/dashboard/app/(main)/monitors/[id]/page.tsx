@@ -5,6 +5,7 @@ import { ArrowLeftIcon } from "@phosphor-icons/react";
 import { ArrowSquareOutIcon } from "@phosphor-icons/react";
 import { GlobeIcon } from "@phosphor-icons/react";
 import { HeartbeatIcon } from "@phosphor-icons/react";
+import { LightningIcon } from "@phosphor-icons/react";
 import { PauseIcon } from "@phosphor-icons/react";
 import { PencilIcon } from "@phosphor-icons/react";
 import { PlayIcon } from "@phosphor-icons/react";
@@ -206,6 +207,9 @@ export default function MonitorDetailsPage() {
 	});
 	const deleteMutation = useMutation({
 		...orpc.uptime.deleteSchedule.mutationOptions(),
+	});
+	const manualCheckMutation = useMutation({
+		...orpc.uptime.manualCheck.mutationOptions(),
 	});
 
 	const transferMutation = useMutation({
@@ -476,6 +480,26 @@ export default function MonitorDetailsPage() {
 		setIsRefreshing(false);
 	};
 
+	const handleManualCheck = async () => {
+		if (!schedule) {
+			return;
+		}
+		try {
+			await manualCheckMutation.mutateAsync({ scheduleId: schedule.id });
+			toast.success("Check triggered");
+			setTimeout(() => {
+				refetchSchedule();
+				refetchUptimeData();
+				refetchHeatmapData();
+				refetchLatencyData();
+			}, 3000);
+		} catch (error) {
+			const errorMessage =
+				error instanceof Error ? error.message : "Failed to trigger check";
+			toast.error(errorMessage);
+		}
+	};
+
 	const handleTransfer = async (targetOrganizationId: string) => {
 		if (!schedule) {
 			return;
@@ -568,6 +592,21 @@ export default function MonitorDetailsPage() {
 							<ArrowClockwiseIcon
 								className={isRefreshing ? "animate-spin" : ""}
 							/>
+						</Button>
+						<Button
+							aria-label="Trigger manual check"
+							disabled={manualCheckMutation.isPending || schedule.isPaused}
+							onClick={handleManualCheck}
+							size="sm"
+							type="button"
+							variant="outline"
+						>
+							<LightningIcon
+								className={manualCheckMutation.isPending ? "animate-spin" : ""}
+								size={16}
+								weight="fill"
+							/>
+							Check Now
 						</Button>
 						<Button
 							disabled={

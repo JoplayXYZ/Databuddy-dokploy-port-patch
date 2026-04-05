@@ -1,4 +1,5 @@
 import { and, db, eq, uptimeSchedules } from "@databuddy/db";
+import { rateLimit } from "@databuddy/redis";
 import { Client } from "@upstash/qstash";
 import { randomUUIDv7 } from "bun";
 import { z } from "zod";
@@ -545,6 +546,49 @@ export const uptimeRouter = {
 				"Monitor transferred"
 			);
 
+			return { success: true };
+		}),
+
+	manualCheck: monitorsProcedure
+		.route({
+			description:
+				"Triggers an immediate uptime check for a monitor. Monitor must not be paused.",
+			method: "POST",
+			path: "/uptime/manualCheck",
+			summary: "Manual check",
+			tags: ["Uptime"],
+		})
+		.input(z.object({ scheduleId: z.string() }))
+		.output(z.object({ success: z.literal(true) }))
+		.handler(async ({ context, input }) => {
+			const schedule = await getScheduleAndAuthorize(input.scheduleId, context);
+
+			if (schedule.isPaused) {
+				throw rpcError.badRequest("Cannot trigger check on a paused monitor");
+			}
+
+			const rl = await rateLimit(`manual-check:${input.scheduleId}`, 5, 60);
+			if (!rl.success) {
+				throw rpcError.rateLimited(60);
+			}
+
+			try {
+				await client.publish({
+					urlGroup: UPTIME_URL_GROUP,
+					headers: {
+						"Content-Type": "application/json",
+						"X-Schedule-Id": input.scheduleId,
+					},
+				});
+			} catch (error) {
+				logger.error(
+					{ scheduleId: input.scheduleId, error },
+					"Manual check failed"
+				);
+				throw rpcError.internal("Failed to trigger check");
+			}
+
+			logger.info({ scheduleId: input.scheduleId }, "Manual check triggered");
 			return { success: true };
 		}),
 

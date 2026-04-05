@@ -3,6 +3,7 @@
 import { ArrowSquareOutIcon } from "@phosphor-icons/react";
 import { DotsThreeIcon } from "@phosphor-icons/react";
 import { HeartbeatIcon } from "@phosphor-icons/react";
+import { LightningIcon } from "@phosphor-icons/react";
 import { PauseIcon } from "@phosphor-icons/react";
 import { PencilSimpleIcon } from "@phosphor-icons/react";
 import { PlayIcon } from "@phosphor-icons/react";
@@ -89,6 +90,23 @@ function MonitorActions({
 	const transferMutation = useMutation({
 		...orpc.uptime.transfer.mutationOptions(),
 	});
+	const manualCheckMutation = useMutation({
+		...orpc.uptime.manualCheck.mutationOptions(),
+	});
+
+	const handleManualCheck = async () => {
+		try {
+			await manualCheckMutation.mutateAsync({ scheduleId: schedule.id });
+			toast.success("Check triggered");
+			setTimeout(() => {
+				onRefetchAction();
+			}, 3000);
+		} catch (error) {
+			const errorMessage =
+				error instanceof Error ? error.message : "Failed to trigger check";
+			toast.error(errorMessage);
+		}
+	};
 
 	const handleTogglePause = async () => {
 		setIsPausing(true);
@@ -156,6 +174,14 @@ function MonitorActions({
 					<DropdownMenuItem className="gap-2" onClick={onEditAction}>
 						<PencilSimpleIcon className="size-4" weight="duotone" />
 						Edit Monitor
+					</DropdownMenuItem>
+					<DropdownMenuItem
+						className="gap-2"
+						disabled={manualCheckMutation.isPending || schedule.isPaused}
+						onClick={handleManualCheck}
+					>
+						<LightningIcon className="size-4" weight="duotone" />
+						Check Now
 					</DropdownMenuItem>
 					<DropdownMenuItem
 						className="gap-2"
