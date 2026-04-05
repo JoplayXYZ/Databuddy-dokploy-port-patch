@@ -8,7 +8,6 @@
   "dependencies": {
     "@databuddy/db": "workspace:*",
     "@databuddy/email": "workspace:*",
-    "@databuddy/services": "workspace:*",
     "@upstash/qstash": "^2.8.4",
     "elysia": "^1.4.18",
     "evlog": "^2.8.0",
