@@ -1,5 +1,6 @@
 "use client";
 
+import { track } from "@databuddy/sdk";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { GlobeIcon, SpinnerIcon } from "@phosphor-icons/react";
 import { useForm } from "react-hook-form";
@@ -61,6 +62,9 @@ export function StepCreateWebsite({ onComplete }: StepCreateWebsiteProps) {
 				organizationId: activeOrganization?.id,
 			});
 			toast.success("Website created!");
+			try {
+				track("onboarding_website_created", { domain: formData.domain });
+			} catch {}
 			onComplete(result.id);
 		} catch (error: unknown) {
 			const rpcError = error as {

@@ -1,5 +1,6 @@
 "use client";
 
+import { track } from "@databuddy/sdk";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
 	EnvelopeSimpleIcon,
@@ -74,6 +75,12 @@ export function StepInviteTeam() {
 				{ email: values.email, role: values.role },
 			]);
 			form.reset();
+			try {
+				track("onboarding_invite_sent", {
+					role: values.role,
+					invite_count: sentInvites.length + 1,
+				});
+			} catch {}
 		} catch {
 			// Error handled by the hook's toast
 		}

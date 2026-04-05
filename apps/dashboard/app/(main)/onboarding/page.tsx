@@ -1,8 +1,9 @@
 "use client";
 
+import { track } from "@databuddy/sdk";
 import { ArrowLeftIcon, ArrowRightIcon } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useWebsitesLight } from "@/hooks/use-websites";
 import { OnboardingStepIndicator } from "./_components/onboarding-step-indicator";
@@ -18,27 +19,56 @@ const STEPS = [
 	{ id: "explore", title: "Explore" },
 ] as const;
 
+function trackOnboarding(
+	event: string,
+	properties?: Record<string, string | number | boolean>
+) {
+	try {
+		track(`onboarding_${event}`, properties);
+	} catch {
+		// SDK not loaded yet
+	}
+}
+
 export default function OnboardingPage() {
 	const router = useRouter();
 	const { websites } = useWebsitesLight();
+	const trackedStepRef = useRef<number>(-1);
 
 	const [currentStep, setCurrentStep] = useState(0);
 	const [completedSteps, setCompletedSteps] = useState<Set<string>>(new Set());
 	const [createdWebsiteId, setCreatedWebsiteId] = useState<string | null>(null);
 
-	// Derive initial completed state from existing data
 	const hasWebsite = websites && websites.length > 0;
 	const websiteId = createdWebsiteId ?? websites?.[0]?.id ?? "";
+
+	// Update URL and track step views
+	useEffect(() => {
+		const stepId = STEPS[currentStep].id;
+		window.history.replaceState(null, "", `/onboarding?step=${stepId}`);
+
+		if (trackedStepRef.current !== currentStep) {
+			trackedStepRef.current = currentStep;
+			trackOnboarding("step_viewed", {
+				step: stepId,
+				step_number: currentStep + 1,
+			});
+		}
+	}, [currentStep]);
 
 	useEffect(() => {
 		if (hasWebsite && !completedSteps.has("website")) {
 			setCompletedSteps((prev) => new Set([...prev, "website"]));
-			// Auto-advance past step 1 if they already have a website
 			if (currentStep === 0) {
 				setCurrentStep(1);
 			}
 		}
 	}, [hasWebsite, completedSteps, currentStep]);
+
+	// Track onboarding start once
+	useEffect(() => {
+		trackOnboarding("started");
+	}, []);
 
 	const markComplete = useCallback((stepId: string) => {
 		setCompletedSteps((prev) => new Set([...prev, stepId]));
@@ -56,6 +86,7 @@ export default function OnboardingPage() {
 		(id: string) => {
 			setCreatedWebsiteId(id);
 			markComplete("website");
+			trackOnboarding("step_completed", { step: "website" });
 			goNext();
 		},
 		[markComplete, goNext]
@@ -63,16 +94,22 @@ export default function OnboardingPage() {
 
 	const handleTrackingComplete = useCallback(() => {
 		markComplete("tracking");
+		trackOnboarding("step_completed", {
+			step: "tracking",
+			verified: true,
+		});
 		goNext();
 	}, [markComplete, goNext]);
 
 	const handleTeamComplete = useCallback(() => {
 		markComplete("team");
+		trackOnboarding("step_completed", { step: "team" });
 		goNext();
 	}, [markComplete, goNext]);
 
 	const handleExploreComplete = useCallback(() => {
 		markComplete("explore");
+		trackOnboarding("completed");
 		const pendingPlan = localStorage.getItem("pendingPlanSelection");
 		if (pendingPlan) {
 			localStorage.removeItem("pendingPlanSelection");
@@ -82,13 +119,20 @@ export default function OnboardingPage() {
 		}
 	}, [markComplete, router, websiteId]);
 
+	const handleSkipOnboarding = useCallback(() => {
+		trackOnboarding("skipped", {
+			skipped_at_step: STEPS[currentStep].id,
+			step_number: currentStep + 1,
+		});
+		router.push("/websites");
+	}, [currentStep, router]);
+
 	const canContinue = useMemo(() => {
 		const step = STEPS[currentStep];
 		switch (step.id) {
 			case "website":
 				return completedSteps.has("website");
 			case "tracking":
-				// Always continuable — user can verify later
 				return true;
 			case "team":
 				return true;
@@ -110,9 +154,12 @@ export default function OnboardingPage() {
 			return;
 		}
 		if (step.id === "tracking") {
-			// Allow continuing even without verification
 			if (!completedSteps.has("tracking")) {
 				markComplete("tracking");
+				trackOnboarding("step_completed", {
+					step: "tracking",
+					verified: false,
+				});
 			}
 			goNext();
 			return;
@@ -166,7 +213,7 @@ export default function OnboardingPage() {
 				/>
 				<Button
 					className="text-muted-foreground text-xs"
-					onClick={() => router.push("/websites")}
+					onClick={handleSkipOnboarding}
 					size="sm"
 					variant="ghost"
 				>
