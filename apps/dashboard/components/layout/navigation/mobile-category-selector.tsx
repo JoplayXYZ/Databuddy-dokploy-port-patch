@@ -1,6 +1,5 @@
 "use client";
 
-import { authClient } from "@databuddy/auth/client";
 import { useFlags } from "@databuddy/sdk/react";
 import { CaretDownIcon } from "@phosphor-icons/react";
 import { usePathname } from "next/navigation";
@@ -13,12 +12,8 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useHydrated } from "@/hooks/use-hydrated";
-import { useWebsitesLight } from "@/hooks/use-websites";
 import { cn } from "@/lib/utils";
 import {
-	categoryConfig,
-	createLoadingWebsitesNavigation,
-	createWebsitesNavigation,
 	filterCategoriesByFlags,
 	filterCategoriesForRoute,
 	getContextConfig,
@@ -34,31 +29,12 @@ export function MobileCategorySelector({
 	onCategoryChangeAction,
 	selectedCategory,
 }: MobileCategorySelectorProps) {
-	const { data: session } = authClient.useSession();
-	const user = session?.user ?? null;
-
 	const pathname = usePathname();
-	const { websites, isLoading: isLoadingWebsites } = useWebsitesLight({
-		enabled: user !== null,
-	});
 	const { getFlag } = useFlags();
 	const isHydrated = useHydrated();
 
 	const { categories, defaultCategory } = useMemo(() => {
-		const baseConfig = getContextConfig(pathname);
-		const config =
-			baseConfig === categoryConfig.main
-				? {
-						...baseConfig,
-						navigationMap: {
-							...baseConfig.navigationMap,
-							home: isLoadingWebsites
-								? createLoadingWebsitesNavigation()
-								: createWebsitesNavigation(websites),
-						},
-					}
-				: baseConfig;
-
+		const config = getContextConfig(pathname);
 		const defaultCat = getDefaultCategory(pathname);
 		const filteredCategories = filterCategoriesByFlags(
 			filterCategoriesForRoute(config.categories, pathname),
@@ -67,7 +43,7 @@ export function MobileCategorySelector({
 		);
 
 		return { categories: filteredCategories, defaultCategory: defaultCat };
-	}, [pathname, websites, isLoadingWebsites, isHydrated, getFlag]);
+	}, [pathname, isHydrated, getFlag]);
 
 	const activeCategory = selectedCategory || defaultCategory;
 	const currentCategory = categories.find((cat) => cat.id === activeCategory);

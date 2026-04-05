@@ -13,15 +13,9 @@ import {
 	useState,
 } from "react";
 import { useHydrated } from "@/hooks/use-hydrated";
-import { useMonitorsLight } from "@/hooks/use-monitors";
 import { useAccordionStates } from "@/hooks/use-persistent-state";
 import { useWebsitesLight } from "@/hooks/use-websites";
 import {
-	categoryConfig,
-	createLoadingMonitorsNavigation,
-	createLoadingWebsitesNavigation,
-	createMonitorsNavigation,
-	createWebsitesNavigation,
 	filterCategoriesByFlags,
 	filterCategoriesForRoute,
 	getContextConfig,
@@ -72,61 +66,30 @@ export function SidebarNavigationProvider({
 		undefined
 	);
 
-	const { websites, isLoading: isLoadingWebsites } = useWebsitesLight({
-		enabled: user !== null,
-	});
-	const { monitors, isLoading: isLoadingMonitors } = useMonitorsLight({
-		enabled: user !== null,
-	});
-
 	const isDemo = pathname.startsWith("/demo");
 	const isWebsite = pathname.startsWith("/websites/");
 	const websiteId = isDemo || isWebsite ? pathname.split("/")[2] : null;
+
+	// Only fetch websites for the website header (when viewing a specific website)
+	const { websites } = useWebsitesLight({
+		enabled: user !== null && (isWebsite || isDemo),
+	});
 
 	const currentWebsite = useMemo(
 		() => (websiteId ? websites?.find((site) => site.id === websiteId) : null),
 		[websiteId, websites]
 	);
 
-	const populatedConfig = useMemo(() => {
-		const baseConfig = getContextConfig(pathname);
-		if (baseConfig !== categoryConfig.main) {
-			return baseConfig;
-		}
-
-		const showLoadingWebsites = !(isHydrated && user) || isLoadingWebsites;
-		const showLoadingMonitors = !(isHydrated && user) || isLoadingMonitors;
-
-		return {
-			...baseConfig,
-			navigationMap: {
-				...baseConfig.navigationMap,
-				home: showLoadingWebsites
-					? createLoadingWebsitesNavigation()
-					: createWebsitesNavigation(websites),
-				monitors: showLoadingMonitors
-					? createLoadingMonitorsNavigation()
-					: createMonitorsNavigation(monitors),
-			},
-		};
-	}, [
-		pathname,
-		isHydrated,
-		user,
-		isLoadingWebsites,
-		websites,
-		isLoadingMonitors,
-		monitors,
-	]);
+	const config = useMemo(() => getContextConfig(pathname), [pathname]);
 
 	const categories = useMemo(
 		() =>
 			filterCategoriesByFlags(
-				filterCategoriesForRoute(populatedConfig.categories, pathname),
+				filterCategoriesForRoute(config.categories, pathname),
 				isHydrated,
 				getFlag
 			),
-		[populatedConfig.categories, pathname, isHydrated, getFlag]
+		[config.categories, pathname, isHydrated, getFlag]
 	);
 
 	const defaultCategory = useMemo(
@@ -149,11 +112,11 @@ export function SidebarNavigationProvider({
 
 	const navigation = useMemo(() => {
 		const navSections =
-			populatedConfig.navigationMap[
-				activeCategory as keyof typeof populatedConfig.navigationMap
+			config.navigationMap[
+				activeCategory as keyof typeof config.navigationMap
 			] ||
-			populatedConfig.navigationMap[
-				populatedConfig.defaultCategory as keyof typeof populatedConfig.navigationMap
+			config.navigationMap[
+				config.defaultCategory as keyof typeof config.navigationMap
 			];
 
 		return navSections
@@ -182,7 +145,7 @@ export function SidebarNavigationProvider({
 				}
 				return true;
 			});
-	}, [populatedConfig, activeCategory, getFlag]);
+	}, [config, activeCategory, getFlag]);
 
 	const header = useMemo(() => {
 		if (isWebsite || isDemo) {

@@ -1,9 +1,12 @@
 "use client";
 
 import type { Icon } from "@phosphor-icons/react";
-import { ArrowSquareOutIcon } from "@phosphor-icons/react";
-import { CommandIcon } from "@phosphor-icons/react";
-import { MagnifyingGlassIcon } from "@phosphor-icons/react";
+import {
+	ArrowSquareOutIcon,
+	CommandIcon,
+	GlobeIcon,
+	MagnifyingGlassIcon,
+} from "@phosphor-icons/react";
 import { useDebouncedCallback } from "@tanstack/react-pacer";
 import { Command as CommandPrimitive } from "cmdk";
 import { usePathname, useRouter } from "next/navigation";
@@ -18,7 +21,7 @@ import {
 import { useHotkeys } from "react-hotkeys-hook";
 import {
 	billingNavigation,
-	createWebsitesNavigation,
+	homeNavigation,
 	organizationNavigation,
 	personalNavigation,
 	resourcesNavigation,
@@ -184,11 +187,19 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
 			? `/websites/${currentWebsiteId}`
 			: "";
 
+		// Static home navigation (overview, websites link, observability)
+		result.push(...toSearchGroups(homeNavigation));
+
+		// Individual websites as search items
 		if (websites.length > 0) {
-			const websitesNav = createWebsitesNavigation(
-				websites.map((w) => ({ id: w.id, name: w.name, domain: "" }))
-			);
-			result.push(...toSearchGroups(websitesNav));
+			result.push({
+				category: "Websites",
+				items: websites.map((w) => ({
+					name: w.name || w.domain,
+					path: `/websites/${w.id}`,
+					icon: GlobeIcon,
+				})),
+			});
 		}
 
 		if (currentWebsiteId) {
