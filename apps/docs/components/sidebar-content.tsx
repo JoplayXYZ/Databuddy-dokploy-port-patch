@@ -359,17 +359,3 @@ export const contents: SidebarSection[] = [
 		],
 	},
 ];
-
-export const examples: SidebarSection[] = [
-	{
-		title: "Examples",
-		Icon: CodeIcon,
-		list: [
-			{
-				title: "Coming Soon",
-				group: true,
-				icon: FileTextIcon,
-			},
-		],
-	},
-];
