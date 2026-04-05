@@ -354,7 +354,7 @@ export class SimpleQueryBuilder {
 			const whereClause = this.buildWhereClauseFromFilters(whereClauseParams);
 
 			if (this.request.organizationWebsiteIds) {
-				whereClauseParams.orgWebsiteIds = this.request.organizationWebsiteIds;
+				whereClauseParams.__orgLevel = true;
 			}
 
 			const helpers = this.config.plugins?.sessionAttribution
