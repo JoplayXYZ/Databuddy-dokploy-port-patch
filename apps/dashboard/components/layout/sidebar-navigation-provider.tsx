@@ -94,23 +94,25 @@ export function SidebarNavigationProvider({
 			return baseConfig;
 		}
 
+		const showLoadingWebsites = !(isHydrated && user) || isLoadingWebsites;
+		const showLoadingMonitors = !(isHydrated && user) || isLoadingMonitors;
+
 		return {
 			...baseConfig,
 			navigationMap: {
 				...baseConfig.navigationMap,
-				home:
-					!isHydrated || isLoadingWebsites
-						? createLoadingWebsitesNavigation()
-						: createWebsitesNavigation(websites),
-				monitors:
-					!isHydrated || isLoadingMonitors
-						? createLoadingMonitorsNavigation()
-						: createMonitorsNavigation(monitors),
+				home: showLoadingWebsites
+					? createLoadingWebsitesNavigation()
+					: createWebsitesNavigation(websites),
+				monitors: showLoadingMonitors
+					? createLoadingMonitorsNavigation()
+					: createMonitorsNavigation(monitors),
 			},
 		};
 	}, [
 		pathname,
 		isHydrated,
+		user,
 		isLoadingWebsites,
 		websites,
 		isLoadingMonitors,
