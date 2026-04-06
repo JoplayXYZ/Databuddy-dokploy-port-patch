@@ -21,6 +21,7 @@ import { getRedisCache, rateLimit } from "@databuddy/redis";
 import { createId } from "@databuddy/shared/utils/ids";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { betterAuth } from "better-auth/minimal";
+import { log } from "evlog";
 import {
 	customSession,
 	emailOTP,
@@ -102,8 +103,10 @@ export const auth = betterAuth({
 				const value = await getRedisCache().get(key);
 				return value ? JSON.parse(value) : null;
 			},
+			// TTL is 2x the longest window so counters survive the full window
+			// without lingering indefinitely.
 			set: async (key, value) => {
-				await getRedisCache().set(key, JSON.stringify(value), "EX", 300);
+				await getRedisCache().set(key, JSON.stringify(value), "EX", 120);
 			},
 		},
 		customRules: {
@@ -235,6 +238,12 @@ export const auth = betterAuth({
 		sendResetPassword: async ({ user, url }: { user: any; url: string }) => {
 			const { success } = await rateLimit(`reset:${user.email}`, 3, 3600);
 			if (!success) {
+				log.warn({
+					service: "auth",
+					auth_rate_limited: true,
+					auth_callback: "reset_password",
+					auth_rate_limit_email: user.email,
+				});
 				return;
 			}
 
@@ -260,6 +269,12 @@ export const auth = betterAuth({
 		}) => {
 			const { success } = await rateLimit(`verify:${user.email}`, 3, 900);
 			if (!success) {
+				log.warn({
+					service: "auth",
+					auth_rate_limited: true,
+					auth_callback: "verify_email",
+					auth_rate_limit_email: user.email,
+				});
 				return;
 			}
 
@@ -291,6 +306,13 @@ export const auth = betterAuth({
 			async sendVerificationOTP({ email, otp, type }) {
 				const { success } = await rateLimit(`otp:${email}`, 3, 900);
 				if (!success) {
+					log.warn({
+						service: "auth",
+						auth_rate_limited: true,
+						auth_callback: "verification_otp",
+						auth_otp_type: type,
+						auth_rate_limit_email: email,
+					});
 					return;
 				}
 
@@ -321,6 +343,12 @@ export const auth = betterAuth({
 			sendMagicLink: async ({ email, url }) => {
 				const { success } = await rateLimit(`magic:${email}`, 3, 900);
 				if (!success) {
+					log.warn({
+						service: "auth",
+						auth_rate_limited: true,
+						auth_callback: "magic_link",
+						auth_rate_limit_email: email,
+					});
 					return;
 				}
 
@@ -380,6 +408,12 @@ export const auth = betterAuth({
 					3600
 				);
 				if (!success) {
+					log.warn({
+						service: "auth",
+						auth_rate_limited: true,
+						auth_callback: "invitation",
+						auth_organization_id: organization.id,
+					});
 					return;
 				}
 
