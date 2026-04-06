@@ -20,6 +20,7 @@ import {
 	type McpToolFactory,
 	type RegisteredMcpTool,
 } from "./define-tool";
+import { INSIGHT_TOOL_FACTORIES, INSIGHT_TOOL_NAMES } from "./insights-tools";
 import {
 	buildBatchQueryRequests,
 	CLICKHOUSE_SCHEMA_DOCS,
@@ -372,6 +373,7 @@ const capabilitiesTool = defineMcpTool(
 			"get_goal_analytics",
 			"list_links",
 			"search_links",
+			...INSIGHT_TOOL_NAMES,
 			...(isMemoryEnabled() ? ["search_memory", "save_memory"] : []),
 		];
 
@@ -392,6 +394,11 @@ const capabilitiesTool = defineMcpTool(
 				"capabilities with detail='full' shows allowedFilters per query type",
 				"ask accepts optional timezone (IANA format) and returns conversationId for follow-ups",
 				"list_funnels, list_goals, list_links are direct tools — no LLM cost, fast",
+				"summarize_insights — fastest 'how are we doing' check; org-wide by default, returns counts + top 3 priorities",
+				"list_insights — full insight rows with filtering; org-wide by default, pass websiteId/Name/Domain to scope",
+				"compare_metric — week-over-week diff for visitors/sessions/pageviews/bounce_rate/session_duration/events; replaces 2 manual get_data calls",
+				"top_movers — top pages/referrers/countries/browsers/os that changed the most between two periods",
+				"detect_anomalies — z-score check on daily summary metrics for the last 7-60 days; finds spikes without needing pre-computed insights",
 				"Use ask for complex questions; use direct tools for simple CRUD lookups",
 				"Custom events: use custom_events_discovery to get events + properties + top values in one call",
 				"Custom events: use filters [{field:'event_name',op:'eq',value:'your-event'}] to scope property queries to a specific event",
@@ -773,6 +780,7 @@ const CORE_TOOL_FACTORIES: McpToolFactory[] = [
 	getGoalAnalyticsTool,
 	listLinksTool,
 	searchLinksTool,
+	...INSIGHT_TOOL_FACTORIES,
 ];
 
 export function createMcpTools(ctx: McpRequestContext): RegisteredMcpTool[] {
