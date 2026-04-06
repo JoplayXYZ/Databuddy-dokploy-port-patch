@@ -21,7 +21,6 @@ const QUERY_LABELS: Record<string, string> = {
 	summary: "summary",
 	engagement: "engagement",
 	profiles: "profiles",
-	llm_analytics: "LLM analytics",
 	uptime: "uptime",
 	links: "links",
 };
