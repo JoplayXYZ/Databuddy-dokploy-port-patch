@@ -145,7 +145,6 @@ export interface TimeBucketConfig {
 
 export interface QueryPlugins {
 	deduplicateGeo?: boolean;
-	mapDeviceTypes?: boolean;
 	normalizeGeo?: boolean;
 	normalizeUrls?: boolean;
 	parseReferrers?: boolean;
