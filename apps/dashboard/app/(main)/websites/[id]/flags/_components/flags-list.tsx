@@ -296,12 +296,22 @@ function FlagRow({
 	return (
 		<List.Row
 			asChild
-			className={cn("min-w-full", flag.status === "archived" && "opacity-50")}
+			className={cn(
+				"min-w-full cursor-pointer text-left",
+				flag.status === "archived" && "opacity-50"
+			)}
 		>
-			<button
-				className="cursor-pointer text-left"
+			{/* biome-ignore lint/a11y/useSemanticElements: List.Row asChild replaces this element; a real <button> would nest inside the action-cell buttons */}
+			<div
 				onClick={() => onEdit(flag)}
-				type="button"
+				onKeyDown={(e) => {
+					if (e.key === "Enter" || e.key === " ") {
+						e.preventDefault();
+						onEdit(flag);
+					}
+				}}
+				role="button"
+				tabIndex={0}
 			>
 				{/* Flag name & key */}
 				<List.Cell
@@ -397,7 +407,7 @@ function FlagRow({
 				<List.Cell action>
 					<FlagActions flag={flag} onDelete={onDelete} onEdit={onEdit} />
 				</List.Cell>
-			</button>
+			</div>
 		</List.Row>
 	);
 }

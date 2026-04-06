@@ -102,7 +102,7 @@ export function FunnelItem({
 	className,
 	children,
 }: FunnelItemProps) {
-	const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+	const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
 		const target = e.target as HTMLElement;
 		if (
 			target.closest("[data-dropdown-trigger]") ||
@@ -121,17 +121,23 @@ export function FunnelItem({
 		<div className={cn("w-full", className)}>
 			<List.Row
 				asChild
-				className={cn(isExpanded && "bg-accent/30", isLast && "border-b-0")}
+				className={cn(
+					"cursor-pointer",
+					isExpanded && "bg-accent/30",
+					isLast && "border-b-0"
+				)}
 			>
-				<button
+				{/* biome-ignore lint/a11y/useSemanticElements: List.Row asChild replaces this element; a real <button> would nest inside the dropdown-menu trigger */}
+				<div
 					onClick={handleClick}
 					onKeyDown={(e) => {
 						if (e.key === "Enter" || e.key === " ") {
+							e.preventDefault();
 							onToggle(funnel.id);
 						}
 					}}
+					role="button"
 					tabIndex={0}
-					type="button"
 				>
 					<List.Cell>
 						<div
@@ -245,7 +251,7 @@ export function FunnelItem({
 							</DropdownMenuContent>
 						</DropdownMenu>
 					</List.Cell>
-				</button>
+				</div>
 			</List.Row>
 
 			{isExpanded ? (
