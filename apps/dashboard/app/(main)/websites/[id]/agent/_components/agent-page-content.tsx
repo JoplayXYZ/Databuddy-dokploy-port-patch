@@ -16,8 +16,11 @@ import {
 	ConversationContent,
 	ConversationScrollButton,
 } from "@/components/ai-elements/conversation";
+import { FaviconImage } from "@/components/analytics/favicon-image";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useChat } from "@/contexts/chat-context";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useChat, useChatLoading } from "@/contexts/chat-context";
+import { useWebsite } from "@/hooks/use-websites";
 import { orpc } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
 import { AgentInput } from "./agent-input";
@@ -38,42 +41,21 @@ const FALLBACK_ICONS = [
 	LightningIcon,
 ] as const;
 
-const CAPABILITY_PROMPTS: Array<{ label: string; prompt: string }> = [
-	{
-		label: "Deep analysis",
-		prompt:
-			"Run a deep analysis of my site's performance over the last 30 days and tell me what stands out.",
-	},
-	{
-		label: "Pattern detection",
-		prompt:
-			"Look across my traffic, sources, and pages and surface any patterns I should know about.",
-	},
-	{
-		label: "Anomaly alerts",
-		prompt:
-			"Detect anomalies in my analytics from the last 14 days and explain what likely caused them.",
-	},
-	{
-		label: "Auto reports",
-		prompt:
-			"Generate a weekly performance report covering traffic, sources, top pages, and conversions.",
-	},
-];
-
 export function AgentPageContent({ chatId, websiteId }: AgentPageContentProps) {
 	useEffect(() => {
 		setLastChatId(websiteId, chatId);
 	}, [websiteId, chatId]);
 
 	const { messages, sendMessage } = useChat();
+	const { isRestoring } = useChatLoading();
+	const { data: website } = useWebsite(websiteId);
 	const searchParams = useSearchParams();
 	const router = useRouter();
 	const pathname = usePathname();
 	const autoSentRef = useRef(false);
 
 	useEffect(() => {
-		if (autoSentRef.current) {
+		if (autoSentRef.current || isRestoring) {
 			return;
 		}
 		const prompt = searchParams.get("prompt");
@@ -85,9 +67,17 @@ export function AgentPageContent({ chatId, websiteId }: AgentPageContentProps) {
 		sendMessage({ text: prompt });
 		// Strip ?prompt= so reloading or sharing the URL doesn't re-send.
 		router.replace(pathname);
-	}, [searchParams, messages.length, sendMessage, router, pathname]);
+	}, [
+		searchParams,
+		messages.length,
+		sendMessage,
+		router,
+		pathname,
+		isRestoring,
+	]);
 
 	const hasMessages = messages.length > 0;
+	const domain = website?.domain ?? null;
 
 	const launchPrompt = (text: string) => {
 		sendMessage({ text });
@@ -110,6 +100,27 @@ export function AgentPageContent({ chatId, websiteId }: AgentPageContentProps) {
 						<span className="rounded border border-border/60 px-1.5 py-px font-medium text-[10px] text-muted-foreground uppercase tracking-wide">
 							Alpha
 						</span>
+						{domain ? (
+							<>
+								<span aria-hidden className="text-border text-xs leading-none">
+									·
+								</span>
+								<div className="flex min-w-0 items-center gap-1.5">
+									<FaviconImage
+										altText={`${domain} favicon`}
+										className="size-3.5 shrink-0 rounded-sm"
+										domain={domain}
+										fallbackIcon={
+											<div className="size-3.5 shrink-0 rounded-sm bg-muted" />
+										}
+										size={14}
+									/>
+									<span className="truncate text-muted-foreground text-xs">
+										{domain}
+									</span>
+								</div>
+							</>
+						) : null}
 					</div>
 					<div className="flex shrink-0 items-center gap-1">
 						<ChatHistory />
@@ -122,16 +133,23 @@ export function AgentPageContent({ chatId, websiteId }: AgentPageContentProps) {
 						className="mx-auto flex min-h-full w-full max-w-3xl flex-col gap-6 px-4 py-6"
 						scrollClassName="overscroll-none"
 					>
-						{hasMessages ? (
-							<AgentMessages />
-						) : (
-							<div className="flex flex-1 items-center justify-center">
-								<WelcomeState
-									onPromptSelect={launchPrompt}
-									websiteId={websiteId}
-								/>
-							</div>
-						)}
+						{(() => {
+							if (isRestoring) {
+								return <ConversationLoadingSkeleton />;
+							}
+							if (hasMessages) {
+								return <AgentMessages />;
+							}
+							return (
+								<div className="flex flex-1 items-center justify-center">
+									<WelcomeState
+										domain={domain}
+										onPromptSelect={launchPrompt}
+										websiteId={websiteId}
+									/>
+								</div>
+							);
+						})()}
 						<AgentInput />
 					</ConversationContent>
 					<ConversationScrollButton />
@@ -144,21 +162,21 @@ export function AgentPageContent({ chatId, websiteId }: AgentPageContentProps) {
 function WelcomeState({
 	onPromptSelect,
 	websiteId,
+	domain,
 }: {
 	onPromptSelect: (text: string) => void;
 	websiteId: string;
+	domain: string | null;
 }) {
-	const { data: prompts } = useQuery({
+	const { data: prompts, isLoading } = useQuery({
 		...orpc.agentChats.suggestedPrompts.queryOptions({
 			input: { websiteId },
 		}),
 		staleTime: 5 * 60 * 1000,
 	});
 
-	const items = prompts ?? [];
-
 	return (
-		<div className="w-full space-y-8">
+		<div className="w-full space-y-6">
 			<div className="flex flex-col items-center gap-3">
 				<Avatar className="size-10 rounded">
 					<AvatarImage alt="Databunny avatar" src="/databunny.webp" />
@@ -167,69 +185,129 @@ function WelcomeState({
 					</AvatarFallback>
 				</Avatar>
 
-				<div className="max-w-md space-y-1.5 text-center">
+				<div className="space-y-1 text-center">
 					<h3 className="text-balance font-semibold text-lg">Meet Databunny</h3>
-					<p className="text-pretty text-muted-foreground text-sm leading-relaxed">
-						Databunny explores your analytics, uncovers patterns, and surfaces
-						actionable insights without you babysitting every step.
+					<p className="text-pretty text-muted-foreground text-sm">
+						Ask anything about{" "}
+						<span className="font-medium text-foreground">
+							{domain ?? "your"}
+						</span>
+						's analytics.
 					</p>
 				</div>
 			</div>
 
-			<div className="flex flex-wrap justify-center gap-1.5">
-				{CAPABILITY_PROMPTS.map((capability) => (
-					<button
-						className="rounded border border-border/60 bg-card px-2.5 py-1 text-foreground/80 text-xs transition-colors hover:border-border hover:bg-accent/50"
-						key={capability.label}
-						onClick={() => onPromptSelect(capability.prompt)}
-						type="button"
-					>
-						{capability.label}
-					</button>
-				))}
-			</div>
-
 			<div className="grid gap-2 sm:grid-cols-2">
-				{items.map((item, idx) => {
-					const Icon =
-						item.source === "insight"
-							? SparkleIcon
-							: (FALLBACK_ICONS[idx] ?? FALLBACK_ICONS[0]);
-					return (
-						<button
-							className={cn(
-								"group flex items-start gap-3 rounded border border-border/60 bg-card p-3 text-left",
-								"transition-colors hover:border-border hover:bg-accent/40"
-							)}
-							key={`${item.source}-${item.label}`}
-							onClick={() => onPromptSelect(item.prompt)}
-							type="button"
-						>
-							<div
-								className={cn(
-									"flex size-7 shrink-0 items-center justify-center rounded",
-									item.source === "insight"
-										? "bg-amber-500/10 text-amber-600 dark:text-amber-400"
-										: "bg-accent/60 text-muted-foreground"
-								)}
-							>
-								<Icon className="size-3.5" weight="duotone" />
-							</div>
-							<div className="min-w-0 flex-1">
-								<p className="line-clamp-2 text-sm leading-tight">
-									{item.label}
-								</p>
-								<p className="mt-0.5 text-muted-foreground text-xs">
-									{item.source === "insight"
-										? "From your insights"
-										: "Suggested"}
-								</p>
-							</div>
-							<ArrowRightIcon className="mt-0.5 size-3.5 shrink-0 text-transparent transition-colors group-hover:text-muted-foreground" />
-						</button>
-					);
-				})}
+				{isLoading || !prompts
+					? SKELETON_WIDTHS.map((widthClass) => (
+							<SuggestionSkeleton key={widthClass} widthClass={widthClass} />
+						))
+					: prompts.map((item, idx) => {
+							const Icon =
+								item.source === "insight"
+									? SparkleIcon
+									: (FALLBACK_ICONS[idx] ?? FALLBACK_ICONS[0]);
+							return (
+								<button
+									className={cn(
+										"group flex items-start gap-3 rounded border border-border/60 bg-card p-3 text-left",
+										"transition-colors hover:border-border hover:bg-accent/40"
+									)}
+									key={`${item.source}-${item.label}`}
+									onClick={() => onPromptSelect(item.prompt)}
+									type="button"
+								>
+									<div
+										className={cn(
+											"flex size-7 shrink-0 items-center justify-center rounded",
+											item.source === "insight"
+												? "bg-amber-500/10 text-amber-600 dark:text-amber-400"
+												: "bg-accent/60 text-muted-foreground"
+										)}
+									>
+										<Icon className="size-3.5" weight="duotone" />
+									</div>
+									<div className="min-w-0 flex-1">
+										<p className="line-clamp-2 text-sm leading-tight">
+											{item.label}
+										</p>
+										<p className="mt-0.5 text-muted-foreground text-xs">
+											{item.source === "insight"
+												? "From your insights"
+												: "Suggested"}
+										</p>
+									</div>
+									<ArrowRightIcon className="mt-0.5 size-3.5 shrink-0 text-transparent transition-colors group-hover:text-muted-foreground" />
+								</button>
+							);
+						})}
 			</div>
+		</div>
+	);
+}
+
+function SuggestionSkeleton({ widthClass }: { widthClass: string }) {
+	return (
+		<div
+			aria-hidden
+			className="flex items-start gap-3 rounded border border-border/60 bg-card p-3"
+		>
+			<Skeleton className="size-7 shrink-0 rounded" />
+			<div className="min-w-0 flex-1 space-y-1.5">
+				<Skeleton className="h-3.5 w-full rounded-sm" />
+				<Skeleton className={cn("h-3.5 rounded-sm", widthClass)} />
+				<Skeleton className="mt-1 h-2.5 w-20 rounded-sm" />
+			</div>
+			<Skeleton className="mt-1 size-3.5 shrink-0 rounded-sm opacity-50" />
+		</div>
+	);
+}
+
+// Pre-baked widths so the skeleton doesn't all line up — feels more natural
+// while still being layout-stable.
+const SKELETON_WIDTHS = ["w-3/5", "w-4/5", "w-2/3", "w-1/2"] as const;
+
+function ConversationLoadingSkeleton() {
+	return (
+		<div aria-hidden className="flex w-full flex-col gap-6 py-2">
+			<MessageSkeleton align="end" widthClass="w-2/5" />
+			<MessageSkeleton align="start" lines={3} widthClass="w-11/12" />
+			<MessageSkeleton align="end" widthClass="w-1/3" />
+			<MessageSkeleton align="start" lines={2} widthClass="w-10/12" />
+		</div>
+	);
+}
+
+const ASSISTANT_LINE_KEYS = ["a", "b", "c", "d"] as const;
+
+function MessageSkeleton({
+	align,
+	lines = 1,
+	widthClass,
+}: {
+	align: "start" | "end";
+	lines?: number;
+	widthClass: string;
+}) {
+	if (align === "end") {
+		return (
+			<div className="flex justify-end">
+				<Skeleton className={cn("h-9 max-w-[60%] rounded", widthClass)} />
+			</div>
+		);
+	}
+	const lineKeys = ASSISTANT_LINE_KEYS.slice(0, lines);
+	return (
+		<div className="flex w-full flex-col gap-2">
+			{lineKeys.map((lineKey, idx) => (
+				<Skeleton
+					className={cn(
+						"h-3.5 rounded-sm",
+						idx === lineKeys.length - 1 ? widthClass : "w-full"
+					)}
+					key={lineKey}
+				/>
+			))}
 		</div>
 	);
 }
