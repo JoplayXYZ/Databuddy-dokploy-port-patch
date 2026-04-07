@@ -1,10 +1,5 @@
 "use client";
 
-import { GATED_FEATURES } from "@databuddy/shared/types/features";
-import { FunnelIcon } from "@phosphor-icons/react";
-import dynamic from "next/dynamic";
-import { useParams } from "next/navigation";
-import { useState } from "react";
 import { FeatureGate } from "@/components/feature-gate";
 import { List } from "@/components/ui/composables/list";
 import { DeleteDialog } from "@/components/ui/delete-dialog";
@@ -16,6 +11,11 @@ import {
 	useFunnels,
 } from "@/hooks/use-funnels";
 import type { CreateFunnelData } from "@/types/funnels";
+import { GATED_FEATURES } from "@databuddy/shared/types/features";
+import { FunnelIcon } from "@phosphor-icons/react";
+import dynamic from "next/dynamic";
+import { useParams } from "next/navigation";
+import { useState } from "react";
 import { WebsitePageHeader } from "../_components/website-page-header";
 import {
 	FunnelAnalytics,
@@ -167,12 +167,7 @@ export default function FunnelsPage() {
 							},
 							description:
 								"Create your first funnel to start tracking user conversion journeys and identify optimization opportunities in your user flow.",
-							icon: (
-								<FunnelIcon
-									className="size-6 text-accent-foreground"
-									weight="duotone"
-								/>
-							),
+							icon: <FunnelIcon className="size-6" weight="duotone" />,
 							title: "No funnels yet",
 						}}
 						errorProps={{
