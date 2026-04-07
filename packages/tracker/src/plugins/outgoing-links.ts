@@ -35,14 +35,19 @@ export function initOutgoingLinksTracking(tracker: BaseTracker): () => void {
 			}
 
 			tracker.api.fetch(
-				"/outgoing",
+				"/",
 				{
+					type: "outgoing_link",
 					eventId: generateUUIDv4(),
+					anonymousId: tracker.anonymousId,
+					sessionId: tracker.sessionId,
+					timestamp: Date.now(),
 					href: link.href,
 					text: link.innerText || link.title || "",
 					...tracker.getBaseContext(),
 				},
-				{ keepalive: true }
+				{ keepalive: true },
+				{ client_id: tracker.options.clientId }
 			);
 		} catch {
 			return;
