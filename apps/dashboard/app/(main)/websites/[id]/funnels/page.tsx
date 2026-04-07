@@ -139,12 +139,7 @@ export default function FunnelsPage() {
 					description="Track user journeys and optimize conversion drop-off points"
 					feature={GATED_FEATURES.FUNNELS}
 					hasError={listOutcome.status === "error"}
-					icon={
-						<FunnelIcon
-							className="size-6 text-accent-foreground"
-							weight="duotone"
-						/>
-					}
+					icon={<FunnelIcon className="size-6" weight="duotone" />}
 					isLoading={isLoading}
 					isRefreshing={isFetching}
 					onCreateAction={() => setEditing("new")}
@@ -175,12 +170,7 @@ export default function FunnelsPage() {
 							description:
 								error?.message ??
 								"Something went wrong while loading funnel data.",
-							icon: (
-								<FunnelIcon
-									className="size-6 text-accent-foreground"
-									weight="duotone"
-								/>
-							),
+							icon: <FunnelIcon className="size-6" weight="duotone" />,
 							title: "Failed to load funnels",
 						}}
 						loading={<FunnelsListSkeleton />}
