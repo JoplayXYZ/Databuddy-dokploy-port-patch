@@ -242,49 +242,48 @@ test.describe("Edge Cases", () => {
 	});
 
 	test.describe("Pixel Mode", () => {
-		// FIXME: pixel plugin (packages/tracker/src/plugins/pixel.ts) is broken —
-		// it only translates the `/` endpoint to `/px.jpg`, leaving `/batch`,
-		// `/track`, `/vitals`, `/errors` as GET image loads to paths basket
-		// only serves as POST. The hardened E2E fixture (tests/test-utils.ts)
-		// correctly fails this test because screen_view goes through /batch and
-		// hits GET /batch → 404. Fix is to route ALL endpoints to /px.jpg in
-		// pixel.ts and rely on a `type` query param, matching basket's
-		// parsePixelQuery handler. Tracked separately; not part of the E2E
-		// hardening PR.
-		test.fixme(
-			"sends events via image pixel when usePixel is enabled",
-			async ({ page }) => {
-				let pixelRequestMade = false;
+		test("sends events via image pixel when usePixel is enabled", async ({
+			page,
+		}) => {
+			let pixelRequestMade = false;
+			let pixelRequestPath: string | null = null;
 
-				// Pixel transport uses GET Image loads to /px.jpg, /batch, /track, etc.
-				await page.route("**/basket.databuddy.cc/*", async (route) => {
-					if (route.request().method() !== "GET") {
-						await route.fallback();
-						return;
-					}
-					pixelRequestMade = true;
-					await route.fulfill({
-						status: 200,
-						contentType: "image/jpeg",
-						body: Buffer.from([]),
-					});
+			await page.route("**/basket.databuddy.cc/*", async (route) => {
+				if (route.request().method() !== "GET") {
+					await route.fallback();
+					return;
+				}
+				pixelRequestMade = true;
+				try {
+					pixelRequestPath = new URL(route.request().url()).pathname;
+				} catch {
+					/* best-effort */
+				}
+				await route.fulfill({
+					status: 200,
+					contentType: "image/jpeg",
+					body: Buffer.from([]),
 				});
+			});
 
-				await page.goto("/test");
-				await page.evaluate(() => {
-					(window as any).databuddyConfig = {
-						clientId: "test-pixel",
-						ignoreBotDetection: true,
-						usePixel: true,
-						batchTimeout: 200,
-					};
-				});
-				await page.addScriptTag({ url: "/dist/databuddy-debug.js" });
+			await page.goto("/test");
+			await page.evaluate(() => {
+				(window as any).databuddyConfig = {
+					clientId: "test-pixel",
+					ignoreBotDetection: true,
+					usePixel: true,
+					batchTimeout: 200,
+				};
+			});
+			await page.addScriptTag({ url: "/dist/databuddy-debug.js" });
 
-				await page.waitForTimeout(500);
-				expect(pixelRequestMade).toBe(true);
-			}
-		);
+			await page.waitForTimeout(500);
+			expect(pixelRequestMade).toBe(true);
+			// Pixel transport must always go to /px.jpg — it's the only GET
+			// route basket actually serves. Other paths (/batch, /track,
+			// /vitals, /errors) are POST-only and would 404.
+			expect(pixelRequestPath).toBe("/px.jpg");
+		});
 	});
 
 	test.describe("Circular Reference Handling", () => {
