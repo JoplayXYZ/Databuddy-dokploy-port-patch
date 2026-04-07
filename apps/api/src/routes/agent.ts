@@ -83,8 +83,6 @@ function getTextFromMessage(message: UIMessage | undefined): string {
 }
 
 const TITLE_MAX_LEN = 60;
-const FOLLOWUP_MAX_LEN = 80;
-const MAX_FOLLOWUPS = 3;
 
 /**
  * Generate a short, descriptive title from the first user/assistant exchange.
@@ -120,90 +118,6 @@ async function generateChatTitle(
 	} catch {
 		return null;
 	}
-}
-
-/**
- * Generate up to 3 short follow-up prompts the user is likely to ask next,
- * based on the most recent assistant turn. Returns [] on failure so the UI
- * gracefully renders nothing.
- */
-async function generateFollowups(messages: UIMessage[]): Promise<string[]> {
-	const lastUser = [...messages].reverse().find((m) => m.role === "user");
-	const lastAssistant = [...messages]
-		.reverse()
-		.find((m) => m.role === "assistant");
-	const userText = getTextFromMessage(lastUser).trim().slice(0, 400);
-	const assistantText = getTextFromMessage(lastAssistant).trim().slice(0, 800);
-	if (!(userText && assistantText)) {
-		return [];
-	}
-
-	try {
-		const result = await generateText({
-			model: models.triage,
-			temperature: 0.4,
-			maxOutputTokens: 200,
-			system:
-				"You suggest the next 3 questions a Databuddy analytics user is most likely to ask. Output ONLY a JSON array of 3 short strings (max 80 chars each). No prose, no markdown, no keys. Each string must be a question or actionable prompt the user can click to send. Be specific and useful — never generic.",
-			prompt: `User asked: "${userText}"\n\nAssistant answered: "${assistantText}"\n\nNext 3 questions:`,
-		});
-
-		const trimmed = result.text.trim();
-		const jsonStart = trimmed.indexOf("[");
-		const jsonEnd = trimmed.lastIndexOf("]");
-		if (jsonStart === -1 || jsonEnd === -1) {
-			return [];
-		}
-		const parsed: unknown = JSON.parse(trimmed.slice(jsonStart, jsonEnd + 1));
-		if (!Array.isArray(parsed)) {
-			return [];
-		}
-		return parsed
-			.filter((s): s is string => typeof s === "string" && s.trim().length > 0)
-			.slice(0, MAX_FOLLOWUPS)
-			.map((s) => s.trim().slice(0, FOLLOWUP_MAX_LEN));
-	} catch {
-		return [];
-	}
-}
-
-interface AgentMessageMetadata {
-	followups?: string[];
-}
-
-/**
- * Returns a copy of `messages` with `followups` attached to the metadata of
- * the most recent assistant message. Used so suggestions persist with the
- * messages array (no extra column / no extra fetch on the client).
- */
-function attachFollowups(
-	messages: UIMessage[],
-	followups: string[]
-): UIMessage[] {
-	if (followups.length === 0) {
-		return messages;
-	}
-	const lastAssistantIdx = (() => {
-		for (let i = messages.length - 1; i >= 0; i--) {
-			if (messages[i]?.role === "assistant") {
-				return i;
-			}
-		}
-		return -1;
-	})();
-	if (lastAssistantIdx === -1) {
-		return messages;
-	}
-	return messages.map((m, i) => {
-		if (i !== lastAssistantIdx) {
-			return m;
-		}
-		const existingMetadata = (m.metadata ?? {}) as AgentMessageMetadata;
-		return {
-			...m,
-			metadata: { ...existingMetadata, followups },
-		};
-	});
 }
 
 const MAX_MESSAGES = 100;
@@ -516,12 +430,6 @@ export const agent = new Elysia({ prefix: "/v1/agent" })
 								return;
 							}
 							try {
-								// Generate follow-up suggestions in parallel with the
-								// initial persist so the LLM call doesn't extend the
-								// total turn time. Result is attached as metadata on
-								// the most recent assistant message.
-								const followupsPromise = generateFollowups(messages);
-
 								await db
 									.insert(agentChats)
 									.values({
@@ -540,14 +448,6 @@ export const agent = new Elysia({ prefix: "/v1/agent" })
 											updatedAt: new Date(),
 										},
 									});
-
-								const followups = await followupsPromise;
-								if (followups.length > 0) {
-									await db
-										.update(agentChats)
-										.set({ messages: attachFollowups(messages, followups) })
-										.where(eq(agentChats.id, chatId));
-								}
 
 								// First-turn title polish: generate a real title once we
 								// have an assistant response. Run after the upsert so a

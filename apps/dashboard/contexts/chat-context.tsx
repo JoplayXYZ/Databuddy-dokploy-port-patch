@@ -23,10 +23,18 @@ interface PendingQueueValue {
 	removeAction: (index: number) => void;
 }
 
+interface ChatLoadingValue {
+	/** Initial mount: server fetch in flight, messages not yet hydrated. */
+	isRestoring: boolean;
+}
+
 const ChatContext = createContext<ChatApi | null>(null);
 const PendingQueueContext = createContext<PendingQueueValue>({
 	messages: [],
 	removeAction: () => {},
+});
+const ChatLoadingContext = createContext<ChatLoadingValue>({
+	isRestoring: false,
 });
 
 const isBusy = (c: ChatApi) =>
@@ -141,31 +149,14 @@ export function ChatProvider({
 			queryKey: orpc.agentChats.list.key({ input: { websiteId } }),
 		});
 
-		// Pull the just-finished chat back from the server after a short
-		// delay so any post-stream metadata (followup suggestions, polished
-		// titles) lands on the in-memory message list.
-		const syncTimer = setTimeout(async () => {
-			try {
-				const fresh = await queryClient.fetchQuery(
-					orpc.agentChats.get.queryOptions({ input: { id: chatId } })
-				);
-				if (fresh?.messages && fresh.messages.length > 0) {
-					chatRef.current.setMessages(fresh.messages as UIMessage[]);
-				}
-			} catch {
-				// Best-effort sync — failures don't affect the chat itself.
-			}
-		}, 1500);
-
 		const [next, ...rest] = pendingRef.current;
 		if (next === undefined) {
-			return () => clearTimeout(syncTimer);
+			return;
 		}
 		pendingRef.current = rest;
 		syncQueue();
 		chat.sendMessage({ text: next }).catch(() => undefined);
-		return () => clearTimeout(syncTimer);
-	}, [chat.status, chat, syncQueue, queryClient, websiteId, chatId]);
+	}, [chat.status, chat, syncQueue, queryClient, websiteId]);
 
 	const chatValue = useMemo(
 		(): ChatApi => ({ ...chat, sendMessage, stop }),
@@ -177,11 +168,20 @@ export function ChatProvider({
 		[pendingTexts, removeAction]
 	);
 
+	const loadingValue = useMemo(
+		(): ChatLoadingValue => ({
+			isRestoring: !hasRestored,
+		}),
+		[hasRestored]
+	);
+
 	return (
 		<ChatContext.Provider value={chatValue}>
-			<PendingQueueContext.Provider value={queueValue}>
-				{children}
-			</PendingQueueContext.Provider>
+			<ChatLoadingContext.Provider value={loadingValue}>
+				<PendingQueueContext.Provider value={queueValue}>
+					{children}
+				</PendingQueueContext.Provider>
+			</ChatLoadingContext.Provider>
 		</ChatContext.Provider>
 	);
 }
@@ -197,4 +197,12 @@ export function useChat() {
 /** Returns the queued messages and a remove callback. */
 export function usePendingQueue() {
 	return useContext(PendingQueueContext);
+}
+
+/**
+ * Returns transient loading flags for the current chat (initial restore +
+ * post-stream metadata sync). Components use these to render skeletons.
+ */
+export function useChatLoading() {
+	return useContext(ChatLoadingContext);
 }
