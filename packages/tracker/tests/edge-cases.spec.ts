@@ -279,9 +279,6 @@ test.describe("Edge Cases", () => {
 
 			await page.waitForTimeout(500);
 			expect(pixelRequestMade).toBe(true);
-			// Pixel transport must always go to /px.jpg — it's the only GET
-			// route basket actually serves. Other paths (/batch, /track,
-			// /vitals, /errors) are POST-only and would 404.
 			expect(pixelRequestPath).toBe("/px.jpg");
 		});
 	});

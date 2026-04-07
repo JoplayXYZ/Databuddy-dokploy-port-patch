@@ -2,6 +2,15 @@ import type { BaseTracker } from "../core/tracker";
 
 const PIXEL_PATH = "/px.jpg";
 
+// basket /px.jpg dispatches on `type` and only handles these two.
+// Other endpoints have no pixel equivalent and are dropped.
+const PIXEL_TYPE_BY_ENDPOINT: Record<string, string> = {
+	"/": "track",
+	"/batch": "track",
+	"/track": "track",
+	"/outgoing": "outgoing_link",
+};
+
 function safeStringify(value: unknown): string {
 	const seen = new WeakSet();
 	return JSON.stringify(value, (_key, val) => {
@@ -15,26 +24,26 @@ function safeStringify(value: unknown): string {
 	});
 }
 
-/**
- * Map a tracker endpoint to the `type` query param that basket's
- * /px.jpg handler dispatches on. basket only supports `track` and
- * `outgoing_link` events via pixel transport (see
- * apps/basket/src/utils/pixel.ts → parsePixelQuery and
- * apps/basket/src/routes/basket.ts → GET /px.jpg).
- *
- * Other endpoints (/vitals, /errors) have no pixel equivalent and we
- * skip them rather than sending GET image loads to paths basket only
- * serves as POST. The tracker tests' strict basket route allowlist
- * (packages/tracker/tests/test-utils.ts) catches any drift here.
- */
-function pixelEventTypeFor(endpoint: string): string | null {
-	if (endpoint === "/" || endpoint === "/batch" || endpoint === "/track") {
-		return "track";
+function flattenIntoParams(
+	params: URLSearchParams,
+	obj: Record<string, unknown>,
+	prefix = ""
+): void {
+	for (const key in obj) {
+		if (!Object.hasOwn(obj, key)) {
+			continue;
+		}
+		const value = obj[key];
+		if (value === null || value === undefined) {
+			continue;
+		}
+		const newKey = prefix ? `${prefix}[${key}]` : key;
+		if (typeof value === "object") {
+			params.append(newKey, safeStringify(value));
+		} else {
+			params.append(newKey, String(value));
+		}
 	}
-	if (endpoint === "/outgoing") {
-		return "outgoing_link";
-	}
-	return null;
 }
 
 export function initPixelTracking(tracker: BaseTracker) {
@@ -45,31 +54,7 @@ export function initPixelTracking(tracker: BaseTracker) {
 		data: Record<string, unknown>
 	): Promise<{ success: boolean }> => {
 		const params = new URLSearchParams();
-
-		const flatten = (obj: Record<string, unknown>, prefix = "") => {
-			for (const key in obj) {
-				if (Object.hasOwn(obj, key)) {
-					const value = obj[key];
-					const newKey = prefix ? `${prefix}[${key}]` : key;
-
-					if (value === null || value === undefined) {
-						continue;
-					}
-
-					if (typeof value === "object" && value !== null) {
-						if (prefix === "" && key === "properties") {
-							params.append(key, safeStringify(value));
-						} else {
-							params.append(newKey, safeStringify(value));
-						}
-					} else {
-						params.append(newKey, String(value));
-					}
-				}
-			}
-		};
-
-		flatten(data);
+		flattenIntoParams(params, data);
 
 		if (!params.has("type")) {
 			params.set("type", eventType);
@@ -102,18 +87,12 @@ export function initPixelTracking(tracker: BaseTracker) {
 		endpoint: string,
 		data: unknown
 	): Promise<{ success: boolean }> => {
-		const eventType = pixelEventTypeFor(endpoint);
+		const eventType = PIXEL_TYPE_BY_ENDPOINT[endpoint];
 		if (!eventType) {
 			return { success: false };
 		}
 
-		// Batched arrays: fire one pixel per event since /px.jpg only
-		// accepts a single event per GET. The tracker batches screen
-		// views and custom track events into arrays sent to /batch.
 		if (Array.isArray(data)) {
-			if (data.length === 0) {
-				return { success: true };
-			}
 			const results = await Promise.all(
 				data.map((event) =>
 					event && typeof event === "object"
