@@ -35,7 +35,7 @@ export function sanitizeString(input: unknown, maxLength?: number): string {
 
 	const actualMaxLength = maxLength ?? VALIDATION_LIMITS.STRING_MAX_LENGTH;
 
-	return input
+	let result = input
 		.trim()
 		.slice(0, actualMaxLength)
 		.split("")
@@ -49,10 +49,16 @@ export function sanitizeString(input: unknown, maxLength?: number): string {
 				code === 127
 			);
 		})
-		.join("")
-		.replace(/<[^>]*>/g, "") // Remove HTML tags
-		.replace(/[<>'"&]/g, "")
-		.replace(/\s+/g, " ");
+		.join("");
+
+	// Strip HTML tags repeatedly to defeat stacked-tag bypasses (e.g. `<scr<script>ipt>`)
+	let prev: string;
+	do {
+		prev = result;
+		result = result.replace(/<[^>]*>/g, "");
+	} while (result !== prev);
+
+	return result.replace(/[<>'"&]/g, "").replace(/\s+/g, " ");
 }
 
 const sessionIdRegex = /^[a-zA-Z0-9_-]+$/;
