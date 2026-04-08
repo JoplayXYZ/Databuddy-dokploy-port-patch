@@ -1,6 +1,7 @@
 import { auth, websitesApi } from "@databuddy/auth";
 import { agentChats, db, eq } from "@databuddy/db";
 import { getRateLimitHeaders, rateLimit } from "@databuddy/redis/rate-limit";
+import { getAutumn, getBillingCustomerId } from "@databuddy/rpc";
 import {
 	convertToModelMessages,
 	generateId,
@@ -272,6 +273,33 @@ export const agent = new Elysia({ prefix: "/v1/agent" })
 
 					const userId = user?.id ?? apiKeyOrg ?? "api-key";
 
+					const billingCustomerId = user?.id
+						? await getBillingCustomerId(user.id, organizationId)
+						: null;
+
+					if (billingCustomerId) {
+						try {
+							const allowed = await getAutumn().check({
+								customerId: billingCustomerId,
+								featureId: "agent_credits",
+							});
+							if (allowed.allowed === false) {
+								mergeWideEvent({ agent_rejected: "out_of_credits" });
+								return jsonError(
+									402,
+									"OUT_OF_CREDITS",
+									"You're out of Databunny credits this month. Upgrade or wait for the monthly reset."
+								);
+							}
+						} catch (creditCheckError) {
+							captureError(creditCheckError, {
+								agent_credit_check_error: true,
+								agent_chat_id: chatId,
+								agent_website_id: body.websiteId,
+							});
+						}
+					}
+
 					// Rate limit: 40 chat turns per 10 minutes per user (LLM cost abuse guard).
 					const rl = await rateLimit(`agent-chat:${userId}`, 40, 600);
 					if (!rl.success) {
@@ -426,7 +454,7 @@ export const agent = new Elysia({ prefix: "/v1/agent" })
 					// `totalUsage` resolves once the stream finishes; run as a
 					// parallel side effect so it never blocks the response.
 					Promise.resolve(result.totalUsage)
-						.then((usage) => {
+						.then(async (usage) => {
 							const summary = summarizeAgentUsage(modelNames.analytics, usage);
 							mergeWideEvent(summary);
 							trackAgentEvent("agent_activity", {
@@ -438,6 +466,28 @@ export const agent = new Elysia({ prefix: "/v1/agent" })
 								user_id: persistedUserId ?? null,
 								...summary,
 							});
+
+							if (!billingCustomerId) {
+								return;
+							}
+							const autumn = getAutumn();
+							const tokenTracks: [string, number][] = [
+								["agent_input_tokens", summary.input_tokens],
+								["agent_output_tokens", summary.output_tokens],
+								["agent_cache_read_tokens", summary.cache_read_tokens],
+								["agent_cache_write_tokens", summary.cache_write_tokens],
+							];
+							await Promise.allSettled(
+								tokenTracks
+									.filter(([, value]) => value > 0)
+									.map(([featureId, value]) =>
+										autumn.track({
+											customerId: billingCustomerId,
+											featureId,
+											value,
+										})
+									)
+							);
 						})
 						.catch((usageError) => {
 							captureError(usageError, {
