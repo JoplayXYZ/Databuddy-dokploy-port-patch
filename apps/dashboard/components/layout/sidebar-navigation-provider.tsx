@@ -119,33 +119,34 @@ export function SidebarNavigationProvider({
 				config.defaultCategory as keyof typeof config.navigationMap
 			];
 
+		const isFlagOn = (flag: string) => {
+			if (!isHydrated) {
+				return false;
+			}
+			const flagState = getFlag(flag);
+			return flagState.status === "ready" && flagState.on;
+		};
+
 		return navSections
 			.map((entry) => {
 				if ("items" in entry) {
-					const filteredItems = entry.items.filter((item) => {
-						if (item.flag) {
-							const flagState = getFlag(item.flag);
-							return flagState.status === "ready" && flagState.on;
-						}
-						return true;
-					});
+					const filteredItems = entry.items.filter(
+						(item) => !item.flag || isFlagOn(item.flag)
+					);
 					return { ...entry, items: filteredItems };
 				}
 				return entry;
 			})
 			.filter((entry) => {
-				if (entry.flag) {
-					const flagState = getFlag(entry.flag);
-					if (!(flagState.status === "ready" && flagState.on)) {
-						return false;
-					}
+				if (entry.flag && !isFlagOn(entry.flag)) {
+					return false;
 				}
 				if ("items" in entry && entry.items.length === 0) {
 					return false;
 				}
 				return true;
 			});
-	}, [config, activeCategory, getFlag]);
+	}, [config, activeCategory, getFlag, isHydrated]);
 
 	const header = useMemo(() => {
 		if (isWebsite || isDemo) {
