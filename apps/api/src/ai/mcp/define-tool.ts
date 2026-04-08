@@ -1,6 +1,6 @@
 import { getRateLimitHeaders, rateLimit } from "@databuddy/redis/rate-limit";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
-import type { z } from "zod";
+import { z } from "zod";
 import type { ApiKeyRow } from "../../lib/api-key";
 import { trackAgentEvent } from "../../lib/databuddy";
 import { captureError, mergeWideEvent } from "../../lib/tracing";
@@ -19,14 +19,6 @@ function stripAnsi(text: string): string {
 	return text.replace(ANSI_RE, "");
 }
 
-/**
- * Coerce stringified booleans and JSON arrays/objects into their native shapes
- * before Zod validation. Some MCP clients serialize every argument as a string
- * regardless of the underlying type, which causes `z.boolean()` / `z.array(...)`
- * schemas to reject otherwise-valid calls. Conservative by design: only
- * coerces values that unambiguously look like the intended type, leaving real
- * strings untouched.
- */
 function coerceMcpInput(input: unknown): unknown {
 	if (!input || typeof input !== "object" || Array.isArray(input)) {
 		return input;
@@ -51,7 +43,7 @@ function coerceMcpInput(input: unknown): unknown {
 						continue;
 					}
 				} catch {
-					// Not valid JSON — fall through and keep as string
+					// intentionally empty
 				}
 			}
 		}
@@ -218,11 +210,15 @@ export function defineMcpTool<S extends z.ZodTypeAny>(
 	}
 
 	const hasOutputSchema = meta.outputSchema !== undefined;
+	const coercedInputSchema = z.preprocess(
+		coerceMcpInput,
+		meta.inputSchema
+	) as unknown as S;
 
 	const build = (ctx: McpRequestContext): RegisteredMcpTool => ({
 		name: meta.name,
 		description: meta.description,
-		inputSchema: meta.inputSchema,
+		inputSchema: coercedInputSchema,
 		outputSchema: meta.outputSchema,
 		handler: async (rawInput: unknown): Promise<CallToolResult> => {
 			const start = Date.now();
@@ -234,9 +230,7 @@ export function defineMcpTool<S extends z.ZodTypeAny>(
 			});
 
 			try {
-				const parseResult = meta.inputSchema.safeParse(
-					coerceMcpInput(rawInput ?? {})
-				);
+				const parseResult = coercedInputSchema.safeParse(rawInput ?? {});
 				if (!parseResult.success) {
 					const issue = parseResult.error.issues[0];
 					const path = issue?.path.join(".") ?? "input";

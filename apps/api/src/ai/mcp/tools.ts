@@ -536,8 +536,6 @@ const capabilitiesTool = defineMcpTool(
 				? input.include
 				: CAPABILITY_DEFAULTS
 		);
-		// If the caller passes category/contains, they clearly want queryTypes
-		// — auto-include that section even if they forgot to list it.
 		if ((input.category || input.contains) && !selected.has("queryTypes")) {
 			selected.add("queryTypes");
 		}
@@ -990,9 +988,6 @@ const ALL_TOOL_FACTORIES: McpToolFactory[] = [
 	...(MEMORY_ENABLED ? [searchMemoryTool, saveMemoryTool] : []),
 ];
 
-// Cache tool names once — used by capabilities. Avoids drift with the registry.
-// Fails loud at module load if a factory is missing its toolName, so the
-// availableTools "[null, null, ...]" bug can never ship again.
 const REGISTERED_TOOL_NAMES: readonly string[] = Object.freeze(
 	ALL_TOOL_FACTORIES.map((f, idx) => {
 		if (typeof f.toolName !== "string" || f.toolName.length === 0) {

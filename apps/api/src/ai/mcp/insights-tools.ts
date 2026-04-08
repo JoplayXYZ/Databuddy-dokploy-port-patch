@@ -849,9 +849,6 @@ const compareMetricTool = defineMcpTool(
 			compareRange = computePreviousPeriod(currentRange);
 		}
 
-		// All built-in metrics share the same queryType (summary_metrics), so we
-		// fan out one unique query per period regardless of how many metrics the
-		// caller asked for.
 		const selectedDefs = selectedMetrics.flatMap((k) => {
 			const def = METRIC_REGISTRY[k];
 			return def ? [[k, def] as const] : [];
@@ -1459,8 +1456,6 @@ const detectAnomaliesTool = defineMcpTool(
 			}
 		}
 
-		// Deduplicate: prefer the larger |deltaPercent| entry when both arms fire
-		// on the same metric.
 		const byMetric = new Map<string, AnomalyRow>();
 		for (const a of anomalies) {
 			const key = a.metric;
