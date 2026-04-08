@@ -2,23 +2,25 @@
 
 import {
 	BrainIcon,
-	CaretDownIcon,
 	ClockCountdownIcon,
 	PaperPlaneRightIcon,
 	StopIcon,
 	XIcon,
 } from "@phosphor-icons/react";
 import { useAtom } from "jotai";
-import { Button } from "@/components/ui/button";
+import { useMemo, useState } from "react";
 import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuLabel,
-	DropdownMenuRadioGroup,
-	DropdownMenuRadioItem,
-	DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+	UnicodeSpinner,
+	useRandomThinkingVariant,
+} from "@/components/ai-elements/unicode-spinner";
+import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipProvider,
+	TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useChat, usePendingQueue } from "@/contexts/chat-context";
 import { cn } from "@/lib/utils";
 import {
@@ -27,6 +29,8 @@ import {
 	agentInputAtom,
 	agentThinkingAtom,
 } from "./agent-atoms";
+import { AgentCommandMenu } from "./agent-command-menu";
+import { type AgentCommand, filterCommands } from "./agent-commands";
 import { useEnterSubmit } from "./hooks/use-enter-submit";
 
 export function AgentInput() {
@@ -35,6 +39,23 @@ export function AgentInput() {
 	const isLoading = status === "streaming" || status === "submitted";
 	const [input, setInput] = useAtom(agentInputAtom);
 	const { formRef, onKeyDown } = useEnterSubmit();
+	const [selectedCommandIndex, setSelectedCommandIndex] = useState(0);
+	const [commandsDismissed, setCommandsDismissed] = useState(false);
+
+	const filteredCommands = useMemo(() => {
+		if (!input.startsWith("/")) {
+			return [];
+		}
+		const query = input.slice(1);
+		return filterCommands(query);
+	}, [input]);
+
+	const showCommands =
+		!(commandsDismissed || isLoading) && filteredCommands.length > 0;
+	const safeCommandIndex =
+		filteredCommands.length === 0
+			? 0
+			: Math.min(selectedCommandIndex, filteredCommands.length - 1);
 
 	const handleSubmit = (e?: React.FormEvent) => {
 		e?.preventDefault();
@@ -43,6 +64,67 @@ export function AgentInput() {
 		}
 		sendMessage({ text: input.trim() });
 		setInput("");
+		setCommandsDismissed(false);
+	};
+
+	const selectCommand = (command: AgentCommand) => {
+		setInput(command.prompt);
+		setSelectedCommandIndex(0);
+		setCommandsDismissed(true);
+	};
+
+	const handleTextareaKeyDown = (
+		event: React.KeyboardEvent<HTMLTextAreaElement>
+	) => {
+		if (showCommands) {
+			if (event.key === "ArrowDown") {
+				event.preventDefault();
+				setSelectedCommandIndex((prev) => (prev + 1) % filteredCommands.length);
+				return;
+			}
+			if (event.key === "ArrowUp") {
+				event.preventDefault();
+				setSelectedCommandIndex(
+					(prev) =>
+						(prev - 1 + filteredCommands.length) % filteredCommands.length
+				);
+				return;
+			}
+			if (event.key === "Escape") {
+				event.preventDefault();
+				setCommandsDismissed(true);
+				return;
+			}
+			if (
+				event.key === "Enter" &&
+				!event.shiftKey &&
+				!event.nativeEvent.isComposing
+			) {
+				event.preventDefault();
+				const target = filteredCommands[safeCommandIndex];
+				if (target) {
+					selectCommand(target);
+				}
+				return;
+			}
+			if (event.key === "Tab") {
+				event.preventDefault();
+				const target = filteredCommands[safeCommandIndex];
+				if (target) {
+					selectCommand(target);
+				}
+				return;
+			}
+		}
+		onKeyDown(event);
+	};
+
+	const handleInputChange = (value: string) => {
+		setInput(value);
+		if (!value.startsWith("/")) {
+			setCommandsDismissed(false);
+		}
+		setSelectedCommandIndex(0);
 	};
 
 	return (
@@ -60,59 +142,69 @@ export function AgentInput() {
 				/>
 			) : null}
 
-			<div
-				className={cn(
-					"rounded border border-border bg-background shadow-xs transition-colors",
-					"focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/50"
-				)}
-			>
-				<Textarea
-					className={cn(
-						"min-h-0 resize-none border-0 bg-transparent px-3 pt-3 pb-2 text-sm shadow-none",
-						"focus-visible:border-0 focus-visible:bg-transparent focus-visible:shadow-none focus-visible:ring-0"
-					)}
-					maxRows={8}
-					minRows={1}
-					onChange={(e) => setInput(e.target.value)}
-					onKeyDown={onKeyDown}
-					placeholder="Ask Databunny anything about your analytics…"
-					showFocusIndicator={false}
-					value={input}
-				/>
-
-				<div className="flex items-center justify-between gap-3 rounded-b border-border/60 border-t bg-muted/30 px-3 py-1.5">
-					<KeyboardHints isLoading={isLoading} />
-
-					<div className="flex shrink-0 items-center gap-1">
-						<ThinkingControl />
-						{isLoading ? (
-							<Button
-								aria-label="Stop generation"
-								className="size-7"
-								onClick={stop}
-								size="icon"
-								type="button"
-								variant="default"
-							>
-								<StopIcon className="size-3.5" weight="fill" />
-							</Button>
-						) : (
-							<Button
-								aria-label="Send message"
-								className="size-7"
-								disabled={!input.trim()}
-								size="icon"
-								type="submit"
-							>
-								<PaperPlaneRightIcon
-									className="size-3.5"
-									weight={input.trim() ? "fill" : "duotone"}
-								/>
-							</Button>
+			<AgentCommandMenu
+				anchor={
+					<div
+						className={cn(
+							"rounded border border-border bg-background shadow-xs transition-colors",
+							"focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/50"
 						)}
+					>
+						<Textarea
+							className={cn(
+								"min-h-0 resize-none border-0 bg-transparent px-3 pt-3 pb-2 text-sm shadow-none",
+								"focus-visible:border-0 focus-visible:bg-transparent focus-visible:shadow-none focus-visible:ring-0"
+							)}
+							maxRows={8}
+							minRows={1}
+							onChange={(e) => handleInputChange(e.target.value)}
+							onKeyDown={handleTextareaKeyDown}
+							placeholder="Ask Databunny anything about your analytics…"
+							showFocusIndicator={false}
+							value={input}
+						/>
+
+						<div className="flex items-center justify-between gap-3 rounded-b border-border/60 border-t bg-muted/30 px-3 py-1.5">
+							<KeyboardHints isLoading={isLoading} />
+
+							<div className="flex shrink-0 items-center gap-1">
+								<ThinkingControl />
+								{isLoading ? (
+									<Button
+										aria-label="Stop generation"
+										className="size-7"
+										onClick={stop}
+										size="icon"
+										type="button"
+										variant="default"
+									>
+										<StopIcon className="size-3.5" weight="fill" />
+									</Button>
+								) : (
+									<Button
+										aria-label="Send message"
+										className="size-7"
+										disabled={!input.trim()}
+										size="icon"
+										type="submit"
+									>
+										<PaperPlaneRightIcon
+											className="size-3.5"
+											weight={input.trim() ? "fill" : "duotone"}
+										/>
+									</Button>
+								)}
+							</div>
+						</div>
 					</div>
-				</div>
-			</div>
+				}
+				commands={filteredCommands}
+				onDismiss={() => setCommandsDismissed(true)}
+				onHover={setSelectedCommandIndex}
+				onSelect={selectCommand}
+				open={showCommands}
+				selectedIndex={safeCommandIndex}
+			/>
 		</form>
 	);
 }
@@ -135,52 +227,49 @@ function ThinkingControl() {
 	const [thinking, setThinking] = useAtom(agentThinkingAtom);
 	const isOn = thinking !== "off";
 
+	const cycleThinking = () => {
+		const currentIndex = AGENT_THINKING_LEVELS.indexOf(thinking);
+		const nextIndex = (currentIndex + 1) % AGENT_THINKING_LEVELS.length;
+		const next = AGENT_THINKING_LEVELS[nextIndex];
+		if (next) {
+			setThinking(next);
+		}
+	};
+
 	return (
-		<DropdownMenu>
-			<DropdownMenuTrigger asChild>
-				<button
-					aria-label={`Thinking effort: ${THINKING_LABELS[thinking]}`}
-					className={cn(
-						"flex h-7 items-center gap-1 rounded border px-2 text-xs transition-colors",
-						isOn
-							? "border-border bg-accent text-foreground"
-							: "border-transparent text-muted-foreground hover:border-border/60 hover:bg-accent/40 hover:text-foreground"
-					)}
-					type="button"
-				>
-					<BrainIcon className="size-3.5" weight={isOn ? "fill" : "duotone"} />
-					<span className="font-medium">{THINKING_LABELS[thinking]}</span>
-					<CaretDownIcon className="size-3 opacity-60" weight="bold" />
-				</button>
-			</DropdownMenuTrigger>
-			<DropdownMenuContent
-				align="end"
-				className="w-56"
-				side="top"
-				sideOffset={8}
-			>
-				<DropdownMenuLabel className="pb-1 font-medium text-[11px] text-muted-foreground uppercase tracking-wide">
-					Thinking effort
-				</DropdownMenuLabel>
-				<DropdownMenuRadioGroup
-					onValueChange={(value) => setThinking(value as AgentThinking)}
-					value={thinking}
-				>
-					{AGENT_THINKING_LEVELS.map((level) => (
-						<DropdownMenuRadioItem className="py-1.5" key={level} value={level}>
-							<div className="flex min-w-0 flex-col">
-								<span className="font-medium text-sm leading-tight">
-									{THINKING_LABELS[level]}
-								</span>
-								<span className="text-muted-foreground text-xs leading-snug">
-									{THINKING_DESCRIPTIONS[level]}
-								</span>
-							</div>
-						</DropdownMenuRadioItem>
-					))}
-				</DropdownMenuRadioGroup>
-			</DropdownMenuContent>
-		</DropdownMenu>
+		<TooltipProvider delayDuration={250}>
+			<Tooltip>
+				<TooltipTrigger asChild>
+					<button
+						aria-label={`Thinking effort: ${THINKING_LABELS[thinking]}. Click to cycle.`}
+						className={cn(
+							"flex h-7 items-center gap-1 rounded border px-2 text-xs transition-colors",
+							isOn
+								? "border-border bg-accent text-foreground"
+								: "border-transparent text-muted-foreground hover:border-border/60 hover:bg-accent/40 hover:text-foreground"
+						)}
+						onClick={cycleThinking}
+						type="button"
+					>
+						<BrainIcon
+							className="size-3.5"
+							weight={isOn ? "fill" : "duotone"}
+						/>
+						<span className="font-medium">{THINKING_LABELS[thinking]}</span>
+					</button>
+				</TooltipTrigger>
+				<TooltipContent side="top" sideOffset={8}>
+					<div className="flex flex-col gap-0.5">
+						<span className="font-medium">
+							Thinking · {THINKING_LABELS[thinking]}
+						</span>
+						<span className="text-muted-foreground">
+							{THINKING_DESCRIPTIONS[thinking]}
+						</span>
+					</div>
+				</TooltipContent>
+			</Tooltip>
+		</TooltipProvider>
 	);
 }
 
@@ -192,17 +281,22 @@ function Kbd({ children }: { children: React.ReactNode }) {
 	);
 }
 
+function GeneratingHint() {
+	const variant = useRandomThinkingVariant();
+	return (
+		<div className="flex min-w-0 items-center gap-1.5 text-muted-foreground text-xs">
+			<UnicodeSpinner label="Generating" variant={variant} />
+			<span>Generating…</span>
+		</div>
+	);
+}
+
 function KeyboardHints({ isLoading }: { isLoading: boolean }) {
 	// Keep this slot mounted in both states so the footer layout doesn't
 	// shift when a message is sent. Streaming state shows a subtle status
 	// line in the same height instead of the keyboard shortcuts.
 	if (isLoading) {
-		return (
-			<div className="flex min-w-0 items-center gap-1.5 text-muted-foreground text-xs">
-				<span className="inline-block size-1.5 animate-pulse rounded-full bg-foreground/60" />
-				<span>Generating…</span>
-			</div>
-		);
+		return <GeneratingHint />;
 	}
 	return (
 		<div className="flex min-w-0 items-center gap-1.5 text-muted-foreground text-xs">

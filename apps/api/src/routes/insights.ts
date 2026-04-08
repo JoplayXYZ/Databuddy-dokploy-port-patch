@@ -13,7 +13,8 @@ import {
 	member,
 	websites,
 } from "@databuddy/db";
-import { getRedisCache } from "@databuddy/redis";
+import { cacheable, getRedisCache } from "@databuddy/redis";
+import { getRateLimitHeaders, rateLimit } from "@databuddy/redis/rate-limit";
 import { generateText, Output, stepCountIs, ToolLoopAgent } from "ai";
 import dayjs from "dayjs";
 import { Elysia, t } from "elysia";
@@ -23,7 +24,7 @@ import type { ParsedInsight } from "../ai/schemas/smart-insights-output";
 import { insightsOutputSchema } from "../ai/schemas/smart-insights-output";
 import { createInsightsAgentTools } from "../ai/tools/insights-agent-tools";
 import { storeAnalyticsSummary } from "../lib/supermemory";
-import { mergeWideEvent } from "../lib/tracing";
+import { captureError, mergeWideEvent } from "../lib/tracing";
 import { executeQuery } from "../query";
 
 const CACHE_TTL = 900;
@@ -927,6 +928,118 @@ async function invalidateInsightsCacheForOrg(
 	}
 }
 
+const NARRATIVE_RATE_LIMIT = 30;
+const NARRATIVE_RATE_WINDOW_SECS = 3600;
+const NARRATIVE_CACHE_TTL_SECS = 3600;
+const NARRATIVE_INSIGHTS_LIMIT = 5;
+
+function rangeWord(range: "7d" | "30d" | "90d"): string {
+	if (range === "7d") {
+		return "week";
+	}
+	if (range === "30d") {
+		return "month";
+	}
+	return "quarter";
+}
+
+function buildDeterministicNarrative(
+	range: "7d" | "30d" | "90d",
+	topInsights: {
+		title: string;
+		severity: string;
+		websiteName: string | null;
+	}[]
+): string {
+	const word = rangeWord(range);
+	if (topInsights.length === 0) {
+		return `All systems healthy this ${word}. No actionable signals detected.`;
+	}
+	const headline = topInsights[0];
+	const siteSuffix = headline.websiteName ? ` on ${headline.websiteName}` : "";
+	if (topInsights.length === 1) {
+		return `This ${word}: ${headline.title}${siteSuffix}.`;
+	}
+	const extra = topInsights.length - 1;
+	return `This ${word}: ${headline.title}${siteSuffix}, plus ${extra} more signal${extra === 1 ? "" : "s"} worth reviewing.`;
+}
+
+const generateNarrativeCached = cacheable(
+	async function generateNarrativeCached(
+		organizationId: string,
+		range: "7d" | "30d" | "90d"
+	): Promise<{ narrative: string }> {
+		const topInsights = await db
+			.select({
+				title: analyticsInsights.title,
+				description: analyticsInsights.description,
+				severity: analyticsInsights.severity,
+				changePercent: analyticsInsights.changePercent,
+				websiteName: websites.name,
+			})
+			.from(analyticsInsights)
+			.innerJoin(websites, eq(analyticsInsights.websiteId, websites.id))
+			.where(eq(analyticsInsights.organizationId, organizationId))
+			.orderBy(desc(analyticsInsights.priority))
+			.limit(NARRATIVE_INSIGHTS_LIMIT);
+
+		if (topInsights.length === 0) {
+			return {
+				narrative: `All systems healthy this ${rangeWord(range)}. No actionable signals detected.`,
+			};
+		}
+
+		const insightLines = topInsights.map((ins) => {
+			const site = ins.websiteName ? ` [${ins.websiteName}]` : "";
+			const change =
+				ins.changePercent == null
+					? ""
+					: ` (${ins.changePercent > 0 ? "+" : ""}${ins.changePercent.toFixed(0)}%)`;
+			return `- [${ins.severity}] ${ins.title}${change}${site}: ${ins.description ?? ""}`;
+		});
+
+		const prompt = `You are an analytics assistant summarizing an organization's state over the last ${range}.
+
+Write a crisp 2–3 sentence executive summary of the top insights below.
+
+Rules:
+- Lead with the most important change
+- Include concrete numbers when available
+- Never exceed 60 words total
+- State facts, do not editorialize
+- If nothing meaningful is happening, say so plainly
+
+Top signals this ${range}:
+${insightLines.join("\n")}`;
+
+		let narrative = "";
+		try {
+			const result = await generateText({
+				model: models.analytics,
+				prompt,
+				temperature: 0.2,
+				maxOutputTokens: 200,
+			});
+			narrative = result.text.trim();
+		} catch (error) {
+			useLogger().warn("Narrative LLM call failed", {
+				insights: { organizationId, range, error },
+			});
+		}
+
+		if (!narrative) {
+			narrative = buildDeterministicNarrative(range, topInsights);
+			mergeWideEvent({ insights_narrative_fallback: true });
+		}
+
+		return { narrative };
+	},
+	{
+		expireInSec: NARRATIVE_CACHE_TTL_SECS,
+		prefix: "insights-narrative",
+	}
+);
+
 export const insights = new Elysia({ prefix: "/v1/insights" })
 	.derive(async ({ request }) => {
 		const session = await auth.api.getSession({ headers: request.headers });
@@ -1056,6 +1169,78 @@ export const insights = new Elysia({ prefix: "/v1/insights" })
 				limit: t.Optional(t.String()),
 				offset: t.Optional(t.String()),
 				websiteId: t.Optional(t.String()),
+			}),
+		}
+	)
+	.get(
+		"/org-narrative",
+		async ({ query, user, set }) => {
+			const userId = user?.id;
+			if (!userId) {
+				return { success: false, error: "User ID required" };
+			}
+
+			const { organizationId, range } = query;
+			mergeWideEvent({
+				insights_narrative_org_id: organizationId,
+				insights_narrative_range: range,
+			});
+
+			const memberships = await db.query.member.findMany({
+				where: eq(member.userId, userId),
+				columns: { organizationId: true },
+			});
+
+			const orgIds = new Set(memberships.map((m) => m.organizationId));
+			if (!orgIds.has(organizationId)) {
+				mergeWideEvent({ insights_narrative_access: "denied" });
+				set.status = 403;
+				return { success: false, error: "Access denied to this organization" };
+			}
+
+			const rl = await rateLimit(
+				`insights:narrative:${organizationId}:${userId}`,
+				NARRATIVE_RATE_LIMIT,
+				NARRATIVE_RATE_WINDOW_SECS
+			);
+			const rlHeaders = getRateLimitHeaders(rl);
+			for (const [key, value] of Object.entries(rlHeaders)) {
+				set.headers[key] = value;
+			}
+			if (!rl.success) {
+				set.status = 429;
+				return {
+					success: false,
+					error: "Rate limit exceeded. Try again later.",
+				};
+			}
+
+			try {
+				const { narrative } = await generateNarrativeCached(
+					organizationId,
+					range
+				);
+				return {
+					success: true,
+					narrative,
+					generatedAt: new Date().toISOString(),
+				};
+			} catch (error) {
+				captureError(error, {
+					insights_narrative_org_id: organizationId,
+					insights_narrative_range: range,
+				});
+				useLogger().warn("Failed to generate org narrative", {
+					insights: { organizationId, range, error },
+				});
+				set.status = 500;
+				return { success: false, error: "Could not generate narrative" };
+			}
+		},
+		{
+			query: t.Object({
+				organizationId: t.String(),
+				range: t.Union([t.Literal("7d"), t.Literal("30d"), t.Literal("90d")]),
 			}),
 		}
 	)
