@@ -2,6 +2,7 @@
 
 import {
 	BrainIcon,
+	CaretDownIcon,
 	ClockCountdownIcon,
 	PaperPlaneRightIcon,
 	StopIcon,
@@ -10,10 +11,13 @@ import {
 import { useAtom } from "jotai";
 import { Button } from "@/components/ui/button";
 import {
-	Popover,
-	PopoverContent,
-	PopoverTrigger,
-} from "@/components/ui/popover";
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuLabel,
+	DropdownMenuRadioGroup,
+	DropdownMenuRadioItem,
+	DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Textarea } from "@/components/ui/textarea";
 import { useChat, usePendingQueue } from "@/contexts/chat-context";
 import { cn } from "@/lib/utils";
@@ -121,10 +125,10 @@ const THINKING_LABELS: Record<AgentThinking, string> = {
 };
 
 const THINKING_DESCRIPTIONS: Record<AgentThinking, string> = {
-	off: "Fastest, cheapest. Good for most questions.",
-	low: "Brief reasoning before answering.",
-	medium: "Deeper reasoning. Better for analysis.",
-	high: "Extended reasoning. Slowest and most expensive.",
+	off: "Fastest, cheapest",
+	low: "Brief reasoning",
+	medium: "Deeper analysis",
+	high: "Extended reasoning",
 };
 
 function ThinkingControl() {
@@ -132,10 +136,10 @@ function ThinkingControl() {
 	const isOn = thinking !== "off";
 
 	return (
-		<Popover>
-			<PopoverTrigger asChild>
+		<DropdownMenu>
+			<DropdownMenuTrigger asChild>
 				<button
-					aria-label={`Thinking: ${THINKING_LABELS[thinking]}`}
+					aria-label={`Thinking effort: ${THINKING_LABELS[thinking]}`}
 					className={cn(
 						"flex h-7 items-center gap-1 rounded border px-2 text-xs transition-colors",
 						isOn
@@ -145,41 +149,38 @@ function ThinkingControl() {
 					type="button"
 				>
 					<BrainIcon className="size-3.5" weight={isOn ? "fill" : "duotone"} />
-					<span className="font-medium tabular-nums">
-						{THINKING_LABELS[thinking]}
-					</span>
+					<span className="font-medium">{THINKING_LABELS[thinking]}</span>
+					<CaretDownIcon className="size-3 opacity-60" weight="bold" />
 				</button>
-			</PopoverTrigger>
-			<PopoverContent align="end" className="w-60 p-2" sideOffset={8}>
-				<div className="px-1.5 pt-0.5 pb-1.5">
-					<p className="font-medium text-foreground text-xs">Thinking</p>
-					<p className="mt-0.5 text-[11px] text-muted-foreground leading-snug">
-						{THINKING_DESCRIPTIONS[thinking]}
-					</p>
-				</div>
-				<div className="flex gap-1">
-					{AGENT_THINKING_LEVELS.map((level) => {
-						const selected = level === thinking;
-						return (
-							<button
-								aria-pressed={selected}
-								className={cn(
-									"flex-1 rounded border px-2 py-1 font-medium text-xs transition-colors",
-									selected
-										? "border-foreground/20 bg-foreground text-background"
-										: "border-border/60 bg-transparent text-muted-foreground hover:border-border hover:text-foreground"
-								)}
-								key={level}
-								onClick={() => setThinking(level)}
-								type="button"
-							>
-								{THINKING_LABELS[level]}
-							</button>
-						);
-					})}
-				</div>
-			</PopoverContent>
-		</Popover>
+			</DropdownMenuTrigger>
+			<DropdownMenuContent
+				align="end"
+				className="w-56"
+				side="top"
+				sideOffset={8}
+			>
+				<DropdownMenuLabel className="pb-1 font-medium text-[11px] text-muted-foreground uppercase tracking-wide">
+					Thinking effort
+				</DropdownMenuLabel>
+				<DropdownMenuRadioGroup
+					onValueChange={(value) => setThinking(value as AgentThinking)}
+					value={thinking}
+				>
+					{AGENT_THINKING_LEVELS.map((level) => (
+						<DropdownMenuRadioItem className="py-1.5" key={level} value={level}>
+							<div className="flex min-w-0 flex-col">
+								<span className="font-medium text-sm leading-tight">
+									{THINKING_LABELS[level]}
+								</span>
+								<span className="text-muted-foreground text-xs leading-snug">
+									{THINKING_DESCRIPTIONS[level]}
+								</span>
+							</div>
+						</DropdownMenuRadioItem>
+					))}
+				</DropdownMenuRadioGroup>
+			</DropdownMenuContent>
+		</DropdownMenu>
 	);
 }
 

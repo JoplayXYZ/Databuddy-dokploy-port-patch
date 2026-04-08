@@ -16,7 +16,6 @@ import {
 	ConversationContent,
 	ConversationScrollButton,
 } from "@/components/ai-elements/conversation";
-import { FaviconImage } from "@/components/analytics/favicon-image";
 import {
 	useBillingContext,
 	useUsageFeature,
@@ -95,44 +94,24 @@ export function AgentPageContent({ chatId, websiteId }: AgentPageContentProps) {
 	return (
 		<div className="relative flex flex-1 overflow-hidden">
 			<div className="flex flex-1 flex-col overflow-hidden">
-				<header className="flex h-12 shrink-0 items-center gap-3 border-b bg-background px-4">
-					<Avatar className="size-6 rounded">
-						<AvatarImage alt="Databunny avatar" src="/databunny.webp" />
-						<AvatarFallback className="rounded bg-primary/10 font-semibold text-[10px] text-primary">
-							DB
-						</AvatarFallback>
-					</Avatar>
-					<div className="flex min-w-0 flex-1 items-center gap-2">
+				<header className="flex h-12 shrink-0 items-center gap-2.5 border-b bg-background px-4">
+					<div className="flex min-w-0 flex-1 items-center gap-2.5">
+						<Avatar className="size-6 rounded">
+							<AvatarImage alt="Databunny avatar" src="/databunny.webp" />
+							<AvatarFallback className="rounded bg-primary/10 font-semibold text-[10px] text-primary">
+								DB
+							</AvatarFallback>
+						</Avatar>
 						<h1 className="truncate font-semibold text-foreground text-sm">
 							Databunny
 						</h1>
 						<span className="rounded border border-border/60 px-1.5 py-px font-medium text-[10px] text-muted-foreground uppercase tracking-wide">
 							Alpha
 						</span>
-						{domain ? (
-							<>
-								<span aria-hidden className="text-border text-xs leading-none">
-									·
-								</span>
-								<div className="flex min-w-0 items-center gap-1.5">
-									<FaviconImage
-										altText={`${domain} favicon`}
-										className="size-3.5 shrink-0 rounded-sm"
-										domain={domain}
-										fallbackIcon={
-											<div className="size-3.5 shrink-0 rounded-sm bg-muted" />
-										}
-										size={14}
-									/>
-									<span className="truncate text-muted-foreground text-xs">
-										{domain}
-									</span>
-								</div>
-							</>
-						) : null}
 					</div>
 					<div className="flex shrink-0 items-center gap-1">
 						<AgentCreditBalance />
+						<span aria-hidden className="mx-1 h-4 w-px bg-border/60" />
 						<ChatHistory />
 						<NewChatButton />
 					</div>
