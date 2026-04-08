@@ -1,12 +1,10 @@
 "use client";
 
 import type { DateRange } from "@databuddy/shared/types/analytics";
-import {
-	CalendarDotsIcon,
-	FunnelIcon,
-	PencilSimpleIcon,
-	PlusIcon,
-} from "@phosphor-icons/react";
+import { CalendarDotsIcon } from "@phosphor-icons/react";
+import { FunnelIcon } from "@phosphor-icons/react";
+import { PencilSimpleIcon } from "@phosphor-icons/react";
+import { PlusIcon } from "@phosphor-icons/react";
 import { useAtomValue } from "jotai";
 import { useParams } from "next/navigation";
 import { useMemo, useState } from "react";

@@ -1,11 +1,9 @@
 "use client";
 
-import {
-	CopyIcon,
-	DownloadSimpleIcon,
-	ImageIcon,
-	XIcon,
-} from "@phosphor-icons/react";
+import { CopyIcon } from "@phosphor-icons/react";
+import { DownloadSimpleIcon } from "@phosphor-icons/react";
+import { ImageIcon } from "@phosphor-icons/react";
+import { XIcon } from "@phosphor-icons/react";
 import { useCallback, useRef, useState } from "react";
 import { QRCode } from "react-qrcode-logo";
 import { toast } from "sonner";
@@ -34,10 +32,10 @@ const QR_COLORS = [
 ];
 
 interface LinkQrCodeProps {
-	slug: string;
+	className?: string;
 	name: string;
 	showControls?: boolean;
-	className?: string;
+	slug: string;
 }
 
 export function LinkQrCode({

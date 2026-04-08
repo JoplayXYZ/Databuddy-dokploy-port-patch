@@ -2,8 +2,8 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { ChartErrorBoundary } from "@/components/chart-error-boundary";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Chart } from "@/components/ui/composables/chart";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
 	chartAxisTickDefault,
 	chartAxisYWidthCompact,
@@ -17,7 +17,7 @@ import {
 	chartTooltipSingleShellClassName,
 } from "@/lib/chart-presentation";
 import dayjs from "@/lib/dayjs";
-import { formatMetricNumber } from "@/lib/formatters";
+import { formatNumber } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
 import type { ChartComponentProps } from "../../types";
 
@@ -36,9 +36,9 @@ const {
 } = Chart.Recharts;
 
 export interface TimeSeriesProps extends ChartComponentProps {
-	variant: "line" | "bar" | "area" | "stacked-bar";
 	data: Record<string, string | number>[];
 	series: string[];
+	variant: "line" | "bar" | "area" | "stacked-bar";
 }
 
 const PLOT_HEIGHT = 200;
@@ -71,8 +71,11 @@ export function TimeSeriesRenderer({
 	const toggleSeries = useCallback((key: string) => {
 		setHiddenSeries((prev) => {
 			const next = new Set(prev);
-			if (next.has(key)) next.delete(key);
-			else next.add(key);
+			if (next.has(key)) {
+				next.delete(key);
+			} else {
+				next.add(key);
+			}
 			return next;
 		});
 	}, []);
@@ -86,19 +89,30 @@ export function TimeSeriesRenderer({
 			label,
 		}: {
 			active?: boolean;
-			payload?: Array<{ value?: number; dataKey?: string | number; color?: string }>;
+			payload?: Array<{
+				value?: number;
+				dataKey?: string | number;
+				color?: string;
+			}>;
 			label?: string;
 		}) => {
-			if (!(active && payload?.length)) return null;
+			if (!(active && payload?.length)) {
+				return null;
+			}
 			return (
 				<div className={chartTooltipSingleShellClassName}>
 					<p className="mb-1 text-[10px] text-muted-foreground">
 						{formatDateLabel(String(label ?? ""))}
 					</p>
 					{payload.map((entry) => (
-						<p className="font-semibold text-foreground text-sm tabular-nums" key={entry.dataKey}>
-							{formatMetricNumber(entry.value ?? 0)}{" "}
-							<span className="font-normal text-muted-foreground">{entry.dataKey}</span>
+						<p
+							className="font-semibold text-foreground text-sm tabular-nums"
+							key={entry.dataKey}
+						>
+							{formatNumber(entry.value ?? 0)}{" "}
+							<span className="font-normal text-muted-foreground">
+								{entry.dataKey}
+							</span>
 						</p>
 					))}
 				</div>
@@ -128,7 +142,7 @@ export function TimeSeriesRenderer({
 		const yAxisProps = {
 			...axisProps,
 			width: chartAxisYWidthCompact,
-			tickFormatter: (v: number) => formatMetricNumber(v),
+			tickFormatter: (v: number) => formatNumber(v),
 		};
 
 		if (variant === "bar" || variant === "stacked-bar") {
@@ -137,13 +151,22 @@ export function TimeSeriesRenderer({
 					<CartesianGrid {...chartCartesianGridDefault} />
 					<XAxis {...xAxisProps} />
 					<YAxis {...yAxisProps} />
-					<Tooltip content={tooltipContent} cursor={{ fill: "var(--accent)", fillOpacity: 0.5 }} />
+					<Tooltip
+						content={tooltipContent}
+						cursor={{ fill: "var(--accent)", fillOpacity: 0.5 }}
+					/>
 					{visibleSeries.map((key, idx) => (
 						<Bar
-							key={key}
 							dataKey={key}
 							fill={chartSeriesColorAtIndex(series.indexOf(key))}
-							radius={variant === "stacked-bar" ? (idx === visibleSeries.length - 1 ? [3, 3, 0, 0] : [0, 0, 0, 0]) : [3, 3, 0, 0]}
+							key={key}
+							radius={
+								variant === "stacked-bar"
+									? idx === visibleSeries.length - 1
+										? [3, 3, 0, 0]
+										: [0, 0, 0, 0]
+									: [3, 3, 0, 0]
+							}
 							stackId={variant === "stacked-bar" ? "stack" : undefined}
 						/>
 					))}
@@ -157,15 +180,18 @@ export function TimeSeriesRenderer({
 					<CartesianGrid {...chartCartesianGridDefault} />
 					<XAxis {...xAxisProps} />
 					<YAxis {...yAxisProps} />
-					<Tooltip content={tooltipContent} cursor={{ stroke: "var(--border)", strokeDasharray: "4 4" }} />
+					<Tooltip
+						content={tooltipContent}
+						cursor={{ stroke: "var(--border)", strokeDasharray: "4 4" }}
+					/>
 					{visibleSeries.map((key) => (
 						<Line
-							key={key}
+							activeDot={{ r: 3, strokeWidth: 0 }}
 							dataKey={key}
+							dot={false}
+							key={key}
 							stroke={chartSeriesColorAtIndex(series.indexOf(key))}
 							strokeWidth={2}
-							dot={false}
-							activeDot={{ r: 3, strokeWidth: 0 }}
 							type="monotone"
 						/>
 					))}
@@ -179,19 +205,22 @@ export function TimeSeriesRenderer({
 				<CartesianGrid {...chartCartesianGridDefault} />
 				<XAxis {...xAxisProps} />
 				<YAxis {...yAxisProps} />
-				<Tooltip content={tooltipContent} cursor={{ stroke: "var(--border)", strokeDasharray: "4 4" }} />
+				<Tooltip
+					content={tooltipContent}
+					cursor={{ stroke: "var(--border)", strokeDasharray: "4 4" }}
+				/>
 				{visibleSeries.map((key) => {
 					const color = chartSeriesColorAtIndex(series.indexOf(key));
 					return (
 						<Area
-							key={key}
+							activeDot={{ r: 3, strokeWidth: 0 }}
 							dataKey={key}
-							stroke={color}
+							dot={false}
 							fill={color}
 							fillOpacity={0.1}
+							key={key}
+							stroke={color}
 							strokeWidth={2}
-							dot={false}
-							activeDot={{ r: 3, strokeWidth: 0 }}
 							type="monotone"
 						/>
 					);
@@ -215,9 +244,7 @@ export function TimeSeriesRenderer({
 			</div>
 			<div className="flex items-center gap-2.5 border-t px-3 py-2">
 				{title && (
-					<p className="min-w-0 flex-1 truncate font-medium text-sm">
-						{title}
-					</p>
+					<p className="min-w-0 flex-1 truncate font-medium text-sm">{title}</p>
 				)}
 				<div className={chartLegendPillRowClassName}>
 					{series.map((key) => {
@@ -225,14 +252,16 @@ export function TimeSeriesRenderer({
 						const hidden = hiddenSeries.has(key);
 						return (
 							<button
-								key={key}
-								type="button"
-								onClick={() => toggleSeries(key)}
 								className={cn(chartLegendPillClassName, hidden && "opacity-40")}
+								key={key}
+								onClick={() => toggleSeries(key)}
+								type="button"
 							>
 								<div
 									className={chartLegendPillDotClassName}
-									style={{ backgroundColor: hidden ? "var(--muted-foreground)" : color }}
+									style={{
+										backgroundColor: hidden ? "var(--muted-foreground)" : color,
+									}}
 								/>
 								<span className={chartLegendPillLabelClassName}>{key}</span>
 							</button>
@@ -242,7 +271,10 @@ export function TimeSeriesRenderer({
 			</div>
 			{streaming && !isSkeleton && (
 				<div className="h-0.5 w-full overflow-hidden">
-					<div className="h-full w-1/3 animate-pulse rounded bg-primary/30" style={{ animation: "pulse 1.5s ease-in-out infinite" }} />
+					<div
+						className="h-full w-1/3 animate-pulse rounded bg-primary/30"
+						style={{ animation: "pulse 1.5s ease-in-out infinite" }}
+					/>
 				</div>
 			)}
 		</div>

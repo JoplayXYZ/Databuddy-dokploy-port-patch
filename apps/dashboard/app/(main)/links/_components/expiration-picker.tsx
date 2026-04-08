@@ -1,12 +1,10 @@
 "use client";
 
-import {
-	CalendarIcon,
-	CheckIcon,
-	ClockIcon,
-	InfinityIcon,
-	XIcon,
-} from "@phosphor-icons/react";
+import { CalendarIcon } from "@phosphor-icons/react";
+import { CheckIcon } from "@phosphor-icons/react";
+import { ClockIcon } from "@phosphor-icons/react";
+import { InfinityIcon } from "@phosphor-icons/react";
+import { XIcon } from "@phosphor-icons/react";
 import { useCallback, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -19,9 +17,9 @@ import dayjs from "@/lib/dayjs";
 import { cn } from "@/lib/utils";
 
 interface ExpirationPreset {
+	getDate: () => Date;
 	label: string;
 	value: string;
-	getDate: () => Date;
 }
 
 const EXPIRATION_PRESETS: ExpirationPreset[] = [
@@ -73,9 +71,9 @@ function formatPresetPreview(preset: ExpirationPreset): string {
 }
 
 interface ExpirationPickerProps {
-	value?: string;
-	onChange: (value: string) => void;
 	className?: string;
+	onChange: (value: string) => void;
+	value?: string;
 }
 
 export function ExpirationPicker({

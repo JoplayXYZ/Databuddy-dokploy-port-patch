@@ -38,21 +38,11 @@ export function createMemoryTools(): Record<string, Tool> {
 	return {
 		search_memory: tool({
 			description:
-				"Search your memory of past conversations with this user. Use when you need context about their preferences, past questions, patterns, or previous analytics findings. Returns relevant memories ranked by similarity.",
+				"Search past conversation memory for this user's preferences, patterns, or prior findings.",
 			strict: true,
 			inputSchema: z.object({
-				query: z
-					.string()
-					.describe(
-						"What to search for in memory (e.g. 'pricing page performance', 'user preferences', 'previous traffic issues')"
-					),
-				limit: z
-					.number()
-					.min(1)
-					.max(10)
-					.optional()
-					.default(5)
-					.describe("Max number of memories to return"),
+				query: z.string(),
+				limit: z.number().min(1).max(10).optional().default(5),
 			}),
 			execute: async (args, options) => {
 				const { userId, apiKeyId } = getAgentContext(options);
@@ -76,19 +66,14 @@ export function createMemoryTools(): Record<string, Tool> {
 		}),
 		save_memory: tool({
 			description:
-				"Save an important insight, user preference, or finding to memory for future conversations. Use when the user shares preferences, you discover important patterns, or want to remember key findings.",
+				"Save an important user preference, pattern, or finding for future conversations.",
 			strict: true,
 			inputSchema: z.object({
-				content: z
-					.string()
-					.describe(
-						"The insight or information to remember (e.g. 'User cares most about /pricing page bounce rate', 'Traffic drops every Monday')"
-					),
+				content: z.string(),
 				category: z
 					.enum(["preference", "insight", "pattern", "alert", "context"])
 					.optional()
-					.default("insight")
-					.describe("Category of the memory"),
+					.default("insight"),
 			}),
 			execute: (args, options) => {
 				const { userId, apiKeyId } = getAgentContext(options);

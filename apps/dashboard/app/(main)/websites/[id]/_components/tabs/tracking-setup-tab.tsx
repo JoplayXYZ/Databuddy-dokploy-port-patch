@@ -1,19 +1,17 @@
 "use client";
 
-import {
-	ArrowClockwiseIcon,
-	BookOpenIcon,
-	BugIcon,
-	CaretDownIcon,
-	CheckIcon,
-	ClipboardIcon,
-	CodeIcon,
-	GearIcon,
-	LightningIcon,
-	PackageIcon,
-	PulseIcon,
-	WarningCircleIcon,
-} from "@phosphor-icons/react";
+import { ArrowClockwiseIcon } from "@phosphor-icons/react";
+import { BookOpenIcon } from "@phosphor-icons/react";
+import { BugIcon } from "@phosphor-icons/react";
+import { CaretDownIcon } from "@phosphor-icons/react";
+import { CheckIcon } from "@phosphor-icons/react";
+import { ClipboardIcon } from "@phosphor-icons/react";
+import { CodeIcon } from "@phosphor-icons/react";
+import { GearIcon } from "@phosphor-icons/react";
+import { LightningIcon } from "@phosphor-icons/react";
+import { PackageIcon } from "@phosphor-icons/react";
+import { PulseIcon } from "@phosphor-icons/react";
+import { WarningCircleIcon } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
 import { useAtom } from "jotai";
 import { useMemo, useState } from "react";

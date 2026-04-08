@@ -64,8 +64,12 @@ import type {
 function isTimeSeriesInput(
 	input: RawComponentInput
 ): input is RawComponentInput & TimeSeriesInput {
-	if (!Array.isArray(input.series) || !Array.isArray(input.rows)) return false;
-	if (input.series.length === 0) return false;
+	if (!(Array.isArray(input.series) && Array.isArray(input.rows))) {
+		return false;
+	}
+	if (input.series.length === 0) {
+		return false;
+	}
 	return (input.series as unknown[]).every(
 		(s: unknown) => typeof s === "string"
 	);
@@ -74,7 +78,9 @@ function isTimeSeriesInput(
 function isDistributionInput(
 	input: RawComponentInput
 ): input is RawComponentInput & DistributionInput {
-	if (!Array.isArray(input.rows)) return false;
+	if (!Array.isArray(input.rows)) {
+		return false;
+	}
 	return input.rows.length > 0;
 }
 
@@ -248,7 +254,9 @@ function isAnnotationPreviewInput(
 function isDataTableInput(
 	input: RawComponentInput
 ): input is RawComponentInput & DataTableInput {
-	if (input.type !== "data-table") return false;
+	if (input.type !== "data-table") {
+		return false;
+	}
 	return Array.isArray(input.columns) && Array.isArray(input.rows);
 }
 
@@ -313,7 +321,10 @@ function toTimeSeriesProps(input: TimeSeriesInput): TimeSeriesProps {
 				series.map((key, i) => [key, Number(values[i]) || 0])
 			),
 		}));
-	const variant = input.type.replace("-chart", "") as TimeSeriesProps["variant"];
+	const variant = input.type.replace(
+		"-chart",
+		""
+	) as TimeSeriesProps["variant"];
 	return {
 		variant: variant === "stacked-bar" ? "stacked-bar" : variant,
 		title: input.title,

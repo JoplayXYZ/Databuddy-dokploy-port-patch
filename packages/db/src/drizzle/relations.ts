@@ -1,6 +1,7 @@
 import { relations } from "drizzle-orm/relations";
 import {
 	account,
+	agentChats,
 	alarmDestinations,
 	alarms,
 	analyticsInsights,
@@ -383,6 +384,21 @@ export const ssoProviderRelations = relations(ssoProvider, ({ one }) => ({
 	}),
 	organization: one(organization, {
 		fields: [ssoProvider.organizationId],
+		references: [organization.id],
+	}),
+}));
+
+export const agentChatsRelations = relations(agentChats, ({ one }) => ({
+	user: one(user, {
+		fields: [agentChats.userId],
+		references: [user.id],
+	}),
+	website: one(websites, {
+		fields: [agentChats.websiteId],
+		references: [websites.id],
+	}),
+	organization: one(organization, {
+		fields: [agentChats.organizationId],
 		references: [organization.id],
 	}),
 }));

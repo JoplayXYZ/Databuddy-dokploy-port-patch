@@ -1,14 +1,12 @@
 "use client";
 
-import {
-	ArrowSquareOutIcon,
-	CheckIcon,
-	ClipboardIcon,
-	GearIcon,
-	PencilSimpleIcon,
-	TrashIcon,
-	WarningCircleIcon,
-} from "@phosphor-icons/react";
+import { ArrowSquareOutIcon } from "@phosphor-icons/react";
+import { CheckIcon } from "@phosphor-icons/react";
+import { ClipboardIcon } from "@phosphor-icons/react";
+import { GearIcon } from "@phosphor-icons/react";
+import { PencilSimpleIcon } from "@phosphor-icons/react";
+import { TrashIcon } from "@phosphor-icons/react";
+import { WarningCircleIcon } from "@phosphor-icons/react";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";

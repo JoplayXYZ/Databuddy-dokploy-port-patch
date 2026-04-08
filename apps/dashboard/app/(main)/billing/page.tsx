@@ -1,14 +1,12 @@
 "use client";
 
-import {
-	ArrowSquareOutIcon,
-	CalendarIcon,
-	CrownIcon,
-	PlusIcon,
-	PuzzlePieceIcon,
-	TrendUpIcon,
-	XIcon,
-} from "@phosphor-icons/react";
+import { ArrowSquareOutIcon } from "@phosphor-icons/react";
+import { CalendarIcon } from "@phosphor-icons/react";
+import { CrownIcon } from "@phosphor-icons/react";
+import { PlusIcon } from "@phosphor-icons/react";
+import { PuzzlePieceIcon } from "@phosphor-icons/react";
+import { TrendUpIcon } from "@phosphor-icons/react";
+import { XIcon } from "@phosphor-icons/react";
 import { useCustomer } from "autumn-js/react";
 import Link from "next/link";
 import { useMemo } from "react";

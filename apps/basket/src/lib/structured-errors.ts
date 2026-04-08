@@ -202,6 +202,26 @@ export function isIngestSchemaValidationError(
 	);
 }
 
+/**
+ * Re-throw EvlogErrors; wrap anything else as a 500 and log it.
+ */
+export function rethrowOrWrap(
+	error: unknown,
+	log?: { error: (err: Error) => void }
+): never {
+	if (error instanceof EvlogError) {
+		throw error;
+	}
+	const err = error instanceof Error ? error : new Error(String(error));
+	log?.error(err);
+	throw createError({
+		message: "Internal server error",
+		status: 500,
+		why: process.env.NODE_ENV === "development" ? err.message : undefined,
+		cause: err,
+	});
+}
+
 export function buildBasketErrorPayload(
 	error: unknown,
 	options: {

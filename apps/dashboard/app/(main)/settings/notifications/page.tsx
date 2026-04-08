@@ -1,14 +1,12 @@
 "use client";
 
-import {
-	BellIcon,
-	CircleNotchIcon,
-	DotsThreeIcon,
-	PencilIcon,
-	PlusIcon,
-	TestTubeIcon,
-	TrashIcon,
-} from "@phosphor-icons/react";
+import { BellIcon } from "@phosphor-icons/react";
+import { CircleNotchIcon } from "@phosphor-icons/react";
+import { DotsThreeIcon } from "@phosphor-icons/react";
+import { PencilIcon } from "@phosphor-icons/react";
+import { PlusIcon } from "@phosphor-icons/react";
+import { TestTubeIcon } from "@phosphor-icons/react";
+import { TrashIcon } from "@phosphor-icons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -29,20 +27,20 @@ import { orpc } from "@/lib/orpc";
 import { AlarmSheet } from "./_components/alarm-sheet";
 
 interface AlarmDestination {
-	id: string;
-	type: string;
-	identifier: string;
 	config: Record<string, string | boolean | number | null>;
+	id: string;
+	identifier: string;
+	type: string;
 }
 
 interface Alarm {
+	description?: string | null;
+	destinations?: AlarmDestination[];
+	enabled: boolean;
 	id: string;
 	name: string;
-	description?: string | null;
-	enabled: boolean;
 	triggerType: string;
 	websiteId?: string | null;
-	destinations?: AlarmDestination[];
 }
 
 const DEST_LABELS: Record<string, string> = {

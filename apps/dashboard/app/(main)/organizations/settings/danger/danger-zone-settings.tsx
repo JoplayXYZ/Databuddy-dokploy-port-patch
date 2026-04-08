@@ -1,7 +1,9 @@
 "use client";
 
 import { authClient } from "@databuddy/auth/client";
-import { SignOutIcon, TrashIcon, WarningIcon } from "@phosphor-icons/react";
+import { SignOutIcon } from "@phosphor-icons/react";
+import { TrashIcon } from "@phosphor-icons/react";
+import { WarningIcon } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";

@@ -1,11 +1,9 @@
 "use client";
 
-import {
-	ArrowRightIcon,
-	ArrowsLeftRightIcon,
-	BuildingsIcon,
-	GlobeIcon,
-} from "@phosphor-icons/react";
+import { ArrowRightIcon } from "@phosphor-icons/react";
+import { ArrowsLeftRightIcon } from "@phosphor-icons/react";
+import { BuildingsIcon } from "@phosphor-icons/react";
+import { GlobeIcon } from "@phosphor-icons/react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { FaviconImage } from "@/components/analytics/favicon-image";
@@ -24,9 +22,9 @@ import { cn } from "@/lib/utils";
 import { useWebsiteTransfer } from "./hooks/use-website-transfer";
 
 interface WebsiteItemProps {
-	website: Website;
-	selected: boolean;
 	onClickAction: () => void;
+	selected: boolean;
+	website: Website;
 }
 
 function WebsiteItem({ website, selected, onClickAction }: WebsiteItemProps) {

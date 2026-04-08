@@ -1,10 +1,8 @@
 "use client";
 
-import {
-	CalendarDotsIcon,
-	CaretRightIcon,
-	CheckIcon,
-} from "@phosphor-icons/react";
+import { CalendarDotsIcon } from "@phosphor-icons/react";
+import { CaretRightIcon } from "@phosphor-icons/react";
+import { CheckIcon } from "@phosphor-icons/react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { DateRange } from "react-day-picker";
 import { Button } from "@/components/ui/button";
@@ -16,12 +14,12 @@ import {
 } from "@/components/ui/popover";
 import { useIsMobile } from "@/hooks/use-mobile";
 import dayjs from "@/lib/dayjs";
-import { formatMonthDay } from "@/lib/formatters";
+import { formatLocalTime } from "@/lib/time";
 import { cn } from "@/lib/utils";
 
 interface PresetRange {
-	label: string;
 	getValue: () => DateRange;
+	label: string;
 }
 
 const PRESET_RANGES: PresetRange[] = [
@@ -85,11 +83,11 @@ const PRESET_RANGES: PresetRange[] = [
 
 interface DateRangePickerProps {
 	className?: string;
-	value?: DateRange;
-	onChange?: (dateRange: DateRange | undefined) => void;
 	disabled?: boolean;
 	maxDate?: Date;
 	minDate?: Date;
+	onChange?: (dateRange: DateRange | undefined) => void;
+	value?: DateRange;
 }
 
 export function DateRangePicker({
@@ -254,7 +252,7 @@ export function DateRangePicker({
 										<>
 											<div className="rounded bg-background px-2.5 py-1 shadow-sm">
 												<span className="font-semibold text-foreground text-sm tabular-nums">
-													{formatMonthDay(tempRange.from)}
+													{formatLocalTime(tempRange.from, "MMM D")}
 												</span>
 											</div>
 											<CaretRightIcon
@@ -278,7 +276,7 @@ export function DateRangePicker({
 													)}
 												>
 													{tempRange?.to
-														? formatMonthDay(tempRange.to)
+														? formatLocalTime(tempRange.to, "MMM D")
 														: "End date"}
 												</span>
 											</div>

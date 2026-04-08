@@ -2,15 +2,13 @@
 
 import { API_SCOPES, type ApiScope } from "@databuddy/api-keys/scopes";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-	ArrowsClockwiseIcon,
-	CheckCircleIcon,
-	CheckIcon,
-	CopyIcon,
-	KeyIcon,
-	ProhibitIcon,
-	TrashIcon,
-} from "@phosphor-icons/react";
+import { ArrowsClockwiseIcon } from "@phosphor-icons/react";
+import { CheckCircleIcon } from "@phosphor-icons/react";
+import { CheckIcon } from "@phosphor-icons/react";
+import { CopyIcon } from "@phosphor-icons/react";
+import { KeyIcon } from "@phosphor-icons/react";
+import { ProhibitIcon } from "@phosphor-icons/react";
+import { TrashIcon } from "@phosphor-icons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -37,8 +35,8 @@ import { type ApiKeyListItem, SCOPE_OPTIONS } from "./api-key-types";
 
 interface ApiKeyDetailDialogProps {
 	apiKey: ApiKeyListItem | null;
-	open: boolean;
 	onOpenChangeAction: (open: boolean) => void;
+	open: boolean;
 }
 
 const scopeSchema = z.enum(API_SCOPES);

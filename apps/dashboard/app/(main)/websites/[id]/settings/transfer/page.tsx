@@ -1,12 +1,10 @@
 "use client";
 
-import {
-	ArrowRightIcon,
-	ArrowSquareOutIcon,
-	BuildingsIcon,
-	InfoIcon,
-	WarningIcon,
-} from "@phosphor-icons/react";
+import { ArrowRightIcon } from "@phosphor-icons/react";
+import { ArrowSquareOutIcon } from "@phosphor-icons/react";
+import { BuildingsIcon } from "@phosphor-icons/react";
+import { InfoIcon } from "@phosphor-icons/react";
+import { WarningIcon } from "@phosphor-icons/react";
 import { useParams, useRouter } from "next/navigation";
 import { Suspense, useCallback, useState } from "react";
 import { toast } from "sonner";

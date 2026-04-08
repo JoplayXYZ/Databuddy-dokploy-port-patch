@@ -1,13 +1,11 @@
 "use client";
 
 import { authClient } from "@databuddy/auth/client";
-import {
-	CaretRightIcon,
-	GearIcon,
-	PlusIcon,
-	SignOutIcon,
-	SpinnerGapIcon,
-} from "@phosphor-icons/react";
+import { CaretRightIcon } from "@phosphor-icons/react";
+import { GearIcon } from "@phosphor-icons/react";
+import { PlusIcon } from "@phosphor-icons/react";
+import { SignOutIcon } from "@phosphor-icons/react";
+import { SpinnerGapIcon } from "@phosphor-icons/react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -26,12 +24,12 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-export type ProfileButtonUser = {
-	id?: string;
-	name?: string | null;
+export interface ProfileButtonUser {
 	email?: string | null;
+	id?: string;
 	image?: string | null;
-};
+	name?: string | null;
+}
 
 interface ProfileButtonClientProps {
 	user: ProfileButtonUser | null;

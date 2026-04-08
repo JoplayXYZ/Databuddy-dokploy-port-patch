@@ -15,11 +15,11 @@ import type { UptimeHeatmapDay } from "./heatmap-days";
 
 export interface UptimeHeatmapStripProps {
 	days: UptimeHeatmapDay[];
+	emptyLabel: string;
+	getDateLabel: (date: Date) => string;
 	interactive: boolean;
 	isActive: boolean;
 	stripClassName: string;
-	emptyLabel: string;
-	getDateLabel: (date: Date) => string;
 	tooltipHasData?: (day: UptimeHeatmapDay) => boolean;
 }
 
@@ -93,15 +93,15 @@ export function UptimeHeatmapStrip({
 							className={cn(uptimeHeatmapTooltipContentClassName)}
 							sideOffset={6}
 						>
-						<UptimeHeatmapDayTooltipBody
-							dateLabel={getDateLabel(day.date)}
-							downtimeSeconds={day.downtimeSeconds}
-							emptyLabel={emptyLabel}
-							hasData={showDataInTooltip}
-							successfulChecks={day.successfulChecks}
-							totalChecks={day.totalChecks}
-							uptimePercent={day.uptime}
-						/>
+							<UptimeHeatmapDayTooltipBody
+								dateLabel={getDateLabel(day.date)}
+								downtimeSeconds={day.downtimeSeconds}
+								emptyLabel={emptyLabel}
+								hasData={showDataInTooltip}
+								successfulChecks={day.successfulChecks}
+								totalChecks={day.totalChecks}
+								uptimePercent={day.uptime}
+							/>
 						</TooltipContent>
 					</Tooltip>
 				);

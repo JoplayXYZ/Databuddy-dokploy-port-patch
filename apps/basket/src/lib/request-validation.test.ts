@@ -1,348 +1,181 @@
-import { describe, expect, test } from "bun:test";
-import {
-	isValidIpFromSettings,
-	isValidOriginFromSettings,
-} from "@hooks/auth";
-import { getWebsiteSecuritySettings } from "./request-validation";
+import { describe, expect, mock, test } from "bun:test";
+import { truthTable } from "../test-helpers";
+
+// Mock DB/Redis so @hooks/auth can load without a live connection
+mock.module("@databuddy/db", () => ({
+	db: { query: { member: {}, websites: {}, revenueConfig: {} } },
+	and: () => {},
+	eq: () => {},
+	member: {},
+	websites: {},
+}));
+mock.module("@databuddy/redis", () => ({
+	cacheable: (fn: Function) => fn,
+	redis: {},
+}));
+mock.module("@lib/tracing", () => ({
+	record: (_n: string, fn: Function) => Promise.resolve().then(() => fn()),
+	captureError: mock(),
+}));
+
+const { isValidIpFromSettings, isValidOriginFromSettings } = await import(
+	"@hooks/auth"
+);
+const { getWebsiteSecuritySettings } = await import("./request-validation");
+
+// ── getWebsiteSecuritySettings ──
 
 describe("getWebsiteSecuritySettings", () => {
-	test("should return null for null settings", () => {
-		expect(getWebsiteSecuritySettings(null)).toBeNull();
-	});
+	const nullInputs: unknown[] = [
+		null,
+		undefined,
+		"string",
+		123,
+		true,
+		[],
+		[1, 2],
+	];
+	for (const input of nullInputs) {
+		test(`returns null for ${JSON.stringify(input)}`, () =>
+			expect(getWebsiteSecuritySettings(input)).toBeNull());
+	}
 
-	test("should return null for undefined settings", () => {
-		expect(getWebsiteSecuritySettings(undefined)).toBeNull();
-	});
+	test("empty object → undefined fields", () =>
+		expect(getWebsiteSecuritySettings({})).toEqual({
+			allowedOrigins: undefined,
+			allowedIps: undefined,
+		}));
 
-	test("should return null for non-object settings", () => {
-		expect(getWebsiteSecuritySettings("string")).toBeNull();
-		expect(getWebsiteSecuritySettings(123)).toBeNull();
-		expect(getWebsiteSecuritySettings(true)).toBeNull();
-	});
-
-	test("should return null for array settings", () => {
-		expect(getWebsiteSecuritySettings([])).toBeNull();
-		expect(getWebsiteSecuritySettings([1, 2, 3])).toBeNull();
-	});
-
-	test("should return empty object for empty settings object", () => {
-		const result = getWebsiteSecuritySettings({});
-		expect(result).toEqual({ allowedOrigins: undefined, allowedIps: undefined });
-	});
-
-	test("should extract allowedOrigins array", () => {
-		const settings = {
-			allowedOrigins: ["cal.com", "*.example.com"],
-		};
-		const result = getWebsiteSecuritySettings(settings);
-		expect(result?.allowedOrigins).toEqual(["cal.com", "*.example.com"]);
-	});
-
-	test("should extract allowedIps array", () => {
-		const settings = {
-			allowedIps: ["192.168.1.1", "10.0.0.0/8"],
-		};
-		const result = getWebsiteSecuritySettings(settings);
-		expect(result?.allowedIps).toEqual(["192.168.1.1", "10.0.0.0/8"]);
-	});
-
-	test("should extract both allowedOrigins and allowedIps", () => {
-		const settings = {
-			allowedOrigins: ["cal.com"],
-			allowedIps: ["192.168.1.1"],
-		};
-		const result = getWebsiteSecuritySettings(settings);
-		expect(result?.allowedOrigins).toEqual(["cal.com"]);
-		expect(result?.allowedIps).toEqual(["192.168.1.1"]);
-	});
-
-	test("should filter out non-string values from allowedOrigins", () => {
-		const settings = {
+	test("extracts string arrays, filters non-strings", () => {
+		const result = getWebsiteSecuritySettings({
 			allowedOrigins: ["cal.com", 123, null, "*.example.com", undefined],
-		};
-		const result = getWebsiteSecuritySettings(settings);
-		expect(result?.allowedOrigins).toEqual(["cal.com", "*.example.com"]);
-	});
-
-	test("should filter out non-string values from allowedIps", () => {
-		const settings = {
 			allowedIps: ["192.168.1.1", true, "10.0.0.0/8", {}],
-		};
-		const result = getWebsiteSecuritySettings(settings);
+		});
+		expect(result?.allowedOrigins).toEqual(["cal.com", "*.example.com"]);
 		expect(result?.allowedIps).toEqual(["192.168.1.1", "10.0.0.0/8"]);
 	});
 
-	test("should return undefined for non-array allowedOrigins", () => {
-		const settings = {
+	test("non-array values → undefined", () => {
+		const result = getWebsiteSecuritySettings({
 			allowedOrigins: "not-an-array",
-		};
-		const result = getWebsiteSecuritySettings(settings);
-		expect(result?.allowedOrigins).toBeUndefined();
-	});
-
-	test("should return undefined for non-array allowedIps", () => {
-		const settings = {
 			allowedIps: 123,
-		};
-		const result = getWebsiteSecuritySettings(settings);
+		});
+		expect(result?.allowedOrigins).toBeUndefined();
 		expect(result?.allowedIps).toBeUndefined();
 	});
 });
 
-describe("isValidOriginFromSettings", () => {
-	test("should allow all origins when allowedOrigins is empty", () => {
-		expect(isValidOriginFromSettings("https://example.com", [])).toBe(true);
-		expect(isValidOriginFromSettings("https://malicious.com", [])).toBe(true);
-	});
+// ── isValidOriginFromSettings ──
 
-	test("should allow all origins when allowedOrigins is undefined", () => {
-		expect(isValidOriginFromSettings("https://example.com", undefined)).toBe(
-			true
-		);
-	});
+truthTable(
+	"isValidOriginFromSettings",
+	[
+		["empty allowed → true", "https://example.com", [], true],
+		["undefined allowed → true", "https://example.com", undefined as any, true],
+		["empty origin → true", "", ["cal.com"], true],
+		["whitespace origin → true", "   ", ["cal.com"], true],
+		["wildcard * → true", "https://anything.com", ["*"], true],
+		[
+			"localhost with port → true",
+			"http://localhost:3000",
+			["localhost"],
+			true,
+		],
+		["localhost no port → true", "http://localhost", ["localhost"], true],
+		[
+			"non-localhost vs localhost → false",
+			"https://example.com",
+			["localhost"],
+			false,
+		],
+		["exact match → true", "https://cal.com", ["cal.com"], true],
+		["mismatch → false", "https://cal.com", ["example.com"], false],
+		["http → true", "http://cal.com", ["cal.com"], true],
+		["https → true", "https://cal.com", ["cal.com"], true],
+		[
+			"*.cal.com matches app.cal.com",
+			"https://app.cal.com",
+			["*.cal.com"],
+			true,
+		],
+		["*.cal.com matches cal.com", "https://cal.com", ["*.cal.com"], true],
+		["*.cal.com matches nested", "https://api.v1.cal.com", ["*.cal.com"], true],
+		[
+			"*.cal.com rejects example.com",
+			"https://example.com",
+			["*.cal.com"],
+			false,
+		],
+		[
+			"*.cal.com rejects cal.example.com",
+			"https://cal.example.com",
+			["*.cal.com"],
+			false,
+		],
+		["www stripped → true", "https://www.cal.com", ["cal.com"], true],
+		["case insensitive → true", "https://CAL.COM", ["cal.com"], true],
+		["port stripped → true", "https://cal.com:3000", ["cal.com"], true],
+		["not-a-url → false", "not-a-url", ["cal.com"], false],
+		[
+			"multi: exact match",
+			"https://cal.com",
+			["cal.com", "*.example.com"],
+			true,
+		],
+		[
+			"multi: wildcard match",
+			"https://app.example.com",
+			["cal.com", "*.example.com"],
+			true,
+		],
+		[
+			"multi: no match",
+			"https://malicious.com",
+			["cal.com", "*.example.com"],
+			false,
+		],
+	],
+	(origin, allowed) => isValidOriginFromSettings(origin, allowed)
+);
 
-	test("should allow empty origin header", () => {
-		expect(isValidOriginFromSettings("", ["cal.com"])).toBe(true);
-		expect(isValidOriginFromSettings("   ", ["cal.com"])).toBe(true);
-	});
+// ── isValidIpFromSettings ──
 
-	test("should allow all origins with wildcard *", () => {
-		expect(isValidOriginFromSettings("https://example.com", ["*"])).toBe(true);
-		expect(isValidOriginFromSettings("https://malicious.com", ["*"])).toBe(
-			true
-		);
-		expect(isValidOriginFromSettings("http://localhost:3000", ["*"])).toBe(
-			true
-		);
-	});
-
-	test("should allow localhost when configured", () => {
-		expect(
-			isValidOriginFromSettings("http://localhost:3000", ["localhost"])
-		).toBe(true);
-		expect(
-			isValidOriginFromSettings("http://localhost", ["localhost"])
-		).toBe(true);
-	});
-
-	test("should reject non-localhost when only localhost is allowed", () => {
-		expect(
-			isValidOriginFromSettings("https://example.com", ["localhost"])
-		).toBe(false);
-	});
-
-	test("should match exact domains", () => {
-		expect(
-			isValidOriginFromSettings("https://cal.com", ["cal.com"])
-		).toBe(true);
-		expect(
-			isValidOriginFromSettings("https://cal.com", ["example.com"])
-		).toBe(false);
-	});
-
-	test("should match domains with protocol", () => {
-		expect(
-			isValidOriginFromSettings("https://cal.com", ["cal.com"])
-		).toBe(true);
-		expect(
-			isValidOriginFromSettings("http://cal.com", ["cal.com"])
-		).toBe(true);
-	});
-
-	test("should match subdomains with wildcard pattern", () => {
-		expect(
-			isValidOriginFromSettings("https://app.cal.com", ["*.cal.com"])
-		).toBe(true);
-		expect(
-			isValidOriginFromSettings("https://api.cal.com", ["*.cal.com"])
-		).toBe(true);
-		expect(
-			isValidOriginFromSettings("https://cal.com", ["*.cal.com"])
-		).toBe(true);
-	});
-
-	test("should reject non-matching subdomains with wildcard", () => {
-		expect(
-			isValidOriginFromSettings("https://example.com", ["*.cal.com"])
-		).toBe(false);
-		expect(
-			isValidOriginFromSettings("https://cal.example.com", ["*.cal.com"])
-		).toBe(false);
-	});
-
-	test("should match nested subdomains with wildcard", () => {
-		expect(
-			isValidOriginFromSettings("https://api.v1.cal.com", ["*.cal.com"])
-		).toBe(true);
-	});
-
-	test("should handle multiple allowed origins", () => {
-		const allowed = ["cal.com", "*.example.com", "localhost"];
-		expect(
-			isValidOriginFromSettings("https://cal.com", allowed)
-		).toBe(true);
-		expect(
-			isValidOriginFromSettings("https://app.example.com", allowed)
-		).toBe(true);
-		expect(
-			isValidOriginFromSettings("http://localhost:3000", allowed)
-		).toBe(true);
-		expect(
-			isValidOriginFromSettings("https://malicious.com", allowed)
-		).toBe(false);
-	});
-
-	test("should handle invalid origin URLs gracefully", () => {
-		expect(
-			isValidOriginFromSettings("not-a-url", ["cal.com"])
-		).toBe(false);
-		expect(
-			isValidOriginFromSettings("ftp://example.com", ["cal.com"])
-		).toBe(false);
-	});
-
-	test("should normalize domains correctly", () => {
-		expect(
-			isValidOriginFromSettings("https://www.cal.com", ["cal.com"])
-		).toBe(true);
-		expect(
-			isValidOriginFromSettings("https://CAL.COM", ["cal.com"])
-		).toBe(true);
-	});
-
-	test("should handle ports in origin URLs", () => {
-		expect(
-			isValidOriginFromSettings("https://cal.com:3000", ["cal.com"])
-		).toBe(true);
-		expect(
-			isValidOriginFromSettings("http://localhost:8080", ["localhost"])
-		).toBe(true);
-	});
-});
-
-describe("isValidIpFromSettings", () => {
-	test("should allow all IPs when allowedIps is empty", () => {
-		expect(isValidIpFromSettings("192.168.1.1", [])).toBe(true);
-		expect(isValidIpFromSettings("10.0.0.1", [])).toBe(true);
-	});
-
-	test("should allow all IPs when allowedIps is undefined", () => {
-		expect(isValidIpFromSettings("192.168.1.1", undefined)).toBe(true);
-	});
-
-	test("should allow empty IP", () => {
-		expect(isValidIpFromSettings("", ["192.168.1.1"])).toBe(true);
-		expect(isValidIpFromSettings("   ", ["192.168.1.1"])).toBe(true);
-	});
-
-	test("should match exact IPv4 addresses", () => {
-		expect(isValidIpFromSettings("192.168.1.1", ["192.168.1.1"])).toBe(
-			true
-		);
-		expect(isValidIpFromSettings("10.0.0.1", ["10.0.0.1"])).toBe(true);
-		expect(isValidIpFromSettings("192.168.1.2", ["192.168.1.1"])).toBe(
-			false
-		);
-	});
-
-	test("should match IPv6 addresses", () => {
-		const ipv6 = "2001:0db8:85a3:0000:0000:8a2e:0370:7334";
-		expect(isValidIpFromSettings(ipv6, [ipv6])).toBe(true);
-		expect(
-			isValidIpFromSettings(ipv6, ["2001:0db8:85a3:0000:0000:8a2e:0370:7335"])
-		).toBe(false);
-	});
-
-	test("should match IPs within CIDR range", () => {
-		expect(
-			isValidIpFromSettings("192.168.1.100", ["192.168.1.0/24"])
-		).toBe(true);
-		expect(
-			isValidIpFromSettings("192.168.1.255", ["192.168.1.0/24"])
-		).toBe(true);
-		expect(
-			isValidIpFromSettings("192.168.1.0", ["192.168.1.0/24"])
-		).toBe(true);
-	});
-
-	test("should reject IPs outside CIDR range", () => {
-		expect(
-			isValidIpFromSettings("192.168.2.1", ["192.168.1.0/24"])
-		).toBe(false);
-		expect(
-			isValidIpFromSettings("192.169.1.1", ["192.168.1.0/24"])
-		).toBe(false);
-	});
-
-	test("should handle /32 CIDR (single IP)", () => {
-		expect(
-			isValidIpFromSettings("192.168.1.1", ["192.168.1.1/32"])
-		).toBe(true);
-		expect(
-			isValidIpFromSettings("192.168.1.2", ["192.168.1.1/32"])
-		).toBe(false);
-	});
-
-	test("should handle /16 CIDR range", () => {
-		expect(
-			isValidIpFromSettings("192.168.1.1", ["192.168.0.0/16"])
-		).toBe(true);
-		expect(
-			isValidIpFromSettings("192.168.255.255", ["192.168.0.0/16"])
-		).toBe(true);
-		expect(
-			isValidIpFromSettings("192.169.0.1", ["192.168.0.0/16"])
-		).toBe(false);
-	});
-
-	test("should handle /8 CIDR range", () => {
-		expect(
-			isValidIpFromSettings("10.1.2.3", ["10.0.0.0/8"])
-		).toBe(true);
-		expect(
-			isValidIpFromSettings("10.255.255.255", ["10.0.0.0/8"])
-		).toBe(true);
-		expect(
-			isValidIpFromSettings("11.0.0.1", ["10.0.0.0/8"])
-		).toBe(false);
-	});
-
-	test("should handle multiple allowed IPs", () => {
-		const allowed = ["192.168.1.1", "10.0.0.0/8", "172.16.0.0/12"];
-		expect(isValidIpFromSettings("192.168.1.1", allowed)).toBe(true);
-		expect(isValidIpFromSettings("10.5.5.5", allowed)).toBe(true);
-		expect(isValidIpFromSettings("172.16.1.1", allowed)).toBe(true);
-		expect(isValidIpFromSettings("8.8.8.8", allowed)).toBe(false);
-	});
-
-	test("should handle invalid CIDR notation gracefully", () => {
-		expect(
-			isValidIpFromSettings("192.168.1.1", ["192.168.1.0/33"])
-		).toBe(false);
-		expect(
-			isValidIpFromSettings("192.168.1.1", ["192.168.1.0/-1"])
-		).toBe(false);
-		expect(
-			isValidIpFromSettings("192.168.1.1", ["invalid/cidr"])
-		).toBe(false);
-	});
-
-	test("should trim whitespace from IPs", () => {
-		expect(
-			isValidIpFromSettings("  192.168.1.1  ", ["192.168.1.1"])
-		).toBe(true);
-	});
-
-	test("should handle edge cases for CIDR ranges", () => {
-		expect(
-			isValidIpFromSettings("0.0.0.0", ["0.0.0.0/32"])
-		).toBe(true);
-		expect(
-			isValidIpFromSettings("255.255.255.255", ["255.255.255.255/32"])
-		).toBe(true);
-		expect(
-			isValidIpFromSettings("0.0.0.1", ["0.0.0.0/32"])
-		).toBe(false);
-	});
-});
-
+truthTable(
+	"isValidIpFromSettings",
+	[
+		["empty allowed → true", "192.168.1.1", [], true],
+		["undefined allowed → true", "192.168.1.1", undefined as any, true],
+		["empty IP → true", "", ["192.168.1.1"], true],
+		["whitespace IP → true", "   ", ["192.168.1.1"], true],
+		["exact match → true", "192.168.1.1", ["192.168.1.1"], true],
+		["exact mismatch → false", "192.168.1.2", ["192.168.1.1"], false],
+		["IPv6 match → true", "2001:db8::1", ["2001:db8::1"], true],
+		["IPv6 mismatch → false", "2001:db8::1", ["2001:db8::2"], false],
+		["/24 in range → true", "192.168.1.100", ["192.168.1.0/24"], true],
+		["/24 boundary 0 → true", "192.168.1.0", ["192.168.1.0/24"], true],
+		["/24 boundary 255 → true", "192.168.1.255", ["192.168.1.0/24"], true],
+		["/24 out of range → false", "192.168.2.1", ["192.168.1.0/24"], false],
+		["/32 exact → true", "192.168.1.1", ["192.168.1.1/32"], true],
+		["/32 off by one → false", "192.168.1.2", ["192.168.1.1/32"], false],
+		["/16 in range → true", "192.168.255.255", ["192.168.0.0/16"], true],
+		["/16 out of range → false", "192.169.0.1", ["192.168.0.0/16"], false],
+		["/8 in range → true", "10.1.2.3", ["10.0.0.0/8"], true],
+		["/8 out of range → false", "11.0.0.1", ["10.0.0.0/8"], false],
+		["/33 → false", "192.168.1.1", ["192.168.1.0/33"], false],
+		["/-1 → false", "192.168.1.1", ["192.168.1.0/-1"], false],
+		["invalid/cidr → false", "192.168.1.1", ["invalid/cidr"], false],
+		["trimmed IP → true", "  192.168.1.1  ", ["192.168.1.1"], true],
+		["multi: exact match", "192.168.1.1", ["192.168.1.1", "10.0.0.0/8"], true],
+		["multi: CIDR match", "10.5.5.5", ["192.168.1.1", "10.0.0.0/8"], true],
+		["multi: no match", "8.8.8.8", ["192.168.1.1", "10.0.0.0/8"], false],
+		["0.0.0.0/32 → true", "0.0.0.0", ["0.0.0.0/32"], true],
+		[
+			"255.255.255.255/32 → true",
+			"255.255.255.255",
+			["255.255.255.255/32"],
+			true,
+		],
+		["0.0.0.1 vs 0.0.0.0/32 → false", "0.0.0.1", ["0.0.0.0/32"], false],
+	],
+	(ip, allowed) => isValidIpFromSettings(ip, allowed)
+);

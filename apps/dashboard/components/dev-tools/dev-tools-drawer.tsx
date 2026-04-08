@@ -1,31 +1,29 @@
 "use client";
 
-import {
-	BugIcon,
-	CaretDownIcon,
-	ChartBarIcon,
-	ChartLineIcon,
-	CheckCircleIcon,
-	ClipboardIcon,
-	CopyIcon,
-	DatabaseIcon,
-	DesktopIcon,
-	FunnelIcon,
-	GearIcon,
-	InfoIcon,
-	LightningIcon,
-	MonitorIcon,
-	MoonIcon,
-	PresentationChartIcon,
-	SpinnerIcon,
-	SquaresFourIcon,
-	StackIcon,
-	SunIcon,
-	TrashIcon,
-	UsersIcon,
-	WarningCircleIcon,
-	XIcon,
-} from "@phosphor-icons/react";
+import { BugIcon } from "@phosphor-icons/react";
+import { CaretDownIcon } from "@phosphor-icons/react";
+import { ChartBarIcon } from "@phosphor-icons/react";
+import { ChartLineIcon } from "@phosphor-icons/react";
+import { CheckCircleIcon } from "@phosphor-icons/react";
+import { ClipboardIcon } from "@phosphor-icons/react";
+import { CopyIcon } from "@phosphor-icons/react";
+import { DatabaseIcon } from "@phosphor-icons/react";
+import { DesktopIcon } from "@phosphor-icons/react";
+import { FunnelIcon } from "@phosphor-icons/react";
+import { GearIcon } from "@phosphor-icons/react";
+import { InfoIcon } from "@phosphor-icons/react";
+import { LightningIcon } from "@phosphor-icons/react";
+import { MonitorIcon } from "@phosphor-icons/react";
+import { MoonIcon } from "@phosphor-icons/react";
+import { PresentationChartIcon } from "@phosphor-icons/react";
+import { SpinnerIcon } from "@phosphor-icons/react";
+import { SquaresFourIcon } from "@phosphor-icons/react";
+import { StackIcon } from "@phosphor-icons/react";
+import { SunIcon } from "@phosphor-icons/react";
+import { TrashIcon } from "@phosphor-icons/react";
+import { UsersIcon } from "@phosphor-icons/react";
+import { WarningCircleIcon } from "@phosphor-icons/react";
+import { XIcon } from "@phosphor-icons/react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTheme } from "next-themes";
 import { useCallback, useEffect, useState } from "react";

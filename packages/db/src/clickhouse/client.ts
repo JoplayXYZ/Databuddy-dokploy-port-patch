@@ -95,8 +95,7 @@ export function chQueryWithMeta<T extends Record<string, any>>(
 ): Promise<ResponseJSON<T>> {
 	const tracer = trace.getTracer("clickhouse");
 	return tracer.startActiveSpan("chQuery", async (span) => {
-		const preview =
-			query.length > 200 ? `${query.substring(0, 200)}...` : query;
+		const preview = query.length > 200 ? `${query.slice(0, 200)}...` : query;
 		span.setAttribute("db.system", "clickhouse");
 		span.setAttribute("db.statement", preview);
 

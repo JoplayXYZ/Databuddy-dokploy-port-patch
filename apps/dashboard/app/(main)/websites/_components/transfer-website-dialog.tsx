@@ -2,11 +2,9 @@
 
 import type { WebsiteOutput } from "@databuddy/rpc";
 import type { Website } from "@databuddy/shared/types/website";
-import {
-	ArrowRightIcon,
-	ArrowSquareOutIcon,
-	WarningIcon,
-} from "@phosphor-icons/react";
+import { ArrowRightIcon } from "@phosphor-icons/react";
+import { ArrowSquareOutIcon } from "@phosphor-icons/react";
+import { WarningIcon } from "@phosphor-icons/react";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -34,10 +32,10 @@ function getDicebearUrl(seed: string): string {
 }
 
 interface TransferWebsiteDialogProps {
-	website: Website | WebsiteOutput;
-	open: boolean;
 	onOpenChange: (open: boolean) => void;
 	onTransferSuccess?: () => void;
+	open: boolean;
+	website: Website | WebsiteOutput;
 }
 
 export function TransferWebsiteDialog({

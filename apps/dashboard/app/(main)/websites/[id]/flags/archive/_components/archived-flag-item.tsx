@@ -1,11 +1,9 @@
 "use client";
 
-import {
-	ArrowCounterClockwiseIcon,
-	DotsThreeIcon,
-	PencilSimpleIcon,
-	TrashIcon,
-} from "@phosphor-icons/react";
+import { ArrowCounterClockwiseIcon } from "@phosphor-icons/react";
+import { DotsThreeIcon } from "@phosphor-icons/react";
+import { PencilSimpleIcon } from "@phosphor-icons/react";
+import { TrashIcon } from "@phosphor-icons/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -21,10 +19,10 @@ import { cn } from "@/lib/utils";
 import type { Flag } from "../../_components/types";
 
 interface ArchivedFlagItemProps {
-	flag: Flag;
-	onEdit: (flag: Flag) => void;
-	onDelete: (flagId: string) => void;
 	className?: string;
+	flag: Flag;
+	onDelete: (flagId: string) => void;
+	onEdit: (flag: Flag) => void;
 }
 
 export function ArchivedFlagItem({

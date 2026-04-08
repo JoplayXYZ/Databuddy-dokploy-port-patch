@@ -17,61 +17,10 @@ type WebsiteWithOwner = Website & {
 const REGEX_WWW_PREFIX = /^www\./;
 const REGEX_DOMAIN_LABEL = /^[a-zA-Z0-9-]+$/;
 
-/**
- * Resolves the billing owner's user ID for a given website.
- * Used exclusively for Autumn billing checks, NOT for ClickHouse owner_id.
- */
-function _resolveOwnerId(website: Website): Promise<string | null> {
-	return record("resolveOwnerId", async () => {
-		if (!website.organizationId) {
-			return null;
-		}
-
-		try {
-			const orgMember = await db.query.member.findFirst({
-				where: and(
-					eq(member.organizationId, website.organizationId),
-					eq(member.role, "owner")
-				),
-				columns: {
-					userId: true,
-				},
-			});
-
-			if (orgMember) {
-				return orgMember.userId;
-			}
-		} catch (error) {
-			captureError(error, {
-				message: "Failed to fetch workspace owner",
-				websiteId: website.id,
-				organizationId: website.organizationId,
-			});
-		}
-
-		return null;
-	});
-}
-
-const getOwnerId = cacheable(
-	async (website: Website): Promise<string | null> =>
-		await _resolveOwnerId(website),
-	{
-		expireInSec: 300,
-		prefix: "website_owner_id",
-		staleWhileRevalidate: true,
-		staleTime: 60,
-	}
-);
-
-/**
- * Resolves the billing owner's user ID for an API key.
- * Returns the workspace (organization) owner's userId.
- */
-function _resolveApiKeyOwnerId(
+function _resolveOwnerId(
 	organizationId: string | null
 ): Promise<string | null> {
-	return record("resolveApiKeyOwnerId", async () => {
+	return record("resolveOwnerId", async () => {
 		if (!organizationId) {
 			return null;
 		}
@@ -92,7 +41,7 @@ function _resolveApiKeyOwnerId(
 			}
 		} catch (error) {
 			captureError(error, {
-				message: "Failed to fetch workspace owner for API key",
+				message: "Failed to fetch workspace owner",
 				organizationId,
 			});
 		}
@@ -103,40 +52,10 @@ function _resolveApiKeyOwnerId(
 
 export const resolveApiKeyOwnerId = cacheable(
 	async (organizationId: string | null): Promise<string | null> =>
-		_resolveApiKeyOwnerId(organizationId),
+		_resolveOwnerId(organizationId),
 	{
 		expireInSec: 300,
 		prefix: "api_key_owner_id",
-		staleWhileRevalidate: true,
-		staleTime: 60,
-	}
-);
-
-export const getWebsiteById = cacheable(
-	async (id: string): Promise<WebsiteWithOwner | null> => {
-		try {
-			const website = await db.query.websites.findFirst({
-				where: eq(websites.id, id),
-			});
-
-			if (!website) {
-				return null;
-			}
-
-			const ownerId = await getOwnerId(website);
-
-			return { ...website, ownerId };
-		} catch (error) {
-			captureError(error, {
-				message: "Failed to get website by ID",
-				websiteId: id,
-			});
-			return null;
-		}
-	},
-	{
-		expireInSec: 300,
-		prefix: "website_with_owner_by_id",
 		staleWhileRevalidate: true,
 		staleTime: 60,
 	}
@@ -254,84 +173,6 @@ export function isValidDomainFormat(domain: string): boolean {
 	return true;
 }
 
-export function isValidOriginSecure(
-	originHeader: string,
-	allowedDomain: string,
-	options: {
-		allowLocalhost?: boolean;
-		allowedSubdomains?: string[];
-		blockedSubdomains?: string[];
-		requireHttps?: boolean;
-	} = {}
-): boolean {
-	const {
-		allowLocalhost = false,
-		allowedSubdomains = [],
-		blockedSubdomains = [],
-		requireHttps = false,
-	} = options;
-
-	if (!originHeader?.trim()) {
-		return true;
-	}
-
-	if (!allowedDomain?.trim()) {
-		return false;
-	}
-
-	try {
-		const originUrl = new URL(originHeader.trim());
-
-		if (requireHttps && originUrl.protocol !== "https:") {
-			return false;
-		}
-
-		if (isLocalhost(originUrl.hostname)) {
-			return allowLocalhost;
-		}
-
-		const normalizedOriginDomain = normalizeDomain(originUrl.hostname);
-		if (
-			allowedSubdomains.length > 0 &&
-			!allowedSubdomains.some(
-				(sub) => `${sub}.${allowedDomain}` === normalizedOriginDomain
-			)
-		) {
-			return false;
-		}
-
-		if (
-			blockedSubdomains.length > 0 &&
-			blockedSubdomains.some(
-				(sub) => `${sub}.${allowedDomain}` === normalizedOriginDomain
-			)
-		) {
-			return false;
-		}
-
-		const normalizedAllowedDomain = normalizeDomain(allowedDomain);
-		return (
-			normalizedOriginDomain === normalizedAllowedDomain ||
-			isSubdomain(normalizedOriginDomain, normalizedAllowedDomain)
-		);
-	} catch (error) {
-		captureError(error, {
-			message: "[isValidOriginSecure] Validation failed",
-			originHeader,
-			allowedDomain,
-		});
-		return false;
-	}
-}
-
-export function isLocalhost(hostname: string): boolean {
-	return (
-		hostname === "localhost" ||
-		hostname === "[::1]" ||
-		hostname.startsWith("127.")
-	);
-}
-
 const getWebsiteByIdWithOwnerCached = cacheable(
 	async (id: string): Promise<WebsiteWithOwner | null> => {
 		try {
@@ -343,7 +184,7 @@ const getWebsiteByIdWithOwnerCached = cacheable(
 				return null;
 			}
 
-			const ownerId = await _resolveOwnerId(website);
+			const ownerId = await _resolveOwnerId(website.organizationId);
 			return { ...website, ownerId };
 		} catch (error) {
 			captureError(error, {

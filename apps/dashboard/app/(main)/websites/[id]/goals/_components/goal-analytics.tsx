@@ -1,22 +1,23 @@
 "use client";
 
-import { ArrowClockwiseIcon as ArrowClockwise } from "@phosphor-icons/react/dist/ssr/ArrowClockwise";
-import { TargetIcon as Target } from "@phosphor-icons/react/dist/ssr/Target";
-import { TrendUpIcon as TrendUp } from "@phosphor-icons/react/dist/ssr/TrendUp";
-import { UsersIcon as Users } from "@phosphor-icons/react/dist/ssr/Users";
+import { ArrowClockwiseIcon as ArrowClockwise } from "@phosphor-icons/react";
+import { TargetIcon as Target } from "@phosphor-icons/react";
+import { TrendUpIcon as TrendUp } from "@phosphor-icons/react";
+import { UsersIcon as Users } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { formatNumber } from "@/lib/formatters";
 
 interface GoalAnalyticsProps {
-	isLoading: boolean;
-	error: Error | null;
 	data: any;
+	error: Error | null;
+	isLoading: boolean;
+	onRetry: () => void;
 	summaryStats: {
 		totalUsers: number;
 		conversionRate: number;
 		completions: number;
 	};
-	onRetry: () => void;
 }
 
 export function GoalAnalytics({
@@ -80,16 +81,6 @@ export function GoalAnalytics({
 			</Card>
 		);
 	}
-
-	const formatNumber = (num: number) => {
-		if (num >= 1_000_000) {
-			return `${(num / 1_000_000).toFixed(1)}M`;
-		}
-		if (num >= 1000) {
-			return `${(num / 1000).toFixed(1)}K`;
-		}
-		return num.toLocaleString();
-	};
 
 	const formatPercentage = (num: number) => `${num.toFixed(1)}%`;
 

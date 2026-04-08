@@ -1,10 +1,17 @@
 "use client";
 
-import { BrainIcon } from "@phosphor-icons/react";
+import {
+	ArrowsClockwiseIcon,
+	BrainIcon,
+	CaretRightIcon,
+	CheckCircleIcon,
+	CheckIcon,
+	CircleNotchIcon,
+	CopyIcon,
+} from "@phosphor-icons/react";
 import type { UIMessage } from "ai";
-import { useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { AIComponent } from "@/components/ai-elements/ai-component";
-import { ToolStep } from "@/components/ai-elements/chain-of-thought";
 import {
 	Message,
 	MessageContent,
@@ -16,12 +23,17 @@ import {
 	ReasoningTrigger,
 } from "@/components/ai-elements/reasoning";
 import { Shimmer } from "@/components/ai-elements/shimmer";
+import { Button } from "@/components/ui/button";
+import {
+	Collapsible,
+	CollapsibleContent,
+	CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { useChat } from "@/contexts/chat-context";
 import { parseContentSegments } from "@/lib/ai-components";
 import { formatToolLabel } from "@/lib/tool-display";
 import { cn } from "@/lib/utils";
 import { AgentErrorMessage } from "./agent-error-message";
-import { useChatStatus } from "./hooks/use-chat-status";
 
 type MessagePart = UIMessage["parts"][number];
 
@@ -32,51 +44,58 @@ type ToolMessagePart = MessagePart & {
 	state?: string;
 };
 
-function isToolPart(part: MessagePart): part is ToolMessagePart {
-	return part.type?.startsWith("tool-") ?? false;
-}
-
 const TOOL_PREFIX_REGEX = /^tool-/;
+const PREVIEW_ROW_LIMIT = 5;
+const PREVIEW_VALUE_MAX_LEN = 120;
+
+function isToolPart(part: MessagePart): part is ToolMessagePart {
+	return part.type.startsWith("tool-");
+}
 
 function getToolName(part: ToolMessagePart): string {
 	return part.type.replace(TOOL_PREFIX_REGEX, "");
 }
 
-function getReasoningText(part: MessagePart): string {
-	const reasoning = part as {
-		text?: string;
-		content?: string;
-	};
+function getMessageText(message: UIMessage): string {
+	return message.parts
+		.flatMap((p) => (p.type === "text" ? [p.text] : []))
+		.join("\n\n")
+		.trim();
+}
 
-	return (
-		reasoning.text ||
-		reasoning.content ||
-		JSON.stringify(part, null, 2) ||
-		"Thinking through the request."
-	);
+/**
+ * Find the most recent tool part that has been started but not yet returned
+ * an output. Used to label the streaming "Thinking" indicator with the
+ * actual tool currently running.
+ */
+function findActiveToolLabel(message: UIMessage | undefined): string | null {
+	if (!message || message.role !== "assistant") {
+		return null;
+	}
+	for (let i = message.parts.length - 1; i >= 0; i--) {
+		const part = message.parts[i];
+		if (!(part && isToolPart(part))) {
+			continue;
+		}
+		if (part.output != null) {
+			return null;
+		}
+		return formatToolLabel(getToolName(part), part.input ?? {});
+	}
+	return null;
 }
 
 function ReasoningMessage({
 	part,
 	isStreaming,
 }: {
-	part: MessagePart;
+	part: Extract<MessagePart, { type: "reasoning" }>;
 	isStreaming: boolean;
 }) {
-	const [hasBeenStreaming, setHasBeenStreaming] = useState(false);
-	useEffect(() => {
-		if (isStreaming) {
-			setHasBeenStreaming(true);
-		}
-	}, [isStreaming]);
-
 	return (
-		<Reasoning
-			defaultOpen={isStreaming || hasBeenStreaming}
-			isStreaming={isStreaming}
-		>
+		<Reasoning defaultOpen={isStreaming} isStreaming={isStreaming}>
 			<ReasoningTrigger />
-			<ReasoningContent>{getReasoningText(part)}</ReasoningContent>
+			<ReasoningContent>{part.text}</ReasoningContent>
 		</Reasoning>
 	);
 }
@@ -87,13 +106,11 @@ function mergeConsecutiveToolStepsForDisplay(
 ): Array<{ repeatCount: number; tool: ToolMessagePart }> {
 	const merged: Array<{ repeatCount: number; tool: ToolMessagePart }> = [];
 	for (const tool of tools) {
-		const toolName = getToolName(tool);
-		const label = formatToolLabel(toolName, tool.input ?? {});
+		const label = formatToolLabel(getToolName(tool), tool.input ?? {});
 		const last = merged.at(-1);
-		if (
-			last &&
-			formatToolLabel(getToolName(last.tool), last.tool.input ?? {}) === label
-		) {
+		const lastLabel =
+			last && formatToolLabel(getToolName(last.tool), last.tool.input ?? {});
+		if (last && lastLabel === label) {
 			last.repeatCount += 1;
 			last.tool = tool;
 		} else {
@@ -110,13 +127,13 @@ function collectToolGroups(parts: MessagePart[]) {
 	for (const part of parts) {
 		if (isToolPart(part)) {
 			toolBuffer.push(part);
-		} else {
-			if (toolBuffer.length > 0) {
-				result.push(toolBuffer);
-				toolBuffer = [];
-			}
-			result.push(part);
+			continue;
 		}
+		if (toolBuffer.length > 0) {
+			result.push(toolBuffer);
+			toolBuffer = [];
+		}
+		result.push(part);
 	}
 
 	if (toolBuffer.length > 0) {
@@ -124,6 +141,192 @@ function collectToolGroups(parts: MessagePart[]) {
 	}
 
 	return result;
+}
+
+function truncateValue(value: unknown): string {
+	if (value === null || value === undefined) {
+		return "—";
+	}
+	if (typeof value === "string") {
+		return value.length > PREVIEW_VALUE_MAX_LEN
+			? `${value.slice(0, PREVIEW_VALUE_MAX_LEN)}…`
+			: value;
+	}
+	if (typeof value === "number" || typeof value === "boolean") {
+		return String(value);
+	}
+	const json = JSON.stringify(value);
+	return json.length > PREVIEW_VALUE_MAX_LEN
+		? `${json.slice(0, PREVIEW_VALUE_MAX_LEN)}…`
+		: json;
+}
+
+function ToolInputBlock({ input }: { input: Record<string, unknown> }) {
+	const entries = Object.entries(input);
+	if (entries.length === 0) {
+		return (
+			<p className="text-muted-foreground/70 text-xs italic">No parameters</p>
+		);
+	}
+	return (
+		<dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs">
+			{entries.map(([key, value]) => (
+				<div className="contents" key={key}>
+					<dt className="font-mono text-muted-foreground">{key}</dt>
+					<dd className="break-words font-mono text-foreground/85">
+						{truncateValue(value)}
+					</dd>
+				</div>
+			))}
+		</dl>
+	);
+}
+
+function ToolOutputBlock({ output }: { output: unknown }) {
+	if (output === null || output === undefined) {
+		return <p className="text-muted-foreground/70 text-xs italic">No result</p>;
+	}
+
+	if (Array.isArray(output)) {
+		if (output.length === 0) {
+			return (
+				<p className="text-muted-foreground/70 text-xs italic">Empty array</p>
+			);
+		}
+		const preview = output.slice(0, PREVIEW_ROW_LIMIT);
+		const isObjectArray = preview.every(
+			(row): row is Record<string, unknown> =>
+				typeof row === "object" && row !== null && !Array.isArray(row)
+		);
+
+		if (isObjectArray) {
+			const columns = Array.from(
+				new Set(preview.flatMap((row) => Object.keys(row)))
+			).slice(0, 5);
+			return (
+				<div className="space-y-1.5">
+					<div className="overflow-x-auto rounded border border-border/60">
+						<table className="w-full font-mono text-xs">
+							<thead className="bg-muted/50 text-muted-foreground">
+								<tr>
+									{columns.map((col) => (
+										<th className="px-2 py-1 text-left font-medium" key={col}>
+											{col}
+										</th>
+									))}
+								</tr>
+							</thead>
+							<tbody>
+								{preview.map((row, rowIdx) => (
+									<tr
+										className="border-border/40 border-t"
+										key={`row-${rowIdx}`}
+									>
+										{columns.map((col) => (
+											<td
+												className="break-words px-2 py-1 text-foreground/80"
+												key={col}
+											>
+												{truncateValue(row[col])}
+											</td>
+										))}
+									</tr>
+								))}
+							</tbody>
+						</table>
+					</div>
+					<p className="text-muted-foreground/70 text-xs">
+						{output.length === 1 ? "1 row" : `${output.length} rows`}
+						{output.length > PREVIEW_ROW_LIMIT
+							? ` · showing first ${PREVIEW_ROW_LIMIT}`
+							: ""}
+					</p>
+				</div>
+			);
+		}
+
+		return (
+			<pre className="overflow-x-auto rounded border border-border/60 bg-muted/30 p-2 font-mono text-foreground/85 text-xs">
+				{preview.map((item) => truncateValue(item)).join("\n")}
+			</pre>
+		);
+	}
+
+	if (typeof output === "object") {
+		return <ToolInputBlock input={output as Record<string, unknown>} />;
+	}
+
+	return (
+		<p className="break-words font-mono text-foreground/85 text-xs">
+			{truncateValue(output)}
+		</p>
+	);
+}
+
+function InspectableToolStep({
+	tool,
+	label,
+	repeatCount,
+	status,
+}: {
+	tool: ToolMessagePart;
+	label: string;
+	repeatCount: number;
+	status: "active" | "complete";
+}) {
+	const [open, setOpen] = useState(false);
+	const isActive = status === "active";
+	const displayLabel = repeatCount > 1 ? `${label} · ${repeatCount}×` : label;
+	const hasOutput = tool.output != null;
+
+	return (
+		<Collapsible onOpenChange={setOpen} open={open}>
+			<CollapsibleTrigger
+				className={cn(
+					"group flex w-full items-center gap-2 py-0.5 text-left text-muted-foreground text-xs transition-colors hover:text-foreground",
+					isActive && "text-foreground"
+				)}
+			>
+				{isActive ? (
+					<CircleNotchIcon
+						className="size-3 shrink-0 animate-spin"
+						weight="bold"
+					/>
+				) : (
+					<CheckCircleIcon
+						className="size-3 shrink-0 text-muted-foreground/60"
+						weight="fill"
+					/>
+				)}
+				<span className="truncate">{displayLabel}</span>
+				<CaretRightIcon
+					className={cn(
+						"size-3 shrink-0 text-muted-foreground/40 transition-transform",
+						open && "rotate-90"
+					)}
+					weight="bold"
+				/>
+			</CollapsibleTrigger>
+			<CollapsibleContent className="data-[state=open]:fade-in-0 data-[state=open]:slide-in-from-top-1 data-[state=open]:animate-in">
+				<div className="mt-1 ml-5 space-y-3 rounded border border-border/60 bg-card/40 p-3">
+					<section className="space-y-1.5">
+						<p className="font-medium text-[10px] text-muted-foreground uppercase tracking-wide">
+							Input
+						</p>
+						<ToolInputBlock input={tool.input ?? {}} />
+					</section>
+					{hasOutput || !isActive ? (
+						<section className="space-y-1.5">
+							<p className="font-medium text-[10px] text-muted-foreground uppercase tracking-wide">
+								Result
+							</p>
+							<ToolOutputBlock output={tool.output} />
+						</section>
+					) : null}
+				</div>
+			</CollapsibleContent>
+		</Collapsible>
+	);
 }
 
 function renderToolGroup(
@@ -137,21 +340,20 @@ function renderToolGroup(
 	return (
 		<div className="space-y-0 py-1" key={key}>
 			{merged.map((entry, idx) => {
-				const toolName = getToolName(entry.tool);
-				const toolInput = entry.tool.input ?? {};
 				const isLast = idx === merged.length - 1;
 				const isActive =
 					isLastGroup && isStreaming && isLast && !entry.tool.output;
-				const baseLabel = formatToolLabel(toolName, toolInput);
-				const label =
-					entry.repeatCount > 1
-						? `${baseLabel} · ${entry.repeatCount}×`
-						: baseLabel;
+				const baseLabel = formatToolLabel(
+					getToolName(entry.tool),
+					entry.tool.input ?? {}
+				);
 				return (
-					<ToolStep
+					<InspectableToolStep
 						key={`${key}-${idx}`}
-						label={label}
+						label={baseLabel}
+						repeatCount={entry.repeatCount}
 						status={isActive ? "active" : "complete"}
+						tool={entry.tool}
 					/>
 				);
 			})}
@@ -187,12 +389,11 @@ function renderMessagePart(
 	}
 
 	if (part.type === "text") {
-		const textPart = part as { text: string };
-		if (!textPart.text?.trim()) {
+		if (!part.text.trim()) {
 			return null;
 		}
 
-		const { segments } = parseContentSegments(textPart.text);
+		const { segments } = parseContentSegments(part.text);
 		if (segments.length === 0) {
 			return null;
 		}
@@ -211,7 +412,6 @@ function renderMessagePart(
 							</MessageResponse>
 						);
 					}
-					// Both complete and streaming components render via AIComponent
 					return (
 						<AIComponent
 							input={segment.content}
@@ -225,14 +425,15 @@ function renderMessagePart(
 	}
 
 	if (isToolPart(part)) {
-		const toolName = getToolName(part as ToolMessagePart);
-		const toolInput = (part as ToolMessagePart).input ?? {};
-		const isActive = isCurrentlyStreaming && !(part as ToolMessagePart).output;
+		const isActive = isCurrentlyStreaming && !part.output;
+		const baseLabel = formatToolLabel(getToolName(part), part.input ?? {});
 		return (
 			<div className="py-1" key={key}>
-				<ToolStep
-					label={formatToolLabel(toolName, toolInput)}
+				<InspectableToolStep
+					label={baseLabel}
+					repeatCount={1}
 					status={isActive ? "active" : "complete"}
+					tool={part}
 				/>
 			</div>
 		);
@@ -241,43 +442,75 @@ function renderMessagePart(
 	return null;
 }
 
-function AgentChatErrorPanel({
-	clearError,
-	error,
-	onRetryAction,
+function AssistantActions({
+	message,
+	isLast,
+	canRegenerate,
+	onRegenerate,
 }: {
-	clearError: () => void;
-	error: Error | undefined;
-	onRetryAction: () => Promise<void>;
+	message: UIMessage;
+	isLast: boolean;
+	canRegenerate: boolean;
+	onRegenerate: () => void;
 }) {
-	return (
-		<AgentErrorMessage
-			error={error}
-			onDismissAction={clearError}
-			onRetryAction={onRetryAction}
-		/>
-	);
-}
+	const [copied, setCopied] = useState(false);
+	const text = getMessageText(message);
 
-function getTextFromUserMessage(message: UIMessage): string {
-	if (!message.parts?.length) {
-		return "";
+	const handleCopy = useCallback(async () => {
+		if (!text) {
+			return;
+		}
+		try {
+			await navigator.clipboard.writeText(text);
+			setCopied(true);
+			setTimeout(() => setCopied(false), 1500);
+		} catch {
+			// Clipboard unavailable — silent failure.
+		}
+	}, [text]);
+
+	if (!text) {
+		return null;
 	}
-	return message.parts
-		.filter((p): p is { type: "text"; text: string } => p.type === "text")
-		.map((p) => p.text)
-		.join("");
+
+	return (
+		<div className="-ml-1.5 flex items-center gap-0.5 pt-1 opacity-60 transition-opacity focus-within:opacity-100 group-hover/message:opacity-100">
+			<Button
+				aria-label={copied ? "Copied" : "Copy response"}
+				className="size-7 text-muted-foreground hover:text-foreground"
+				onClick={handleCopy}
+				size="icon"
+				type="button"
+				variant="ghost"
+			>
+				{copied ? (
+					<CheckIcon className="size-3.5" weight="bold" />
+				) : (
+					<CopyIcon className="size-3.5" weight="duotone" />
+				)}
+			</Button>
+			{isLast && canRegenerate ? (
+				<Button
+					aria-label="Regenerate response"
+					className="size-7 text-muted-foreground hover:text-foreground"
+					onClick={onRegenerate}
+					size="icon"
+					type="button"
+					variant="ghost"
+				>
+					<ArrowsClockwiseIcon className="size-3.5" weight="duotone" />
+				</Button>
+			) : null}
+		</div>
+	);
 }
 
 export function AgentMessages() {
 	const { status, messages, error, regenerate, clearError, sendMessage } =
 		useChat();
 	const hasError = status === "error";
-	const chatStatus = useChatStatus(messages, status);
 	const isStreaming = status === "streaming" || status === "submitted";
 	const lastMessage = messages.at(-1);
-	const errorAfterUser =
-		hasError && lastMessage?.role === "user" && messages.length > 0;
 
 	if (messages.length === 0) {
 		return null;
@@ -286,8 +519,8 @@ export function AgentMessages() {
 	const retry = async () => {
 		const last = messages.at(-1);
 		if (last?.role === "user") {
-			const text = getTextFromUserMessage(last);
-			if (text.trim()) {
+			const text = getMessageText(last);
+			if (text) {
 				await sendMessage({ messageId: last.id, text });
 				return;
 			}
@@ -299,18 +532,17 @@ export function AgentMessages() {
 		<>
 			{messages.map((message, index) => {
 				const isLastMessage = index === messages.length - 1;
-				const showError =
-					isLastMessage && hasError && message.role === "assistant";
-
-				const groupedParts = message.parts
-					? collectToolGroups(message.parts)
-					: [];
+				const isAssistant = message.role === "assistant";
+				const showActions = isAssistant && !(isLastMessage && isStreaming);
+				const groupedParts = collectToolGroups(message.parts);
 
 				return (
-					<Message from={message.role} key={message.id}>
-						<MessageContent
-							className={cn(message.role === "assistant" ? "w-full" : "")}
-						>
+					<Message
+						className="group/message"
+						from={message.role}
+						key={message.id}
+					>
+						<MessageContent className={cn(isAssistant ? "w-full" : "")}>
 							{groupedParts.map((part, partIndex) =>
 								renderMessagePart(
 									part,
@@ -322,11 +554,14 @@ export function AgentMessages() {
 								)
 							)}
 
-							{showError ? (
-								<AgentChatErrorPanel
-									clearError={clearError}
-									error={error}
-									onRetryAction={retry}
+							{showActions ? (
+								<AssistantActions
+									canRegenerate={!hasError}
+									isLast={isLastMessage}
+									message={message}
+									onRegenerate={() => {
+										regenerate().catch(() => undefined);
+									}}
 								/>
 							) : null}
 						</MessageContent>
@@ -334,28 +569,45 @@ export function AgentMessages() {
 				);
 			})}
 
-			{errorAfterUser ? (
+			{hasError ? (
 				<Message from="assistant">
 					<MessageContent className="w-full">
-						<AgentChatErrorPanel
-							clearError={clearError}
+						<AgentErrorMessage
 							error={error}
+							onDismissAction={clearError}
 							onRetryAction={retry}
 						/>
 					</MessageContent>
 				</Message>
 			) : null}
 
-			{isStreaming &&
-			!chatStatus.hasTextContent &&
-			chatStatus.displayMessage == null ? (
-				<StreamingIndicator />
+			{showTailIndicator(isStreaming, lastMessage) ? (
+				<StreamingIndicator label={findActiveToolLabel(lastMessage)} />
 			) : null}
 		</>
 	);
 }
 
-function StreamingIndicator() {
+/**
+ * The tail "Thinking" indicator only fills the gap before the assistant
+ * has produced ANY part. Once a reasoning, tool, or text part exists,
+ * those parts render their own inline progress, so we suppress the tail
+ * to avoid duplicate "Thinking" labels stacking on screen.
+ */
+function showTailIndicator(
+	isStreaming: boolean,
+	lastMessage: UIMessage | undefined
+): boolean {
+	if (!isStreaming) {
+		return false;
+	}
+	if (!lastMessage || lastMessage.role !== "assistant") {
+		return true;
+	}
+	return lastMessage.parts.length === 0;
+}
+
+function StreamingIndicator({ label }: { label: string | null }) {
 	return (
 		<div
 			className="fade-in flex w-full animate-in items-center gap-2 duration-200"
@@ -366,7 +618,7 @@ function StreamingIndicator() {
 				weight="duotone"
 			/>
 			<Shimmer as="span" className="text-sm" duration={1} spread={4}>
-				Thinking
+				{label ?? "Thinking"}
 			</Shimmer>
 		</div>
 	);

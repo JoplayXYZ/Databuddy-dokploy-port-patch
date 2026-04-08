@@ -1,41 +1,30 @@
 "use client";
 
-import {
-	EyeIcon,
-	HeartbeatIcon,
-	LockIcon,
-	MinusIcon,
-	TrendDownIcon,
-	TrendUpIcon,
-	UsersIcon,
-} from "@phosphor-icons/react";
+import { EyeIcon } from "@phosphor-icons/react";
+import { HeartbeatIcon } from "@phosphor-icons/react";
+import { LockIcon } from "@phosphor-icons/react";
+import { MinusIcon } from "@phosphor-icons/react";
+import { TrendDownIcon } from "@phosphor-icons/react";
+import { TrendUpIcon } from "@phosphor-icons/react";
+import { UsersIcon } from "@phosphor-icons/react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { formatNumber } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
 
 interface SummaryStatsProps {
-	totalActiveUsers: number;
-	totalViews: number;
-	averageTrend: number;
-	trendDirection: "up" | "down" | "neutral";
-	websiteCount: number;
-	pulseHealthPercentage: number;
-	totalMonitors: number;
 	activeMonitors: number;
+	averageTrend: number;
 	hasPulseAccess: boolean;
 	isLoading?: boolean;
-}
-
-function formatNumber(num: number) {
-	if (num >= 1_000_000) {
-		return `${(num / 1_000_000).toFixed(1)}M`;
-	}
-	if (num >= 1000) {
-		return `${(num / 1000).toFixed(1)}K`;
-	}
-	return num.toString();
+	pulseHealthPercentage: number;
+	totalActiveUsers: number;
+	totalMonitors: number;
+	totalViews: number;
+	trendDirection: "up" | "down" | "neutral";
+	websiteCount: number;
 }
 
 function StatCardSkeleton() {

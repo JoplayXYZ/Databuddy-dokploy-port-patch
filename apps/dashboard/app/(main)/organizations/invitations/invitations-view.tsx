@@ -1,13 +1,11 @@
 "use client";
 
-import {
-	ArrowClockwiseIcon,
-	CheckIcon,
-	ClockIcon,
-	EnvelopeIcon,
-	UserPlusIcon,
-	XIcon,
-} from "@phosphor-icons/react";
+import { ArrowClockwiseIcon } from "@phosphor-icons/react";
+import { CheckIcon } from "@phosphor-icons/react";
+import { ClockIcon } from "@phosphor-icons/react";
+import { EnvelopeIcon } from "@phosphor-icons/react";
+import { UserPlusIcon } from "@phosphor-icons/react";
+import { XIcon } from "@phosphor-icons/react";
 import { useState } from "react";
 import { EmptyState } from "@/components/empty-state";
 import { InviteMemberDialog } from "@/components/organizations/invite-member-dialog";

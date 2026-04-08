@@ -6,14 +6,12 @@ import {
 	getMinimumPlanForFeature,
 	PLAN_IDS,
 } from "@databuddy/shared/types/features";
-import {
-	ArrowRightIcon,
-	CrownIcon,
-	LockSimpleIcon,
-	RocketLaunchIcon,
-	SparkleIcon,
-	StarIcon,
-} from "@phosphor-icons/react";
+import { ArrowRightIcon } from "@phosphor-icons/react";
+import { CrownIcon } from "@phosphor-icons/react";
+import { LockSimpleIcon } from "@phosphor-icons/react";
+import { RocketLaunchIcon } from "@phosphor-icons/react";
+import { SparkleIcon } from "@phosphor-icons/react";
+import { StarIcon } from "@phosphor-icons/react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { useBillingContext } from "@/components/providers/billing-provider";
@@ -44,11 +42,11 @@ const PLAN_CONFIG: Record<
 };
 
 interface FeatureGateProps {
-	feature: GatedFeatureId;
-	children: ReactNode;
-	title?: string;
-	description?: string;
 	blockWhileLoading?: boolean;
+	children: ReactNode;
+	description?: string;
+	feature: GatedFeatureId;
+	title?: string;
 }
 
 export function FeatureGate({

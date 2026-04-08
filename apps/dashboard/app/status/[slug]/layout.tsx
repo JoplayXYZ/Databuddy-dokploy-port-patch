@@ -1,5 +1,5 @@
-import { TooltipProvider } from "@/components/ui/tooltip";
 import type { Metadata } from "next";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 export const metadata: Metadata = {
 	title: {

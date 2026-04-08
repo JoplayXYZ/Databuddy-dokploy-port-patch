@@ -3,11 +3,11 @@ import { localDayjs } from "@/lib/time";
 export interface UptimeHeatmapDay {
 	date: Date;
 	dateStr: string;
-	hasData: boolean;
-	uptime: number;
-	totalChecks: number;
-	successfulChecks: number;
 	downtimeSeconds: number;
+	hasData: boolean;
+	successfulChecks: number;
+	totalChecks: number;
+	uptime: number;
 }
 
 export function buildUptimeHeatmapDays(
@@ -20,9 +20,7 @@ export function buildUptimeHeatmapDays(
 	}>,
 	days: number
 ): UptimeHeatmapDay[] {
-	const dataByDate = new Map(
-		data.map((d) => [localDayjs(d.date).format("YYYY-MM-DD"), d])
-	);
+	const dataByDate = new Map(data.map((d) => [d.date.slice(0, 10), d]));
 
 	const result: UptimeHeatmapDay[] = [];
 	const today = localDayjs().endOf("day");

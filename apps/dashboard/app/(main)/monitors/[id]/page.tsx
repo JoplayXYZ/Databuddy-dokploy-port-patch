@@ -1,5 +1,21 @@
 "use client";
 
+import { ArrowClockwiseIcon } from "@phosphor-icons/react";
+import { ArrowLeftIcon } from "@phosphor-icons/react";
+import { ArrowSquareOutIcon } from "@phosphor-icons/react";
+import { GlobeIcon } from "@phosphor-icons/react";
+import { HeartbeatIcon } from "@phosphor-icons/react";
+import { LightningIcon } from "@phosphor-icons/react";
+import { PauseIcon } from "@phosphor-icons/react";
+import { PencilIcon } from "@phosphor-icons/react";
+import { PlayIcon } from "@phosphor-icons/react";
+import { TrashIcon } from "@phosphor-icons/react";
+import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
+import dynamic from "next/dynamic";
+import Link from "next/link";
+import { useParams, useRouter } from "next/navigation";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 import { MonitorDetailLoading } from "@/app/(main)/monitors/_components/monitor-detail-loading";
 import { PageHeader } from "@/app/(main)/websites/_components/page-header";
 import { FaviconImage } from "@/components/analytics/favicon-image";
@@ -25,23 +41,6 @@ import { fromNow, localDayjs } from "@/lib/time";
 import { LatencyChartChunkPlaceholder } from "@/lib/uptime/latency-chart-chunk-placeholder";
 import { UptimeHeatmap } from "@/lib/uptime/uptime-heatmap";
 import { cn } from "@/lib/utils";
-import {
-	ArrowClockwiseIcon,
-	ArrowLeftIcon,
-	ArrowSquareOutIcon,
-	GlobeIcon,
-	HeartbeatIcon,
-	PauseIcon,
-	PencilIcon,
-	PlayIcon,
-	TrashIcon,
-} from "@phosphor-icons/react";
-import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
-import dynamic from "next/dynamic";
-import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { toast } from "sonner";
 import {
 	RecentActivity,
 	type RecentActivityCheck,
@@ -73,22 +72,24 @@ const granularityLabels: Record<string, string> = {
 };
 
 interface ScheduleData {
-	id: string;
-	organizationId: string;
-	websiteId: string | null;
-	url: string;
-	name: string | null;
-	granularity: string;
+	cacheBust: boolean;
 	cron: string;
+	granularity: string;
+	id: string;
 	isPaused: boolean;
 	isPublic: boolean;
-	qstashStatus: string;
 	jsonParsingConfig?: { enabled: boolean } | null;
+	name: string | null;
+	organizationId: string;
+	qstashStatus: string;
+	timeout: number | null;
+	url: string;
 	website?: {
 		id: string;
 		name: string | null;
 		domain: string;
 	} | null;
+	websiteId: string | null;
 }
 
 function resolveStatus(check: RecentActivityCheck | undefined) {
@@ -161,7 +162,8 @@ export default function MonitorDetailsPage() {
 		url: string;
 		name?: string | null;
 		granularity: string;
-		isPublic?: boolean;
+		timeout?: number | null;
+		cacheBust?: boolean;
 		jsonParsingConfig?: { enabled: boolean } | null;
 	} | null>(null);
 	const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -208,6 +210,9 @@ export default function MonitorDetailsPage() {
 	});
 	const deleteMutation = useMutation({
 		...orpc.uptime.deleteSchedule.mutationOptions(),
+	});
+	const manualCheckMutation = useMutation({
+		...orpc.uptime.manualCheck.mutationOptions(),
 	});
 
 	const transferMutation = useMutation({
@@ -328,12 +333,15 @@ export default function MonitorDetailsPage() {
 		"uptime_response_time_trends"
 	);
 
-	// --- Pagination effects ---
+	// --- Pagination: reset when filters change (render-time pattern) ---
 
-	useEffect(() => {
+	const paginationResetKey = `${dateRange.start_date}-${dateRange.end_date}-${scheduleId}`;
+	const [prevResetKey, setPrevResetKey] = useState(paginationResetKey);
+	if (prevResetKey !== paginationResetKey) {
+		setPrevResetKey(paginationResetKey);
 		setRecentChecksPage(1);
 		setAllRecentChecks([]);
-	}, [dateRange, scheduleId]);
+	}
 
 	const recentChecksHasNext =
 		pageRecentChecks.length === RECENT_CHECKS_PAGE_SIZE;
@@ -407,7 +415,8 @@ export default function MonitorDetailsPage() {
 			url: schedule.url,
 			name: schedule.name,
 			granularity: schedule.granularity,
-			isPublic: schedule.isPublic,
+			timeout: schedule.timeout,
+			cacheBust: schedule.cacheBust,
 			jsonParsingConfig: schedule.jsonParsingConfig as {
 				enabled: boolean;
 			} | null,
@@ -473,6 +482,26 @@ export default function MonitorDetailsPage() {
 			// Errors handled by individual queries
 		}
 		setIsRefreshing(false);
+	};
+
+	const handleManualCheck = async () => {
+		if (!schedule) {
+			return;
+		}
+		try {
+			await manualCheckMutation.mutateAsync({ scheduleId: schedule.id });
+			toast.success("Check triggered");
+			setTimeout(() => {
+				refetchSchedule();
+				refetchUptimeData();
+				refetchHeatmapData();
+				refetchLatencyData();
+			}, 3000);
+		} catch (error) {
+			const errorMessage =
+				error instanceof Error ? error.message : "Failed to trigger check";
+			toast.error(errorMessage);
+		}
 	};
 
 	const handleTransfer = async (targetOrganizationId: string) => {
@@ -567,6 +596,21 @@ export default function MonitorDetailsPage() {
 							<ArrowClockwiseIcon
 								className={isRefreshing ? "animate-spin" : ""}
 							/>
+						</Button>
+						<Button
+							aria-label="Trigger manual check"
+							disabled={manualCheckMutation.isPending || schedule.isPaused}
+							onClick={handleManualCheck}
+							size="sm"
+							type="button"
+							variant="outline"
+						>
+							<LightningIcon
+								className={manualCheckMutation.isPending ? "animate-spin" : ""}
+								size={16}
+								weight="fill"
+							/>
+							Check Now
 						</Button>
 						<Button
 							disabled={

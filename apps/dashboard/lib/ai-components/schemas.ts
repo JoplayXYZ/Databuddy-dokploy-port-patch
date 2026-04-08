@@ -30,7 +30,9 @@ export const dataTableSchema = z
 		description: z.string().optional(),
 		columns: z.array(z.string()),
 		align: z.array(z.enum(["left", "center", "right"])).optional(),
-		rows: z.array(z.array(z.union([z.string(), z.number(), z.boolean(), z.null()]))),
+		rows: z.array(
+			z.array(z.union([z.string(), z.number(), z.boolean(), z.null()]))
+		),
 		footer: z.string().optional(),
 	})
 	.passthrough();
@@ -293,7 +295,10 @@ export function validateComponentJSON(input: unknown): {
 		typeof input !== "object" ||
 		!("type" in input)
 	) {
-		return { valid: false, error: "Input must be an object with a 'type' field" };
+		return {
+			valid: false,
+			error: "Input must be an object with a 'type' field",
+		};
 	}
 
 	const { type } = input as { type: unknown };

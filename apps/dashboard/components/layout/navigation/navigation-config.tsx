@@ -1,51 +1,47 @@
 import { GATED_FEATURES } from "@databuddy/shared/types/features";
-import {
-	ActivityIcon,
-	ArrowSquareOutIcon,
-	BellIcon,
-	BookOpenIcon,
-	BrowserIcon,
-	BugIcon,
-	BuildingsIcon,
-	CalendarIcon,
-	ChartBarIcon,
-	ChartLineUpIcon,
-	ChartPieIcon,
-	CodeIcon,
-	CreditCardIcon,
-	CurrencyDollarIcon,
-	EyeIcon,
-	FileArrowDownIcon,
-	FlagIcon,
-	FunnelIcon,
-	GearIcon,
-	GlobeIcon,
-	GlobeSimpleIcon,
-	HeartbeatIcon,
-	HouseIcon,
-	IdentificationCardIcon,
-	KeyIcon,
-	LightningIcon,
-	LinkIcon,
-	LockIcon,
-	MapPinIcon,
-	PlayIcon,
-	PlugIcon,
-	PlusIcon,
-	ReceiptIcon,
-	RoadHorizonIcon,
-	RobotIcon,
-	ShieldCheckIcon,
-	SparkleIcon,
-	SpeakerHighIcon,
-	SquaresFourIcon,
-	TargetIcon,
-	TrendUpIcon,
-	UserGearIcon,
-	UserIcon,
-	UsersThreeIcon,
-	WarningIcon,
-} from "@phosphor-icons/react";
+import { ActivityIcon } from "@phosphor-icons/react";
+import { ArrowSquareOutIcon } from "@phosphor-icons/react";
+import { BellIcon } from "@phosphor-icons/react";
+import { BookOpenIcon } from "@phosphor-icons/react";
+import { BugIcon } from "@phosphor-icons/react";
+import { BuildingsIcon } from "@phosphor-icons/react";
+import { CalendarIcon } from "@phosphor-icons/react";
+import { ChartBarIcon } from "@phosphor-icons/react";
+import { ChartLineUpIcon } from "@phosphor-icons/react";
+import { ChartPieIcon } from "@phosphor-icons/react";
+import { CodeIcon } from "@phosphor-icons/react";
+import { CreditCardIcon } from "@phosphor-icons/react";
+import { CurrencyDollarIcon } from "@phosphor-icons/react";
+import { EyeIcon } from "@phosphor-icons/react";
+import { FileArrowDownIcon } from "@phosphor-icons/react";
+import { FlagIcon } from "@phosphor-icons/react";
+import { FunnelIcon } from "@phosphor-icons/react";
+import { GearIcon } from "@phosphor-icons/react";
+import { GlobeIcon } from "@phosphor-icons/react";
+import { GlobeSimpleIcon } from "@phosphor-icons/react";
+import { HeartbeatIcon } from "@phosphor-icons/react";
+import { HouseIcon } from "@phosphor-icons/react";
+import { IdentificationCardIcon } from "@phosphor-icons/react";
+import { KeyIcon } from "@phosphor-icons/react";
+import { LightningIcon } from "@phosphor-icons/react";
+import { LinkIcon } from "@phosphor-icons/react";
+import { LockIcon } from "@phosphor-icons/react";
+import { MapPinIcon } from "@phosphor-icons/react";
+import { PlayIcon } from "@phosphor-icons/react";
+import { PlugIcon } from "@phosphor-icons/react";
+import { ReceiptIcon } from "@phosphor-icons/react";
+import { RoadHorizonIcon } from "@phosphor-icons/react";
+import { RobotIcon } from "@phosphor-icons/react";
+import { ShieldCheckIcon } from "@phosphor-icons/react";
+import { SparkleIcon } from "@phosphor-icons/react";
+import { SpeakerHighIcon } from "@phosphor-icons/react";
+import { SquaresFourIcon } from "@phosphor-icons/react";
+import { TargetIcon } from "@phosphor-icons/react";
+import { TrendUpIcon } from "@phosphor-icons/react";
+import { UserIcon } from "@phosphor-icons/react";
+import { UserGearIcon } from "@phosphor-icons/react";
+import { UsersThreeIcon } from "@phosphor-icons/react";
+import { WarningIcon } from "@phosphor-icons/react";
 import type { Category, NavigationEntry, NavigationSection } from "./types";
 
 const createNavItem = (
@@ -103,47 +99,12 @@ export function filterCategoriesByFlags(
 	});
 }
 
-const createDynamicNavigation = <T extends { id: string; name: string | null }>(
-	items: T[],
-	title: string,
-	titleIcon: any,
-	overviewName: string,
-	overviewHref: string,
-	itemIcon: any,
-	itemHrefPrefix: string,
-	emptyText: string,
-	extraProps?: (item: T) => Record<string, any>
-): NavigationSection[] => [
-	createNavSection(title, titleIcon, [
-		createNavItem(overviewName, ChartBarIcon, overviewHref, {
-			highlight: true,
-		}),
-		...(items.length > 0
-			? items.map((item) =>
-					createNavItem(
-						item.name || "",
-						itemIcon,
-						`${itemHrefPrefix}/${item.id}`,
-						{
-							highlight: true,
-							...(extraProps?.(item) || {}),
-						}
-					)
-				)
-			: [
-					createNavItem(emptyText, PlusIcon, overviewHref, {
-						highlight: true,
-						disabled: true,
-					}),
-				]),
-	]),
-];
-
-export const createWebsitesNavigation = (
-	websites: Array<{ id: string; name: string | null; domain: string }>
-): NavigationEntry[] => [
+export const homeNavigation: NavigationEntry[] = [
 	createNavSection("Overview", SquaresFourIcon, [
 		createNavItem("Home", HouseIcon, "/home", {
+			highlight: true,
+		}),
+		createNavItem("Websites", GlobeIcon, "/websites", {
 			highlight: true,
 		}),
 		createNavItem("Insights", SparkleIcon, "/insights", {
@@ -151,17 +112,6 @@ export const createWebsitesNavigation = (
 			flag: "insights",
 		}),
 	]),
-	...createDynamicNavigation(
-		websites,
-		"Websites",
-		GlobeSimpleIcon,
-		"Website Overview",
-		"/websites",
-		GlobeIcon,
-		"/websites",
-		"Add Your First Website",
-		(website) => ({ domain: website.domain })
-	),
 	createNavSection("Observability", ActivityIcon, [
 		createNavItem("Links", LinkIcon, "/links", {
 			highlight: true,
@@ -270,47 +220,15 @@ export const billingNavigation: NavigationSection[] = [
 	]),
 ];
 
-const statusPagesSection = createNavSection("Status Pages", BrowserIcon, [
-	createNavItem("All Pages", GlobeSimpleIcon, "/monitors/status-pages"),
-]);
-
-export const createMonitorsNavigation = (
-	monitors: Array<{
-		id: string;
-		name: string | null;
-		url: string | null;
-		websiteId: string | null;
-		website: { id: string; name: string | null; domain: string } | null;
-	}>
-): NavigationSection[] => [
-	...createDynamicNavigation(
-		monitors.map((m) => ({
-			id: m.id,
-			name: m.name || m.website?.name || m.url || "Monitor",
-			domain: m.website?.domain || m.url || "",
-		})),
-		"Monitoring",
-		HeartbeatIcon,
-		"All Monitors",
-		"/monitors",
-		HeartbeatIcon,
-		"/monitors",
-		"Add Your First Monitor",
-		(monitor) => ({ domain: monitor.domain })
-	),
-	statusPagesSection,
-];
-
-export const createLoadingMonitorsNavigation = (): NavigationSection[] => [
-	...createLoadingNavigation(
-		"Monitoring",
-		HeartbeatIcon,
-		"All Monitors",
-		"/monitors",
-		"Loading monitors...",
-		HeartbeatIcon
-	),
-	statusPagesSection,
+export const monitorsNavigation: NavigationSection[] = [
+	createNavSection("Monitoring", HeartbeatIcon, [
+		createNavItem("All Monitors", HeartbeatIcon, "/monitors", {
+			highlight: true,
+		}),
+		createNavItem("Status Pages", GlobeSimpleIcon, "/monitors/status-pages", {
+			highlight: true,
+		}),
+	]),
 ];
 
 export const websiteNavigation: NavigationSection[] = [
@@ -451,8 +369,8 @@ export const categoryConfig = {
 		],
 		"home",
 		{
-			home: [],
-			monitors: [],
+			home: homeNavigation,
+			monitors: monitorsNavigation,
 			organizations: organizationNavigation,
 			billing: billingNavigation,
 			settings: personalNavigation,
@@ -512,50 +430,3 @@ export const getDefaultCategory = (pathname: string) => {
 	}
 	return getContextConfig(pathname).defaultCategory;
 };
-
-const createLoadingNavigation = (
-	title: string,
-	titleIcon: any,
-	overviewName: string,
-	overviewHref: string,
-	loadingName: string,
-	loadingIcon: any
-): NavigationSection[] => [
-	createNavSection(title, titleIcon, [
-		createNavItem(overviewName, ChartBarIcon, overviewHref, {
-			highlight: true,
-		}),
-		createNavItem(loadingName, loadingIcon, overviewHref, {
-			highlight: true,
-			disabled: true,
-		}),
-	]),
-];
-
-export const createLoadingWebsitesNavigation = (): NavigationEntry[] => [
-	createNavSection("Overview", SquaresFourIcon, [
-		createNavItem("Home", HouseIcon, "/home", {
-			highlight: true,
-		}),
-		createNavItem("Insights", SparkleIcon, "/insights", {
-			highlight: true,
-			flag: "insights",
-		}),
-	]),
-	...createLoadingNavigation(
-		"Websites",
-		GlobeSimpleIcon,
-		"Website Overview",
-		"/websites",
-		"Loading websites...",
-		GlobeIcon
-	),
-	createNavSection("Observability", ActivityIcon, [
-		createNavItem("Links", LinkIcon, "/links", {
-			highlight: true,
-		}),
-		createNavItem("Custom Events", LightningIcon, "/events", {
-			highlight: true,
-		}),
-	]),
-];

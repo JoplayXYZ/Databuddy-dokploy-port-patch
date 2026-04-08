@@ -1,12 +1,10 @@
 "use client";
 
-import {
-	HeartbeatIcon,
-	PauseIcon,
-	PencilIcon,
-	PlayIcon,
-	TrashIcon,
-} from "@phosphor-icons/react";
+import { HeartbeatIcon } from "@phosphor-icons/react";
+import { PauseIcon } from "@phosphor-icons/react";
+import { PencilIcon } from "@phosphor-icons/react";
+import { PlayIcon } from "@phosphor-icons/react";
+import { TrashIcon } from "@phosphor-icons/react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
 import { useMemo, useState } from "react";
@@ -48,15 +46,15 @@ const granularityLabels: Record<string, string> = {
 };
 
 interface Schedule {
-	id: string;
-	url: string;
-	name?: string | null;
 	granularity: string;
+	id: string;
 	isPaused: boolean;
 	isPublic: boolean;
 	jsonParsingConfig?: {
 		enabled: boolean;
 	} | null;
+	name?: string | null;
+	url: string;
 }
 
 export default function PulsePage() {

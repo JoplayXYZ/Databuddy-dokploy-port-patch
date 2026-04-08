@@ -1,6 +1,6 @@
 "use client";
 
-import { ArchiveIcon } from "@phosphor-icons/react/dist/ssr/Archive";
+import { ArchiveIcon } from "@phosphor-icons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAtom } from "jotai";
 import { useParams } from "next/navigation";
@@ -70,7 +70,7 @@ export default function ArchivePage() {
 	const handleDeleteFlagRequest = (flagId: string) => {
 		const flag = archivedFlags.find((f) => f.id === flagId);
 		if (flag) {
-			setFlagToDelete(flag as Flag);
+			setFlagToDelete(flag as unknown as Flag);
 		}
 	};
 

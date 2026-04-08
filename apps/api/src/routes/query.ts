@@ -234,12 +234,12 @@ function generateRequestId(): string {
 }
 
 interface AuthContext {
-	apiKey: ApiKeyRow | null;
-	user: { id: string; name: string; email: string; role?: string } | null;
-	isAuthenticated: boolean;
-	authMethod: "api_key" | "session" | "none";
 	/** Session active org; used when query omits organization_id. */
 	activeOrganizationId: string | null;
+	apiKey: ApiKeyRow | null;
+	authMethod: "api_key" | "session" | "none";
+	isAuthenticated: boolean;
+	user: { id: string; name: string; email: string; role?: string } | null;
 }
 
 function isAdminUser(user: AuthContext["user"]): boolean {
@@ -311,16 +311,6 @@ function createValidationErrorResponse(
 		requestId,
 		errors
 	);
-}
-
-async function getOrganizationWebsiteIds(
-	organizationId: string
-): Promise<string[]> {
-	const result = await db.query.websites.findMany({
-		where: eq(websites.organizationId, organizationId),
-		columns: { id: true },
-	});
-	return result.map((w) => w.id);
 }
 
 /**
@@ -741,10 +731,10 @@ function parseQueryParameter(param: ParameterInput) {
 }
 
 interface QueryResult {
-	parameter: string;
-	success: boolean;
 	data: Record<string, unknown>[];
 	error?: string;
+	parameter: string;
+	success: boolean;
 }
 
 async function executeDynamicQuery(
@@ -787,17 +777,16 @@ async function executeDynamicQuery(
 				: await getWebsiteOwnerId(projectId);
 	}
 
-	// For org-level queries, resolve all website IDs so custom_events queries
-	// can match events by website_id (owner_id may differ between ingestion paths)
+	// For org-level custom_events queries, signal the builder to use
+	// owner_id = projectId (primary-key scan) instead of website_id matching.
+	// owner_id is always set to the organizationId at ingestion time.
 	const hasCustomEventsQueries = request.parameters.some((param) => {
 		const name = typeof param === "string" ? param : param.name;
 		return name.startsWith("custom_event");
 	});
 
-	let orgWebsiteIds: string[] | undefined;
-	if (projectType === "organization" && hasCustomEventsQueries) {
-		orgWebsiteIds = await getOrganizationWebsiteIds(projectId);
-	}
+	const isOrgCustomEvents =
+		projectType === "organization" && hasCustomEventsQueries;
 
 	type PreparedParameter =
 		| { id: string; error: string }
@@ -843,7 +832,8 @@ async function executeDynamicQuery(
 				limit: request.limit || 100,
 				offset: request.page ? (request.page - 1) * (request.limit || 100) : 0,
 				timezone,
-				organizationWebsiteIds: isCustomEventsQuery ? orgWebsiteIds : undefined,
+				organizationWebsiteIds:
+					isCustomEventsQuery && isOrgCustomEvents ? [] : undefined,
 			},
 		};
 	});

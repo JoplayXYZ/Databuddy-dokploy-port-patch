@@ -53,16 +53,20 @@ export const UptimeBuilders: Record<string, SimpleQueryConfig> = {
 			startDate: string,
 			endDate: string,
 			_filters?: Filter[],
-			_granularity?: string
+			_granularity?: string,
+			_limit?: number,
+			_offset?: number,
+			timezone?: string
 		) => {
 			const granularity = _granularity ?? "hour";
+			const tz = timezone || "UTC";
 			const timeGroup =
 				granularity === "minute"
 					? "toStartOfMinute(ts)"
 					: granularity === "hour"
 						? "toStartOfHour(ts)"
 						: granularity === "day"
-							? "toDate(ts)"
+							? "toDate(toTimeZone(ts, {timezone:String}))"
 							: "toStartOfHour(ts)";
 
 			const windowSec =
@@ -75,7 +79,7 @@ export const UptimeBuilders: Record<string, SimpleQueryConfig> = {
 
 			return {
 				sql: `
-					SELECT 
+					SELECT
 						date,
 						${uptimePercentageExpr} as uptime_percentage,
 						total_checks,
@@ -115,16 +119,16 @@ export const UptimeBuilders: Record<string, SimpleQueryConfig> = {
 									ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING
 								) as next_ts
 							FROM ${UPTIME_TABLE}
-							WHERE 
+							WHERE
 								site_id = {websiteId:String}
-								AND timestamp >= toDateTime({startDate:String})
-								AND timestamp <= toDateTime(concat({endDate:String}, ' 23:59:59'))
+								AND timestamp >= parseDateTimeBestEffort({startDate:String}, {timezone:String})
+								AND timestamp <= parseDateTimeBestEffort(concat({endDate:String}, ' 23:59:59'), {timezone:String})
 						)
 						GROUP BY date
 					)
 					ORDER BY date ASC
 				`,
-				params: { websiteId, startDate, endDate },
+				params: { websiteId, startDate, endDate, timezone: tz },
 			};
 		},
 		timeField: "timestamp",

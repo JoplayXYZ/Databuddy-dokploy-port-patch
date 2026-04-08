@@ -10,9 +10,9 @@ import { orpc } from "@/lib/orpc";
 export type { Website } from "@databuddy/db";
 
 export interface WebsitesListData {
-	websites: Website[];
-	chartData: Record<string, ProcessedMiniChartData>;
 	activeUsers: Record<string, number>;
+	chartData: Record<string, ProcessedMiniChartData>;
+	websites: Website[];
 }
 
 export const getWebsiteByIdKey = (id: string): QueryKey =>
@@ -177,7 +177,7 @@ export function useDeleteWebsite() {
 		...orpc.websites.delete.mutationOptions(),
 		onMutate: async ({ id }) => {
 			const getByIdKey = getWebsiteByIdKey(id);
-			const previousWebsite = queryClient.getQueryData<Website>(getByIdKey);
+			const _previousWebsite = queryClient.getQueryData<Website>(getByIdKey);
 
 			const listKey = getWebsitesListKey();
 

@@ -1,23 +1,21 @@
 "use client";
 
-import {
-	ArrowRightIcon,
-	BugIcon,
-	CaretDownIcon,
-	ChartLineUpIcon,
-	CopyIcon,
-	DotsThreeIcon,
-	GaugeIcon,
-	LightningIcon,
-	LinkIcon,
-	RocketIcon,
-	ThumbsDownIcon,
-	ThumbsUpIcon,
-	TrendDownIcon,
-	TrendUpIcon,
-	WarningCircleIcon,
-	XIcon,
-} from "@phosphor-icons/react";
+import { ArrowRightIcon } from "@phosphor-icons/react";
+import { BugIcon } from "@phosphor-icons/react";
+import { CaretDownIcon } from "@phosphor-icons/react";
+import { ChartLineUpIcon } from "@phosphor-icons/react";
+import { CopyIcon } from "@phosphor-icons/react";
+import { DotsThreeIcon } from "@phosphor-icons/react";
+import { GaugeIcon } from "@phosphor-icons/react";
+import { LightningIcon } from "@phosphor-icons/react";
+import { LinkIcon } from "@phosphor-icons/react";
+import { RocketIcon } from "@phosphor-icons/react";
+import { ThumbsDownIcon } from "@phosphor-icons/react";
+import { ThumbsUpIcon } from "@phosphor-icons/react";
+import { TrendDownIcon } from "@phosphor-icons/react";
+import { TrendUpIcon } from "@phosphor-icons/react";
+import { WarningCircleIcon } from "@phosphor-icons/react";
+import { XIcon } from "@phosphor-icons/react";
 import Link from "next/link";
 import { type ReactNode, useMemo } from "react";
 import { toast } from "sonner";
@@ -162,12 +160,12 @@ function buildDiagnosticPrompt(insight: Insight): string {
 }
 
 export interface InsightCardProps {
-	insight: Insight;
 	expanded: boolean;
-	onToggleAction: () => void;
-	onDismissAction?: () => void;
 	feedbackVote?: InsightFeedbackVote | null;
+	insight: Insight;
+	onDismissAction?: () => void;
 	onFeedbackAction?: (vote: InsightFeedbackVote | null) => void;
+	onToggleAction: () => void;
 }
 
 export function InsightCard({

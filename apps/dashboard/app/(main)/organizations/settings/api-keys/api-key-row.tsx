@@ -1,12 +1,10 @@
 "use client";
 
-import {
-	CalendarIcon,
-	CaretRightIcon,
-	KeyIcon,
-	LockKeyIcon,
-	WarningIcon,
-} from "@phosphor-icons/react";
+import { CalendarIcon } from "@phosphor-icons/react";
+import { CaretRightIcon } from "@phosphor-icons/react";
+import { KeyIcon } from "@phosphor-icons/react";
+import { LockKeyIcon } from "@phosphor-icons/react";
+import { WarningIcon } from "@phosphor-icons/react";
 import type { ApiKeyListItem } from "@/components/organizations/api-key-types";
 import { Badge } from "@/components/ui/badge";
 import dayjs from "@/lib/dayjs";

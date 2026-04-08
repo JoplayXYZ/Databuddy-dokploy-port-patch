@@ -1,5 +1,16 @@
 "use client";
 
+import { ArrowSquareOutIcon } from "@phosphor-icons/react";
+import { BrowserIcon } from "@phosphor-icons/react";
+import { CopyIcon } from "@phosphor-icons/react";
+import { DotsThreeIcon } from "@phosphor-icons/react";
+import { HeartbeatIcon } from "@phosphor-icons/react";
+import { PencilSimpleIcon } from "@phosphor-icons/react";
+import { TrashIcon } from "@phosphor-icons/react";
+import { useMutation } from "@tanstack/react-query";
+import Link from "next/link";
+import { useCallback, useState } from "react";
+import { toast } from "sonner";
 import { TransferToOrgDialog } from "@/components/transfer-to-org-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -17,43 +28,30 @@ import { Switch } from "@/components/ui/switch";
 import { getStatusPageUrl } from "@/lib/app-url";
 import { orpc } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
-import {
-	ArrowSquareOutIcon,
-	BrowserIcon,
-	CopyIcon,
-	DotsThreeIcon,
-	HeartbeatIcon,
-	PencilSimpleIcon,
-	TrashIcon,
-} from "@phosphor-icons/react";
-import { useMutation } from "@tanstack/react-query";
-import Link from "next/link";
-import { useCallback, useState } from "react";
-import { toast } from "sonner";
 
 export interface StatusPage {
+	createdAt: Date | string;
+	customCss?: string | null;
+	description: string | null;
+	faviconUrl?: string | null;
+	hideBranding?: boolean;
 	id: string;
+	logoUrl?: string | null;
+	monitorCount: number;
+	name: string;
 	organizationId: string;
 	slug: string;
-	name: string;
-	description: string | null;
-	logoUrl?: string | null;
-	faviconUrl?: string | null;
-	websiteUrl?: string | null;
 	supportUrl?: string | null;
 	theme?: string | null;
-	hideBranding?: boolean;
-	customCss?: string | null;
-	monitorCount: number;
-	createdAt: Date | string;
 	updatedAt: Date | string;
+	websiteUrl?: string | null;
 }
 
 interface StatusPageRowProps {
-	statusPage: StatusPage;
-	onEditAction: () => void;
 	onDeleteAction: () => void;
+	onEditAction: () => void;
 	onTransferSuccessAction?: () => void;
+	statusPage: StatusPage;
 }
 
 function StatusPageActions({

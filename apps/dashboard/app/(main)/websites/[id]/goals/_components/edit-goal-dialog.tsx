@@ -2,9 +2,9 @@
 
 import { filterOptions } from "@databuddy/shared/lists/filters";
 import type { GoalFilter } from "@databuddy/shared/types/api";
-import { PlusIcon } from "@phosphor-icons/react/dist/ssr/Plus";
-import { TargetIcon as Target } from "@phosphor-icons/react/dist/ssr/Target";
-import { TrashIcon } from "@phosphor-icons/react/dist/ssr/Trash";
+import { PlusIcon } from "@phosphor-icons/react";
+import { TargetIcon as Target } from "@phosphor-icons/react";
+import { TrashIcon } from "@phosphor-icons/react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AutocompleteInput } from "@/components/ui/autocomplete-input";
 import { Button } from "@/components/ui/button";
@@ -38,22 +38,22 @@ const defaultFilter: GoalFilter = {
 } as const;
 
 interface GoalFormData {
-	id?: string;
-	name: string;
 	description: string | null;
-	type: string;
-	target: string;
 	filters: GoalFilter[];
+	id?: string;
 	ignoreHistoricData?: boolean;
+	name: string;
+	target: string;
+	type: string;
 }
 
 interface EditGoalDialogProps {
+	autocompleteData?: AutocompleteData;
+	goal: Goal | null;
 	isOpen: boolean;
+	isSaving: boolean;
 	onClose: () => void;
 	onSave: (data: Goal | Omit<CreateGoalData, "websiteId">) => Promise<void>;
-	goal: Goal | null;
-	isSaving: boolean;
-	autocompleteData?: AutocompleteData;
 }
 
 export function EditGoalDialog({

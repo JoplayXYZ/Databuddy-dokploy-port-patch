@@ -3,19 +3,17 @@
 import type { FlagWithScheduleForm } from "@databuddy/shared/flags";
 import { flagWithScheduleSchema } from "@databuddy/shared/flags";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-	BuildingsIcon,
-	CaretDownIcon,
-	CodeIcon,
-	FlagIcon,
-	GitBranchIcon,
-	SpinnerGapIcon,
-	UserIcon,
-	UsersIcon,
-	UsersThreeIcon,
-} from "@phosphor-icons/react";
+import { BuildingsIcon } from "@phosphor-icons/react";
+import { CaretDownIcon } from "@phosphor-icons/react";
+import { CodeIcon } from "@phosphor-icons/react";
+import { FlagIcon } from "@phosphor-icons/react";
+import { GitBranchIcon } from "@phosphor-icons/react";
+import { SpinnerGapIcon } from "@phosphor-icons/react";
+import { UserIcon } from "@phosphor-icons/react";
+import { UsersIcon } from "@phosphor-icons/react";
+import { UsersThreeIcon } from "@phosphor-icons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion } from "motion/react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";

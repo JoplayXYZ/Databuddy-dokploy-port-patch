@@ -1,14 +1,12 @@
 "use client";
 
 import type { UsageResponse } from "@databuddy/shared/types/billing";
-import {
-	BugIcon,
-	ChartBarIcon,
-	LightningIcon,
-	LinkIcon,
-	SparkleIcon,
-	TableIcon,
-} from "@phosphor-icons/react";
+import { BugIcon } from "@phosphor-icons/react";
+import { ChartBarIcon } from "@phosphor-icons/react";
+import { LightningIcon } from "@phosphor-icons/react";
+import { LinkIcon } from "@phosphor-icons/react";
+import { SparkleIcon } from "@phosphor-icons/react";
+import { TableIcon } from "@phosphor-icons/react";
 import { EmptyState } from "@/components/empty-state";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -48,9 +46,9 @@ const EVENT_TYPE_CONFIG = {
 } as const;
 
 interface UsageBreakdownTableProps {
-	usageData?: UsageResponse;
 	isLoading: boolean;
 	overageInfo: OverageInfo | null;
+	usageData?: UsageResponse;
 }
 
 export function UsageBreakdownTable({

@@ -2,15 +2,13 @@
 
 import { authClient } from "@databuddy/auth/client";
 import type { Icon } from "@phosphor-icons/react";
-import {
-	CircleNotchIcon,
-	GithubLogoIcon,
-	GoogleLogoIcon,
-	KeyIcon,
-	LinkBreakIcon,
-	LinkIcon,
-	ShieldCheckIcon,
-} from "@phosphor-icons/react";
+import { CircleNotchIcon } from "@phosphor-icons/react";
+import { GithubLogoIcon } from "@phosphor-icons/react";
+import { GoogleLogoIcon } from "@phosphor-icons/react";
+import { KeyIcon } from "@phosphor-icons/react";
+import { LinkBreakIcon } from "@phosphor-icons/react";
+import { LinkIcon } from "@phosphor-icons/react";
+import { ShieldCheckIcon } from "@phosphor-icons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -36,10 +34,10 @@ import { TwoFactorDialog } from "./sections/two-factor-dialog";
 
 // Types
 interface Account {
-	id: string;
-	providerId: string;
 	accountId: string;
 	createdAt: Date;
+	id: string;
+	providerId: string;
 }
 
 type SocialProvider = "google" | "github";

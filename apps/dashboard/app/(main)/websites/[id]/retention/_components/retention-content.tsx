@@ -1,17 +1,16 @@
 "use client";
 
-import {
-	ArrowCounterClockwiseIcon,
-	ChartLineIcon,
-	TableIcon,
-	UserPlusIcon,
-	UsersIcon,
-} from "@phosphor-icons/react";
+import { ArrowCounterClockwiseIcon } from "@phosphor-icons/react";
+import { ChartLineIcon } from "@phosphor-icons/react";
+import { TableIcon } from "@phosphor-icons/react";
+import { UserPlusIcon } from "@phosphor-icons/react";
+import { UsersIcon } from "@phosphor-icons/react";
 import { useMemo, useState } from "react";
 import { StatCard } from "@/components/analytics";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useChartPreferences } from "@/hooks/use-chart-preferences";
 import { useDateFilters } from "@/hooks/use-date-filters";
+import { formatNumber } from "@/lib/formatters";
 import { useDynamicQuery } from "@/hooks/use-dynamic-query";
 import dayjs from "@/lib/dayjs";
 import { RetentionCohortsGrid } from "./retention-cohorts-grid";
@@ -35,8 +34,8 @@ interface RetentionCohort {
 interface RetentionRate {
 	date: string;
 	new_users: number;
-	returning_users: number;
 	retention_rate: number;
+	returning_users: number;
 }
 
 export function RetentionContent({ websiteId }: RetentionContentProps) {
@@ -143,16 +142,6 @@ export function RetentionContent({ websiteId }: RetentionContentProps) {
 		}),
 		[rates]
 	);
-
-	const formatNumber = (num: number) => {
-		if (num >= 1_000_000) {
-			return `${(num / 1_000_000).toFixed(1)}M`;
-		}
-		if (num >= 1000) {
-			return `${(num / 1000).toFixed(1)}K`;
-		}
-		return num.toLocaleString();
-	};
 
 	return (
 		<div className="flex h-full min-h-0 flex-col gap-4">

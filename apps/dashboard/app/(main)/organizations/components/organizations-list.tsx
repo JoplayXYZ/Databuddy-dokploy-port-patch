@@ -1,12 +1,10 @@
 "use client";
 
 import { authClient } from "@databuddy/auth/client";
-import {
-	BuildingsIcon,
-	CaretRightIcon,
-	CheckCircleIcon,
-	PlusIcon,
-} from "@phosphor-icons/react";
+import { BuildingsIcon } from "@phosphor-icons/react";
+import { CaretRightIcon } from "@phosphor-icons/react";
+import { CheckCircleIcon } from "@phosphor-icons/react";
+import { PlusIcon } from "@phosphor-icons/react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -28,8 +26,8 @@ function getDicebearUrl(seed: string): string {
 }
 
 interface OrganizationsListProps {
-	organizations: Organization[] | null | undefined;
 	activeOrganization: Organization | null | undefined;
+	organizations: Organization[] | null | undefined;
 }
 
 function EmptyState() {
@@ -60,10 +58,10 @@ function EmptyState() {
 }
 
 interface OrganizationRowProps {
-	organization: Organization;
 	isActive: boolean;
 	isProcessing: boolean;
 	onClick: () => void;
+	organization: Organization;
 }
 
 function OrganizationRow({

@@ -7,12 +7,10 @@ import {
 	Droppable,
 	type DropResult,
 } from "@hello-pangea/dnd";
-import {
-	DotsNineIcon,
-	FunnelIcon,
-	PlusIcon,
-	TrashIcon,
-} from "@phosphor-icons/react";
+import { DotsNineIcon } from "@phosphor-icons/react";
+import { FunnelIcon } from "@phosphor-icons/react";
+import { PlusIcon } from "@phosphor-icons/react";
+import { TrashIcon } from "@phosphor-icons/react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AutocompleteInput } from "@/components/ui/autocomplete-input";
 import { Button } from "@/components/ui/button";
@@ -52,14 +50,14 @@ const defaultFilter: FunnelFilter = {
 } as const;
 
 interface EditFunnelDialogProps {
-	isOpen: boolean;
-	onClose: () => void;
-	onSubmit: (funnel: Funnel) => Promise<void>;
-	onCreate?: (data: CreateFunnelData) => Promise<void>;
-	funnel: Funnel | null;
-	isUpdating: boolean;
-	isCreating?: boolean;
 	autocompleteData?: AutocompleteData;
+	funnel: Funnel | null;
+	isCreating?: boolean;
+	isOpen: boolean;
+	isUpdating: boolean;
+	onClose: () => void;
+	onCreate?: (data: CreateFunnelData) => Promise<void>;
+	onSubmit: (funnel: Funnel) => Promise<void>;
 }
 
 export function EditFunnelDialog({

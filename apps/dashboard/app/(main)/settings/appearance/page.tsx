@@ -1,21 +1,19 @@
 "use client";
 
-import {
-	CalendarBlankIcon,
-	CaretDownIcon,
-	ChartBarIcon,
-	ChartLineIcon,
-	ClockIcon,
-	CursorClickIcon,
-	DesktopIcon,
-	FunnelIcon,
-	MoonIcon,
-	PresentationChartIcon,
-	SquaresFourIcon,
-	StackIcon,
-	SunIcon,
-	UsersIcon,
-} from "@phosphor-icons/react";
+import { CalendarBlankIcon } from "@phosphor-icons/react";
+import { CaretDownIcon } from "@phosphor-icons/react";
+import { ChartBarIcon } from "@phosphor-icons/react";
+import { ChartLineIcon } from "@phosphor-icons/react";
+import { ClockIcon } from "@phosphor-icons/react";
+import { CursorClickIcon } from "@phosphor-icons/react";
+import { DesktopIcon } from "@phosphor-icons/react";
+import { FunnelIcon } from "@phosphor-icons/react";
+import { MoonIcon } from "@phosphor-icons/react";
+import { PresentationChartIcon } from "@phosphor-icons/react";
+import { SquaresFourIcon } from "@phosphor-icons/react";
+import { StackIcon } from "@phosphor-icons/react";
+import { SunIcon } from "@phosphor-icons/react";
+import { UsersIcon } from "@phosphor-icons/react";
 import { useTheme } from "next-themes";
 import { useState } from "react";
 import { StatCard } from "@/components/analytics/stat-card";

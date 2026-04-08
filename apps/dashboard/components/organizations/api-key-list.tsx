@@ -1,4 +1,5 @@
-import { KeyIcon, PlusIcon } from "@phosphor-icons/react";
+import { KeyIcon } from "@phosphor-icons/react";
+import { PlusIcon } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
 import dayjs from "@/lib/dayjs";
 import { orpc } from "@/lib/orpc";
@@ -17,9 +18,9 @@ import {
 import type { ApiKeyListItem } from "./api-key-types";
 
 interface ApiKeyListProps {
-	organizationId: string;
 	onCreateNew?: () => void;
 	onSelect?: (apiKey: ApiKeyListItem) => void;
+	organizationId: string;
 }
 
 function ApiKeyListSkeleton() {

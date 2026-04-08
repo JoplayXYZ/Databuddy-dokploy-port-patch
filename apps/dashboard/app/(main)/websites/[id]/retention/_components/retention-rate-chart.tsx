@@ -1,7 +1,7 @@
 "use client";
 
-import { ChartLineIcon } from "@phosphor-icons/react/dist/ssr/ChartLine";
-import { SpinnerIcon } from "@phosphor-icons/react/dist/ssr/Spinner";
+import { ChartLineIcon } from "@phosphor-icons/react";
+import { SpinnerIcon } from "@phosphor-icons/react";
 import { useMemo } from "react";
 import { EmptyState } from "@/components/empty-state";
 import { Chart } from "@/components/ui/composables/chart";
@@ -30,8 +30,8 @@ const {
 interface RetentionRate {
 	date: string;
 	new_users: number;
-	returning_users: number;
 	retention_rate: number;
+	returning_users: number;
 }
 
 interface RetentionRateChartProps {

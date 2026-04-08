@@ -1,16 +1,14 @@
 "use client";
 
 import { authClient } from "@databuddy/auth/client";
-import {
-	CaretDownIcon,
-	CheckCircleIcon,
-	CircleNotchIcon,
-	CopyIcon,
-	DeviceMobileIcon,
-	KeyIcon,
-	ShieldCheckIcon,
-	WarningCircleIcon,
-} from "@phosphor-icons/react";
+import { CaretDownIcon } from "@phosphor-icons/react";
+import { CheckCircleIcon } from "@phosphor-icons/react";
+import { CircleNotchIcon } from "@phosphor-icons/react";
+import { CopyIcon } from "@phosphor-icons/react";
+import { DeviceMobileIcon } from "@phosphor-icons/react";
+import { KeyIcon } from "@phosphor-icons/react";
+import { ShieldCheckIcon } from "@phosphor-icons/react";
+import { WarningCircleIcon } from "@phosphor-icons/react";
 import { useMutation } from "@tanstack/react-query";
 import { QRCodeSVG } from "qrcode.react";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -43,11 +41,11 @@ type TwoFactorStep =
 	| "manage";
 
 interface TwoFactorDialogProps {
-	open: boolean;
-	onOpenChange: (open: boolean) => void;
-	isEnabled: boolean;
 	hasCredentialAccount: boolean;
+	isEnabled: boolean;
+	onOpenChange: (open: boolean) => void;
 	onSuccess: () => void;
+	open: boolean;
 }
 
 const MIN_PASSWORD_LENGTH = 8;

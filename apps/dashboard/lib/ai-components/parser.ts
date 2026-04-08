@@ -8,6 +8,11 @@ import type {
 
 const COMPONENT_START = '{"type":"';
 
+const TRAILING_COMMA_RE = /,\s*$/;
+const DANGLING_KEY_TEST_RE = /,\s*"[^"]*"\s*$/;
+const DANGLING_KV_TEST_RE = /,\s*"[^"]*"\s*:\s*$/;
+const DANGLING_KV_REPLACE_RE = /,\s*"[^"]*"(\s*:\s*[^,}\]]*?)?\s*$/;
+
 /**
  * Type guard to validate raw component input structure.
  * Uses Zod schemas to validate data shape beyond just checking the type exists.
@@ -29,20 +34,20 @@ function isRawComponentInput(obj: unknown): obj is RawComponentInput {
  * Returns a parseable JSON string, or null if the input is too incomplete.
  */
 export function repairPartialJSON(input: string): string | null {
-	if (input.length < 10) return null;
+	if (input.length < 10) {
+		return null;
+	}
 
 	let result = input;
 	// Remove trailing comma before we close structures
-	result = result.replace(/,\s*$/, "");
+	result = result.replace(TRAILING_COMMA_RE, "");
 
 	// Track open structures
 	let inString = false;
 	let escaped = false;
 	const stack: string[] = [];
 
-	for (let i = 0; i < result.length; i++) {
-		const ch = result[i];
-
+	for (const ch of result) {
 		if (escaped) {
 			escaped = false;
 			continue;
@@ -62,11 +67,17 @@ export function repairPartialJSON(input: string): string | null {
 			continue;
 		}
 
-		if (inString) continue;
+		if (inString) {
+			continue;
+		}
 
-		if (ch === "{") stack.push("}");
-		else if (ch === "[") stack.push("]");
-		else if (ch === "}" || ch === "]") stack.pop();
+		if (ch === "{") {
+			stack.push("}");
+		} else if (ch === "[") {
+			stack.push("]");
+		} else if (ch === "}" || ch === "]") {
+			stack.pop();
+		}
 	}
 
 	// Close unclosed string
@@ -78,17 +89,20 @@ export function repairPartialJSON(input: string): string | null {
 	// e.g. {"type":"line-chart","tit  ->  {"type":"line-chart"
 	// After closing the string, check if the last token is a dangling key
 	const lastBrace = result.lastIndexOf("{");
-	if (stack.length > 0 && stack[stack.length - 1] === "}") {
+	if (stack.length > 0 && stack.at(-1) === "}") {
 		// Only clean dangling KV in the current object level
-		const afterLastBrace = result.substring(lastBrace);
+		const afterLastBrace = result.slice(lastBrace);
 		// Check for incomplete value after colon
-		if (/,\s*"[^"]*"\s*$/.test(afterLastBrace) || /,\s*"[^"]*"\s*:\s*$/.test(afterLastBrace)) {
-			result = result.replace(/,\s*"[^"]*"(\s*:\s*[^,}\]]*?)?\s*$/, "");
+		if (
+			DANGLING_KEY_TEST_RE.test(afterLastBrace) ||
+			DANGLING_KV_TEST_RE.test(afterLastBrace)
+		) {
+			result = result.replace(DANGLING_KV_REPLACE_RE, "");
 		}
 	}
 
 	// Remove trailing commas again (may have been exposed by string closing)
-	result = result.replace(/,\s*$/, "");
+	result = result.replace(TRAILING_COMMA_RE, "");
 
 	// Close all open structures in reverse order
 	while (stack.length > 0) {
@@ -117,7 +131,7 @@ export function parseContentSegments(content: string): ParsedSegments {
 
 		if (startIndex === -1) {
 			// No more components, add remaining text
-			const remainingText = content.substring(searchIndex).trim();
+			const remainingText = content.slice(searchIndex).trim();
 			if (remainingText) {
 				segments.push({ type: "text", content: remainingText });
 			}
@@ -125,7 +139,7 @@ export function parseContentSegments(content: string): ParsedSegments {
 		}
 
 		// Add text before the component
-		const textBefore = content.substring(searchIndex, startIndex).trim();
+		const textBefore = content.slice(searchIndex, startIndex).trim();
 		if (textBefore) {
 			segments.push({ type: "text", content: textBefore });
 		}
@@ -149,17 +163,14 @@ export function parseContentSegments(content: string): ParsedSegments {
 			// JSON is still streaming. The text before the JSON was already
 			// pushed as a segment above (line 129-131). Just attempt repair
 			// on the partial JSON — never show raw JSON to the user.
-			const partialJson = content.substring(startIndex);
+			const partialJson = content.slice(startIndex);
 			const repaired = repairPartialJSON(partialJson);
 
 			if (repaired) {
 				try {
 					const parsed = JSON.parse(repaired) as unknown;
 					const record = parsed as Record<string, unknown>;
-					if (
-						typeof record.type === "string" &&
-						hasComponent(record.type)
-					) {
+					if (typeof record.type === "string" && hasComponent(record.type)) {
 						segments.push({
 							type: "streaming-component",
 							content: record as RawComponentInput,
@@ -176,7 +187,7 @@ export function parseContentSegments(content: string): ParsedSegments {
 			break;
 		}
 
-		const jsonString = content.substring(startIndex, endIndex + 1);
+		const jsonString = content.slice(startIndex, endIndex + 1);
 		try {
 			const parsed = JSON.parse(jsonString) as unknown;
 			if (isRawComponentInput(parsed)) {
@@ -201,4 +212,3 @@ export function parseContentSegments(content: string): ParsedSegments {
 
 	return { segments };
 }
-

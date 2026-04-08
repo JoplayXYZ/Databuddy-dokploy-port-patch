@@ -1,6 +1,7 @@
 "use client";
 
-import { BrainIcon, CaretDownIcon } from "@phosphor-icons/react";
+import { BrainIcon } from "@phosphor-icons/react";
+import { CaretDownIcon } from "@phosphor-icons/react";
 import { useControllableState } from "@radix-ui/react-use-controllable-state";
 import type { ComponentProps, ReactNode } from "react";
 import { createContext, memo, useContext, useEffect, useState } from "react";
@@ -14,10 +15,10 @@ import { cn } from "@/lib/utils";
 import { Shimmer } from "./shimmer";
 
 interface ReasoningContextValue {
-	isStreaming: boolean;
-	isOpen: boolean;
-	setIsOpen: (open: boolean) => void;
 	duration: number | undefined;
+	isOpen: boolean;
+	isStreaming: boolean;
+	setIsOpen: (open: boolean) => void;
 }
 
 const ReasoningContext = createContext<ReasoningContextValue | null>(null);

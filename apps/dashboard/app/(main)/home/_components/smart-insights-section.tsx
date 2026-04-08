@@ -1,19 +1,17 @@
 "use client";
 
-import {
-	ArrowClockwiseIcon,
-	ArrowRightIcon,
-	BugIcon,
-	CaretDownIcon,
-	CheckCircleIcon,
-	GaugeIcon,
-	LightningIcon,
-	RocketIcon,
-	SparkleIcon,
-	TrendDownIcon,
-	TrendUpIcon,
-	WarningCircleIcon,
-} from "@phosphor-icons/react";
+import { ArrowClockwiseIcon } from "@phosphor-icons/react";
+import { ArrowRightIcon } from "@phosphor-icons/react";
+import { BugIcon } from "@phosphor-icons/react";
+import { CaretDownIcon } from "@phosphor-icons/react";
+import { CheckCircleIcon } from "@phosphor-icons/react";
+import { GaugeIcon } from "@phosphor-icons/react";
+import { LightningIcon } from "@phosphor-icons/react";
+import { RocketIcon } from "@phosphor-icons/react";
+import { SparkleIcon } from "@phosphor-icons/react";
+import { TrendDownIcon } from "@phosphor-icons/react";
+import { TrendUpIcon } from "@phosphor-icons/react";
+import { WarningCircleIcon } from "@phosphor-icons/react";
 import Link from "next/link";
 import { type ReactNode, useMemo, useState } from "react";
 import { InsightMetrics } from "@/components/insight-metrics";
@@ -299,10 +297,10 @@ function ErrorState({ onRetryAction }: { onRetryAction?: () => void }) {
 
 interface InsightsSectionProps {
 	insights: Insight[];
-	isLoading?: boolean;
+	isError?: boolean;
 	isFetching?: boolean;
 	isFetchingFresh?: boolean;
-	isError?: boolean;
+	isLoading?: boolean;
 	onRefreshAction?: () => void;
 	/** `compact` = capped list height (home). `full` = grows with parent flex layout (`/insights`). */
 	variant?: "compact" | "full";

@@ -9,16 +9,14 @@ import {
 	PLAN_IDS,
 	type PlanId,
 } from "@databuddy/shared/types/features";
-import {
-	ArrowDownIcon,
-	CheckIcon,
-	CircleNotchIcon,
-	CrownIcon,
-	RocketLaunchIcon,
-	SparkleIcon,
-	StarIcon,
-	WarningIcon,
-} from "@phosphor-icons/react";
+import { ArrowDownIcon } from "@phosphor-icons/react";
+import { CheckIcon } from "@phosphor-icons/react";
+import { CircleNotchIcon } from "@phosphor-icons/react";
+import { CrownIcon } from "@phosphor-icons/react";
+import { RocketLaunchIcon } from "@phosphor-icons/react";
+import { SparkleIcon } from "@phosphor-icons/react";
+import { StarIcon } from "@phosphor-icons/react";
+import { WarningIcon } from "@phosphor-icons/react";
 import { useCustomer, useListPlans } from "autumn-js/react";
 import { createContext, useContext, useState } from "react";
 import { PricingTiersTooltip } from "@/app/(main)/billing/components/pricing-tiers-tooltip";

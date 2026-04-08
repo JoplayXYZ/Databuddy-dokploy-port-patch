@@ -1,5 +1,15 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
+import { CodeIcon } from "@phosphor-icons/react";
+import { GearIcon } from "@phosphor-icons/react";
+import { InfoIcon } from "@phosphor-icons/react";
+import { useMutation } from "@tanstack/react-query";
+import clsx from "clsx";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { z } from "zod";
 import { useOrganizationsContext } from "@/components/providers/organizations-provider";
 import { Button } from "@/components/ui/button";
 import {
@@ -28,14 +38,6 @@ import {
 } from "@/components/ui/tooltip";
 import { useWebsite } from "@/hooks/use-websites";
 import { orpc } from "@/lib/orpc";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { CodeIcon, GearIcon, InfoIcon } from "@phosphor-icons/react";
-import { useMutation } from "@tanstack/react-query";
-import clsx from "clsx";
-import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import { toast } from "sonner";
-import { z } from "zod";
 import { CollapsibleSection } from "./collapsible-section";
 
 const granularityOptions = [
@@ -66,11 +68,10 @@ const monitorFormSchema = z.object({
 type MonitorFormData = z.infer<typeof monitorFormSchema>;
 
 interface MonitorSheetProps {
-	open: boolean;
 	onCloseAction: (open: boolean) => void;
-	websiteId?: string;
-	onSaveAction?: () => void;
 	onCreatedAction?: (scheduleId: string) => void;
+	onSaveAction?: () => void;
+	open: boolean;
 	schedule?: {
 		id: string;
 		url: string;
@@ -82,6 +83,7 @@ interface MonitorSheetProps {
 			enabled: boolean;
 		} | null;
 	} | null;
+	websiteId?: string;
 }
 
 export function MonitorSheet({
@@ -170,6 +172,7 @@ export function MonitorSheet({
 			if (isEditing && schedule) {
 				await updateMutation.mutateAsync({
 					scheduleId: schedule.id,
+					name: data.name?.trim() ? data.name.trim() : null,
 					granularity: data.granularity,
 					timeout: data.timeout,
 					cacheBust: data.cacheBust,

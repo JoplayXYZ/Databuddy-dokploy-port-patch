@@ -1,16 +1,21 @@
 "use client";
 
-import { ArrowClockwiseIcon } from "@phosphor-icons/react/dist/ssr/ArrowClockwise";
-import { GlobeIcon } from "@phosphor-icons/react/dist/ssr/Globe";
-import { PlusIcon } from "@phosphor-icons/react/dist/ssr/Plus";
-import { TrendUpIcon } from "@phosphor-icons/react/dist/ssr/TrendUp";
+import { ArrowClockwiseIcon } from "@phosphor-icons/react";
+import { GlobeIcon } from "@phosphor-icons/react";
+import { PlusIcon } from "@phosphor-icons/react";
+import { TrendUpIcon } from "@phosphor-icons/react";
+import dynamic from "next/dynamic";
 import { useState } from "react";
 import { EmptyState } from "@/components/empty-state";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { WebsiteDialog } from "@/components/website-dialog";
 import { useWebsites } from "@/hooks/use-websites";
+
+const WebsiteDialog = dynamic(
+	() => import("@/components/website-dialog").then((mod) => mod.WebsiteDialog),
+	{ ssr: false }
+);
 
 import { cn } from "@/lib/utils";
 import { PageHeader } from "./_components/page-header";

@@ -1,11 +1,9 @@
 "use client";
 
-import {
-	ArrowSquareOutIcon,
-	CaretDownIcon,
-	CheckCircleIcon,
-	WarningCircleIcon,
-} from "@phosphor-icons/react";
+import { ArrowSquareOutIcon } from "@phosphor-icons/react";
+import { CaretDownIcon } from "@phosphor-icons/react";
+import { CheckCircleIcon } from "@phosphor-icons/react";
+import { WarningCircleIcon } from "@phosphor-icons/react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useLayoutEffect, useRef, useState } from "react";
@@ -38,8 +36,8 @@ const LINE_WIDTH = 1;
 const LINE_GAP = 2;
 
 interface LineProgressProps {
-	percentage: number;
 	isLast: boolean;
+	percentage: number;
 }
 
 function LineProgress({ percentage, isLast }: LineProgressProps) {

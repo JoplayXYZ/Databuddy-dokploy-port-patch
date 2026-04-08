@@ -2,9 +2,8 @@ import { resolveApiKeyOwnerId } from "@hooks/auth";
 import { getApiKeyFromHeader, hasKeyScope } from "@lib/api-key";
 import { checkAutumnUsage } from "@lib/billing";
 import { insertAICallSpans } from "@lib/event-service";
-import { basketErrors } from "@lib/structured-errors";
+import { basketErrors, rethrowOrWrap } from "@lib/structured-errors";
 import { Elysia } from "elysia";
-import { createError, EvlogError } from "evlog";
 import { useLogger } from "evlog/elysia";
 import { z } from "zod";
 
@@ -84,13 +83,9 @@ const app = new Elysia().post("/llm", async (context) => {
 			throw basketErrors.llmBillingOwnerUnresolved();
 		}
 
-		const billing = await checkAutumnUsage(billingOwnerId, "events", {
+		await checkAutumnUsage(billingOwnerId, "events", {
 			api_key_id: apiKey.id,
 		});
-		if ("exceeded" in billing) {
-			log.set({ rejected: "billing_exceeded" });
-			return billing.response;
-		}
 
 		const parseResult = z
 			.union([aiCallSchema, z.array(aiCallSchema)])
@@ -159,17 +154,7 @@ const app = new Elysia().post("/llm", async (context) => {
 			}
 		);
 	} catch (error) {
-		if (error instanceof EvlogError) {
-			throw error;
-		}
-		const err = error instanceof Error ? error : new Error(String(error));
-		log.error(err);
-		throw createError({
-			message: "Internal server error",
-			status: 500,
-			why: process.env.NODE_ENV === "development" ? err.message : undefined,
-			cause: err,
-		});
+		rethrowOrWrap(error, log);
 	}
 });
 

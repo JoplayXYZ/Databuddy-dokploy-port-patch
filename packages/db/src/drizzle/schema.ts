@@ -350,8 +350,8 @@ export const userPreferences = pgTable(
 );
 
 export interface WebsiteSettings {
-	allowedOrigins?: string[];
 	allowedIps?: string[];
+	allowedOrigins?: string[];
 }
 
 export const websites = pgTable(
@@ -419,10 +419,10 @@ export interface DataFilter {
 }
 
 export interface FunnelStep {
-	type: "PAGE_VIEW" | "EVENT" | "CUSTOM";
-	target: string;
-	name: string;
 	conditions?: Record<string, unknown>;
+	name: string;
+	target: string;
+	type: "PAGE_VIEW" | "EVENT" | "CUSTOM";
 }
 
 export const funnelDefinitions = pgTable(
@@ -580,10 +580,10 @@ export const apiResourceType = pgEnum("api_resource_type", [
 ]);
 
 export interface ApiKeyMetadata {
-	resources?: Record<string, string[]>;
-	tags?: string[];
 	description?: string;
 	lastUsedAt?: string;
+	resources?: Record<string, string[]>;
+	tags?: string[];
 }
 
 export const apikey = pgTable(
@@ -679,7 +679,10 @@ export const annotationType = pgEnum("annotation_type", [
 export const chartType = pgEnum("chart_type", ["metrics"]);
 
 export interface FlagUserRule {
-	type: "user_id" | "email" | "property";
+	batch: boolean;
+	batchValues?: string[];
+	enabled: boolean;
+	field?: string;
 	operator:
 		| "equals"
 		| "contains"
@@ -689,20 +692,17 @@ export interface FlagUserRule {
 		| "not_in"
 		| "exists"
 		| "not_exists";
-	field?: string;
+	type: "user_id" | "email" | "property";
 	value?: string;
 	values?: string[];
-	enabled: boolean;
-	batch: boolean;
-	batchValues?: string[];
 }
 
 export interface FlagVariant {
+	description?: string;
 	key: string;
+	type: "string" | "number" | "json";
 	value: string | number;
 	weight?: number;
-	description?: string;
-	type: "string" | "number" | "json";
 }
 
 export const flags = pgTable(
@@ -1544,3 +1544,93 @@ export const alarmDestinationTypeValues = [
 ] as const;
 export type AlarmDestinationTypeValue =
 	(typeof alarmDestinationTypeValues)[number];
+
+// Agent install telemetry — tracks AI-assisted SDK installations from onboarding
+export const agentInstallStatus = pgEnum("agent_install_status", [
+	"success",
+	"partial",
+	"failed",
+]);
+
+export const agentInstallTelemetry = pgTable(
+	"agent_install_telemetry",
+	{
+		id: text().primaryKey().notNull(),
+		websiteId: text("website_id").notNull(),
+		agent: text().notNull(),
+		status: agentInstallStatus().notNull(),
+		framework: text(),
+		installMethod: text("install_method"),
+		durationMs: integer("duration_ms"),
+		stepsCompleted: jsonb("steps_completed"),
+		issues: jsonb(),
+		errorMessage: text("error_message"),
+		metadata: jsonb(),
+		createdAt: timestamp("created_at", { withTimezone: true })
+			.defaultNow()
+			.notNull(),
+	},
+	(table) => [
+		index("agent_install_telemetry_website_id_idx").using(
+			"btree",
+			table.websiteId.asc().nullsLast().op("text_ops")
+		),
+		index("agent_install_telemetry_status_idx").using(
+			"btree",
+			table.status.asc().nullsLast()
+		),
+		index("agent_install_telemetry_created_at_idx").using(
+			"btree",
+			table.createdAt.asc().nullsLast()
+		),
+	]
+);
+
+// Agent chats — persisted Databunny conversations.
+// `messages` stores the full UIMessage[] array as JSONB; written atomically
+// via onFinish in the agent stream response.
+export const agentChats = pgTable(
+	"agent_chats",
+	{
+		id: text().primaryKey().notNull(),
+		websiteId: text("website_id").notNull(),
+		userId: text("user_id").notNull(),
+		organizationId: text("organization_id"),
+		title: text().notNull().default(""),
+		messages: jsonb().notNull().default([]).$type<unknown[]>(),
+		createdAt: timestamp("created_at", { withTimezone: true })
+			.defaultNow()
+			.notNull(),
+		updatedAt: timestamp("updated_at", { withTimezone: true })
+			.defaultNow()
+			.notNull(),
+	},
+	(table) => [
+		index("agent_chats_website_user_updated_idx").using(
+			"btree",
+			table.websiteId.asc().nullsLast().op("text_ops"),
+			table.userId.asc().nullsLast().op("text_ops"),
+			table.updatedAt.desc().nullsLast()
+		),
+		index("agent_chats_user_updated_idx").using(
+			"btree",
+			table.userId.asc().nullsLast().op("text_ops"),
+			table.updatedAt.desc().nullsLast()
+		),
+		foreignKey({
+			columns: [table.websiteId],
+			foreignColumns: [websites.id],
+			name: "agent_chats_website_id_fkey",
+		}).onDelete("cascade"),
+		foreignKey({
+			columns: [table.userId],
+			foreignColumns: [user.id],
+			name: "agent_chats_user_id_fkey",
+		}).onDelete("cascade"),
+		foreignKey({
+			columns: [table.organizationId],
+			foreignColumns: [organization.id],
+			name: "agent_chats_organization_id_fkey",
+		}).onDelete("set null"),
+	]
+);

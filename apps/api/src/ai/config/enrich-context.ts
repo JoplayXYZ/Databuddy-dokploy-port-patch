@@ -119,7 +119,9 @@ export async function fetchRecentInsights(
 	websiteId: string
 ): Promise<string> {
 	try {
-		if (!organizationId) return "";
+		if (!organizationId) {
+			return "";
+		}
 
 		const fourteenDaysAgo = new Date();
 		fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
@@ -143,7 +145,9 @@ export async function fetchRecentInsights(
 			.orderBy(desc(analyticsInsights.createdAt))
 			.limit(8);
 
-		if (rows.length === 0) return "";
+		if (rows.length === 0) {
+			return "";
+		}
 
 		const lines = rows.map((row) => {
 			const date = row.createdAt.toISOString().slice(0, 10);

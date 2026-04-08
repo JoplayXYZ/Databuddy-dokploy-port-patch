@@ -1,5 +1,10 @@
 "use client";
 
+import { CheckCircleIcon } from "@phosphor-icons/react";
+import { ClockCounterClockwiseIcon } from "@phosphor-icons/react";
+import { WarningCircleIcon } from "@phosphor-icons/react";
+import { XCircleIcon } from "@phosphor-icons/react";
+import type { RefCallback } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -12,28 +17,21 @@ import {
 } from "@/components/ui/table";
 import { formatLocalTime } from "@/lib/time";
 import { cn } from "@/lib/utils";
-import {
-	CheckCircleIcon,
-	ClockCounterClockwiseIcon,
-	WarningCircleIcon,
-	XCircleIcon,
-} from "@phosphor-icons/react";
-import type { RefCallback } from "react";
 
 export interface RecentActivityCheck {
-	timestamp: string;
-	status: number; // 1 = up, 0 = down, 2 = pending
-	total_ms: number;
-	http_code: number;
-	probe_region: string;
-	probe_ip?: string;
 	error?: string;
+	http_code: number;
+	probe_ip?: string;
+	probe_region: string;
+	status: number; // 1 = up, 0 = down, 2 = pending
+	timestamp: string;
+	total_ms: number;
 }
 
 interface RecentActivityProps {
 	checks: RecentActivityCheck[];
-	isLoading?: boolean;
 	hasMore?: boolean;
+	isLoading?: boolean;
 	isLoadingMore?: boolean;
 	loadMoreRef?: RefCallback<HTMLTableCellElement | null>;
 }

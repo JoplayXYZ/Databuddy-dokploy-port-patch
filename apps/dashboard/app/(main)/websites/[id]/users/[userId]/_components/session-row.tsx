@@ -7,11 +7,9 @@ import type {
 	SessionReferrer,
 	SessionRowProps,
 } from "@databuddy/shared/types/sessions";
-import {
-	ArrowSquareOutIcon,
-	CaretDownIcon,
-	CaretRightIcon,
-} from "@phosphor-icons/react";
+import { ArrowSquareOutIcon } from "@phosphor-icons/react";
+import { CaretDownIcon } from "@phosphor-icons/react";
+import { CaretRightIcon } from "@phosphor-icons/react";
 import React, { useCallback } from "react";
 import { FaviconImage } from "@/components/analytics/favicon-image";
 import { BrowserIcon, CountryFlag, OSIcon } from "@/components/icon";

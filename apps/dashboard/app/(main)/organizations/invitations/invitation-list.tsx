@@ -1,6 +1,7 @@
 "use client";
 
-import { EnvelopeIcon, TrashIcon } from "@phosphor-icons/react";
+import { EnvelopeIcon } from "@phosphor-icons/react";
+import { TrashIcon } from "@phosphor-icons/react";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,8 +11,8 @@ import dayjs from "@/lib/dayjs";
 import { cn } from "@/lib/utils";
 
 interface InvitationToCancel {
-	id: string;
 	email: string;
+	id: string;
 }
 
 interface InvitationRowProps {

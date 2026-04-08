@@ -3,14 +3,23 @@
  * Extracts schema information from actual table definitions to ensure docs are always up to date.
  */
 
+export const SCHEMA_SECTIONS = [
+	"events",
+	"errors",
+	"vitals",
+	"outgoing",
+] as const;
+export type SchemaSection = (typeof SCHEMA_SECTIONS)[number];
+
 /**
  * Schema table definition with description
  */
 interface TableDef {
-	name: string;
+	additionalInfo?: string;
 	description: string;
 	keyColumns: string[];
-	additionalInfo?: string;
+	name: string;
+	section: SchemaSection;
 }
 
 /**
@@ -19,6 +28,7 @@ interface TableDef {
 const ANALYTICS_TABLES: TableDef[] = [
 	{
 		name: "analytics.events",
+		section: "events",
 		description: "Main events table with page views and user sessions",
 		keyColumns: [
 			"id (UUID)",
@@ -92,6 +102,7 @@ const ANALYTICS_TABLES: TableDef[] = [
 	},
 	{
 		name: "analytics.error_spans",
+		section: "errors",
 		description: "JavaScript errors and exceptions",
 		keyColumns: [
 			"client_id (String)",
@@ -111,6 +122,7 @@ const ANALYTICS_TABLES: TableDef[] = [
 	},
 	{
 		name: "analytics.error_hourly",
+		section: "errors",
 		description: "Hourly aggregated error statistics",
 		keyColumns: [
 			"client_id (String)",
@@ -127,6 +139,7 @@ const ANALYTICS_TABLES: TableDef[] = [
 	},
 	{
 		name: "analytics.web_vitals_spans",
+		section: "vitals",
 		description: "Core Web Vitals measurements (FCP, LCP, CLS, INP, TTFB, FPS)",
 		keyColumns: [
 			"client_id (String)",
@@ -147,6 +160,7 @@ const ANALYTICS_TABLES: TableDef[] = [
 	},
 	{
 		name: "analytics.web_vitals_hourly",
+		section: "vitals",
 		description: "Hourly aggregated Web Vitals statistics",
 		keyColumns: [
 			"client_id (String)",
@@ -164,6 +178,7 @@ const ANALYTICS_TABLES: TableDef[] = [
 	},
 	{
 		name: "analytics.outgoing_links",
+		section: "outgoing",
 		description: "External links clicked by users",
 		keyColumns: [
 			"id (UUID)",
@@ -178,26 +193,7 @@ const ANALYTICS_TABLES: TableDef[] = [
 	},
 ];
 
-/**
- * Generates comprehensive schema documentation for LLM consumption
- */
-export function generateSchemaDocumentation(): string {
-	const analyticsDoc = ANALYTICS_TABLES.map((table) => {
-		const columns = table.keyColumns.map((col) => `  - ${col}`).join("\n");
-		const info = table.additionalInfo
-			? `\n  Note: ${table.additionalInfo}`
-			: "";
-		return `\n### ${table.name}\n${table.description}\n${columns}${info}`;
-	}).join("\n");
-
-	return `<available-data>
-You have access to comprehensive website analytics data for understanding user behavior and site performance.
-
-## Analytics Database (analytics.*)
-Primary tables for website traffic, user behavior, and performance:
-${analyticsDoc}
-
-## Query Guidelines
+const GUIDELINES = `## Query Guidelines
 - Use client_id = {websiteId:String} to filter by website
 - For time-based queries, use time or timestamp columns
 - Aggregation tables (*_hourly) are pre-computed for performance
@@ -205,11 +201,10 @@ ${analyticsDoc}
 - Geographic data uses ISO country codes
 - All timestamps are in UTC
 - Use uniqMerge() for unique counts from AggregateFunction columns
-- Properties columns contain JSON strings - use JSONExtract functions to parse
+- Properties columns contain JSON strings - use JSONExtract functions to parse`;
 
-## Common Query Patterns
-\`\`\`sql
--- Page views over time
+const EXAMPLES_BY_SECTION: Record<SchemaSection, string> = {
+	events: `-- Page views over time
 SELECT
   toStartOfDay(time) as date,
   count() as views,
@@ -231,9 +226,8 @@ WHERE client_id = {websiteId:String}
   AND time >= now() - INTERVAL 7 DAY
 GROUP BY path
 ORDER BY views DESC
-LIMIT 10
-
--- Error rate trends (using aggregated table)
+LIMIT 10`,
+	errors: `-- Error rate trends (using aggregated table)
 SELECT
   toStartOfDay(hour) as date,
   sum(error_count) as errors,
@@ -242,9 +236,8 @@ FROM analytics.error_hourly
 WHERE client_id = {websiteId:String}
   AND hour >= now() - INTERVAL 7 DAY
 GROUP BY date
-ORDER BY date
-
--- Web Vitals performance (using aggregated table)
+ORDER BY date`,
+	vitals: `-- Web Vitals performance (using aggregated table)
 SELECT
   metric_name,
   quantileMerge(0.75)(p75) as p75_value,
@@ -252,8 +245,69 @@ SELECT
 FROM analytics.web_vitals_hourly
 WHERE client_id = {websiteId:String}
   AND hour >= now() - INTERVAL 7 DAY
-GROUP BY metric_name
-\`\`\`
+GROUP BY metric_name`,
+	outgoing: `-- Top outgoing domains
+SELECT
+  domain(href) as dest,
+  count() as clicks,
+  uniq(anonymous_id) as users
+FROM analytics.outgoing_links
+WHERE client_id = {websiteId:String}
+  AND timestamp >= now() - INTERVAL 7 DAY
+GROUP BY dest
+ORDER BY clicks DESC
+LIMIT 10`,
+};
+
+export interface SchemaDocOptions {
+	includeExamples?: boolean;
+	includeGuidelines?: boolean;
+	sections?: readonly SchemaSection[];
+}
+
+/**
+ * Generates schema documentation for LLM consumption.
+ * Filter to specific sections and toggle guidelines/examples for a lighter payload.
+ */
+export function generateSchemaDocumentation(
+	opts: SchemaDocOptions = {}
+): string {
+	const { sections, includeGuidelines = true, includeExamples = true } = opts;
+	const activeSections =
+		sections && sections.length > 0
+			? new Set<SchemaSection>(sections)
+			: new Set<SchemaSection>(SCHEMA_SECTIONS);
+
+	const tables = ANALYTICS_TABLES.filter((t) => activeSections.has(t.section));
+	const analyticsDoc = tables
+		.map((table) => {
+			const columns = table.keyColumns.map((col) => `  - ${col}`).join("\n");
+			const info = table.additionalInfo
+				? `\n  Note: ${table.additionalInfo}`
+				: "";
+			return `\n### ${table.name}\n${table.description}\n${columns}${info}`;
+		})
+		.join("\n");
+
+	const guidelinesBlock = includeGuidelines ? `\n\n${GUIDELINES}` : "";
+
+	let examplesBlock = "";
+	if (includeExamples) {
+		const exampleText = [...activeSections]
+			.map((s) => EXAMPLES_BY_SECTION[s])
+			.filter(Boolean)
+			.join("\n\n");
+		if (exampleText) {
+			examplesBlock = `\n\n## Common Query Patterns\n\`\`\`sql\n${exampleText}\n\`\`\``;
+		}
+	}
+
+	return `<available-data>
+You have access to comprehensive website analytics data for understanding user behavior and site performance.
+
+## Analytics Database (analytics.*)
+Primary tables for website traffic, user behavior, and performance:
+${analyticsDoc}${guidelinesBlock}${examplesBlock}
 </available-data>`;
 }
 

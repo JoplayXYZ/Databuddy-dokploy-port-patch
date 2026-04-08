@@ -1,15 +1,13 @@
 "use client";
 
-import {
-	ArrowClockwiseIcon,
-	ArrowSquareOutIcon,
-	BugIcon,
-	ClockIcon,
-	TargetIcon,
-	TrendDownIcon,
-	UsersIcon,
-	WarningCircleIcon,
-} from "@phosphor-icons/react";
+import { ArrowClockwiseIcon } from "@phosphor-icons/react";
+import { ArrowSquareOutIcon } from "@phosphor-icons/react";
+import { BugIcon } from "@phosphor-icons/react";
+import { ClockIcon } from "@phosphor-icons/react";
+import { TargetIcon } from "@phosphor-icons/react";
+import { TrendDownIcon } from "@phosphor-icons/react";
+import { UsersIcon } from "@phosphor-icons/react";
+import { WarningCircleIcon } from "@phosphor-icons/react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { StatCard } from "@/components/analytics/stat-card";
@@ -42,13 +40,13 @@ function safePercent(value: number | undefined | null): string {
 }
 
 interface FunnelAnalyticsProps {
-	isLoading: boolean;
-	error: Error | null;
 	data: FunnelAnalyticsData | undefined;
-	onRetry: () => void;
-	selectedReferrer?: string;
-	referrerAnalytics?: FunnelAnalyticsByReferrerResult[];
+	error: Error | null;
 	headerAction?: React.ReactNode;
+	isLoading: boolean;
+	onRetry: () => void;
+	referrerAnalytics?: FunnelAnalyticsByReferrerResult[];
+	selectedReferrer?: string;
 }
 
 function AnalyticsSkeleton() {

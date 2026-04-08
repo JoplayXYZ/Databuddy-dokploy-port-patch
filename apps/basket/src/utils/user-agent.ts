@@ -14,17 +14,6 @@ import {
 } from "@databuddy/shared/bot-detection";
 import { captureError, record } from "@lib/tracing";
 
-export interface UserAgentInfo {
-	bot: {
-		isBot: boolean;
-		name?: string;
-		type?: string;
-	};
-	browser?: string;
-	os?: string;
-	device?: "desktop" | "mobile" | "tablet" | "unknown";
-}
-
 /**
  * Parse user agent to extract useful information
  */

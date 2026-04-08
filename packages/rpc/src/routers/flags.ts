@@ -29,7 +29,11 @@ import { z } from "zod";
 import { rpcError } from "../errors";
 import type { Context } from "../orpc";
 import { protectedProcedure, publicProcedure } from "../orpc";
-import { isFullyAuthorized, withWorkspace } from "../procedures/with-workspace";
+import {
+	isFullyAuthorized,
+	type Workspace,
+	withWorkspace,
+} from "../procedures/with-workspace";
 import {
 	requireFeatureWithLimit,
 	requireUsageWithinLimit,
@@ -697,7 +701,7 @@ export const flagsRouter = {
 
 			const flag = existingFlag[0];
 
-			let workspace;
+			let workspace: Workspace | undefined;
 			if (flag.websiteId) {
 				workspace = await withWorkspace(context, {
 					websiteId: flag.websiteId,

@@ -5,9 +5,9 @@ import {
 	getCountryName,
 } from "@databuddy/shared/country-codes";
 import type { ProfileData } from "@databuddy/shared/types/analytics";
-import { GlobeIcon } from "@phosphor-icons/react/dist/ssr/Globe";
-import { UsersIcon } from "@phosphor-icons/react/dist/ssr/Users";
-import { UsersThreeIcon } from "@phosphor-icons/react/dist/ssr/UsersThree";
+import { GlobeIcon } from "@phosphor-icons/react";
+import { UsersIcon } from "@phosphor-icons/react";
+import { UsersThreeIcon } from "@phosphor-icons/react";
 import {
 	type ColumnDef,
 	flexRender,
