@@ -5,6 +5,7 @@ import type * as React from "react";
 import {
 	createContext,
 	useContext,
+	useEffect,
 	useLayoutEffect,
 	useRef,
 	useState,
@@ -36,6 +37,14 @@ function Tabs({
 }) {
 	const [activeValue, setActiveValue] = useState(value ?? defaultValue);
 	const triggersRef = useRef<Map<string, HTMLButtonElement>>(new Map());
+
+	// Sync internal state when parent updates the controlled value prop.
+	// Without this, the indicator/context lags behind URL-driven tab changes.
+	useEffect(() => {
+		if (value !== undefined) {
+			setActiveValue(value);
+		}
+	}, [value]);
 
 	const registerTrigger = (val: string, element: HTMLButtonElement | null) => {
 		if (element) {

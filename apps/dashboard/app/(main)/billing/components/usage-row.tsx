@@ -288,7 +288,7 @@ function BilledOverageRow({
 					)}
 					<Link
 						className="font-medium text-primary text-xs hover:underline"
-						href="/billing/cost-breakdown"
+						href="#breakdown"
 					>
 						View breakdown
 					</Link>

@@ -9,10 +9,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import {
-	billingNavigation,
-	organizationNavigation,
-	personalNavigation,
 	resourcesNavigation,
+	settingsNavigation,
 } from "@/components/layout/navigation/navigation-config";
 import type {
 	NavigationItem,
@@ -29,9 +27,7 @@ import {
 import { cn } from "@/lib/utils";
 
 const ALL_NAVIGATION: NavigationSection[] = [
-	...organizationNavigation,
-	...billingNavigation,
-	...personalNavigation,
+	...settingsNavigation,
 	...resourcesNavigation,
 ];
 

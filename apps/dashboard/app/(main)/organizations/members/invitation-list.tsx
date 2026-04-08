@@ -6,7 +6,8 @@ import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DeleteDialog } from "@/components/ui/delete-dialog";
-import type { CancelInvitation, Invitation } from "@/hooks/use-organizations";
+import type { CancelInvitation } from "@/hooks/use-organizations";
+import type { Invitation } from "@/stores/jotai/organizationAtoms";
 import dayjs from "@/lib/dayjs";
 import { cn } from "@/lib/utils";
 

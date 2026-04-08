@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { type Organization, useOrganizations } from "@/hooks/use-organizations";
 import { OrganizationAvatarEditor } from "./organization-avatar-editor";
+import { WorkspaceWebsitesSection } from "./workspace-websites-section";
 
 export function GeneralSettings({
 	organization,
@@ -161,6 +162,8 @@ export function GeneralSettings({
 							</div>
 						</div>
 					</section>
+
+					<WorkspaceWebsitesSection organization={organization} />
 				</div>
 
 				{/* Save Footer */}

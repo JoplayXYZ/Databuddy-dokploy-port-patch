@@ -2,6 +2,7 @@
 
 import { authClient } from "@databuddy/auth/client";
 import { CaretRightIcon } from "@phosphor-icons/react";
+import { CreditCardIcon } from "@phosphor-icons/react";
 import { GearIcon } from "@phosphor-icons/react";
 import { PlusIcon } from "@phosphor-icons/react";
 import { SignOutIcon } from "@phosphor-icons/react";
@@ -134,6 +135,11 @@ export function ProfileButtonClient({ user }: ProfileButtonClientProps) {
 		router.push("/settings/account");
 	};
 
+	const handleBilling = () => {
+		setIsOpen(false);
+		router.push("/billing");
+	};
+
 	const getInitials = (
 		name: string | null | undefined,
 		email: string | null | undefined
@@ -219,6 +225,10 @@ export function ProfileButtonClient({ user }: ProfileButtonClientProps) {
 				<DropdownMenuItem onClick={handleSettings}>
 					<GearIcon weight="duotone" />
 					Settings
+				</DropdownMenuItem>
+				<DropdownMenuItem onClick={handleBilling}>
+					<CreditCardIcon weight="duotone" />
+					Billing
 				</DropdownMenuItem>
 				<DropdownMenuSeparator />
 				<DropdownMenuItem

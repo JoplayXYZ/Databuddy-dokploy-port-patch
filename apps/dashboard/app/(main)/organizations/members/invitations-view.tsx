@@ -11,7 +11,6 @@ import { EmptyState } from "@/components/empty-state";
 import { InviteMemberDialog } from "@/components/organizations/invite-member-dialog";
 import { RightSidebar } from "@/components/right-sidebar";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
 	Tabs,
 	TabsBadge,
@@ -24,44 +23,8 @@ import type {
 	ActiveOrganization,
 	Organization,
 } from "@/hooks/use-organizations";
+import { InvitationsSkeleton } from "../components/settings-skeletons";
 import { InvitationList } from "./invitation-list";
-
-function SkeletonRow() {
-	return (
-		<div className="grid grid-cols-[auto_1fr_auto] items-center gap-4 px-5 py-4">
-			<Skeleton className="size-8 rounded-full" />
-			<div className="space-y-2">
-				<Skeleton className="h-4 w-48" />
-				<Skeleton className="h-3 w-32" />
-			</div>
-			<Skeleton className="size-7" />
-		</div>
-	);
-}
-
-function InvitationsSkeleton() {
-	return (
-		<div className="flex h-full flex-col">
-			<div className="flex h-10 shrink-0 gap-4 border-b bg-accent/30 px-3">
-				<Skeleton className="my-2 h-6 w-24" />
-				<Skeleton className="my-2 h-6 w-24" />
-				<Skeleton className="my-2 h-6 w-24" />
-			</div>
-			<div className="flex-1 lg:grid lg:grid-cols-[1fr_18rem]">
-				<div className="divide-y border-b lg:border-b-0">
-					<SkeletonRow />
-					<SkeletonRow />
-					<SkeletonRow />
-				</div>
-				<div className="space-y-4 bg-card p-5">
-					<Skeleton className="h-10 w-full" />
-					<Skeleton className="h-18 w-full rounded" />
-					<Skeleton className="h-10 w-full" />
-				</div>
-			</div>
-		</div>
-	);
-}
 
 function ErrorState({ onRetry }: { onRetry: () => void }) {
 	return (
@@ -180,34 +143,35 @@ export function InvitationsView({
 				className="flex h-full flex-col gap-0"
 				onValueChange={setTab}
 				value={selectedTab}
-				variant="navigation"
+				variant="pills"
 			>
-				<TabsList>
-					<TabsTrigger value="pending">
-						<ClockIcon weight="duotone" />
-						Pending
-						{pendingCount > 0 && (
-							<TabsBadge forValue="pending">{pendingCount}</TabsBadge>
-						)}
-					</TabsTrigger>
-					<TabsTrigger value="expired">
-						<XIcon weight="bold" />
-						Expired
-						{expiredCount > 0 && (
-							<TabsBadge forValue="expired">{expiredCount}</TabsBadge>
-						)}
-					</TabsTrigger>
-					<TabsTrigger value="accepted">
-						<CheckIcon weight="bold" />
-						Accepted
-						{acceptedCount > 0 && (
-							<TabsBadge forValue="accepted">{acceptedCount}</TabsBadge>
-						)}
-					</TabsTrigger>
-				</TabsList>
-
 				<div className="min-h-0 flex-1 lg:grid lg:grid-cols-[1fr_18rem]">
-					<div className="flex flex-col overflow-y-auto border-b lg:border-b-0">
+					<div className="flex flex-col overflow-y-auto lg:border-b-0">
+						<div className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b bg-background/95 px-4 py-3 backdrop-blur">
+							<TabsList>
+								<TabsTrigger value="pending">
+									<ClockIcon weight="duotone" />
+									Pending
+									{pendingCount > 0 && (
+										<TabsBadge forValue="pending">{pendingCount}</TabsBadge>
+									)}
+								</TabsTrigger>
+								<TabsTrigger value="expired">
+									<XIcon weight="bold" />
+									Expired
+									{expiredCount > 0 && (
+										<TabsBadge forValue="expired">{expiredCount}</TabsBadge>
+									)}
+								</TabsTrigger>
+								<TabsTrigger value="accepted">
+									<CheckIcon weight="bold" />
+									Accepted
+									{acceptedCount > 0 && (
+										<TabsBadge forValue="accepted">{acceptedCount}</TabsBadge>
+									)}
+								</TabsTrigger>
+							</TabsList>
+						</div>
 						<TabsContent className="m-0 h-full" value="pending">
 							{pendingCount > 0 ? (
 								<InvitationList

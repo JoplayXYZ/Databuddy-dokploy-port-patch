@@ -7,45 +7,13 @@ import { useState } from "react";
 import { InviteMemberDialog } from "@/components/organizations/invite-member-dialog";
 import { RightSidebar } from "@/components/right-sidebar";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
 	type ActiveOrganization,
 	type Organization,
 	useOrganizationMembers,
 } from "@/hooks/use-organizations";
+import { MembersSkeleton } from "../components/settings-skeletons";
 import { MemberList } from "./member-list";
-
-function SkeletonRow() {
-	return (
-		<div className="grid grid-cols-[auto_1fr_auto_auto] items-center gap-4 px-5 py-4">
-			<Skeleton className="size-10 rounded-full" />
-			<div className="space-y-2">
-				<Skeleton className="h-4 w-32" />
-				<Skeleton className="h-3 w-48" />
-			</div>
-			<Skeleton className="h-7 w-20" />
-			<Skeleton className="size-7" />
-		</div>
-	);
-}
-
-function MembersSkeleton() {
-	return (
-		<div className="h-full lg:grid lg:grid-cols-[1fr_18rem]">
-			<div className="divide-y border-b lg:border-b-0">
-				<SkeletonRow />
-				<SkeletonRow />
-				<SkeletonRow />
-				<SkeletonRow />
-			</div>
-			<div className="space-y-4 bg-card p-5">
-				<Skeleton className="h-18 w-full rounded" />
-				<Skeleton className="h-10 w-full" />
-				<Skeleton className="h-20 w-full rounded" />
-			</div>
-		</div>
-	);
-}
 
 function EmptyState() {
 	return (

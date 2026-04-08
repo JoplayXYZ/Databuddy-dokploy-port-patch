@@ -6,10 +6,7 @@ import {
 	BookOpenIcon,
 	BugIcon,
 	BuildingsIcon,
-	CalendarIcon,
 	ChartBarIcon,
-	ChartLineUpIcon,
-	ChartPieIcon,
 	CodeIcon,
 	CreditCardIcon,
 	CurrencyDollarIcon,
@@ -29,7 +26,6 @@ import {
 	LockIcon,
 	MapPinIcon,
 	PlayIcon,
-	PlugIcon,
 	ReceiptIcon,
 	RoadHorizonIcon,
 	RobotIcon,
@@ -123,37 +119,22 @@ export const homeNavigation: NavigationEntry[] = [
 	]),
 ];
 
-export const personalNavigation: NavigationSection[] = [
-	createNavSection("Personal", UserGearIcon, [
-		createNavItem("Account", IdentificationCardIcon, "/settings/account"),
-		createNavItem("Appearance", EyeIcon, "/settings/appearance"),
-		createNavItem("Privacy & Data", ShieldCheckIcon, "/settings/privacy", {
-			disabled: true,
-			tag: "soon",
-		}),
+export const settingsNavigation: NavigationSection[] = [
+	createNavSection("Workspace", BuildingsIcon, [
+		createNavItem("General", GearIcon, "/organizations/settings"),
+		createNavItem("Members", UserIcon, "/organizations/members"),
+		createNavItem("API Keys", KeyIcon, "/organizations/settings/api-keys"),
+		createNavItem("Danger Zone", WarningIcon, "/organizations/settings/danger"),
 	]),
-	createNavSection("Preferences", GearIcon, [
-		createNavItem(
-			"Analytics Behavior",
-			ChartLineUpIcon,
-			"/settings/analytics",
-			{
-				disabled: true,
-				tag: "soon",
-			}
-		),
-		createNavItem("Feature Access", FlagIcon, "/settings/features", {
-			disabled: true,
-			tag: "soon",
-		}),
-		createNavItem("Integrations", PlugIcon, "/settings/integrations", {
-			disabled: true,
-			tag: "soon",
-		}),
-		createNavItem("Notifications", BellIcon, "/settings/notifications", {
-			disabled: true,
-			tag: "soon",
-		}),
+	createNavSection("Billing", CreditCardIcon, [
+		createNavItem("Overview", ActivityIcon, "/billing"),
+		createNavItem("Plans", CurrencyDollarIcon, "/billing/plans"),
+		createNavItem("Invoices", ReceiptIcon, "/billing/history"),
+	]),
+	createNavSection("Account", UserGearIcon, [
+		createNavItem("Profile", IdentificationCardIcon, "/settings/account"),
+		createNavItem("Appearance", EyeIcon, "/settings/appearance"),
+		createNavItem("Notifications", BellIcon, "/settings/notifications"),
 	]),
 ];
 
@@ -181,43 +162,6 @@ export const resourcesNavigation: NavigationSection[] = [
 			"https://databuddy.featurebase.app/",
 			{ external: true, highlight: true }
 		),
-	]),
-];
-
-export const organizationNavigation: NavigationSection[] = [
-	createNavSection("Organizations", BuildingsIcon, [
-		createNavItem("Overview", ChartPieIcon, "/organizations"),
-	]),
-	createNavSection("Team Management", UsersThreeIcon, [
-		createNavItem("Members", UserIcon, "/organizations/members"),
-		createNavItem("Invitations", CalendarIcon, "/organizations/invitations"),
-	]),
-	createNavSection("Organization Settings", GearIcon, [
-		createNavItem("General", GearIcon, "/organizations/settings"),
-		createNavItem(
-			"Website Access",
-			GlobeSimpleIcon,
-			"/organizations/settings/websites"
-		),
-		createNavItem("API Keys", KeyIcon, "/organizations/settings/api-keys"),
-		createNavItem("Danger Zone", WarningIcon, "/organizations/settings/danger"),
-	]),
-];
-
-export const billingNavigation: NavigationSection[] = [
-	createNavSection("Billing & Usage", CreditCardIcon, [
-		createNavItem("Usage Overview", ActivityIcon, "/billing"),
-		createNavItem("Plans & Pricing", CurrencyDollarIcon, "/billing/plans"),
-		createNavItem("Payment History", ReceiptIcon, "/billing/history"),
-		createNavItem(
-			"Cost Breakdown",
-			ChartLineUpIcon,
-			"/billing/cost-breakdown",
-			{
-				badge: { text: "Experimental", variant: "purple" as const },
-			}
-		),
-		createNavItem("Feedback & Credits", SpeakerHighIcon, "/feedback"),
 	]),
 ];
 
@@ -340,18 +284,6 @@ export const categoryConfig = {
 				flag: "monitors",
 			},
 			{
-				id: "organizations",
-				name: "Organizations",
-				icon: BuildingsIcon,
-				production: true,
-			},
-			{
-				id: "billing",
-				name: "Billing",
-				icon: CreditCardIcon,
-				production: true,
-			},
-			{
 				id: "settings",
 				name: "Settings",
 				icon: GearIcon,
@@ -369,9 +301,7 @@ export const categoryConfig = {
 		{
 			home: homeNavigation,
 			monitors: monitorsNavigation,
-			organizations: organizationNavigation,
-			billing: billingNavigation,
-			settings: personalNavigation,
+			settings: settingsNavigation,
 			resources: resourcesNavigation,
 		}
 	),
@@ -405,9 +335,8 @@ const PATH_CONFIG_MAP = [
 
 const CATEGORY_PATH_MAP = [
 	{ pattern: "/monitors", category: "monitors" as const },
-	{ pattern: "/organizations", category: "organizations" as const },
-	{ pattern: "/billing", category: "billing" as const },
-	{ pattern: "/feedback", category: "billing" as const },
+	{ pattern: "/organizations", category: "settings" as const },
+	{ pattern: "/billing", category: "settings" as const },
 	{ pattern: "/settings", category: "settings" as const },
 ] as const;
 

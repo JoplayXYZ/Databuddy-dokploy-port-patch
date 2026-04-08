@@ -1,26 +1,69 @@
 "use client";
 
-import { ArrowSquareOutIcon } from "@phosphor-icons/react";
-import { CalendarIcon } from "@phosphor-icons/react";
-import { CrownIcon } from "@phosphor-icons/react";
-import { PlusIcon } from "@phosphor-icons/react";
-import { PuzzlePieceIcon } from "@phosphor-icons/react";
-import { TrendUpIcon } from "@phosphor-icons/react";
-import { XIcon } from "@phosphor-icons/react";
-import { useCustomer } from "autumn-js/react";
-import Link from "next/link";
-import { useMemo } from "react";
 import { EmptyState } from "@/components/empty-state";
 import { useBillingContext } from "@/components/providers/billing-provider";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import dayjs from "@/lib/dayjs";
+import { orpc } from "@/lib/orpc";
+import type { UsageResponse } from "@databuddy/shared/types/billing";
+import {
+	ArrowSquareOutIcon,
+	CalendarIcon,
+	CrownIcon,
+	PlusIcon,
+	PuzzlePieceIcon,
+	TrendUpIcon,
+	XIcon,
+} from "@phosphor-icons/react";
+import { useQuery } from "@tanstack/react-query";
+import { useCustomer } from "autumn-js/react";
+import Link from "next/link";
+import { Suspense, useMemo, useState } from "react";
 import { CancelSubscriptionDialog } from "./components/cancel-subscription-dialog";
+import { ConsumptionChart } from "./components/consumption-chart";
 import { CreditCardDisplay } from "./components/credit-card-display";
 import { ErrorState } from "./components/empty-states";
 import { OverviewSkeleton } from "./components/overview-skeleton";
+import { UsageBreakdownTable } from "./components/usage-breakdown-table";
 import { UsageRow } from "./components/usage-row";
 import { useBilling, useBillingData } from "./hooks/use-billing";
+import type { OverageInfo } from "./utils/billing-utils";
+
+interface OrgUsageData {
+	balance?: number | null;
+	includedUsage?: number | null;
+	unlimited: boolean;
+}
+
+function getDefaultDateRange() {
+	const end = new Date();
+	const start = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+	return {
+		startDate: start.toISOString().split("T")[0],
+		endDate: end.toISOString().split("T")[0],
+	};
+}
+
+function calculateOverageInfo(
+	balance: number,
+	includedUsage: number,
+	unlimited: boolean
+): OverageInfo {
+	if (unlimited || balance >= 0) {
+		return {
+			hasOverage: false,
+			overageEvents: 0,
+			includedEvents: includedUsage,
+		};
+	}
+	return {
+		hasOverage: true,
+		overageEvents: Math.abs(balance),
+		includedEvents: includedUsage,
+	};
+}
 
 function isSSOPlan(plan: { id: string; name: string }): boolean {
 	const id = plan.id.toLowerCase();
@@ -59,6 +102,33 @@ export default function BillingPage() {
 	const { plans, usage, customer, isLoading, error, refetch } =
 		useBillingData();
 	const { attach } = useCustomer();
+	const [dateRange, setDateRange] = useState(getDefaultDateRange);
+
+	const { data: breakdownUsageRaw, isLoading: isBreakdownLoading } = useQuery({
+		...orpc.billing.getUsage.queryOptions({
+			input: {
+				startDate: dateRange.startDate,
+				endDate: dateRange.endDate,
+			},
+		}),
+	});
+	const breakdownUsageData = breakdownUsageRaw as UsageResponse | undefined;
+
+	const { data: orgUsageRaw } = useQuery({
+		...orpc.organizations.getUsage.queryOptions(),
+	});
+	const orgUsage = orgUsageRaw as OrgUsageData | undefined;
+
+	const overageInfo = useMemo(() => {
+		if (!orgUsage) {
+			return null;
+		}
+		return calculateOverageInfo(
+			orgUsage.balance ?? 0,
+			orgUsage.includedUsage ?? 0,
+			orgUsage.unlimited
+		);
+	}, [orgUsage]);
 	const {
 		onCancelClick,
 		onCancelConfirm,
@@ -140,7 +210,7 @@ export default function BillingPage() {
 					planName={cancelTarget?.name ?? ""}
 				/>
 
-				{/* Main Content - Usage Stats */}
+				{/* Main Content - Usage Stats + Breakdown */}
 				<div className="shrink-0 lg:h-full lg:min-h-0 lg:overflow-y-auto">
 					{usageStats.length === 0 ? (
 						<EmptyState
@@ -151,15 +221,34 @@ export default function BillingPage() {
 							variant="minimal"
 						/>
 					) : (
-						<div className="divide-y">
-							{usageStats.map((feature) => (
-								<UsageRow
-									feature={feature}
-									isMaxPlan={isMaxPlan}
-									key={feature.id}
+						<>
+							<div className="divide-y">
+								{usageStats.map((feature) => (
+									<UsageRow
+										feature={feature}
+										isMaxPlan={isMaxPlan}
+										key={feature.id}
+									/>
+								))}
+							</div>
+							<Suspense fallback={<Skeleton className="h-64 w-full" />}>
+								<ConsumptionChart
+									isLoading={isBreakdownLoading}
+									onDateRangeChange={(start, end) =>
+										setDateRange({ startDate: start, endDate: end })
+									}
+									overageInfo={overageInfo}
+									usageData={breakdownUsageData}
 								/>
-							))}
-						</div>
+							</Suspense>
+							<Suspense fallback={<Skeleton className="h-64 w-full" />}>
+								<UsageBreakdownTable
+									isLoading={isBreakdownLoading}
+									overageInfo={overageInfo}
+									usageData={breakdownUsageData}
+								/>
+							</Suspense>
+						</>
 					)}
 				</div>
 

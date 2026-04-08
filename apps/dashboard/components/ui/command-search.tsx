@@ -20,11 +20,9 @@ import {
 } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import {
-	billingNavigation,
 	homeNavigation,
-	organizationNavigation,
-	personalNavigation,
 	resourcesNavigation,
+	settingsNavigation,
 	websiteNavigation,
 	websiteSettingsNavigation,
 } from "@/components/layout/navigation/navigation-config";
@@ -61,9 +59,7 @@ interface SearchGroup {
 }
 
 const ALL_NAVIGATION: NavigationSection[] = [
-	...organizationNavigation,
-	...billingNavigation,
-	...personalNavigation,
+	...settingsNavigation,
 	...resourcesNavigation,
 ];
 
