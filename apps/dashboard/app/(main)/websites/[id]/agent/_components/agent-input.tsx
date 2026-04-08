@@ -1,18 +1,28 @@
 "use client";
 
 import {
+	BrainIcon,
 	ClockCountdownIcon,
 	PaperPlaneRightIcon,
 	StopIcon,
 	XIcon,
 } from "@phosphor-icons/react";
 import { useAtom } from "jotai";
-import { useRef } from "react";
 import { Button } from "@/components/ui/button";
+import {
+	Popover,
+	PopoverContent,
+	PopoverTrigger,
+} from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
 import { useChat, usePendingQueue } from "@/contexts/chat-context";
 import { cn } from "@/lib/utils";
-import { agentInputAtom } from "./agent-atoms";
+import {
+	AGENT_THINKING_LEVELS,
+	type AgentThinking,
+	agentInputAtom,
+	agentThinkingAtom,
+} from "./agent-atoms";
 import { useEnterSubmit } from "./hooks/use-enter-submit";
 
 export function AgentInput() {
@@ -20,7 +30,6 @@ export function AgentInput() {
 	const { messages: pendingMessages, removeAction } = usePendingQueue();
 	const isLoading = status === "streaming" || status === "submitted";
 	const [input, setInput] = useAtom(agentInputAtom);
-	const textareaRef = useRef<HTMLTextAreaElement>(null);
 	const { formRef, onKeyDown } = useEnterSubmit();
 
 	const handleSubmit = (e?: React.FormEvent) => {
@@ -63,7 +72,6 @@ export function AgentInput() {
 					onChange={(e) => setInput(e.target.value)}
 					onKeyDown={onKeyDown}
 					placeholder="Ask Databunny anything about your analytics…"
-					ref={textareaRef}
 					showFocusIndicator={false}
 					value={input}
 				/>
@@ -72,6 +80,7 @@ export function AgentInput() {
 					<KeyboardHints isLoading={isLoading} />
 
 					<div className="flex shrink-0 items-center gap-1">
+						<ThinkingControl />
 						{isLoading ? (
 							<Button
 								aria-label="Stop generation"
@@ -79,27 +88,98 @@ export function AgentInput() {
 								onClick={stop}
 								size="icon"
 								type="button"
-								variant="ghost"
+								variant="default"
 							>
 								<StopIcon className="size-3.5" weight="fill" />
 							</Button>
-						) : null}
-						<Button
-							aria-label={isLoading ? "Queue message" : "Send message"}
-							className="size-7"
-							disabled={!input.trim()}
-							size="icon"
-							type="submit"
-						>
-							<PaperPlaneRightIcon
-								className="size-3.5"
-								weight={input.trim() ? "fill" : "duotone"}
-							/>
-						</Button>
+						) : (
+							<Button
+								aria-label="Send message"
+								className="size-7"
+								disabled={!input.trim()}
+								size="icon"
+								type="submit"
+							>
+								<PaperPlaneRightIcon
+									className="size-3.5"
+									weight={input.trim() ? "fill" : "duotone"}
+								/>
+							</Button>
+						)}
 					</div>
 				</div>
 			</div>
 		</form>
+	);
+}
+
+const THINKING_LABELS: Record<AgentThinking, string> = {
+	off: "Off",
+	low: "Low",
+	medium: "Medium",
+	high: "High",
+};
+
+const THINKING_DESCRIPTIONS: Record<AgentThinking, string> = {
+	off: "Fastest, cheapest. Good for most questions.",
+	low: "Brief reasoning before answering.",
+	medium: "Deeper reasoning. Better for analysis.",
+	high: "Extended reasoning. Slowest and most expensive.",
+};
+
+function ThinkingControl() {
+	const [thinking, setThinking] = useAtom(agentThinkingAtom);
+	const isOn = thinking !== "off";
+
+	return (
+		<Popover>
+			<PopoverTrigger asChild>
+				<button
+					aria-label={`Thinking: ${THINKING_LABELS[thinking]}`}
+					className={cn(
+						"flex h-7 items-center gap-1 rounded border px-2 text-xs transition-colors",
+						isOn
+							? "border-border bg-accent text-foreground"
+							: "border-transparent text-muted-foreground hover:border-border/60 hover:bg-accent/40 hover:text-foreground"
+					)}
+					type="button"
+				>
+					<BrainIcon className="size-3.5" weight={isOn ? "fill" : "duotone"} />
+					<span className="font-medium tabular-nums">
+						{THINKING_LABELS[thinking]}
+					</span>
+				</button>
+			</PopoverTrigger>
+			<PopoverContent align="end" className="w-60 p-2" sideOffset={8}>
+				<div className="px-1.5 pt-0.5 pb-1.5">
+					<p className="font-medium text-foreground text-xs">Thinking</p>
+					<p className="mt-0.5 text-[11px] text-muted-foreground leading-snug">
+						{THINKING_DESCRIPTIONS[thinking]}
+					</p>
+				</div>
+				<div className="flex gap-1">
+					{AGENT_THINKING_LEVELS.map((level) => {
+						const selected = level === thinking;
+						return (
+							<button
+								aria-pressed={selected}
+								className={cn(
+									"flex-1 rounded border px-2 py-1 font-medium text-xs transition-colors",
+									selected
+										? "border-foreground/20 bg-foreground text-background"
+										: "border-border/60 bg-transparent text-muted-foreground hover:border-border hover:text-foreground"
+								)}
+								key={level}
+								onClick={() => setThinking(level)}
+								type="button"
+							>
+								{THINKING_LABELS[level]}
+							</button>
+						);
+					})}
+				</div>
+			</PopoverContent>
+		</Popover>
 	);
 }
 
@@ -112,8 +192,16 @@ function Kbd({ children }: { children: React.ReactNode }) {
 }
 
 function KeyboardHints({ isLoading }: { isLoading: boolean }) {
+	// Keep this slot mounted in both states so the footer layout doesn't
+	// shift when a message is sent. Streaming state shows a subtle status
+	// line in the same height instead of the keyboard shortcuts.
 	if (isLoading) {
-		return null;
+		return (
+			<div className="flex min-w-0 items-center gap-1.5 text-muted-foreground text-xs">
+				<span className="inline-block size-1.5 animate-pulse rounded-full bg-foreground/60" />
+				<span>Generating…</span>
+			</div>
+		);
 	}
 	return (
 		<div className="flex min-w-0 items-center gap-1.5 text-muted-foreground text-xs">

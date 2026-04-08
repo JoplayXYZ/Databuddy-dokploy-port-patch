@@ -26,6 +26,9 @@ export interface UsageTelemetry {
 	cost_output_usd: number;
 	cost_reasoning_usd: number;
 	cost_total_usd: number;
+	/** Fresh, non-cached input tokens — what to bill at the input rate. */
+	fresh_input_tokens: number;
+	/** Total input tokens reported by the provider (cache + non-cache). */
 	input_tokens: number;
 	output_tokens: number;
 	reasoning_tokens: number;
@@ -42,6 +45,13 @@ export function summarizeAgentUsage(
 ): UsageTelemetry {
 	const inputTokens = num(usage.inputTokens);
 	const outputTokens = num(usage.outputTokens);
+	const cacheReadTokens = num(usage.inputTokenDetails?.cacheReadTokens);
+	const cacheWriteTokens = num(usage.inputTokenDetails?.cacheWriteTokens);
+	// Prefer the provider-reported fresh count; fall back to subtraction if
+	// the provider doesn't expose it explicitly.
+	const freshInputTokens =
+		num(usage.inputTokenDetails?.noCacheTokens) ||
+		Math.max(0, inputTokens - cacheReadTokens - cacheWriteTokens);
 
 	let costModelId = modelId;
 	let costs = getUsage({
@@ -61,10 +71,11 @@ export function summarizeAgentUsage(
 
 	return {
 		input_tokens: inputTokens,
+		fresh_input_tokens: freshInputTokens,
 		output_tokens: outputTokens,
 		total_tokens: inputTokens + outputTokens,
-		cache_read_tokens: num(usage.inputTokenDetails?.cacheReadTokens),
-		cache_write_tokens: num(usage.inputTokenDetails?.cacheWriteTokens),
+		cache_read_tokens: cacheReadTokens,
+		cache_write_tokens: cacheWriteTokens,
 		reasoning_tokens: num(usage.outputTokenDetails?.reasoningTokens),
 		cost_input_usd: num(costs?.inputUSD),
 		cost_output_usd: num(costs?.outputUSD),

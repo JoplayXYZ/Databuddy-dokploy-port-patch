@@ -17,6 +17,7 @@ import { log, parseError } from "evlog";
 import { useLogger } from "evlog/elysia";
 import type { AgentConfig, AgentType } from "../ai/agents";
 import { createAgentConfig } from "../ai/agents";
+import { AGENT_THINKING_LEVELS } from "../ai/agents/types";
 import { enrichAgentContext } from "../ai/config/enrich-context";
 import { modelNames, models } from "../ai/config/models";
 import { ANTHROPIC_CACHE_1H } from "../ai/config/prompt-cache";
@@ -154,29 +155,29 @@ const AgentRequestSchema = t.Object({
 	messages: t.Array(UIMessageSchema, { maxItems: MAX_MESSAGES }),
 	id: t.Optional(t.String()),
 	timezone: t.Optional(t.String()),
+	thinking: t.Optional(
+		t.Union(AGENT_THINKING_LEVELS.map((level) => t.Literal(level)))
+	),
 });
 
-// Single canonical agent — no user-facing tiers.
 const AGENT_TYPE: AgentType = "analytics";
 
-/**
- * Create a ToolLoopAgent from AgentConfig.
- * Uses server-side context management (Anthropic) for automatic pruning
- * and caches the conversation prefix across steps for cost reduction.
- */
 function createToolLoopAgent(
 	config: AgentConfig,
 	experimentalTelemetry?: AgentExperimentalTelemetry
 ): InstanceType<typeof ToolLoopAgent> {
+	// Anthropic rejects `temperature` when extended thinking is enabled.
+	const thinkingEnabled = Boolean(config.providerOptions);
 	return new ToolLoopAgent({
 		model: config.model,
 		instructions: config.system,
 		tools: config.tools,
 		stopWhen: config.stopWhen,
-		temperature: config.temperature,
+		temperature: thinkingEnabled ? undefined : config.temperature,
 		maxRetries: AI_MODEL_MAX_RETRIES,
 		experimental_context: config.experimental_context,
 		experimental_telemetry: experimentalTelemetry,
+		providerOptions: config.providerOptions,
 		prepareStep({ messages }) {
 			if (messages.length === 0) {
 				return { messages };
@@ -250,8 +251,7 @@ export const agent = new Elysia({ prefix: "/v1/agent" })
 					organizationId = website.organizationId ?? null;
 
 					// API key auth: key's org must match the website's org
-					const apiKeyOrg = (apiKey as Record<string, unknown> | null)
-						?.organizationId as string | undefined;
+					const apiKeyOrg = apiKey?.organizationId ?? null;
 					const hasPermission =
 						website.isPublic ||
 						(apiKey && apiKeyOrg && apiKeyOrg === website.organizationId) ||
@@ -346,13 +346,14 @@ export const agent = new Elysia({ prefix: "/v1/agent" })
 
 					const [config, memoryCtx, enrichment] = await Promise.all([
 						Promise.resolve(
-							createAgentConfig(AGENT_TYPE, {
+							createAgentConfig({
 								userId,
 								websiteId: body.websiteId,
 								websiteDomain: domain,
 								timezone,
 								chatId,
 								requestHeaders: request.headers,
+								thinking: body.thinking,
 							})
 						),
 						isMemoryEnabled() && lastMessage
@@ -471,8 +472,11 @@ export const agent = new Elysia({ prefix: "/v1/agent" })
 								return;
 							}
 							const autumn = getAutumn();
+							// Bill fresh input only — cache_read/cache_write are tracked
+							// as their own metered features and would otherwise be charged
+							// twice (once at the input rate, once at the cache rate).
 							const tokenTracks: [string, number][] = [
-								["agent_input_tokens", summary.input_tokens],
+								["agent_input_tokens", summary.fresh_input_tokens],
 								["agent_output_tokens", summary.output_tokens],
 								["agent_cache_read_tokens", summary.cache_read_tokens],
 								["agent_cache_write_tokens", summary.cache_write_tokens],
