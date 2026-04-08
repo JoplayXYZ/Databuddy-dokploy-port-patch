@@ -64,13 +64,6 @@ export const status_page_custom_domain = feature({
 	type: "boolean",
 });
 
-/*
- * Databunny agent — token currencies + visible credit pool
- *
- * Raw token counts get tracked from `result.totalUsage` via tokenlens.
- * Users never see these directly — they're the underlying currency that the
- * `agent_credits` credit_system converts into a single visible pool.
- */
 export const agent_input_tokens = feature({
 	id: "agent_input_tokens",
 	name: "Agent Input Tokens",
@@ -99,26 +92,23 @@ export const agent_cache_write_tokens = feature({
 	consumable: true,
 });
 
-/*
- * 1 credit ≈ $0.005 of LLM compute. Sonnet 4.6 rates per token:
- *   input        $3.00/M  → 0.000_6  credits
- *   output      $15.00/M  → 0.003    credits
- *   cache read   $0.30/M  → 0.000_06 credits
- *   cache write  $3.75/M  → 0.000_75 credits
- *
- * After the prompt/tool trim pass, a fresh analytics chat's first turn
- * costs ~6 credits (dominated by the 7.7k-token cache write); subsequent
- * cached turns cost ~3-4 credits each.
- */
+export const agent_web_search_calls = feature({
+	id: "agent_web_search_calls",
+	name: "Agent Web Search Calls",
+	type: "metered",
+	consumable: true,
+});
+
 export const agent_credits = feature({
 	id: "agent_credits",
 	name: "Agent Credits",
 	type: "credit_system",
 	creditSchema: [
-		{ meteredFeatureId: "agent_input_tokens", creditCost: 0.0006 },
-		{ meteredFeatureId: "agent_output_tokens", creditCost: 0.003 },
-		{ meteredFeatureId: "agent_cache_read_tokens", creditCost: 0.000_06 },
-		{ meteredFeatureId: "agent_cache_write_tokens", creditCost: 0.000_75 },
+		{ meteredFeatureId: "agent_input_tokens", creditCost: 0.000_72 },
+		{ meteredFeatureId: "agent_output_tokens", creditCost: 0.0036 },
+		{ meteredFeatureId: "agent_cache_read_tokens", creditCost: 0.000_072 },
+		{ meteredFeatureId: "agent_cache_write_tokens", creditCost: 0.001_44 },
+		{ meteredFeatureId: "agent_web_search_calls", creditCost: 5 },
 	],
 });
 
