@@ -100,24 +100,25 @@ export const agent_cache_write_tokens = feature({
 });
 
 /*
- * 1 credit ≈ $0.001 of LLM compute. Sonnet 4.6 rates per token:
- *   input        $3.00/M  → 0.000_12  credits
- *   output      $15.00/M  → 0.000_6   credits
- *   cache read   $0.30/M  → 0.000_012 credits
- *   cache write  $3.75/M  → 0.000_15  credits
+ * 1 credit ≈ $0.005 of LLM compute. Sonnet 4.6 rates per token:
+ *   input        $3.00/M  → 0.000_6  credits
+ *   output      $15.00/M  → 0.003    credits
+ *   cache read   $0.30/M  → 0.000_06 credits
+ *   cache write  $3.75/M  → 0.000_75 credits
  *
- * A typical analytics turn (34k cache read + 1k fresh input + 500 output)
- * consumes ~1 credit. First turn of a fresh chat ~3 credits (cache write).
+ * After the prompt/tool trim pass, a fresh analytics chat's first turn
+ * costs ~6 credits (dominated by the 7.7k-token cache write); subsequent
+ * cached turns cost ~3-4 credits each.
  */
 export const agent_credits = feature({
 	id: "agent_credits",
 	name: "Agent Credits",
 	type: "credit_system",
 	creditSchema: [
-		{ meteredFeatureId: "agent_input_tokens", creditCost: 0.000_12 },
-		{ meteredFeatureId: "agent_output_tokens", creditCost: 0.0006 },
-		{ meteredFeatureId: "agent_cache_read_tokens", creditCost: 0.000_012 },
-		{ meteredFeatureId: "agent_cache_write_tokens", creditCost: 0.000_15 },
+		{ meteredFeatureId: "agent_input_tokens", creditCost: 0.0006 },
+		{ meteredFeatureId: "agent_output_tokens", creditCost: 0.003 },
+		{ meteredFeatureId: "agent_cache_read_tokens", creditCost: 0.000_06 },
+		{ meteredFeatureId: "agent_cache_write_tokens", creditCost: 0.000_75 },
 	],
 });
 

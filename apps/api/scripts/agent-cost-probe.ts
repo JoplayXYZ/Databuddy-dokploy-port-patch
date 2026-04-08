@@ -58,18 +58,12 @@ if (!(websiteId && userId)) {
 	process.exit(1);
 }
 
+// Matches creditSchema in apps/dashboard/autumn.config.ts.
 const CURRENT_SCHEMA = {
-	input: 0.000_12,
-	output: 0.0006,
-	cacheRead: 0.000_012,
-	cacheWrite: 0.000_15,
-};
-
-const PROPOSED_SCHEMA = {
-	input: 0.000_024,
-	output: 0.000_12,
-	cacheRead: 0.000_002_4,
-	cacheWrite: 0.000_03,
+	input: 0.0006,
+	output: 0.003,
+	cacheRead: 0.000_06,
+	cacheWrite: 0.000_75,
 };
 
 function computeCredits(
@@ -117,8 +111,7 @@ async function main() {
 
 	const uiMessages: UIMessage[] = [];
 	const totals = {
-		current: 0,
-		proposed: 0,
+		credits: 0,
 		fresh: 0,
 		read: 0,
 		write: 0,
@@ -168,11 +161,9 @@ async function main() {
 		const steps = (await result.steps).length;
 		const elapsed = ((Date.now() - t0) / 1000).toFixed(2);
 		const summary = summarizeAgentUsage(modelNames.analytics, usage);
-		const currentCredits = computeCredits(CURRENT_SCHEMA, summary);
-		const proposedCredits = computeCredits(PROPOSED_SCHEMA, summary);
+		const credits = computeCredits(CURRENT_SCHEMA, summary);
 
-		totals.current += currentCredits;
-		totals.proposed += proposedCredits;
+		totals.credits += credits;
 		totals.fresh += summary.fresh_input_tokens;
 		totals.read += summary.cache_read_tokens;
 		totals.write += summary.cache_write_tokens;
@@ -185,10 +176,10 @@ async function main() {
 					: ""
 			}`
 		);
-		console.log(
-			`  credits: current ${currentCredits.toFixed(2)} · proposed ${proposedCredits.toFixed(2)}`
-		);
+		console.log(`  credits: ${credits.toFixed(2)}`);
 	}
+
+	const avgCreditsPerTurn = totals.credits / messages.length;
 
 	console.log();
 	console.log("━".repeat(70));
@@ -197,12 +188,10 @@ async function main() {
 	console.log(`  cache read   ${totals.read.toLocaleString().padStart(10)}`);
 	console.log(`  cache write  ${totals.write.toLocaleString().padStart(10)}`);
 	console.log(`  output       ${totals.output.toLocaleString().padStart(10)}`);
+	console.log(`  credits      ${totals.credits.toFixed(2).padStart(10)}`);
 	console.log();
-	console.log("Credits across chat:");
-	console.log(`  current schema   ${totals.current.toFixed(2)}`);
-	console.log(`  proposed (5x)    ${totals.proposed.toFixed(2)}`);
 	console.log(
-		`  free tier (500)  current: ${(500 / (totals.current / messages.length)).toFixed(0)} turns avg · proposed: ${(500 / (totals.proposed / messages.length)).toFixed(0)} turns avg`
+		`Runway: free 500 → ${(500 / avgCreditsPerTurn).toFixed(0)} turns · hobby 2500 → ${(2500 / avgCreditsPerTurn).toFixed(0)} · pro 25000 → ${(25_000 / avgCreditsPerTurn).toFixed(0)}`
 	);
 	console.log("━".repeat(70));
 }
