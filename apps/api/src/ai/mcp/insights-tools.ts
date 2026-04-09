@@ -13,10 +13,6 @@ import {
 } from "./define-tool";
 import { resolveOrganizationIds } from "./tool-context";
 
-// ---------------------------------------------------------------------------
-// Constants & registries
-// ---------------------------------------------------------------------------
-
 const INSIGHT_TYPES = [
 	"error_spike",
 	"new_errors",
@@ -51,10 +47,6 @@ const SINCE_PRESETS = ["last_24h", "last_7d", "last_30d", "last_90d"] as const;
 
 const INSIGHTS_LIST_CACHE_TTL = 60;
 const INSIGHTS_LIST_FETCH_LIMIT = 200;
-
-// ---------------------------------------------------------------------------
-// Shared output schemas
-// ---------------------------------------------------------------------------
 
 const PeriodSchema = z.object({
 	from: z.string(),
@@ -153,10 +145,6 @@ const ANOMALY_METRICS: { key: string; label: string; field: string }[] = [
 	},
 ];
 
-// ---------------------------------------------------------------------------
-// Period helpers
-// ---------------------------------------------------------------------------
-
 const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 function isValidDate(value: string): boolean {
@@ -253,10 +241,6 @@ function parseSinceShorthand(since: string): Date | undefined {
 	}
 }
 
-// ---------------------------------------------------------------------------
-// Format helpers
-// ---------------------------------------------------------------------------
-
 function formatMetricValue(value: number, format: MetricFormat): string {
 	if (format === "percent") {
 		return `${value.toFixed(1)}%`;
@@ -278,7 +262,6 @@ function formatMetricValue(value: number, format: MetricFormat): string {
 	return value.toFixed(1);
 }
 
-/** Round a numeric field to the precision appropriate for the metric format. */
 function roundForFormat(value: number, format: MetricFormat): number {
 	if (!Number.isFinite(value)) {
 		return 0;
@@ -360,10 +343,6 @@ function buildAnomalyHeadline(
 	return `${label} ${direction} ${pctStr}% vs baseline ${baselineStr} (now ${currentStr}, z=${zScore.toFixed(1)})`;
 }
 
-// ---------------------------------------------------------------------------
-// Statistics helpers
-// ---------------------------------------------------------------------------
-
 function mean(values: number[]): number {
 	if (values.length === 0) {
 		return 0;
@@ -387,10 +366,6 @@ function stddev(values: number[]): number {
 	variance /= values.length - 1;
 	return Math.sqrt(variance);
 }
-
-// ---------------------------------------------------------------------------
-// Insight row → MCP shape
-// ---------------------------------------------------------------------------
 
 function mapInsightRow(row: InsightRow) {
 	return {
@@ -421,18 +396,10 @@ function mapInsightRow(row: InsightRow) {
 	};
 }
 
-// ---------------------------------------------------------------------------
-// Cached fetch
-// ---------------------------------------------------------------------------
-
 const cachedFetchInsightsForOrgs = cacheable(fetchInsightsForOrgs, {
 	expireInSec: INSIGHTS_LIST_CACHE_TTL,
 	prefix: "mcp:insights",
 });
-
-// ---------------------------------------------------------------------------
-// list_insights
-// ---------------------------------------------------------------------------
 
 const INSIGHT_FIELDS = [
 	"id",
@@ -456,7 +423,6 @@ const INSIGHT_FIELDS = [
 ] as const;
 type InsightField = (typeof INSIGHT_FIELDS)[number];
 
-/** Keep only the requested fields on each mapped row (default = all). */
 function pickInsightFields<T extends Record<string, unknown>>(
 	row: T,
 	fields: readonly InsightField[] | undefined
@@ -588,10 +554,6 @@ const listInsightsTool = defineMcpTool(
 		};
 	}
 );
-
-// ---------------------------------------------------------------------------
-// summarize_insights
-// ---------------------------------------------------------------------------
 
 const summarizeInsightsTool = defineMcpTool(
 	{
@@ -740,10 +702,6 @@ const summarizeInsightsTool = defineMcpTool(
 		};
 	}
 );
-
-// ---------------------------------------------------------------------------
-// compare_metric
-// ---------------------------------------------------------------------------
 
 const MetricEnum = z.enum(METRIC_KEYS);
 const MetricComparisonSchema = z.object({
@@ -927,10 +885,6 @@ const compareMetricTool = defineMcpTool(
 		};
 	}
 );
-
-// ---------------------------------------------------------------------------
-// top_movers
-// ---------------------------------------------------------------------------
 
 interface DimensionRow {
 	name?: unknown;
@@ -1167,10 +1121,6 @@ const topMoversTool = defineMcpTool(
 	}
 );
 
-// ---------------------------------------------------------------------------
-// detect_anomalies
-// ---------------------------------------------------------------------------
-
 interface DailyRow {
 	bounce_rate?: unknown;
 	date?: unknown;
@@ -1307,7 +1257,6 @@ const detectAnomaliesTool = defineMcpTool(
 		let baselineDayCount: number | undefined;
 		let insufficientDataHint: string | undefined;
 
-		// ---- zscore arm ----
 		if (runZscore) {
 			const rows = (await executeQuery(
 				{
@@ -1383,7 +1332,6 @@ const detectAnomaliesTool = defineMcpTool(
 			}
 		}
 
-		// ---- wow (period-over-period) arm ----
 		if (runWow) {
 			const windowDays = Math.max(3, Math.floor(lookbackDays / 2));
 			const currentFrom = today
@@ -1487,10 +1435,6 @@ const detectAnomaliesTool = defineMcpTool(
 		};
 	}
 );
-
-// ---------------------------------------------------------------------------
-// Export
-// ---------------------------------------------------------------------------
 
 export const INSIGHT_TOOL_FACTORIES: McpToolFactory[] = [
 	listInsightsTool,

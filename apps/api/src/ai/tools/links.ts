@@ -113,7 +113,6 @@ export function createLinksTools() {
 		) => {
 			const context = getAppContext(options);
 			try {
-				// If not confirmed, return preview and ask for confirmation
 				if (!confirmed) {
 					return {
 						preview: true,
@@ -190,7 +189,6 @@ export function createLinksTools() {
 		execute: async ({ id, websiteId, confirmed, ...updates }, options) => {
 			const context = getAppContext(options);
 			try {
-				// First, get the current link
 				const organizationId = await getOrganizationIdFromWebsite(websiteId);
 				const currentLink = (await callRPCProcedure(
 					"links",
@@ -199,7 +197,6 @@ export function createLinksTools() {
 					context
 				)) as LinkData;
 
-				// Build preview of changes
 				const changes: string[] = [];
 				if (updates.name && updates.name !== currentLink.name) {
 					changes.push(`Name: "${currentLink.name}" → "${updates.name}"`);
@@ -248,7 +245,6 @@ export function createLinksTools() {
 					};
 				}
 
-				// Filter out undefined values
 				const cleanUpdates = Object.fromEntries(
 					Object.entries(updates).filter(([_, v]) => v !== undefined)
 				);
@@ -287,7 +283,6 @@ export function createLinksTools() {
 			try {
 				const organizationId = await getOrganizationIdFromWebsite(websiteId);
 
-				// Get link details for confirmation
 				const link = (await callRPCProcedure(
 					"links",
 					"get",

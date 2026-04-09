@@ -90,10 +90,7 @@ function normalizeReferrerValue(value: string, forLikeSearch = false): string {
 		: value;
 }
 
-/**
- * Escapes special characters in LIKE patterns for ClickHouse
- * Escapes backslashes first (they're used for escaping), then escapes LIKE special characters
- */
+// Escape backslashes first so the subsequent [%_] replacement doesn't double-escape them.
 function escapeLikePattern(value: string): string {
 	return value.replace(/\\/g, "\\\\").replace(/[%_]/g, "\\$&");
 }
@@ -134,7 +131,6 @@ function buildGenericFilter(
 ): FilterResult {
 	const transform = valueTransform || ((v: string) => v);
 
-	// Contains / not_contains - wrap value with %
 	if (filter.op === "contains" || filter.op === "not_contains") {
 		const value = transform(String(filter.value));
 		const escaped = escapeLikePattern(value);
@@ -144,7 +140,6 @@ function buildGenericFilter(
 		};
 	}
 
-	// Starts with - append % to value
 	if (filter.op === "starts_with") {
 		const value = transform(String(filter.value));
 		const escaped = escapeLikePattern(value);
@@ -154,7 +149,6 @@ function buildGenericFilter(
 		};
 	}
 
-	// In / not_in - array of values
 	if (filter.op === "in" || filter.op === "not_in") {
 		const values = Array.isArray(filter.value)
 			? filter.value.map((v) => transform(String(v)))
@@ -165,7 +159,6 @@ function buildGenericFilter(
 		};
 	}
 
-	// eq / ne - exact match
 	return {
 		clause: `${fieldExpr} ${operator} {${key}:String}`,
 		params: { [key]: transform(String(filter.value)) },

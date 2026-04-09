@@ -41,31 +41,19 @@ const MS_PER_DAY = 86_400_000;
 const DATE_FORMAT_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 const ISO_DATETIME_REGEX = /^\d{4}-\d{2}-\d{2}T/;
 
-/**
- * Normalize date input to YYYY-MM-DD format
- * Accepts: "2024-01-15", "2024-01-15T14:30:00.000Z", etc.
- */
 function normalizeDate(input: string): string {
-	// Already in correct format
 	if (DATE_FORMAT_REGEX.test(input)) {
 		return input;
 	}
-	// ISO datetime format - extract date part
 	if (ISO_DATETIME_REGEX.test(input)) {
 		return input.split("T")[0] as string;
 	}
-	// Try to parse as date
 	const parsed = new Date(input);
 	if (!Number.isNaN(parsed.getTime())) {
 		return parsed.toISOString().split("T")[0] as string;
 	}
-	// Return as-is (will fail validation)
 	return input;
 }
-
-// ============================================================================
-// Validation Helpers
-// ============================================================================
 
 interface ValidationError {
 	field: string;
@@ -81,7 +69,6 @@ function findClosestMatch(input: string, options: string[]): string | null {
 	for (const option of options) {
 		const optionLower = option.toLowerCase();
 
-		// Exact prefix match
 		if (
 			optionLower.startsWith(inputLower) ||
 			inputLower.startsWith(optionLower)
@@ -95,7 +82,6 @@ function findClosestMatch(input: string, options: string[]): string | null {
 			}
 		}
 
-		// Levenshtein-like simple check (for typos)
 		let matches = 0;
 		for (let i = 0; i < Math.min(inputLower.length, optionLower.length); i++) {
 			if (inputLower[i] === optionLower[i]) {
@@ -121,7 +107,6 @@ function validateQueryRequest(
 	const errors: ValidationError[] = [];
 	const queryTypes = Object.keys(QueryBuilders);
 
-	// Validate parameters
 	if (!request.parameters || request.parameters.length === 0) {
 		errors.push({
 			field: "parameters",
@@ -142,8 +127,6 @@ function validateQueryRequest(
 		}
 	}
 
-	// Resolve dates from preset or explicit values
-	// Normalize dates to YYYY-MM-DD (accepts ISO datetime strings too)
 	let startDate = request.startDate
 		? normalizeDate(request.startDate)
 		: undefined;
@@ -167,7 +150,6 @@ function validateQueryRequest(
 		}
 	}
 
-	// Check date requirements
 	if (!(startDate || request.preset)) {
 		errors.push({
 			field: "startDate",
@@ -181,7 +163,6 @@ function validateQueryRequest(
 		});
 	}
 
-	// Validate normalized date format
 	if (startDate && !DATE_FORMAT_REGEX.test(startDate)) {
 		errors.push({
 			field: "startDate",
@@ -195,7 +176,6 @@ function validateQueryRequest(
 		});
 	}
 
-	// Validate limit
 	if (request.limit !== undefined) {
 		if (request.limit < 1) {
 			errors.push({
@@ -210,7 +190,6 @@ function validateQueryRequest(
 		}
 	}
 
-	// Validate page
 	if (request.page !== undefined && request.page < 1) {
 		errors.push({
 			field: "page",
@@ -234,7 +213,7 @@ function generateRequestId(): string {
 }
 
 interface AuthContext {
-	/** Session active org; used when query omits organization_id. */
+	// Session active org; used when query omits organization_id.
 	activeOrganizationId: string | null;
 	apiKey: ApiKeyRow | null;
 	authMethod: "api_key" | "session" | "none";
@@ -313,10 +292,6 @@ function createValidationErrorResponse(
 	);
 }
 
-/**
- * Get the owner ID for a website (organizationId)
- * Used for LLM queries which are scoped by owner, not website
- */
 async function getWebsiteOwnerId(websiteId: string): Promise<string | null> {
 	const website = await db.query.websites.findFirst({
 		where: eq(websites.id, websiteId),
@@ -594,7 +569,6 @@ async function resolveProjectAccess(
 ): Promise<ProjectAccessResult> {
 	const { websiteId, scheduleId, linkId, organizationId } = options;
 
-	// Check link_id first (for link shortener)
 	if (linkId) {
 		const hasAccess = await verifyLinkAccess(ctx, linkId);
 		if (!hasAccess) {
@@ -610,7 +584,6 @@ async function resolveProjectAccess(
 		return { success: true, projectId: linkId, projectType: "link" };
 	}
 
-	// Check schedule_id (for custom uptime monitors)
 	if (scheduleId) {
 		const hasAccess = await verifyScheduleAccess(ctx, scheduleId);
 		if (!hasAccess) {
@@ -626,7 +599,6 @@ async function resolveProjectAccess(
 		return { success: true, projectId: scheduleId, projectType: "schedule" };
 	}
 
-	// Check website access (handles public websites)
 	if (websiteId) {
 		const hasAccess = await verifyWebsiteAccess(ctx, websiteId);
 		if (!hasAccess) {
@@ -669,7 +641,6 @@ async function resolveProjectAccess(
 		};
 	}
 
-	// No project identifier provided
 	if (!ctx.isAuthenticated) {
 		return {
 			success: false,
@@ -756,19 +727,16 @@ async function executeDynamicQuery(
 }> {
 	const { startDate: from, endDate: to } = request;
 
-	// Try to get domain for website IDs (will return null for schedule IDs)
 	const domain =
 		domainCache?.[projectId] ??
 		(await getWebsiteDomain(projectId).catch(() => null));
 
-	// Check if any LLM queries are requested - they need owner_id, not website_id
+	// LLM queries are scoped by owner (organizationId/userId), not website_id.
 	const hasLlmQueries = request.parameters.some((param) => {
 		const name = typeof param === "string" ? param : param.name;
 		return name.startsWith("llm_");
 	});
 
-	// Resolve owner ID for LLM queries (organizationId or userId)
-	// If projectType is "organization", the projectId IS the owner ID
 	let ownerId: string | null = null;
 	if (hasLlmQueries) {
 		ownerId =
@@ -777,9 +745,8 @@ async function executeDynamicQuery(
 				: await getWebsiteOwnerId(projectId);
 	}
 
-	// For org-level custom_events queries, signal the builder to use
-	// owner_id = projectId (primary-key scan) instead of website_id matching.
-	// owner_id is always set to the organizationId at ingestion time.
+	// Org-level custom_events queries: builder scans by owner_id (= organizationId
+	// set at ingestion) via primary key instead of matching website_id.
 	const hasCustomEventsQueries = request.parameters.some((param) => {
 		const name = typeof param === "string" ? param : param.name;
 		return name.startsWith("custom_event");
@@ -848,7 +815,6 @@ async function executeDynamicQuery(
 
 	const resultMap = new Map<string, QueryResult>();
 
-	// Add error results
 	for (const errorParam of errorParameters) {
 		resultMap.set(errorParam.id, {
 			parameter: errorParam.id,
@@ -858,7 +824,6 @@ async function executeDynamicQuery(
 		});
 	}
 
-	// Execute valid queries
 	if (validParameters.length > 0) {
 		const results = await executeBatch(
 			validParameters.map((v) => v.request),
@@ -879,7 +844,6 @@ async function executeDynamicQuery(
 		}
 	}
 
-	// Build results array maintaining parameter order
 	const allResults = prepared.map(
 		(p) =>
 			resultMap.get(p.id) || {
@@ -890,7 +854,6 @@ async function executeDynamicQuery(
 			}
 	);
 
-	// Sort: successes first, then errors
 	const sortedResults = allResults.sort((a, b) => {
 		const aIsError = !a.success;
 		const bIsError = !b.success;
@@ -1082,7 +1045,6 @@ export const query = new Elysia({ prefix: "/v1/query" })
 				});
 
 				if (isBatch) {
-					// Validate all requests in batch first
 					for (let i = 0; i < body.length; i++) {
 						const req = body[i];
 						if (req) {
@@ -1150,7 +1112,6 @@ export const query = new Elysia({ prefix: "/v1/query" })
 					return { success: true, requestId, batch: true, results };
 				}
 
-				// Single query - validate and resolve dates
 				const validation = validateQueryRequest(body, timezone);
 				if (!validation.valid) {
 					return createValidationErrorResponse(validation.errors, requestId);

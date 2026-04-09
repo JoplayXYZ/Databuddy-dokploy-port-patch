@@ -1,8 +1,3 @@
-/**
- * Programmatic ClickHouse schema documentation generator.
- * Extracts schema information from actual table definitions to ensure docs are always up to date.
- */
-
 export const SCHEMA_SECTIONS = [
 	"events",
 	"errors",
@@ -11,9 +6,6 @@ export const SCHEMA_SECTIONS = [
 ] as const;
 export type SchemaSection = (typeof SCHEMA_SECTIONS)[number];
 
-/**
- * Schema table definition with description
- */
 interface TableDef {
 	additionalInfo?: string;
 	description: string;
@@ -22,9 +14,6 @@ interface TableDef {
 	section: SchemaSection;
 }
 
-/**
- * Analytics tables - main event tracking and user behavior
- */
 const ANALYTICS_TABLES: TableDef[] = [
 	{
 		name: "analytics.events",
@@ -39,13 +28,11 @@ const ANALYTICS_TABLES: TableDef[] = [
 			"time (DateTime64) - Event timestamp",
 			"timestamp (DateTime64) - Alternative timestamp",
 
-			// Page info
 			"path (String) - URL path",
 			"url (String) - Full URL",
 			"title (String) - Page title",
 			"referrer (String) - Referrer URL",
 
-			// User agent & device
 			"user_agent (String)",
 			"browser_name (String)",
 			"browser_version (String)",
@@ -55,26 +42,22 @@ const ANALYTICS_TABLES: TableDef[] = [
 			"device_brand (String)",
 			"device_model (String)",
 
-			// Geography
 			"ip (String)",
 			"country (String) - ISO country code",
 			"region (String) - State/province",
 			"city (String)",
 
-			// Session metrics
 			"time_on_page (Float32) - Seconds spent on page",
 			"scroll_depth (Float32) - Max scroll percentage (0-100)",
 			"interaction_count (Int16) - Number of interactions",
 			"page_count (UInt8) - Pages in session",
 
-			// UTM parameters
 			"utm_source (String)",
 			"utm_medium (String)",
 			"utm_campaign (String)",
 			"utm_term (String)",
 			"utm_content (String)",
 
-			// Performance metrics
 			"load_time (Int32) - Page load time in ms",
 			"dom_ready_time (Int32) - DOM ready time in ms",
 			"dom_interactive (Int32) - DOM interactive time in ms",
@@ -85,7 +68,6 @@ const ANALYTICS_TABLES: TableDef[] = [
 			"redirect_time (Int32) - Redirect time in ms",
 			"domain_lookup_time (Int32) - DNS lookup time in ms",
 
-			// Additional data
 			"screen_resolution (String) - e.g. 1920x1080",
 			"viewport_size (String) - e.g. 1200x800",
 			"language (String) - Browser language",
@@ -265,10 +247,6 @@ export interface SchemaDocOptions {
 	sections?: readonly SchemaSection[];
 }
 
-/**
- * Generates schema documentation for LLM consumption.
- * Filter to specific sections and toggle guidelines/examples for a lighter payload.
- */
 export function generateSchemaDocumentation(
 	opts: SchemaDocOptions = {}
 ): string {
@@ -311,7 +289,4 @@ ${analyticsDoc}${guidelinesBlock}${examplesBlock}
 </available-data>`;
 }
 
-/**
- * Export the generated schema docs for use in prompts
- */
 export const CLICKHOUSE_SCHEMA_DOCS = generateSchemaDocumentation();

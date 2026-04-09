@@ -14,8 +14,6 @@ const SVIX_SECRET = process.env.AUTUMN_WEBHOOK_SECRET;
 const SLACK_URL = process.env.SLACK_WEBHOOK_URL ?? "";
 const COOLDOWN_DAYS = 7;
 
-// ── Types ───────────────────────────────────────────────────────────
-
 interface LimitReachedData {
 	customer_id: string;
 	entity_id?: string;
@@ -70,8 +68,6 @@ interface WebhookResult {
 	message: string;
 	success: boolean;
 }
-
-// ── Shared helpers ──────────────────────────────────────────────────
 
 async function _getUserData(
 	customerId: string
@@ -169,8 +165,6 @@ async function sendAlertEmailAction(opts: {
 	});
 	return { success: true, message: "Email sent" };
 }
-
-// ── Handlers ────────────────────────────────────────────────────────
 
 function handleLimitReached(
 	data: LimitReachedData
@@ -297,8 +291,6 @@ function handleProductsUpdated(data: ProductsUpdatedData): WebhookResult {
 	return { success: true, message: `Processed ${scenario}` };
 }
 
-// ── Svix verification ───────────────────────────────────────────────
-
 function verifySvix(
 	body: string,
 	headers: Record<string, string | null>
@@ -333,8 +325,6 @@ function verifySvix(
 		return false;
 	}
 }
-
-// ── Route ───────────────────────────────────────────────────────────
 
 const handlers: Record<
 	string,

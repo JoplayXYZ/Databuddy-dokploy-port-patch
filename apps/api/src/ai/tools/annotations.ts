@@ -109,7 +109,6 @@ export function createAnnotationTools() {
 		) => {
 			const context = getAppContext(options);
 			try {
-				// Validate date format
 				if (!dayjs(xValue).isValid()) {
 					throw new Error(
 						"xValue must be a valid ISO 8601 date string (e.g., '2024-01-15T10:30:00Z')."
@@ -121,14 +120,12 @@ export function createAnnotationTools() {
 					);
 				}
 
-				// Validate range annotations have end value
 				if (annotationType === "range" && !xEndValue) {
 					throw new Error(
 						"Range annotations require an xEndValue to define the end of the time period."
 					);
 				}
 
-				// If not confirmed, return preview and ask for confirmation
 				if (!confirmed) {
 					const dateRangePreview = `${chartContext.dateRange.start_date} to ${chartContext.dateRange.end_date} (${chartContext.dateRange.granularity})`;
 
@@ -154,7 +151,6 @@ export function createAnnotationTools() {
 					};
 				}
 
-				// User confirmed - create the annotation
 				const result = await callRPCProcedure(
 					"annotations",
 					"create",
@@ -275,7 +271,6 @@ export function createAnnotationTools() {
 					};
 				}
 
-				// User confirmed - update the annotation
 				const updateData: {
 					id: string;
 					text?: string;
@@ -350,7 +345,6 @@ export function createAnnotationTools() {
 					};
 				}
 
-				// User confirmed - delete the annotation
 				const result = await callRPCProcedure(
 					"annotations",
 					"delete",
