@@ -860,6 +860,13 @@ export const analyticsInsights = pgTable(
 		type: text("type").notNull(),
 		priority: integer("priority").notNull(),
 		changePercent: doublePrecision("change_percent"),
+		subjectKey: text("subject_key").notNull().default(""),
+		sources: jsonb("sources")
+			.$type<Array<"web" | "product" | "ops" | "business">>()
+			.notNull()
+			.default([]),
+		confidence: doublePrecision("confidence").notNull().default(0),
+		impactSummary: text("impact_summary"),
 		metrics:
 			jsonb("metrics").$type<
 				Array<{
@@ -890,6 +897,12 @@ export const analyticsInsights = pgTable(
 		index("idx_analytics_insights_run").using(
 			"btree",
 			table.runId.asc().nullsLast().op("text_ops")
+		),
+		index("idx_analytics_insights_subject_key").using(
+			"btree",
+			table.websiteId.asc().nullsLast().op("text_ops"),
+			table.subjectKey.asc().nullsLast().op("text_ops"),
+			table.createdAt.desc().nullsLast()
 		),
 		foreignKey({
 			columns: [table.organizationId],

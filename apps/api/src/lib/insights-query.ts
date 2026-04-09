@@ -24,17 +24,21 @@ export interface InsightMetricRow {
 
 export interface InsightRow {
 	changePercent: number | null;
+	confidence: number;
 	createdAt: Date;
 	currentPeriodFrom: string;
 	currentPeriodTo: string;
 	description: string;
 	id: string;
+	impactSummary: string | null;
 	metrics: InsightMetricRow[] | null;
 	previousPeriodFrom: string;
 	previousPeriodTo: string;
 	priority: number;
 	sentiment: string;
 	severity: string;
+	sources: Array<"web" | "product" | "ops" | "business">;
+	subjectKey: string;
 	suggestion: string;
 	timezone: string;
 	title: string;
@@ -104,6 +108,10 @@ export async function fetchInsightsForOrgs(
 			description: analyticsInsights.description,
 			suggestion: analyticsInsights.suggestion,
 			changePercent: analyticsInsights.changePercent,
+			subjectKey: analyticsInsights.subjectKey,
+			sources: analyticsInsights.sources,
+			confidence: analyticsInsights.confidence,
+			impactSummary: analyticsInsights.impactSummary,
 			metrics: analyticsInsights.metrics,
 			currentPeriodFrom: analyticsInsights.currentPeriodFrom,
 			currentPeriodTo: analyticsInsights.currentPeriodTo,
@@ -124,5 +132,7 @@ export async function fetchInsightsForOrgs(
 	return rows.map((r) => ({
 		...r,
 		metrics: (r.metrics as InsightMetricRow[] | null) ?? null,
+		sources:
+			(r.sources as Array<"web" | "product" | "ops" | "business"> | null) ?? [],
 	}));
 }

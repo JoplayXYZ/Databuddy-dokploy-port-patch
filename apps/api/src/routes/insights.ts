@@ -198,6 +198,10 @@ You are an analytics insights engine. Return 1-3 week-over-week insights ranked 
 - Use the right format: number, percent, duration_ms, or duration_s.
 - Include previous when comparison data exists.
 - changePercent should be the signed week-over-week change for the primary metric when that comparison exists.
+- subjectKey should be a stable identifier for the signal, such as pricing_page, organic_search, signup_goal, or signup_errors.
+- sources must list only the evidence domains actually used: web, product, ops, business.
+- confidence should be between 0 and 1 based on how directly the data supports the conclusion.
+- impactSummary is optional and should briefly state user or business impact when the impact is clear.
 </metrics_rules>
 
 <examples>
@@ -217,7 +221,11 @@ Output pattern:
   "sentiment": "positive",
   "priority": 6,
   "type": "page_trend",
-  "changePercent": 28
+  "changePercent": 28,
+  "subjectKey": "pricing_page",
+  "sources": ["web"],
+  "confidence": 0.74,
+  "impactSummary": "Higher-intent page demand improved this week."
 }
 </example>
 
@@ -237,7 +245,11 @@ Output pattern:
   "sentiment": "negative",
   "priority": 8,
   "type": "error_spike",
-  "changePercent": 161.5
+  "changePercent": 161.5,
+  "subjectKey": "error_rate",
+  "sources": ["web", "ops"],
+  "confidence": 0.88,
+  "impactSummary": "More sessions are likely encountering broken flows."
 }
 </example>
 
@@ -257,7 +269,10 @@ Output pattern:
   "sentiment": "neutral",
   "priority": 5,
   "type": "engagement_change",
-  "changePercent": -17.5
+  "changePercent": -17.5,
+  "subjectKey": "session_duration",
+  "sources": ["web"],
+  "confidence": 0.63
 }
 </example>
 </examples>
@@ -544,6 +559,10 @@ async function getRecentInsightsFromDb(
 			type: analyticsInsights.type,
 			priority: analyticsInsights.priority,
 			changePercent: analyticsInsights.changePercent,
+			subjectKey: analyticsInsights.subjectKey,
+			sources: analyticsInsights.sources,
+			confidence: analyticsInsights.confidence,
+			impactSummary: analyticsInsights.impactSummary,
 			metrics: analyticsInsights.metrics,
 			createdAt: analyticsInsights.createdAt,
 		})
@@ -579,6 +598,12 @@ async function getRecentInsightsFromDb(
 			type: r.type as ParsedInsight["type"],
 			priority: r.priority,
 			changePercent: r.changePercent ?? undefined,
+			subjectKey: r.subjectKey,
+			sources:
+				(r.sources as Array<"web" | "product" | "ops" | "business"> | null) ??
+				[],
+			confidence: r.confidence,
+			impactSummary: r.impactSummary ?? undefined,
 		})
 	);
 }
@@ -821,6 +846,10 @@ export const insights = new Elysia({ prefix: "/v1/insights" })
 					type: analyticsInsights.type,
 					priority: analyticsInsights.priority,
 					changePercent: analyticsInsights.changePercent,
+					subjectKey: analyticsInsights.subjectKey,
+					sources: analyticsInsights.sources,
+					confidence: analyticsInsights.confidence,
+					impactSummary: analyticsInsights.impactSummary,
 					metrics: analyticsInsights.metrics,
 					createdAt: analyticsInsights.createdAt,
 					currentPeriodFrom: analyticsInsights.currentPeriodFrom,
@@ -852,6 +881,12 @@ export const insights = new Elysia({ prefix: "/v1/insights" })
 				type: r.type,
 				priority: r.priority,
 				changePercent: r.changePercent ?? undefined,
+				subjectKey: r.subjectKey,
+				sources:
+					(r.sources as Array<"web" | "product" | "ops" | "business"> | null) ??
+					[],
+				confidence: r.confidence,
+				impactSummary: r.impactSummary ?? undefined,
 				createdAt: r.createdAt.toISOString(),
 				currentPeriodFrom: r.currentPeriodFrom,
 				currentPeriodTo: r.currentPeriodTo,
@@ -1130,6 +1165,7 @@ export const insights = new Elysia({ prefix: "/v1/insights" })
 						type: insight.type,
 						sentiment: insight.sentiment,
 						changePercent: insight.changePercent ?? null,
+						subjectKey: insight.subjectKey,
 						title: insight.title,
 					});
 					if (seenInBatch.has(key)) {
@@ -1163,6 +1199,10 @@ export const insights = new Elysia({ prefix: "/v1/insights" })
 						type: string;
 						priority: number;
 						changePercent: number | null;
+						subjectKey: string;
+						sources: Array<"web" | "product" | "ops" | "business">;
+						confidence: number;
+						impactSummary: string | null;
 						metrics: InsightMetricRow[] | null;
 						timezone: string;
 						currentPeriodFrom: string;
@@ -1177,6 +1217,7 @@ export const insights = new Elysia({ prefix: "/v1/insights" })
 							type: insight.type,
 							sentiment: insight.sentiment,
 							changePercent: insight.changePercent ?? null,
+							subjectKey: insight.subjectKey,
 							title: insight.title,
 						});
 						const existingId = dedupeKeyToId.get(key);
@@ -1196,6 +1237,10 @@ export const insights = new Elysia({ prefix: "/v1/insights" })
 							type: insight.type,
 							priority: insight.priority,
 							changePercent: insight.changePercent ?? null,
+							subjectKey: insight.subjectKey,
+							sources: insight.sources,
+							confidence: insight.confidence,
+							impactSummary: insight.impactSummary ?? null,
 							metrics: insight.metrics.length > 0 ? insight.metrics : null,
 							timezone,
 							currentPeriodFrom: period.current.from,
@@ -1225,6 +1270,7 @@ export const insights = new Elysia({ prefix: "/v1/insights" })
 								type: insight.type,
 								sentiment: insight.sentiment,
 								changePercent: insight.changePercent ?? null,
+								subjectKey: insight.subjectKey,
 								title: insight.title,
 							});
 							const existingId = dedupeKeyToId.get(key);
@@ -1244,6 +1290,10 @@ export const insights = new Elysia({ prefix: "/v1/insights" })
 										type: insight.type,
 										priority: insight.priority,
 										changePercent: insight.changePercent ?? null,
+										subjectKey: insight.subjectKey,
+										sources: insight.sources,
+										confidence: insight.confidence,
+										impactSummary: insight.impactSummary ?? null,
 										metrics:
 											insight.metrics.length > 0 ? insight.metrics : null,
 									})

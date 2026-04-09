@@ -81,6 +81,7 @@ export async function fetchInsightDedupeKeyToIdMap(
 			type: analyticsInsights.type,
 			sentiment: analyticsInsights.sentiment,
 			changePercent: analyticsInsights.changePercent,
+			subjectKey: analyticsInsights.subjectKey,
 			title: analyticsInsights.title,
 		})
 		.from(analyticsInsights)
@@ -99,6 +100,7 @@ export async function fetchInsightDedupeKeyToIdMap(
 			type: row.type as ParsedInsight["type"],
 			sentiment: row.sentiment as ParsedInsight["sentiment"],
 			changePercent: row.changePercent,
+			subjectKey: row.subjectKey,
 			title: row.title,
 		});
 		if (!map.has(key)) {
