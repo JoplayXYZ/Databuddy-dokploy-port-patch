@@ -409,7 +409,7 @@ async function analyzeWebsite(
 **Timezone:** ${timezone}
 **Domain:** ${domain}
 
-Use insight_query to pull metrics for both current and previous periods before inferring trends. Start with summary_metrics for both periods, then add top_pages, error_summary, top_referrers, country, browser_name, vitals_overview, or custom_events queries only when they sharpen the narrative. Use product_metrics for goals, funnels, retention, and custom event behavior when a traffic change may have downstream product impact. Use ops_context for page-level errors, uptime, anomaly signals, and recent flag rollouts when reliability or product changes may explain the trend. Use business_context for revenue totals, attribution, and product mix when commercial impact matters.
+Use web_metrics to pull metrics for both current and previous periods before inferring trends. Start with summary_metrics for both periods, then add top_pages, error_summary, top_referrers, country, browser_name, vitals_overview, or custom_events queries only when they sharpen the narrative. Use product_metrics for goals, funnels, retention, and custom event behavior when a traffic change may have downstream product impact. Use ops_context for page-level errors, uptime, anomaly signals, and recent flag rollouts when reliability or product changes may explain the trend. Use business_context for revenue totals, attribution, and product mix when commercial impact matters.
 
 ${orgContext}${annotationContext}${recentInsightsBlock}`;
 
@@ -441,8 +441,8 @@ ${orgContext}${annotationContext}${recentInsightsBlock}`;
 			prepareStep: ({ stepNumber }) => {
 				if (stepNumber === 0) {
 					return {
-						activeTools: ["insight_query"],
-						toolChoice: { type: "tool", toolName: "insight_query" },
+						activeTools: ["web_metrics"],
+						toolChoice: { type: "tool", toolName: "web_metrics" },
 					};
 				}
 				return {};

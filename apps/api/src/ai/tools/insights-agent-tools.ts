@@ -101,7 +101,7 @@ export function createInsightsAgentTools(
 			),
 	});
 
-	const insightQueryTool = tool({
+	const webMetricsTool = tool({
 		description:
 			"Fetch analytics data for the current or previous week-over-week period. Batch multiple query types in one call (up to 8). Start with summary_metrics for both periods, then add top_pages, errors, referrers, geo, browsers, vitals, or custom events as needed before producing final insights.",
 		inputSchema: z.object({
@@ -145,9 +145,8 @@ export function createInsightsAgentTools(
 				};
 
 				try {
-					const data = (await runQueryWithTimeout(
-						`insight_query:${q.type}`,
-						() => executeQuery(req, params.domain, params.timezone)
+					const data = (await runQueryWithTimeout(`web_metrics:${q.type}`, () =>
+						executeQuery(req, params.domain, params.timezone)
 					)) as Record<string, unknown>[];
 					results.push({
 						type: q.type,
@@ -319,9 +318,9 @@ export function createInsightsAgentTools(
 	return {
 		tools: {
 			business_context: businessContextTool,
-			insight_query: insightQueryTool,
 			ops_context: opsContextTool,
 			product_metrics: productMetricsTool,
+			web_metrics: webMetricsTool,
 		},
 	};
 }
