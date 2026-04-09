@@ -91,13 +91,3 @@ export async function executeTimedQuery<T extends Record<string, unknown>>(
 		throw error;
 	}
 }
-
-/**
- * Wraps an error with a consistent message format.
- */
-export function wrapError(error: unknown, defaultMessage: string): Error {
-	if (error instanceof Error) {
-		return error;
-	}
-	return new Error(defaultMessage);
-}
