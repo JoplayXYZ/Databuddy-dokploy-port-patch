@@ -33,6 +33,7 @@ import type {
 	InsightMetricRow,
 	WeekOverWeekPeriod,
 } from "../ai/insights/types";
+import type { AppContext } from "../ai/config/context";
 import { models } from "../ai/config/models";
 import type { ParsedInsight } from "../ai/schemas/smart-insights-output";
 import { insightsOutputSchema } from "../ai/schemas/smart-insights-output";
@@ -363,7 +364,8 @@ async function analyzeWebsite(
 	domain: string,
 	timezone: string,
 	period: WeekOverWeekPeriod,
-	orgSites: OrgWebsiteRow[]
+	orgSites: OrgWebsiteRow[],
+	requestHeaders: Headers
 ): Promise<ParsedInsight[]> {
 	const currentRange = period.current;
 	const previousRange = period.previous;
@@ -392,7 +394,7 @@ async function analyzeWebsite(
 **Timezone:** ${timezone}
 **Domain:** ${domain}
 
-Use insight_query to pull metrics for both current and previous periods before inferring trends. Start with summary_metrics for both periods, then add top_pages, error_summary, top_referrers, country, browser_name, vitals_overview, or custom_events queries only when they sharpen the narrative.
+Use insight_query to pull metrics for both current and previous periods before inferring trends. Start with summary_metrics for both periods, then add top_pages, error_summary, top_referrers, country, browser_name, vitals_overview, or custom_events queries only when they sharpen the narrative. Use product_metrics for goals, funnels, retention, and custom event behavior when a traffic change may have downstream product impact.
 
 ${orgContext}${annotationContext}${recentInsightsBlock}`;
 
@@ -404,6 +406,16 @@ ${orgContext}${annotationContext}${recentInsightsBlock}`;
 	});
 
 	try {
+		const appContext: AppContext = {
+			userId,
+			websiteId,
+			websiteDomain: domain,
+			timezone,
+			currentDateTime: new Date().toISOString(),
+			chatId: `insights:${organizationId}:${websiteId}`,
+			requestHeaders,
+		};
+
 		const agent = new ToolLoopAgent({
 			model: models.analytics,
 			instructions: INSIGHTS_SYSTEM_PROMPT,
@@ -436,6 +448,7 @@ ${orgContext}${annotationContext}${recentInsightsBlock}`;
 				});
 			},
 			temperature: 0.2,
+			experimental_context: appContext,
 			experimental_telemetry: {
 				isEnabled: true,
 				functionId: "databuddy.insights.analyze_website",
@@ -733,7 +746,7 @@ ${insightLines.join("\n")}`;
 export const insights = new Elysia({ prefix: "/v1/insights" })
 	.derive(async ({ request }) => {
 		const session = await auth.api.getSession({ headers: request.headers });
-		return { user: session?.user ?? null };
+		return { user: session?.user ?? null, requestHeaders: request.headers };
 	})
 	.onBeforeHandle(({ user, set }) => {
 		if (!user) {
@@ -994,7 +1007,7 @@ export const insights = new Elysia({ prefix: "/v1/insights" })
 	)
 	.post(
 		"/ai",
-		async ({ body, user, set }) => {
+		async ({ body, user, set, requestHeaders }) => {
 			const userId = user?.id;
 			if (!userId) {
 				mergeWideEvent({ insights_ai_error: "missing_user_id" });
@@ -1091,7 +1104,8 @@ export const insights = new Elysia({ prefix: "/v1/insights" })
 							site.domain,
 							timezone,
 							period,
-							orgSites
+							orgSites,
+							requestHeaders
 						);
 						return results.map(
 							(insight): WebsiteInsight => ({

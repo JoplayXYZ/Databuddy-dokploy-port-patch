@@ -1,5 +1,10 @@
 import { tool } from "ai";
 import { z } from "zod";
+import {
+	fetchProductMetrics,
+	PRODUCT_INSIGHT_QUERY_TYPES,
+} from "../insights/product-context";
+import { getAppContext } from "./utils";
 import { executeQuery } from "../../query";
 import { QueryBuilders } from "../../query/builders";
 import type { QueryRequest } from "../../query/types";
@@ -33,6 +38,7 @@ const INSIGHTS_AGENT_QUERY_TYPES = [
 ] as const;
 
 const INSIGHTS_TYPE_LIST = INSIGHTS_AGENT_QUERY_TYPES.join(", ");
+const PRODUCT_INSIGHTS_TYPE_LIST = PRODUCT_INSIGHT_QUERY_TYPES.join(", ");
 
 function isAllowedQueryType(type: string): boolean {
 	return (
@@ -164,9 +170,60 @@ export function createInsightsAgentTools(
 		},
 	});
 
+	const productMetricQuerySchema = z.object({
+		type: z
+			.enum(PRODUCT_INSIGHT_QUERY_TYPES)
+			.describe(
+				`Product context query type. Allowed: ${PRODUCT_INSIGHTS_TYPE_LIST}`
+			),
+		limit: z
+			.number()
+			.min(1)
+			.max(10)
+			.optional()
+			.describe(
+				"Max number of goals, funnels, cohorts, or events to summarize."
+			),
+	});
+
+	const productMetricsTool = tool({
+		description:
+			"Fetch product analytics context for the current or previous week-over-week period. Use this for goals, funnels, retention, and custom event summaries when a traffic story needs conversion or behavior context.",
+		inputSchema: z.object({
+			period: z
+				.enum(["current", "previous"])
+				.describe("Which WoW window: current week vs previous week."),
+			queries: z
+				.array(productMetricQuerySchema)
+				.min(1)
+				.max(MAX_QUERIES_PER_CALL),
+		}),
+		execute: async ({ period, queries }, options) => {
+			const appContext = getAppContext(options);
+
+			let payload = JSON.stringify(
+				await fetchProductMetrics(
+					appContext,
+					params.periodBounds,
+					period,
+					queries
+				),
+				null,
+				0
+			);
+
+			if (payload.length > MAX_TOOL_RESPONSE_CHARS) {
+				payload = `${payload.slice(0, MAX_TOOL_RESPONSE_CHARS)}\n…[truncated]`;
+			}
+
+			return payload;
+		},
+	});
+
 	return {
 		tools: {
 			insight_query: insightQueryTool,
+			product_metrics: productMetricsTool,
 		},
 	};
 }
