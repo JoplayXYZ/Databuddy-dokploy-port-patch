@@ -135,7 +135,6 @@ export default function ExportPage() {
 				title="Data Export"
 			/>
 			<div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-none">
-				{/* Format selection */}
 				<section className="border-b px-4 py-5 sm:px-6">
 					<div className="mb-3">
 						<Label className="font-medium text-sm">Export format</Label>
@@ -176,7 +175,6 @@ export default function ExportPage() {
 					</div>
 				</section>
 
-				{/* Date range */}
 				<section className="border-b px-4 py-5 sm:px-6">
 					<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 						<div>
@@ -212,7 +210,6 @@ export default function ExportPage() {
 					)}
 				</section>
 
-				{/* Export action */}
 				<section className="px-4 py-5 sm:px-6">
 					<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 						<div>

@@ -15,7 +15,6 @@ import { BrowserIcon, OSIcon } from "@/components/icon";
 const MOBILE_PREFIX_REGEX = /^Mobile\s+/;
 const MOBILE_SUFFIX_REGEX = /\s+Mobile$/;
 
-// Types
 export interface DeviceTypeEntry {
 	device_brand?: string;
 	device_model?: string;

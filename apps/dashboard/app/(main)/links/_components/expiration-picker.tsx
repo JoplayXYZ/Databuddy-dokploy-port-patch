@@ -238,7 +238,6 @@ export function ExpirationPicker({
 			>
 				{showCustom ? (
 					<div className="flex flex-col">
-						{/* Header */}
 						<div className="flex items-center justify-between border-b px-4 py-3">
 							<button
 								aria-label="Go back to presets"
@@ -252,7 +251,6 @@ export function ExpirationPicker({
 							<div className="w-10" />
 						</div>
 
-						{/* Calendar */}
 						<div className="p-3">
 							<Calendar
 								defaultMonth={customDate || new Date()}
@@ -263,7 +261,6 @@ export function ExpirationPicker({
 							/>
 						</div>
 
-						{/* Time picker */}
 						<div className="border-t px-4 py-3">
 							<div className="flex items-center gap-3">
 								<ClockIcon
@@ -297,7 +294,6 @@ export function ExpirationPicker({
 							)}
 						</div>
 
-						{/* Footer */}
 						<div className="flex items-center justify-end gap-2 border-t bg-secondary/50 px-4 py-3">
 							<Button
 								onClick={() => setShowCustom(false)}

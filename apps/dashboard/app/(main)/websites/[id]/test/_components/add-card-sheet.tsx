@@ -76,10 +76,8 @@ import type {
 	DateRangePreset,
 } from "./utils/types";
 
-// Re-export for convenience
 export type { DashboardCardConfig } from "./utils/types";
 
-/** Visualization types compatible with stat cards */
 const CARD_COMPATIBLE_VISUALIZATIONS = new Set([
 	"metric",
 	"timeseries",
@@ -152,13 +150,11 @@ export function CardSheet({
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-	// Check if form is valid for saving
 	const canSave =
 		dataSourceMode === "predefined"
 			? Boolean(selectedQueryType && selectedField)
 			: Boolean(customQuery?.table);
 
-	// Filter and group query types for cards
 	const { metricTypes, trendTypes } = useMemo(() => {
 		const compatible = queryTypes.filter((t) =>
 			CARD_COMPATIBLE_VISUALIZATIONS.has(t.defaultVisualization || "")
@@ -172,13 +168,11 @@ export function CardSheet({
 		};
 	}, [queryTypes]);
 
-	// Compute the preview date range based on preset
 	const previewDateRange = useMemo(
 		() => resolveDateRange(dateRangePreset, dateRange),
 		[dateRangePreset, dateRange]
 	);
 
-	// Create a temporary widget config for preview data fetching
 	const previewWidgets = useMemo(
 		() =>
 			selectedQueryType
@@ -218,7 +212,6 @@ export function CardSheet({
 	};
 
 	const initializeFromCard = (card: DashboardCardConfig) => {
-		// Set data source mode
 		const mode = card.dataSourceMode || "predefined";
 		setDataSourceMode(mode);
 
@@ -307,7 +300,6 @@ export function CardSheet({
 
 			setIsSubmitting(true);
 
-			// Get the first select's alias as the label
 			const firstSelect = customQuery.selects.at(0);
 			const label =
 				firstSelect?.alias || `${firstSelect?.aggregate}_${firstSelect?.field}`;
@@ -318,7 +310,7 @@ export function CardSheet({
 				queryType: `custom_${customQuery.table}`,
 				field: firstSelect?.field || "",
 				label,
-				displayMode: "text", // Custom queries only support text for now
+				displayMode: "text",
 				title: customTitle.trim() || undefined,
 				category: "Custom",
 				dateRangePreset:
@@ -407,7 +399,6 @@ export function CardSheet({
 			? getChartData("preview", selectedQueryType.key, selectedField.name)
 			: undefined;
 
-	// Check if chart mode is supported for selected query type
 	const supportsChart =
 		selectedQueryType && isTrendType(selectedQueryType.defaultVisualization);
 
@@ -443,7 +434,6 @@ export function CardSheet({
 				</SheetHeader>
 
 				<SheetBody className="space-y-6">
-					{/* Live Preview */}
 					<div className="space-y-2">
 						<Label className="text-muted-foreground">Preview</Label>
 						<StatCard
@@ -459,10 +449,8 @@ export function CardSheet({
 						/>
 					</div>
 
-					{/* Separator */}
 					<div className="h-px bg-border" />
 
-					{/* Data Source Mode Toggle */}
 					<div className="space-y-2">
 						<Label>Data Source Type</Label>
 						<div className="flex gap-2">
@@ -496,7 +484,6 @@ export function CardSheet({
 
 					{dataSourceMode === "predefined" ? (
 						<>
-							{/* Query Type Selector */}
 							<div className="space-y-2">
 								<Label>
 									Data Source <span className="text-destructive">*</span>
@@ -553,7 +540,6 @@ export function CardSheet({
 												>
 													<CommandEmpty>No data source found.</CommandEmpty>
 
-													{/* Metrics Section */}
 													{metricTypes.length > 0 && (
 														<CommandGroup
 															heading={
@@ -603,7 +589,6 @@ export function CardSheet({
 														</CommandGroup>
 													)}
 
-													{/* Trends Section */}
 													{trendTypes.length > 0 && (
 														<CommandGroup
 															heading={
@@ -659,7 +644,6 @@ export function CardSheet({
 								)}
 							</div>
 
-							{/* Field Selector */}
 							{selectedQueryType && (
 								<div className="space-y-2">
 									<Label>
@@ -734,7 +718,6 @@ export function CardSheet({
 								</div>
 							)}
 
-							{/* Display Mode - only show if trends data supports chart */}
 							{selectedField && supportsChart && (
 								<div className="space-y-2">
 									<Label>Display Mode</Label>
@@ -778,7 +761,6 @@ export function CardSheet({
 								</div>
 							)}
 
-							{/* Custom Title */}
 							{selectedField && (
 								<div className="space-y-2">
 									<Label
@@ -798,13 +780,11 @@ export function CardSheet({
 						</>
 					) : (
 						<>
-							{/* Custom Query Builder */}
 							<CustomQueryBuilder
 								onChangeAction={setCustomQuery}
 								value={customQuery}
 							/>
 
-							{/* Custom Title for Custom Query */}
 							{customQuery && customQuery.selects.length > 0 && (
 								<div className="space-y-2">
 									<Label
@@ -826,13 +806,11 @@ export function CardSheet({
 						</>
 					)}
 
-					{/* Advanced Options - Date Range & Filters (shared) */}
 					{(selectedField ||
 						(customQuery && customQuery.selects.length > 0)) && (
 						<>
 							<div className="h-px bg-border" />
 
-							{/* Date Range Override */}
 							<div className="space-y-2">
 								<Label className="flex items-center gap-1.5 text-muted-foreground">
 									<CalendarDotsIcon className="size-3.5" weight="duotone" />
@@ -894,7 +872,6 @@ export function CardSheet({
 								</Popover>
 							</div>
 
-							{/* Filters */}
 							<div className="space-y-2">
 								<Label className="flex items-center gap-1.5 text-muted-foreground">
 									<FunnelIcon className="size-3.5" weight="duotone" />

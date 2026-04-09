@@ -429,14 +429,12 @@ function PricingCard({
 			</div>
 
 			<div className="flex-1 p-5">
-				{/* Billing features (usage limits) */}
 				<div className="space-y-2.5">
 					{billingItems.map((item) => (
 						<FeatureItem item={item} key={item.display?.primaryText} />
 					))}
 				</div>
 
-				{/* Gated features new to this plan */}
 				{newGatedFeatures.length > 0 && (
 					<div className="mt-4 space-y-2.5 border-t pt-4">
 						<span className="text-muted-foreground text-xs uppercase">

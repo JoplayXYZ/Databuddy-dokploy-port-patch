@@ -204,7 +204,6 @@ export default function OnboardingPage() {
 
 	return (
 		<div className="flex h-full flex-col">
-			{/* Header */}
 			<div className="flex h-12 shrink-0 items-center justify-between border-b px-4 sm:px-6">
 				<OnboardingStepIndicator
 					completedSteps={completedSteps}
@@ -221,12 +220,10 @@ export default function OnboardingPage() {
 				</Button>
 			</div>
 
-			{/* Content */}
 			<div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
 				<div className="mx-auto max-w-xl">{renderStep()}</div>
 			</div>
 
-			{/* Bottom nav */}
 			{showBottomNav && (
 				<div className="flex h-12 shrink-0 items-center justify-between border-t px-4 sm:px-6">
 					<Button

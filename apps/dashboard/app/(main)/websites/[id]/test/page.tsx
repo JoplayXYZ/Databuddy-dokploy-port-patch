@@ -222,7 +222,6 @@ export default function TestPage() {
 					</GridLayout>
 				)}
 
-				{/* Add Card Tile - outside grid */}
 				<Card
 					className="group mt-4 flex h-[140px] cursor-pointer flex-col items-center justify-center gap-2 border-dashed bg-transparent py-0 transition-all hover:border-primary hover:bg-accent/50"
 					onClick={handleOpenAddSheet}

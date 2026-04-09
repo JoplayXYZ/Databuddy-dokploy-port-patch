@@ -179,7 +179,6 @@ export function GroupItem({
 			}}
 			type="button"
 		>
-			{/* Group icon */}
 			<div
 				className="shrink-0 rounded p-1.5"
 				style={{ backgroundColor: `${group.color}20` }}

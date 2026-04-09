@@ -61,7 +61,6 @@ export function DependencySelector({
 
 	return (
 		<div className="space-y-2">
-			{/* Selected */}
 			{selectedFlags.length > 0 && (
 				<div className="flex flex-wrap gap-1.5">
 					<AnimatePresence mode="popLayout">
@@ -98,7 +97,6 @@ export function DependencySelector({
 				</div>
 			)}
 
-			{/* Add */}
 			{selectableFlags.length > 0 && (
 				<Popover onOpenChange={setIsOpen} open={isOpen}>
 					<PopoverTrigger asChild>

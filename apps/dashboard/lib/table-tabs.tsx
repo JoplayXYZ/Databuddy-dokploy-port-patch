@@ -3,7 +3,6 @@ import { useMemo } from "react";
 import { PercentageBadge } from "@/app/(main)/websites/[id]/_components/utils/technology-helpers";
 import { formatNumber } from "@/lib/formatters";
 
-// Generic data item that all tab data should extend
 export interface BaseTabItem {
 	pageviews?: number;
 	percentage?: number;
@@ -12,7 +11,6 @@ export interface BaseTabItem {
 	[key: string]: any;
 }
 
-// Configuration for a single tab
 export interface TabConfig<T extends BaseTabItem> {
 	customCell?: (info: CellContext<T, unknown>) => React.ReactNode;
 	data: T[];
@@ -23,7 +21,6 @@ export interface TabConfig<T extends BaseTabItem> {
 	primaryHeader: string;
 }
 
-// Generic function to add percentages to data
 export function addPercentages<T extends BaseTabItem>(data: T[]): T[] {
 	if (!data?.length) {
 		return [];
@@ -41,7 +38,6 @@ export function addPercentages<T extends BaseTabItem>(data: T[]): T[] {
 	}));
 }
 
-// Generic function to create columns for any tab data
 export function createTabColumns<T extends BaseTabItem>(
 	primaryField: string,
 	primaryHeader: string,
@@ -87,7 +83,6 @@ export function createTabColumns<T extends BaseTabItem>(
 	];
 }
 
-// Simplified type for tab configuration
 export interface SimpleTabConfig<T extends BaseTabItem> {
 	customCell?: (info: CellContext<T, unknown>) => React.ReactNode;
 	data: T[];
@@ -97,7 +92,6 @@ export interface SimpleTabConfig<T extends BaseTabItem> {
 	primaryHeader: string;
 }
 
-// Hook to create tabs from simple data configuration
 export function useTableTabs(tabsData: Record<string, SimpleTabConfig<any>>) {
 	return useMemo(
 		() =>

@@ -64,9 +64,7 @@ const BillingContext = createContext<BillingContextValue | null>(null);
 
 interface BillingProviderProps {
 	children: ReactNode;
-	/** Skip billing fetches and serve FREE-plan defaults. For unauth routes. */
 	public?: boolean;
-	/** Optional website ID to get billing context for (for demos/public pages) */
 	websiteId?: string;
 }
 
@@ -78,7 +76,7 @@ const FREE_PLAN_VALUE: BillingContextValue = {
 	currentPlanId: PLAN_IDS.FREE,
 	isFree: true,
 	isOrganizationBilling: false,
-	// True so demo visitors see upgrade CTAs that lead to signup.
+	// Demo visitors should see upgrade CTAs that lead to signup.
 	canUserUpgrade: true,
 	canUse: () => false,
 	getBalance: () => null,
@@ -100,9 +98,7 @@ const FREE_PLAN_VALUE: BillingContextValue = {
 	isAiCapabilityEnabled: (capability) =>
 		isPlanAiCapabilityEnabled(PLAN_IDS.FREE, capability),
 	getPlanCapabilities: () => getPlanCapabilitiesForPlan(PLAN_IDS.FREE),
-	refetch: () => {
-		// no-op
-	},
+	refetch: () => {},
 };
 
 function PublicBillingProvider({ children }: { children: ReactNode }) {
@@ -171,10 +167,6 @@ function AuthenticatedBillingProvider({
 		refetch: refetchPlans,
 	} = useListPlans();
 
-	// Get the correct billing context (handles org/website ownership)
-	// Always fetch billing context - the backend handles both:
-	// 1. When websiteId is provided: uses website owner's plan
-	// 2. When no websiteId: uses authenticated user's/org's plan
 	const {
 		data: billingContext,
 		isLoading: isBillingContextLoading,

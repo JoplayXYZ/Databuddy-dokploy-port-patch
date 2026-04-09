@@ -190,7 +190,6 @@ export default function FlagsLayout({
 				websiteName={website?.name ?? undefined}
 			/>
 
-			{/* Navigation Tabs */}
 			<PageNavigation
 				tabs={[
 					{
@@ -275,7 +274,6 @@ export default function FlagsLayout({
 				)}
 			</div>
 
-			{/* Page Content */}
 			<div className="min-h-0 flex-1 overflow-hidden">{children}</div>
 		</div>
 	);

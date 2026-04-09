@@ -828,7 +828,6 @@ export function WebsiteTrackingSetupTab({ websiteId }: TrackingSetupTabProps) {
 				</Card>
 			</div>
 
-			{/* Help Footer */}
 			<div className="flex flex-wrap items-center justify-between gap-4 rounded border border-dashed bg-background/50 p-3">
 				<span className="text-muted-foreground text-sm">
 					Need help setting up?

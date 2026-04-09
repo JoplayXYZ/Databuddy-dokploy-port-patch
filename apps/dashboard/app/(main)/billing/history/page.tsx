@@ -54,7 +54,6 @@ export default function HistoryPage() {
 	return (
 		<main className="min-h-0 flex-1 overflow-hidden">
 			<div className="flex h-full flex-col overflow-y-auto lg:grid lg:h-full lg:grid-cols-[1fr_20rem] lg:overflow-hidden">
-				{/* Main Content - Invoices */}
 				<div className="shrink-0 lg:h-full lg:min-h-0 lg:overflow-y-auto">
 					{sortedInvoices.length === 0 ? (
 						<EmptyState
@@ -75,7 +74,6 @@ export default function HistoryPage() {
 
 				{/* Sidebar - Subscription History + Actions */}
 				<RightSidebar>
-					{/* Subscription Changes */}
 					<div className="border-b p-5">
 						<h3 className="font-semibold">Subscription History</h3>
 						{subscriptionHistory.length === 0 ? (
@@ -91,14 +89,12 @@ export default function HistoryPage() {
 						)}
 					</div>
 
-					{/* Billing Summary */}
 					<div className="grid gap-5 p-5 sm:grid-cols-2 lg:grid-cols-1 lg:gap-0 lg:p-0">
 						<div className="w-full lg:w-auto lg:border-b lg:p-5">
 							<h3 className="mb-3 font-semibold">Billing Summary</h3>
 							<BillingSummary invoices={sortedInvoices} />
 						</div>
 
-						{/* Actions */}
 						<div className="flex w-full flex-col gap-2 lg:w-auto lg:p-5">
 							<Button className="w-full" onClick={onManageBilling}>
 								Billing Portal

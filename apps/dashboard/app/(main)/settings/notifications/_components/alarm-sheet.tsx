@@ -244,7 +244,6 @@ export function AlarmSheet({
 						onSubmit={form.handleSubmit(handleSubmit)}
 					>
 						<SheetBody className="space-y-6">
-							{/* Basics */}
 							<div className="space-y-4">
 								<FormField
 									control={form.control}
@@ -284,7 +283,6 @@ export function AlarmSheet({
 
 							<div className="h-px bg-border" />
 
-							{/* Configuration */}
 							<div className="space-y-4">
 								<FormField
 									control={form.control}
@@ -342,7 +340,6 @@ export function AlarmSheet({
 
 							<div className="h-px bg-border" />
 
-							{/* Destinations */}
 							<div className="space-y-3">
 								<div className="flex items-center justify-between">
 									<div className="space-y-1">

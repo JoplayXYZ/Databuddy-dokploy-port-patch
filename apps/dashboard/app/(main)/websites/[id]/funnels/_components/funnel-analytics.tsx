@@ -52,7 +52,6 @@ interface FunnelAnalyticsProps {
 function AnalyticsSkeleton() {
 	return (
 		<div className="space-y-6">
-			{/* Stats grid skeleton */}
 			<div className="grid grid-cols-2 gap-3 md:grid-cols-4">
 				<StatCard icon={UsersIcon} isLoading title="Users" value={0} />
 				<StatCard icon={TargetIcon} isLoading title="Conversion" value={0} />
@@ -60,7 +59,6 @@ function AnalyticsSkeleton() {
 				<StatCard icon={ClockIcon} isLoading title="Avg Time" value={0} />
 			</div>
 
-			{/* Steps skeleton */}
 			<div className="space-y-3">
 				{[1, 2, 3].map((i) => (
 					<div

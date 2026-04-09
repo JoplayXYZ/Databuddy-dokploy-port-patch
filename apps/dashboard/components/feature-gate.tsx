@@ -99,7 +99,6 @@ export function FeatureGate({
 				</CardHeader>
 
 				<CardContent className="space-y-4 p-4">
-					{/* Required plan */}
 					<div className="flex items-center justify-between rounded border bg-accent/50 px-3 py-2.5">
 						<span className="text-muted-foreground text-sm">Required plan</span>
 						<div className="flex items-center gap-1.5">
@@ -113,7 +112,6 @@ export function FeatureGate({
 						</div>
 					</div>
 
-					{/* Current plan */}
 					<div className="flex items-center justify-between rounded border px-3 py-2.5">
 						<span className="text-muted-foreground text-sm">Your plan</span>
 						<div className="flex items-center gap-1.5">
@@ -127,7 +125,6 @@ export function FeatureGate({
 						</div>
 					</div>
 
-					{/* CTA */}
 					{canUserUpgrade ? (
 						<Button asChild className="group w-full gap-2" size="lg">
 							<Link href="/billing/plans">

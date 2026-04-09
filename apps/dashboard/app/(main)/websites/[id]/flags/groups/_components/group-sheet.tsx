@@ -210,7 +210,6 @@ export function GroupSheet({
 						})}
 					>
 						<SheetBody className="space-y-6">
-							{/* Basic Info */}
 							<div className="space-y-4">
 								<FormField
 									control={form.control}
@@ -248,7 +247,6 @@ export function GroupSheet({
 									)}
 								/>
 
-								{/* Color Picker */}
 								<FormField
 									control={form.control}
 									name="color"
@@ -297,10 +295,8 @@ export function GroupSheet({
 								/>
 							</div>
 
-							{/* Separator */}
 							<div className="h-px bg-border" />
 
-							{/* Targeting Rules */}
 							<div className="space-y-3">
 								<div className="flex items-center justify-between">
 									<div>

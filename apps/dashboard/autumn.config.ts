@@ -15,7 +15,6 @@ import { feature, item, plan } from "atmn";
  * Autumn only meters what it actually bills.
  */
 
-// Analytics core ------------------------------------------------------------
 export const events = feature({
 	id: "events",
 	name: "Events",
@@ -24,14 +23,12 @@ export const events = feature({
 	eventNames: ["Events"],
 });
 
-// Team / collaboration -----------------------------------------------------
 export const sso = feature({
 	id: "sso",
 	name: "Single Sign On",
 	type: "boolean",
 });
 
-// Pulse — uptime monitoring + status pages ---------------------------------
 export const monitors = feature({
 	id: "monitors",
 	name: "Uptime Monitors",
@@ -204,7 +201,6 @@ export const webhook_alert_destinations = feature({
 	archived: true,
 });
 
-// Plans ====================================================================
 export const free = plan({
 	id: "free",
 	name: "Free",
@@ -373,7 +369,6 @@ export const sso_plan = plan({
 	],
 });
 
-// Pulse plans — uptime monitoring focused, larger monitor counts ----------
 export const pulse_hobby = plan({
 	id: "pulse_hobby",
 	name: "Pulse Hobby",

@@ -159,7 +159,6 @@ export function DataTable<TData extends { name: string | number }, TValue>({
 					className
 				)}
 			>
-				{/* Toolbar */}
 				<TableToolbar
 					borderBottom={!tabs}
 					description={description}
@@ -168,7 +167,6 @@ export function DataTable<TData extends { name: string | number }, TValue>({
 					title={title}
 				/>
 
-				{/* Tabs */}
 				{tabs && (
 					<TableTabs
 						activeTab={activeTab}

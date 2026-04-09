@@ -55,7 +55,6 @@ export function ApiKeySettings({ organization }: ApiKeySettingsProps) {
 	return (
 		<>
 			<div className="h-full lg:grid lg:grid-cols-[1fr_18rem]">
-				{/* Keys List / Empty State */}
 				<div className="flex flex-col border-b lg:border-b-0">
 					{isEmpty ? (
 						<EmptyState
@@ -79,7 +78,6 @@ export function ApiKeySettings({ organization }: ApiKeySettingsProps) {
 					)}
 				</div>
 
-				{/* Sidebar */}
 				<RightSidebar className="gap-4 p-5">
 					<Button className="w-full" onClick={() => setShowCreateDialog(true)}>
 						<PlusIcon size={16} />

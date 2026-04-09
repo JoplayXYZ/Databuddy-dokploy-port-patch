@@ -145,7 +145,6 @@ export function RetentionContent({ websiteId }: RetentionContentProps) {
 
 	return (
 		<div className="flex h-full min-h-0 flex-col gap-4">
-			{/* Stats Grid */}
 			<div className="grid shrink-0 grid-cols-2 gap-4 lg:grid-cols-4">
 				<StatCard
 					chartData={chartData.retentionRate}
@@ -197,7 +196,6 @@ export function RetentionContent({ websiteId }: RetentionContentProps) {
 				/>
 			</div>
 
-			{/* Tabs Section */}
 			<Tabs
 				className="flex min-h-0 flex-1 flex-col"
 				onValueChange={setActiveTab}

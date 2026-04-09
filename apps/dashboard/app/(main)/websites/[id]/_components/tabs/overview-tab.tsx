@@ -937,7 +937,6 @@ export function WebsiteOverviewTab({
 				websiteId={websiteId}
 			/>
 
-			{/* Tables */}
 			<div className="grid grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-2">
 				<DataTable
 					description="Referrers and campaign data"
@@ -966,7 +965,6 @@ export function WebsiteOverviewTab({
 				onAddFilterAction={onAddFilter}
 			/>
 
-			{/* Technology */}
 			<div className="grid grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-2">
 				<DataTable
 					columns={deviceColumns}

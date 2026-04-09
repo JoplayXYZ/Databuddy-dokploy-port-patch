@@ -408,7 +408,6 @@ export function StepInstallTracking({
 				</div>
 			</div>
 
-			{/* Status banner */}
 			<Card
 				className={cn(
 					"gap-0 overflow-hidden py-0",
@@ -451,7 +450,6 @@ export function StepInstallTracking({
 				</CardContent>
 			</Card>
 
-			{/* Installation tabs */}
 			<Tabs className="w-full" defaultValue="ai" variant="underline">
 				<TabsList>
 					<TabsTrigger value="ai">
@@ -583,7 +581,6 @@ export function StepInstallTracking({
 				</TabsContent>
 			</Tabs>
 
-			{/* Website ID */}
 			<div className="flex items-center gap-2">
 				<span className="text-muted-foreground text-xs">Website ID:</span>
 				<button

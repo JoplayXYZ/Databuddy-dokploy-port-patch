@@ -476,7 +476,6 @@ export function FlagSheet({
 						})}
 					>
 						<SheetBody className="space-y-6">
-							{/* Basic Info */}
 							<div className="space-y-4">
 								<div className="grid place-items-start gap-4 sm:grid-cols-2">
 									<FormField
@@ -547,10 +546,8 @@ export function FlagSheet({
 								/>
 							</div>
 
-							{/* Separator */}
 							<div className="h-px bg-border" />
 
-							{/* Type & Value */}
 							<div className="space-y-4">
 								<div className="space-y-2">
 									<div className="space-y-0.5">
@@ -805,7 +802,6 @@ export function FlagSheet({
 								</AnimatePresence>
 							</div>
 
-							{/* Status */}
 							<FormField
 								control={form.control}
 								name="flag.status"
@@ -888,10 +884,8 @@ export function FlagSheet({
 								}}
 							/>
 
-							{/* Divider */}
 							<div className="h-px bg-border" />
 
-							{/* Advanced Options */}
 							<div className="space-y-1">
 								<CollapsibleSection
 									badge={form.watch("flag.targetGroupIds")?.length ?? 0}

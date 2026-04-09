@@ -129,7 +129,6 @@ export function TransferAssets({ organizationId }: TransferAssetsProps) {
 
 	return (
 		<div className="space-y-4">
-			{/* Websites in current org */}
 			<div className="flex flex-col">
 				<div className="mb-3 flex items-center gap-2">
 					<BuildingsIcon
@@ -158,7 +157,6 @@ export function TransferAssets({ organizationId }: TransferAssetsProps) {
 				</div>
 			</div>
 
-			{/* Target org selector */}
 			{selectedWebsite && (
 				<div className="space-y-2">
 					<label className="font-medium text-sm" htmlFor="target-org">
@@ -188,7 +186,6 @@ export function TransferAssets({ organizationId }: TransferAssetsProps) {
 				</div>
 			)}
 
-			{/* Transfer button */}
 			<Button
 				className="w-full"
 				disabled={!canTransfer || isTransferring}

@@ -10,8 +10,6 @@ import { cn } from "@/lib/utils";
 import { LastChecked } from "./last-checked";
 import { MonitorRowInteractive } from "./monitor-row-interactive";
 
-// ── Root ─────────────────────────────────────────────────────────────────
-
 interface StatusRootProps {
 	children: ReactNode;
 	className?: string;
@@ -24,8 +22,6 @@ function StatusRoot({ children, className }: StatusRootProps) {
 		</div>
 	);
 }
-
-// ── Header ───────────────────────────────────────────────────────────────
 
 interface StatusHeaderProps {
 	children?: ReactNode;
@@ -86,8 +82,6 @@ function StatusHeader({
 		</div>
 	);
 }
-
-// ── Banner ───────────────────────────────────────────────────────────────
 
 const BANNER_CONFIG = {
 	operational: {
@@ -154,8 +148,6 @@ function StatusBanner({ status, className }: StatusBannerProps) {
 	);
 }
 
-// ── Section ──────────────────────────────────────────────────────────────
-
 interface StatusSectionProps {
 	action?: ReactNode;
 	children: ReactNode;
@@ -179,8 +171,6 @@ function StatusSection({
 		</div>
 	);
 }
-
-// ── Monitor card ─────────────────────────────────────────────────────────
 
 const MONITOR_STATUS = {
 	up: {
@@ -276,8 +266,6 @@ function StatusMonitorCard({
 	);
 }
 
-// ── Incidents ────────────────────────────────────────────────────────────
-
 function StatusIncidents({ className }: { className?: string }) {
 	return (
 		<div
@@ -297,8 +285,6 @@ function StatusIncidents({ className }: { className?: string }) {
 		</div>
 	);
 }
-
-// ── Compound export ──────────────────────────────────────────────────────
 
 StatusRoot.displayName = "Status";
 

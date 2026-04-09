@@ -290,7 +290,6 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
 							}
 						}}
 					>
-						{/* Search Header */}
 						<div className="dotted-bg flex items-center gap-3 border-b bg-accent px-4 py-3">
 							<div className="flex size-8 shrink-0 items-center justify-center rounded bg-background">
 								<MagnifyingGlassIcon
@@ -310,7 +309,6 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
 							</kbd>
 						</div>
 
-						{/* Results */}
 						<CommandPrimitive.List className="max-h-80 scroll-py-2 overflow-y-auto p-2">
 							<CommandPrimitive.Empty className="flex flex-col items-center justify-center gap-2 py-12 text-center">
 								<MagnifyingGlassIcon
@@ -344,7 +342,6 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
 							))}
 						</CommandPrimitive.List>
 
-						{/* Footer */}
 						<div className="flex items-center justify-between border-t bg-accent/50 px-4 py-2">
 							<div className="flex items-center gap-3">
 								<span className="flex items-center gap-1.5 text-muted-foreground text-xs">

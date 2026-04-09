@@ -87,7 +87,6 @@ export function GoalAnalytics({
 	return (
 		<div className="space-y-4">
 			<div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-				{/* Total Users */}
 				<Card className="rounded">
 					<CardContent className="p-6">
 						<div className="flex items-center gap-3">
@@ -106,7 +105,6 @@ export function GoalAnalytics({
 					</CardContent>
 				</Card>
 
-				{/* Completions */}
 				<Card className="rounded">
 					<CardContent className="p-6">
 						<div className="flex items-center gap-3">
@@ -129,7 +127,6 @@ export function GoalAnalytics({
 					</CardContent>
 				</Card>
 
-				{/* Conversion Rate */}
 				<Card className="rounded">
 					<CardContent className="p-6">
 						<div className="flex items-center gap-3">
@@ -153,7 +150,6 @@ export function GoalAnalytics({
 				</Card>
 			</div>
 
-			{/* Goal Details */}
 			<Card className="rounded">
 				<CardHeader className="pb-3">
 					<CardTitle className="text-lg">Goal Performance</CardTitle>

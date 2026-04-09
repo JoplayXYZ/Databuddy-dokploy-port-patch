@@ -164,7 +164,6 @@ export function OrganizationsList({
 
 	return (
 		<div className="h-full lg:grid lg:grid-cols-[1fr_18rem]">
-			{/* Organizations List */}
 			<div className="flex flex-col border-b lg:border-b-0">
 				<div className="flex-1 divide-y overflow-y-auto">
 					{organizations.map((org) => (
@@ -179,7 +178,6 @@ export function OrganizationsList({
 				</div>
 			</div>
 
-			{/* Sidebar */}
 			<RightSidebar className="gap-4 p-5">
 				<Button
 					className="w-full"

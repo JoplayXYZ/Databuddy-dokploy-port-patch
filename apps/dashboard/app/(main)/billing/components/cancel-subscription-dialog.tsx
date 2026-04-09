@@ -200,7 +200,6 @@ export function CancelSubscriptionDialog({
 						</DialogHeader>
 
 						<div className="space-y-2">
-							{/* End of period option */}
 							<button
 								className={`w-full rounded border p-4 text-left transition-all ${
 									selected === "end_of_period"
@@ -233,7 +232,6 @@ export function CancelSubscriptionDialog({
 								</div>
 							</button>
 
-							{/* Immediate option */}
 							<button
 								className={`w-full rounded border p-4 text-left transition-all ${
 									selected === "immediate"
@@ -262,7 +260,6 @@ export function CancelSubscriptionDialog({
 							</button>
 						</div>
 
-						{/* Warning for immediate cancellation */}
 						{selected === "immediate" && (
 							<div className="flex items-start gap-2 rounded border border-destructive/20 bg-destructive/5 p-3 text-sm">
 								<WarningCircleIcon

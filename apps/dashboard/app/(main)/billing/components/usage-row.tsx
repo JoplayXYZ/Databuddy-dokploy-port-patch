@@ -216,7 +216,6 @@ function BilledOverageRow({
 
 	return (
 		<div className="border-b p-5">
-			{/* Header */}
 			<div className="mb-4 flex items-center justify-between">
 				<div className="flex items-center gap-3">
 					<div className="flex size-10 shrink-0 items-center justify-center rounded border bg-background">
@@ -241,7 +240,6 @@ function BilledOverageRow({
 				)}
 			</div>
 
-			{/* Segmented bar */}
 			<div className="mb-3">
 				<div className="flex h-2.5 w-full overflow-hidden rounded-full bg-muted">
 					<div

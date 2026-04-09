@@ -1,7 +1,5 @@
 import { z } from "zod";
 
-// --- Time Series (line-chart, bar-chart, area-chart, stacked-bar-chart) ---
-
 export const timeSeriesSchema = z
 	.object({
 		type: z.string(),
@@ -11,8 +9,6 @@ export const timeSeriesSchema = z
 	})
 	.passthrough();
 
-// --- Distribution (pie-chart, donut-chart) ---
-
 export const distributionSchema = z
 	.object({
 		type: z.string(),
@@ -20,8 +16,6 @@ export const distributionSchema = z
 		rows: z.array(z.array(z.union([z.string(), z.number()]))),
 	})
 	.passthrough();
-
-// --- Data Table ---
 
 export const dataTableSchema = z
 	.object({
@@ -36,8 +30,6 @@ export const dataTableSchema = z
 		footer: z.string().optional(),
 	})
 	.passthrough();
-
-// --- Referrers List ---
 
 const referrerItemSchema = z
 	.object({
@@ -58,8 +50,6 @@ export const referrersListSchema = z
 	})
 	.passthrough();
 
-// --- Mini Map ---
-
 const countryItemSchema = z
 	.object({
 		name: z.string(),
@@ -77,8 +67,6 @@ export const miniMapSchema = z
 		countries: z.array(countryItemSchema),
 	})
 	.passthrough();
-
-// --- Links List ---
 
 const linkItemSchema = z
 	.object({
@@ -108,8 +96,6 @@ export const linksListSchema = z
 	})
 	.passthrough();
 
-// --- Link Preview ---
-
 export const linkPreviewSchema = z
 	.object({
 		type: z.literal("link-preview"),
@@ -129,8 +115,6 @@ export const linkPreviewSchema = z
 		message: z.string().optional(),
 	})
 	.passthrough();
-
-// --- Funnels List ---
 
 const funnelStepSchema = z
 	.object({
@@ -159,8 +143,6 @@ export const funnelsListSchema = z
 	})
 	.passthrough();
 
-// --- Funnel Preview ---
-
 export const funnelPreviewSchema = z
 	.object({
 		type: z.literal("funnel-preview"),
@@ -175,8 +157,6 @@ export const funnelPreviewSchema = z
 			.passthrough(),
 	})
 	.passthrough();
-
-// --- Goals List ---
 
 const goalItemSchema = z
 	.object({
@@ -198,8 +178,6 @@ export const goalsListSchema = z
 	})
 	.passthrough();
 
-// --- Goal Preview ---
-
 export const goalPreviewSchema = z
 	.object({
 		type: z.literal("goal-preview"),
@@ -215,8 +193,6 @@ export const goalPreviewSchema = z
 			.passthrough(),
 	})
 	.passthrough();
-
-// --- Annotations List ---
 
 const annotationItemSchema = z
 	.object({
@@ -240,8 +216,6 @@ export const annotationsListSchema = z
 	})
 	.passthrough();
 
-// --- Annotation Preview ---
-
 export const annotationPreviewSchema = z
 	.object({
 		type: z.literal("annotation-preview"),
@@ -259,8 +233,6 @@ export const annotationPreviewSchema = z
 			.passthrough(),
 	})
 	.passthrough();
-
-// --- Component Schema Map ---
 
 export const componentSchemaMap: Record<string, z.ZodTypeAny> = {
 	"line-chart": timeSeriesSchema,
@@ -281,8 +253,6 @@ export const componentSchemaMap: Record<string, z.ZodTypeAny> = {
 	"annotations-list": annotationsListSchema,
 	"annotation-preview": annotationPreviewSchema,
 };
-
-// --- Validation Helper ---
 
 export function validateComponentJSON(input: unknown): {
 	valid: boolean;

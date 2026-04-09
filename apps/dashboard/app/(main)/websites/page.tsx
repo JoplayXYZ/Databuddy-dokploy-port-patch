@@ -68,7 +68,6 @@ export default function WebsitesPage() {
 
 	return (
 		<div className="flex h-full flex-col">
-			{/* Enhanced header */}
 			<PageHeader
 				description="Track analytics for all your websites"
 				icon={<TrendUpIcon />}
@@ -110,7 +109,6 @@ export default function WebsitesPage() {
 				title="Websites"
 			/>
 
-			{/* Content area */}
 			<div
 				aria-busy={isFetching}
 				className="flex-1 overflow-y-auto p-3 sm:p-4 lg:p-6"
@@ -131,7 +129,6 @@ export default function WebsitesPage() {
 					/>
 				)}
 
-				{/* Show empty state */}
 				{!(isLoading || isError) && websites && websites.length === 0 && (
 					<EmptyState
 						action={{
@@ -146,7 +143,6 @@ export default function WebsitesPage() {
 					/>
 				)}
 
-				{/* Show website grid */}
 				{!(isLoading || isError) && websites && websites.length > 0 && (
 					<div
 						aria-live="polite"
@@ -165,7 +161,6 @@ export default function WebsitesPage() {
 				)}
 			</div>
 
-			{/* Website Dialog */}
 			<WebsiteDialog onOpenChange={setDialogOpen} open={dialogOpen} />
 		</div>
 	);

@@ -30,7 +30,6 @@ export function ApiKeyRow({ apiKey, onSelect }: ApiKeyRowProps) {
 			onClick={onSelect}
 			type="button"
 		>
-			{/* Icon */}
 			<div
 				className={cn(
 					"flex size-10 items-center justify-center rounded border bg-background",
@@ -54,7 +53,6 @@ export function ApiKeyRow({ apiKey, onSelect }: ApiKeyRowProps) {
 				)}
 			</div>
 
-			{/* Info */}
 			<div className="min-w-0">
 				<div className="flex items-center gap-2">
 					<span
@@ -83,7 +81,6 @@ export function ApiKeyRow({ apiKey, onSelect }: ApiKeyRowProps) {
 				</div>
 			</div>
 
-			{/* Status */}
 			{isActive ? (
 				<Badge variant="green">
 					<div className="mr-1.5 size-1.5 rounded-full bg-green-600 dark:bg-green-400" />
@@ -93,7 +90,6 @@ export function ApiKeyRow({ apiKey, onSelect }: ApiKeyRowProps) {
 				<Badge variant="gray">{isRevoked ? "Revoked" : "Disabled"}</Badge>
 			)}
 
-			{/* Arrow */}
 			<CaretRightIcon
 				className={cn(
 					"text-muted-foreground/40 transition-all",

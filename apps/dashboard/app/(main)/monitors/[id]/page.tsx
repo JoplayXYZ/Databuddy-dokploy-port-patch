@@ -219,8 +219,6 @@ export default function MonitorDetailsPage() {
 		...orpc.uptime.transfer.mutationOptions(),
 	});
 
-	// --- Recent checks (paginated) ---
-
 	const uptimeQueries = useMemo(
 		() => [
 			{
@@ -259,8 +257,6 @@ export default function MonitorDetailsPage() {
 		allRecentChecks.length === 0 &&
 		(isPendingUptimeChecks || isFetchingUptimeChecks);
 
-	// --- Heatmap ---
-
 	const heatmapDateRange = useMemo(
 		() => ({
 			start_date: localDayjs()
@@ -294,8 +290,6 @@ export default function MonitorDetailsPage() {
 
 	const heatmapData =
 		getHeatmapData("uptime-heatmap", "uptime_time_series") || [];
-
-	// --- Latency chart ---
 
 	const latencyDateRange = useMemo(() => {
 		const days = localDayjs(dateRange.end_date).diff(
@@ -332,8 +326,6 @@ export default function MonitorDetailsPage() {
 		"uptime-latency",
 		"uptime_response_time_trends"
 	);
-
-	// --- Pagination: reset when filters change (render-time pattern) ---
 
 	const paginationResetKey = `${dateRange.start_date}-${dateRange.end_date}-${scheduleId}`;
 	const [prevResetKey, setPrevResetKey] = useState(paginationResetKey);
@@ -403,8 +395,6 @@ export default function MonitorDetailsPage() {
 			return merged;
 		});
 	}, [pageRecentChecks, recentChecksPage]);
-
-	// --- Handlers ---
 
 	const handleEditMonitor = () => {
 		if (!schedule) {

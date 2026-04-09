@@ -332,7 +332,6 @@ export function EditFunnelDialog({
 				</SheetHeader>
 
 				<SheetBody className="space-y-6">
-					{/* Basic Info */}
 					<div className="grid gap-4 sm:grid-cols-2">
 						<div className="space-y-2">
 							<Label htmlFor="funnel-name">Name</Label>
@@ -362,7 +361,6 @@ export function EditFunnelDialog({
 						</div>
 					</div>
 
-					{/* Steps Section */}
 					<section className="space-y-3">
 						<div className="flex items-center justify-between">
 							<Label className="text-muted-foreground text-xs">
@@ -400,7 +398,6 @@ export function EditFunnelDialog({
 																"border-primary shadow-lg ring-2 ring-primary/20"
 														)}
 													>
-														{/* Drag handle */}
 														<div
 															{...provided.dragHandleProps}
 															className="cursor-grab text-muted-foreground hover:text-foreground active:cursor-grabbing"
@@ -408,12 +405,10 @@ export function EditFunnelDialog({
 															<DotsNineIcon size={16} />
 														</div>
 
-														{/* Step number */}
 														<div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-accent-foreground font-semibold text-accent text-xs">
 															{index + 1}
 														</div>
 
-														{/* Step fields */}
 														<div className="grid flex-1 grid-cols-3 gap-2">
 															<Select
 																onValueChange={(value) =>
@@ -458,7 +453,6 @@ export function EditFunnelDialog({
 															/>
 														</div>
 
-														{/* Remove button */}
 														{formData.steps.length > 2 && (
 															<Button
 																className="size-6 shrink-0 p-0 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
@@ -491,7 +485,6 @@ export function EditFunnelDialog({
 						</Button>
 					</section>
 
-					{/* Settings Section */}
 					<section className="space-y-3">
 						<Label className="text-muted-foreground text-xs">Settings</Label>
 						<div className="flex items-center justify-between rounded border bg-card p-3">
@@ -518,7 +511,6 @@ export function EditFunnelDialog({
 						</div>
 					</section>
 
-					{/* Filters Section */}
 					<section className="space-y-3">
 						<Label className="text-muted-foreground text-xs">
 							Filters (Optional)

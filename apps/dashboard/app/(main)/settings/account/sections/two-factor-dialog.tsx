@@ -63,7 +63,6 @@ export function TwoFactorDialog({
 	hasCredentialAccount,
 	onSuccess,
 }: TwoFactorDialogProps) {
-	// Determine initial step based on current state
 	const initialStep = useMemo((): TwoFactorStep => {
 		if (isEnabled) {
 			return "manage";
@@ -85,7 +84,6 @@ export function TwoFactorDialog({
 	const [showSecret, setShowSecret] = useState(false);
 	const [copiedBackup, setCopiedBackup] = useState(false);
 
-	// Reset state when dialog closes
 	useEffect(() => {
 		if (!open) {
 			setStep(initialStep);
@@ -101,12 +99,10 @@ export function TwoFactorDialog({
 		}
 	}, [open, initialStep]);
 
-	// Password validation
 	const isNewPasswordValid =
 		newPassword.length >= MIN_PASSWORD_LENGTH &&
 		newPassword === confirmPassword;
 
-	// Set password mutation for OAuth users
 	const setPasswordMutation = useMutation({
 		mutationFn: async () => {
 			if (newPassword !== confirmPassword) {
@@ -117,7 +113,6 @@ export function TwoFactorDialog({
 					`Password must be at least ${MIN_PASSWORD_LENGTH} characters`
 				);
 			}
-			// Double-check: shouldn't reach here if user already has credentials
 			if (hasCredentialAccount) {
 				throw new Error(
 					"You already have a password. Use change password instead."
@@ -137,7 +132,6 @@ export function TwoFactorDialog({
 		},
 	});
 
-	// Enable 2FA mutation
 	const enableMutation = useMutation({
 		mutationFn: async () => {
 			const result = await authClient.twoFactor.enable({ password });
@@ -158,7 +152,6 @@ export function TwoFactorDialog({
 		},
 	});
 
-	// Verify TOTP mutation
 	const verifyMutation = useMutation({
 		mutationFn: async () => {
 			const result = await authClient.twoFactor.verifyTotp({
@@ -176,7 +169,6 @@ export function TwoFactorDialog({
 		},
 	});
 
-	// Disable 2FA mutation
 	const disableMutation = useMutation({
 		mutationFn: async () => {
 			const result = await authClient.twoFactor.disable({ password });
@@ -192,7 +184,6 @@ export function TwoFactorDialog({
 		},
 	});
 
-	// Generate new backup codes mutation
 	const regenerateBackupMutation = useMutation({
 		mutationFn: async () => {
 			const result = await authClient.twoFactor.generateBackupCodes({
@@ -363,7 +354,6 @@ export function TwoFactorDialog({
 										</div>
 									</div>
 
-									{/* Manual entry toggle */}
 									<div className="space-y-2">
 										<button
 											className="flex w-full items-center gap-2 text-left text-xs"

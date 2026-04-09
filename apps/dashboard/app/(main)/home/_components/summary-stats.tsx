@@ -88,7 +88,6 @@ export function SummaryStats({
 
 	return (
 		<div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-			{/* Active Users */}
 			<Card className="group gap-0 overflow-hidden border bg-card py-0 transition-colors hover:border-primary/60">
 				<CardHeader className="dotted-bg relative gap-0! border-b bg-accent px-0 pt-4 pb-0!">
 					<div className="flex h-16 items-center justify-center">
@@ -123,7 +122,6 @@ export function SummaryStats({
 				</CardContent>
 			</Card>
 
-			{/* Total Views */}
 			<Card className="group gap-0 overflow-hidden border bg-card py-0 transition-colors hover:border-primary/60">
 				<CardHeader className="dotted-bg relative gap-0! border-b bg-accent px-0 pt-4 pb-0!">
 					<div className="flex h-16 items-center justify-center">
@@ -174,7 +172,6 @@ export function SummaryStats({
 				</CardContent>
 			</Card>
 
-			{/* Websites */}
 			<Link className="group block" href="/websites">
 				<Card className="h-full gap-0 overflow-hidden border bg-card py-0 transition-colors group-hover:border-primary/60">
 					<CardHeader className="dotted-bg relative gap-0! border-b bg-accent px-0 pt-4 pb-0!">
@@ -214,7 +211,6 @@ export function SummaryStats({
 				</Card>
 			</Link>
 
-			{/* Pulse Status */}
 			{hasPulseAccess ? (
 				<Link className="group block" href="/monitors">
 					<Card className="h-full gap-0 overflow-hidden border bg-card py-0 transition-colors group-hover:border-primary/60">

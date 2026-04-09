@@ -35,8 +35,6 @@ export interface ParsedSegments {
 	segments: ContentSegment[];
 }
 
-// Chart types
-
 export interface ChartComponentProps extends BaseComponentProps {
 	title?: string;
 }
@@ -53,8 +51,6 @@ export interface DistributionInput {
 	title?: string;
 	type: string;
 }
-
-// Links types
 
 export interface LinksListInput {
 	baseUrl?: string;
@@ -94,8 +90,6 @@ export interface LinkPreviewInput {
 	type: "link-preview";
 }
 
-// Funnels types
-
 export interface FunnelStepInput {
 	name: string;
 	target: string;
@@ -126,8 +120,6 @@ export interface FunnelPreviewInput {
 	type: "funnel-preview";
 }
 
-// Goals types
-
 export interface GoalsListInput {
 	goals: Array<{
 		id: string;
@@ -153,8 +145,6 @@ export interface GoalPreviewInput {
 	mode: "create" | "update" | "delete";
 	type: "goal-preview";
 }
-
-// Annotations types
 
 export interface AnnotationsListInput {
 	annotations: Array<{
@@ -186,8 +176,6 @@ export interface AnnotationPreviewInput {
 	type: "annotation-preview";
 }
 
-// Data Table types
-
 export interface DataTableInput {
 	align?: ("left" | "center" | "right")[];
 	columns: string[];
@@ -197,8 +185,6 @@ export interface DataTableInput {
 	title?: string;
 	type: "data-table";
 }
-
-// Referrers List types
 
 export interface ReferrerItem {
 	domain?: string;
@@ -214,8 +200,6 @@ export interface ReferrersListInput {
 	title?: string;
 	type: "referrers-list";
 }
-
-// Mini Map types
 
 export interface CountryItem {
 	country_code?: string;

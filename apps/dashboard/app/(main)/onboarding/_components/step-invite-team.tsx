@@ -102,7 +102,6 @@ export function StepInviteTeam() {
 				</div>
 			</div>
 
-			{/* Invite form */}
 			<Form {...form}>
 				<form className="flex gap-2" onSubmit={form.handleSubmit(handleSubmit)}>
 					<FormField
@@ -157,7 +156,6 @@ export function StepInviteTeam() {
 				</form>
 			</Form>
 
-			{/* Sent invites */}
 			{sentInvites.length > 0 && (
 				<div className="space-y-2">
 					<p className="font-medium text-muted-foreground text-xs">

@@ -115,7 +115,6 @@ export function FunnelFlow({ steps }: FunnelFlowProps) {
 
 				return (
 					<div key={step.step_number}>
-						{/* Drop-off connector */}
 						{index !== 0 && (
 							<div className="flex items-center justify-center gap-3 border-y bg-secondary/50 py-2">
 								<div className="flex items-center gap-1.5 text-xs">
@@ -138,9 +137,7 @@ export function FunnelFlow({ steps }: FunnelFlowProps) {
 							</div>
 						)}
 
-						{/* Step card */}
 						<div className="flex items-center gap-4 p-4">
-							{/* Step number badge */}
 							<div
 								className={cn(
 									"flex size-10 shrink-0 items-center justify-center rounded-full font-semibold text-sm",
@@ -156,7 +153,6 @@ export function FunnelFlow({ steps }: FunnelFlowProps) {
 								)}
 							</div>
 
-							{/* Step content */}
 							<div className="min-w-0 flex-1">
 								<div className="mb-2 flex items-baseline justify-between gap-2">
 									<div className="flex items-center gap-2">
@@ -220,11 +216,9 @@ export function FunnelFlow({ steps }: FunnelFlowProps) {
 									</span>
 								</div>
 
-								{/* Line progress */}
 								<LineProgress isLast={isLast} percentage={totalConversion} />
 							</div>
 
-							{/* Conversion percentage */}
 							<div
 								className={cn(
 									"w-16 shrink-0 text-right font-bold text-lg tabular-nums",
@@ -238,7 +232,6 @@ export function FunnelFlow({ steps }: FunnelFlowProps) {
 				);
 			})}
 
-			{/* Summary footer */}
 			{lastStep && steps.length > 1 && (
 				<div className="flex items-center justify-between border-border border-t bg-secondary/50 px-4 py-3">
 					<span className="text-muted-foreground text-sm">

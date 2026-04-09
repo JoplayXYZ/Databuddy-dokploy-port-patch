@@ -49,7 +49,6 @@ export function ClosableAlert({
 				className
 			)}
 		>
-			{/* Header - always visible */}
 			<div className="flex items-center justify-between p-3">
 				<div className="flex min-w-0 flex-1 items-center gap-2">
 					<Icon
@@ -94,7 +93,6 @@ export function ClosableAlert({
 				</div>
 			</div>
 
-			{/* Expandable content */}
 			{isExpanded && (
 				<div className="border-border/50 border-t px-3 pb-3">
 					<div className="space-y-2 pt-3">

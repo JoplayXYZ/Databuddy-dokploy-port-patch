@@ -13,10 +13,6 @@ const DANGLING_KEY_TEST_RE = /,\s*"[^"]*"\s*$/;
 const DANGLING_KV_TEST_RE = /,\s*"[^"]*"\s*:\s*$/;
 const DANGLING_KV_REPLACE_RE = /,\s*"[^"]*"(\s*:\s*[^,}\]]*?)?\s*$/;
 
-/**
- * Type guard to validate raw component input structure.
- * Uses Zod schemas to validate data shape beyond just checking the type exists.
- */
 function isRawComponentInput(obj: unknown): obj is RawComponentInput {
 	if (typeof obj !== "object" || obj === null) {
 		return false;
@@ -29,20 +25,14 @@ function isRawComponentInput(obj: unknown): obj is RawComponentInput {
 	return valid;
 }
 
-/**
- * Attempt to close all open JSON structures in a truncated string.
- * Returns a parseable JSON string, or null if the input is too incomplete.
- */
 export function repairPartialJSON(input: string): string | null {
 	if (input.length < 10) {
 		return null;
 	}
 
 	let result = input;
-	// Remove trailing comma before we close structures
 	result = result.replace(TRAILING_COMMA_RE, "");
 
-	// Track open structures
 	let inString = false;
 	let escaped = false;
 	const stack: string[] = [];
@@ -80,19 +70,15 @@ export function repairPartialJSON(input: string): string | null {
 		}
 	}
 
-	// Close unclosed string
 	if (inString) {
 		result += '"';
 	}
 
-	// Drop incomplete key-value pair at the end of an object
+	// Drop dangling key-value pair before the current open object closes.
 	// e.g. {"type":"line-chart","tit  ->  {"type":"line-chart"
-	// After closing the string, check if the last token is a dangling key
 	const lastBrace = result.lastIndexOf("{");
 	if (stack.length > 0 && stack.at(-1) === "}") {
-		// Only clean dangling KV in the current object level
 		const afterLastBrace = result.slice(lastBrace);
-		// Check for incomplete value after colon
 		if (
 			DANGLING_KEY_TEST_RE.test(afterLastBrace) ||
 			DANGLING_KV_TEST_RE.test(afterLastBrace)
@@ -101,15 +87,13 @@ export function repairPartialJSON(input: string): string | null {
 		}
 	}
 
-	// Remove trailing commas again (may have been exposed by string closing)
+	// Trailing commas may have been exposed by closing an unterminated string.
 	result = result.replace(TRAILING_COMMA_RE, "");
 
-	// Close all open structures in reverse order
 	while (stack.length > 0) {
 		result += stack.pop();
 	}
 
-	// Validate the repair produced valid JSON
 	try {
 		JSON.parse(result);
 		return result;
@@ -118,10 +102,6 @@ export function repairPartialJSON(input: string): string | null {
 	}
 }
 
-/**
- * Parse content into ordered segments of text and components.
- * Components are rendered in the order they appear in the content.
- */
 export function parseContentSegments(content: string): ParsedSegments {
 	const segments: ContentSegment[] = [];
 	let searchIndex = 0;
@@ -130,7 +110,6 @@ export function parseContentSegments(content: string): ParsedSegments {
 		const startIndex = content.indexOf(COMPONENT_START, searchIndex);
 
 		if (startIndex === -1) {
-			// No more components, add remaining text
 			const remainingText = content.slice(searchIndex).trim();
 			if (remainingText) {
 				segments.push({ type: "text", content: remainingText });
@@ -138,13 +117,11 @@ export function parseContentSegments(content: string): ParsedSegments {
 			break;
 		}
 
-		// Add text before the component
 		const textBefore = content.slice(searchIndex, startIndex).trim();
 		if (textBefore) {
 			segments.push({ type: "text", content: textBefore });
 		}
 
-		// Find matching closing brace
 		let braceCount = 0;
 		let endIndex = -1;
 		for (let i = startIndex; i < content.length; i++) {
@@ -160,9 +137,8 @@ export function parseContentSegments(content: string): ParsedSegments {
 		}
 
 		if (endIndex === -1) {
-			// JSON is still streaming. The text before the JSON was already
-			// pushed as a segment above (line 129-131). Just attempt repair
-			// on the partial JSON — never show raw JSON to the user.
+			// JSON is still streaming — attempt repair and render a streaming-component
+			// segment. Partial or invalid JSON is silently hidden; never leaked as text.
 			const partialJson = content.slice(startIndex);
 			const repaired = repairPartialJSON(partialJson);
 
@@ -176,14 +152,8 @@ export function parseContentSegments(content: string): ParsedSegments {
 							content: record as RawComponentInput,
 						});
 					}
-					// If type is unknown, the partial JSON is silently hidden
-					// (no text segment for raw JSON). It will render once complete.
-				} catch {
-					// Repair produced invalid JSON — still hidden from text
-				}
+				} catch {}
 			}
-			// If repair failed entirely, the partial JSON is still hidden.
-			// The user sees only the text before it.
 			break;
 		}
 
@@ -195,18 +165,15 @@ export function parseContentSegments(content: string): ParsedSegments {
 				searchIndex = endIndex + 1;
 				continue;
 			}
-			// Valid JSON with a known type but failed schema validation.
-			// Skip past it silently rather than dumping raw JSON as text.
+			// Valid JSON with a known component type but failed schema validation —
+			// skip past it silently rather than dumping raw JSON as text.
 			const record = parsed as Record<string, unknown>;
 			if (typeof record.type === "string" && hasComponent(record.type)) {
 				searchIndex = endIndex + 1;
 				continue;
 			}
-		} catch {
-			// Invalid JSON, skip
-		}
+		} catch {}
 
-		// Not a valid component, continue searching
 		searchIndex = startIndex + COMPONENT_START.length;
 	}
 

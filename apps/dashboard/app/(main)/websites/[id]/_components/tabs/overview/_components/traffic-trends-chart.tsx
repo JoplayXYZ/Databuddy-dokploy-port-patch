@@ -528,7 +528,6 @@ export function TrafficTrendsRechartsPlot({
 							</div>
 						)}
 
-						{/* Drag instruction pill */}
 						{mergedFeatures.rangeSelection &&
 							refAreaLeft !== null &&
 							refAreaRight === null && (
@@ -539,7 +538,6 @@ export function TrafficTrendsRechartsPlot({
 								</div>
 							)}
 
-						{/* Onboarding tip */}
 						{mergedFeatures.annotations &&
 							mergedFeatures.rangeSelection &&
 							!refAreaLeft &&
@@ -874,7 +872,6 @@ export function TrafficTrendsRechartsPlot({
 					</div>
 				</div>
 
-				{/* Range Selection Popup */}
 				{mergedFeatures.rangeSelection &&
 					showRangePopup === true &&
 					selectedDateRange !== null && (

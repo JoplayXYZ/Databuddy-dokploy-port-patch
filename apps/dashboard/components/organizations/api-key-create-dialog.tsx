@@ -246,7 +246,6 @@ export function ApiKeyCreateDialog({
 					onSubmit={onSubmit}
 				>
 					<SheetBody className="space-y-6">
-						{/* Name Section */}
 						<section className="space-y-3">
 							<Label className="font-medium" htmlFor="name">
 								Key Name
@@ -299,7 +298,6 @@ export function ApiKeyCreateDialog({
 							</div>
 						</section>
 
-						{/* Website-Specific Permissions */}
 						{websites && websites.length > 0 && (
 							<section className="space-y-3">
 								<Label className="font-medium">
@@ -338,7 +336,6 @@ export function ApiKeyCreateDialog({
 									</Button>
 								</div>
 
-								{/* Website Access List */}
 								{websiteAccess.length > 0 && (
 									<div className="space-y-3">
 										{websiteAccess.map((entry) => {

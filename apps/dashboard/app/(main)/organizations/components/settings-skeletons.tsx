@@ -1,11 +1,6 @@
 import { RightSidebar } from "@/components/right-sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
 
-/**
- * Shell that matches the `h-full lg:grid lg:grid-cols-[1fr_18rem]` layout
- * used by every settings page. Content is slotted on the left; the right
- * sidebar is the shared `RightSidebar.Skeleton`.
- */
 function SettingsShell({ children }: { children: React.ReactNode }) {
 	return (
 		<div className="h-full lg:grid lg:grid-cols-[1fr_18rem]">
@@ -14,8 +9,6 @@ function SettingsShell({ children }: { children: React.ReactNode }) {
 		</div>
 	);
 }
-
-// ───── Members list (avatar rows) ─────
 
 function MemberRowSkeleton() {
 	return (
@@ -43,8 +36,6 @@ export function MembersSkeleton() {
 		</SettingsShell>
 	);
 }
-
-// ───── Invitations list (avatar rows, 3 cols) ─────
 
 function InvitationRowSkeleton() {
 	return (
@@ -76,8 +67,6 @@ export function InvitationsSkeleton() {
 	);
 }
 
-// ───── Members page (outer Tabs wrapper) ─────
-
 export function MembersPageSkeleton() {
 	return (
 		<div className="flex h-full flex-col">
@@ -91,8 +80,6 @@ export function MembersPageSkeleton() {
 		</div>
 	);
 }
-
-// ───── API Keys list (icon rows) ─────
 
 function ApiKeyRowSkeleton() {
 	return (
@@ -123,13 +110,10 @@ export function ApiKeysSkeleton() {
 	);
 }
 
-// ───── General settings (avatar + details + websites list) ─────
-
 export function GeneralSettingsSkeleton() {
 	return (
 		<SettingsShell>
 			<div className="flex-1 overflow-y-auto">
-				{/* Avatar section */}
 				<section className="space-y-4 border-b px-5 py-6">
 					<div className="space-y-1.5">
 						<Skeleton className="h-4 w-44" />
@@ -141,13 +125,11 @@ export function GeneralSettingsSkeleton() {
 					</div>
 				</section>
 
-				{/* Organization Details section */}
 				<section className="space-y-4 border-b px-5 py-6">
 					<div className="space-y-1.5">
 						<Skeleton className="h-4 w-48" />
 						<Skeleton className="h-3 w-80" />
 					</div>
-					{/* Org ID row */}
 					<div className="flex items-center justify-between gap-3">
 						<div className="min-w-0 flex-1 space-y-2">
 							<Skeleton className="h-3.5 w-32" />
@@ -170,7 +152,6 @@ export function GeneralSettingsSkeleton() {
 					</div>
 				</section>
 
-				{/* Websites list section */}
 				<section className="border-b px-5 py-6">
 					<div className="mb-4 flex items-start justify-between gap-4">
 						<div className="space-y-1.5">
@@ -200,13 +181,10 @@ export function GeneralSettingsSkeleton() {
 	);
 }
 
-// ───── Danger zone (transfer + destruct sections) ─────
-
 export function DangerZoneSkeleton() {
 	return (
 		<SettingsShell>
 			<div className="flex flex-col gap-6 p-5">
-				{/* Transfer Assets section */}
 				<section className="space-y-4">
 					<div className="space-y-1.5">
 						<Skeleton className="h-4 w-36" />
@@ -216,7 +194,6 @@ export function DangerZoneSkeleton() {
 					<Skeleton className="h-40 w-full rounded" />
 				</section>
 
-				{/* Destructive action section */}
 				<section className="mt-auto rounded border border-destructive/20 bg-destructive/5 p-4">
 					<div className="flex items-center justify-between gap-4">
 						<div className="space-y-1.5">
@@ -230,8 +207,6 @@ export function DangerZoneSkeleton() {
 		</SettingsShell>
 	);
 }
-
-// ───── Organizations list (top-level /organizations page) ─────
 
 function OrgListRowSkeleton() {
 	return (

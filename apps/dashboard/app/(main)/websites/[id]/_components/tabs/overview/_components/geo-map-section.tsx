@@ -85,7 +85,6 @@ export function GeoMapSection({ countries, isLoading }: GeoMapSectionProps) {
 
 	return (
 		<div className="w-full overflow-hidden rounded border bg-card backdrop-blur-sm">
-			{/* Toolbar */}
 			<div className="px-3 pt-3 pb-2">
 				<div className="flex flex-col items-center justify-between gap-3 sm:flex-row">
 					<div className="min-w-0 flex-1">
@@ -99,7 +98,6 @@ export function GeoMapSection({ countries, isLoading }: GeoMapSectionProps) {
 				</div>
 			</div>
 
-			{/* Content */}
 			<div
 				className="relative flex flex-col lg:flex-row"
 				style={{ minHeight: 350 }}

@@ -55,7 +55,6 @@ export const METRIC_COLORS = {
 		"#fee2e2",
 		"from-red-500/20 to-red-600/5"
 	),
-	// Core Web Vitals
 	avg_fcp: createColorSet(
 		"#06b6d4",
 		"#0891b2",
@@ -116,7 +115,6 @@ export const METRIC_COLORS = {
 		"#ffe4e6",
 		"from-rose-500/20 to-rose-600/5"
 	),
-	// Load time metrics
 	avg_load_time: createColorSet(
 		"#3b82f6",
 		"#1d4ed8",
@@ -133,14 +131,11 @@ export const METRIC_COLORS = {
 
 export interface ChartDataRow {
 	avg_cls?: number;
-	// Core Web Vitals
 	avg_fcp?: number;
 	avg_fid?: number;
 	avg_inp?: number;
 	avg_lcp?: number;
-	// Load time metrics
 	avg_load_time?: number;
-	// TTFB metrics
 	avg_ttfb?: number;
 	bounce_rate?: number;
 	date: string;
@@ -173,7 +168,6 @@ export interface MetricConfig {
 	yAxisId: string;
 }
 
-// Utility functions
 export const formatPerformanceTime = (value: number): string => {
 	if (!value || value === 0) {
 		return "N/A";
@@ -242,7 +236,6 @@ export const ANALYTICS_METRICS: MetricConfig[] = [
 ];
 
 export const PERFORMANCE_METRICS: MetricConfig[] = [
-	// Load time metrics
 	createMetric(
 		"avg_load_time",
 		"Avg Load Time",
@@ -262,7 +255,6 @@ export const PERFORMANCE_METRICS: MetricConfig[] = [
 ];
 
 export const CORE_WEB_VITALS_METRICS: MetricConfig[] = [
-	// FCP metrics
 	createMetric(
 		"avg_fcp",
 		"FCP (Avg)",
@@ -279,7 +271,6 @@ export const CORE_WEB_VITALS_METRICS: MetricConfig[] = [
 		formatPerformanceTime,
 		"core_web_vitals"
 	),
-	// LCP metrics
 	createMetric(
 		"avg_lcp",
 		"LCP (Avg)",
@@ -296,7 +287,6 @@ export const CORE_WEB_VITALS_METRICS: MetricConfig[] = [
 		formatPerformanceTime,
 		"core_web_vitals"
 	),
-	// CLS metrics
 	createMetric(
 		"avg_cls",
 		"CLS (Avg)",
@@ -313,7 +303,6 @@ export const CORE_WEB_VITALS_METRICS: MetricConfig[] = [
 		formatCLS,
 		"core_web_vitals"
 	),
-	// FID metrics
 	createMetric(
 		"avg_fid",
 		"FID (Avg)",
@@ -330,7 +319,6 @@ export const CORE_WEB_VITALS_METRICS: MetricConfig[] = [
 		formatPerformanceTime,
 		"core_web_vitals"
 	),
-	// INP metrics
 	createMetric(
 		"avg_inp",
 		"INP (Avg)",
@@ -349,7 +337,6 @@ export const CORE_WEB_VITALS_METRICS: MetricConfig[] = [
 	),
 ];
 
-// Error metrics
 export const ERROR_METRICS: MetricConfig[] = [
 	createMetric("total_errors", "Total Errors", "bounce_rate", Bug, (value) =>
 		formatLocaleNumber(value)

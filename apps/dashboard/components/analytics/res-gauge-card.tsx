@@ -202,7 +202,6 @@ export const RESGaugeCard = memo(function RESGaugeCard({
 			)}
 		>
 			<CardContent className="flex items-stretch gap-4 p-4">
-				{/* Gauge */}
 				<div className="flex shrink-0 flex-col items-center justify-center">
 					<GaugeChart
 						formatValue={(v) => String(Math.round(v))}
@@ -232,7 +231,6 @@ export const RESGaugeCard = memo(function RESGaugeCard({
 					)}
 				</div>
 
-				{/* Content */}
 				<div className="flex flex-1 flex-col justify-center">
 					<div className="flex items-center gap-2">
 						{statusConfig && (
@@ -283,7 +281,6 @@ export const RESGaugeCard = memo(function RESGaugeCard({
 						</div>
 					</div>
 
-					{/* Metric breakdown */}
 					<div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-0.5">
 						{res.metrics.map((metric) => (
 							<MetricBreakdownItem data={metric} key={metric.metric} />
@@ -291,7 +288,6 @@ export const RESGaugeCard = memo(function RESGaugeCard({
 					</div>
 				</div>
 
-				{/* Percentile selector */}
 				{percentileOptions && onPercentileChangeAction && (
 					<div className="flex shrink-0 flex-col justify-center gap-1.5 border-l pl-4">
 						<span className="text-muted-foreground text-xs">Percentile</span>

@@ -77,7 +77,6 @@ export function MembersView({
 	return (
 		<>
 			<div className="h-full lg:grid lg:grid-cols-[1fr_18rem]">
-				{/* Members List */}
 				<div className="flex flex-col border-b lg:border-b-0">
 					<div className="flex-1 divide-y overflow-y-auto">
 						<MemberList

@@ -147,7 +147,6 @@ export function GroupSelector({
 
 	return (
 		<div className="space-y-3">
-			{/* Selected groups pills */}
 			{selectedGroupObjects.length > 0 && (
 				<div className="flex flex-wrap gap-2">
 					<AnimatePresence mode="popLayout">
@@ -162,7 +161,6 @@ export function GroupSelector({
 				</div>
 			)}
 
-			{/* Add group button */}
 			<Popover onOpenChange={setIsOpen} open={isOpen}>
 				<PopoverTrigger asChild>
 					<Button

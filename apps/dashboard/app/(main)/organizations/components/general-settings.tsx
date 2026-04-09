@@ -80,10 +80,8 @@ export function GeneralSettings({
 
 	return (
 		<div className="h-full lg:grid lg:grid-cols-[1fr_18rem]">
-			{/* Main Content */}
 			<div className="flex flex-col border-b lg:border-b-0">
 				<div className="flex-1 overflow-y-auto">
-					{/* Avatar Section */}
 					<section className="border-b px-5 py-6">
 						<div className="mb-4">
 							<h3 className="font-semibold text-sm">Organization Avatar</h3>
@@ -94,7 +92,6 @@ export function GeneralSettings({
 						<OrganizationAvatarEditor organization={organization} />
 					</section>
 
-					{/* Organization Details */}
 					<section className="border-b px-5 py-6">
 						<div className="mb-4">
 							<h3 className="font-semibold text-sm">Organization Details</h3>
@@ -102,7 +99,6 @@ export function GeneralSettings({
 								Manage your organization's basic information and identifier
 							</p>
 						</div>
-						{/* Organization ID */}
 						<div className="mb-4 flex items-center justify-between gap-3">
 							<div className="min-w-0 flex-1">
 								<Label className="block font-medium text-sm">
@@ -166,7 +162,6 @@ export function GeneralSettings({
 					<WorkspaceWebsitesSection organization={organization} />
 				</div>
 
-				{/* Save Footer */}
 				{hasChanges && (
 					<div className="angled-rectangle-gradient flex shrink-0 items-center justify-between border-t bg-secondary px-5 py-4">
 						<p className="text-muted-foreground text-sm">
@@ -189,7 +184,6 @@ export function GeneralSettings({
 				)}
 			</div>
 
-			{/* Sidebar */}
 			<RightSidebar className="gap-4 p-5">
 				<RightSidebar.InfoCard
 					description={`/${organization.slug}`}

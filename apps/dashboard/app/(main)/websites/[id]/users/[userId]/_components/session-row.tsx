@@ -120,7 +120,6 @@ function SessionRowInternal({
 						isExpanded ? "bg-accent/30" : ""
 					}`}
 				>
-					{/* Expand Icon */}
 					<div className="flex justify-center text-muted-foreground">
 						{isExpanded ? (
 							<CaretDownIcon className="size-3.5" />
@@ -129,10 +128,8 @@ function SessionRowInternal({
 						)}
 					</div>
 
-					{/* Session Name */}
 					<span className="truncate font-medium">{sessionDisplayName}</span>
 
-					{/* Location */}
 					<div className="flex items-center gap-1.5 overflow-hidden">
 						<CountryFlag country={session.country_code || ""} size="sm" />
 						<span className="truncate">
@@ -140,14 +137,12 @@ function SessionRowInternal({
 						</span>
 					</div>
 
-					{/* Device Stack */}
 					<div className="flex items-center gap-1">
 						{getDeviceIcon(session.device_type)}
 						<BrowserIcon name={session.browser_name || "Unknown"} size="sm" />
 						<OSIcon name={session.os_name || "Unknown"} size="sm" />
 					</div>
 
-					{/* Referrer */}
 					<div className="hidden items-center gap-1.5 overflow-hidden lg:flex">
 						{referrerInfo.domain ? (
 							<FaviconImage
@@ -161,17 +156,14 @@ function SessionRowInternal({
 						<span className="truncate">{referrerInfo.name}</span>
 					</div>
 
-					{/* Pages */}
 					<span className="text-right font-medium tabular-nums">
 						{session.page_views ?? 0}
 					</span>
 
-					{/* Events */}
 					<span className="text-right font-medium tabular-nums">
 						{events.length}
 					</span>
 
-					{/* Last seen */}
 					<span className="text-right text-muted-foreground">
 						{session.first_visit ? fromNow(session.first_visit) : "—"}
 					</span>

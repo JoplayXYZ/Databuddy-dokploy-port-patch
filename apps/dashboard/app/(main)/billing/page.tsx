@@ -252,9 +252,7 @@ export default function BillingPage() {
 					)}
 				</div>
 
-				{/* Sidebar */}
 				<div className="flex w-full shrink-0 flex-col border-t bg-card lg:h-full lg:w-auto lg:overflow-y-auto lg:border-t-0 lg:border-l">
-					{/* Current Plan */}
 					<div className="border-b p-5">
 						<div className="mb-3 flex items-center justify-between">
 							<h3 className="font-semibold">Current Plan</h3>
@@ -354,7 +352,6 @@ export default function BillingPage() {
 						</div>
 					</div>
 
-					{/* Enterprise Add-ons */}
 					{showAddOns && (
 						<div className="border-t p-5">
 							<div className="mb-3 flex items-center gap-2">

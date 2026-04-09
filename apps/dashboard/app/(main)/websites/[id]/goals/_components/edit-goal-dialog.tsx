@@ -228,7 +228,6 @@ export function EditGoalDialog({
 				</SheetHeader>
 
 				<SheetBody className="space-y-6">
-					{/* Basic Info */}
 					<div className="grid gap-4 sm:grid-cols-2">
 						<div className="space-y-2">
 							<Label htmlFor="goal-name">Name</Label>
@@ -250,17 +249,14 @@ export function EditGoalDialog({
 						</div>
 					</div>
 
-					{/* Goal Target Section */}
 					<section className="space-y-3">
 						<Label className="text-muted-foreground text-xs">Goal Target</Label>
 
 						<div className="flex items-center gap-2 rounded border bg-card p-2.5">
-							{/* Step number */}
 							<div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-foreground font-semibold text-accent text-xs">
 								1
 							</div>
 
-							{/* Goal fields */}
 							<div className="flex flex-1 gap-2">
 								<Select
 									onValueChange={(value) => updateField("type", value)}
@@ -288,7 +284,6 @@ export function EditGoalDialog({
 						</div>
 					</section>
 
-					{/* Settings Section */}
 					<section className="space-y-3">
 						<Label className="text-muted-foreground text-xs">Settings</Label>
 						<div className="flex items-center justify-between rounded border bg-card p-3">
@@ -315,7 +310,6 @@ export function EditGoalDialog({
 						</div>
 					</section>
 
-					{/* Filters Section */}
 					<section className="space-y-3">
 						<Label className="text-muted-foreground text-xs">
 							Filters (Optional)

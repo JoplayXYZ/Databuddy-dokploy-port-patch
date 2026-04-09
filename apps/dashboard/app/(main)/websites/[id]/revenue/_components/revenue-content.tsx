@@ -314,7 +314,6 @@ function RevenueSettingsSheet({
 						</div>
 					) : (
 						<div className="space-y-1">
-							{/* Webhook URLs Section */}
 							<CollapsibleSection
 								badge={
 									webhookHash ? (
@@ -331,7 +330,6 @@ function RevenueSettingsSheet({
 							>
 								{webhookHash ? (
 									<div className="space-y-4">
-										{/* Stripe URL */}
 										<div className="space-y-1.5">
 											<div className="flex items-center justify-between">
 												<p className="font-medium text-foreground text-xs">
@@ -370,7 +368,6 @@ function RevenueSettingsSheet({
 											</div>
 										</div>
 
-										{/* Paddle URL */}
 										<div className="space-y-1.5">
 											<div className="flex items-center justify-between">
 												<p className="font-medium text-foreground text-xs">
@@ -444,7 +441,6 @@ function RevenueSettingsSheet({
 								)}
 							</CollapsibleSection>
 
-							{/* Stripe Section */}
 							<CollapsibleSection
 								badge={
 									config?.stripeConfigured ? (
@@ -522,7 +518,6 @@ function RevenueSettingsSheet({
 								</div>
 							</CollapsibleSection>
 
-							{/* Paddle Section */}
 							<CollapsibleSection
 								badge={
 									config?.paddleConfigured ? (

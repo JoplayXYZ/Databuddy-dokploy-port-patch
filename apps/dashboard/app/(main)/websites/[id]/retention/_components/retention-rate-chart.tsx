@@ -159,7 +159,6 @@ export function RetentionRateChart({
 				</div>
 			</div>
 
-			{/* Chart */}
 			<div className="min-h-0 flex-1">
 				<ResponsiveContainer height="100%" width="100%">
 					<AreaChart

@@ -313,7 +313,6 @@ function FlagRow({
 				role="button"
 				tabIndex={0}
 			>
-				{/* Flag name & key */}
 				<List.Cell
 					className="min-w-0 max-w-[min(320px,100%)] shrink-0"
 					onClick={(e) => e.stopPropagation()}
@@ -344,7 +343,6 @@ function FlagRow({
 					</div>
 				</List.Cell>
 
-				{/* Description */}
 				<List.Cell grow>
 					{flag.description ? (
 						<p className="wrap-break-word text-pretty text-muted-foreground text-xs">
@@ -353,21 +351,18 @@ function FlagRow({
 					) : null}
 				</List.Cell>
 
-				{/* Type */}
 				<List.Cell className="flex w-[100px] shrink-0 justify-center">
 					<Badge className="font-normal" variant="secondary">
 						{typeConfig.label}
 					</Badge>
 				</List.Cell>
 
-				{/* Rollout */}
 				<List.Cell className="flex w-20 shrink-0 justify-center">
 					{flag.type === "rollout" && rollout > 0 && (
 						<RolloutProgress percentage={rollout} />
 					)}
 				</List.Cell>
 
-				{/* Rules & Variants */}
 				<List.Cell className="flex w-[100px] shrink-0 justify-center">
 					{(ruleCount > 0 || variantCount > 0) && (
 						<div className="flex flex-col gap-0.5 text-center text-muted-foreground text-xs">
@@ -383,12 +378,10 @@ function FlagRow({
 					)}
 				</List.Cell>
 
-				{/* Groups */}
 				<List.Cell className="flex w-[100px] shrink-0 justify-center">
 					<GroupsDisplay groups={groups} />
 				</List.Cell>
 
-				{/* Status */}
 				<List.Cell
 					className="flex w-[120px] shrink-0 justify-center"
 					onClick={(e) => e.stopPropagation()}
