@@ -152,7 +152,7 @@ export const agentChatsRouter = {
 
 			await withWorkspace(context, {
 				websiteId: row.websiteId,
-				permissions: ["read"],
+				permissions: ["update"],
 			});
 
 			await context.db
@@ -187,7 +187,7 @@ export const agentChatsRouter = {
 
 			await withWorkspace(context, {
 				websiteId: row.websiteId,
-				permissions: ["read"],
+				permissions: ["delete"],
 			});
 
 			await context.db.delete(agentChats).where(eq(agentChats.id, input.id));

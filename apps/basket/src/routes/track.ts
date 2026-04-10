@@ -1,5 +1,11 @@
 import { getWebsiteByIdV2, resolveApiKeyOwnerId } from "@hooks/auth";
-import { getApiKeyFromHeader, hasKeyScope } from "@lib/api-key";
+import {
+	type ApiKeyRow,
+	getAccessibleWebsiteIds,
+	getApiKeyFromHeader,
+	hasGlobalAccess,
+	hasKeyScope,
+} from "@lib/api-key";
 import { checkAutumnUsage } from "@lib/billing";
 import { insertCustomEvents } from "@lib/event-service";
 import { basketErrors, rethrowOrWrap } from "@lib/structured-errors";
@@ -10,6 +16,7 @@ import { useLogger } from "evlog/elysia";
 import { trackEventSchema } from "./track-event-schema";
 
 interface ResolvedAuth {
+	apiKey?: ApiKeyRow;
 	organizationId?: string;
 	ownerId: string;
 	websiteId?: string;
@@ -71,6 +78,7 @@ function resolveAuth(
 			});
 			return {
 				ownerId,
+				apiKey,
 				organizationId: apiKey.organizationId ?? undefined,
 			};
 		}
@@ -160,6 +168,23 @@ export const trackRoute = new Elysia().post(
 				await checkAutumnUsage(billingUserId, "events", {
 					api_route: "track",
 				});
+			}
+
+			if (auth.apiKey) {
+				const allowedIds = hasGlobalAccess(auth.apiKey)
+					? null
+					: new Set(getAccessibleWebsiteIds(auth.apiKey));
+
+				for (const event of events) {
+					const targetId = event.websiteId ?? auth.websiteId;
+					if (!targetId) {
+						throw basketErrors.trackInvalidBody();
+					}
+					if (allowedIds && !allowedIds.has(targetId)) {
+						log.set({ rejected: "website_scope", targetWebsiteId: targetId });
+						throw basketErrors.trackMissingCredentials();
+					}
+				}
 			}
 
 			const now = Date.now();

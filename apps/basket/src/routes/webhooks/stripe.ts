@@ -2,7 +2,7 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import { clickHouse } from "@databuddy/db";
 import { Elysia } from "elysia";
 import { useLogger } from "evlog/elysia";
-import { formatDate, getWebhookConfig } from "./shared";
+import { formatDate, getWebhookConfig, resolveWebsiteId } from "./shared";
 
 const SIGNATURE_TOLERANCE_SECONDS = 300;
 
@@ -209,7 +209,11 @@ async function handlePaymentIntent(
 		values: [
 			{
 				owner_id: config.ownerId,
-				website_id: metadata.client_id || config.websiteId || undefined,
+				website_id: await resolveWebsiteId(
+					metadata.client_id,
+					config.websiteId,
+					config.ownerId
+				),
 				transaction_id: pi.id,
 				provider: "stripe",
 				type,
@@ -259,7 +263,11 @@ async function handleFailedPayment(
 		values: [
 			{
 				owner_id: config.ownerId,
-				website_id: metadata.client_id || config.websiteId || undefined,
+				website_id: await resolveWebsiteId(
+					metadata.client_id,
+					config.websiteId,
+					config.ownerId
+				),
 				transaction_id: pi.id,
 				provider: "stripe",
 				type,
@@ -320,7 +328,11 @@ async function handleInvoicePaid(
 		values: [
 			{
 				owner_id: config.ownerId,
-				website_id: metadata.client_id || config.websiteId || undefined,
+				website_id: await resolveWebsiteId(
+					metadata.client_id,
+					config.websiteId,
+					config.ownerId
+				),
 				transaction_id: invoice.id,
 				provider: "stripe",
 				type: "subscription" as const,
@@ -370,7 +382,11 @@ async function handleInvoiceFailed(
 		values: [
 			{
 				owner_id: config.ownerId,
-				website_id: metadata.client_id || config.websiteId || undefined,
+				website_id: await resolveWebsiteId(
+					metadata.client_id,
+					config.websiteId,
+					config.ownerId
+				),
 				transaction_id: invoice.id,
 				provider: "stripe",
 				type: "subscription" as const,
@@ -439,7 +455,11 @@ async function handleSubscriptionEvent(
 		values: [
 			{
 				owner_id: config.ownerId,
-				website_id: metadata.client_id || config.websiteId || undefined,
+				website_id: await resolveWebsiteId(
+					metadata.client_id,
+					config.websiteId,
+					config.ownerId
+				),
 				transaction_id: `${sub.id}_${eventType}`,
 				provider: "stripe",
 				type: "subscription_event",
@@ -488,7 +508,11 @@ async function handleRefund(
 			values: [
 				{
 					owner_id: config.ownerId,
-					website_id: metadata.client_id || config.websiteId || undefined,
+					website_id: await resolveWebsiteId(
+						metadata.client_id,
+						config.websiteId,
+						config.ownerId
+					),
 					transaction_id: refund.id,
 					provider: "stripe",
 					type: "refund",

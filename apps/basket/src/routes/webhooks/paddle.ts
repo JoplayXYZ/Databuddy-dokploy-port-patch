@@ -2,7 +2,7 @@ import { timingSafeEqual } from "node:crypto";
 import { clickHouse } from "@databuddy/db";
 import { Elysia } from "elysia";
 import { useLogger } from "evlog/elysia";
-import { formatDate, getWebhookConfig } from "./shared";
+import { formatDate, getWebhookConfig, resolveWebsiteId } from "./shared";
 
 interface PaddleTransaction {
 	billed_at: string | null;
@@ -111,7 +111,11 @@ async function handleTransaction(
 		values: [
 			{
 				owner_id: config.ownerId,
-				website_id: metadata.website_id || config.websiteId || undefined,
+				website_id: await resolveWebsiteId(
+					metadata.website_id,
+					config.websiteId,
+					config.ownerId
+				),
 				transaction_id: tx.id,
 				provider: "paddle",
 				type,

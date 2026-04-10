@@ -142,6 +142,30 @@ export async function deactivateUserAccount(formData: FormData) {
 		if (!email || typeof email !== "string" || email !== currentUser.email) {
 			return { error: "Email address doesn't match your account" };
 		}
+
+		const credentialAccount = await db.query.account.findFirst({
+			where: and(
+				eq(account.userId, currentUser.id),
+				eq(account.providerId, "credential")
+			),
+			columns: { password: true },
+		});
+
+		if (!credentialAccount?.password) {
+			return {
+				error:
+					"Account does not have a password. Use your OAuth provider to manage your account.",
+			};
+		}
+
+		const passwordValid = await auth.api.verifyPassword({
+			headers: await headers(),
+			body: { password },
+		});
+		if (!passwordValid.status) {
+			return { error: "Incorrect password" };
+		}
+
 		await db
 			.update(user)
 			.set({
