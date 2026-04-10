@@ -89,20 +89,32 @@ export const clickHouse = new Proxy(clickHouseOG, {
 	},
 });
 
+export interface ChQueryOptions {
+	readonly?: boolean;
+}
+
 export function chQueryWithMeta<T extends Record<string, any>>(
 	query: string,
-	params?: Record<string, unknown>
+	params?: Record<string, unknown>,
+	options?: ChQueryOptions
 ): Promise<ResponseJSON<T>> {
 	const tracer = trace.getTracer("clickhouse");
-	return tracer.startActiveSpan("chQuery", async (span) => {
+	const spanName = options?.readonly ? "chQuery:readonly" : "chQuery";
+	return tracer.startActiveSpan(spanName, async (span) => {
 		const preview = query.length > 200 ? `${query.slice(0, 200)}...` : query;
 		span.setAttribute("db.system", "clickhouse");
 		span.setAttribute("db.statement", preview);
+		if (options?.readonly) {
+			span.setAttribute("db.readonly", true);
+		}
 
 		try {
 			const res = await clickHouse.query({
 				query,
 				query_params: params,
+				...(options?.readonly && {
+					clickhouse_settings: { readonly: "1" },
+				}),
 			});
 			const json = await res.json<T>();
 			const keys = Object.keys(json.data[0] || {});
@@ -151,9 +163,10 @@ export function chQueryWithMeta<T extends Record<string, any>>(
 
 export function chQuery<T extends Record<string, any>>(
 	query: string,
-	params?: Record<string, unknown>
+	params?: Record<string, unknown>,
+	options?: ChQueryOptions
 ): Promise<T[]> {
-	return chQueryWithMeta<T>(query, params).then((res) => res.data);
+	return chQueryWithMeta<T>(query, params, options).then((res) => res.data);
 }
 
 export async function chCommand(
