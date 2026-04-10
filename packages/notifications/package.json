@@ -16,6 +16,9 @@
     "test": "bun test src/__tests__/providers src/__tests__/templates src/__tests__/client.test.ts src/__tests__/helpers.test.ts",
     "test:integration": "bun test src/__tests__/integration"
   },
+  "dependencies": {
+    "@databuddy/shared": "workspace:*"
+  },
   "devDependencies": {
     "@types/node": "^24.10.4",
     "typescript": "catalog:"

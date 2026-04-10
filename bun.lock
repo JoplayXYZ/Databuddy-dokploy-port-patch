@@ -486,6 +486,9 @@
     "packages/notifications": {
       "name": "@databuddy/notifications",
       "version": "0.0.1",
+      "dependencies": {
+        "@databuddy/shared": "workspace:*",
+      },
       "devDependencies": {
         "@types/node": "^24.10.4",
         "typescript": "catalog:",

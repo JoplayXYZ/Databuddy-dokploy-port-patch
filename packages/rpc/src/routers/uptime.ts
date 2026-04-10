@@ -1,4 +1,5 @@
-import { and, db, eq, uptimeSchedules } from "@databuddy/db";
+import { and, db, eq } from "@databuddy/db";
+import { uptimeSchedules } from "@databuddy/db/schema";
 import { rateLimit } from "@databuddy/redis";
 import { Client } from "@upstash/qstash";
 import { randomUUIDv7 } from "bun";

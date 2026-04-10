@@ -37,7 +37,8 @@
     "./utils/date-utils": "./src/utils/date-utils.ts",
     "./utils/ids": "./src/utils/ids.ts",
     "./utils/openrouter": "./src/utils/openrouter.ts",
-    "./bot-detection": "./src/utils/bot-detection/index.ts"
+    "./bot-detection": "./src/utils/bot-detection/index.ts",
+    "./ssrf-guard": "./src/ssrf-guard.ts"
   },
   "dependencies": {
     "@databuddy/redis": "workspace:*",

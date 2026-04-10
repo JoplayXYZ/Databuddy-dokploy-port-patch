@@ -7,7 +7,7 @@
 
 import { and, db, eq } from "@databuddy/db";
 import { member, type Website, websites } from "@databuddy/db/schema";
-import { cacheable } from "@databuddy/redis";
+import { cacheable } from "@databuddy/redis/cacheable";
 import { captureError, record } from "@lib/tracing";
 import { createError, EvlogError } from "evlog";
 
@@ -203,126 +203,10 @@ const getWebsiteByIdWithOwnerCached = cacheable(
 	}
 );
 
-/**
- * Validates if an origin matches any of the allowed origins from website settings
- */
-export function isValidOriginFromSettings(
-	originHeader: string,
-	allowedOrigins?: string[]
-): boolean {
-	if (!originHeader?.trim()) {
-		return true;
-	}
-
-	if (!allowedOrigins || allowedOrigins.length === 0) {
-		return true;
-	}
-
-	try {
-		const originUrl = new URL(originHeader.trim());
-		const originDomain = normalizeDomain(originUrl.hostname);
-
-		for (const allowed of allowedOrigins) {
-			if (allowed === "*") {
-				return true;
-			}
-
-			if (allowed === "localhost") {
-				if (originDomain === "localhost") {
-					return true;
-				}
-				continue;
-			}
-
-			if (allowed.startsWith("*.")) {
-				const baseDomain = normalizeDomain(allowed.slice(2));
-				if (
-					originDomain === baseDomain ||
-					isSubdomain(originDomain, baseDomain)
-				) {
-					return true;
-				}
-				continue;
-			}
-
-			const normalizedAllowed = normalizeDomain(allowed);
-			if (originDomain === normalizedAllowed) {
-				return true;
-			}
-		}
-
-		return false;
-	} catch (error) {
-		captureError(error, {
-			message: "[isValidOriginFromSettings] Validation failed",
-			originHeader,
-			allowedOriginsCount: allowedOrigins?.length ?? 0,
-		});
-		return false;
-	}
-}
-
-/**
- * Validates if an IP address matches any of the allowed IPs from website settings
- */
-export function isValidIpFromSettings(
-	ip: string,
-	allowedIps?: string[]
-): boolean {
-	if (!ip?.trim()) {
-		return true;
-	}
-
-	if (!allowedIps || allowedIps.length === 0) {
-		return true;
-	}
-
-	const trimmedIp = ip.trim();
-
-	for (const allowed of allowedIps) {
-		if (allowed === trimmedIp) {
-			return true;
-		}
-
-		if (allowed.includes("/") && isIpInCidrRange(trimmedIp, allowed)) {
-			return true;
-		}
-	}
-
-	return false;
-}
-
-function isIpInCidrRange(ip: string, cidr: string): boolean {
-	try {
-		const [network, prefixLengthStr] = cidr.split("/");
-		const prefixLength = Number.parseInt(prefixLengthStr, 10);
-
-		if (Number.isNaN(prefixLength) || prefixLength < 0 || prefixLength > 32) {
-			return false;
-		}
-
-		const ipToNumber = (ipAddr: string): number => {
-			const parts = ipAddr.split(".");
-			return (
-				Number.parseInt(parts[0] ?? "0", 10) * 16_777_216 +
-				Number.parseInt(parts[1] ?? "0", 10) * 65_536 +
-				Number.parseInt(parts[2] ?? "0", 10) * 256 +
-				Number.parseInt(parts[3] ?? "0", 10)
-			);
-		};
-
-		const networkNum = ipToNumber(network);
-		const ipNum = ipToNumber(ip);
-		const maskSize = 2 ** (32 - prefixLength);
-
-		const networkMasked = Math.floor(networkNum / maskSize) * maskSize;
-		const ipMasked = Math.floor(ipNum / maskSize) * maskSize;
-
-		return networkMasked === ipMasked;
-	} catch {
-		return false;
-	}
-}
+export {
+	isValidOriginFromSettings,
+	isValidIpFromSettings,
+} from "@utils/origin-ip-validation";
 
 export function getWebsiteByIdV2(id: string): Promise<WebsiteWithOwner | null> {
 	return record("getWebsiteByIdV2", async () => {
