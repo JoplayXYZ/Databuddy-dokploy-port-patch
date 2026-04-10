@@ -1,4 +1,4 @@
-import { getAutumn } from "@databuddy/rpc";
+import { getAutumn } from "@databuddy/rpc/autumn";
 import { captureError, record } from "@lib/tracing";
 import { useLogger } from "evlog/elysia";
 

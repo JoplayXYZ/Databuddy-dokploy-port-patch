@@ -5,13 +5,13 @@
  * and platform identification.
  */
 
+import { detectBot as detectBotShared } from "@databuddy/shared/bot-detection/detector";
 import {
 	type BotAction,
 	BotCategory,
 	type BotDetectionResult,
-	detectBot as detectBotShared,
-	parseUserAgent as parseUserAgentShared,
-} from "@databuddy/shared/bot-detection";
+} from "@databuddy/shared/bot-detection/types";
+import { parseUserAgent as parseUserAgentShared } from "@databuddy/shared/bot-detection/user-agent";
 import { captureError, record } from "@lib/tracing";
 
 /**

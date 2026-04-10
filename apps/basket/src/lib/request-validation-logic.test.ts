@@ -43,6 +43,14 @@ mock.module("@lib/producer", () => ({
 }));
 
 const mockDetectBot = mock(() => ({ isBot: false }));
+mock.module("ua-parser-js/bot-detection", () => ({
+	isBot: () => false,
+	isAICrawler: () => false,
+	isAIAssistant: () => false,
+}));
+mock.module("ua-parser-js", () => ({
+	UAParser: class { getResult() { return {}; } },
+}));
 mock.module("@utils/user-agent", () => ({
 	detectBot: mockDetectBot,
 }));

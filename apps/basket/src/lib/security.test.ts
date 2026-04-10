@@ -56,8 +56,11 @@ describe("saltAnonymousId", () => {
 const mockRedisSet = mock(() => Promise.resolve("OK"));
 const mockLoggerSet = mock(() => {});
 
-mock.module("@databuddy/redis", () => ({
+mock.module("@databuddy/redis/redis", () => ({
 	redis: { set: mockRedisSet },
+	getRedisCache: () => ({ set: mockRedisSet }),
+}));
+mock.module("@databuddy/redis/cacheable", () => ({
 	cacheable: (fn: () => Promise<any>) => fn,
 }));
 

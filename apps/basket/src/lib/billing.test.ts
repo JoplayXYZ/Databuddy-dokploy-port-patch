@@ -12,7 +12,7 @@ const mockCheck = mock(() =>
 
 const mockLoggerSet = mock(() => {});
 
-mock.module("@databuddy/rpc", () => ({
+mock.module("@databuddy/rpc/autumn", () => ({
 	getAutumn: () => ({ check: mockCheck }),
 }));
 
