@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 
-const countriesGeoUrl = "/api/geo-proxy?path=/geojson/countries.geojson";
-const subdivisionsGeoUrl = "/api/geo-proxy?path=/geojson/subdivisions.json";
+const countriesGeoUrl = "https://cdn.databuddy.cc/geojson/countries.geojson";
+const subdivisionsGeoUrl = "https://cdn.databuddy.cc/geojson/subdivisions.json";
 
 export interface Subdivisions {
 	features: Array<{

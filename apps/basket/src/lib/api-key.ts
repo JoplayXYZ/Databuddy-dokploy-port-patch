@@ -9,12 +9,12 @@ import {
 import { record } from "@lib/tracing";
 import { useLogger } from "evlog/elysia";
 
-export type { ApiKeyRow, ApiScope } from "@databuddy/api-keys/resolve";
 export {
 	getAccessibleWebsiteIds,
 	hasGlobalAccess,
 	hasKeyScope,
 } from "@databuddy/api-keys/resolve";
+export type { ApiKeyRow, ApiScope } from "@databuddy/api-keys/resolve";
 
 export function getApiKeyFromHeader(
 	headers: Headers

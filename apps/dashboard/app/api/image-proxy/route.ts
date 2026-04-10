@@ -1,5 +1,5 @@
-import { type NextRequest, NextResponse } from "next/server";
 import { validateUrl } from "@databuddy/shared/ssrf-guard";
+import { type NextRequest, NextResponse } from "next/server";
 
 const ALLOWED_CONTENT_TYPES = [
 	"image/jpeg",
