@@ -2,6 +2,7 @@ import { hasKeyScope } from "@databuddy/api-keys/resolve";
 import {
 	LINKS_SCOPE_MAP,
 	type LinksPermission,
+	requiredScopesForResource,
 } from "@databuddy/api-keys/scopes";
 import {
 	type PermissionFor,
@@ -173,7 +174,9 @@ async function resolveUserWorkspace(
 function resolveApiKeyWorkspace(
 	context: Context,
 	organizationId: string,
-	plan: PlanId
+	plan: PlanId,
+	resource: string,
+	permissions: string[]
 ): Omit<Workspace, "website" | "getCreatedBy"> {
 	if (!context.apiKey) {
 		throw rpcError.unauthorized();
@@ -181,6 +184,13 @@ function resolveApiKeyWorkspace(
 
 	if (context.apiKey.organizationId !== organizationId) {
 		throw rpcError.forbidden("API key does not have access to this workspace");
+	}
+
+	const requiredScopes = requiredScopesForResource(resource, permissions);
+	for (const scope of requiredScopes) {
+		if (!hasKeyScope(context.apiKey, scope)) {
+			throw rpcError.forbidden(`API key missing required scope: ${scope}`);
+		}
 	}
 
 	return {
@@ -280,7 +290,13 @@ export async function withWorkspace<R extends ResourceType = "organization">(
 	}
 
 	if (context.apiKey) {
-		const ws = resolveApiKeyWorkspace(context, organizationId, plan);
+		const ws = resolveApiKeyWorkspace(
+			context,
+			organizationId,
+			plan,
+			resolvedResource,
+			resolvedPermissions
+		);
 		return { ...ws, website, getCreatedBy };
 	}
 
