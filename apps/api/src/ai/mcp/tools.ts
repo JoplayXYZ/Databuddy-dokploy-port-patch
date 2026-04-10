@@ -1,10 +1,11 @@
 import dayjs from "dayjs";
 import { z } from "zod";
 import {
+	forgetMemory,
 	isMemoryEnabled,
 	sanitizeMemoryContent,
+	saveCuratedMemory,
 	searchMemories,
-	storeConversation as storeMemory,
 } from "../../lib/supermemory";
 import { executeBatch } from "../../query";
 import { isAiGatewayConfigured } from "../config/models";
@@ -906,14 +907,54 @@ const saveMemoryTool = defineMcpTool(
 	},
 	(input, ctx) => {
 		const apiKeyId = ctx.apiKey ? (ctx.apiKey as { id: string }).id : null;
-		// storeMemory is intentionally fire-and-forget (see supermemory.ts)
-		storeMemory(
-			[{ role: "assistant", content: sanitizeMemoryContent(input.content) }],
-			ctx.userId,
-			apiKeyId,
-			{ category: input.category ?? "insight" }
-		);
+		saveCuratedMemory(input.content, ctx.userId, apiKeyId, {
+			category: input.category ?? "insight",
+		});
 		return { queued: true };
+	}
+);
+
+const forgetMemoryTool = defineMcpTool(
+	{
+		name: "forget_memory",
+		description:
+			"Delete an incorrect or outdated memory. Search for the memory first, then forget it.",
+		inputSchema: z.object({
+			query: z
+				.string()
+				.min(1)
+				.describe("Search query to find the memory to forget"),
+		}),
+		outputSchema: z.object({
+			forgotten: z.boolean(),
+			message: z.string(),
+		}),
+		rateLimit: { limit: 10, windowSec: 60 },
+	},
+	async (input, ctx) => {
+		const apiKeyId = ctx.apiKey ? (ctx.apiKey as { id: string }).id : null;
+		const results = await searchMemories(input.query, ctx.userId, apiKeyId, {
+			limit: 1,
+			threshold: 0.3,
+		});
+		if (results.length === 0 || !results[0]) {
+			return {
+				forgotten: false,
+				message: "No matching memory found to forget.",
+			};
+		}
+		const containerTag = ctx.userId
+			? `user:${ctx.userId}`
+			: apiKeyId
+				? `apikey:${apiKeyId}`
+				: "anonymous";
+		const result = await forgetMemory(containerTag, results[0].memory);
+		return {
+			forgotten: result.success,
+			message: result.success
+				? "Memory forgotten."
+				: "Failed to forget memory.",
+		};
 	}
 );
 
@@ -930,7 +971,9 @@ const ALL_TOOL_FACTORIES: McpToolFactory[] = [
 	listLinksTool,
 	searchLinksTool,
 	...INSIGHT_TOOL_FACTORIES,
-	...(MEMORY_ENABLED ? [searchMemoryTool, saveMemoryTool] : []),
+	...(MEMORY_ENABLED
+		? [searchMemoryTool, saveMemoryTool, forgetMemoryTool]
+		: []),
 ];
 
 const REGISTERED_TOOL_NAMES: readonly string[] = Object.freeze(

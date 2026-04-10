@@ -62,7 +62,7 @@ export async function executeTimedQuery<T extends Record<string, unknown>>(
 	const queryStart = Date.now();
 
 	try {
-		const raw = await chQuery<T>(sql, params);
+		const raw = await chQuery<T>(sql, params, { readonly: true });
 		const executionTime = Date.now() - queryStart;
 		const result = raw.map(sanitizeRow);
 

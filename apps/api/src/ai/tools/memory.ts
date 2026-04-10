@@ -1,22 +1,26 @@
 import { type Tool, tool } from "ai";
 import { z } from "zod";
 import {
+	forgetMemory,
 	isMemoryEnabled,
 	sanitizeMemoryContent,
+	saveCuratedMemory,
 	searchMemories,
-	storeConversation,
 } from "../../lib/supermemory";
 
 function getAgentContext(options: unknown): {
 	userId: string | null;
 	apiKeyId: string | null;
+	websiteId: string | null;
 } {
 	const ctx = (options as { experimental_context?: Record<string, unknown> })
 		?.experimental_context;
 	const userId =
 		typeof ctx?.userId === "string" && ctx.userId ? ctx.userId : null;
 	const apiKey = ctx?.apiKey as { id: string } | null | undefined;
-	return { userId, apiKeyId: apiKey?.id ?? null };
+	const websiteId =
+		typeof ctx?.websiteId === "string" && ctx.websiteId ? ctx.websiteId : null;
+	return { userId, apiKeyId: apiKey?.id ?? null, websiteId };
 }
 
 export function createMemoryTools(): Record<string, Tool> {
@@ -34,10 +38,11 @@ export function createMemoryTools(): Record<string, Tool> {
 				limit: z.number().min(1).max(10).optional().default(5),
 			}),
 			execute: async (args, options) => {
-				const { userId, apiKeyId } = getAgentContext(options);
+				const { userId, apiKeyId, websiteId } = getAgentContext(options);
 				const results = await searchMemories(args.query, userId, apiKeyId, {
 					limit: args.limit,
 					threshold: 0.4,
+					websiteId: websiteId ?? undefined,
 				});
 
 				if (results.length === 0) {
@@ -65,15 +70,45 @@ export function createMemoryTools(): Record<string, Tool> {
 					.default("insight"),
 			}),
 			execute: (args, options) => {
-				const { userId, apiKeyId } = getAgentContext(options);
-				const sanitized = sanitizeMemoryContent(args.content);
-				storeConversation(
-					[{ role: "assistant", content: sanitized }],
-					userId,
-					apiKeyId,
-					{ category: args.category ?? "insight" }
-				);
+				const { userId, apiKeyId, websiteId } = getAgentContext(options);
+				saveCuratedMemory(args.content, userId, apiKeyId, {
+					category: args.category ?? "insight",
+					websiteId: websiteId ?? undefined,
+				});
 				return { saved: true };
+			},
+		}),
+		forget_memory: tool({
+			description:
+				"Delete an incorrect or outdated memory. Use when the user says something previously saved is wrong.",
+			strict: true,
+			inputSchema: z.object({
+				query: z.string().describe("Search query to find the memory to forget"),
+			}),
+			execute: async (args, options) => {
+				const { userId, apiKeyId } = getAgentContext(options);
+				const results = await searchMemories(args.query, userId, apiKeyId, {
+					limit: 1,
+					threshold: 0.3,
+				});
+				if (results.length === 0 || !results[0]) {
+					return {
+						forgotten: false,
+						message: "No matching memory found to forget.",
+					};
+				}
+				const containerTag = userId
+					? `user:${userId}`
+					: apiKeyId
+						? `apikey:${apiKeyId}`
+						: "anonymous";
+				const result = await forgetMemory(containerTag, results[0].memory);
+				return {
+					forgotten: result.success,
+					message: result.success
+						? "Memory forgotten."
+						: "Failed to forget memory.",
+				};
 			},
 		}),
 	};

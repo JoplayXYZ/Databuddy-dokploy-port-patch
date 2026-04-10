@@ -27,7 +27,9 @@ import { modelNames, models } from "../ai/config/models";
 import { ANTHROPIC_CACHE_1H } from "../ai/config/prompt-cache";
 import { AI_MODEL_MAX_RETRIES } from "../ai/config/retry";
 import {
+	getAccessibleWebsiteIds,
 	getApiKeyFromHeader,
+	hasGlobalAccess,
 	hasKeyScope,
 	isApiKeyPresent,
 } from "../lib/api-key";
@@ -245,17 +247,30 @@ export const agent = new Elysia({ prefix: "/v1/agent" })
 					const { website } = websiteValidation;
 					organizationId = website.organizationId ?? null;
 
-					const apiKeyOrg = apiKey?.organizationId ?? null;
-					const hasPermission =
-						website.isPublic ||
-						(apiKey && apiKeyOrg && apiKeyOrg === website.organizationId) ||
-						(website.organizationId &&
+					const hasPermission = await (async () => {
+						if (apiKey) {
+							if (hasGlobalAccess(apiKey)) {
+								return (
+									apiKey.organizationId != null &&
+									apiKey.organizationId === website.organizationId
+								);
+							}
+							return getAccessibleWebsiteIds(apiKey).includes(body.websiteId);
+						}
+
+						return (
+							website.organizationId != null &&
 							(
 								await websitesApi.hasPermission({
 									headers: request.headers,
-									body: { permissions: { website: ["read"] } },
+									body: {
+										organizationId: website.organizationId,
+										permissions: { website: ["read"] },
+									},
 								})
-							).success);
+							).success
+						);
+					})();
 
 					if (!hasPermission) {
 						return jsonError(
@@ -265,7 +280,10 @@ export const agent = new Elysia({ prefix: "/v1/agent" })
 						);
 					}
 
-					const userId = user?.id ?? apiKeyOrg ?? "api-key";
+					if (!(user || apiKey)) {
+						return jsonError(401, "AUTH_REQUIRED", "Authentication required");
+					}
+					const userId = user?.id ?? `apikey:${apiKey?.id}`;
 
 					const billingCustomerId = await resolveAgentBillingCustomerId({
 						userId: user?.id ?? null,
@@ -349,7 +367,9 @@ export const agent = new Elysia({ prefix: "/v1/agent" })
 							})
 						),
 						isMemoryEnabled() && lastMessage
-							? getMemoryContext(lastMessage, userId, null)
+							? getMemoryContext(lastMessage, userId, null, {
+									websiteId: body.websiteId,
+								})
 							: Promise.resolve(null),
 						enrichAgentContext({
 							userId,
@@ -422,8 +442,12 @@ export const agent = new Elysia({ prefix: "/v1/agent" })
 							userId,
 							null,
 							{
-								source: "dashboard",
+								metadata: {
+									source: "dashboard",
+								},
 								websiteId: body.websiteId,
+								conversationId: chatId,
+								domain,
 							}
 						);
 					}

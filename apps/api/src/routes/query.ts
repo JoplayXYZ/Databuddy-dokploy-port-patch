@@ -436,7 +436,9 @@ function verifyScheduleAccess(
 		}
 
 		if (ctx.apiKey) {
-			const granted = ctx.apiKey.organizationId === schedule.organizationId;
+			const granted =
+				hasKeyScope(ctx.apiKey, "read:data") &&
+				ctx.apiKey.organizationId === schedule.organizationId;
 			mergeWideEvent({
 				access_result: granted ? "api_key_match" : "api_key_denied",
 			});
@@ -499,7 +501,9 @@ function verifyLinkAccess(ctx: AuthContext, linkId: string): Promise<boolean> {
 		}
 
 		if (ctx.apiKey) {
-			const granted = ctx.apiKey.organizationId === link.organizationId;
+			const granted =
+				hasKeyScope(ctx.apiKey, "read:data") &&
+				ctx.apiKey.organizationId === link.organizationId;
 			mergeWideEvent({
 				access_result: granted ? "api_key_match" : "api_key_denied",
 			});
@@ -546,7 +550,9 @@ function verifyOrganizationAccess(
 		}
 
 		if (ctx.apiKey) {
-			const granted = ctx.apiKey.organizationId === organizationId;
+			const granted =
+				hasKeyScope(ctx.apiKey, "read:data") &&
+				ctx.apiKey.organizationId === organizationId;
 			mergeWideEvent({
 				access_result: granted ? "api_key_match" : "api_key_denied",
 			});
@@ -614,11 +620,15 @@ async function resolveProjectAccess(
 		return { success: true, projectId: websiteId, projectType: "website" };
 	}
 
+	const apiKeyOrgFallback =
+		ctx.apiKey && hasGlobalAccess(ctx.apiKey)
+			? ctx.apiKey.organizationId
+			: null;
 	const resolvedOrganizationId =
 		organizationId ??
 		(websiteId || scheduleId || linkId
 			? null
-			: (ctx.activeOrganizationId ?? ctx.apiKey?.organizationId ?? null));
+			: (ctx.activeOrganizationId ?? apiKeyOrgFallback ?? null));
 	if (resolvedOrganizationId) {
 		const hasAccess = await verifyOrganizationAccess(
 			ctx,

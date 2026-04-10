@@ -41,10 +41,6 @@ export async function ensureWebsiteAccess(
 	}
 	const { website } = validation;
 
-	if (website.isPublic) {
-		return { domain: website.domain ?? "unknown" };
-	}
-
 	if (apiKey) {
 		if (!hasKeyScope(apiKey, "read:data")) {
 			return new Error("API key missing read:data scope");
@@ -71,7 +67,10 @@ export async function ensureWebsiteAccess(
 		(
 			await websitesApi.hasPermission({
 				headers,
-				body: { permissions: { website: ["read"] } },
+				body: {
+					organizationId: website.organizationId,
+					permissions: { website: ["read"] },
+				},
 			})
 		).success;
 	if (!hasPermission) {
@@ -207,8 +206,13 @@ export async function resolveOrganizationIds(
 		}
 		return [orgId];
 	}
-	if (principal.apiKey?.organizationId) {
+	if (principal.apiKey?.organizationId && hasGlobalAccess(principal.apiKey)) {
 		return [principal.apiKey.organizationId];
+	}
+	if (principal.apiKey && !hasGlobalAccess(principal.apiKey)) {
+		return new Error(
+			"Scoped API key requires a websiteId for org-level queries"
+		);
 	}
 	if (principal.userId) {
 		const memberships = await db.query.member.findMany({

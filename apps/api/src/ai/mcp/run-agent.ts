@@ -146,7 +146,10 @@ export async function runMcpAgent(
 			],
 			mcpUserId,
 			apiKeyId,
-			{ source: "mcp" }
+			{
+				metadata: { source: "mcp" },
+				conversationId: sessionId,
+			}
 		);
 
 		return answer;
