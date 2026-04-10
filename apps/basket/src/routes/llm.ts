@@ -62,7 +62,9 @@ const app = new Elysia().post("/llm", async (context) => {
 			log.set({ rejected: "missing_api_key" });
 			throw basketErrors.llmMissingApiKey();
 		}
-		if (!hasKeyScope(apiKey, "write:llm")) {
+		if (
+			!(hasKeyScope(apiKey, "track:llm") || hasKeyScope(apiKey, "write:llm"))
+		) {
 			log.set({ rejected: "missing_scope" });
 			throw basketErrors.llmMissingScope();
 		}
