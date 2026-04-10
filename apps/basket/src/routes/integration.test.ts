@@ -106,7 +106,7 @@ mock.module("@lib/api-key", () => ({
 	),
 	hasKeyScope: mock(() => true),
 	hasGlobalAccess: mock(() => false),
-	getAccessibleWebsiteIds: mock(() => []),
+	getAccessibleWebsiteIds: mock(() => ["ws_test"]),
 }));
 
 mock.module("@hooks/auth", () => ({
@@ -425,7 +425,10 @@ describe("GET /px.jpg", () => {
 
 describe("POST /track", () => {
 	test("single event → 200", async () => {
-		const res = await post(trackRoute, "/track", { name: "signup" });
+		const res = await post(trackRoute, "/track", {
+			name: "signup",
+			websiteId: "ws_test",
+		});
 		expect(res.status).toBe(200);
 		const body = await json(res);
 		expect(body.status).toBe("success");
@@ -435,8 +438,8 @@ describe("POST /track", () => {
 
 	test("batch of events → 200", async () => {
 		const res = await post(trackRoute, "/track", [
-			{ name: "signup" },
-			{ name: "purchase", properties: { plan: "pro" } },
+			{ name: "signup", websiteId: "ws_test" },
+			{ name: "purchase", websiteId: "ws_test", properties: { plan: "pro" } },
 		]);
 		expect(res.status).toBe(200);
 		const body = await json(res);
@@ -444,18 +447,27 @@ describe("POST /track", () => {
 	});
 
 	test("missing name → 400", async () => {
-		const res = await post(trackRoute, "/track", { namespace: "x" });
+		const res = await post(trackRoute, "/track", {
+			namespace: "x",
+			websiteId: "ws_test",
+		});
 		expect(res.status).toBe(400);
 	});
 
 	test("empty name → 400", async () => {
-		const res = await post(trackRoute, "/track", { name: "" });
+		const res = await post(trackRoute, "/track", {
+			name: "",
+			websiteId: "ws_test",
+		});
 		expect(res.status).toBe(400);
 	});
 
 	test("inserts call event-service", async () => {
 		mockInsertCustomEvents.mockClear();
-		await post(trackRoute, "/track", { name: "test_event" });
+		await post(trackRoute, "/track", {
+			name: "test_event",
+			websiteId: "ws_test",
+		});
 		expect(mockInsertCustomEvents).toHaveBeenCalled();
 	});
 });
@@ -541,7 +553,10 @@ describe("response contracts", () => {
 	});
 
 	test("POST /track → { status, type, count }", async () => {
-		const res = await post(trackRoute, "/track", { name: "signup" });
+		const res = await post(trackRoute, "/track", {
+			name: "signup",
+			websiteId: "ws_test",
+		});
 		const body = await json(res);
 		expect(body).toEqual({ status: "success", type: "custom_event", count: 1 });
 	});
