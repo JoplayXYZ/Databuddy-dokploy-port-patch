@@ -563,6 +563,10 @@ export const apiScope = pgEnum("api_scope", [
 	"track:events",
 	"read:links",
 	"write:links",
+	"track:llm",
+	"manage:websites",
+	"manage:flags",
+	"manage:config",
 ]);
 
 // Resource type for flexible, future-proof per-resource access control
