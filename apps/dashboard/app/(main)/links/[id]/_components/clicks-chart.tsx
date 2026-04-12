@@ -7,6 +7,7 @@ import dayjs from "@/lib/dayjs";
 export interface ChartDataPoint {
 	clicks: number;
 	date: string;
+	[key: string]: string | number;
 }
 
 interface ClicksChartProps {

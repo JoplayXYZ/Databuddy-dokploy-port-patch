@@ -21,9 +21,9 @@ export function EventLimitIndicator() {
 		return null;
 	}
 
-	const balance = data.balance ?? 0;
-	const planLimit = data.includedUsage ?? 0;
-	const overageAllowed = data.overageAllowed ?? false;
+	const balance = Number(data.balance ?? 0);
+	const planLimit = Number(data.includedUsage ?? 0);
+	const overageAllowed = Boolean(data.overageAllowed);
 
 	if (balance < 0) {
 		if (overageAllowed) {

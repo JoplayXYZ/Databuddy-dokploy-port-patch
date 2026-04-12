@@ -57,12 +57,12 @@ export function RetentionContent({ websiteId }: RetentionContentProps) {
 	);
 
 	const cohorts = useMemo(
-		() => (data?.retention_cohorts as RetentionCohort[]) ?? [],
+		() => (data?.retention_cohorts ?? []) as unknown as RetentionCohort[],
 		[data]
 	);
 
 	const rates = useMemo(() => {
-		const rawRates = (data?.retention_rate as RetentionRate[]) ?? [];
+		const rawRates = (data?.retention_rate ?? []) as unknown as RetentionRate[];
 		const hasDateRange = dateRange?.start_date && dateRange?.end_date;
 		if (!hasDateRange) {
 			return rawRates;
