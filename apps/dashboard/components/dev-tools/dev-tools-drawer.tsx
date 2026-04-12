@@ -721,6 +721,7 @@ const LOCATION_ICONS: Record<ChartLocation, typeof ChartLineIcon> = {
 	funnels: FunnelIcon,
 	retention: UsersIcon,
 	"website-list": ChartLineIcon,
+	events: ChartBarIcon,
 };
 
 function AppearanceSettings() {

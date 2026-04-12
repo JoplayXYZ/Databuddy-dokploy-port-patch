@@ -75,7 +75,6 @@ const BUTTON_VARIANTS = [
 	"outline",
 	"secondary",
 	"ghost",
-	"link",
 ] as const;
 
 const BUTTON_SIZES = ["default", "sm", "lg", "icon"] as const;

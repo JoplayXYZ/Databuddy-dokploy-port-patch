@@ -181,8 +181,11 @@ function AuthenticatedBillingProvider({
 
 	const value = useMemo<BillingContextValue>(() => {
 		const effectivePlanId = (billingContext?.planId ?? PLAN_IDS.FREE) as PlanId;
-		const isOrganizationBilling = billingContext?.isOrganization ?? false;
-		const canUserUpgrade = billingContext?.canUserUpgrade ?? true;
+		const isOrganizationBilling = Boolean(billingContext?.isOrganization);
+		const canUserUpgrade =
+			billingContext?.canUserUpgrade === undefined
+				? true
+				: Boolean(billingContext.canUserUpgrade);
 
 		const currentPlanId = effectivePlanId;
 		const currentPlan = plans?.find((p) => p.id === currentPlanId);
@@ -272,7 +275,7 @@ function AuthenticatedBillingProvider({
 			customer: customer ?? null,
 			plans: plans ?? [],
 			isLoading: isCustomerLoading || isPlansLoading || isBillingContextLoading,
-			hasActiveSubscription: billingContext?.hasActiveSubscription ?? false,
+			hasActiveSubscription: Boolean(billingContext?.hasActiveSubscription),
 			currentPlanId,
 			isFree,
 			isOrganizationBilling,

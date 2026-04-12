@@ -729,7 +729,7 @@ export function WebsiteTrackingSetupTab({ websiteId }: TrackingSetupTabProps) {
 		enabled: !!websiteId,
 	});
 
-	const isSetup = trackingSetupData?.tracking_setup ?? false;
+	const isSetup = Boolean(trackingSetupData?.tracking_setup);
 
 	const handleCopyCode = (code: string, blockId: string, message: string) => {
 		navigator.clipboard.writeText(code);

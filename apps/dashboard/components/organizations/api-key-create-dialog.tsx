@@ -167,7 +167,10 @@ export function ApiKeyCreateDialog({
 			name: values.name,
 			organizationId,
 			scopes: [],
-			resources: Object.keys(resources).length > 0 ? resources : undefined,
+			resources:
+				Object.keys(resources).length > 0
+					? (resources as Parameters<typeof mutation.mutate>[0]["resources"])
+					: undefined,
 		});
 	});
 
