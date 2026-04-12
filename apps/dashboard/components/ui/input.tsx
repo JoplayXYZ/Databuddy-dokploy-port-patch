@@ -3,7 +3,7 @@
 import { forwardRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
-type InputProps = React.ComponentProps<"input"> & {
+type InputProps = Omit<React.ComponentProps<"input">, "prefix" | "suffix"> & {
 	variant?: "default" | "ghost";
 	showFocusIndicator?: boolean;
 	wrapperClassName?: string;
