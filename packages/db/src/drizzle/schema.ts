@@ -476,7 +476,7 @@ export const goals = pgTable(
 	{
 		id: text().primaryKey().notNull(),
 		websiteId: text().notNull(),
-		type: text().notNull(), // e.g., 'PAGE_VIEW', 'EVENT', 'CUSTOM'
+		type: text().$type<"PAGE_VIEW" | "EVENT" | "CUSTOM">().notNull(),
 		target: text().notNull(), // event name or page path
 		name: text().notNull(),
 		description: text(),
