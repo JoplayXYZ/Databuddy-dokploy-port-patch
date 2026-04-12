@@ -99,7 +99,7 @@ export function GoalPreviewRenderer({
 		isActive: true,
 		createdAt: new Date(),
 		updatedAt: new Date(),
-		createdBy: null,
+		createdBy: "",
 		deletedAt: null,
 	};
 

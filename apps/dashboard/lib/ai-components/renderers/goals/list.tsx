@@ -223,7 +223,7 @@ export function GoalsListRenderer({ title, goals, className }: GoalsListProps) {
 					? new Date(editingGoal.createdAt)
 					: new Date(),
 				updatedAt: new Date(),
-				createdBy: null,
+				createdBy: "",
 				deletedAt: null,
 			}
 		: null;

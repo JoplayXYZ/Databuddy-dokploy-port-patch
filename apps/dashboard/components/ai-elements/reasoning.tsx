@@ -203,7 +203,7 @@ export const ReasoningContent = memo(
 			{...props}
 		>
 			<div className="py-1.5 pl-5 text-xs">
-				<Streamdown {...props}>{children}</Streamdown>
+				<Streamdown>{children}</Streamdown>
 			</div>
 		</CollapsibleContent>
 	)

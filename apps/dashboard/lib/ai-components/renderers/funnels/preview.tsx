@@ -115,9 +115,13 @@ export function FunnelPreviewRenderer({
 		[createAction]
 	);
 
-	const handleUpdateFromDialog = useCallback((_funnel: Funnel) => {
-		setIsDialogOpen(false);
-	}, []);
+	const handleUpdateFromDialog = useCallback(
+		(_funnel: Funnel): Promise<void> => {
+			setIsDialogOpen(false);
+			return Promise.resolve();
+		},
+		[]
+	);
 
 	return (
 		<>
