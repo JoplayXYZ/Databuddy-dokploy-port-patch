@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 import { buttonVariants } from "./ui/button";
 
 const rateButtonVariants = cva(
-	"inline-flex items-center gap-2 rounded border px-3 py-2 font-medium text-sm disabled:cursor-not-allowed [&_svg]:size-4",
+	"inline-flex items-center gap-2 border px-3 py-2 font-medium text-sm disabled:cursor-not-allowed [&_svg]:size-4",
 	{
 		variants: {
 			active: {
@@ -150,7 +150,7 @@ export function Feedback({
 			</div>
 			<CollapsibleContent className="mt-3">
 				{previous ? (
-					<div className="flex flex-col items-center gap-3 rounded bg-muted/50 px-3 py-6 text-center text-muted-foreground text-sm">
+					<div className="flex flex-col items-center gap-3 bg-muted/50 px-3 py-6 text-center text-muted-foreground text-sm">
 						<p>Thank you for your feedback!</p>
 						<button
 							className={cn(
@@ -174,7 +174,7 @@ export function Feedback({
 						<textarea
 							autoFocus
 							className={cn(
-								"resize-none rounded border bg-muted/30 p-3 text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1",
+								"resize-none border bg-muted/30 p-3 text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1",
 								error
 									? "border-red-500 focus-visible:ring-red-500/50"
 									: "border-border focus-visible:ring-primary/50"

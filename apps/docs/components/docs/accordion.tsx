@@ -34,7 +34,7 @@ function Accordions({
 	return (
 		<SciFiCard
 			className={cn(
-				"rounded border border-border bg-card/50 backdrop-blur-sm",
+				"border border-border bg-card/50 backdrop-blur-sm",
 				className
 			)}
 			opacity="reduced"

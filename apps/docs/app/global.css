@@ -5,7 +5,7 @@
 
 @custom-variant dark (&:is(.dark *));
 
-* {
+*:not(code, code *, pre, pre *, kbd) {
   font-family: var(--font-lt-superior);
 }
 

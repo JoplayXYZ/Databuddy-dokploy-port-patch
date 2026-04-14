@@ -21,7 +21,7 @@ export {
 	Cards,
 } from "./card";
 // Code components
-export { CodeBlock, InlineCode } from "./code-block";
+export { CodeBlock, InlineCode, PreWrapper } from "./code-block";
 export { LeapComponent } from "./leap-component";
 // Steps components
 export { CompletedStep, Step, Steps } from "./steps";
