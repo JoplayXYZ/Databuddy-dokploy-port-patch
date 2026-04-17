@@ -1,45 +1,12 @@
+import { logger } from "@/logger";
 import type { DatabuddyTracker } from "./types";
 
-/**
- * Checks if the Databuddy tracker script has loaded and is available.
- * Use this before calling tracking functions in conditional scenarios.
- *
- * @returns `true` if tracker is available, `false` if not loaded or on server
- *
- * @example
- * ```ts
- * import { isTrackerAvailable, track } from "@databuddy/sdk";
- *
- * if (isTrackerAvailable()) {
- *   track("feature_used", { feature: "export" });
- * }
- * ```
- */
+/** Check if the full tracker instance (`window.databuddy`) is available. */
 export function isTrackerAvailable(): boolean {
-	return typeof window !== "undefined" && (!!window.databuddy || !!window.db);
+	return typeof window !== "undefined" && !!window.databuddy;
 }
 
-/**
- * Returns the raw Databuddy tracker instance for advanced use cases.
- * Prefer using the exported functions (`track`, `flush`, etc.) instead.
- *
- * @returns Tracker instance or `null` if not available
- *
- * @example
- * ```ts
- * import { getTracker, getAnonymousId, getSessionId } from "@databuddy/sdk";
- *
- * const tracker = getTracker();
- * if (tracker) {
- *   // Access tracker methods
- *   tracker.track("event", { prop: "value" });
- *
- *   // Get IDs using dedicated functions
- *   const anonId = getAnonymousId();
- *   const sessionId = getSessionId();
- * }
- * ```
- */
+/** Returns the `window.databuddy` tracker instance, or `null` if unavailable. */
 export function getTracker(): DatabuddyTracker | null {
 	if (typeof window === "undefined") {
 		return null;
@@ -47,38 +14,7 @@ export function getTracker(): DatabuddyTracker | null {
 	return window.databuddy || null;
 }
 
-/**
- * Tracks a custom event with optional properties.
- * Events are batched and sent efficiently to minimize network overhead.
- * Safe to call on server (no-op) or before tracker loads.
- *
- * @param name - Event name (e.g., "button_click", "purchase", "signup")
- * @param properties - Key-value pairs of event data
- *
- * @example
- * ```ts
- * import { track } from "@databuddy/sdk";
- *
- * // Simple event
- * track("signup_started");
- *
- * // Event with properties
- * track("item_purchased", {
- *   itemId: "sku-123",
- *   price: 29.99,
- *   currency: "USD"
- * });
- *
- * // In a React component
- * function CheckoutButton() {
- *   return (
- *     <button onClick={() => track("checkout_clicked", { cartSize: 3 })}>
- *       Checkout
- *     </button>
- *   );
- * }
- * ```
- */
+/** Track a custom event. Safe to call on server (no-op) or before tracker loads. */
 export function track(
 	name: string,
 	properties?: Record<string, unknown>
@@ -87,16 +23,15 @@ export function track(
 		return;
 	}
 
-	const tracker = window.db?.track || window.databuddy?.track;
-
-	if (!tracker) {
+	const fn = window.db?.track || window.databuddy?.track;
+	if (!fn) {
 		return;
 	}
 
 	try {
-		tracker(name, properties);
+		fn(name, properties);
 	} catch (error) {
-		console.error("Databuddy track error:", error);
+		logger.error("track error:", error);
 	}
 }
 
@@ -108,93 +43,43 @@ export function trackCustomEvent(
 	track(name, properties);
 }
 
-/**
- * Clears the current user session and generates new anonymous/session IDs.
- * Use after logout to ensure the next user gets a fresh identity.
- *
- * @example
- * ```ts
- * import { clear } from "@databuddy/sdk";
- *
- * async function handleLogout() {
- *   await signOut();
- *   clear(); // Reset tracking identity
- *   router.push("/login");
- * }
- * ```
- */
+/** Reset user session — generates new anonymous and session IDs. Call after logout. */
 export function clear(): void {
 	if (typeof window === "undefined") {
 		return;
 	}
 
-	const tracker = window.db?.clear || window.databuddy?.clear;
-
-	if (!tracker) {
+	const fn = window.db?.clear || window.databuddy?.clear;
+	if (!fn) {
 		return;
 	}
 
 	try {
-		tracker();
+		fn();
 	} catch (error) {
-		console.error("Databuddy clear error:", error);
+		logger.error("clear error:", error);
 	}
 }
 
-/**
- * Forces all queued events to be sent immediately.
- * Useful before navigation or when you need to ensure events are captured.
- *
- * @example
- * ```ts
- * import { track, flush } from "@databuddy/sdk";
- *
- * function handleExternalLink(url: string) {
- *   track("external_link_clicked", { url });
- *   flush(); // Ensure event is sent before leaving
- *   window.location.href = url;
- * }
- * ```
- */
+/** Force send all queued events. Call before navigating to external sites. */
 export function flush(): void {
 	if (typeof window === "undefined") {
 		return;
 	}
 
-	const tracker = window.db?.flush || window.databuddy?.flush;
-
-	if (!tracker) {
+	const fn = window.db?.flush || window.databuddy?.flush;
+	if (!fn) {
 		return;
 	}
 
 	try {
-		tracker();
+		fn();
 	} catch (error) {
-		console.error("Databuddy flush error:", error);
+		logger.error("flush error:", error);
 	}
 }
 
-/**
- * Tracks an error event. Convenience wrapper around `track("error", ...)`.
- *
- * @param message - Error message
- * @param properties - Additional error context (filename, line number, stack trace)
- *
- * @example
- * ```ts
- * import { trackError } from "@databuddy/sdk";
- *
- * try {
- *   await riskyOperation();
- * } catch (error) {
- *   trackError(error.message, {
- *     stack: error.stack,
- *     error_type: error.name,
- *     context: "checkout_flow"
- *   });
- * }
- * ```
- */
+/** Convenience wrapper: `track('error', { message, ...properties })` */
 export function trackError(
 	message: string,
 	properties?: {
@@ -209,32 +94,7 @@ export function trackError(
 	track("error", { message, ...properties });
 }
 
-/**
- * Gets the anonymous user ID. Persists across sessions via localStorage.
- * Useful for server-side identification or cross-domain tracking.
- *
- * @param urlParams - Optional URLSearchParams to check for `anonId` param (highest priority)
- * @returns Anonymous ID or `null` if unavailable
- *
- * Priority: URL params → tracker instance → localStorage
- *
- * @example
- * ```ts
- * import { getAnonymousId } from "@databuddy/sdk";
- *
- * // Get from tracker
- * const anonId = getAnonymousId();
- *
- * // Check URL params first (for cross-domain tracking)
- * const params = new URLSearchParams(window.location.search);
- * const anonId = getAnonymousId(params);
- *
- * // Pass to server
- * await fetch("/api/identify", {
- *   body: JSON.stringify({ anonId })
- * });
- * ```
- */
+/** Get anonymous user ID. Priority: URL params → localStorage. Persists across sessions. */
 export function getAnonymousId(urlParams?: URLSearchParams): string | null {
 	if (typeof window === "undefined") {
 		return null;
@@ -242,23 +102,7 @@ export function getAnonymousId(urlParams?: URLSearchParams): string | null {
 	return urlParams?.get("anonId") || localStorage.getItem("did") || null;
 }
 
-/**
- * Gets the current session ID. Resets after 30 min of inactivity.
- * Useful for correlating events within a single browsing session.
- *
- * @param urlParams - Optional URLSearchParams to check for `sessionId` param (highest priority)
- * @returns Session ID or `null` if unavailable
- *
- * Priority: URL params → tracker instance → sessionStorage
- *
- * @example
- * ```ts
- * import { getSessionId } from "@databuddy/sdk";
- *
- * const sessionId = getSessionId();
- * console.log("Current session:", sessionId);
- * ```
- */
+/** Get current session ID. Priority: URL params → sessionStorage. Resets after 30 min inactivity. */
 export function getSessionId(urlParams?: URLSearchParams): string | null {
 	if (typeof window === "undefined") {
 		return null;
@@ -268,22 +112,7 @@ export function getSessionId(urlParams?: URLSearchParams): string | null {
 	);
 }
 
-/**
- * Gets both anonymous ID and session ID in a single call.
- *
- * @param urlParams - Optional URLSearchParams to check for tracking params
- * @returns Object with `anonId` and `sessionId` (either may be null)
- *
- * @example
- * ```ts
- * import { getTrackingIds } from "@databuddy/sdk";
- *
- * const { anonId, sessionId } = getTrackingIds();
- *
- * // Send to your backend
- * await api.identify({ anonId, sessionId, userId: user.id });
- * ```
- */
+/** Get both anonymous ID and session ID in one call. */
 export function getTrackingIds(urlParams?: URLSearchParams): {
 	anonId: string | null;
 	sessionId: string | null;
@@ -294,27 +123,7 @@ export function getTrackingIds(urlParams?: URLSearchParams): {
 	};
 }
 
-/**
- * Returns tracking IDs as a URL query string for cross-domain tracking.
- * Append to URLs when linking to other domains you own.
- *
- * @param urlParams - Optional URLSearchParams to preserve existing params
- * @returns Query string like `"anonId=xxx&sessionId=yyy"` or empty string
- *
- * @example
- * ```ts
- * import { getTrackingParams } from "@databuddy/sdk";
- *
- * // Link to subdomain with tracking continuity
- * const params = getTrackingParams();
- * const url = `https://app.example.com/dashboard${params ? `?${params}` : ""}`;
- *
- * // In a component
- * <a href={`https://shop.example.com?${getTrackingParams()}`}>
- *   Visit Shop
- * </a>
- * ```
- */
+/** Returns tracking IDs as a URL query string for cross-domain tracking. */
 export function getTrackingParams(urlParams?: URLSearchParams): string {
 	const anonId = getAnonymousId(urlParams);
 	const sessionId = getSessionId(urlParams);

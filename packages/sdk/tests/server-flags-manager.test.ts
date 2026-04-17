@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, mock } from "bun:test";
 import type { FlagResult, FlagsConfig } from "../src/core/flags/types";
-import { createServerFlagsManager } from "../src/node/flags/create-manager";
+import { createServerFlagsManager } from "../src/node/flags/flags-manager";
 import { ServerFlagsManager } from "../src/node/flags/flags-manager";
 
 const FLAG_ENABLED: FlagResult = {

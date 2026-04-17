@@ -1,6 +1,6 @@
 import { defineComponent, onMounted, onUnmounted, ref, watch } from "vue";
 import { createScript, type DatabuddyConfig, isScriptInjected } from "@/core";
-import type { IsOptional } from "@/utils";
+import { detectClientId, type IsOptional } from "@/utils";
 
 export const Databuddy = defineComponent({
 	props: {} as {
@@ -19,11 +19,12 @@ export const Databuddy = defineComponent({
 		const scriptRef = ref<HTMLScriptElement | null>(null);
 
 		const injectScript = () => {
-			if (props.disabled || isScriptInjected()) {
+			const clientId = detectClientId(props.clientId);
+			if (!clientId || props.disabled || isScriptInjected()) {
 				return;
 			}
 
-			const script = createScript(props);
+			const script = createScript({ ...props, clientId });
 
 			document.head.appendChild(script);
 			scriptRef.value = script;

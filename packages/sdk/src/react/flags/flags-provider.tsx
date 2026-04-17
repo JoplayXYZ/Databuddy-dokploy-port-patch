@@ -1,4 +1,3 @@
-/** biome-ignore-all lint/correctness/noUnusedImports: we need to import React to use the createContext function */
 import { BrowserFlagStorage } from "@/core/flags/browser-storage";
 import { BrowserFlagsManager } from "@/core/flags/flags-manager";
 import type {
@@ -58,14 +57,20 @@ export function FlagsProvider({ children, ...config }: FlagsProviderProps) {
 		const prev = prevConfigRef.current;
 		const changed =
 			prev.apiUrl !== config.apiUrl ||
-			prev.isPending !== config.isPending ||
-			prev.user?.userId !== config.user?.userId ||
-			prev.user?.email !== config.user?.email ||
-			prev.environment !== config.environment ||
-			prev.disabled !== config.disabled ||
 			prev.autoFetch !== config.autoFetch ||
 			prev.cacheTtl !== config.cacheTtl ||
-			prev.staleTime !== config.staleTime;
+			prev.debug !== config.debug ||
+			prev.defaults !== config.defaults ||
+			prev.disabled !== config.disabled ||
+			prev.environment !== config.environment ||
+			prev.isPending !== config.isPending ||
+			prev.skipStorage !== config.skipStorage ||
+			prev.staleTime !== config.staleTime ||
+			prev.user?.userId !== config.user?.userId ||
+			prev.user?.email !== config.user?.email ||
+			prev.user?.organizationId !== config.user?.organizationId ||
+			prev.user?.teamId !== config.user?.teamId ||
+			prev.user?.properties !== config.user?.properties;
 
 		if (changed) {
 			prevConfigRef.current = config;
