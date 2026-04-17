@@ -109,6 +109,12 @@ export function validateRequest(
 
 		log.set({ clientId });
 
+		const sdkName = request.headers.get("databuddy-sdk-name");
+		const sdkVersion = request.headers.get("databuddy-sdk-version");
+		if (sdkName) {
+			log.set({ sdk_name: sdkName, sdk_version: sdkVersion });
+		}
+
 		const website = await record("getWebsiteByIdV2", () =>
 			getWebsiteByIdV2(clientId)
 		);
