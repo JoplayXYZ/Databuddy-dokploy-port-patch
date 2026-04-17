@@ -40,4 +40,8 @@ export const MagicLinkEmail = ({ url }: MagicLinkEmailProps) => (
 	</EmailLayout>
 );
 
+MagicLinkEmail.PreviewProps = {
+	url: "https://app.databuddy.cc/magic/abc123",
+} satisfies MagicLinkEmailProps;
+
 export default MagicLinkEmail;

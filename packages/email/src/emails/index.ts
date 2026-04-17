@@ -1,4 +1,3 @@
-export { sanitizeEmailText } from "../utils/sanitize";
 export { emailBrand } from "./email-brand";
 export * from "./email-button";
 export * from "./email-footer";
@@ -10,6 +9,7 @@ export * from "./invitation-email";
 export * from "./magic-link-email";
 export * from "./otp-email";
 export * from "./reset-password-email";
+export { emailTailwindConfig } from "./tailwind.config";
 export * from "./uptime-alert-email";
 export * from "./usage-alert-email";
 export * from "./usage-limit-email";

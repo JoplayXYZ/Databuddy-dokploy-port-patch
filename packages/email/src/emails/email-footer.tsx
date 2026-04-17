@@ -3,7 +3,10 @@ import { emailBrand } from "./email-brand";
 
 export const EmailFooter = () => (
 	<Section className="mt-8">
-		<Hr style={{ borderColor: emailBrand.border }} />
+		<Hr
+			className="border-border border-solid"
+			style={{ borderColor: emailBrand.border }}
+		/>
 		<Text
 			className="m-0 mb-2 text-center text-xs"
 			style={{ color: emailBrand.muted }}

@@ -117,4 +117,12 @@ export const UsageLimitEmail = ({
 	);
 };
 
+UsageLimitEmail.PreviewProps = {
+	featureName: "Events",
+	limitAmount: 10_000,
+	thresholdType: "limit_reached",
+	usageAmount: 10_000,
+	userName: "Ada",
+} satisfies UsageLimitEmailProps;
+
 export default UsageLimitEmail;

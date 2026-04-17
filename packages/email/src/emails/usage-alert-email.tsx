@@ -102,4 +102,11 @@ export const UsageAlertEmail = ({
 	);
 };
 
+UsageAlertEmail.PreviewProps = {
+	featureName: "Events",
+	threshold: 80,
+	thresholdType: "usage_percentage_threshold",
+	userName: "Ada",
+} satisfies UsageAlertEmailProps;
+
 export default UsageAlertEmail;

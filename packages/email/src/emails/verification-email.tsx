@@ -40,4 +40,8 @@ export const VerificationEmail = ({ url }: VerificationEmailProps) => (
 	</EmailLayout>
 );
 
+VerificationEmail.PreviewProps = {
+	url: "https://app.databuddy.cc/verify/abc123",
+} satisfies VerificationEmailProps;
+
 export default VerificationEmail;

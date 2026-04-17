@@ -37,4 +37,8 @@ export const ResetPasswordEmail = ({ url }: ResetPasswordEmailProps) => (
 	</EmailLayout>
 );
 
+ResetPasswordEmail.PreviewProps = {
+	url: "https://app.databuddy.cc/reset/abc123",
+} satisfies ResetPasswordEmailProps;
+
 export default ResetPasswordEmail;

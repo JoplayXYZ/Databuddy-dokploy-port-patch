@@ -45,4 +45,8 @@ export const OtpEmail = ({ otp }: OtpEmailProps) => (
 	</EmailLayout>
 );
 
+OtpEmail.PreviewProps = {
+	otp: "482913",
+} satisfies OtpEmailProps;
+
 export default OtpEmail;
