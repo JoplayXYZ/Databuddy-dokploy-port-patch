@@ -554,10 +554,10 @@ export function FlagSheet({
 								<div className="space-y-2">
 									<div className="space-y-0.5">
 										<span className="font-medium text-foreground text-sm">
-											Flag Type
+											Type
 										</span>
 										<p className="text-muted-foreground text-xs">
-											How the flag value is determined for each user
+											What this flag returns
 										</p>
 									</div>
 									<div className="flex gap-2">
@@ -612,10 +612,10 @@ export function FlagSheet({
 														<div className="flex items-center justify-between">
 															<div className="space-y-0.5">
 																<span className="font-medium text-foreground text-sm">
-																	Rollout Percentage
+																	Rollout
 																</span>
 																<p className="text-muted-foreground text-xs">
-																	% of users who get true (when active)
+																	Share of users who see it enabled
 																</p>
 															</div>
 															<span className="font-mono text-foreground text-lg tabular-nums">
@@ -658,19 +658,19 @@ export function FlagSheet({
 														{
 															value: "user",
 															label: "User",
-															description: "Each user individually",
+															description: "Each user",
 															icon: UserIcon,
 														},
 														{
 															value: "organization",
 															label: "Organization",
-															description: "All org members together",
+															description: "Whole org",
 															icon: BuildingsIcon,
 														},
 														{
 															value: "team",
 															label: "Team",
-															description: "All team members together",
+															description: "Whole team",
 															icon: UsersThreeIcon,
 														},
 													] as const;
@@ -679,10 +679,10 @@ export function FlagSheet({
 														<div className="space-y-2">
 															<div className="space-y-0.5">
 																<span className="font-medium text-foreground text-sm">
-																	Rollout Unit
+																	Bucket by
 																</span>
 																<p className="text-muted-foreground text-xs">
-																	Group users for consistent rollout results
+																	Same user always gets the same result
 																</p>
 															</div>
 															<div className="flex gap-2">
@@ -760,10 +760,10 @@ export function FlagSheet({
 											<div className="flex items-center justify-between">
 												<div className="space-y-0.5">
 													<span className="font-medium text-foreground text-sm">
-														Return Value
+														Default
 													</span>
 													<p className="text-muted-foreground text-xs">
-														What users get when flag is active
+														Value returned when on
 													</p>
 												</div>
 												<FormField
@@ -816,9 +816,9 @@ export function FlagSheet({
 									const canBeActive = inactiveDeps.length === 0;
 
 									const statusDescriptions = {
-										active: "Live, evaluates rules",
-										inactive: "Off, always returns false",
-										archived: "Retired, hidden from list",
+										active: "Live",
+										inactive: "Returns false",
+										archived: "Hidden",
 									};
 
 									return (
@@ -826,11 +826,10 @@ export function FlagSheet({
 											<div className="flex items-center justify-between">
 												<div className="space-y-0.5">
 													<span className="font-medium text-foreground text-sm">
-														Flag Status
+														Status
 													</span>
 													<p className="text-muted-foreground text-xs">
-														Active = uses settings below. Inactive = completely
-														off.
+														Turn this flag on or off for everyone
 													</p>
 												</div>
 												{!canBeActive && (
@@ -953,7 +952,7 @@ export function FlagSheet({
 									icon={CodeIcon}
 									isExpanded={expandedSection === "implementation"}
 									onToggleAction={() => toggleSection("implementation")}
-									title="How to Implement"
+									title="Code"
 								>
 									<ImplementationExamples
 										flagKey={form.watch("flag.key") || "my-feature"}

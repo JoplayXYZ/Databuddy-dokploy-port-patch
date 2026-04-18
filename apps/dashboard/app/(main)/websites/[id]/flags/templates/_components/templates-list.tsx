@@ -18,7 +18,7 @@ export function TemplatesList({
 		return (
 			<div className="flex flex-1 items-center justify-center py-16">
 				<EmptyState
-					description="Pre-configured templates for common feature flag patterns will appear here."
+					description="Ready-made flag setups will appear here."
 					icon={<LayoutIcon weight="duotone" />}
 					title="No templates available"
 					variant="minimal"

@@ -128,12 +128,12 @@ export default function FlagsLayout({
 				}
 				description={
 					isTemplatesPage
-						? "Pre-configured flag templates for common use cases"
+						? "Starting points for common flag setups"
 						: isGroupsPage
-							? "Reusable targeting rules for your flags"
+							? "Reusable targeting rules"
 							: isArchivePage
-								? "Flags that have been archived"
-								: "Control feature rollouts and A/B testing"
+								? "Flags you've retired"
+								: "Control rollouts and A/B tests"
 				}
 				docsUrl="https://www.databuddy.cc/docs/sdk/feature-flags"
 				feature={
@@ -254,10 +254,8 @@ export default function FlagsLayout({
 								<div className="space-y-2">
 									<p className="font-medium">A/B Test Experiment</p>
 									<p className="text-xs leading-relaxed">
-										This is a proof-of-concept feature flag demonstrating A/B
-										testing capabilities. Approximately 50% of users are
-										randomly assigned to the "Red Team" experience, while the
-										other 50% see the "Blue Team" experience.
+										Live demo: ~50% of users see Red Team, ~50% see Blue
+										Team.
 									</p>
 								</div>
 							</TooltipContent>

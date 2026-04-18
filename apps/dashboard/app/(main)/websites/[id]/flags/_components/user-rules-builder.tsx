@@ -344,7 +344,7 @@ export function UserRulesBuilder({ rules, onChange }: UserRulesBuilderProps) {
 		return (
 			<div className="py-4 text-center">
 				<p className="mb-3 text-muted-foreground text-sm">
-					Target specific users, emails, or properties
+					Match users by ID, email, or property
 				</p>
 				<Button onClick={addRule} size="sm" type="button" variant="outline">
 					<PlusIcon size={14} />

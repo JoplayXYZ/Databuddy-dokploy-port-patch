@@ -101,10 +101,10 @@ export default function FlagsPage() {
 							<div className="flex flex-1 items-center justify-center py-16">
 								<EmptyState
 									action={{
-										label: "Create Your First Flag",
+										label: "Create a flag",
 										onClick: handleCreateFlag,
 									}}
-									description="Create your first feature flag to start controlling feature rollouts and A/B testing across your application."
+									description="Flags let you roll out features gradually or run A/B tests."
 									icon={<FlagIcon weight="duotone" />}
 									title="No feature flags yet"
 									variant="minimal"

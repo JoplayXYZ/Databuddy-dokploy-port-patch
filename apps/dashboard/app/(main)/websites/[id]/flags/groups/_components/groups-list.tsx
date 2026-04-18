@@ -21,10 +21,10 @@ export function GroupsList({
 			<div className="flex flex-1 items-center justify-center py-16">
 				<EmptyState
 					action={{
-						label: "Create Your First Group",
+						label: "Create a group",
 						onClick: onCreateGroupAction,
 					}}
-					description="Create reusable groups of users to quickly target them across multiple feature flags without repeating the same rules."
+					description="Reusable sets of users you can target from any flag."
 					icon={<UsersThreeIcon weight="duotone" />}
 					title="No target groups yet"
 					variant="minimal"

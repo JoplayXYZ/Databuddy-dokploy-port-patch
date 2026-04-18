@@ -136,7 +136,7 @@ export default function FunnelsPage() {
 				<WebsitePageHeader
 					createActionLabel="Create Funnel"
 					currentUsage={funnels.length}
-					description="Track user journeys and optimize conversion drop-off points"
+					description="See where users drop off in a multi-step journey"
 					feature={GATED_FEATURES.FUNNELS}
 					hasError={listOutcome.status === "error"}
 					icon={<FunnelIcon className="size-6" weight="duotone" />}
@@ -157,11 +157,11 @@ export default function FunnelsPage() {
 					<List.Content
 						emptyProps={{
 							action: {
-								label: "Create Your First Funnel",
+								label: "Create a funnel",
 								onClick: () => setEditing("new"),
 							},
 							description:
-								"Create your first funnel to start tracking user conversion journeys and identify optimization opportunities in your user flow.",
+								"Define a multi-step journey to see where users drop off.",
 							icon: <FunnelIcon className="size-6" weight="duotone" />,
 							title: "No funnels yet",
 						}}

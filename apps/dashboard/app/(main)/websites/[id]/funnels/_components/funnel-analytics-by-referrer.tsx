@@ -285,7 +285,7 @@ export function FunnelAnalyticsByReferrer({
 					conversionRate={avgConversionRate}
 					isAll
 					isSelected={selectedReferrer === "all"}
-					label="All Sources"
+					label="All sources"
 					onClick={() => handleChange("all")}
 					users={totalUsers}
 				/>
