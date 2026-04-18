@@ -8,7 +8,7 @@ import type { DatePreset } from "../../schemas/query-schemas";
 import {
 	type SchemaDocOptions,
 	generateSchemaDocumentation,
-} from "../config/schema-docs";
+} from "../prompts/clickhouse-schema";
 
 export {
 	MCP_DATE_PRESETS,
@@ -18,7 +18,7 @@ export {
 	CLICKHOUSE_SCHEMA_DOCS,
 	SCHEMA_SECTIONS,
 	type SchemaSection,
-} from "../config/schema-docs";
+} from "../prompts/clickhouse-schema";
 
 export interface McpQueryItem {
 	filters?: Array<{

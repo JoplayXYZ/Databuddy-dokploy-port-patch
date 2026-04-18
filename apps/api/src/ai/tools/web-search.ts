@@ -1,7 +1,7 @@
 import { getAutumn } from "@databuddy/rpc";
 import { generateText, tool } from "ai";
 import { z } from "zod";
-import { getAILogger } from "../config/ai-logger";
+import { getAILogger } from "../../lib/ai-logger";
 import { mergeWideEvent } from "../../lib/tracing";
 import type { AppContext } from "../config/context";
 import { models } from "../config/models";

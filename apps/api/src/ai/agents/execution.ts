@@ -8,12 +8,6 @@ import {
 	type UsageTelemetry,
 } from "../../lib/usage-telemetry";
 
-interface AgentBillingPrincipal {
-	apiKey?: ApiKeyRow | null;
-	organizationId?: string | null;
-	userId?: string | null;
-}
-
 interface AgentUsageTrackingInput {
 	agentType?: string;
 	billingCustomerId?: string | null;
@@ -26,14 +20,15 @@ interface AgentUsageTrackingInput {
 	websiteId?: string;
 }
 
-export async function resolveAgentBillingCustomerId(
-	principal: AgentBillingPrincipal
-): Promise<string | null> {
+export async function resolveAgentBillingCustomerId(principal: {
+	apiKey?: ApiKeyRow | null;
+	organizationId?: string | null;
+	userId?: string | null;
+}): Promise<string | null> {
 	const ownerUserId = principal.userId ?? principal.apiKey?.userId ?? null;
 	if (!ownerUserId) {
 		return null;
 	}
-
 	return await getBillingCustomerId(
 		ownerUserId,
 		principal.organizationId ?? principal.apiKey?.organizationId ?? null
@@ -46,7 +41,6 @@ export async function ensureAgentCreditsAvailable(
 	if (!billingCustomerId) {
 		return true;
 	}
-
 	const allowed = await getAutumn().check({
 		customerId: billingCustomerId,
 		featureId: "agent_credits",
@@ -82,30 +76,27 @@ export async function trackAgentUsageAndBill(
 		["agent_cache_write_tokens", summary.cache_write_tokens],
 	];
 
-	const results = await Promise.allSettled(
+	const billingErrorContext = {
+		agent_usage_billing_error: true,
+		agent_source: input.source,
+		...(input.agentType ? { agent_type: input.agentType } : {}),
+		...(input.chatId ? { agent_chat_id: input.chatId } : {}),
+		...(input.websiteId ? { agent_website_id: input.websiteId } : {}),
+	};
+
+	await Promise.all(
 		tokenTracks
 			.filter(([, value]) => value > 0)
 			.map(([featureId, value]) =>
-				autumn.track({
-					customerId: input.billingCustomerId as string,
-					featureId,
-					value,
-				})
+				autumn
+					.track({
+						customerId: input.billingCustomerId as string,
+						featureId,
+						value,
+					})
+					.catch((err) => captureError(err, billingErrorContext))
 			)
 	);
-
-	const rejected = results.find(
-		(result): result is PromiseRejectedResult => result.status === "rejected"
-	);
-	if (rejected) {
-		captureError(rejected.reason, {
-			agent_usage_billing_error: true,
-			agent_source: input.source,
-			...(input.agentType ? { agent_type: input.agentType } : {}),
-			...(input.chatId ? { agent_chat_id: input.chatId } : {}),
-			...(input.websiteId ? { agent_website_id: input.websiteId } : {}),
-		});
-	}
 
 	return summary;
 }

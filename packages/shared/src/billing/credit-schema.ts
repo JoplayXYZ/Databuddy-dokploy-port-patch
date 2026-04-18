@@ -35,7 +35,7 @@ export const BASELINE_MODEL_ID = "anthropic/claude-4-sonnet" as const;
  *
  * The Vercel AI Gateway catalog in tokenlens exposes Anthropic's
  * 5-minute cache rate ($3.75/M), but our agent is configured with
- * `ttl: "1h"` in apps/api/src/ai/config/prompt-cache.ts so Anthropic
+ * `ttl: "1h"` in apps/api/src/ai/config/models.ts so Anthropic
  * bills the 1-hour rate ($6/M). We override cacheWrite here to match
  * production billing. If the agent switches back to 5-minute TTL,
  * delete this constant and let tokenlens drive the rate directly.

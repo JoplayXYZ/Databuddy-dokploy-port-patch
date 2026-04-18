@@ -11,11 +11,8 @@ import {
 	getPlanCapabilities,
 	type PlanId,
 } from "@databuddy/shared/types/features";
+import { captureError } from "../../lib/tracing";
 
-/**
- * Fetch plan/tier info and capabilities for the current user.
- * Returns an XML string describing the plan and enabled features.
- */
 export async function fetchPlanContext(
 	userId: string,
 	organizationId: string | null
@@ -38,15 +35,12 @@ export async function fetchPlanContext(
 <features>${featureSummary}</features>
 <limits>${limitSummary}</limits>
 </plan_info>`;
-	} catch {
+	} catch (err) {
+		captureError(err, { enrich_context_step: "plan", user_id: userId });
 		return "";
 	}
 }
 
-/**
- * Fetch entity counts (goals, funnels, links, annotations) scoped to the
- * current website/organization. Returns an XML string with the counts.
- */
 export async function fetchEntityCounts(
 	websiteId: string,
 	organizationId: string | null
@@ -88,35 +82,29 @@ export async function fetchEntityCounts(
 				),
 		]);
 
-		const goalCount = goalRows[0]?.value ?? 0;
-		const funnelCount = funnelRows[0]?.value ?? 0;
-		const linkCount = linkRows[0]?.value ?? 0;
-		const annotationCount = annotationRows[0]?.value ?? 0;
-
 		return `<existing_entities>
-<goals>${goalCount}</goals>
-<funnels>${funnelCount}</funnels>
-<links>${linkCount}</links>
-<annotations>${annotationCount}</annotations>
+<goals>${goalRows[0]?.value ?? 0}</goals>
+<funnels>${funnelRows[0]?.value ?? 0}</funnels>
+<links>${linkRows[0]?.value ?? 0}</links>
+<annotations>${annotationRows[0]?.value ?? 0}</annotations>
 </existing_entities>`;
-	} catch {
+	} catch (err) {
+		captureError(err, {
+			enrich_context_step: "entity_counts",
+			website_id: websiteId,
+		});
 		return "";
 	}
 }
 
-/**
- * Fetch recent analytics insights (last 14 days) for the given website.
- * Returns an XML string summarising the latest anomalies and insights.
- */
 export async function fetchRecentInsights(
 	organizationId: string | null,
 	websiteId: string
 ): Promise<string> {
+	if (!organizationId) {
+		return "";
+	}
 	try {
-		if (!organizationId) {
-			return "";
-		}
-
 		const fourteenDaysAgo = new Date();
 		fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
 
@@ -160,16 +148,15 @@ export async function fetchRecentInsights(
 		return `<recent_insights>
 ${lines.join("\n")}
 </recent_insights>`;
-	} catch {
+	} catch (err) {
+		captureError(err, {
+			enrich_context_step: "insights",
+			website_id: websiteId,
+		});
 		return "";
 	}
 }
 
-/**
- * Enrich the agent context with plan info, entity counts, and recent insights.
- * Runs all enrichment queries in parallel. Each enrichment is best-effort and
- * will silently return an empty string on failure.
- */
 export async function enrichAgentContext(opts: {
 	userId: string;
 	websiteId: string;

@@ -12,7 +12,7 @@ import {
 	trackAgentUsageAndBill,
 } from "../agents/execution";
 import { createMcpAgentConfig } from "../agents/mcp";
-import { getAILogger } from "../config/ai-logger";
+import { getAILogger } from "../../lib/ai-logger";
 import { modelNames } from "../config/models";
 
 const MCP_AGENT_TIMEOUT_MS = 45_000;
@@ -72,9 +72,6 @@ export async function runMcpAgent(
 	]);
 
 	const memoryBlock = memoryCtx ? formatMemoryForPrompt(memoryCtx) : "";
-	if (memoryBlock) {
-		config.system.content = `${config.system.content}\n\n${memoryBlock}`;
-	}
 	const instructions = config.system;
 
 	const mcpTelemetryMetadata: Record<string, string> = {
@@ -106,13 +103,17 @@ export async function runMcpAgent(
 		},
 	});
 
+	const questionContent = memoryBlock
+		? `<context>\n${memoryBlock}\n</context>\n\n${options.question}`
+		: options.question;
+
 	const messages =
 		options.priorMessages && options.priorMessages.length > 0
 			? [
 					...options.priorMessages,
-					{ role: "user" as const, content: options.question },
+					{ role: "user" as const, content: questionContent },
 				]
-			: [{ role: "user" as const, content: options.question }];
+			: [{ role: "user" as const, content: questionContent }];
 
 	const abortController = new AbortController();
 	const timeout = setTimeout(

@@ -33,7 +33,7 @@ import type { ParsedInsight } from "../ai/schemas/smart-insights-output";
 import { insightsOutputSchema } from "../ai/schemas/smart-insights-output";
 import { createInsightsAgentTools } from "../ai/tools/insights-agent-tools";
 import { storeAnalyticsSummary } from "../lib/supermemory";
-import { getAILogger } from "../ai/config/ai-logger";
+import { getAILogger } from "../lib/ai-logger";
 import { captureError, mergeWideEvent } from "../lib/tracing";
 
 const CACHE_TTL = 900;

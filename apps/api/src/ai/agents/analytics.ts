@@ -1,8 +1,10 @@
 import { stepCountIs } from "ai";
 import type { AppContext } from "../config/context";
-import { models } from "../config/models";
-import { cachedSystemPrompt } from "../config/prompt-cache";
-import { buildAnalyticsInstructions } from "../prompts/analytics";
+import { type AgentModelKey, ANTHROPIC_CACHE_1H, models } from "../config/models";
+import {
+	buildAnalyticsInstructions,
+	buildFastInstructions,
+} from "../prompts/analytics";
 import { createAnnotationTools } from "../tools/annotations";
 import { executeSqlQueryTool } from "../tools/execute-sql-query";
 import { createFunnelTools } from "../tools/funnels";
@@ -14,31 +16,27 @@ import { createProfileTools } from "../tools/profiles";
 import { webSearchTool } from "../tools/web-search";
 import type { AgentConfig, AgentContext, AgentThinking } from "./types";
 
-function createTools() {
-	return {
-		get_data: getDataTool,
-		execute_sql_query: executeSqlQueryTool,
-		web_search: webSearchTool,
-		...createMemoryTools(),
-		...createProfileTools(),
-		...createFunnelTools(),
-		...createGoalTools(),
-		...createAnnotationTools(),
-		...createLinksTools(),
-	};
-}
+const analyticsTools = {
+	get_data: getDataTool,
+	execute_sql_query: executeSqlQueryTool,
+	web_search: webSearchTool,
+	...createMemoryTools(),
+	...createProfileTools(),
+	...createFunnelTools(),
+	...createGoalTools(),
+	...createAnnotationTools(),
+	...createLinksTools(),
+};
 
 export const maxSteps = 20;
 
-// Anthropic extended thinking budget per effort tier (tokens). Values are
-// conservative — the model may use less but won't exceed this.
 const THINKING_BUDGET: Record<Exclude<AgentThinking, "off">, number> = {
 	low: 2048,
 	medium: 8192,
 	high: 16_384,
 };
 
-function buildProviderOptions(
+function thinkingProviderOptions(
 	thinking: AgentThinking | undefined
 ): AgentConfig["providerOptions"] {
 	if (!thinking || thinking === "off") {
@@ -51,7 +49,10 @@ function buildProviderOptions(
 	};
 }
 
-export function createConfig(context: AgentContext): AgentConfig {
+export function createConfig(
+	context: AgentContext,
+	modelKey: AgentModelKey = "analytics"
+): AgentConfig {
 	const appContext: AppContext = {
 		userId: context.userId,
 		websiteId: context.websiteId,
@@ -63,13 +64,23 @@ export function createConfig(context: AgentContext): AgentConfig {
 		billingCustomerId: context.billingCustomerId,
 	};
 
+	const isFast = modelKey === "fast";
+
 	return {
-		model: models.analytics,
-		system: cachedSystemPrompt(buildAnalyticsInstructions(appContext)),
-		tools: createTools(),
-		stopWhen: stepCountIs(maxSteps),
-		temperature: 0.1,
-		providerOptions: buildProviderOptions(context.thinking),
+		model: models[modelKey],
+		system: {
+			role: "system",
+			content: isFast
+				? buildFastInstructions(appContext)
+				: buildAnalyticsInstructions(appContext),
+			providerOptions: ANTHROPIC_CACHE_1H,
+		},
+		tools: isFast ? {} : analyticsTools,
+		stopWhen: stepCountIs(isFast ? 1 : maxSteps),
+		temperature: isFast ? 0.3 : 0.1,
+		providerOptions: isFast
+			? undefined
+			: thinkingProviderOptions(context.thinking),
 		experimental_context: appContext,
 	};
 }
