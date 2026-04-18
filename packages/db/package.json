@@ -5,7 +5,7 @@
   "types": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts",
-    "./schema": "./src/drizzle/schema.ts",
+    "./schema": "./src/drizzle/schema/index.ts",
     "./clickhouse": "./src/clickhouse/index.ts",
     "./clickhouse/schema": "./src/clickhouse/schema.ts"
   },

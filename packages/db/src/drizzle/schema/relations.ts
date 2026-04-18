@@ -1,39 +1,40 @@
 import { relations } from "drizzle-orm/relations";
+import { featureAccessLog, featureInvite } from "./admin";
+import { agentChats } from "./agent";
 import {
-	account,
-	agentChats,
-	alarmDestinations,
-	alarms,
 	analyticsInsights,
 	annotations,
-	apikey,
-	featureAccessLog,
-	featureInvite,
-	feedback,
-	feedbackRedemptions,
-	flags,
-	flagsToTargetGroups,
 	funnelDefinitions,
 	goals,
-	insightUserFeedback,
+	revenueConfig,
+} from "./analytics";
+import { apikey } from "./api-keys";
+import {
+	account,
 	invitation,
-	links,
 	member,
 	organization,
-	revenueConfig,
 	session,
 	ssoProvider,
-	statusPageMonitors,
-	statusPages,
-	targetGroups,
 	team,
 	twoFactor,
-	uptimeSchedules,
-	usageAlertLog,
 	user,
 	userPreferences,
-	websites,
-} from "./schema";
+} from "./auth";
+import { alarmDestinations, alarms, usageAlertLog } from "./billing";
+import {
+	feedback,
+	feedbackRedemptions,
+	insightUserFeedback,
+} from "./feedback";
+import { flags, flagsToTargetGroups, targetGroups } from "./flags";
+import { links } from "./links";
+import {
+	statusPageMonitors,
+	statusPages,
+	uptimeSchedules,
+} from "./uptime";
+import { websites } from "./websites";
 
 export const userRelations = relations(user, ({ many }) => ({
 	accounts: many(account),
