@@ -1,19 +1,19 @@
 /** biome-ignore-all lint/performance/useTopLevelRegex: it's a test file */
 import { describe, expect, test } from "bun:test";
-import { renderToStaticMarkup } from "react-dom/server";
+import { render as renderEmail } from "react-email";
 import { UptimeAlertEmail } from "./uptime-alert-email";
 
 type Props = Parameters<typeof UptimeAlertEmail>[0];
 
-function render(props: Props): string {
-	return renderToStaticMarkup(UptimeAlertEmail(props));
+function render(props: Props): Promise<string> {
+	return renderEmail(UptimeAlertEmail(props));
 }
 
 const SAFE_HREF_FALLBACK = "https://app.databuddy.cc/";
 
 describe("UptimeAlertEmail — URL text rendering", () => {
-	test("slashes render literally, not as &#x2F; entities", () => {
-		const html = render({
+	test("slashes render literally, not as &#x2F; entities", async () => {
+		const html = await render({
 			kind: "down",
 			siteLabel: "server.example.com",
 			url: "https://server.example.com",
@@ -23,8 +23,8 @@ describe("UptimeAlertEmail — URL text rendering", () => {
 		expect(html).not.toContain("&amp;#x2F;");
 	});
 
-	test("query-string ampersands are escaped exactly once", () => {
-		const html = render({
+	test("query-string ampersands are escaped exactly once", async () => {
+		const html = await render({
 			kind: "down",
 			url: "https://example.com/path?a=1&b=2&c=3",
 		});
@@ -32,8 +32,8 @@ describe("UptimeAlertEmail — URL text rendering", () => {
 		expect(html).not.toContain("&amp;amp;");
 	});
 
-	test("percent-encoded URLs survive unchanged", () => {
-		const html = render({
+	test("percent-encoded URLs survive unchanged", async () => {
+		const html = await render({
 			kind: "down",
 			url: "https://example.com/path%20with%20spaces?q=hello%20world",
 		});
@@ -42,37 +42,37 @@ describe("UptimeAlertEmail — URL text rendering", () => {
 		);
 	});
 
-	test("unicode hosts render as typed in text (IDN domains)", () => {
-		const html = render({ kind: "down", url: "https://münchen.de/über" });
+	test("unicode hosts render as typed in text (IDN domains)", async () => {
+		const html = await render({ kind: "down", url: "https://münchen.de/über" });
 		expect(html).toContain("münchen.de");
 		expect(html).toContain("über");
 	});
 
-	test("URLs with port, path, query, fragment all render", () => {
-		const html = render({
+	test("URLs with port, path, query, fragment all render", async () => {
+		const html = await render({
 			kind: "down",
 			url: "https://example.com:8443/a/b?x=1#section",
 		});
 		expect(html).toContain("https://example.com:8443/a/b?x=1#section");
 	});
 
-	test("very long URL (2KB) does not throw or truncate visibly", () => {
+	test("very long URL (2KB) does not throw or truncate visibly", async () => {
 		const longPath = "a".repeat(2048);
 		const url = `https://example.com/${longPath}`;
-		const html = render({ kind: "down", url });
+		const html = await render({ kind: "down", url });
 		expect(html).toContain(longPath);
 	});
 });
 
 describe("UptimeAlertEmail — href protocol allowlist (XSS)", () => {
-	test("javascript: URL never appears in an href attribute", () => {
-		const html = render({ kind: "down", url: "javascript:alert(1)" });
+	test("javascript: URL never appears in an href attribute", async () => {
+		const html = await render({ kind: "down", url: "javascript:alert(1)" });
 		expect(html).not.toMatch(/href="javascript:/i);
 		expect(html).toContain(`href="${SAFE_HREF_FALLBACK}"`);
 	});
 
-	test("data: URL never appears in an href attribute", () => {
-		const html = render({
+	test("data: URL never appears in an href attribute", async () => {
+		const html = await render({
 			kind: "down",
 			url: "data:text/html,<script>alert(1)</script>",
 		});
@@ -80,50 +80,50 @@ describe("UptimeAlertEmail — href protocol allowlist (XSS)", () => {
 		expect(html).toContain(`href="${SAFE_HREF_FALLBACK}"`);
 	});
 
-	test("vbscript: URL is rejected", () => {
-		const html = render({ kind: "down", url: "vbscript:msgbox(1)" });
+	test("vbscript: URL is rejected", async () => {
+		const html = await render({ kind: "down", url: "vbscript:msgbox(1)" });
 		expect(html).not.toMatch(/href="vbscript:/i);
 	});
 
-	test("file: URL is rejected", () => {
-		const html = render({ kind: "down", url: "file:///etc/passwd" });
+	test("file: URL is rejected", async () => {
+		const html = await render({ kind: "down", url: "file:///etc/passwd" });
 		expect(html).not.toMatch(/href="file:/i);
 	});
 
-	test("ftp: URL is rejected (non http/https)", () => {
-		const html = render({ kind: "down", url: "ftp://example.com/a" });
+	test("ftp: URL is rejected (non http/https)", async () => {
+		const html = await render({ kind: "down", url: "ftp://example.com/a" });
 		expect(html).not.toMatch(/href="ftp:/i);
 	});
 
-	test("protocol-relative //evil.com falls back to default href", () => {
-		const html = render({ kind: "down", url: "//evil.com/x" });
+	test("protocol-relative //evil.com falls back to default href", async () => {
+		const html = await render({ kind: "down", url: "//evil.com/x" });
 		expect(html).toContain(`href="${SAFE_HREF_FALLBACK}"`);
 	});
 
-	test("mixed-case JaVaScRiPt: is rejected (protocol compared case-insensitively by URL parser)", () => {
-		const html = render({ kind: "down", url: "JaVaScRiPt:alert(1)" });
+	test("mixed-case JaVaScRiPt: is rejected (protocol compared case-insensitively by URL parser)", async () => {
+		const html = await render({ kind: "down", url: "JaVaScRiPt:alert(1)" });
 		expect(html).not.toMatch(/href="j/i);
 	});
 
-	test("URL with embedded whitespace/newline is rejected", () => {
-		const html = render({ kind: "down", url: "java\nscript:alert(1)" });
+	test("URL with embedded whitespace/newline is rejected", async () => {
+		const html = await render({ kind: "down", url: "java\nscript:alert(1)" });
 		expect(html).not.toMatch(/href="java/i);
 	});
 
-	test("empty url falls back to default href", () => {
-		const html = render({ kind: "down", url: "" });
+	test("empty url falls back to default href", async () => {
+		const html = await render({ kind: "down", url: "" });
 		expect(html).toContain(`href="${SAFE_HREF_FALLBACK}"`);
 	});
 
-	test("malformed URL (no scheme, unparseable) falls back to default href", () => {
-		const html = render({ kind: "down", url: "not a url at all" });
+	test("malformed URL (no scheme, unparseable) falls back to default href", async () => {
+		const html = await render({ kind: "down", url: "not a url at all" });
 		expect(html).toContain(`href="${SAFE_HREF_FALLBACK}"`);
 	});
 });
 
 describe("UptimeAlertEmail — HTML injection in string fields", () => {
-	test("siteLabel <script> is escaped, not executable", () => {
-		const html = render({
+	test("siteLabel <script> is escaped, not executable", async () => {
+		const html = await render({
 			kind: "down",
 			siteLabel: "<script>alert(1)</script>",
 			url: "https://example.com",
@@ -132,8 +132,8 @@ describe("UptimeAlertEmail — HTML injection in string fields", () => {
 		expect(html).toContain("&lt;script&gt;alert(1)&lt;/script&gt;");
 	});
 
-	test("siteLabel <img onerror> payload is escaped", () => {
-		const html = render({
+	test("siteLabel <img onerror> payload is escaped", async () => {
+		const html = await render({
 			kind: "down",
 			siteLabel: '<img src=x onerror="alert(1)">',
 			url: "https://example.com",
@@ -142,8 +142,8 @@ describe("UptimeAlertEmail — HTML injection in string fields", () => {
 		expect(html).toContain("&lt;img");
 	});
 
-	test("error field with HTML tags is escaped", () => {
-		const html = render({
+	test("error field with HTML tags is escaped", async () => {
+		const html = await render({
 			kind: "down",
 			url: "https://example.com",
 			error: "<svg onload=alert(1)></svg>",
@@ -152,8 +152,8 @@ describe("UptimeAlertEmail — HTML injection in string fields", () => {
 		expect(html).toContain("&lt;svg");
 	});
 
-	test("probeRegion with injection payload is escaped", () => {
-		const html = render({
+	test("probeRegion with injection payload is escaped", async () => {
+		const html = await render({
 			kind: "down",
 			url: "https://example.com",
 			probeRegion: '"><script>alert(1)</script>',
@@ -162,8 +162,8 @@ describe("UptimeAlertEmail — HTML injection in string fields", () => {
 		expect(html).toContain("&quot;&gt;&lt;script&gt;");
 	});
 
-	test("attribute-breakout quotes in URL payload cannot escape the anchor tag", () => {
-		const html = render({
+	test("attribute-breakout quotes in URL payload cannot escape the anchor tag", async () => {
+		const html = await render({
 			kind: "down",
 			url: 'https://example.com" onmouseover="alert(1)',
 		});
@@ -174,8 +174,8 @@ describe("UptimeAlertEmail — HTML injection in string fields", () => {
 		expect(html).toContain(`href="${SAFE_HREF_FALLBACK}"`);
 	});
 
-	test("existing HTML entities in input are escaped only once (no double-encode)", () => {
-		const html = render({
+	test("existing HTML entities in input are escaped only once (no double-encode)", async () => {
+		const html = await render({
 			kind: "down",
 			siteLabel: "Tom &amp; Jerry",
 			url: "https://example.com",
@@ -184,8 +184,8 @@ describe("UptimeAlertEmail — HTML injection in string fields", () => {
 		expect(html).not.toContain("Tom &amp;amp;amp;");
 	});
 
-	test("null bytes / control chars in siteLabel do not break output", () => {
-		const html = render({
+	test("null bytes / control chars in siteLabel do not break output", async () => {
+		const html = await render({
 			kind: "down",
 			siteLabel: "evil\u0000\u0001site",
 			url: "https://example.com",
@@ -195,30 +195,34 @@ describe("UptimeAlertEmail — HTML injection in string fields", () => {
 });
 
 describe("UptimeAlertEmail — field fallbacks and optional props", () => {
-	test("all optional props undefined renders without throwing", () => {
-		const html = render({});
+	test("all optional props undefined renders without throwing", async () => {
+		const html = await render({});
 		expect(html.length).toBeGreaterThan(0);
 		expect(html).toContain("example.com");
 	});
 
-	test("empty siteLabel falls back to 'your site'", () => {
-		const html = render({ kind: "down", siteLabel: "", url: "https://x.com" });
+	test("empty siteLabel falls back to 'your site'", async () => {
+		const html = await render({
+			kind: "down",
+			siteLabel: "",
+			url: "https://x.com",
+		});
 		expect(html).toContain("your site");
 	});
 
-	test("defaults to kind='down' when kind is missing", () => {
-		const html = render({ url: "https://example.com" });
+	test("defaults to kind='down' when kind is missing", async () => {
+		const html = await render({ url: "https://example.com" });
 		expect(html).toContain("is down");
 		expect(html).not.toContain("back up");
 	});
 
-	test("dashboardUrl absent → no dashboard button", () => {
-		const html = render({ kind: "down", url: "https://example.com" });
+	test("dashboardUrl absent → no dashboard button", async () => {
+		const html = await render({ kind: "down", url: "https://example.com" });
 		expect(html).not.toContain("View in Databuddy");
 	});
 
-	test("dashboardUrl present → dashboard button appears with that href", () => {
-		const html = render({
+	test("dashboardUrl present → dashboard button appears with that href", async () => {
+		const html = await render({
 			kind: "down",
 			url: "https://example.com",
 			dashboardUrl: "https://app.databuddy.cc/monitors/abc123",
@@ -229,8 +233,8 @@ describe("UptimeAlertEmail — field fallbacks and optional props", () => {
 });
 
 describe("UptimeAlertEmail — down vs recovered variants", () => {
-	test("down variant uses the down copy and red accent", () => {
-		const html = render({
+	test("down variant uses the down copy and red accent", async () => {
+		const html = await render({
 			kind: "down",
 			siteLabel: "acme.com",
 			url: "https://acme.com",
@@ -240,8 +244,8 @@ describe("UptimeAlertEmail — down vs recovered variants", () => {
 		expect(html.toLowerCase()).toContain("#dc2626");
 	});
 
-	test("recovered variant uses the recovery copy and green accent", () => {
-		const html = render({
+	test("recovered variant uses the recovery copy and green accent", async () => {
+		const html = await render({
 			kind: "recovered",
 			siteLabel: "acme.com",
 			url: "https://acme.com",
@@ -251,8 +255,8 @@ describe("UptimeAlertEmail — down vs recovered variants", () => {
 		expect(html.toLowerCase()).toContain("#22c55e");
 	});
 
-	test("recovered variant omits the error line even if error is passed", () => {
-		const html = render({
+	test("recovered variant omits the error line even if error is passed", async () => {
+		const html = await render({
 			kind: "recovered",
 			url: "https://acme.com",
 			error: "This error should not appear",
@@ -260,8 +264,8 @@ describe("UptimeAlertEmail — down vs recovered variants", () => {
 		expect(html).not.toContain("This error should not appear");
 	});
 
-	test("down variant with empty error hides the error block", () => {
-		const html = render({
+	test("down variant with empty error hides the error block", async () => {
+		const html = await render({
 			kind: "down",
 			url: "https://acme.com",
 			error: "   \n\t  ",
@@ -269,8 +273,8 @@ describe("UptimeAlertEmail — down vs recovered variants", () => {
 		expect(html).not.toContain("Error · ");
 	});
 
-	test("down variant trims leading/trailing whitespace from error", () => {
-		const html = render({
+	test("down variant trims leading/trailing whitespace from error", async () => {
+		const html = await render({
 			kind: "down",
 			url: "https://acme.com",
 			error: "   Timeout after 60000ms   ",
@@ -281,8 +285,8 @@ describe("UptimeAlertEmail — down vs recovered variants", () => {
 });
 
 describe("UptimeAlertEmail — timing and numeric edge cases", () => {
-	test("HTTP 0 (timeout) renders literally as 0", () => {
-		const html = render({
+	test("HTTP 0 (timeout) renders literally as 0", async () => {
+		const html = await render({
 			kind: "down",
 			url: "https://example.com",
 			httpCode: 0,
@@ -290,13 +294,13 @@ describe("UptimeAlertEmail — timing and numeric edge cases", () => {
 		expect(html).toMatch(/HTTP.*·.*0/);
 	});
 
-	test("checkedAt undefined renders em-dash placeholder", () => {
-		const html = render({ kind: "down", url: "https://example.com" });
+	test("checkedAt undefined renders em-dash placeholder", async () => {
+		const html = await render({ kind: "down", url: "https://example.com" });
 		expect(html).toMatch(/Checked at.*·.*—/);
 	});
 
-	test("checkedAt = NaN renders em-dash (not 'Invalid Date')", () => {
-		const html = render({
+	test("checkedAt = NaN renders em-dash (not 'Invalid Date')", async () => {
+		const html = await render({
 			kind: "down",
 			url: "https://example.com",
 			checkedAt: Number.NaN,
@@ -305,8 +309,8 @@ describe("UptimeAlertEmail — timing and numeric edge cases", () => {
 		expect(html).toMatch(/Checked at.*·.*—/);
 	});
 
-	test("checkedAt = Infinity renders em-dash", () => {
-		const html = render({
+	test("checkedAt = Infinity renders em-dash", async () => {
+		const html = await render({
 			kind: "down",
 			url: "https://example.com",
 			checkedAt: Number.POSITIVE_INFINITY,
@@ -315,8 +319,8 @@ describe("UptimeAlertEmail — timing and numeric edge cases", () => {
 		expect(html).toMatch(/Checked at.*·.*—/);
 	});
 
-	test("checkedAt = 0 (epoch) renders a formatted date, not em-dash", () => {
-		const html = render({
+	test("checkedAt = 0 (epoch) renders a formatted date, not em-dash", async () => {
+		const html = await render({
 			kind: "down",
 			url: "https://example.com",
 			checkedAt: 0,
@@ -324,8 +328,8 @@ describe("UptimeAlertEmail — timing and numeric edge cases", () => {
 		expect(html).toContain("1970");
 	});
 
-	test("fractional ttfb/total values round to integers", () => {
-		const html = render({
+	test("fractional ttfb/total values round to integers", async () => {
+		const html = await render({
 			kind: "down",
 			url: "https://example.com",
 			ttfbMs: 123.7,
@@ -335,20 +339,20 @@ describe("UptimeAlertEmail — timing and numeric edge cases", () => {
 		expect(html).toContain("total 456 ms");
 	});
 
-	test("ttfb/total undefined hide the Response row", () => {
-		const html = render({ kind: "down", url: "https://example.com" });
+	test("ttfb/total undefined hide the Response row", async () => {
+		const html = await render({ kind: "down", url: "https://example.com" });
 		expect(html).not.toContain("Response · ");
 	});
 
-	test("only one of ttfb/total present still renders the Response row", () => {
-		const htmlA = render({
+	test("only one of ttfb/total present still renders the Response row", async () => {
+		const htmlA = await render({
 			kind: "down",
 			url: "https://example.com",
 			ttfbMs: 50,
 		});
 		expect(htmlA).toContain("TTFB 50 ms");
 
-		const htmlB = render({
+		const htmlB = await render({
 			kind: "down",
 			url: "https://example.com",
 			totalMs: 200,
@@ -358,13 +362,13 @@ describe("UptimeAlertEmail — timing and numeric edge cases", () => {
 });
 
 describe("UptimeAlertEmail — SSL row", () => {
-	test("sslValid undefined → no SSL row", () => {
-		const html = render({ kind: "down", url: "https://example.com" });
+	test("sslValid undefined → no SSL row", async () => {
+		const html = await render({ kind: "down", url: "https://example.com" });
 		expect(html).not.toContain("SSL · ");
 	});
 
-	test("sslValid true with expiry renders 'Valid · expires …'", () => {
-		const html = render({
+	test("sslValid true with expiry renders 'Valid · expires …'", async () => {
+		const html = await render({
 			kind: "down",
 			url: "https://example.com",
 			sslValid: true,
@@ -374,8 +378,8 @@ describe("UptimeAlertEmail — SSL row", () => {
 		expect(html).toContain("2030");
 	});
 
-	test("sslValid true with no expiry renders just 'Valid'", () => {
-		const html = render({
+	test("sslValid true with no expiry renders just 'Valid'", async () => {
+		const html = await render({
 			kind: "down",
 			url: "https://example.com",
 			sslValid: true,
@@ -384,8 +388,8 @@ describe("UptimeAlertEmail — SSL row", () => {
 		expect(html).not.toContain("expires");
 	});
 
-	test("sslValid false renders 'Invalid'", () => {
-		const html = render({
+	test("sslValid false renders 'Invalid'", async () => {
+		const html = await render({
 			kind: "down",
 			url: "https://example.com",
 			sslValid: false,
@@ -393,8 +397,8 @@ describe("UptimeAlertEmail — SSL row", () => {
 		expect(html).toContain("Invalid");
 	});
 
-	test("sslExpiryMs = 0 is treated as missing", () => {
-		const html = render({
+	test("sslExpiryMs = 0 is treated as missing", async () => {
+		const html = await render({
 			kind: "down",
 			url: "https://example.com",
 			sslValid: true,
@@ -403,8 +407,8 @@ describe("UptimeAlertEmail — SSL row", () => {
 		expect(html).not.toContain("expires");
 	});
 
-	test("sslExpiryMs = Infinity is treated as missing", () => {
-		const html = render({
+	test("sslExpiryMs = Infinity is treated as missing", async () => {
+		const html = await render({
 			kind: "down",
 			url: "https://example.com",
 			sslValid: true,
@@ -415,13 +419,16 @@ describe("UptimeAlertEmail — SSL row", () => {
 });
 
 describe("UptimeAlertEmail — preview text", () => {
-	test("down preview mentions 'unreachable' with fallback label", () => {
-		const html = render({ kind: "down", url: "https://example.com" });
+	test("down preview mentions 'unreachable' with fallback label", async () => {
+		const html = await render({ kind: "down", url: "https://example.com" });
 		expect(html).toContain("is unreachable");
 	});
 
-	test("recovered preview mentions 'back online'", () => {
-		const html = render({ kind: "recovered", url: "https://example.com" });
+	test("recovered preview mentions 'back online'", async () => {
+		const html = await render({
+			kind: "recovered",
+			url: "https://example.com",
+		});
 		expect(html).toContain("is back online");
 	});
 });
