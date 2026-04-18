@@ -71,7 +71,11 @@ export async function getApiKeyFromHeader(
 	const keyHash = keys.hashKey(secret);
 	const key = await getCachedApiKeyByHash(keyHash);
 
-	if (!key?.enabled || key.revokedAt || isExpired(key.expiresAt)) {
+	if (
+		!key?.enabled ||
+		key.revokedAt ||
+		isExpired(key.expiresAt?.toISOString() ?? null)
+	) {
 		return null;
 	}
 

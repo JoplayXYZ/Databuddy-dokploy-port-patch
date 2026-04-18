@@ -96,7 +96,9 @@ export function ApiKeyDetailDialog({
 		form.reset({
 			name: keyToUse.name,
 			enabled: keyToUse.enabled && !keyToUse.revokedAt,
-			expiresAt: keyToUse.expiresAt?.slice(0, 10) ?? "",
+			expiresAt: keyToUse.expiresAt
+				? new Date(keyToUse.expiresAt).toISOString().slice(0, 10)
+				: "",
 			scopes: getEffectiveScopes(keyToUse),
 		});
 	}, [apiKey?.id, apiKey, fullKey, form]);

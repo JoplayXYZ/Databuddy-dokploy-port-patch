@@ -34,35 +34,36 @@ export const variantSchema = z.object({
 export type Variant = z.infer<typeof variantSchema>;
 const flagTypeEnum = z.enum(["boolean", "rollout", "multivariant"]);
 export type FlagType = z.infer<typeof flagTypeEnum>;
+export const flagFormShape = {
+	key: z
+		.string()
+		.min(1, "Key is required")
+		.max(100, "Key too long")
+		.regex(
+			/^[a-zA-Z0-9_-]+$/,
+			"Key must contain only letters, numbers, underscores, and hyphens"
+		),
+	name: z
+		.string()
+		.min(1, "Name is required")
+		.max(100, "Name too long")
+		.optional(),
+	description: z.string().optional(),
+	type: flagTypeEnum,
+	status: z.enum(["active", "inactive", "archived"]),
+	defaultValue: z.boolean(),
+	rolloutPercentage: z.number().min(0).max(100),
+	rolloutBy: z.string().optional(),
+	rules: z.array(userRuleSchema).optional(),
+	variants: z.array(variantSchema).optional(),
+	dependencies: z
+		.array(z.string().min(1, "Invalid dependency value"))
+		.optional(),
+	environment: z.string().nullable().optional(),
+	targetGroupIds: z.array(z.string()).optional(),
+};
 export const flagFormSchema = z
-	.object({
-		key: z
-			.string()
-			.min(1, "Key is required")
-			.max(100, "Key too long")
-			.regex(
-				/^[a-zA-Z0-9_-]+$/,
-				"Key must contain only letters, numbers, underscores, and hyphens"
-			),
-		name: z
-			.string()
-			.min(1, "Name is required")
-			.max(100, "Name too long")
-			.optional(),
-		description: z.string().optional(),
-		type: flagTypeEnum,
-		status: z.enum(["active", "inactive", "archived"]),
-		defaultValue: z.boolean(),
-		rolloutPercentage: z.number().min(0).max(100),
-		rolloutBy: z.string().optional(),
-		rules: z.array(userRuleSchema).optional(),
-		variants: z.array(variantSchema).optional(),
-		dependencies: z
-			.array(z.string().min(1, "Invalid dependency value"))
-			.optional(),
-		environment: z.string().nullable().optional(),
-		targetGroupIds: z.array(z.string()).optional(),
-	})
+	.object(flagFormShape)
 	.superRefine((data, ctx) => {
 		if (data.type === "multivariant" && data.variants) {
 			const hasAnyWeight = data.variants.some(

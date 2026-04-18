@@ -16,7 +16,7 @@ import {
 } from "@databuddy/db/schema";
 import { createDrizzleCache, redis } from "@databuddy/redis";
 import {
-	flagFormSchema,
+	flagFormShape,
 	userRuleSchema,
 	variantSchema,
 } from "@databuddy/shared/flags";
@@ -108,7 +108,7 @@ const createFlagSchema = z
 		organizationId: z.string().optional(),
 		payload: z.any().optional(),
 		persistAcrossAuth: z.boolean().optional(),
-		...flagFormSchema.shape,
+		...flagFormShape,
 	})
 	.refine((data) => data.websiteId || data.organizationId, {
 		message: "Either websiteId or organizationId must be provided",
@@ -518,8 +518,8 @@ export const flagsRouter = {
 		.input(createFlagSchema)
 		.output(flagOutputSchema)
 		.handler(async ({ context, input }) => {
-			const wsId = input.websiteId as string | undefined;
-			const orgId = input.organizationId as string | undefined;
+			const wsId = input.websiteId;
+			const orgId = input.organizationId;
 
 			const workspace = wsId
 				? await withWorkspace(context, {
