@@ -242,7 +242,7 @@ export default function Testimonials(): ReactElement {
 					<SectionBullet color="#714075" />
 				</span>
 				<div>
-					<h2 className="mb-2 font-semibold text-2xl leading-tight tracking-tight sm:mb-2 sm:text-3xl md:text-4xl lg:text-5xl">
+					<h2 className="mb-2 font-semibold text-3xl leading-tight tracking-tight sm:mb-2 sm:text-3xl md:text-4xl lg:text-5xl">
 						What developers are saying
 					</h2>
 					<p className="max-w-2xl px-2 text-base text-muted-foreground sm:px-0 sm:text-lg lg:text-xl">

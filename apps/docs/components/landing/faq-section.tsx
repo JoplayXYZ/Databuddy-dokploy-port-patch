@@ -35,7 +35,7 @@ export function FaqSection({
 					<span className="mt-2">
 						<SectionBullet color="#CD5F20" />
 					</span>
-					<h2 className="text-balance font-medium text-2xl tracking-tight sm:text-5xl">
+					<h2 className="text-balance font-medium text-3xl tracking-tight sm:text-5xl">
 						{title}
 					</h2>
 					{subtitle ? (

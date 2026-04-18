@@ -17,7 +17,7 @@ export function Footer() {
 			<div className="mx-auto flex max-w-360 flex-col gap-8 px-4 pt-10 sm:px-6 lg:px-8">
 				{/* CTA Section */}
 				<div
-					className="relative flex h-80 w-full items-start rounded-lg bg-center bg-cover"
+					className="relative flex h-70 w-full items-start rounded-lg bg-center bg-cover md:h-80"
 					style={{
 						backgroundImage: "url('/brand/gradients/cta-bg.png')",
 					}}
@@ -29,7 +29,7 @@ export function Footer() {
 						src="/brand/logomark/white.svg"
 						width={180}
 					/>
-					<div className="max-w-5xl px-8 pt-16 sm:px-16">
+					<div className="max-w-5xl px-8 pt-8 sm:px-16 md:pt-16">
 						<h2 className="mb-2 text-left font-medium text-2xl leading-tight sm:text-4xl">
 							All the analytics you need. One click away
 						</h2>
@@ -245,7 +245,7 @@ export function Footer() {
 				</div>
 
 				{/* Copyright Row */}
-				<div className="mt-4 flex flex-col items-center justify-between gap-4 border-border border-t pt-4 sm:flex-row">
+				<div className="mt-4 flex flex-row flex-col items-start justify-between gap-4 border-border border-t pt-4">
 					<p className="text-muted-foreground text-sm sm:text-base">
 						© {new Date().getFullYear()} Databuddy
 					</p>

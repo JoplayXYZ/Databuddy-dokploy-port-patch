@@ -58,10 +58,13 @@ const cards = [
 export const GridCards = () => {
 	return (
 		<div className="w-full">
-			<div className="mb-12 text-center lg:mb-16 lg:text-left">
-				<h2 className="mx-auto max-w-4xl text-balance font-semibold text-3xl leading-tight sm:text-4xl lg:mx-0 lg:text-5xl">
+			<div className="mb-12 text-start lg:mb-16 lg:text-left">
+				<h2 className="mx-auto flex max-w-4xl gap-2 text-balance font-semibold text-3xl leading-tight sm:text-4xl lg:mx-0 lg:text-5xl">
+					<span className="mt-2">
+						<SectionBullet color="#B24A7E" />
+					</span>
 					<span className="flex items-center gap-4 text-foreground">
-						<SectionBullet color="#B24A7E" /> Set up once, understand everything{" "}
+						Set up once, understand everything{" "}
 					</span>
 				</h2>
 				<p className="mt-3 max-w-2xl text-pretty text-muted-foreground text-sm sm:px-0 sm:text-base lg:text-lg">
