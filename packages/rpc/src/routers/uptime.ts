@@ -351,7 +351,7 @@ export const uptimeRouter = {
 				cron?: string;
 				timeout?: number | null;
 				cacheBust?: boolean;
-				jsonParsingConfig?: unknown;
+				jsonParsingConfig?: { enabled: boolean };
 				updatedAt: Date;
 			} = {
 				updatedAt: new Date(),
