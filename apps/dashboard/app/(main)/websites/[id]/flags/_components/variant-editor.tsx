@@ -299,8 +299,7 @@ export function VariantEditor({
 					</>
 				) : (
 					<>
-						Total: {totalWeight}%{" "}
-						{isValidTotal ? "" : "— must add up to 100%"}
+						Total: {totalWeight}% {isValidTotal ? "" : "— must add up to 100%"}
 					</>
 				)}
 			</div>

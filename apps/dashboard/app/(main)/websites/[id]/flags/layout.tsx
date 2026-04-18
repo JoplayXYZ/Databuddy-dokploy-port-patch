@@ -254,8 +254,7 @@ export default function FlagsLayout({
 								<div className="space-y-2">
 									<p className="font-medium">A/B Test Experiment</p>
 									<p className="text-xs leading-relaxed">
-										Live demo: ~50% of users see Red Team, ~50% see Blue
-										Team.
+										Live demo: ~50% of users see Red Team, ~50% see Blue Team.
 									</p>
 								</div>
 							</TooltipContent>

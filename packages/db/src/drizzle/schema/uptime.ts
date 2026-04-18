@@ -30,7 +30,9 @@ export const uptimeSchedules = pgTable(
 		isPublic: boolean("is_public").default(false).notNull(),
 		timeout: integer(),
 		cacheBust: boolean("cache_bust").default(false).notNull(),
-		jsonParsingConfig: jsonb("json_parsing_config").$type<UptimeJsonParsingConfig>(),
+		jsonParsingConfig: jsonb(
+			"json_parsing_config"
+		).$type<UptimeJsonParsingConfig>(),
 		lastNotifiedStatus: integer("last_notified_status"),
 		createdAt: timestamp("created_at", { precision: 3, withTimezone: true })
 			.defaultNow()

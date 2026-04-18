@@ -57,10 +57,10 @@ export interface AnnotationChartContext {
 }
 
 export interface AnalyticsInsightMetric {
-	label: string;
 	current: number;
-	previous?: number;
 	format: "number" | "percent" | "duration_ms" | "duration_s";
+	label: string;
+	previous?: number;
 }
 
 export type AnalyticsInsightSource = "web" | "product" | "ops" | "business";
@@ -154,7 +154,10 @@ export const annotations = pgTable(
 			.$type<AnnotationChartContext>()
 			.notNull(),
 		annotationType: annotationType("annotation_type").notNull(),
-		xValue: timestamp("x_value", { precision: 3, withTimezone: true }).notNull(),
+		xValue: timestamp("x_value", {
+			precision: 3,
+			withTimezone: true,
+		}).notNull(),
 		xEndValue: timestamp("x_end_value", { precision: 3, withTimezone: true }),
 		yValue: integer("y_value"),
 		text: text().notNull(),
@@ -203,10 +206,7 @@ export const analyticsInsights = pgTable(
 		priority: integer().notNull(),
 		changePercent: doublePrecision("change_percent"),
 		subjectKey: text("subject_key").notNull().default(""),
-		sources: jsonb()
-			.$type<AnalyticsInsightSource[]>()
-			.notNull()
-			.default([]),
+		sources: jsonb().$type<AnalyticsInsightSource[]>().notNull().default([]),
 		confidence: doublePrecision().notNull().default(0),
 		impactSummary: text("impact_summary"),
 		metrics: jsonb().$type<AnalyticsInsightMetric[]>(),

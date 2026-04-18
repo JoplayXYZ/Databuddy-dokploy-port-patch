@@ -82,10 +82,7 @@ export const alarmDestinations = pgTable(
 		alarmId: text("alarm_id").notNull(),
 		type: text().notNull(),
 		identifier: text().notNull().default(""),
-		config: jsonb()
-			.$type<Record<string, unknown>>()
-			.notNull()
-			.default({}),
+		config: jsonb().$type<Record<string, unknown>>().notNull().default({}),
 		createdAt: timestamp("created_at", { precision: 3, withTimezone: true })
 			.defaultNow()
 			.notNull(),

@@ -18,9 +18,9 @@ export const agentInstallStatus = pgEnum("agent_install_status", [
 ]);
 
 export interface AgentInstallStep {
+	durationMs?: number;
 	name: string;
 	status: "pending" | "in_progress" | "completed" | "failed" | "skipped";
-	durationMs?: number;
 }
 
 export interface AgentInstallIssue {

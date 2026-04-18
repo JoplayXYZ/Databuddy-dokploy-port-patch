@@ -22,18 +22,10 @@ import {
 	userPreferences,
 } from "./auth";
 import { alarmDestinations, alarms, usageAlertLog } from "./billing";
-import {
-	feedback,
-	feedbackRedemptions,
-	insightUserFeedback,
-} from "./feedback";
+import { feedback, feedbackRedemptions, insightUserFeedback } from "./feedback";
 import { flags, flagsToTargetGroups, targetGroups } from "./flags";
 import { links } from "./links";
-import {
-	statusPageMonitors,
-	statusPages,
-	uptimeSchedules,
-} from "./uptime";
+import { statusPageMonitors, statusPages, uptimeSchedules } from "./uptime";
 import { websites } from "./websites";
 
 export const userRelations = relations(user, ({ many }) => ({
