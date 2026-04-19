@@ -42,19 +42,19 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
       - name: Mount Docker build cache
-        uses: useblacksmith/stickydisk@v1
+        uses: useblacksmith/stickydisk@41873b1513bb679f9c115504cbd13d3660432504 # v1
         with:
           key: ${{ github.repository }}-docker-build-cache
           path: /tmp/docker-build-cache
 
       - name: Set up Docker Builder
-        uses: useblacksmith/setup-docker-builder@v1
+        uses: useblacksmith/setup-docker-builder@ac083cc84672d01c60d5e8561d0a939b697de542 # v1
 
       - name: Build API Docker image
-        uses: useblacksmith/build-push-action@v2
+        uses: useblacksmith/build-push-action@cbd1f60d194a98cb3be5523b15134501eaf0fbf3 # v2
         with:
           context: .
           file: ./api.Dockerfile
@@ -141,19 +141,19 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
       - name: Mount Docker build cache
-        uses: useblacksmith/stickydisk@v1
+        uses: useblacksmith/stickydisk@41873b1513bb679f9c115504cbd13d3660432504 # v1
         with:
           key: ${{ github.repository }}-docker-build-cache
           path: /tmp/docker-build-cache
 
       - name: Set up Docker Builder
-        uses: useblacksmith/setup-docker-builder@v1
+        uses: useblacksmith/setup-docker-builder@ac083cc84672d01c60d5e8561d0a939b697de542 # v1
 
       - name: Build Basket Docker image
-        uses: useblacksmith/build-push-action@v2
+        uses: useblacksmith/build-push-action@cbd1f60d194a98cb3be5523b15134501eaf0fbf3 # v2
         with:
           context: .
           file: ./basket.Dockerfile
