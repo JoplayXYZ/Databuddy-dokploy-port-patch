@@ -1,17 +1,16 @@
 "use client";
 
 import type { Icon } from "@phosphor-icons/react";
-import { CalendarIcon } from "@phosphor-icons/react";
-import { CheckIcon } from "@phosphor-icons/react";
-import { CircleNotchIcon } from "@phosphor-icons/react";
-import { ImageIcon } from "@phosphor-icons/react";
-import { LinkIcon } from "@phosphor-icons/react";
-import { PencilSimpleIcon } from "@phosphor-icons/react";
-import { TrashIcon } from "@phosphor-icons/react";
+import { CalendarIcon } from "@phosphor-icons/react/dist/ssr";
+import { CheckIcon } from "@phosphor-icons/react/dist/ssr";
+import { ImageIcon } from "@phosphor-icons/react/dist/ssr";
+import { LinkIcon } from "@phosphor-icons/react/dist/ssr";
+import { PencilSimpleIcon } from "@phosphor-icons/react/dist/ssr";
+import { TrashIcon } from "@phosphor-icons/react/dist/ssr";
 import { useState } from "react";
 import { LinkSheet } from "@/app/(main)/links/_components/link-sheet";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ds/button";
+import { Card } from "@/components/ds/card";
 import { useChat } from "@/contexts/chat-context";
 import type { Link } from "@/hooks/use-links";
 import { cn } from "@/lib/utils";
@@ -39,7 +38,7 @@ interface ModeConfig {
 	confirmLabel: string;
 	confirmMessage: string;
 	title: string;
-	variant: "default" | "destructive";
+	tone?: "danger";
 }
 
 const MODE_CONFIG: Record<string, ModeConfig> = {
@@ -48,7 +47,6 @@ const MODE_CONFIG: Record<string, ModeConfig> = {
 		confirmLabel: "Create",
 		confirmMessage: "Yes, create it",
 		accent: "",
-		variant: "default",
 		ButtonIcon: CheckIcon,
 	},
 	update: {
@@ -56,7 +54,6 @@ const MODE_CONFIG: Record<string, ModeConfig> = {
 		confirmLabel: "Update",
 		confirmMessage: "Yes, update it",
 		accent: "border-amber-500/30",
-		variant: "default",
 		ButtonIcon: CheckIcon,
 	},
 	delete: {
@@ -64,7 +61,7 @@ const MODE_CONFIG: Record<string, ModeConfig> = {
 		confirmLabel: "Delete",
 		confirmMessage: "Yes, delete it",
 		accent: "border-destructive/30",
-		variant: "destructive",
+		tone: "danger",
 		ButtonIcon: TrashIcon,
 	},
 };
@@ -182,16 +179,13 @@ export function LinkPreviewRenderer({
 						Edit
 					</Button>
 					<Button
-						disabled={isLoading || isConfirming}
+						disabled={isLoading}
+						loading={isConfirming}
 						onClick={handleConfirm}
 						size="sm"
-						variant={config.variant}
+						tone={config.tone}
 					>
-						{isConfirming ? (
-							<CircleNotchIcon className="size-3.5 animate-spin" />
-						) : (
-							<config.ButtonIcon className="size-3.5" weight="bold" />
-						)}
+						<config.ButtonIcon className="size-3.5" weight="bold" />
 						{config.confirmLabel}
 					</Button>
 				</div>

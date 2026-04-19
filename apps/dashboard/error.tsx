@@ -1,10 +1,10 @@
 "use client";
 
-import { ArrowClockwiseIcon } from "@phosphor-icons/react";
-import { WarningIcon } from "@phosphor-icons/react";
+import { ArrowClockwiseIcon } from "@phosphor-icons/react/dist/ssr";
+import { WarningIcon } from "@phosphor-icons/react/dist/ssr";
 import { useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ds/button";
+import { Card } from "@/components/ds/card";
 
 interface ErrorPageProps {
 	error: Error & { digest?: string };
@@ -19,13 +19,13 @@ export default function ErrorPage({ error, reset }: ErrorPageProps) {
 	return (
 		<div className="flex min-h-dvh items-center justify-center bg-muted/20">
 			<Card className="w-full max-w-lg border-destructive/50 shadow-lg">
-				<CardHeader>
-					<CardTitle className="flex items-center gap-2 text-destructive">
+				<Card.Header>
+					<Card.Title className="flex items-center gap-2 text-destructive">
 						<WarningIcon className="size-6" size={24} weight="duotone" />
 						Something went wrong
-					</CardTitle>
-				</CardHeader>
-				<CardContent className="space-y-4 pt-6">
+					</Card.Title>
+				</Card.Header>
+				<Card.Content className="space-y-4 pt-6">
 					<p className="text-muted-foreground text-sm">
 						We encountered an unexpected error. Please try again. If the problem
 						persists, please contact support.
@@ -37,7 +37,7 @@ export default function ErrorPage({ error, reset }: ErrorPageProps) {
 						<ArrowClockwiseIcon className="mr-2 size-4" size={16} />
 						Try again
 					</Button>
-				</CardContent>
+				</Card.Content>
 			</Card>
 		</div>
 	);

@@ -10,7 +10,7 @@ import { AnalyticsToolbar } from "@/app/(main)/websites/[id]/_components/analyti
 import { publicDashboardMarketingHref } from "@/app/public/public-dashboard-constants";
 import { FaviconImage } from "@/components/analytics/favicon-image";
 import { Branding } from "@/components/logo/branding";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@/components/ds/skeleton";
 import { WebsiteErrorState } from "@/components/website-error-state";
 import { useWebsite } from "@/hooks/use-websites";
 import {

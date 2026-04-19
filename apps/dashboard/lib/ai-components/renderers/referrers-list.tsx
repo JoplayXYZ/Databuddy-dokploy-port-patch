@@ -2,7 +2,7 @@
 
 import { GlobeIcon } from "@phosphor-icons/react";
 import { FaviconImage } from "@/components/analytics/favicon-image";
-import { Card } from "@/components/ui/card";
+import { Card } from "@/components/ds/card";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 import type { BaseComponentProps } from "../types";

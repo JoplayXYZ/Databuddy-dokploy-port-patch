@@ -1,7 +1,6 @@
 "use client";
 
 import { OrganizationsProvider } from "@/components/providers/organizations-provider";
-import { TooltipProvider } from "@/components/ui/tooltip";
 import { useToastTracking } from "@/hooks/toast-hooks";
 import { isAbortError } from "@/lib/is-abort-error";
 import { authClient } from "@databuddy/auth/client";
@@ -125,15 +124,13 @@ export default function Providers({ children }: { children: React.ReactNode }) {
 		<ThemeProvider attribute="class" defaultTheme="system" enableSystem>
 			<div className="flex min-h-0 flex-1 flex-col overflow-hidden">
 				<QueryClientProvider client={queryClient}>
-					<TooltipProvider>
-						<FlagsProviderWrapper>
-							<OrganizationsProvider>
-								<ToastTracker>
-									<NuqsAdapter>{children}</NuqsAdapter>
-								</ToastTracker>
-							</OrganizationsProvider>
-						</FlagsProviderWrapper>
-					</TooltipProvider>
+					<FlagsProviderWrapper>
+						<OrganizationsProvider>
+							<ToastTracker>
+								<NuqsAdapter>{children}</NuqsAdapter>
+							</ToastTracker>
+						</OrganizationsProvider>
+					</FlagsProviderWrapper>
 				</QueryClientProvider>
 			</div>
 		</ThemeProvider>

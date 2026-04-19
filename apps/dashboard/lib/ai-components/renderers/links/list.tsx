@@ -1,27 +1,21 @@
 "use client";
 
-import { ClockCountdownIcon } from "@phosphor-icons/react";
-import { CopyIcon } from "@phosphor-icons/react";
-import { DotsThreeIcon } from "@phosphor-icons/react";
-import { LinkIcon } from "@phosphor-icons/react";
-import { PencilSimpleIcon } from "@phosphor-icons/react";
-import { PlusIcon } from "@phosphor-icons/react";
-import { TrashIcon } from "@phosphor-icons/react";
+import { ClockCountdownIcon } from "@phosphor-icons/react/dist/ssr";
+import { CopyIcon } from "@phosphor-icons/react/dist/ssr";
+import { DotsThreeIcon } from "@phosphor-icons/react/dist/ssr";
+import { LinkIcon } from "@phosphor-icons/react/dist/ssr";
+import { PencilSimpleIcon } from "@phosphor-icons/react/dist/ssr";
+import { PlusIcon } from "@phosphor-icons/react/dist/ssr";
+import { TrashIcon } from "@phosphor-icons/react/dist/ssr";
 import { useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { LinkSheet } from "@/app/(main)/links/_components/link-sheet";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { DeleteDialog } from "@/components/ui/delete-dialog";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuSeparator,
-	DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ds/badge";
+import { Button } from "@/components/ds/button";
+import { Card } from "@/components/ds/card";
+import { DeleteDialog } from "@/components/ds/delete-dialog";
+import { DropdownMenu } from "@/components/ds/dropdown-menu";
 import { type Link, useDeleteLink } from "@/hooks/use-links";
 import { fromNow, localDayjs } from "@/lib/time";
 import { cn } from "@/lib/utils";
@@ -75,7 +69,7 @@ function ExpirationBadge({ date }: { date: string | null }) {
 	return (
 		<Badge
 			className="gap-1 text-[10px]"
-			variant={isExpired ? "destructive" : isSoon ? "amber" : "secondary"}
+			variant={isExpired ? "destructive" : isSoon ? "warning" : "muted"}
 		>
 			<ClockCountdownIcon className="size-3" weight="duotone" />
 			{isExpired ? "Expired" : expires.fromNow(true)}
@@ -168,36 +162,32 @@ function LinkRow({
 				role="presentation"
 			>
 				<DropdownMenu>
-					<DropdownMenuTrigger asChild>
-						<Button
-							aria-label="Actions"
-							className="size-7 opacity-50 hover:opacity-100 data-[state=open]:opacity-100"
-							size="icon"
-							variant="ghost"
-						>
-							<DotsThreeIcon className="size-4" weight="bold" />
-						</Button>
-					</DropdownMenuTrigger>
-					<DropdownMenuContent align="end" className="w-40">
-						<DropdownMenuItem className="gap-2" onClick={handleCopy}>
+					<DropdownMenu.Trigger
+						aria-label="Actions"
+						className="inline-flex size-7 items-center justify-center gap-1.5 rounded-md bg-transparent p-0 font-medium text-muted-foreground opacity-50 transition-all duration-(--duration-quick) ease-(--ease-smooth) hover:bg-interactive-hover hover:text-foreground hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 disabled:pointer-events-none disabled:opacity-50 data-[state=open]:opacity-100"
+					>
+						<DotsThreeIcon className="size-4" weight="bold" />
+					</DropdownMenu.Trigger>
+					<DropdownMenu.Content align="end" className="w-40">
+						<DropdownMenu.Item className="gap-2" onClick={handleCopy}>
 							<CopyIcon className="size-4" weight="duotone" />
 							Copy
-						</DropdownMenuItem>
-						<DropdownMenuSeparator />
-						<DropdownMenuItem className="gap-2" onClick={onEdit}>
+						</DropdownMenu.Item>
+						<DropdownMenu.Separator />
+						<DropdownMenu.Item className="gap-2" onClick={onEdit}>
 							<PencilSimpleIcon className="size-4" weight="duotone" />
 							Edit
-						</DropdownMenuItem>
-						<DropdownMenuSeparator />
-						<DropdownMenuItem
+						</DropdownMenu.Item>
+						<DropdownMenu.Separator />
+						<DropdownMenu.Item
 							className="gap-2"
 							onClick={onDelete}
 							variant="destructive"
 						>
 							<TrashIcon className="size-4" weight="duotone" />
 							Delete
-						</DropdownMenuItem>
-					</DropdownMenuContent>
+						</DropdownMenu.Item>
+					</DropdownMenu.Content>
 				</DropdownMenu>
 			</div>
 		</div>
@@ -257,7 +247,7 @@ export function LinksListRenderer({ title, links, className }: LinksListProps) {
 						className="mt-2"
 						onClick={openCreate}
 						size="sm"
-						variant="outline"
+						variant="secondary"
 					>
 						<PlusIcon className="size-4" />
 						Create Link

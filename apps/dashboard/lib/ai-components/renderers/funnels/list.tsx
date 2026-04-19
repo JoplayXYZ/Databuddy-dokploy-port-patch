@@ -1,26 +1,20 @@
 "use client";
 
-import { CaretRightIcon } from "@phosphor-icons/react";
-import { DotsThreeIcon } from "@phosphor-icons/react";
-import { FunnelIcon } from "@phosphor-icons/react";
-import { PencilSimpleIcon } from "@phosphor-icons/react";
-import { PlusIcon } from "@phosphor-icons/react";
-import { TrashIcon } from "@phosphor-icons/react";
+import { CaretRightIcon } from "@phosphor-icons/react/dist/ssr";
+import { DotsThreeIcon } from "@phosphor-icons/react/dist/ssr";
+import { FunnelIcon } from "@phosphor-icons/react/dist/ssr";
+import { PencilSimpleIcon } from "@phosphor-icons/react/dist/ssr";
+import { PlusIcon } from "@phosphor-icons/react/dist/ssr";
+import { TrashIcon } from "@phosphor-icons/react/dist/ssr";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { EditFunnelDialog } from "@/app/(main)/websites/[id]/funnels/_components/edit-funnel-dialog";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { DeleteDialog } from "@/components/ui/delete-dialog";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuSeparator,
-	DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ds/badge";
+import { Button } from "@/components/ds/button";
+import { Card } from "@/components/ds/card";
+import { DeleteDialog } from "@/components/ds/delete-dialog";
+import { DropdownMenu } from "@/components/ds/dropdown-menu";
 import { useFunnels } from "@/hooks/use-funnels";
 import { fromNow } from "@/lib/time";
 import type { CreateFunnelData, Funnel } from "@/types/funnels";
@@ -72,7 +66,7 @@ function FunnelRow({
 			<div className="min-w-0 flex-1">
 				<div className="flex items-center gap-2">
 					<p className="truncate font-medium text-sm">{funnel.name}</p>
-					<Badge className="text-[10px]" variant="secondary">
+					<Badge className="text-[10px]" variant="muted">
 						{funnel.steps.length} steps
 					</Badge>
 				</div>
@@ -114,31 +108,27 @@ function FunnelRow({
 				role="presentation"
 			>
 				<DropdownMenu>
-					<DropdownMenuTrigger asChild>
-						<Button
-							aria-label="Actions"
-							className="size-7 opacity-50 hover:opacity-100 data-[state=open]:opacity-100"
-							size="icon"
-							variant="ghost"
-						>
-							<DotsThreeIcon className="size-4" weight="bold" />
-						</Button>
-					</DropdownMenuTrigger>
-					<DropdownMenuContent align="end" className="w-40">
-						<DropdownMenuItem className="gap-2" onClick={onEdit}>
+					<DropdownMenu.Trigger
+						aria-label="Actions"
+						className="inline-flex size-7 items-center justify-center gap-1.5 rounded-md bg-transparent p-0 font-medium text-muted-foreground opacity-50 transition-all duration-(--duration-quick) ease-(--ease-smooth) hover:bg-interactive-hover hover:text-foreground hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 disabled:pointer-events-none disabled:opacity-50 data-[state=open]:opacity-100"
+					>
+						<DotsThreeIcon className="size-4" weight="bold" />
+					</DropdownMenu.Trigger>
+					<DropdownMenu.Content align="end" className="w-40">
+						<DropdownMenu.Item className="gap-2" onClick={onEdit}>
 							<PencilSimpleIcon className="size-4" weight="duotone" />
 							Edit
-						</DropdownMenuItem>
-						<DropdownMenuSeparator />
-						<DropdownMenuItem
+						</DropdownMenu.Item>
+						<DropdownMenu.Separator />
+						<DropdownMenu.Item
 							className="gap-2"
 							onClick={onDelete}
 							variant="destructive"
 						>
 							<TrashIcon className="size-4" weight="duotone" />
 							Delete
-						</DropdownMenuItem>
-					</DropdownMenuContent>
+						</DropdownMenu.Item>
+					</DropdownMenu.Content>
 				</DropdownMenu>
 			</div>
 		</div>
@@ -259,7 +249,7 @@ export function FunnelsListRenderer({
 						className="mt-2"
 						onClick={openCreate}
 						size="sm"
-						variant="outline"
+						variant="secondary"
 					>
 						<PlusIcon className="size-4" />
 						Create Funnel

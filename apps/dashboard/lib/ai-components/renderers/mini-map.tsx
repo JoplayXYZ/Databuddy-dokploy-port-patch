@@ -5,7 +5,7 @@ import { GlobeIcon } from "@phosphor-icons/react";
 import dynamic from "next/dynamic";
 import { useMemo } from "react";
 import { CountryFlag } from "@/components/icon";
-import { Card } from "@/components/ui/card";
+import { Card } from "@/components/ds/card";
 import type { BaseComponentProps } from "../types";
 
 const MapComponent = dynamic(

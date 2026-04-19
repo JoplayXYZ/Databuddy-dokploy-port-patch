@@ -1,18 +1,17 @@
 "use client";
 
 import type { Icon } from "@phosphor-icons/react";
-import { CheckIcon } from "@phosphor-icons/react";
-import { CircleNotchIcon } from "@phosphor-icons/react";
-import { FunnelIcon } from "@phosphor-icons/react";
-import { PencilSimpleIcon } from "@phosphor-icons/react";
-import { TrashIcon } from "@phosphor-icons/react";
+import { CheckIcon } from "@phosphor-icons/react/dist/ssr";
+import { FunnelIcon } from "@phosphor-icons/react/dist/ssr";
+import { PencilSimpleIcon } from "@phosphor-icons/react/dist/ssr";
+import { TrashIcon } from "@phosphor-icons/react/dist/ssr";
 import { useParams } from "next/navigation";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { EditFunnelDialog } from "@/app/(main)/websites/[id]/funnels/_components/edit-funnel-dialog";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ds/badge";
+import { Button } from "@/components/ds/button";
+import { Card } from "@/components/ds/card";
 import { useChat } from "@/contexts/chat-context";
 import { useFunnels } from "@/hooks/use-funnels";
 import { cn } from "@/lib/utils";
@@ -37,7 +36,7 @@ interface ModeConfig {
 	confirmLabel: string;
 	confirmMessage: string;
 	title: string;
-	variant: "default" | "destructive";
+	tone?: "danger";
 }
 
 const MODE_CONFIG: Record<string, ModeConfig> = {
@@ -46,7 +45,6 @@ const MODE_CONFIG: Record<string, ModeConfig> = {
 		confirmLabel: "Create",
 		confirmMessage: "Yes, create it",
 		accent: "",
-		variant: "default",
 		ButtonIcon: CheckIcon,
 	},
 	update: {
@@ -54,7 +52,6 @@ const MODE_CONFIG: Record<string, ModeConfig> = {
 		confirmLabel: "Update",
 		confirmMessage: "Yes, update it",
 		accent: "border-amber-500/30",
-		variant: "default",
 		ButtonIcon: CheckIcon,
 	},
 	delete: {
@@ -62,7 +59,7 @@ const MODE_CONFIG: Record<string, ModeConfig> = {
 		confirmLabel: "Delete",
 		confirmMessage: "Yes, delete it",
 		accent: "border-destructive/30",
-		variant: "destructive",
+		tone: "danger",
 		ButtonIcon: TrashIcon,
 	},
 };
@@ -140,7 +137,7 @@ export function FunnelPreviewRenderer({
 						/>
 					</div>
 					<p className="font-medium text-sm">{config.title}</p>
-					<Badge className="ml-auto text-[10px]" variant="secondary">
+					<Badge className="ml-auto text-[10px]" variant="muted">
 						{funnel.steps.length} steps
 					</Badge>
 				</div>
@@ -171,7 +168,7 @@ export function FunnelPreviewRenderer({
 										<span className="min-w-0 flex-1 truncate text-xs">
 											{step.name}
 										</span>
-										<Badge className="shrink-0 text-[10px]" variant="outline">
+										<Badge className="shrink-0 text-[10px]" variant="default">
 											{step.type === "PAGE_VIEW" ? "Page" : "Event"}
 										</Badge>
 									</div>
@@ -197,16 +194,13 @@ export function FunnelPreviewRenderer({
 						Edit
 					</Button>
 					<Button
-						disabled={isLoading || isConfirming}
+						disabled={isLoading}
+						loading={isConfirming}
 						onClick={handleConfirm}
 						size="sm"
-						variant={config.variant}
+						tone={config.tone}
 					>
-						{isConfirming ? (
-							<CircleNotchIcon className="size-3.5 animate-spin" />
-						) : (
-							<config.ButtonIcon className="size-3.5" weight="bold" />
-						)}
+						<config.ButtonIcon className="size-3.5" weight="bold" />
 						{config.confirmLabel}
 					</Button>
 				</div>

@@ -1,16 +1,9 @@
 "use client";
 
-import {
-	Tooltip,
-	TooltipContent,
-	TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip } from "@/components/ds/tooltip";
 import { cn } from "@/lib/utils";
 import { getUptimeHeatmapCellClass } from "./heatmap-cell-class";
-import {
-	UptimeHeatmapDayTooltipBody,
-	uptimeHeatmapTooltipContentClassName,
-} from "./heatmap-day-tooltip";
+import { UptimeHeatmapDayTooltipBody } from "./heatmap-day-tooltip";
 import type { UptimeHeatmapDay } from "./heatmap-days";
 
 export interface UptimeHeatmapStripProps {
@@ -85,14 +78,8 @@ export function UptimeHeatmapStrip({
 					: day.hasData;
 
 				return (
-					<Tooltip key={day.dateStr} skipProvider>
-						<TooltipTrigger asChild>
-							<HeatmapCell day={day} interactive isActive={isActive} />
-						</TooltipTrigger>
-						<TooltipContent
-							className={cn(uptimeHeatmapTooltipContentClassName)}
-							sideOffset={6}
-						>
+					<Tooltip
+						content={
 							<UptimeHeatmapDayTooltipBody
 								dateLabel={getDateLabel(day.date)}
 								downtimeSeconds={day.downtimeSeconds}
@@ -102,7 +89,10 @@ export function UptimeHeatmapStrip({
 								totalChecks={day.totalChecks}
 								uptimePercent={day.uptime}
 							/>
-						</TooltipContent>
+						}
+						key={day.dateStr}
+					>
+						<HeatmapCell day={day} interactive isActive={isActive} />
 					</Tooltip>
 				);
 			})}

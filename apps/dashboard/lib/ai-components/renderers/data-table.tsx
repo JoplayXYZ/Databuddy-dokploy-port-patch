@@ -1,6 +1,6 @@
 "use client";
 
-import { Card } from "@/components/ui/card";
+import { Card } from "@/components/ds/card";
 import { cn } from "@/lib/utils";
 import type { BaseComponentProps } from "../types";
 

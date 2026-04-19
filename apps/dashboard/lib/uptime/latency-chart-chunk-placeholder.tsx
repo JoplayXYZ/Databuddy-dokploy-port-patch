@@ -1,4 +1,4 @@
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@/components/ds/skeleton";
 
 /** Same footprint as collapsed LatencyChart row — use with next/dynamic loading to avoid CLS */
 export function LatencyChartChunkPlaceholder() {

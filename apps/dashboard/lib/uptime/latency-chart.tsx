@@ -4,7 +4,7 @@ import { CaretDownIcon } from "@phosphor-icons/react";
 import { AnimatePresence, motion } from "motion/react";
 import { useMemo } from "react";
 import { Chart } from "@/components/ui/composables/chart";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@/components/ds/skeleton";
 import { usePersistentState } from "@/hooks/use-persistent-state";
 import {
 	chartAxisTickDefault,

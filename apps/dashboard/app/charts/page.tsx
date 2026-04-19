@@ -6,13 +6,7 @@ import { ChartPieIcon } from "@phosphor-icons/react";
 import { WaveformIcon } from "@phosphor-icons/react";
 import { StatCard } from "@/components/analytics/stat-card";
 import { MiniPieChart } from "@/components/charts/pie-chart";
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
-} from "@/components/ui/card";
+import { Card } from "@/components/ds/card";
 
 function generateChartData(days: number, baseValue: number, variance: number) {
 	const data: { date: string; value: number }[] = [];
@@ -69,14 +63,14 @@ export default function ChartsPage() {
 
 			<div className="grid gap-6 lg:grid-cols-4">
 				<Card className="gap-4">
-					<CardHeader>
+					<Card.Header>
 						<div className="flex items-center gap-2">
 							<WaveformIcon className="size-5" weight="duotone" />
-							<CardTitle>Area Chart</CardTitle>
+							<Card.Title>Area Chart</Card.Title>
 						</div>
-						<CardDescription>Filled area under the line</CardDescription>
-					</CardHeader>
-					<CardContent className="space-y-4">
+						<Card.Description>Filled area under the line</Card.Description>
+					</Card.Header>
+					<Card.Content className="space-y-4">
 						<StatCard
 							chartData={areaData}
 							chartStepType="monotone"
@@ -127,18 +121,18 @@ export default function ChartsPage() {
 							trend={2.8}
 							value={15_420}
 						/>
-					</CardContent>
+					</Card.Content>
 				</Card>
 
 				<Card className="gap-4">
-					<CardHeader>
+					<Card.Header>
 						<div className="flex items-center gap-2">
 							<ChartLineIcon className="size-5" weight="duotone" />
-							<CardTitle>Line Chart</CardTitle>
+							<Card.Title>Line Chart</Card.Title>
 						</div>
-						<CardDescription>Simple line without fill</CardDescription>
-					</CardHeader>
-					<CardContent className="space-y-4">
+						<Card.Description>Simple line without fill</Card.Description>
+					</Card.Header>
+					<Card.Content className="space-y-4">
 						<StatCard
 							chartData={lineData}
 							chartStepType="monotone"
@@ -189,18 +183,20 @@ export default function ChartsPage() {
 							trend={2.8}
 							value={45_200}
 						/>
-					</CardContent>
+					</Card.Content>
 				</Card>
 
 				<Card className="gap-4">
-					<CardHeader>
+					<Card.Header>
 						<div className="flex items-center gap-2">
 							<ChartBarIcon className="size-5" weight="duotone" />
-							<CardTitle>Bar Chart</CardTitle>
+							<Card.Title>Bar Chart</Card.Title>
 						</div>
-						<CardDescription>Vertical bars for each data point</CardDescription>
-					</CardHeader>
-					<CardContent className="space-y-4">
+						<Card.Description>
+							Vertical bars for each data point
+						</Card.Description>
+					</Card.Header>
+					<Card.Content className="space-y-4">
 						<StatCard
 							chartData={barData}
 							chartType="bar"
@@ -245,18 +241,18 @@ export default function ChartsPage() {
 							title="Text Mode"
 							value={9800}
 						/>
-					</CardContent>
+					</Card.Content>
 				</Card>
 
 				<Card className="gap-4">
-					<CardHeader>
+					<Card.Header>
 						<div className="flex items-center gap-2">
 							<ChartPieIcon className="size-5" weight="duotone" />
-							<CardTitle>Pie Chart</CardTitle>
+							<Card.Title>Pie Chart</Card.Title>
 						</div>
-						<CardDescription>Distribution visualization</CardDescription>
-					</CardHeader>
-					<CardContent className="space-y-4">
+						<Card.Description>Distribution visualization</Card.Description>
+					</Card.Header>
+					<Card.Content className="space-y-4">
 						<MiniPieChart
 							data={browserData}
 							id="pie-donut"
@@ -289,7 +285,7 @@ export default function ChartsPage() {
 							title="Loading"
 							variant="donut"
 						/>
-					</CardContent>
+					</Card.Content>
 				</Card>
 			</div>
 		</div>

@@ -1,6 +1,4 @@
 import type { Metadata } from "next";
-import { TooltipProvider } from "@/components/ui/tooltip";
-
 export const metadata: Metadata = {
 	title: {
 		template: "%s | Status",
@@ -18,5 +16,5 @@ export default function StatusLayout({
 }: {
 	children: React.ReactNode;
 }) {
-	return <TooltipProvider>{children}</TooltipProvider>;
+	return <>{children}</>;
 }
