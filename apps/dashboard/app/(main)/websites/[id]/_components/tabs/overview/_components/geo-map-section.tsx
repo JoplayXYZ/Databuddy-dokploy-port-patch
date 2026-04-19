@@ -6,7 +6,7 @@ import dynamic from "next/dynamic";
 import { useMemo } from "react";
 import { CountryFlag } from "@/components/icon";
 import { formatNumber } from "@/lib/formatters";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@/components/ds/skeleton";
 
 const MapComponent = dynamic(
 	() =>

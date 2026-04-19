@@ -3,15 +3,14 @@
 import type { FlagWithScheduleForm } from "@databuddy/shared/flags";
 import { flagWithScheduleSchema } from "@databuddy/shared/flags";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { BuildingsIcon } from "@phosphor-icons/react";
-import { CaretDownIcon } from "@phosphor-icons/react";
-import { CodeIcon } from "@phosphor-icons/react";
-import { FlagIcon } from "@phosphor-icons/react";
-import { GitBranchIcon } from "@phosphor-icons/react";
-import { SpinnerGapIcon } from "@phosphor-icons/react";
-import { UserIcon } from "@phosphor-icons/react";
-import { UsersIcon } from "@phosphor-icons/react";
-import { UsersThreeIcon } from "@phosphor-icons/react";
+import { BuildingsIcon } from "@phosphor-icons/react/dist/ssr";
+import { CaretDownIcon } from "@phosphor-icons/react/dist/ssr";
+import { CodeIcon } from "@phosphor-icons/react/dist/ssr";
+import { FlagIcon } from "@phosphor-icons/react/dist/ssr";
+import { GitBranchIcon } from "@phosphor-icons/react/dist/ssr";
+import { UserIcon } from "@phosphor-icons/react/dist/ssr";
+import { UsersIcon } from "@phosphor-icons/react/dist/ssr";
+import { UsersThreeIcon } from "@phosphor-icons/react/dist/ssr";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "motion/react";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -21,7 +20,7 @@ import {
 	CodeBlock,
 	CodeBlockCopyButton,
 } from "@/components/ai-elements/code-block";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ds/button";
 import {
 	Form,
 	FormControl,
@@ -32,16 +31,8 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { LineSlider } from "@/components/ui/line-slider";
-import {
-	Sheet,
-	SheetBody,
-	SheetContent,
-	SheetDescription,
-	SheetFooter,
-	SheetHeader,
-	SheetTitle,
-} from "@/components/ui/sheet";
-import { Switch } from "@/components/ui/switch";
+import { Sheet } from "@/components/ds/sheet";
+import { Switch } from "@/components/ds/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { orpc } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
@@ -66,7 +57,10 @@ function CollapsibleSection({
 	onToggleAction,
 	children,
 }: {
-	icon: React.ComponentType<{ size?: number; weight?: "duotone" | "fill" }>;
+	icon: React.ComponentType<{
+		className?: string;
+		weight?: "duotone" | "fill";
+	}>;
 	title: string;
 	badge?: number;
 	isExpanded: boolean;
@@ -82,7 +76,7 @@ function CollapsibleSection({
 					type="button"
 				>
 					<div className="flex items-center gap-2.5">
-						<Icon size={16} weight="duotone" />
+						<Icon className="size-4" weight="duotone" />
 						<span className="font-medium text-sm">{title}</span>
 						{badge !== undefined && badge > 0 && (
 							<span className="flex size-5 items-center justify-center rounded-full bg-primary font-medium text-primary-foreground text-xs">
@@ -438,30 +432,30 @@ export function FlagSheet({
 
 	return (
 		<Sheet onOpenChange={handleOpenChange} open={isOpen}>
-			<SheetContent className="sm:max-w-xl" side="right">
-				<SheetHeader>
+			<Sheet.Content className="sm:max-w-xl" side="right">
+				<Sheet.Header>
 					<div className="flex items-center gap-4">
 						<div className="flex size-11 items-center justify-center rounded border bg-secondary">
-							<FlagIcon className="text-primary" size={20} weight="fill" />
+							<FlagIcon className="size-5 text-primary" weight="fill" />
 						</div>
 						<div>
-							<SheetTitle className="text-lg">
+							<Sheet.Title className="text-lg">
 								{isEditing
 									? "Edit Flag"
 									: template
 										? `Create from ${template.name}`
 										: "Create Flag"}
-							</SheetTitle>
-							<SheetDescription>
+							</Sheet.Title>
+							<Sheet.Description>
 								{isEditing
 									? `Editing ${flag?.name || flag?.key}`
 									: template
 										? "Pre-configured with template settings"
 										: "Set up a new feature flag"}
-							</SheetDescription>
+							</Sheet.Description>
 						</div>
 					</div>
-				</SheetHeader>
+				</Sheet.Header>
 
 				<Form {...form}>
 					<form
@@ -477,7 +471,7 @@ export function FlagSheet({
 							}
 						})}
 					>
-						<SheetBody className="space-y-6">
+						<Sheet.Body className="space-y-6">
 							<div className="space-y-4">
 								<div className="grid place-items-start gap-4 sm:grid-cols-2">
 									<FormField
@@ -960,28 +954,20 @@ export function FlagSheet({
 									/>
 								</CollapsibleSection>
 							</div>
-						</SheetBody>
+						</Sheet.Body>
 
-						<SheetFooter>
-							<Button onClick={onCloseAction} type="button" variant="outline">
+						<Sheet.Footer>
+							<Button onClick={onCloseAction} type="button" variant="secondary">
 								Cancel
 							</Button>
-							<Button className="min-w-28" disabled={isLoading} type="submit">
-								{isLoading ? (
-									<>
-										<SpinnerGapIcon className="animate-spin" size={16} />
-										{isEditing ? "Saving…" : "Creating…"}
-									</>
-								) : isEditing ? (
-									"Save Changes"
-								) : (
-									"Create Flag"
-								)}
+							<Button className="min-w-28" loading={isLoading} type="submit">
+								{isEditing ? "Save Changes" : "Create Flag"}
 							</Button>
-						</SheetFooter>
+						</Sheet.Footer>
 					</form>
 				</Form>
-			</SheetContent>
+				<Sheet.Close />
+			</Sheet.Content>
 		</Sheet>
 	);
 }

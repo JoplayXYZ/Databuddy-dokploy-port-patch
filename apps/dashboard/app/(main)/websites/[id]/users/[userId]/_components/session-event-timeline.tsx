@@ -5,7 +5,7 @@ import { CursorClickIcon } from "@phosphor-icons/react";
 import { FileTextIcon } from "@phosphor-icons/react";
 import { LightningIcon } from "@phosphor-icons/react";
 import { SparkleIcon } from "@phosphor-icons/react";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@/components/ds/badge";
 import { formatLocalTime } from "@/lib/time";
 import { cleanUrl, formatPropertyValue, getDisplayPath } from "./session-utils";
 
@@ -67,7 +67,7 @@ function EventItem({
 				{hasProperties && (
 					<Badge
 						className="bg-primary/10 text-[10px] text-primary"
-						variant="secondary"
+						variant="muted"
 					>
 						Custom
 					</Badge>

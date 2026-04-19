@@ -2,20 +2,15 @@
 
 import { filterOptions } from "@databuddy/shared/lists/filters";
 import type { DynamicQueryFilter } from "@databuddy/shared/types/api";
-import { BookmarkIcon } from "@phosphor-icons/react";
-import { CheckIcon } from "@phosphor-icons/react";
-import { CopyIcon } from "@phosphor-icons/react";
-import { PencilIcon } from "@phosphor-icons/react";
-import { TrashIcon } from "@phosphor-icons/react";
+import { BookmarkIcon } from "@phosphor-icons/react/dist/ssr";
+import { CheckIcon } from "@phosphor-icons/react/dist/ssr";
+import { CopyIcon } from "@phosphor-icons/react/dist/ssr";
+import { PencilIcon } from "@phosphor-icons/react/dist/ssr";
+import { TrashIcon } from "@phosphor-icons/react/dist/ssr";
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuSeparator,
-	DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ds/button";
+import { DropdownMenu } from "@/components/ds/dropdown-menu";
+import { cn } from "@/lib/utils";
 import { getOperatorLabel } from "@/hooks/use-filters";
 import type { SavedFilter } from "@/hooks/use-saved-filters";
 
@@ -70,7 +65,7 @@ export function SavedFiltersMenu({
 				className="h-7 gap-1.5 text-xs"
 				disabled
 				size="sm"
-				variant="outline"
+				variant="secondary"
 			>
 				<BookmarkIcon className="size-3.5" weight="duotone" />
 				{isLoading ? "Loading…" : "No saved"}
@@ -80,13 +75,17 @@ export function SavedFiltersMenu({
 
 	return (
 		<DropdownMenu onOpenChange={setOpen} open={open}>
-			<DropdownMenuTrigger asChild>
-				<Button className="h-7 gap-1.5 text-xs" size="sm" variant="outline">
-					<BookmarkIcon className="size-3.5" weight="duotone" />
-					Saved ({savedFilters.length})
-				</Button>
-			</DropdownMenuTrigger>
-			<DropdownMenuContent align="end" className="w-72">
+			<DropdownMenu.Trigger
+				className={cn(
+					"inline-flex items-center justify-center gap-1.5 rounded-md font-medium transition-all duration-(--duration-quick) ease-(--ease-smooth) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 disabled:pointer-events-none disabled:opacity-50",
+					"bg-secondary text-foreground hover:bg-interactive-hover",
+					"h-7 px-2.5 text-xs"
+				)}
+			>
+				<BookmarkIcon className="size-3.5" weight="duotone" />
+				Saved ({savedFilters.length})
+			</DropdownMenu.Trigger>
+			<DropdownMenu.Content align="end" className="w-72">
 				<div className="flex items-center justify-between px-2 py-1.5">
 					<span className="font-medium text-xs">Saved Filters</span>
 					<Button
@@ -101,14 +100,14 @@ export function SavedFiltersMenu({
 						Clear all
 					</Button>
 				</div>
-				<DropdownMenuSeparator />
+				<DropdownMenu.Separator />
 
 				<div className="max-h-64 overflow-y-auto">
 					{savedFilters.map((saved) => {
 						const isActive = filtersMatch(currentFilters, saved.filters);
 
 						return (
-							<DropdownMenuItem
+							<DropdownMenu.Item
 								className="group flex cursor-pointer flex-col items-start gap-1 p-2"
 								key={saved.id}
 								onClick={() => {
@@ -185,11 +184,11 @@ export function SavedFiltersMenu({
 										</span>
 									)}
 								</div>
-							</DropdownMenuItem>
+							</DropdownMenu.Item>
 						);
 					})}
 				</div>
-			</DropdownMenuContent>
+			</DropdownMenu.Content>
 		</DropdownMenu>
 	);
 }

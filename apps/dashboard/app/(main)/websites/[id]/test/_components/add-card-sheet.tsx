@@ -4,25 +4,24 @@ import { filterOptions } from "@databuddy/shared/lists/filters";
 import type { DateRange } from "@databuddy/shared/types/analytics";
 import type { CustomQueryConfig } from "@databuddy/shared/types/custom-query";
 import type { QueryOutputField } from "@databuddy/shared/types/query";
-import { CalendarDotsIcon } from "@phosphor-icons/react";
-import { CaretDownIcon } from "@phosphor-icons/react";
-import { ChartBarIcon } from "@phosphor-icons/react";
-import { ChartLineUpIcon } from "@phosphor-icons/react";
-import { CheckIcon } from "@phosphor-icons/react";
-import { CodeIcon } from "@phosphor-icons/react";
-import { FunnelIcon } from "@phosphor-icons/react";
-import { GaugeIcon } from "@phosphor-icons/react";
-import { PencilSimpleIcon } from "@phosphor-icons/react";
-import { PlusIcon } from "@phosphor-icons/react";
-import { SpinnerGapIcon } from "@phosphor-icons/react";
-import { SquaresFourIcon } from "@phosphor-icons/react";
-import { TextTIcon } from "@phosphor-icons/react";
-import { TrashIcon } from "@phosphor-icons/react";
+import { CalendarDotsIcon } from "@phosphor-icons/react/dist/ssr";
+import { CaretDownIcon } from "@phosphor-icons/react/dist/ssr";
+import { ChartBarIcon } from "@phosphor-icons/react/dist/ssr";
+import { ChartLineUpIcon } from "@phosphor-icons/react/dist/ssr";
+import { CheckIcon } from "@phosphor-icons/react/dist/ssr";
+import { CodeIcon } from "@phosphor-icons/react/dist/ssr";
+import { FunnelIcon } from "@phosphor-icons/react/dist/ssr";
+import { GaugeIcon } from "@phosphor-icons/react/dist/ssr";
+import { PencilSimpleIcon } from "@phosphor-icons/react/dist/ssr";
+import { PlusIcon } from "@phosphor-icons/react/dist/ssr";
+import { SquaresFourIcon } from "@phosphor-icons/react/dist/ssr";
+import { TextTIcon } from "@phosphor-icons/react/dist/ssr";
+import { TrashIcon } from "@phosphor-icons/react/dist/ssr";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { StatCardDisplayMode } from "@/components/analytics/stat-card";
 import { StatCard } from "@/components/analytics/stat-card";
 import { AutocompleteInput } from "@/components/ui/autocomplete-input";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ds/button";
 import {
 	Command,
 	CommandEmpty,
@@ -31,9 +30,9 @@ import {
 	CommandItem,
 	CommandList,
 } from "@/components/ui/command";
-import { DeleteDialog } from "@/components/ui/delete-dialog";
+import { DeleteDialog } from "@/components/ds/delete-dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Field } from "@/components/ds/field";
 import {
 	Popover,
 	PopoverContent,
@@ -46,16 +45,8 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
-import {
-	Sheet,
-	SheetBody,
-	SheetContent,
-	SheetDescription,
-	SheetFooter,
-	SheetHeader,
-	SheetTitle,
-} from "@/components/ui/sheet";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Sheet } from "@/components/ds/sheet";
+import { Skeleton } from "@/components/ds/skeleton";
 import { useAutocompleteData } from "@/hooks/use-autocomplete";
 import { operatorOptions } from "@/hooks/use-filters";
 import { cn } from "@/lib/utils";
@@ -404,8 +395,8 @@ export function CardSheet({
 
 	return (
 		<Sheet onOpenChange={handleOpenChange} open={isOpen}>
-			<SheetContent className="sm:max-w-md" side="right">
-				<SheetHeader>
+			<Sheet.Content className="sm:max-w-md" side="right">
+				<Sheet.Header>
 					<div className="flex items-center gap-4">
 						<div className="flex size-11 items-center justify-center rounded border bg-secondary">
 							{isEditMode ? (
@@ -421,21 +412,21 @@ export function CardSheet({
 							)}
 						</div>
 						<div>
-							<SheetTitle className="text-lg">
+							<Sheet.Title className="text-lg">
 								{isEditMode ? "Edit Card" : "Add Card"}
-							</SheetTitle>
-							<SheetDescription>
+							</Sheet.Title>
+							<Sheet.Description>
 								{isEditMode
 									? "Modify your stat card configuration"
 									: "Create a new stat card from your analytics data"}
-							</SheetDescription>
+							</Sheet.Description>
 						</div>
 					</div>
-				</SheetHeader>
+				</Sheet.Header>
 
-				<SheetBody className="space-y-6">
+				<Sheet.Body className="space-y-6">
 					<div className="space-y-2">
-						<Label className="text-muted-foreground">Preview</Label>
+						<Field.Label className="text-muted-foreground">Preview</Field.Label>
 						<StatCard
 							chartData={previewChartData}
 							chartType="area"
@@ -452,7 +443,7 @@ export function CardSheet({
 					<div className="h-px bg-border" />
 
 					<div className="space-y-2">
-						<Label>Data Source Type</Label>
+						<Field.Label>Data Source Type</Field.Label>
 						<div className="flex gap-2">
 							<Button
 								className={cn(
@@ -462,7 +453,7 @@ export function CardSheet({
 								)}
 								onClick={() => setDataSourceMode("predefined")}
 								type="button"
-								variant="outline"
+								variant="secondary"
 							>
 								<GaugeIcon className="size-4" weight="duotone" />
 								Predefined
@@ -474,7 +465,7 @@ export function CardSheet({
 								)}
 								onClick={() => setDataSourceMode("custom")}
 								type="button"
-								variant="outline"
+								variant="secondary"
 							>
 								<CodeIcon className="size-4" weight="duotone" />
 								Custom Query
@@ -485,9 +476,9 @@ export function CardSheet({
 					{dataSourceMode === "predefined" ? (
 						<>
 							<div className="space-y-2">
-								<Label>
+								<Field.Label>
 									Data Source <span className="text-destructive">*</span>
-								</Label>
+								</Field.Label>
 								{isLoadingTypes ? (
 									<Skeleton className="h-10 w-full" />
 								) : (
@@ -499,7 +490,7 @@ export function CardSheet({
 											<Button
 												className="w-full justify-between"
 												role="combobox"
-												variant="outline"
+												variant="secondary"
 											>
 												{selectedQueryType ? (
 													<div className="flex items-center gap-2 truncate">
@@ -646,15 +637,15 @@ export function CardSheet({
 
 							{selectedQueryType && (
 								<div className="space-y-2">
-									<Label>
+									<Field.Label>
 										Field to Display <span className="text-destructive">*</span>
-									</Label>
+									</Field.Label>
 									<Popover onOpenChange={setIsFieldOpen} open={isFieldOpen}>
 										<PopoverTrigger asChild>
 											<Button
 												className="w-full justify-between"
 												role="combobox"
-												variant="outline"
+												variant="secondary"
 											>
 												{selectedField ? (
 													<span className="truncate">
@@ -720,7 +711,7 @@ export function CardSheet({
 
 							{selectedField && supportsChart && (
 								<div className="space-y-2">
-									<Label>Display Mode</Label>
+									<Field.Label>Display Mode</Field.Label>
 									<div className="flex gap-2">
 										{(
 											[
@@ -763,12 +754,12 @@ export function CardSheet({
 
 							{selectedField && (
 								<div className="space-y-2">
-									<Label
+									<Field.Label
 										className="text-muted-foreground"
 										htmlFor="customTitle"
 									>
 										Custom Title (optional)
-									</Label>
+									</Field.Label>
 									<Input
 										id="customTitle"
 										onChange={(e) => setCustomTitle(e.target.value)}
@@ -787,12 +778,12 @@ export function CardSheet({
 
 							{customQuery && customQuery.selects.length > 0 && (
 								<div className="space-y-2">
-									<Label
+									<Field.Label
 										className="text-muted-foreground"
 										htmlFor="customTitle"
 									>
 										Custom Title (optional)
-									</Label>
+									</Field.Label>
 									<Input
 										id="customTitle"
 										onChange={(e) => setCustomTitle(e.target.value)}
@@ -812,10 +803,10 @@ export function CardSheet({
 							<div className="h-px bg-border" />
 
 							<div className="space-y-2">
-								<Label className="flex items-center gap-1.5 text-muted-foreground">
+								<Field.Label className="flex items-center gap-1.5 text-muted-foreground">
 									<CalendarDotsIcon className="size-3.5" weight="duotone" />
 									Date Range
-								</Label>
+								</Field.Label>
 								<Popover
 									onOpenChange={setIsDateRangeOpen}
 									open={isDateRangeOpen}
@@ -824,7 +815,7 @@ export function CardSheet({
 										<Button
 											className="w-full justify-between"
 											role="combobox"
-											variant="outline"
+											variant="secondary"
 										>
 											<span
 												className={cn(
@@ -873,10 +864,10 @@ export function CardSheet({
 							</div>
 
 							<div className="space-y-2">
-								<Label className="flex items-center gap-1.5 text-muted-foreground">
+								<Field.Label className="flex items-center gap-1.5 text-muted-foreground">
 									<FunnelIcon className="size-3.5" weight="duotone" />
 									Filters
-								</Label>
+								</Field.Label>
 
 								{filters.length > 0 && (
 									<div className="space-y-2">
@@ -942,10 +933,9 @@ export function CardSheet({
 													aria-label="Remove filter"
 													className="size-6 shrink-0 p-0 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
 													onClick={() => handleRemoveFilter(index)}
-													size="icon"
 													variant="ghost"
 												>
-													<TrashIcon size={14} />
+													<TrashIcon className="size-3.5" />
 												</Button>
 											</div>
 										))}
@@ -957,7 +947,7 @@ export function CardSheet({
 									onClick={handleAddFilter}
 									size="sm"
 									type="button"
-									variant="outline"
+									variant="secondary"
 								>
 									<PlusIcon className="size-4" />
 									Add Filter
@@ -965,13 +955,13 @@ export function CardSheet({
 							</div>
 						</>
 					)}
-				</SheetBody>
+				</Sheet.Body>
 
-				<SheetFooter className="flex-row justify-between sm:justify-between">
+				<Sheet.Footer className="flex-row justify-between sm:justify-between">
 					{isEditMode && onDeleteAction ? (
 						<Button
-							className="text-destructive hover:bg-destructive/10 hover:text-destructive"
 							onClick={() => setShowDeleteConfirm(true)}
+							tone="danger"
 							type="button"
 							variant="ghost"
 						>
@@ -982,28 +972,20 @@ export function CardSheet({
 						<div />
 					)}
 					<div className="flex gap-2">
-						<Button onClick={onCloseAction} type="button" variant="outline">
+						<Button onClick={onCloseAction} type="button" variant="secondary">
 							Cancel
 						</Button>
 						<Button
 							className="min-w-24"
-							disabled={isSubmitting || !canSave}
+							disabled={!canSave}
+							loading={isSubmitting}
 							onClick={handleSubmit}
 							type="button"
 						>
-							{isSubmitting ? (
-								<>
-									<SpinnerGapIcon className="animate-spin" size={16} />
-									{isEditMode ? "Saving…" : "Adding…"}
-								</>
-							) : isEditMode ? (
-								"Save Changes"
-							) : (
-								"Add Card"
-							)}
+							{isEditMode ? "Save Changes" : "Add Card"}
 						</Button>
 					</div>
-				</SheetFooter>
+				</Sheet.Footer>
 
 				<DeleteDialog
 					isOpen={showDeleteConfirm}
@@ -1012,7 +994,8 @@ export function CardSheet({
 					onConfirm={handleDelete}
 					title="Delete Card"
 				/>
-			</SheetContent>
+				<Sheet.Close />
+			</Sheet.Content>
 		</Sheet>
 	);
 }

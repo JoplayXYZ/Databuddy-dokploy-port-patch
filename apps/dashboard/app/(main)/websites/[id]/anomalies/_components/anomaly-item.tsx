@@ -8,9 +8,9 @@ import { LightningIcon } from "@phosphor-icons/react";
 import { WarningCircleIcon } from "@phosphor-icons/react";
 import { WarningIcon } from "@phosphor-icons/react";
 import type { ElementType } from "react";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@/components/ds/badge";
 import { List } from "@/components/ui/composables/list";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@/components/ds/skeleton";
 import { cn } from "@/lib/utils";
 
 export interface AnomalyItemData {
@@ -109,7 +109,7 @@ export function AnomalyItem({ anomaly }: AnomalyItemProps) {
 				<div className="flex items-center gap-2">
 					<Badge
 						className="gap-1"
-						variant={isCritical ? "destructive" : "amber"}
+						variant={isCritical ? "destructive" : "warning"}
 					>
 						<SeverityIcon className="size-3" weight="fill" />
 						{anomaly.severity}

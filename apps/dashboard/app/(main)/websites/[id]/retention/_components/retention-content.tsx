@@ -7,7 +7,7 @@ import { UserPlusIcon } from "@phosphor-icons/react";
 import { UsersIcon } from "@phosphor-icons/react";
 import { useMemo, useState } from "react";
 import { StatCard } from "@/components/analytics";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs } from "@/components/ds/tabs";
 import { useChartPreferences } from "@/hooks/use-chart-preferences";
 import { useDateFilters } from "@/hooks/use-date-filters";
 import { formatNumber } from "@/lib/formatters";
@@ -211,33 +211,33 @@ export function RetentionContent({ websiteId }: RetentionContentProps) {
 								Track user retention over time
 							</p>
 						</div>
-						<TabsList className="h-9">
-							<TabsTrigger className="gap-1.5 px-3 text-xs" value="cohorts">
+						<Tabs.List className="h-9">
+							<Tabs.Tab className="gap-1.5 px-3 text-xs" value="cohorts">
 								<TableIcon className="size-4" weight="duotone" />
 								Cohorts
-							</TabsTrigger>
-							<TabsTrigger className="gap-1.5 px-3 text-xs" value="rate">
+							</Tabs.Tab>
+							<Tabs.Tab className="gap-1.5 px-3 text-xs" value="rate">
 								<ChartLineIcon className="size-4" weight="duotone" />
 								Daily Rate
-							</TabsTrigger>
-						</TabsList>
+							</Tabs.Tab>
+						</Tabs.List>
 					</div>
 
-					<TabsContent
+					<Tabs.Panel
 						className="mt-0 min-h-0 flex-1 overflow-auto data-[state=inactive]:hidden"
 						value="cohorts"
 					>
 						<RetentionCohortsGrid cohorts={cohorts} isLoading={isLoading} />
-					</TabsContent>
+					</Tabs.Panel>
 
-					<TabsContent
+					<Tabs.Panel
 						className="mt-0 min-h-0 flex-1 data-[state=inactive]:hidden"
 						value="rate"
 					>
 						<div className="h-[400px]">
 							<RetentionRateChart data={rates} isLoading={isLoading} />
 						</div>
-					</TabsContent>
+					</Tabs.Panel>
 				</div>
 			</Tabs>
 		</div>

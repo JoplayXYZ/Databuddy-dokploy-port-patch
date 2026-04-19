@@ -1,7 +1,7 @@
 "use client";
 
 import { TargetIcon } from "@phosphor-icons/react";
-import { EmptyState } from "@/components/empty-state";
+import { EmptyState } from "@/components/ds/empty-state";
 import { List } from "@/components/ui/composables/list";
 import type { Goal } from "@/hooks/use-goals";
 import { GoalItem } from "./goal-item";

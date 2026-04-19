@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowClockwiseIcon } from "@phosphor-icons/react";
+import { ArrowClockwiseIcon } from "@phosphor-icons/react/dist/ssr";
 import clsx from "clsx";
 import { useAtom } from "jotai";
 import { useCallback, useMemo } from "react";
@@ -8,7 +8,7 @@ import type { DateRange as DayPickerRange } from "react-day-picker";
 import { useHotkeys } from "react-hotkeys-hook";
 import { LiveUserIndicator } from "@/components/analytics";
 import { DateRangePicker } from "@/components/date-range-picker";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ds/button";
 import { useDateFilters } from "@/hooks/use-date-filters";
 import dayjs from "@/lib/dayjs";
 import { addDynamicFilterAtom } from "@/stores/jotai/filterAtoms";
@@ -174,7 +174,7 @@ export function AnalyticsToolbar({
 						className="size-8"
 						disabled={isRefreshing || isDisabled}
 						onClick={onRefreshAction}
-						variant="outline"
+						variant="secondary"
 					>
 						<ArrowClockwiseIcon
 							aria-hidden="true"

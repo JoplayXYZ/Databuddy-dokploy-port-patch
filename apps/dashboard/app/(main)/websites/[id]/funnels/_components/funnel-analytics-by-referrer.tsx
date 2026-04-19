@@ -6,7 +6,7 @@ import { UsersIcon } from "@phosphor-icons/react";
 import { WarningCircleIcon } from "@phosphor-icons/react";
 import { useMemo, useRef, useState } from "react";
 import { FaviconImage } from "@/components/analytics/favicon-image";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@/components/ds/skeleton";
 import { cn } from "@/lib/utils";
 import type { FunnelAnalyticsByReferrerResult } from "@/types/funnels";
 

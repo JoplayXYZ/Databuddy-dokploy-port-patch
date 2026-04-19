@@ -1,10 +1,10 @@
 "use client";
 
-import { ArrowCounterClockwiseIcon } from "@phosphor-icons/react";
-import { HouseIcon } from "@phosphor-icons/react";
-import { WarningCircleIcon } from "@phosphor-icons/react";
+import { ArrowCounterClockwiseIcon } from "@phosphor-icons/react/dist/ssr";
+import { HouseIcon } from "@phosphor-icons/react/dist/ssr";
+import { WarningCircleIcon } from "@phosphor-icons/react/dist/ssr";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ds/button";
 
 export default function WebsiteError({
 	error,
@@ -32,7 +32,7 @@ export default function WebsiteError({
 				)}
 			</div>
 			<div className="flex gap-2">
-				<Button onClick={reset} variant="outline">
+				<Button onClick={reset} variant="secondary">
 					<ArrowCounterClockwiseIcon className="mr-2 size-4" weight="duotone" />
 					Try again
 				</Button>

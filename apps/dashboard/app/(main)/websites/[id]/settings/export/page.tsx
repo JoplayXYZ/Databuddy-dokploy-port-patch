@@ -1,25 +1,27 @@
 "use client";
 
 import type { ExportFormat } from "@databuddy/rpc";
-import { CheckIcon } from "@phosphor-icons/react";
-import { DownloadIcon } from "@phosphor-icons/react";
-import { FileCodeIcon } from "@phosphor-icons/react";
-import { FileTextIcon } from "@phosphor-icons/react";
-import { TableIcon } from "@phosphor-icons/react";
+import {
+	CheckIcon,
+	DownloadIcon,
+	FileCodeIcon,
+	FileTextIcon,
+	TableIcon,
+} from "@phosphor-icons/react/dist/ssr";
 import { useMutation } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
 import { useCallback, useMemo, useState } from "react";
 import type { DateRange as DayPickerRange } from "react-day-picker";
 import { toast } from "sonner";
 import { DateRangePicker } from "@/components/date-range-picker";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ds/badge";
+import { Button } from "@/components/ds/button";
+import { Card } from "@/components/ds/card";
+import { Switch } from "@/components/ds/switch";
 import { useWebsite } from "@/hooks/use-websites";
 import dayjs from "@/lib/dayjs";
 import { orpc } from "@/lib/orpc";
-import { PageHeader } from "../../../_components/page-header";
+import { cn } from "@/lib/utils";
 
 function downloadFile(blob: Blob, filename: string) {
 	const url = window.URL.createObjectURL(blob);
@@ -29,7 +31,6 @@ function downloadFile(blob: Blob, filename: string) {
 	a.style.display = "none";
 	document.body.appendChild(a);
 	a.click();
-
 	window.URL.revokeObjectURL(url);
 	document.body.removeChild(a);
 }
@@ -65,10 +66,7 @@ export default function ExportPage() {
 						startDate: dayjs(dateRange.from).format("YYYY-MM-DD"),
 						endDate: dayjs(dateRange.to).format("YYYY-MM-DD"),
 					}
-				: {
-						websiteId,
-						format: selectedFormat,
-					};
+				: { websiteId, format: selectedFormat };
 
 		exportMutation.mutate(exportParams, {
 			onSuccess: (result) => {
@@ -127,128 +125,118 @@ export default function ExportPage() {
 	}
 
 	return (
-		<div className="flex h-full flex-col">
-			<PageHeader
-				badgeContent="Tools"
-				description="Download analytics as CSV, JSON, or TXT"
-				icon={<DownloadIcon />}
-				title="Data Export"
-			/>
-			<div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-none">
-				<section className="border-b px-4 py-5 sm:px-6">
-					<div className="mb-3">
-						<Label className="font-medium text-sm">Export format</Label>
-					</div>
-					<div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-						{formatOptions.map((format) => {
-							const IconComponent = format.icon;
-							return (
-								<button
-									className={`flex items-start gap-3 rounded-md border p-4 text-left hover:border-primary/50 ${
-										selectedFormat === format.value
-											? "bg-secondary"
-											: "border-border"
-									}`}
-									key={format.value}
-									onClick={() => setSelectedFormat(format.value)}
-									type="button"
-								>
-									<div className="flex size-8 items-center justify-center rounded-md border bg-secondary-brighter">
-										<IconComponent className="size-5" />
-									</div>
-									<div className="min-w-0 flex-1">
-										<div className="mb-1 flex items-center gap-2">
-											<span className="font-medium text-sm">
-												{format.label}
-											</span>
-											{selectedFormat === format.value && (
-												<CheckIcon className="size-4 text-primary" />
-											)}
+		<div className="flex-1 overflow-y-auto">
+			<div className="mx-auto max-w-2xl space-y-6 p-5">
+				<Card>
+					<Card.Header>
+						<Card.Title>Export Format</Card.Title>
+						<Card.Description>
+							Choose a format for your data export
+						</Card.Description>
+					</Card.Header>
+					<Card.Content>
+						<div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+							{formatOptions.map((format) => {
+								const IconComponent = format.icon;
+								const isSelected = selectedFormat === format.value;
+								return (
+									<button
+										className={cn(
+											"flex items-start gap-3 rounded border p-4 text-left",
+											"transition-colors duration-(--duration-quick) ease-(--ease-smooth)",
+											isSelected
+												? "border-primary/50 bg-primary/5"
+												: "border-border/60 hover:border-primary/30 hover:bg-interactive-hover"
+										)}
+										key={format.value}
+										onClick={() => setSelectedFormat(format.value)}
+										type="button"
+									>
+										<div className="flex size-8 items-center justify-center rounded border bg-secondary">
+											<IconComponent className="size-5" />
 										</div>
-										<p className="text-muted-foreground text-xs">
-											{format.description}
-										</p>
-									</div>
-								</button>
-							);
-						})}
-					</div>
-				</section>
-
-				<section className="border-b px-4 py-5 sm:px-6">
-					<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-						<div>
-							<h2 className="font-medium text-sm">Date range</h2>
-							<p className="text-muted-foreground text-xs">
-								{useCustomRange
-									? "Export a specific range"
-									: "Export all available data"}
-							</p>
+										<div className="min-w-0 flex-1">
+											<div className="mb-1 flex items-center gap-2">
+												<span className="font-medium text-sm">
+													{format.label}
+												</span>
+												{isSelected && (
+													<CheckIcon
+														className="size-4 text-primary"
+														weight="bold"
+													/>
+												)}
+											</div>
+											<p className="text-muted-foreground text-xs">
+												{format.description}
+											</p>
+										</div>
+									</button>
+								);
+							})}
 						</div>
-						<Switch
-							aria-label="Use custom date range"
-							checked={useCustomRange}
-							id="custom-range"
-							onCheckedChange={setUseCustomRange}
-						/>
-					</div>
-					{useCustomRange && (
-						<div className="mt-3 border-t pt-3">
-							<div className="flex items-center gap-3">
-								<Label className="shrink-0 font-medium text-sm">
-									From - To:
-								</Label>
+					</Card.Content>
+				</Card>
+
+				<Card>
+					<Card.Header>
+						<Card.Title>Date Range</Card.Title>
+						<Card.Description>
+							{useCustomRange
+								? "Export a specific date range"
+								: "Export all available data"}
+						</Card.Description>
+					</Card.Header>
+					<Card.Content className="space-y-3">
+						<div className="flex items-center justify-between gap-3">
+							<p className="font-medium text-sm">Use custom date range</p>
+							<Switch
+								aria-label="Use custom date range"
+								checked={useCustomRange}
+								onCheckedChange={setUseCustomRange}
+							/>
+						</div>
+						{useCustomRange && (
+							<div className="border-t pt-3">
 								<DateRangePicker
-									className="flex-1"
+									className="w-full"
 									maxDate={new Date()}
 									minDate={new Date(2020, 0, 1)}
 									onChange={setDateRange}
 									value={dateRange}
 								/>
 							</div>
-						</div>
-					)}
-				</section>
+						)}
+					</Card.Content>
+				</Card>
 
-				<section className="px-4 py-5 sm:px-6">
-					<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-						<div>
-							<h3 className="font-medium text-sm">
-								Export {websiteData.name || "data"}
-							</h3>
-							<p className="mt-2 text-muted-foreground text-xs">
+				<Card>
+					<Card.Footer>
+						<div className="flex w-full items-center justify-between">
+							<p className="text-muted-foreground text-xs">
 								Format:{" "}
-								<Badge className="font-mono" variant="secondary">
+								<Badge className="font-mono" variant="muted">
 									{selectedFormat.toUpperCase()}
 								</Badge>
 								{useCustomRange && dateRange?.from && dateRange?.to && (
 									<span className="ml-2">
-										• {dayjs(dateRange.from).format("MMM D, YYYY")} -{" "}
+										{dayjs(dateRange.from).format("MMM D, YYYY")} –{" "}
 										{dayjs(dateRange.to).format("MMM D, YYYY")}
 									</span>
 								)}
 							</p>
+							<Button
+								aria-label="Start data export"
+								disabled={isExportDisabled}
+								loading={isExporting}
+								onClick={handleExport}
+							>
+								<DownloadIcon className="size-4" />
+								Export Data
+							</Button>
 						</div>
-						<Button
-							aria-label="Start data export"
-							disabled={isExportDisabled}
-							onClick={handleExport}
-							size="lg"
-						>
-							{isExporting ? (
-								<>
-									<div className="size-4 animate-spin rounded-full border border-current border-t-transparent" />
-									Exporting...
-								</>
-							) : (
-								<>
-									<DownloadIcon className="size-4" />
-									Export Data
-								</>
-							)}
-						</Button>
-					</div>
-				</section>
+					</Card.Footer>
+				</Card>
 			</div>
 		</div>
 	);

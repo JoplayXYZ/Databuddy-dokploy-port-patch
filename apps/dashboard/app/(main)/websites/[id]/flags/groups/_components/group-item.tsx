@@ -7,14 +7,7 @@ import { TrashIcon } from "@phosphor-icons/react";
 import { UserIcon } from "@phosphor-icons/react";
 import { UsersThreeIcon } from "@phosphor-icons/react";
 import { WrenchIcon } from "@phosphor-icons/react";
-import { Button } from "@/components/ui/button";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuSeparator,
-	DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { DropdownMenu } from "@/components/ds/dropdown-menu";
 import { cn } from "@/lib/utils";
 import type { TargetGroup } from "../../_components/types";
 
@@ -90,31 +83,32 @@ function GroupActions({
 }) {
 	return (
 		<DropdownMenu>
-			<DropdownMenuTrigger asChild>
-				<Button
-					aria-label="Group actions"
-					className="size-8 opacity-0 transition-opacity group-hover:opacity-100 data-[state=open]:opacity-100"
-					size="icon"
-					variant="ghost"
-				>
-					<DotsThreeIcon className="size-5" weight="bold" />
-				</Button>
-			</DropdownMenuTrigger>
-			<DropdownMenuContent align="end" className="w-40">
-				<DropdownMenuItem className="gap-2" onClick={() => onEdit(group)}>
+			<DropdownMenu.Trigger
+				aria-label="Group actions"
+				className={cn(
+					"inline-flex items-center justify-center gap-1.5 rounded-md font-medium transition-all duration-(--duration-quick) ease-(--ease-smooth) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 disabled:pointer-events-none disabled:opacity-50",
+					"bg-transparent text-muted-foreground hover:bg-interactive-hover hover:text-foreground",
+					"size-8 p-0",
+					"opacity-0 transition-opacity group-hover:opacity-100 data-[state=open]:opacity-100"
+				)}
+			>
+				<DotsThreeIcon className="size-5" weight="bold" />
+			</DropdownMenu.Trigger>
+			<DropdownMenu.Content align="end" className="w-40">
+				<DropdownMenu.Item className="gap-2" onClick={() => onEdit(group)}>
 					<PencilSimpleIcon className="size-4" weight="duotone" />
 					Edit
-				</DropdownMenuItem>
-				<DropdownMenuSeparator />
-				<DropdownMenuItem
+				</DropdownMenu.Item>
+				<DropdownMenu.Separator />
+				<DropdownMenu.Item
 					className="gap-2 text-destructive focus:text-destructive"
 					onClick={() => onDelete(group.id)}
 					variant="destructive"
 				>
 					<TrashIcon className="size-4" weight="duotone" />
 					Delete
-				</DropdownMenuItem>
-			</DropdownMenuContent>
+				</DropdownMenu.Item>
+			</DropdownMenu.Content>
 		</DropdownMenu>
 	);
 }

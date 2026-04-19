@@ -20,10 +20,10 @@ import { notFound, useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { PageHeader } from "@/app/(main)/websites/_components/page-header";
 import { FaviconImage } from "@/components/analytics/favicon-image";
-import { EmptyState } from "@/components/empty-state";
+import { EmptyState } from "@/components/ds/empty-state";
 import { BrowserIcon, CountryFlag, OSIcon } from "@/components/icon";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ds/badge";
+import { Skeleton } from "@/components/ds/skeleton";
 import {
 	Table,
 	TableBody,
@@ -32,11 +32,7 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table";
-import {
-	Tooltip,
-	TooltipContent,
-	TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip } from "@/components/ds/tooltip";
 import { useDateFilters } from "@/hooks/use-date-filters";
 import dayjs from "@/lib/dayjs";
 import { getDeviceIcon } from "@/lib/utils";
@@ -299,7 +295,7 @@ export default function UsersPage() {
 					const sessionCount = row.original.session_count ?? 0;
 					const isReturning = sessionCount > 1;
 					return (
-						<Badge variant={isReturning ? "default" : "secondary"}>
+						<Badge variant={isReturning ? "default" : "muted"}>
 							{isReturning ? "Return" : "New"}
 						</Badge>
 					);
@@ -509,13 +505,14 @@ const Source = ({ referrer }: { referrer: string }) => {
 	return (
 		<div className="flex min-w-0 max-w-[100px] items-center gap-1.5">
 			<FaviconImage domain={referrer} size={14} />
-			<Tooltip open={isTextTruncated ? undefined : false}>
-				<TooltipTrigger asChild>
-					<span className="truncate text-sm" ref={checkTextOverflow}>
-						{referrer}
-					</span>
-				</TooltipTrigger>
-				<TooltipContent side="right">{referrer}</TooltipContent>
+			<Tooltip
+				content={referrer}
+				open={isTextTruncated ? undefined : false}
+				side="right"
+			>
+				<span className="truncate text-sm" ref={checkTextOverflow}>
+					{referrer}
+				</span>
 			</Tooltip>
 		</div>
 	);

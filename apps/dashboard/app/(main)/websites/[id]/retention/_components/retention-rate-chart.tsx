@@ -3,7 +3,8 @@
 import { ChartLineIcon } from "@phosphor-icons/react";
 import { SpinnerIcon } from "@phosphor-icons/react";
 import { useMemo } from "react";
-import { EmptyState } from "@/components/empty-state";
+import { EmptyState } from "@/components/ds/empty-state";
+import { StatusDot } from "@/components/ds/status-dot";
 import { Chart } from "@/components/ui/composables/chart";
 import {
 	chartAxisTickDefault,
@@ -79,7 +80,7 @@ function CustomTooltip({
 				</div>
 				<div className="flex items-center justify-between gap-4">
 					<div className="flex items-center gap-2">
-						<div className="size-2 rounded-full bg-success" />
+						<StatusDot color="success" size="md" />
 						<span className="text-muted-foreground text-xs">Returning</span>
 					</div>
 					<span className="font-medium text-foreground text-xs tabular-nums">

@@ -3,7 +3,7 @@ import { MonitorIcon } from "@phosphor-icons/react";
 import { PhoneIcon } from "@phosphor-icons/react";
 import { TableIcon } from "@phosphor-icons/react";
 import { BrowserIcon, CountryFlag, OSIcon } from "@/components/icon";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@/components/ds/badge";
 import { formatLocalTime } from "@/lib/time";
 import { getErrorTypeIcon } from "./error-icons";
 import { getErrorCategory, getSeverityColor } from "./utils";

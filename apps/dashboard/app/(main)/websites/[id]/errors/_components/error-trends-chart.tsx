@@ -1,13 +1,13 @@
 "use client";
 
-import { ArrowCounterClockwiseIcon } from "@phosphor-icons/react";
-import { BugIcon } from "@phosphor-icons/react";
+import { ArrowCounterClockwiseIcon } from "@phosphor-icons/react/dist/ssr";
+import { BugIcon } from "@phosphor-icons/react/dist/ssr";
 import dynamic from "next/dynamic";
 import { useCallback, useState } from "react";
 import { METRIC_COLORS, METRICS } from "@/components/charts/metrics-constants";
 import { TableEmptyState } from "@/components/table/table-empty-state";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ds/badge";
+import { Button } from "@/components/ds/button";
 import { Chart } from "@/components/ui/composables/chart";
 import {
 	chartAxisTickDefault,
@@ -177,13 +177,13 @@ export const ErrorTrendsChart = ({ errorChartData }: ErrorTrendsChartProps) => {
 							className="h-7 gap-1 px-2 text-xs"
 							onClick={resetZoom}
 							size="sm"
-							variant="outline"
+							variant="secondary"
 						>
 							<ArrowCounterClockwiseIcon className="size-3" weight="bold" />
 							Reset
 						</Button>
 					)}
-					<Badge variant="gray">
+					<Badge variant="muted">
 						<span className="font-mono text-[10px]">Drag to zoom</span>
 					</Badge>
 				</div>

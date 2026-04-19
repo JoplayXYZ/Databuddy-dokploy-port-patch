@@ -1,7 +1,7 @@
 import { BugIcon } from "@phosphor-icons/react";
 import { UsersIcon } from "@phosphor-icons/react";
 import { WarningCircleIcon } from "@phosphor-icons/react";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@/components/ds/badge";
 import type { ErrorType } from "./types";
 
 interface TopErrorCardProps {

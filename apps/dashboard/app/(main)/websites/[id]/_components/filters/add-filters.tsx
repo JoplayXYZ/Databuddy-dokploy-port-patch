@@ -3,14 +3,14 @@
 import { filterOptions } from "@databuddy/shared/lists/filters";
 import type { DynamicQueryFilter } from "@databuddy/shared/types/api";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowLeftIcon } from "@phosphor-icons/react";
-import { FunnelIcon } from "@phosphor-icons/react";
-import { WarningCircleIcon } from "@phosphor-icons/react";
+import { ArrowLeftIcon } from "@phosphor-icons/react/dist/ssr";
+import { FunnelIcon } from "@phosphor-icons/react/dist/ssr";
+import { WarningCircleIcon } from "@phosphor-icons/react/dist/ssr";
 import { useParams } from "next/navigation";
 import { useCallback, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ds/button";
 import {
 	Command,
 	CommandEmpty,
@@ -19,13 +19,7 @@ import {
 	CommandItem,
 	CommandList,
 } from "@/components/ui/command";
-import {
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogFooter,
-	DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog } from "@/components/ds/dialog";
 import {
 	Form,
 	FormControl,
@@ -42,7 +36,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@/components/ds/skeleton";
 import {
 	type AutocompleteData,
 	useAutocompleteData,
@@ -198,12 +192,12 @@ function FilterDialogContent({
 						/>
 					</div>
 					<div>
-						<DialogTitle className="font-medium text-base">
+						<Dialog.Title className="font-medium text-base">
 							Add Filter
-						</DialogTitle>
-						<DialogDescription className="text-muted-foreground text-xs">
+						</Dialog.Title>
+						<Dialog.Description className="text-muted-foreground text-xs">
 							Failed to load filter suggestions
-						</DialogDescription>
+						</Dialog.Description>
 					</div>
 				</div>
 				<div className="py-4 text-center">
@@ -211,11 +205,11 @@ function FilterDialogContent({
 						Please try again later
 					</p>
 				</div>
-				<DialogFooter>
-					<Button className="flex-1" onClick={onClose} variant="outline">
+				<Dialog.Footer>
+					<Button className="flex-1" onClick={onClose} variant="secondary">
 						Close
 					</Button>
-				</DialogFooter>
+				</Dialog.Footer>
 			</>
 		);
 	}
@@ -231,12 +225,12 @@ function FilterDialogContent({
 						/>
 					</div>
 					<div>
-						<DialogTitle className="font-medium text-base">
+						<Dialog.Title className="font-medium text-base">
 							Add Filter
-						</DialogTitle>
-						<DialogDescription className="text-muted-foreground text-xs">
+						</Dialog.Title>
+						<Dialog.Description className="text-muted-foreground text-xs">
 							Choose a field to filter your data
-						</DialogDescription>
+						</Dialog.Description>
 					</div>
 				</div>
 
@@ -269,11 +263,11 @@ function FilterDialogContent({
 					</Command>
 				)}
 
-				<DialogFooter>
-					<Button className="flex-1" onClick={onClose} variant="outline">
+				<Dialog.Footer>
+					<Button className="flex-1" onClick={onClose} variant="secondary">
 						Cancel
 					</Button>
-				</DialogFooter>
+				</Dialog.Footer>
 			</>
 		);
 	}
@@ -288,12 +282,12 @@ function FilterDialogContent({
 					/>
 				</div>
 				<div>
-					<DialogTitle className="font-medium text-base">
+					<Dialog.Title className="font-medium text-base">
 						{selectedFilterOption?.label}
-					</DialogTitle>
-					<DialogDescription className="text-muted-foreground text-xs">
+					</Dialog.Title>
+					<Dialog.Description className="text-muted-foreground text-xs">
 						Set the condition and value for this filter
-					</DialogDescription>
+					</Dialog.Description>
 				</div>
 			</div>
 
@@ -362,12 +356,12 @@ function FilterDialogContent({
 						suggestions={suggestions}
 					/>
 
-					<DialogFooter className="pt-2">
+					<Dialog.Footer className="pt-2">
 						<Button
 							className="flex-1"
 							onClick={onClose}
 							type="button"
-							variant="outline"
+							variant="secondary"
 						>
 							Cancel
 						</Button>
@@ -378,7 +372,7 @@ function FilterDialogContent({
 						>
 							Add filter
 						</Button>
-					</DialogFooter>
+					</Dialog.Footer>
 				</form>
 			</Form>
 		</>
@@ -414,22 +408,24 @@ export function AddFilterForm({
 				className={cn("h-8 text-xs", className)}
 				disabled={disabled}
 				onClick={() => setIsOpen(true)}
-				variant="outline"
+				variant="secondary"
 			>
 				<FunnelIcon className="size-3.5" weight="duotone" />
 				{buttonText}
 			</Button>
 
 			<Dialog onOpenChange={setIsOpen} open={isOpen}>
-				<DialogContent className="max-h-[min(90dvh,calc(100dvh-2rem))] max-w-md overflow-y-auto p-4">
-					<FilterDialogContent
-						addFilter={addFilter}
-						autocompleteData={autocompleteQuery.data}
-						isError={autocompleteQuery.isError}
-						isLoading={autocompleteQuery.isLoading}
-						onClose={handleClose}
-					/>
-				</DialogContent>
+				<Dialog.Content className="max-h-[min(90dvh,calc(100dvh-2rem))] max-w-md overflow-y-auto">
+					<Dialog.Body>
+						<FilterDialogContent
+							addFilter={addFilter}
+							autocompleteData={autocompleteQuery.data}
+							isError={autocompleteQuery.isError}
+							isLoading={autocompleteQuery.isLoading}
+							onClose={handleClose}
+						/>
+					</Dialog.Body>
+				</Dialog.Content>
 			</Dialog>
 		</>
 	);

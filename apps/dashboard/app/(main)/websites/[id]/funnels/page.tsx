@@ -2,7 +2,7 @@
 
 import { FeatureGate } from "@/components/feature-gate";
 import { List } from "@/components/ui/composables/list";
-import { DeleteDialog } from "@/components/ui/delete-dialog";
+import { DeleteDialog } from "@/components/ds/delete-dialog";
 import { useAutocompleteData } from "@/hooks/use-autocomplete";
 import { useDateFilters } from "@/hooks/use-date-filters";
 import {

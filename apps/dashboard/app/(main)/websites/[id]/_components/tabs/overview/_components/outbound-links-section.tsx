@@ -4,7 +4,7 @@ import type { CellContext, ColumnDef } from "@tanstack/react-table";
 import { useMemo } from "react";
 import { DataTable, type TabConfig } from "@/components/table/data-table";
 import { formatNumber } from "@/lib/formatters";
-import { PercentageBadge } from "@/components/ui/percentage-badge";
+import { PercentageBadge } from "@/components/ds/badge";
 import type {
 	OutboundDomainRow,
 	OutboundLinkRow,

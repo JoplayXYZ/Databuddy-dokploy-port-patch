@@ -14,7 +14,8 @@ import { UserIcon } from "@phosphor-icons/react";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
 import { BrowserIcon, CountryFlag, OSIcon } from "@/components/icon";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@/components/ds/badge";
+import { StatusDot } from "@/components/ds/status-dot";
 import { Button } from "@/components/ui/button";
 import { useDateFilters } from "@/hooks/use-date-filters";
 import { formatDateOnly, formatLocalTime } from "@/lib/time";
@@ -217,7 +218,7 @@ function Header({
 					</div>
 					<Badge
 						variant={
-							(userProfile.total_sessions ?? 0) > 1 ? "default" : "secondary"
+							(userProfile.total_sessions ?? 0) > 1 ? "default" : "muted"
 						}
 					>
 						{(userProfile.total_sessions ?? 0) > 1 ? "Return" : "New"}
@@ -469,7 +470,7 @@ export default function UserDetailPage() {
 								}
 							/>
 							<div className="flex items-start gap-3">
-								<div className="mt-0.5 size-2 shrink-0 rounded-full bg-success" />
+								<StatusDot className="mt-0.5" color="success" size="md" />
 								<div className="min-w-0 flex-1">
 									<p className="text-muted-foreground text-xs">Total Time</p>
 									<p className="font-semibold text-foreground">

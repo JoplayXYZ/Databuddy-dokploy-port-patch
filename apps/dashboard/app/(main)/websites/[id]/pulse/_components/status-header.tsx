@@ -1,21 +1,16 @@
 "use client";
 
-import { CircleIcon } from "@phosphor-icons/react";
-import { PauseIcon } from "@phosphor-icons/react";
-import { PencilIcon } from "@phosphor-icons/react";
-import { PlayIcon } from "@phosphor-icons/react";
-import { TrashIcon } from "@phosphor-icons/react";
+import { CircleIcon } from "@phosphor-icons/react/dist/ssr";
+import { PauseIcon } from "@phosphor-icons/react/dist/ssr";
+import { PencilIcon } from "@phosphor-icons/react/dist/ssr";
+import { PlayIcon } from "@phosphor-icons/react/dist/ssr";
+import { TrashIcon } from "@phosphor-icons/react/dist/ssr";
 import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ds/button";
+import { Card } from "@/components/ds/card";
+import { DropdownMenu } from "@/components/ds/dropdown-menu";
 import { orpc } from "@/lib/orpc";
 import { fromNow } from "@/lib/time";
 import { cn } from "@/lib/utils";
@@ -148,7 +143,7 @@ export function StatusHeader({
 						}
 						onClick={handleTogglePause}
 						size="sm"
-						variant="outline"
+						variant="secondary"
 					>
 						{schedule.isPaused ? (
 							<>
@@ -166,27 +161,25 @@ export function StatusHeader({
 						className="h-8 gap-2 text-xs"
 						onClick={onEditAction}
 						size="sm"
-						variant="outline"
+						variant="secondary"
 					>
 						<PencilIcon size={14} weight="duotone" />
 						Configure
 					</Button>
 					<DropdownMenu>
-						<DropdownMenuTrigger asChild>
-							<Button className="size-8" size="icon" variant="ghost">
-								<CircleIcon className="size-4" weight="bold" />
-								<span className="sr-only">More options</span>
-							</Button>
-						</DropdownMenuTrigger>
-						<DropdownMenuContent align="end">
-							<DropdownMenuItem
+						<DropdownMenu.Trigger className="inline-flex size-8 items-center justify-center gap-1.5 rounded-md bg-transparent p-0 font-medium text-muted-foreground transition-all duration-(--duration-quick) ease-(--ease-smooth) hover:bg-interactive-hover hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 disabled:pointer-events-none disabled:opacity-50">
+							<CircleIcon className="size-4" weight="bold" />
+							<span className="sr-only">More options</span>
+						</DropdownMenu.Trigger>
+						<DropdownMenu.Content align="end">
+							<DropdownMenu.Item
 								className="text-destructive focus:text-destructive"
 								onClick={onDeleteAction}
 							>
 								<TrashIcon className="mr-2" size={16} />
 								Delete Monitor
-							</DropdownMenuItem>
-						</DropdownMenuContent>
+							</DropdownMenu.Item>
+						</DropdownMenu.Content>
 					</DropdownMenu>
 				</div>
 			</div>

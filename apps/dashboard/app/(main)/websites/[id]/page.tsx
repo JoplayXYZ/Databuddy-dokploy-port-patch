@@ -1,10 +1,10 @@
 "use client";
 
-import { WarningIcon } from "@phosphor-icons/react";
+import { WarningIcon } from "@phosphor-icons/react/dist/ssr";
 import { useAtom } from "jotai";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ds/button";
 import { useDateFilters } from "@/hooks/use-date-filters";
 import { useWebsite } from "@/hooks/use-websites";
 import {

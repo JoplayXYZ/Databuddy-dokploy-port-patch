@@ -1,10 +1,10 @@
 "use client";
 
-import { ArrowCounterClockwiseIcon } from "@phosphor-icons/react";
-import { ArrowLeftIcon } from "@phosphor-icons/react";
-import { LightningIcon } from "@phosphor-icons/react";
+import { ArrowCounterClockwiseIcon } from "@phosphor-icons/react/dist/ssr";
+import { ArrowLeftIcon } from "@phosphor-icons/react/dist/ssr";
+import { LightningIcon } from "@phosphor-icons/react/dist/ssr";
 import { useParams, useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ds/button";
 
 export default function EventsError({
 	error,
@@ -34,7 +34,7 @@ export default function EventsError({
 				)}
 			</div>
 			<div className="flex gap-2">
-				<Button onClick={reset} variant="outline">
+				<Button onClick={reset} variant="secondary">
 					<ArrowCounterClockwiseIcon className="mr-2 size-4" weight="duotone" />
 					Try again
 				</Button>

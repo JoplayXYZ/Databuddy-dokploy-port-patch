@@ -9,7 +9,7 @@ import type {
 	CustomQueryConfig,
 } from "@databuddy/shared/types/custom-query";
 import { useMemo } from "react";
-import { Label } from "@/components/ui/label";
+import { Field } from "@/components/ds/field";
 import {
 	Select,
 	SelectContent,
@@ -140,7 +140,7 @@ export function CustomQueryBuilder({
 	return (
 		<div className="space-y-4">
 			<div className="space-y-2">
-				<Label>Table</Label>
+				<Field.Label>Table</Field.Label>
 				<Select
 					disabled={disabled}
 					onValueChange={handleTableChange}
@@ -162,7 +162,7 @@ export function CustomQueryBuilder({
 			{value?.table && (
 				<>
 					<div className="space-y-2">
-						<Label>Field</Label>
+						<Field.Label>Field</Field.Label>
 						<Select
 							disabled={disabled}
 							onValueChange={handleFieldChange}
@@ -199,7 +199,7 @@ export function CustomQueryBuilder({
 
 					{availableAggregates.length > 1 && (
 						<div className="space-y-2">
-							<Label>Calculation</Label>
+							<Field.Label>Calculation</Field.Label>
 							<Select
 								disabled={disabled}
 								onValueChange={(v) =>

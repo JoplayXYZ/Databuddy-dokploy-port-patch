@@ -2,28 +2,14 @@
 
 import type { WebsiteOutput } from "@databuddy/rpc";
 import type { Website } from "@databuddy/shared/types/website";
-import { ArrowRightIcon } from "@phosphor-icons/react";
-import { ArrowSquareOutIcon } from "@phosphor-icons/react";
-import { WarningIcon } from "@phosphor-icons/react";
+import { ArrowRightIcon } from "@phosphor-icons/react/dist/ssr";
+import { ArrowSquareOutIcon } from "@phosphor-icons/react/dist/ssr";
+import { WarningIcon } from "@phosphor-icons/react/dist/ssr";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import {
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogFooter,
-	DialogHeader,
-	DialogTitle,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "@/components/ui/select";
+import { Button } from "@/components/ds/button";
+import { Dialog } from "@/components/ds/dialog";
+import { DropdownMenu } from "@/components/ds/dropdown-menu";
 import { type Organization, useOrganizations } from "@/hooks/use-organizations";
 import { useWebsiteTransferToOrg } from "@/hooks/use-website-transfer-to-org";
 
@@ -120,13 +106,16 @@ export function TransferWebsiteDialog({
 	if (showConfirmDialog) {
 		return (
 			<Dialog onOpenChange={handleConfirmClose} open={showConfirmDialog}>
-				<DialogContent>
-					<DialogHeader>
-						<DialogTitle>Confirm Website Transfer</DialogTitle>
-						<DialogDescription>This action cannot be undone.</DialogDescription>
-					</DialogHeader>
+				<Dialog.Content>
+					<Dialog.Close />
+					<Dialog.Header>
+						<Dialog.Title>Confirm Website Transfer</Dialog.Title>
+						<Dialog.Description>
+							This action cannot be undone.
+						</Dialog.Description>
+					</Dialog.Header>
 
-					<div className="space-y-3">
+					<Dialog.Body className="space-y-3">
 						<div className="flex items-center gap-2.5 rounded border bg-accent/50 p-2.5">
 							<div className="flex size-8 shrink-0 items-center justify-center rounded bg-primary/10">
 								<span className="font-semibold text-primary text-xs">
@@ -195,50 +184,38 @@ export function TransferWebsiteDialog({
 							</span>{" "}
 							will gain full access.
 						</p>
-					</div>
+					</Dialog.Body>
 
-					<DialogFooter>
-						<Button
-							disabled={isTransferring}
-							onClick={handleConfirmClose}
-							variant="outline"
-						>
+					<Dialog.Footer>
+						<Button onClick={handleConfirmClose} variant="secondary">
 							Cancel
 						</Button>
-						<Button disabled={isTransferring} onClick={handleTransfer}>
-							{isTransferring ? (
-								<>
-									<div className="mr-2 size-4 animate-spin rounded-full border-2 border-white/20 border-t-white" />
-									Transferring…
-								</>
-							) : (
-								<>
-									<ArrowSquareOutIcon className="mr-2 size-4" weight="fill" />
-									Confirm Transfer
-								</>
-							)}
+						<Button loading={isTransferring} onClick={handleTransfer}>
+							<ArrowSquareOutIcon className="size-4" weight="fill" />
+							Confirm Transfer
 						</Button>
-					</DialogFooter>
-				</DialogContent>
+					</Dialog.Footer>
+				</Dialog.Content>
 			</Dialog>
 		);
 	}
 
 	return (
 		<Dialog onOpenChange={handleClose} open={open}>
-			<DialogContent className="sm:max-w-md">
-				<DialogHeader>
-					<DialogTitle>Transfer Website</DialogTitle>
-					<DialogDescription>
+			<Dialog.Content className="sm:max-w-md">
+				<Dialog.Close />
+				<Dialog.Header>
+					<Dialog.Title>Transfer Website</Dialog.Title>
+					<Dialog.Description>
 						Move "{website.name || website.domain}" to a different workspace
-					</DialogDescription>
-				</DialogHeader>
+					</Dialog.Description>
+				</Dialog.Header>
 
-				<div className="space-y-4">
+				<Dialog.Body className="space-y-4">
 					<div className="space-y-2">
-						<Label className="text-muted-foreground text-xs">
+						<span className="font-medium text-foreground text-xs">
 							Current Workspace
-						</Label>
+						</span>
 						<div className="flex items-center gap-2.5 rounded border bg-secondary p-2.5">
 							<img
 								alt={currentOrg.name}
@@ -252,38 +229,55 @@ export function TransferWebsiteDialog({
 					</div>
 
 					<div className="space-y-2">
-						<Label htmlFor="target-org">Transfer to</Label>
-						<Select
-							disabled={isLoadingOrgs || availableOrgs.length === 0}
-							onValueChange={setSelectedOrgId}
-							value={selectedOrgId}
+						<label
+							className="font-medium text-foreground text-xs"
+							htmlFor="target-org"
 						>
-							<SelectTrigger className="w-full" id="target-org">
-								<SelectValue placeholder="Choose a workspace" />
-							</SelectTrigger>
-							<SelectContent>
+							Transfer to
+						</label>
+						<DropdownMenu>
+							<DropdownMenu.Trigger
+								className="flex h-9 w-full items-center justify-between rounded-md border bg-background px-3 text-sm disabled:pointer-events-none disabled:opacity-50"
+								disabled={isLoadingOrgs || availableOrgs.length === 0}
+								id="target-org"
+							>
+								{selectedOrgId
+									? (availableOrgs.find(
+											(org: Organization) => org.id === selectedOrgId
+										)?.name ?? "Choose a workspace")
+									: "Choose a workspace"}
+							</DropdownMenu.Trigger>
+							<DropdownMenu.Content
+								align="start"
+								className="w-[var(--anchor-width)]"
+							>
 								{availableOrgs.length > 0 ? (
-									availableOrgs.map((org: Organization) => (
-										<SelectItem key={org.id} value={org.id}>
-											<div className="flex items-center gap-2">
-												<img
-													alt={org.name}
-													className="size-4 rounded"
-													height={16}
-													src={getDicebearUrl(org.logo || org.id)}
-													width={16}
-												/>
-												<span>{org.name}</span>
-											</div>
-										</SelectItem>
-									))
+									<DropdownMenu.RadioGroup
+										onValueChange={setSelectedOrgId}
+										value={selectedOrgId}
+									>
+										{availableOrgs.map((org: Organization) => (
+											<DropdownMenu.RadioItem key={org.id} value={org.id}>
+												<div className="flex items-center gap-2">
+													<img
+														alt={org.name}
+														className="size-4 rounded"
+														height={16}
+														src={getDicebearUrl(org.logo || org.id)}
+														width={16}
+													/>
+													<span>{org.name}</span>
+												</div>
+											</DropdownMenu.RadioItem>
+										))}
+									</DropdownMenu.RadioGroup>
 								) : (
-									<SelectItem disabled value="no-orgs">
+									<div className="px-2.5 py-2 text-muted-foreground text-sm">
 										No workspaces available
-									</SelectItem>
+									</div>
 								)}
-							</SelectContent>
-						</Select>
+							</DropdownMenu.Content>
+						</DropdownMenu>
 					</div>
 
 					{!isLoadingOrgs && availableOrgs.length === 0 && (
@@ -306,25 +300,22 @@ export function TransferWebsiteDialog({
 							</p>
 						</div>
 					)}
-				</div>
+				</Dialog.Body>
 
-				<DialogFooter>
-					<Button
-						disabled={isTransferring}
-						onClick={handleClose}
-						variant="outline"
-					>
+				<Dialog.Footer>
+					<Button onClick={handleClose} variant="secondary">
 						Cancel
 					</Button>
 					<Button
-						disabled={!selectedOrgId || isTransferring}
+						disabled={!selectedOrgId}
+						loading={isTransferring}
 						onClick={() => setShowConfirmDialog(true)}
 					>
-						<ArrowSquareOutIcon className="mr-2 size-4" />
+						<ArrowSquareOutIcon className="size-4" />
 						Transfer Website
 					</Button>
-				</DialogFooter>
-			</DialogContent>
+				</Dialog.Footer>
+			</Dialog.Content>
 		</Dialog>
 	);
 }

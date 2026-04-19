@@ -7,8 +7,8 @@ import dynamic from "next/dynamic";
 import { useParams } from "next/navigation";
 import { Suspense, useCallback, useMemo, useState } from "react";
 import { CountryFlag } from "@/components/icon";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Card } from "@/components/ds/card";
+import { Skeleton } from "@/components/ds/skeleton";
 import { useDateFilters } from "@/hooks/use-date-filters";
 import { dynamicQueryFiltersAtom } from "@/stores/jotai/filterAtoms";
 import { useMapLocationData } from "./use-map";
@@ -174,16 +174,16 @@ function WebsiteMapPage() {
 
 			<div className="absolute right-3 bottom-3 left-3 z-20 sm:top-3 sm:right-3 sm:bottom-auto sm:left-auto sm:w-60">
 				<Card className="w-full gap-0 border bg-card/95 py-0 shadow-lg backdrop-blur-sm">
-					<CardHeader className="border-b bg-accent px-2.5 py-2 sm:px-3 sm:py-2.5 [.border-b]:pb-2">
-						<CardTitle className="flex items-center gap-2 font-semibold text-xs sm:text-sm">
+					<Card.Header className="border-b bg-accent px-2.5 py-2 sm:px-3 sm:py-2.5 [.border-b]:pb-2">
+						<Card.Title className="flex items-center gap-2 font-semibold text-xs sm:text-sm">
 							<GlobeIcon
 								className="size-3.5 text-primary sm:size-4"
 								weight="duotone"
 							/>
 							Top Countries
-						</CardTitle>
-					</CardHeader>
-					<CardContent className="p-0">
+						</Card.Title>
+					</Card.Header>
+					<Card.Content className="p-0">
 						{isLoading ? (
 							<div className="space-y-1 p-2 sm:p-3">
 								{Array.from({ length: 5 }).map((_, i) => (
@@ -228,7 +228,7 @@ function WebsiteMapPage() {
 								</span>
 							</div>
 						)}
-					</CardContent>
+					</Card.Content>
 				</Card>
 			</div>
 		</div>

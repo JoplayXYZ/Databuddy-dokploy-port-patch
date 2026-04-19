@@ -1,36 +1,23 @@
 "use client";
 
-import { ArrowRightIcon } from "@phosphor-icons/react";
-import { ArrowSquareOutIcon } from "@phosphor-icons/react";
-import { BuildingsIcon } from "@phosphor-icons/react";
-import { InfoIcon } from "@phosphor-icons/react";
-import { WarningIcon } from "@phosphor-icons/react";
+import { ArrowRightIcon } from "@phosphor-icons/react/dist/ssr";
+import { ArrowSquareOutIcon } from "@phosphor-icons/react/dist/ssr";
+import { BuildingsIcon } from "@phosphor-icons/react/dist/ssr";
+import { InfoIcon } from "@phosphor-icons/react/dist/ssr";
+import { WarningIcon } from "@phosphor-icons/react/dist/ssr";
 import { useParams, useRouter } from "next/navigation";
 import { Suspense, useCallback, useState } from "react";
 import { toast } from "sonner";
-import { PageHeader } from "@/app/(main)/websites/_components/page-header";
+import { NoticeBanner } from "@/app/(main)/websites/_components/notice-banner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
-import {
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogFooter,
-	DialogHeader,
-	DialogTitle,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "@/components/ui/select";
+import { Button } from "@/components/ds/button";
+import { Card } from "@/components/ds/card";
+import { Dialog } from "@/components/ds/dialog";
+import { DropdownMenu } from "@/components/ds/dropdown-menu";
+import { Skeleton } from "@/components/ds/skeleton";
 import { type Organization, useOrganizations } from "@/hooks/use-organizations";
 import { useWebsiteTransferToOrg } from "@/hooks/use-website-transfer-to-org";
 import { useWebsite } from "@/hooks/use-websites";
-import { NoticeBanner } from "../../../_components/notice-banner";
 
 function TransferPageContent() {
 	const params = useParams();
@@ -68,7 +55,6 @@ function TransferPageContent() {
 					);
 					setShowConfirmDialog(false);
 					setSelectedOrgId("");
-					// Redirect to websites page after successful transfer
 					setTimeout(() => {
 						router.push("/websites");
 					}, 500);
@@ -86,17 +72,18 @@ function TransferPageContent() {
 
 	if (isLoadingWebsite || isLoadingOrganizations || !websiteData) {
 		return (
-			<div className="flex h-full flex-col">
-				<PageHeader
-					description="Move to another organization"
-					icon={<ArrowSquareOutIcon />}
-					title="Transfer Website"
-				/>
-				<div className="flex flex-1 items-center justify-center">
-					<div className="flex flex-col items-center gap-3">
-						<div className="size-8 animate-spin rounded-full border-2 border-primary/20 border-t-primary" />
-						<p className="text-muted-foreground text-sm">Loading…</p>
-					</div>
+			<div className="flex-1 overflow-y-auto">
+				<div className="mx-auto max-w-2xl space-y-6 p-5">
+					<Card>
+						<Card.Header>
+							<Skeleton className="h-4 w-32" />
+							<Skeleton className="h-3 w-48" />
+						</Card.Header>
+						<Card.Content className="space-y-3">
+							<Skeleton className="h-16 w-full" />
+							<Skeleton className="h-10 w-full" />
+						</Card.Content>
+					</Card>
 				</div>
 			</div>
 		);
@@ -125,91 +112,104 @@ function TransferPageContent() {
 
 	return (
 		<div className="flex h-full flex-col">
-			<PageHeader
-				description="Move this website to a different organization"
-				icon={<ArrowSquareOutIcon />}
-				title="Transfer Website"
-			/>
-			<div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-none">
-				<section className="border-b px-4 py-5 sm:px-6">
-					<div className="space-y-4">
-						<div className="flex items-center gap-3">
-							<div className="flex min-w-0 flex-1 items-center gap-3 rounded-lg border bg-secondary p-3">
-								<BuildingsIcon className="size-5 shrink-0 text-muted-foreground" />
-								<div className="min-w-0 flex-1">
-									<p className="mb-0.5 text-muted-foreground text-xs">From</p>
-									<p className="truncate font-medium text-sm">
-										{currentOrg.name}
-									</p>
+			<div className="flex-1 overflow-y-auto">
+				<div className="mx-auto max-w-2xl space-y-6 p-5">
+					<Card>
+						<Card.Header>
+							<Card.Title>Transfer Website</Card.Title>
+							<Card.Description>
+								Move this website to a different organization
+							</Card.Description>
+						</Card.Header>
+						<Card.Content className="space-y-4">
+							<div className="flex items-center gap-3">
+								<div className="flex min-w-0 flex-1 items-center gap-3 rounded border bg-secondary p-3">
+									<BuildingsIcon className="size-5 shrink-0 text-muted-foreground" />
+									<div className="min-w-0 flex-1">
+										<p className="mb-0.5 text-muted-foreground text-xs">From</p>
+										<p className="truncate font-medium text-sm">
+											{currentOrg.name}
+										</p>
+									</div>
+								</div>
+
+								<ArrowRightIcon className="size-4 shrink-0 text-muted-foreground" />
+
+								<div className="flex min-w-0 flex-1 items-center gap-3 rounded border bg-secondary p-3">
+									<BuildingsIcon className="size-5 shrink-0 text-muted-foreground" />
+									<div className="min-w-0 flex-1">
+										<p className="mb-0.5 text-muted-foreground text-xs">To</p>
+										<p className="truncate font-medium text-sm">
+											{selectedOrg?.name || "Select organization"}
+										</p>
+									</div>
 								</div>
 							</div>
 
-							<ArrowRightIcon className="size-4 shrink-0 text-muted-foreground" />
-
-							<div className="flex min-w-0 flex-1 items-center gap-3 rounded-lg border bg-secondary p-3">
-								<BuildingsIcon className="size-5 shrink-0 text-muted-foreground" />
-								<div className="min-w-0 flex-1">
-									<p className="mb-0.5 text-muted-foreground text-xs">To</p>
-									<p className="truncate font-medium text-sm">
-										{selectedOrg?.name || "Select organization"}
-									</p>
-								</div>
-							</div>
-						</div>
-
-						<NoticeBanner
-							description="Ownership and all data move to the target organization. Its members will gain access."
-							icon={<InfoIcon />}
-							title="What transfers"
-						/>
-					</div>
-				</section>
-
-				<section className="border-b px-4 py-5 sm:px-6">
-					<div className="space-y-3">
-						<div className="space-y-2">
-							<Label className="font-medium text-sm" htmlFor="target-org">
-								Select Target Organization
-							</Label>
-							<Select
-								disabled={availableOrgs.length === 0}
-								onValueChange={setSelectedOrgId}
-								value={selectedOrgId}
-							>
-								<SelectTrigger id="target-org">
-									<SelectValue placeholder="Choose an organization" />
-								</SelectTrigger>
-								<SelectContent>
-									{availableOrgs.length > 0 ? (
-										availableOrgs.map((org: Organization) => (
-											<SelectItem key={org.id} value={org.id}>
-												<div className="flex items-center gap-2">
-													<BuildingsIcon className="size-4" />
-													<span>{org.name}</span>
-												</div>
-											</SelectItem>
-										))
-									) : (
-										<SelectItem disabled value="no-orgs">
-											No organizations available
-										</SelectItem>
-									)}
-								</SelectContent>
-							</Select>
-						</div>
-
-						{availableOrgs.length === 0 && (
 							<NoticeBanner
-								description="Create or join another organization to transfer this website."
-								icon={<WarningIcon />}
-								title="No target organizations"
+								description="Ownership and all data move to the target organization. Its members will gain access."
+								icon={<InfoIcon />}
+								title="What transfers"
 							/>
-						)}
-					</div>
-				</section>
+						</Card.Content>
+					</Card>
 
-				{selectedOrgId && (
-					<section className="border-b px-4 py-5 sm:px-6">
+					<Card>
+						<Card.Header>
+							<Card.Title>Target Organization</Card.Title>
+							<Card.Description>
+								Select where to transfer this website
+							</Card.Description>
+						</Card.Header>
+						<Card.Content className="space-y-3">
+							<DropdownMenu>
+								<DropdownMenu.Trigger
+									className="flex h-9 w-full items-center justify-between rounded-md border bg-background px-3 text-sm disabled:pointer-events-none disabled:opacity-50"
+									disabled={availableOrgs.length === 0}
+								>
+									{selectedOrgId
+										? (availableOrgs.find(
+												(org: Organization) => org.id === selectedOrgId
+											)?.name ?? "Choose an organization")
+										: "Choose an organization"}
+								</DropdownMenu.Trigger>
+								<DropdownMenu.Content
+									align="start"
+									className="w-[var(--anchor-width)]"
+								>
+									{availableOrgs.length > 0 ? (
+										<DropdownMenu.RadioGroup
+											onValueChange={setSelectedOrgId}
+											value={selectedOrgId}
+										>
+											{availableOrgs.map((org: Organization) => (
+												<DropdownMenu.RadioItem key={org.id} value={org.id}>
+													<div className="flex items-center gap-2">
+														<BuildingsIcon className="size-4" />
+														<span>{org.name}</span>
+													</div>
+												</DropdownMenu.RadioItem>
+											))}
+										</DropdownMenu.RadioGroup>
+									) : (
+										<div className="px-2.5 py-2 text-muted-foreground text-sm">
+											No organizations available
+										</div>
+									)}
+								</DropdownMenu.Content>
+							</DropdownMenu>
+
+							{availableOrgs.length === 0 && (
+								<NoticeBanner
+									description="Create or join another organization to transfer this website."
+									icon={<WarningIcon />}
+									title="No target organizations"
+								/>
+							)}
+						</Card.Content>
+					</Card>
+
+					{selectedOrgId && (
 						<Alert className="border-orange-200 bg-orange-50 text-orange-800 dark:border-orange-800 dark:bg-orange-950/20 dark:text-orange-200">
 							<WarningIcon className="size-4" />
 							<AlertDescription className="text-xs">
@@ -223,34 +223,38 @@ function TransferPageContent() {
 								</div>
 							</AlertDescription>
 						</Alert>
-					</section>
-				)}
+					)}
+				</div>
+			</div>
 
-				<section className="angled-rectangle-gradient mt-auto flex items-center justify-between gap-3 border-t bg-secondary px-5 py-4">
-					<p className="text-muted-foreground text-sm">
-						{selectedOrgId
-							? "Review the details and confirm to proceed"
-							: "Select a target organization to continue"}
-					</p>
-					<Button
-						disabled={!selectedOrgId || isTransferring}
-						onClick={() => setShowConfirmDialog(true)}
-						size="sm"
-					>
-						<ArrowSquareOutIcon className="mr-2 size-4" />
-						Transfer Website
-					</Button>
-				</section>
+			<div className="angled-rectangle-gradient sticky bottom-0 z-10 flex items-center justify-between gap-3 border-t bg-secondary px-5 py-4">
+				<p className="text-muted-foreground text-sm">
+					{selectedOrgId
+						? "Review the details and confirm to proceed"
+						: "Select a target organization to continue"}
+				</p>
+				<Button
+					disabled={!selectedOrgId}
+					loading={isTransferring}
+					onClick={() => setShowConfirmDialog(true)}
+					size="sm"
+				>
+					<ArrowSquareOutIcon className="size-4" />
+					Transfer Website
+				</Button>
 			</div>
 
 			<Dialog onOpenChange={setShowConfirmDialog} open={showConfirmDialog}>
-				<DialogContent>
-					<DialogHeader>
-						<DialogTitle>Confirm Website Transfer</DialogTitle>
-						<DialogDescription>This action cannot be undone.</DialogDescription>
-					</DialogHeader>
+				<Dialog.Content>
+					<Dialog.Close />
+					<Dialog.Header>
+						<Dialog.Title>Confirm Website Transfer</Dialog.Title>
+						<Dialog.Description>
+							This action cannot be undone.
+						</Dialog.Description>
+					</Dialog.Header>
 
-					<div className="space-y-3">
+					<Dialog.Body className="space-y-3">
 						<div className="flex items-center gap-2.5 rounded border bg-accent/50 p-2.5">
 							<div className="flex size-8 shrink-0 items-center justify-center rounded bg-primary/10">
 								<span className="font-semibold text-primary text-xs">
@@ -329,31 +333,21 @@ function TransferPageContent() {
 							</span>{" "}
 							will gain full access.
 						</p>
-					</div>
+					</Dialog.Body>
 
-					<DialogFooter>
+					<Dialog.Footer>
 						<Button
-							disabled={isTransferring}
 							onClick={() => setShowConfirmDialog(false)}
-							variant="outline"
+							variant="secondary"
 						>
 							Cancel
 						</Button>
-						<Button disabled={isTransferring} onClick={handleTransfer}>
-							{isTransferring ? (
-								<>
-									<div className="mr-2 size-4 animate-spin rounded-full border-2 border-white/20 border-t-white" />
-									Transferring…
-								</>
-							) : (
-								<>
-									<ArrowSquareOutIcon className="mr-2 size-4" weight="fill" />
-									Confirm Transfer
-								</>
-							)}
+						<Button loading={isTransferring} onClick={handleTransfer}>
+							<ArrowSquareOutIcon className="size-4" weight="fill" />
+							Confirm Transfer
 						</Button>
-					</DialogFooter>
-				</DialogContent>
+					</Dialog.Footer>
+				</Dialog.Content>
 			</Dialog>
 		</div>
 	);
@@ -363,17 +357,18 @@ export default function TransferPage() {
 	return (
 		<Suspense
 			fallback={
-				<div className="flex h-full flex-col">
-					<PageHeader
-						description="Move to another organization"
-						icon={<ArrowSquareOutIcon />}
-						title="Transfer Website"
-					/>
-					<div className="flex flex-1 items-center justify-center">
-						<div className="flex flex-col items-center gap-3">
-							<div className="size-8 animate-spin rounded-full border-2 border-primary/20 border-t-primary" />
-							<p className="text-muted-foreground text-sm">Loading...</p>
-						</div>
+				<div className="flex-1 overflow-y-auto">
+					<div className="mx-auto max-w-2xl space-y-6 p-5">
+						<Card>
+							<Card.Header>
+								<Skeleton className="h-4 w-32" />
+								<Skeleton className="h-3 w-48" />
+							</Card.Header>
+							<Card.Content className="space-y-3">
+								<Skeleton className="h-16 w-full" />
+								<Skeleton className="h-10 w-full" />
+							</Card.Content>
+						</Card>
 					</div>
 				</div>
 			}

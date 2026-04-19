@@ -1,24 +1,21 @@
 "use client";
 
-import { LockIcon } from "@phosphor-icons/react";
-import { PlusIcon } from "@phosphor-icons/react";
-import { XIcon } from "@phosphor-icons/react";
+import { LockIcon, PlusIcon, XIcon } from "@phosphor-icons/react/dist/ssr";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { PageHeader } from "@/app/(main)/websites/_components/page-header";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { NoticeBanner } from "@/app/(main)/websites/_components/notice-banner";
+import { Badge } from "@/components/ds/badge";
+import { Button } from "@/components/ds/button";
+import { Card } from "@/components/ds/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
 	updateWebsiteCache,
 	useWebsite,
 	type Website,
 } from "@/hooks/use-websites";
 import { orpc } from "@/lib/orpc";
-import { NoticeBanner } from "../../../_components/notice-banner";
 
 const ipv4Regex =
 	/^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
@@ -30,18 +27,11 @@ const domainRegex =
 
 function validateOrigin(value: string): { success: boolean; error?: string } {
 	const trimmed = value.trim();
-
-	if (trimmed === "*") {
+	if (trimmed === "*" || trimmed === "localhost") {
 		return { success: true };
 	}
-
-	if (trimmed === "localhost") {
-		return { success: true };
-	}
-
 	if (trimmed.startsWith("*.")) {
-		const domain = trimmed.slice(2);
-		if (domainRegex.test(domain)) {
+		if (domainRegex.test(trimmed.slice(2))) {
 			return { success: true };
 		}
 		return {
@@ -49,11 +39,9 @@ function validateOrigin(value: string): { success: boolean; error?: string } {
 			error: "Invalid wildcard domain format (e.g., *.cal.com)",
 		};
 	}
-
 	if (domainRegex.test(trimmed)) {
 		return { success: true };
 	}
-
 	return {
 		success: false,
 		error: "Must be a valid domain (e.g., cal.com, *.cal.com) or *",
@@ -62,7 +50,6 @@ function validateOrigin(value: string): { success: boolean; error?: string } {
 
 function validateIp(value: string): { success: boolean; error?: string } {
 	const trimmed = value.trim();
-
 	if (
 		ipv4Regex.test(trimmed) ||
 		ipv6Regex.test(trimmed) ||
@@ -103,7 +90,7 @@ function TagList({
 					className="cursor-pointer gap-1 px-2 py-0.5 text-xs hover:bg-destructive hover:text-destructive-foreground"
 					key={value}
 					onClick={() => onRemove(value)}
-					variant="secondary"
+					variant="muted"
 				>
 					{value}
 					<XIcon className="size-2.5" />
@@ -163,7 +150,7 @@ function TagInput({
 	};
 
 	return (
-		<div className="space-y-2">
+		<div className="space-y-3">
 			<TagList label={label} onRemove={onRemove} values={values} />
 			<div className="flex gap-2">
 				<Input
@@ -180,12 +167,11 @@ function TagInput({
 					value={draft}
 				/>
 				<Button
-					className="h-8 w-8 p-0"
+					className="size-8 p-0"
 					disabled={!draft.trim()}
 					onClick={handleAdd}
-					size="sm"
 					type="button"
-					variant="outline"
+					variant="secondary"
 				>
 					<PlusIcon className="size-4" />
 				</Button>
@@ -261,13 +247,10 @@ export default function SecurityPage() {
 
 		if (originsChanged || ipsChanged) {
 			toast.promise(
-				updateMutation.mutateAsync({
-					id: websiteId,
-					settings: newSettings,
-				}),
+				updateMutation.mutateAsync({ id: websiteId, settings: newSettings }),
 				{
 					loading: "Updating security settings...",
-					success: "Security settings updated successfully",
+					success: "Security settings updated",
 					error: "Failed to update security settings",
 				}
 			);
@@ -306,93 +289,89 @@ export default function SecurityPage() {
 
 	return (
 		<div className="flex h-full flex-col">
-			<PageHeader
-				description="Restrict tracking by origin or IP"
-				icon={<LockIcon />}
-				title="Security & Access"
-			/>
-			<div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-none">
-				<section className="border-b px-4 py-5 sm:px-6">
-					<div className="space-y-3">
-						<div>
-							<Label className="font-medium text-sm">Allowed Origins</Label>
-							<p className="mt-1 text-muted-foreground text-xs">
+			<div className="flex-1 overflow-y-auto">
+				<div className="mx-auto max-w-2xl space-y-6 p-5">
+					<Card>
+						<Card.Header>
+							<Card.Title>Allowed Origins</Card.Title>
+							<Card.Description>
 								By default, only your registered domain can send analytics. Add
-								additional origins for third-party integrations like
-								<code className="mx-1 rounded bg-muted px-1.5 py-0.5 font-mono text-xs">
+								additional origins for third-party integrations like{" "}
+								<code className="rounded bg-secondary px-1 py-0.5 font-mono text-[11px]">
 									cal.com
-								</code>
-								or wildcards like
-								<code className="mx-1 rounded bg-muted px-1.5 py-0.5 font-mono text-xs">
+								</code>{" "}
+								or wildcards like{" "}
+								<code className="rounded bg-secondary px-1 py-0.5 font-mono text-[11px]">
 									*.cal.com
 								</code>
-								. Use
-								<code className="mx-1 rounded bg-muted px-1.5 py-0.5 font-mono text-xs">
+								. Use{" "}
+								<code className="rounded bg-secondary px-1 py-0.5 font-mono text-[11px]">
 									*
-								</code>
+								</code>{" "}
 								to allow all origins.
-							</p>
-						</div>
-						<TagInput
-							label="origins"
-							onAdd={handleOriginAdd}
-							onRemove={handleOriginRemove}
-							placeholder="cal.com, *.cal.com, or *"
-							validate={validateOrigin}
-							values={allowedOrigins}
-						/>
-					</div>
-				</section>
+							</Card.Description>
+						</Card.Header>
+						<Card.Content>
+							<TagInput
+								label="origins"
+								onAdd={handleOriginAdd}
+								onRemove={handleOriginRemove}
+								placeholder="cal.com, *.cal.com, or *"
+								validate={validateOrigin}
+								values={allowedOrigins}
+							/>
+						</Card.Content>
+					</Card>
 
-				<section className="border-b px-4 py-5 sm:px-6">
-					<div className="space-y-3">
-						<div>
-							<Label className="font-medium text-sm">
-								Allowed IP Addresses
-							</Label>
-							<p className="mt-1 text-muted-foreground text-xs">
-								Restrict tracking to specific IP addresses or CIDR ranges (e.g.,
-								<code className="mx-1 rounded bg-muted px-1.5 py-0.5 font-mono text-xs">
+					<Card>
+						<Card.Header>
+							<Card.Title>Allowed IP Addresses</Card.Title>
+							<Card.Description>
+								Restrict tracking to specific IP addresses or CIDR ranges (e.g.,{" "}
+								<code className="rounded bg-secondary px-1 py-0.5 font-mono text-[11px]">
 									192.168.1.0/24
 								</code>
 								)
-							</p>
-						</div>
-						<TagInput
-							label="IP addresses"
-							onAdd={handleIpAdd}
-							onRemove={handleIpRemove}
-							placeholder="192.168.1.1 or 192.168.1.0/24"
-							validate={validateIp}
-							values={allowedIps}
-						/>
-					</div>
-				</section>
+							</Card.Description>
+						</Card.Header>
+						<Card.Content>
+							<TagInput
+								label="IP addresses"
+								onAdd={handleIpAdd}
+								onRemove={handleIpRemove}
+								placeholder="192.168.1.1 or 192.168.1.0/24"
+								validate={validateIp}
+								values={allowedIps}
+							/>
+						</Card.Content>
+					</Card>
 
-				<section className="px-4 py-5 sm:px-6">
 					<NoticeBanner
 						description="By default, only your registered domain can send analytics. Add origins here for third-party integrations like Cal.com or embedded widgets."
 						icon={<LockIcon />}
 					/>
-				</section>
-
-				{hasChanges && (
-					<div className="border-t bg-background px-4 py-4 sm:px-6">
-						<div className="flex items-center justify-end gap-3">
-							<Button onClick={initializeSettings} size="sm" variant="outline">
-								Cancel
-							</Button>
-							<Button
-								disabled={updateMutation.isPending}
-								onClick={handleSave}
-								size="sm"
-							>
-								{updateMutation.isPending ? "Saving…" : "Save Changes"}
-							</Button>
-						</div>
-					</div>
-				)}
+				</div>
 			</div>
+
+			{hasChanges && (
+				<div className="angled-rectangle-gradient sticky bottom-0 z-10 flex items-center justify-between gap-3 border-t bg-secondary px-5 py-4">
+					<p className="text-muted-foreground text-sm">
+						You have unsaved changes
+					</p>
+					<div className="flex items-center gap-2">
+						<Button onClick={initializeSettings} size="sm" variant="ghost">
+							Discard
+						</Button>
+						<Button
+							loading={updateMutation.isPending}
+							onClick={handleSave}
+							size="sm"
+						>
+							Save Changes
+						</Button>
+					</div>
+				</div>
+			)}
 		</div>
 	);
 }

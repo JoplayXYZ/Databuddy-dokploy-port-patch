@@ -2,15 +2,15 @@
 
 import { filterOptions } from "@databuddy/shared/lists/filters";
 import type { DynamicQueryFilter } from "@databuddy/shared/types/api";
-import { FloppyDiskIcon } from "@phosphor-icons/react";
-import { PencilIcon } from "@phosphor-icons/react";
-import { XIcon } from "@phosphor-icons/react";
+import { FloppyDiskIcon } from "@phosphor-icons/react/dist/ssr";
+import { PencilIcon } from "@phosphor-icons/react/dist/ssr";
+import { XIcon } from "@phosphor-icons/react/dist/ssr";
 import { useAtom } from "jotai";
 import { useParams } from "next/navigation";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { DeleteDialog } from "@/components/ui/delete-dialog";
+import { Button } from "@/components/ds/button";
+import { DeleteDialog } from "@/components/ds/delete-dialog";
 import { getOperatorLabel } from "@/hooks/use-filters";
 import { useSavedFilters } from "@/hooks/use-saved-filters";
 import {
@@ -260,7 +260,7 @@ export function FiltersSection() {
 									setIsSaveDialogOpen(true);
 								}}
 								size="sm"
-								variant="outline"
+								variant="secondary"
 							>
 								<FloppyDiskIcon className="size-3.5" weight="duotone" />
 								Save

@@ -6,11 +6,7 @@ import { GlobeIcon } from "@phosphor-icons/react";
 import { useCallback, useMemo, useState } from "react";
 import { BrowserIcon, CountryFlag, OSIcon } from "@/components/icon";
 import { DataTable } from "@/components/table/data-table";
-import {
-	Tooltip,
-	TooltipContent,
-	TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip } from "@/components/ds/tooltip";
 import dayjs from "@/lib/dayjs";
 import { formatDateTime } from "@/lib/time";
 import { ErrorDetailModal } from "./error-detail-modal";
@@ -97,21 +93,18 @@ export const RecentErrorsTable = ({ recentErrors }: Props) => {
 					const { type } = getErrorCategory(message);
 
 					return (
-						<Tooltip skipProvider>
-							<TooltipTrigger asChild>
-								<div className="flex max-w-md flex-col gap-1.5">
-									<div className="flex items-center gap-2">
-										<div className="flex size-5 shrink-0 items-center justify-center rounded bg-primary/10">
-											{getErrorTypeIcon(type)}
-										</div>
-										<span className="font-medium text-sm">{type}</span>
+						<Tooltip
+							content={<p className="max-w-sm text-pretty">{message}</p>}
+						>
+							<div className="flex max-w-md flex-col gap-1.5">
+								<div className="flex items-center gap-2">
+									<div className="flex size-5 shrink-0 items-center justify-center rounded bg-primary/10">
+										{getErrorTypeIcon(type)}
 									</div>
-									<p className="line-clamp-2 text-pretty">{message}</p>
+									<span className="font-medium text-sm">{type}</span>
 								</div>
-							</TooltipTrigger>
-							<TooltipContent className="max-w-sm">
-								<p className="text-pretty">{message}</p>
-							</TooltipContent>
+								<p className="line-clamp-2 text-pretty">{message}</p>
+							</div>
 						</Tooltip>
 					);
 				},
@@ -130,19 +123,14 @@ export const RecentErrorsTable = ({ recentErrors }: Props) => {
 					}
 
 					return (
-						<Tooltip skipProvider>
-							<TooltipTrigger asChild>
-								<div className="flex max-w-[140px] items-center gap-1.5">
-									<CodeIcon
-										className="size-3.5 shrink-0 text-muted-foreground"
-										weight="duotone"
-									/>
-									<span className="truncate font-mono text-sm">{pathname}</span>
-								</div>
-							</TooltipTrigger>
-							<TooltipContent>
-								<span className="font-mono">{url}</span>
-							</TooltipContent>
+						<Tooltip content={<span className="font-mono">{url}</span>}>
+							<div className="flex max-w-[140px] items-center gap-1.5">
+								<CodeIcon
+									className="size-3.5 shrink-0 text-muted-foreground"
+									weight="duotone"
+								/>
+								<span className="truncate font-mono text-sm">{pathname}</span>
+							</div>
 						</Tooltip>
 					);
 				},
@@ -162,21 +150,20 @@ export const RecentErrorsTable = ({ recentErrors }: Props) => {
 					}
 
 					return (
-						<Tooltip skipProvider>
-							<TooltipTrigger asChild>
-								<div className="flex items-center gap-2">
-									{browser && <BrowserIcon name={browser} size="sm" />}
-									{os && <OSIcon name={os} size="sm" />}
-									{device && getDeviceIcon(device)}
-								</div>
-							</TooltipTrigger>
-							<TooltipContent>
+						<Tooltip
+							content={
 								<div className="flex flex-col gap-1 text-xs">
 									{browser && <span>Browser: {browser}</span>}
 									{os && <span>OS: {os}</span>}
 									{device && <span>Device: {device}</span>}
 								</div>
-							</TooltipContent>
+							}
+						>
+							<div className="flex items-center gap-2">
+								{browser && <BrowserIcon name={browser} size="sm" />}
+								{os && <OSIcon name={os} size="sm" />}
+								{device && getDeviceIcon(device)}
+							</div>
 						</Tooltip>
 					);
 				},
@@ -222,16 +209,13 @@ export const RecentErrorsTable = ({ recentErrors }: Props) => {
 					const full = formatDateTime(time);
 
 					return (
-						<Tooltip skipProvider>
-							<TooltipTrigger asChild>
-								<div className="flex items-center gap-1.5 text-muted-foreground">
-									<ClockIcon className="size-3.5 shrink-0" weight="duotone" />
-									<span className="whitespace-nowrap text-sm">{relative}</span>
-								</div>
-							</TooltipTrigger>
-							<TooltipContent>
-								<span className="font-mono text-xs">{full}</span>
-							</TooltipContent>
+						<Tooltip
+							content={<span className="font-mono text-xs">{full}</span>}
+						>
+							<div className="flex items-center gap-1.5 text-muted-foreground">
+								<ClockIcon className="size-3.5 shrink-0" weight="duotone" />
+								<span className="whitespace-nowrap text-sm">{relative}</span>
+							</div>
 						</Tooltip>
 					);
 				},

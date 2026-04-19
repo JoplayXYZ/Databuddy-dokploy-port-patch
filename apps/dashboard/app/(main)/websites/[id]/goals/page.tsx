@@ -7,9 +7,9 @@ import { useAtomValue } from "jotai";
 import { useParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import { FeatureGate } from "@/components/feature-gate";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ds/card";
 import { List } from "@/components/ui/composables/list";
-import { DeleteDialog } from "@/components/ui/delete-dialog";
+import { DeleteDialog } from "@/components/ds/delete-dialog";
 import { useAutocompleteData } from "@/hooks/use-autocomplete";
 import { useDateFilters } from "@/hooks/use-date-filters";
 import {
@@ -113,7 +113,7 @@ export default function GoalsPage() {
 		return (
 			<div className="p-4">
 				<Card className="border-destructive/20 bg-destructive/5">
-					<CardContent className="pt-6">
+					<Card.Content className="pt-6">
 						<div className="flex items-center gap-2">
 							<TrendDownIcon
 								className="size-5 text-destructive"
@@ -126,7 +126,7 @@ export default function GoalsPage() {
 						<p className="mt-2 text-destructive/80 text-sm">
 							{goalsError.message}
 						</p>
-					</CardContent>
+					</Card.Content>
 				</Card>
 			</div>
 		);

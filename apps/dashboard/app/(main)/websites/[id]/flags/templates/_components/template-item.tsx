@@ -1,20 +1,13 @@
 "use client";
 
-import { ArrowRightIcon } from "@phosphor-icons/react";
-import { RocketLaunchIcon } from "@phosphor-icons/react";
-import { TestTubeIcon } from "@phosphor-icons/react";
-import { UsersIcon } from "@phosphor-icons/react";
-import { WarningIcon } from "@phosphor-icons/react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardFooter,
-	CardHeader,
-	CardTitle,
-} from "@/components/ui/card";
+import { ArrowRightIcon } from "@phosphor-icons/react/dist/ssr";
+import { RocketLaunchIcon } from "@phosphor-icons/react/dist/ssr";
+import { TestTubeIcon } from "@phosphor-icons/react/dist/ssr";
+import { UsersIcon } from "@phosphor-icons/react/dist/ssr";
+import { WarningIcon } from "@phosphor-icons/react/dist/ssr";
+import { Badge } from "@/components/ds/badge";
+import { Button } from "@/components/ds/button";
+import { Card } from "@/components/ds/card";
 import type { FlagTemplate } from "../../_components/types";
 
 export interface TemplateItemProps {
@@ -39,18 +32,18 @@ function getTemplateIcon(icon: string) {
 
 function getCategoryColor(
 	category: string
-): "blue" | "amber" | "green" | "destructive" | "gray" {
+): "default" | "warning" | "success" | "destructive" | "muted" {
 	switch (category) {
 		case "rollout":
-			return "blue";
+			return "default";
 		case "experiment":
-			return "amber";
+			return "warning";
 		case "targeting":
-			return "green";
+			return "success";
 		case "killswitch":
 			return "destructive";
 		default:
-			return "gray";
+			return "muted";
 	}
 }
 
@@ -60,29 +53,31 @@ export function TemplateItem({ template, onUseAction }: TemplateItemProps) {
 
 	return (
 		<Card className="group relative flex flex-col overflow-hidden transition-all hover:border-primary/50 hover:shadow-md">
-			<CardHeader className="space-y-2">
+			<Card.Header className="space-y-2">
 				<div className="flex items-start justify-between gap-2">
 					<div className="flex size-10 shrink-0 items-center justify-center rounded bg-primary/10">
 						<TemplateIcon className="size-5 text-primary" weight="duotone" />
 					</div>
 					{template.isBuiltIn && (
-						<Badge className="shrink-0" variant="outline">
+						<Badge className="shrink-0" variant="default">
 							Built-in
 						</Badge>
 					)}
 				</div>
-				<CardTitle className="line-clamp-1 text-lg">{template.name}</CardTitle>
-			</CardHeader>
-			<CardContent className="flex-1 space-y-3">
-				<CardDescription className="line-clamp-2 text-sm">
+				<Card.Title className="line-clamp-1 text-lg">
+					{template.name}
+				</Card.Title>
+			</Card.Header>
+			<Card.Content className="flex-1 space-y-3">
+				<Card.Description className="line-clamp-2 text-sm">
 					{template.description}
-				</CardDescription>
+				</Card.Description>
 				<div className="flex items-center gap-2">
 					<Badge variant={categoryColor}>{template.category}</Badge>
-					<Badge variant="outline">{template.type}</Badge>
+					<Badge variant="default">{template.type}</Badge>
 				</div>
-			</CardContent>
-			<CardFooter>
+			</Card.Content>
+			<Card.Footer>
 				<Button
 					className="w-full gap-2"
 					onClick={() => onUseAction(template)}
@@ -91,7 +86,7 @@ export function TemplateItem({ template, onUseAction }: TemplateItemProps) {
 					Use Template
 					<ArrowRightIcon className="size-4" weight="bold" />
 				</Button>
-			</CardFooter>
+			</Card.Footer>
 		</Card>
 	);
 }

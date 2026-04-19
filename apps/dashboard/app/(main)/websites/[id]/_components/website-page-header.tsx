@@ -14,16 +14,11 @@ import { WarningIcon } from "@phosphor-icons/react";
 import Link from "next/link";
 import { cloneElement, type ReactNode } from "react";
 import { useBillingContext } from "@/components/providers/billing-provider";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@/components/ds/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import {
-	Tooltip,
-	TooltipContent,
-	TooltipProvider,
-	TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Card } from "@/components/ds/card";
+import { Skeleton } from "@/components/ds/skeleton";
+import { Tooltip } from "@/components/ds/tooltip";
 import { useHydrated } from "@/hooks/use-hydrated";
 import { formatLocaleNumber } from "@/lib/format-locale-number";
 import { cn } from "@/lib/utils";
@@ -145,78 +140,72 @@ export function WebsitePageHeader({
 			return "destructive" as const;
 		}
 		if (percentUsed >= 80) {
-			return "amber" as const;
+			return "warning" as const;
 		}
-		return "secondary" as const;
+		return "muted" as const;
 	};
 
 	const usageBadge = showUsageBadge ? (
-		<TooltipProvider>
-			<Tooltip>
-				<TooltipTrigger asChild>
-					<Badge
-						className="cursor-help font-mono"
-						variant={
-							getUsageBadgeColor() as
-								| "default"
-								| "secondary"
-								| "destructive"
-								| "outline"
-								| "green"
-								| "amber"
-								| "gray"
-								| null
-								| undefined
-						}
-					>
-						{!withinLimit && (
-							<WarningIcon className="mr-1 size-3" weight="fill" />
+		<Tooltip
+			content={
+				limit === "unlimited" ? (
+					<p>Unlimited on your current plan</p>
+				) : withinLimit && typeof limit === "number" ? (
+					<p className="max-w-xs">
+						You've created {currentUsage} out of {formatLocaleNumber(limit)}{" "}
+						available on your current plan.
+						{currentUsage / limit >= 0.8 && (
+							<>
+								<br />
+								<span className="text-amber-600">
+									You're approaching your limit.
+								</span>
+							</>
 						)}
-						{currentUsage} /{" "}
-						{limit === "unlimited"
-							? "∞"
-							: limit === false
-								? "—"
-								: typeof limit === "number"
-									? formatLocaleNumber(limit)
-									: "0"}
-					</Badge>
-				</TooltipTrigger>
-				<TooltipContent>
-					{limit === "unlimited" ? (
-						<p>Unlimited on your current plan</p>
-					) : withinLimit && typeof limit === "number" ? (
-						<p className="max-w-xs">
-							You've created {currentUsage} out of {formatLocaleNumber(limit)}{" "}
-							available on your current plan.
-							{currentUsage / limit >= 0.8 && (
-								<>
-									<br />
-									<span className="text-amber-600">
-										You're approaching your limit.
-									</span>
-								</>
-							)}
-						</p>
-					) : (
-						<p className="max-w-xs">
-							<span className="font-semibold text-red-600">Limit reached!</span>
-							<br />
-							You've used all{" "}
-							{typeof limit === "number"
-								? formatLocaleNumber(limit)
-								: "available"}{" "}
-							slots.
-							<br />
-							<Link className="underline" href="/billing">
-								Upgrade your plan
-							</Link>{" "}
-							to create more.
-						</p>
-					)}
-				</TooltipContent>
-			</Tooltip>
-		</TooltipProvider>
+					</p>
+				) : (
+					<p className="max-w-xs">
+						<span className="font-semibold text-red-600">Limit reached!</span>
+						<br />
+						You've used all{" "}
+						{typeof limit === "number"
+							? formatLocaleNumber(limit)
+							: "available"}{" "}
+						slots.
+						<br />
+						<Link className="underline" href="/billing">
+							Upgrade your plan
+						</Link>{" "}
+						to create more.
+					</p>
+				)
+			}
+		>
+			<Badge
+				className="cursor-help font-mono"
+				variant={
+					getUsageBadgeColor() as
+						| "default"
+						| "primary"
+						| "success"
+						| "warning"
+						| "destructive"
+						| "muted"
+						| null
+						| undefined
+				}
+			>
+				{!withinLimit && <WarningIcon className="mr-1 size-3" weight="fill" />}
+				{currentUsage} /{" "}
+				{limit === "unlimited"
+					? "∞"
+					: limit === false
+						? "—"
+						: typeof limit === "number"
+							? formatLocaleNumber(limit)
+							: "0"}
+			</Badge>
+		</Tooltip>
 	) : null;
 
 	if (variant === "minimal") {
@@ -360,34 +349,33 @@ export function WebsitePageHeader({
 						</Button>
 					) : null}
 					{onCreateAction ? (
-						<TooltipProvider>
-							<Tooltip>
-								<TooltipTrigger asChild>
-									<div>
-										<Button disabled={!withinLimit} onClick={onCreateAction}>
-											<PlusIcon size={16} />
-											{createActionLabel}
-										</Button>
-									</div>
-								</TooltipTrigger>
-								{!withinLimit && (
-									<TooltipContent>
-										<p>
-											You've reached your limit of{" "}
-											{typeof limit === "number"
-												? formatLocaleNumber(limit)
-												: "available"}
-											.
-											<br />
-											<Link className="underline" href="/billing">
-												Upgrade to create more
-											</Link>
-											.
-										</p>
-									</TooltipContent>
-								)}
-							</Tooltip>
-						</TooltipProvider>
+						<Tooltip
+							content={
+								withinLimit ? (
+									createActionLabel
+								) : (
+									<p>
+										You've reached your limit of{" "}
+										{typeof limit === "number"
+											? formatLocaleNumber(limit)
+											: "available"}
+										.
+										<br />
+										<Link className="underline" href="/billing">
+											Upgrade to create more
+										</Link>
+										.
+									</p>
+								)
+							}
+						>
+							<div>
+								<Button disabled={!withinLimit} onClick={onCreateAction}>
+									<PlusIcon size={16} />
+									{createActionLabel}
+								</Button>
+							</div>
+						</Tooltip>
 					) : null}
 					{additionalActions}
 				</div>
@@ -396,7 +384,7 @@ export function WebsitePageHeader({
 			{hasError ? (
 				<div className="px-3 pt-4 sm:px-4">
 					<Card className="rounded border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950">
-						<CardContent className="pt-6">
+						<Card.Content className="pt-6">
 							<div className="flex flex-col items-center space-y-3 text-center">
 								<div className="rounded-full border border-destructive/10 bg-destructive/5 p-3">
 									{icon}
@@ -422,7 +410,7 @@ export function WebsitePageHeader({
 									</Button>
 								) : null}
 							</div>
-						</CardContent>
+						</Card.Content>
 					</Card>
 				</div>
 			) : null}

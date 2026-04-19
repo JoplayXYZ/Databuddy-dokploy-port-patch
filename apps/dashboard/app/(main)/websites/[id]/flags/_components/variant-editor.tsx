@@ -6,7 +6,7 @@ import { TrashIcon } from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Field } from "@/components/ds/field";
 import { LineSlider } from "@/components/ui/line-slider";
 import {
 	Select,
@@ -127,7 +127,7 @@ export function VariantEditor({
 	return (
 		<div className="space-y-4">
 			<div className="flex items-center justify-between">
-				<Label>Variants</Label>
+				<Field.Label>Variants</Field.Label>
 				<div className="flex items-center gap-2">
 					<label
 						className="flex items-center gap-2 text-sm"
@@ -214,7 +214,9 @@ export function VariantEditor({
 						<div className="flex items-start gap-3">
 							<div className="grid flex-1 gap-3 sm:grid-cols-2">
 								<div className="space-y-1">
-									<Label className="text-muted-foreground text-xs">Key</Label>
+									<Field.Label className="text-muted-foreground text-xs">
+										Key
+									</Field.Label>
 									<Input
 										className="h-8"
 										onChange={(e) =>
@@ -225,7 +227,9 @@ export function VariantEditor({
 									/>
 								</div>
 								<div className="space-y-1">
-									<Label className="text-muted-foreground text-xs">Value</Label>
+									<Field.Label className="text-muted-foreground text-xs">
+										Value
+									</Field.Label>
 									<Input
 										className="h-8"
 										onChange={(e) =>
@@ -255,9 +259,9 @@ export function VariantEditor({
 
 						{typeof variant.weight === "number" && (
 							<div className="space-y-1">
-								<Label className="text-xs">
+								<Field.Label className="text-xs">
 									Traffic Weight: {variant.weight}%
-								</Label>
+								</Field.Label>
 								<LineSlider
 									max={100}
 									min={0}

@@ -5,7 +5,7 @@ import { BugIcon } from "@phosphor-icons/react";
 import { useAtom, useAtomValue } from "jotai";
 import { use, useCallback } from "react";
 import { FeatureGate } from "@/components/feature-gate";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@/components/ds/skeleton";
 import { useDateFilters } from "@/hooks/use-date-filters";
 import { formatDateOnly } from "@/lib/time";
 import {

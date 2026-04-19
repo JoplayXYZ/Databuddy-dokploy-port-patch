@@ -21,12 +21,8 @@ import {
 	useUsageFeature,
 } from "@/components/providers/billing-provider";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Skeleton } from "@/components/ui/skeleton";
-import {
-	Tooltip,
-	TooltipContent,
-	TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Skeleton } from "@/components/ds/skeleton";
+import { Tooltip } from "@/components/ds/tooltip";
 import { useChat, useChatLoading } from "@/contexts/chat-context";
 import { useWebsite } from "@/hooks/use-websites";
 import { orpc } from "@/lib/orpc";
@@ -285,18 +281,15 @@ function AgentCreditBalance() {
 
 	if (unlimited) {
 		return (
-			<Tooltip>
-				<TooltipTrigger asChild>
-					<button
-						className="flex items-center gap-1 rounded border border-border/60 bg-card px-2 py-0.5 text-muted-foreground text-xs transition-colors hover:border-border hover:text-foreground"
-						onClick={() => router.push("/billing")}
-						type="button"
-					>
-						<SparkleIcon className="size-3" weight="duotone" />
-						<span className="font-medium tabular-nums">∞ credits</span>
-					</button>
-				</TooltipTrigger>
-				<TooltipContent>Unlimited agent credits on your plan</TooltipContent>
+			<Tooltip content="Unlimited agent credits on your plan">
+				<button
+					className="flex items-center gap-1 rounded border border-border/60 bg-card px-2 py-0.5 text-muted-foreground text-xs transition-colors hover:border-border hover:text-foreground"
+					onClick={() => router.push("/billing")}
+					type="button"
+				>
+					<SparkleIcon className="size-3" weight="duotone" />
+					<span className="font-medium tabular-nums">∞ credits</span>
+				</button>
 			</Tooltip>
 		);
 	}
@@ -305,32 +298,31 @@ function AgentCreditBalance() {
 	const isLow = !isEmpty && limit > 0 && balance / limit < 0.2;
 
 	return (
-		<Tooltip>
-			<TooltipTrigger asChild>
-				<button
-					className={cn(
-						"flex items-center gap-1 rounded border px-2 py-0.5 text-xs transition-colors",
-						isEmpty &&
-							"border-destructive/40 bg-destructive/5 text-destructive hover:border-destructive/60",
-						isLow &&
-							"border-amber-500/40 bg-amber-500/5 text-amber-600 hover:border-amber-500/60 dark:text-amber-400",
-						!(isEmpty || isLow) &&
-							"border-border/60 bg-card text-muted-foreground hover:border-border hover:text-foreground"
-					)}
-					onClick={() => router.push("/billing")}
-					type="button"
-				>
-					<SparkleIcon className="size-3" weight="duotone" />
-					<span className="font-medium tabular-nums">
-						{balance.toLocaleString()} / {limit.toLocaleString()}
-					</span>
-				</button>
-			</TooltipTrigger>
-			<TooltipContent>
-				{isEmpty
+		<Tooltip
+			content={
+				isEmpty
 					? "Out of agent credits — click to upgrade"
-					: `${balance.toLocaleString()} of ${limit.toLocaleString()} agent credits remaining this month`}
-			</TooltipContent>
+					: `${balance.toLocaleString()} of ${limit.toLocaleString()} agent credits remaining this month`
+			}
+		>
+			<button
+				className={cn(
+					"flex items-center gap-1 rounded border px-2 py-0.5 text-xs transition-colors",
+					isEmpty &&
+						"border-destructive/40 bg-destructive/5 text-destructive hover:border-destructive/60",
+					isLow &&
+						"border-amber-500/40 bg-amber-500/5 text-amber-600 hover:border-amber-500/60 dark:text-amber-400",
+					!(isEmpty || isLow) &&
+						"border-border/60 bg-card text-muted-foreground hover:border-border hover:text-foreground"
+				)}
+				onClick={() => router.push("/billing")}
+				type="button"
+			>
+				<SparkleIcon className="size-3" weight="duotone" />
+				<span className="font-medium tabular-nums">
+					{balance.toLocaleString()} / {limit.toLocaleString()}
+				</span>
+			</button>
 		</Tooltip>
 	);
 }

@@ -2,7 +2,7 @@ import { ActivityIcon } from "@phosphor-icons/react";
 import { TrendUpIcon } from "@phosphor-icons/react";
 import { UsersIcon } from "@phosphor-icons/react";
 import { WarningCircleIcon } from "@phosphor-icons/react";
-import { Card } from "@/components/ui/card";
+import { Card } from "@/components/ds/card";
 import { cn } from "@/lib/utils";
 import type { ErrorSummary } from "./types";
 

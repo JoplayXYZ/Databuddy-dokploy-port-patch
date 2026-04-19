@@ -25,13 +25,8 @@ const WebsiteDialog = dynamic(
 import { memo, useCallback, useState } from "react";
 import { toast } from "sonner";
 import { FaviconImage } from "@/components/analytics/favicon-image";
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
-} from "@/components/ui/card";
+import { Card } from "@/components/ds/card";
+import { StatusDot } from "@/components/ds/status-dot";
 import {
 	ContextMenu,
 	ContextMenuContent,
@@ -39,8 +34,8 @@ import {
 	ContextMenuSeparator,
 	ContextMenuTrigger,
 } from "@/components/ui/context-menu";
-import { DeleteDialog } from "@/components/ui/delete-dialog";
-import { Skeleton } from "@/components/ui/skeleton";
+import { DeleteDialog } from "@/components/ds/delete-dialog";
+import { Skeleton } from "@/components/ds/skeleton";
 import { useDeleteWebsite } from "@/hooks/use-websites";
 import { formatNumber } from "@/lib/formatters";
 import { TOAST_MESSAGES } from "../[id]/_components/shared/tracking-constants";
@@ -171,13 +166,10 @@ export const WebsiteCard = memo(
 								href={`/websites/${website.id}`}
 							>
 								<Card className="relative z-0 flex h-full select-none flex-col gap-0 bg-background p-0 transition-all duration-300 ease-in-out group-hover:z-50 group-hover:border-primary/60 motion-reduce:transform-none motion-reduce:transition-none">
-									<CardHeader className="dotted-bg relative gap-0! rounded-t border-b bg-accent px-0 pt-4 pb-0!">
+									<Card.Header className="dotted-bg relative gap-0! rounded-t border-b bg-accent px-0 pt-4 pb-0!">
 										{activeUsers !== undefined && activeUsers > 0 && (
 											<div className="absolute top-2 right-2 z-10 flex items-center gap-1.5 rounded-full bg-success/10 px-2 py-0.5 font-medium text-success text-xs tabular-nums backdrop-blur-sm">
-												<span className="relative flex size-1.5">
-													<span className="absolute inline-flex size-full animate-ping rounded-full bg-success opacity-75" />
-													<span className="relative inline-flex size-1.5 rounded-full bg-success" />
-												</span>
+												<StatusDot color="success" pulse size="sm" />
 												{activeUsers}
 											</div>
 										)}
@@ -219,8 +211,8 @@ export const WebsiteCard = memo(
 												Failed to load
 											</div>
 										)}
-									</CardHeader>
-									<CardContent className="space-y-1 px-4 py-3">
+									</Card.Header>
+									<Card.Content className="space-y-1 px-4 py-3">
 										<div className="flex items-center gap-3">
 											<FaviconImage
 												altText={`${website.name} favicon`}
@@ -230,12 +222,12 @@ export const WebsiteCard = memo(
 											/>
 											<div className="flex min-w-0 flex-1 items-center justify-between gap-2">
 												<div className="min-w-0 space-y-0.5">
-													<CardTitle className="truncate font-semibold text-sm leading-tight">
+													<Card.Title className="truncate font-semibold text-sm leading-tight">
 														{website.name}
-													</CardTitle>
-													<CardDescription className="truncate text-muted-foreground text-xs">
+													</Card.Title>
+													<Card.Description className="truncate text-muted-foreground text-xs">
 														{website.domain}
-													</CardDescription>
+													</Card.Description>
 												</div>
 												<div className="flex shrink-0 flex-col items-end space-y-0.5">
 													<span className="flex items-center gap-1 font-semibold text-foreground text-xs tabular-nums">
@@ -254,7 +246,7 @@ export const WebsiteCard = memo(
 												</div>
 											</div>
 										</div>
-									</CardContent>
+									</Card.Content>
 								</Card>
 							</Link>
 						</div>
@@ -346,10 +338,10 @@ WebsiteCard.displayName = "WebsiteCard";
 export function WebsiteCardSkeleton() {
 	return (
 		<Card className="h-full overflow-hidden pt-0">
-			<CardHeader className="dotted-bg gap-0! border-b bg-accent px-0 pt-4 pb-0!">
+			<Card.Header className="dotted-bg gap-0! border-b bg-accent px-0 pt-4 pb-0!">
 				<Skeleton className="h-28 w-full" />
-			</CardHeader>
-			<CardContent className="space-y-1 px-4 py-3">
+			</Card.Header>
+			<Card.Content className="space-y-1 px-4 py-3">
 				<div className="flex items-center gap-3">
 					<Skeleton className="size-7 shrink-0 rounded" />
 					<div className="flex min-w-0 flex-1 items-center justify-between gap-2">
@@ -363,7 +355,7 @@ export function WebsiteCardSkeleton() {
 						</div>
 					</div>
 				</div>
-			</CardContent>
+			</Card.Content>
 		</Card>
 	);
 }

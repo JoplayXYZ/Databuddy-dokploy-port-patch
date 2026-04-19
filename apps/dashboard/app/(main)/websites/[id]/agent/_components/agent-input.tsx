@@ -15,12 +15,7 @@ import {
 } from "@/components/ai-elements/unicode-spinner";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import {
-	Tooltip,
-	TooltipContent,
-	TooltipProvider,
-	TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip } from "@/components/ds/tooltip";
 import { useChat, usePendingQueue } from "@/contexts/chat-context";
 import { cn } from "@/lib/utils";
 import {
@@ -237,39 +232,35 @@ function ThinkingControl() {
 	};
 
 	return (
-		<TooltipProvider delayDuration={250}>
-			<Tooltip>
-				<TooltipTrigger asChild>
-					<button
-						aria-label={`Thinking effort: ${THINKING_LABELS[thinking]}. Click to cycle.`}
-						className={cn(
-							"flex h-7 items-center gap-1 rounded border px-2 text-xs transition-colors",
-							isOn
-								? "border-border bg-accent text-foreground"
-								: "border-transparent text-muted-foreground hover:border-border/60 hover:bg-accent/40 hover:text-foreground"
-						)}
-						onClick={cycleThinking}
-						type="button"
-					>
-						<BrainIcon
-							className="size-3.5"
-							weight={isOn ? "fill" : "duotone"}
-						/>
-						<span className="font-medium">{THINKING_LABELS[thinking]}</span>
-					</button>
-				</TooltipTrigger>
-				<TooltipContent side="top" sideOffset={8}>
-					<div className="flex flex-col gap-0.5">
-						<span className="font-medium">
-							Thinking · {THINKING_LABELS[thinking]}
-						</span>
-						<span className="text-muted-foreground">
-							{THINKING_DESCRIPTIONS[thinking]}
-						</span>
-					</div>
-				</TooltipContent>
-			</Tooltip>
-		</TooltipProvider>
+		<Tooltip
+			content={
+				<div className="flex flex-col gap-0.5">
+					<span className="font-medium">
+						Thinking · {THINKING_LABELS[thinking]}
+					</span>
+					<span className="text-muted-foreground">
+						{THINKING_DESCRIPTIONS[thinking]}
+					</span>
+				</div>
+			}
+			delay={250}
+			side="top"
+		>
+			<button
+				aria-label={`Thinking effort: ${THINKING_LABELS[thinking]}. Click to cycle.`}
+				className={cn(
+					"flex h-7 items-center gap-1 rounded border px-2 text-xs transition-colors",
+					isOn
+						? "border-border bg-accent text-foreground"
+						: "border-transparent text-muted-foreground hover:border-border/60 hover:bg-accent/40 hover:text-foreground"
+				)}
+				onClick={cycleThinking}
+				type="button"
+			>
+				<BrainIcon className="size-3.5" weight={isOn ? "fill" : "duotone"} />
+				<span className="font-medium">{THINKING_LABELS[thinking]}</span>
+			</button>
+		</Tooltip>
 	);
 }
 

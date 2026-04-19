@@ -1,14 +1,14 @@
 "use client";
 
-import { EnvelopeIcon } from "@phosphor-icons/react";
-import { PlusIcon } from "@phosphor-icons/react";
-import { TrashIcon } from "@phosphor-icons/react";
-import { UserIcon } from "@phosphor-icons/react";
-import { WrenchIcon } from "@phosphor-icons/react";
-import { XIcon } from "@phosphor-icons/react";
+import { EnvelopeIcon } from "@phosphor-icons/react/dist/ssr";
+import { PlusIcon } from "@phosphor-icons/react/dist/ssr";
+import { TrashIcon } from "@phosphor-icons/react/dist/ssr";
+import { UserIcon } from "@phosphor-icons/react/dist/ssr";
+import { WrenchIcon } from "@phosphor-icons/react/dist/ssr";
+import { XIcon } from "@phosphor-icons/react/dist/ssr";
 import { useState } from "react";
 import { z } from "zod/mini";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ds/button";
 import { Input } from "@/components/ui/input";
 import {
 	Select,
@@ -346,7 +346,7 @@ export function UserRulesBuilder({ rules, onChange }: UserRulesBuilderProps) {
 				<p className="mb-3 text-muted-foreground text-sm">
 					Match users by ID, email, or property
 				</p>
-				<Button onClick={addRule} size="sm" type="button" variant="outline">
+				<Button onClick={addRule} size="sm" type="button" variant="secondary">
 					<PlusIcon size={14} />
 					Add Rule
 				</Button>

@@ -1,15 +1,15 @@
 "use client";
 
-import { HeartbeatIcon } from "@phosphor-icons/react";
-import { PauseIcon } from "@phosphor-icons/react";
-import { PencilIcon } from "@phosphor-icons/react";
-import { PlayIcon } from "@phosphor-icons/react";
-import { TrashIcon } from "@phosphor-icons/react";
+import { HeartbeatIcon } from "@phosphor-icons/react/dist/ssr";
+import { PauseIcon } from "@phosphor-icons/react/dist/ssr";
+import { PencilIcon } from "@phosphor-icons/react/dist/ssr";
+import { PlayIcon } from "@phosphor-icons/react/dist/ssr";
+import { TrashIcon } from "@phosphor-icons/react/dist/ssr";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { EmptyState } from "@/components/empty-state";
+import { EmptyState } from "@/components/ds/empty-state";
 import { FeatureAccessGate } from "@/components/feature-access-gate";
 import { MonitorSheet } from "@/components/monitors/monitor-sheet";
 import {
@@ -22,9 +22,9 @@ import {
 	AlertDialogHeader,
 	AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ds/badge";
+import { Button } from "@/components/ds/button";
+import { Skeleton } from "@/components/ds/skeleton";
 import { useDateFilters } from "@/hooks/use-date-filters";
 import { useBatchDynamicQuery } from "@/hooks/use-dynamic-query";
 import { useFeatureAccess } from "@/hooks/use-feature-access";
@@ -263,7 +263,7 @@ export default function PulsePage() {
 				}
 				variant={
 					schedule.isPaused
-						? "secondary"
+						? "muted"
 						: currentStatus === "down"
 							? "destructive"
 							: "default"
@@ -303,7 +303,7 @@ export default function PulsePage() {
 				}
 				onClick={handleTogglePause}
 				size="sm"
-				variant="outline"
+				variant="secondary"
 			>
 				{schedule.isPaused ? (
 					<>
@@ -317,7 +317,7 @@ export default function PulsePage() {
 					</>
 				)}
 			</Button>
-			<Button onClick={handleEditMonitor} size="sm" variant="outline">
+			<Button onClick={handleEditMonitor} size="sm" variant="secondary">
 				<PencilIcon size={16} weight="duotone" />
 				Configure
 			</Button>
@@ -325,7 +325,7 @@ export default function PulsePage() {
 				disabled={deleteMutation.isPending}
 				onClick={() => setIsDeleteDialogOpen(true)}
 				size="sm"
-				variant="outline"
+				variant="secondary"
 			>
 				<TrashIcon size={16} weight="duotone" />
 				Delete

@@ -7,11 +7,7 @@ import { WarningCircleIcon } from "@phosphor-icons/react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useLayoutEffect, useRef, useState } from "react";
-import {
-	Tooltip,
-	TooltipContent,
-	TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip } from "@/components/ds/tooltip";
 import { cn } from "@/lib/utils";
 import type { FunnelStepAnalytics } from "@/types/funnels";
 
@@ -160,20 +156,9 @@ export function FunnelFlow({ steps }: FunnelFlowProps) {
 											{step.step_name}
 										</span>
 										{step.error_count > 0 && (
-											<Tooltip>
-												<TooltipTrigger asChild>
-													<div className="flex shrink-0 cursor-help items-center gap-1 rounded bg-destructive/10 px-1.5 py-0.5 text-destructive text-xs">
-														<WarningCircleIcon
-															className="size-3"
-															weight="fill"
-														/>
-														<span className="font-medium tabular-nums">
-															{step.error_count}
-														</span>
-													</div>
-												</TooltipTrigger>
-												<TooltipContent className="max-w-xs" side="top">
-													<div className="space-y-1.5">
+											<Tooltip
+												content={
+													<div className="max-w-xs space-y-1.5">
 														<p className="font-medium text-sm">
 															{step.error_count} error
 															{step.error_count === 1 ? "" : "s"} (
@@ -207,7 +192,15 @@ export function FunnelFlow({ steps }: FunnelFlowProps) {
 															<ArrowSquareOutIcon className="size-3" />
 														</Link>
 													</div>
-												</TooltipContent>
+												}
+												side="top"
+											>
+												<div className="flex shrink-0 cursor-help items-center gap-1 rounded bg-destructive/10 px-1.5 py-0.5 text-destructive text-xs">
+													<WarningCircleIcon className="size-3" weight="fill" />
+													<span className="font-medium tabular-nums">
+														{step.error_count}
+													</span>
+												</div>
 											</Tooltip>
 										)}
 									</div>

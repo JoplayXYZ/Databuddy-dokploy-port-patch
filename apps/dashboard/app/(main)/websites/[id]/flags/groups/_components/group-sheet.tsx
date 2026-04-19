@@ -1,15 +1,14 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CheckIcon } from "@phosphor-icons/react";
-import { SpinnerGapIcon } from "@phosphor-icons/react";
-import { UsersThreeIcon } from "@phosphor-icons/react";
+import { CheckIcon } from "@phosphor-icons/react/dist/ssr";
+import { UsersThreeIcon } from "@phosphor-icons/react/dist/ssr";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ds/button";
 import {
 	Form,
 	FormControl,
@@ -19,15 +18,7 @@ import {
 	FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import {
-	Sheet,
-	SheetBody,
-	SheetContent,
-	SheetDescription,
-	SheetFooter,
-	SheetHeader,
-	SheetTitle,
-} from "@/components/ui/sheet";
+import { Sheet } from "@/components/ds/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import { orpc } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
@@ -175,8 +166,8 @@ export function GroupSheet({
 
 	return (
 		<Sheet onOpenChange={handleOpenChange} open={isOpen}>
-			<SheetContent className="sm:max-w-xl" side="right">
-				<SheetHeader>
+			<Sheet.Content className="sm:max-w-xl" side="right">
+				<Sheet.Header>
 					<div className="flex items-center gap-4">
 						<div
 							className="flex size-11 items-center justify-center rounded border"
@@ -189,17 +180,17 @@ export function GroupSheet({
 							/>
 						</div>
 						<div>
-							<SheetTitle className="text-lg">
+							<Sheet.Title className="text-lg">
 								{isEditing ? "Edit Group" : "Create Group"}
-							</SheetTitle>
-							<SheetDescription>
+							</Sheet.Title>
+							<Sheet.Description>
 								{isEditing
 									? `Editing ${group?.name}`
 									: "Create a reusable targeting group"}
-							</SheetDescription>
+							</Sheet.Description>
 						</div>
 					</div>
-				</SheetHeader>
+				</Sheet.Header>
 
 				<Form {...form}>
 					<form
@@ -209,7 +200,7 @@ export function GroupSheet({
 							toast.error("Please fix the form errors");
 						})}
 					>
-						<SheetBody className="space-y-6">
+						<Sheet.Body className="space-y-6">
 							<div className="space-y-4">
 								<FormField
 									control={form.control}
@@ -280,8 +271,7 @@ export function GroupSheet({
 														>
 															{field.value === color.value && (
 																<CheckIcon
-																	className="text-white drop-shadow-sm"
-																	size={14}
+																	className="size-3.5 text-white drop-shadow-sm"
 																	weight="bold"
 																/>
 															)}
@@ -323,28 +313,20 @@ export function GroupSheet({
 									)}
 								/>
 							</div>
-						</SheetBody>
+						</Sheet.Body>
 
-						<SheetFooter>
-							<Button onClick={onCloseAction} type="button" variant="outline">
+						<Sheet.Footer>
+							<Button onClick={onCloseAction} type="button" variant="secondary">
 								Cancel
 							</Button>
-							<Button className="min-w-28" disabled={isLoading} type="submit">
-								{isLoading ? (
-									<>
-										<SpinnerGapIcon className="animate-spin" size={16} />
-										{isEditing ? "Saving…" : "Creating…"}
-									</>
-								) : isEditing ? (
-									"Save Changes"
-								) : (
-									"Create Group"
-								)}
+							<Button className="min-w-28" loading={isLoading} type="submit">
+								{isEditing ? "Save Changes" : "Create Group"}
 							</Button>
-						</SheetFooter>
+						</Sheet.Footer>
 					</form>
 				</Form>
-			</SheetContent>
+				<Sheet.Close />
+			</Sheet.Content>
 		</Sheet>
 	);
 }

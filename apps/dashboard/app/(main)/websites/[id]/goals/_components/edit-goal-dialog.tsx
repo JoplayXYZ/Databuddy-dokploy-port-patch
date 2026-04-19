@@ -2,14 +2,15 @@
 
 import { filterOptions } from "@databuddy/shared/lists/filters";
 import type { GoalFilter } from "@databuddy/shared/types/api";
-import { PlusIcon } from "@phosphor-icons/react";
-import { TargetIcon as Target } from "@phosphor-icons/react";
-import { TrashIcon } from "@phosphor-icons/react";
+import { PlusIcon } from "@phosphor-icons/react/dist/ssr";
+import { TargetIcon as Target } from "@phosphor-icons/react/dist/ssr";
+import { TrashIcon } from "@phosphor-icons/react/dist/ssr";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AutocompleteInput } from "@/components/ui/autocomplete-input";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ds/button";
+import { Field } from "@/components/ds/field";
+import { Sheet } from "@/components/ds/sheet";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
 	Select,
 	SelectContent,
@@ -17,16 +18,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
-import {
-	Sheet,
-	SheetBody,
-	SheetContent,
-	SheetDescription,
-	SheetFooter,
-	SheetHeader,
-	SheetTitle,
-} from "@/components/ui/sheet";
-import { Switch } from "@/components/ui/switch";
+import { Switch } from "@/components/ds/switch";
 import type { AutocompleteData } from "@/hooks/use-autocomplete";
 import { goalFunnelOperatorOptions, useFilters } from "@/hooks/use-filters";
 import type { CreateGoalData, Goal } from "@/hooks/use-goals";
@@ -204,33 +196,34 @@ export function EditGoalDialog({
 
 	return (
 		<Sheet onOpenChange={handleClose} open={isOpen}>
-			<SheetContent side="right">
-				<SheetHeader>
+			<Sheet.Content side="right">
+				<Sheet.Header>
 					<div className="flex items-start gap-4">
 						<div className="flex size-11 items-center justify-center rounded border bg-background">
 							<Target
-								className="text-accent-foreground"
-								size={22}
+								className="size-[22px] text-accent-foreground"
 								weight="fill"
 							/>
 						</div>
 						<div className="min-w-0 flex-1">
-							<SheetTitle className="truncate text-lg">
+							<Sheet.Title className="truncate text-lg">
 								{isCreateMode ? "New Goal" : formData.name || "Edit Goal"}
-							</SheetTitle>
-							<SheetDescription className="text-xs">
+							</Sheet.Title>
+							<Sheet.Description className="text-xs">
 								{isCreateMode
 									? "Track single-step conversions"
 									: "Update goal settings"}
-							</SheetDescription>
+							</Sheet.Description>
 						</div>
 					</div>
-				</SheetHeader>
+				</Sheet.Header>
 
-				<SheetBody className="space-y-6">
+				<Sheet.Close />
+
+				<Sheet.Body className="space-y-6">
 					<div className="grid gap-4 sm:grid-cols-2">
 						<div className="space-y-2">
-							<Label htmlFor="goal-name">Name</Label>
+							<Field.Label htmlFor="goal-name">Name</Field.Label>
 							<Input
 								id="goal-name"
 								onChange={(e) => updateField("name", e.target.value)}
@@ -239,7 +232,7 @@ export function EditGoalDialog({
 							/>
 						</div>
 						<div className="space-y-2">
-							<Label htmlFor="goal-description">Description</Label>
+							<Field.Label htmlFor="goal-description">Description</Field.Label>
 							<Input
 								id="goal-description"
 								onChange={(e) => updateField("description", e.target.value)}
@@ -250,7 +243,9 @@ export function EditGoalDialog({
 					</div>
 
 					<section className="space-y-3">
-						<Label className="text-muted-foreground text-xs">Goal Target</Label>
+						<Field.Label className="text-muted-foreground text-xs">
+							Goal Target
+						</Field.Label>
 
 						<div className="flex items-center gap-2 rounded border bg-card p-2.5">
 							<div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-foreground font-semibold text-accent text-xs">
@@ -285,15 +280,17 @@ export function EditGoalDialog({
 					</section>
 
 					<section className="space-y-3">
-						<Label className="text-muted-foreground text-xs">Settings</Label>
+						<Field.Label className="text-muted-foreground text-xs">
+							Settings
+						</Field.Label>
 						<div className="flex items-center justify-between rounded border bg-card p-3">
 							<div className="space-y-0.5">
-								<Label
+								<Field.Label
 									className="font-medium text-sm"
 									htmlFor="ignore-historic"
 								>
 									Ignore historic data
-								</Label>
+								</Field.Label>
 								<p className="text-muted-foreground text-xs">
 									Only count events after this goal was created
 								</p>
@@ -311,9 +308,9 @@ export function EditGoalDialog({
 					</section>
 
 					<section className="space-y-3">
-						<Label className="text-muted-foreground text-xs">
+						<Field.Label className="text-muted-foreground text-xs">
 							Filters (Optional)
-						</Label>
+						</Field.Label>
 
 						{formData.filters.length > 0 && (
 							<div className="space-y-2">
@@ -373,10 +370,9 @@ export function EditGoalDialog({
 											aria-label="Remove filter"
 											className="size-6 shrink-0 p-0 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
 											onClick={() => removeFilter(index)}
-											size="icon"
 											variant="ghost"
 										>
-											<TrashIcon size={14} />
+											<TrashIcon className="size-3.5" />
 										</Button>
 									</div>
 								))}
@@ -387,32 +383,27 @@ export function EditGoalDialog({
 							className="w-full"
 							onClick={() => addFilter()}
 							size="sm"
-							variant="outline"
+							variant="secondary"
 						>
-							<PlusIcon size={14} />
+							<PlusIcon className="size-3.5" />
 							Add Filter
 						</Button>
 					</section>
-				</SheetBody>
+				</Sheet.Body>
 
-				<SheetFooter>
-					<Button onClick={handleClose} type="button" variant="outline">
+				<Sheet.Footer>
+					<Button onClick={handleClose} type="button" variant="secondary">
 						Cancel
 					</Button>
-					<Button disabled={!isFormValid || isSaving} onClick={handleSubmit}>
-						{isSaving ? (
-							<>
-								<div className="size-4 animate-spin rounded-full border-2 border-primary-foreground/30 border-t-primary-foreground" />
-								{isCreateMode ? "Creating…" : "Saving…"}
-							</>
-						) : isCreateMode ? (
-							"Create Goal"
-						) : (
-							"Save Changes"
-						)}
+					<Button
+						disabled={!isFormValid}
+						loading={isSaving}
+						onClick={handleSubmit}
+					>
+						{isCreateMode ? "Create Goal" : "Save Changes"}
 					</Button>
-				</SheetFooter>
-			</SheetContent>
+				</Sheet.Footer>
+			</Sheet.Content>
 		</Sheet>
 	);
 }

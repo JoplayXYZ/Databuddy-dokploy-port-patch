@@ -1,5 +1,5 @@
 import type React from "react";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@/components/ds/skeleton";
 import { BORDER_RADIUS } from "./ui-components";
 
 interface TabLayoutProps {

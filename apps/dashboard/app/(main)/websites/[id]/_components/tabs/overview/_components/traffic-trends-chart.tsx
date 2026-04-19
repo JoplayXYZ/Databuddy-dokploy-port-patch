@@ -26,7 +26,7 @@ import {
 	type ChartInteractiveFeatures,
 	mergeChartInteractiveFeatures,
 } from "@/components/ui/composables/chart";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@/components/ds/skeleton";
 import { useChartPreferences } from "@/hooks/use-chart-preferences";
 import { usePersistentState } from "@/hooks/use-persistent-state";
 import {

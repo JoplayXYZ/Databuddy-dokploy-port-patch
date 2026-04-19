@@ -7,15 +7,16 @@ import {
 	Droppable,
 	type DropResult,
 } from "@hello-pangea/dnd";
-import { DotsNineIcon } from "@phosphor-icons/react";
-import { FunnelIcon } from "@phosphor-icons/react";
-import { PlusIcon } from "@phosphor-icons/react";
-import { TrashIcon } from "@phosphor-icons/react";
+import { DotsNineIcon } from "@phosphor-icons/react/dist/ssr";
+import { FunnelIcon } from "@phosphor-icons/react/dist/ssr";
+import { PlusIcon } from "@phosphor-icons/react/dist/ssr";
+import { TrashIcon } from "@phosphor-icons/react/dist/ssr";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AutocompleteInput } from "@/components/ui/autocomplete-input";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ds/button";
+import { Field } from "@/components/ds/field";
+import { Sheet } from "@/components/ds/sheet";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
 	Select,
 	SelectContent,
@@ -23,16 +24,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
-import {
-	Sheet,
-	SheetBody,
-	SheetContent,
-	SheetDescription,
-	SheetFooter,
-	SheetHeader,
-	SheetTitle,
-} from "@/components/ui/sheet";
-import { Switch } from "@/components/ui/switch";
+import { Switch } from "@/components/ds/switch";
 import type { AutocompleteData } from "@/hooks/use-autocomplete";
 import { goalFunnelOperatorOptions, useFilters } from "@/hooks/use-filters";
 import { cn } from "@/lib/utils";
@@ -308,33 +300,34 @@ export function EditFunnelDialog({
 
 	return (
 		<Sheet onOpenChange={handleClose} open={isOpen}>
-			<SheetContent side="right">
-				<SheetHeader>
+			<Sheet.Content side="right">
+				<Sheet.Header>
 					<div className="flex items-start gap-4">
 						<div className="flex size-11 items-center justify-center rounded border bg-background">
 							<FunnelIcon
-								className="text-accent-foreground"
-								size={22}
+								className="size-[22px] text-accent-foreground"
 								weight="fill"
 							/>
 						</div>
 						<div className="min-w-0 flex-1">
-							<SheetTitle className="truncate text-lg">
+							<Sheet.Title className="truncate text-lg">
 								{isCreateMode ? "New Funnel" : formData.name || "Edit Funnel"}
-							</SheetTitle>
-							<SheetDescription className="text-xs">
+							</Sheet.Title>
+							<Sheet.Description className="text-xs">
 								{isCreateMode
 									? "Track user conversion journeys"
 									: `${formData.steps.length} steps configured`}
-							</SheetDescription>
+							</Sheet.Description>
 						</div>
 					</div>
-				</SheetHeader>
+				</Sheet.Header>
 
-				<SheetBody className="space-y-6">
+				<Sheet.Close />
+
+				<Sheet.Body className="space-y-6">
 					<div className="grid gap-4 sm:grid-cols-2">
 						<div className="space-y-2">
-							<Label htmlFor="funnel-name">Name</Label>
+							<Field.Label htmlFor="funnel-name">Name</Field.Label>
 							<Input
 								id="funnel-name"
 								onChange={(e) =>
@@ -347,7 +340,9 @@ export function EditFunnelDialog({
 							/>
 						</div>
 						<div className="space-y-2">
-							<Label htmlFor="funnel-description">Description</Label>
+							<Field.Label htmlFor="funnel-description">
+								Description
+							</Field.Label>
 							<Input
 								id="funnel-description"
 								onChange={(e) =>
@@ -363,9 +358,9 @@ export function EditFunnelDialog({
 
 					<section className="space-y-3">
 						<div className="flex items-center justify-between">
-							<Label className="text-muted-foreground text-xs">
+							<Field.Label className="text-muted-foreground text-xs">
 								Funnel Steps
-							</Label>
+							</Field.Label>
 							<span className="text-muted-foreground text-xs">
 								Drag to reorder
 							</span>
@@ -402,7 +397,7 @@ export function EditFunnelDialog({
 															{...provided.dragHandleProps}
 															className="cursor-grab text-muted-foreground hover:text-foreground active:cursor-grabbing"
 														>
-															<DotsNineIcon size={16} />
+															<DotsNineIcon className="size-4" />
 														</div>
 
 														<div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-accent-foreground font-semibold text-accent text-xs">
@@ -457,10 +452,9 @@ export function EditFunnelDialog({
 															<Button
 																className="size-6 shrink-0 p-0 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
 																onClick={() => removeStep(index)}
-																size="icon"
 																variant="ghost"
 															>
-																<TrashIcon size={14} />
+																<TrashIcon className="size-3.5" />
 															</Button>
 														)}
 													</div>
@@ -474,27 +468,29 @@ export function EditFunnelDialog({
 						</DragDropContext>
 
 						<Button
-							className="w-full border text-accent-foreground hover:bg-accent hover:text-accent-foreground"
+							className="w-full"
 							disabled={formData.steps.length >= 10}
 							onClick={addStep}
 							size="sm"
-							variant="outline"
+							variant="secondary"
 						>
-							<PlusIcon size={14} />
+							<PlusIcon className="size-3.5" />
 							Add Step
 						</Button>
 					</section>
 
 					<section className="space-y-3">
-						<Label className="text-muted-foreground text-xs">Settings</Label>
+						<Field.Label className="text-muted-foreground text-xs">
+							Settings
+						</Field.Label>
 						<div className="flex items-center justify-between rounded border bg-card p-3">
 							<div className="space-y-0.5">
-								<Label
+								<Field.Label
 									className="font-medium text-sm"
 									htmlFor="ignore-historic"
 								>
 									Ignore historic data
-								</Label>
+								</Field.Label>
 								<p className="text-muted-foreground text-xs">
 									Only count events after this funnel was created
 								</p>
@@ -512,9 +508,9 @@ export function EditFunnelDialog({
 					</section>
 
 					<section className="space-y-3">
-						<Label className="text-muted-foreground text-xs">
+						<Field.Label className="text-muted-foreground text-xs">
 							Filters (Optional)
-						</Label>
+						</Field.Label>
 
 						{formData.filters && formData.filters.length > 0 && (
 							<div className="space-y-2">
@@ -572,10 +568,9 @@ export function EditFunnelDialog({
 										<Button
 											className="size-6 shrink-0 p-0 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
 											onClick={() => removeFilter(index)}
-											size="icon"
 											variant="ghost"
 										>
-											<TrashIcon size={14} />
+											<TrashIcon className="size-3.5" />
 										</Button>
 									</div>
 								))}
@@ -586,35 +581,27 @@ export function EditFunnelDialog({
 							className="w-full"
 							onClick={() => addFilter()}
 							size="sm"
-							variant="outline"
+							variant="secondary"
 						>
-							<PlusIcon size={14} />
+							<PlusIcon className="size-3.5" />
 							Add Filter
 						</Button>
 					</section>
-				</SheetBody>
+				</Sheet.Body>
 
-				<SheetFooter>
-					<Button onClick={handleClose} variant="outline">
+				<Sheet.Footer>
+					<Button onClick={handleClose} variant="secondary">
 						Cancel
 					</Button>
 					<Button
-						disabled={!isFormValid || (isCreateMode ? isCreating : isUpdating)}
+						disabled={!isFormValid}
+						loading={isCreateMode ? isCreating : isUpdating}
 						onClick={handleSubmit}
 					>
-						{(isCreateMode ? isCreating : isUpdating) ? (
-							<>
-								<div className="size-4 animate-spin rounded-full border-2 border-primary-foreground/30 border-t-primary-foreground" />
-								{isCreateMode ? "Creating…" : "Saving…"}
-							</>
-						) : isCreateMode ? (
-							"Create Funnel"
-						) : (
-							"Save Changes"
-						)}
+						{isCreateMode ? "Create Funnel" : "Save Changes"}
 					</Button>
-				</SheetFooter>
-			</SheetContent>
+				</Sheet.Footer>
+			</Sheet.Content>
 		</Sheet>
 	);
 }

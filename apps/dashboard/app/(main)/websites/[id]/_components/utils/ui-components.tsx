@@ -1,11 +1,7 @@
 import { ExternalLink, HelpCircle } from "lucide-react";
 import type React from "react";
-import {
-	Tooltip,
-	TooltipContent,
-	TooltipProvider,
-	TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { StatusDot } from "@/components/ds/status-dot";
+import { Tooltip } from "@/components/ds/tooltip";
 import { cn } from "@/lib/utils";
 import { PERFORMANCE_THRESHOLDS } from "./analytics-helpers";
 
@@ -156,16 +152,7 @@ export const ExternalLinkButton: React.FC<ExternalLinkButtonProps> = ({
 		return content;
 	}
 
-	return (
-		<TooltipProvider>
-			<Tooltip>
-				<TooltipTrigger asChild>{content}</TooltipTrigger>
-				<TooltipContent className="border bg-background p-2 text-foreground text-xs shadow-lg dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
-					{title || href}
-				</TooltipContent>
-			</Tooltip>
-		</TooltipProvider>
-	);
+	return <Tooltip content={title || href}>{content}</Tooltip>;
 };
 
 export const EmptyState: React.FC<{
@@ -198,28 +185,22 @@ export const MetricTooltip = ({
 }) => {
 	const threshold = PERFORMANCE_THRESHOLDS[metricKey];
 	return (
-		<TooltipProvider>
-			<Tooltip>
-				<TooltipTrigger asChild>
-					<div className="relative w-full">
-						{children}
-						<HelpCircle className="absolute top-2 right-2 size-3 text-muted-foreground/50" />
-					</div>
-				</TooltipTrigger>
-				<TooltipContent className="max-w-[300px] space-y-2 border bg-background p-3 text-foreground shadow-lg">
+		<Tooltip
+			content={
+				<div className="max-w-[300px] space-y-2">
 					<div className="font-medium text-xs">
 						{label || String(metricKey).replace(/_/g, " ")}
 					</div>
 					<div className="space-y-1 text-xs">
 						<div className="flex items-center">
-							<div className="mr-1.5 size-2 rounded-full bg-green-500" />
+							<StatusDot className="mr-1.5" color="success" size="md" />
 							<span>
 								Good: &lt; {threshold.good}
 								{threshold.unit}
 							</span>
 						</div>
 						<div className="flex items-center">
-							<div className="mr-1.5 size-2 rounded-full bg-yellow-500" />
+							<StatusDot className="mr-1.5" color="warning" size="md" />
 							<span>
 								Needs improvement: {threshold.good}
 								{threshold.unit} - {threshold.average}
@@ -227,15 +208,20 @@ export const MetricTooltip = ({
 							</span>
 						</div>
 						<div className="flex items-center">
-							<div className="mr-1.5 size-2 rounded-full bg-red-500" />
+							<StatusDot className="mr-1.5" color="danger" size="md" />
 							<span>
 								Poor: &gt; {threshold.average}
 								{threshold.unit}
 							</span>
 						</div>
 					</div>
-				</TooltipContent>
-			</Tooltip>
-		</TooltipProvider>
+				</div>
+			}
+		>
+			<div className="relative w-full">
+				{children}
+				<HelpCircle className="absolute top-2 right-2 size-3 text-muted-foreground/50" />
+			</div>
+		</Tooltip>
 	);
 };

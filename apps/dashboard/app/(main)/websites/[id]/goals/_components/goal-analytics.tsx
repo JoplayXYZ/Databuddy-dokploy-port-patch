@@ -1,11 +1,11 @@
 "use client";
 
-import { ArrowClockwiseIcon as ArrowClockwise } from "@phosphor-icons/react";
-import { TargetIcon as Target } from "@phosphor-icons/react";
-import { TrendUpIcon as TrendUp } from "@phosphor-icons/react";
-import { UsersIcon as Users } from "@phosphor-icons/react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ArrowClockwiseIcon as ArrowClockwise } from "@phosphor-icons/react/dist/ssr";
+import { TargetIcon as Target } from "@phosphor-icons/react/dist/ssr";
+import { TrendUpIcon as TrendUp } from "@phosphor-icons/react/dist/ssr";
+import { UsersIcon as Users } from "@phosphor-icons/react/dist/ssr";
+import { Button } from "@/components/ds/button";
+import { Card } from "@/components/ds/card";
 import { formatNumber } from "@/lib/formatters";
 
 interface GoalAnalyticsProps {
@@ -33,10 +33,10 @@ export function GoalAnalytics({
 				<div className="grid grid-cols-1 gap-4 md:grid-cols-3">
 					{[...new Array(3)].map((_, i) => (
 						<Card className="animate-pulse rounded" key={i}>
-							<CardContent className="p-6">
+							<Card.Content className="p-6">
 								<div className="mb-2 h-4 w-24 rounded bg-muted" />
 								<div className="h-8 w-16 rounded bg-muted" />
-							</CardContent>
+							</Card.Content>
 						</Card>
 					))}
 				</div>
@@ -47,7 +47,7 @@ export function GoalAnalytics({
 	if (error) {
 		return (
 			<Card className="rounded border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950">
-				<CardContent className="pt-6">
+				<Card.Content className="pt-6">
 					<div className="flex items-center justify-between">
 						<div>
 							<p className="font-medium text-red-600">
@@ -59,13 +59,13 @@ export function GoalAnalytics({
 							className="gap-2"
 							onClick={onRetry}
 							size="sm"
-							variant="outline"
+							variant="secondary"
 						>
 							<ArrowClockwise size={16} weight="duotone" />
 							Retry
 						</Button>
 					</div>
-				</CardContent>
+				</Card.Content>
 			</Card>
 		);
 	}
@@ -73,11 +73,11 @@ export function GoalAnalytics({
 	if (!(data?.success && data.data)) {
 		return (
 			<Card className="rounded">
-				<CardContent className="p-6">
+				<Card.Content className="p-6">
 					<p className="text-center text-muted-foreground">
 						No analytics data available
 					</p>
-				</CardContent>
+				</Card.Content>
 			</Card>
 		);
 	}
@@ -88,7 +88,7 @@ export function GoalAnalytics({
 		<div className="space-y-4">
 			<div className="grid grid-cols-1 gap-4 md:grid-cols-3">
 				<Card className="rounded">
-					<CardContent className="p-6">
+					<Card.Content className="p-6">
 						<div className="flex items-center gap-3">
 							<div className="flex size-10 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/20">
 								<Users className="text-foreground" size={20} weight="duotone" />
@@ -102,11 +102,11 @@ export function GoalAnalytics({
 								</p>
 							</div>
 						</div>
-					</CardContent>
+					</Card.Content>
 				</Card>
 
 				<Card className="rounded">
-					<CardContent className="p-6">
+					<Card.Content className="p-6">
 						<div className="flex items-center gap-3">
 							<div className="flex size-10 items-center justify-center rounded-lg bg-green-100 dark:bg-green-900/20">
 								<Target
@@ -124,11 +124,11 @@ export function GoalAnalytics({
 								</p>
 							</div>
 						</div>
-					</CardContent>
+					</Card.Content>
 				</Card>
 
 				<Card className="rounded">
-					<CardContent className="p-6">
+					<Card.Content className="p-6">
 						<div className="flex items-center gap-3">
 							<div className="flex size-10 items-center justify-center rounded-lg bg-purple-100 dark:bg-purple-900/20">
 								<TrendUp
@@ -146,15 +146,15 @@ export function GoalAnalytics({
 								</p>
 							</div>
 						</div>
-					</CardContent>
+					</Card.Content>
 				</Card>
 			</div>
 
 			<Card className="rounded">
-				<CardHeader className="pb-3">
-					<CardTitle className="text-lg">Goal Performance</CardTitle>
-				</CardHeader>
-				<CardContent>
+				<Card.Header className="pb-3">
+					<Card.Title className="text-lg">Goal Performance</Card.Title>
+				</Card.Header>
+				<Card.Content>
 					<div className="space-y-4">
 						<div className="rounded-lg bg-muted/30 p-4">
 							<div className="mb-2 flex items-center justify-between">
@@ -199,7 +199,7 @@ export function GoalAnalytics({
 							</div>
 						)}
 					</div>
-				</CardContent>
+				</Card.Content>
 			</Card>
 		</div>
 	);

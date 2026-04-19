@@ -1,15 +1,15 @@
 "use client";
 
-import { ArrowSquareOutIcon } from "@phosphor-icons/react";
-import { CheckIcon } from "@phosphor-icons/react";
-import { ClockIcon } from "@phosphor-icons/react";
-import { CodeIcon } from "@phosphor-icons/react";
-import { CopyIcon } from "@phosphor-icons/react";
-import { GlobeIcon } from "@phosphor-icons/react";
-import { HashIcon } from "@phosphor-icons/react";
-import { LinkIcon } from "@phosphor-icons/react";
-import { StackIcon } from "@phosphor-icons/react";
-import { UserIcon } from "@phosphor-icons/react";
+import { ArrowSquareOutIcon } from "@phosphor-icons/react/dist/ssr";
+import { CheckIcon } from "@phosphor-icons/react/dist/ssr";
+import { ClockIcon } from "@phosphor-icons/react/dist/ssr";
+import { CodeIcon } from "@phosphor-icons/react/dist/ssr";
+import { CopyIcon } from "@phosphor-icons/react/dist/ssr";
+import { GlobeIcon } from "@phosphor-icons/react/dist/ssr";
+import { HashIcon } from "@phosphor-icons/react/dist/ssr";
+import { LinkIcon } from "@phosphor-icons/react/dist/ssr";
+import { StackIcon } from "@phosphor-icons/react/dist/ssr";
+import { UserIcon } from "@phosphor-icons/react/dist/ssr";
 import type { ReactNode } from "react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -20,22 +20,10 @@ import {
 	AccordionItem,
 	AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-	Sheet,
-	SheetBody,
-	SheetContent,
-	SheetDescription,
-	SheetFooter,
-	SheetHeader,
-	SheetTitle,
-} from "@/components/ui/sheet";
-import {
-	Tooltip,
-	TooltipContent,
-	TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Badge } from "@/components/ds/badge";
+import { Button } from "@/components/ds/button";
+import { Sheet } from "@/components/ds/sheet";
+import { Tooltip } from "@/components/ds/tooltip";
 import { formatDateTime, fromNow } from "@/lib/time";
 import { getDeviceIcon, getErrorTypeIcon } from "./error-icons";
 import type { RecentError } from "./types";
@@ -74,9 +62,8 @@ const CopyButton = ({
 	return (
 		<Button
 			aria-label={ariaLabel || `Copy ${section}`}
-			className="size-7 shrink-0"
+			className="size-7 shrink-0 p-0"
 			onClick={() => onCopy(text, section)}
-			size="icon"
 			variant="ghost"
 		>
 			{isCopied ? (
@@ -167,7 +154,7 @@ Context:
 				<Button
 					onClick={() => copyToClipboard(error.path, "url")}
 					size="sm"
-					variant="outline"
+					variant="secondary"
 				>
 					<LinkIcon className="size-3.5" weight="duotone" />
 					Copy URL
@@ -185,12 +172,15 @@ Context:
 			key: "open-page",
 			description: "Open this page in a new tab",
 			node: (
-				<Button asChild size="sm" variant="ghost">
-					<a href={error.path} rel="noopener noreferrer" target="_blank">
-						<ArrowSquareOutIcon className="size-3.5" weight="duotone" />
-						Open Page
-					</a>
-				</Button>
+				<a
+					className="inline-flex h-7 items-center justify-center gap-1.5 rounded-md bg-transparent px-2.5 font-medium text-muted-foreground text-xs transition-colors hover:bg-interactive-hover hover:text-foreground"
+					href={error.path}
+					rel="noopener noreferrer"
+					target="_blank"
+				>
+					<ArrowSquareOutIcon className="size-3.5" weight="duotone" />
+					Open Page
+				</a>
 			),
 		});
 	}
@@ -315,32 +305,34 @@ Context:
 
 	return (
 		<Sheet onOpenChange={onClose} open={isOpen}>
-			<SheetContent className="sm:max-w-xl" side="right">
-				<SheetHeader>
+			<Sheet.Content className="sm:max-w-xl" side="right">
+				<Sheet.Header>
 					<div className="flex items-center gap-4">
 						<div className="flex size-11 items-center justify-center rounded bg-accent">
 							{getErrorTypeIcon(type)}
 						</div>
 						<div className="min-w-0 flex-1">
 							<div className="flex items-center gap-2">
-								<SheetTitle className="text-foreground text-lg">
+								<Sheet.Title className="text-foreground text-lg">
 									{type}
-								</SheetTitle>
+								</Sheet.Title>
 								<Badge className={getSeverityColor(severity)}>{severity}</Badge>
 							</div>
-							<SheetDescription className="flex flex-wrap items-center gap-1.5 text-muted-foreground text-xs sm:text-sm">
+							<Sheet.Description className="flex flex-wrap items-center gap-1.5 text-muted-foreground text-xs sm:text-sm">
 								<ClockIcon className="size-3.5" weight="duotone" />
 								<span>{relativeTimeStr}</span>
 								<span className="text-muted-foreground/50">•</span>
 								<span className="font-mono">
 									{formatDateTime(error.timestamp)}
 								</span>
-							</SheetDescription>
+							</Sheet.Description>
 						</div>
 					</div>
-				</SheetHeader>
+				</Sheet.Header>
 
-				<SheetBody className="space-y-6">
+				<Sheet.Close />
+
+				<Sheet.Body className="space-y-6">
 					{quickActions.length > 0 && (
 						<section className="space-y-3">
 							<span className="font-medium text-muted-foreground text-xs uppercase">
@@ -348,11 +340,8 @@ Context:
 							</span>
 							<div className="flex flex-wrap gap-2">
 								{quickActions.map((action) => (
-									<Tooltip key={action.key}>
-										<TooltipTrigger asChild>{action.node}</TooltipTrigger>
-										<TooltipContent className="text-xs">
-											{action.description}
-										</TooltipContent>
+									<Tooltip content={action.description} key={action.key}>
+										{action.node}
 									</Tooltip>
 								))}
 							</div>
@@ -590,16 +579,16 @@ Context:
 							</div>
 						</section>
 					)}
-				</SheetBody>
+				</Sheet.Body>
 
-				<SheetFooter>
+				<Sheet.Footer>
 					<Button onClick={onClose} variant="ghost">
 						Close
 					</Button>
 					<Button
 						className="gap-2"
 						onClick={() => copyToClipboard(fullErrorInfo, "all")}
-						variant="outline"
+						variant="secondary"
 					>
 						{copiedSection === "all" ? (
 							<CheckIcon className="size-4 text-green-500" weight="bold" />
@@ -608,8 +597,8 @@ Context:
 						)}
 						Copy All
 					</Button>
-				</SheetFooter>
-			</SheetContent>
+				</Sheet.Footer>
+			</Sheet.Content>
 		</Sheet>
 	);
 };

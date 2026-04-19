@@ -2,7 +2,7 @@
 
 import type { IconProps } from "@phosphor-icons/react";
 import { cloneElement, memo } from "react";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@/components/ds/badge";
 import { cn } from "@/lib/utils";
 
 interface PageHeaderProps {
@@ -10,13 +10,11 @@ interface PageHeaderProps {
 	badgeContent?: string;
 	badgeVariant?:
 		| "default"
-		| "secondary"
+		| "primary"
+		| "success"
+		| "warning"
 		| "destructive"
-		| "outline"
-		| "green"
-		| "amber"
-		| "gray"
-		| "blue";
+		| "muted";
 	className?: string;
 	count?: number;
 	description: string;
@@ -32,7 +30,7 @@ export const PageHeader = memo(
 		icon,
 		className,
 		badgeContent,
-		badgeVariant = "secondary",
+		badgeVariant = "muted",
 		badgeClassName,
 		right,
 		count,

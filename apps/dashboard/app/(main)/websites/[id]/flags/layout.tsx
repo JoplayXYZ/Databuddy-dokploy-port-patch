@@ -12,13 +12,9 @@ import { useAtom } from "jotai";
 import { useParams, usePathname } from "next/navigation";
 import { useCallback, useMemo } from "react";
 import { PageNavigation } from "@/components/layout/page-navigation";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import {
-	Tooltip,
-	TooltipContent,
-	TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Badge } from "@/components/ds/badge";
+import { Skeleton } from "@/components/ds/skeleton";
+import { Tooltip } from "@/components/ds/tooltip";
 import { useHydrated } from "@/hooks/use-hydrated";
 import { useWebsite } from "@/hooks/use-websites";
 import { orpc } from "@/lib/orpc";
@@ -237,27 +233,32 @@ export default function FlagsLayout({
 							{isExperimentOn ? (
 								<Badge variant="destructive">Red Team</Badge>
 							) : (
-								<Badge variant="blue">Blue Team</Badge>
+								<Badge
+									className="bg-blue-500/15 text-blue-600 dark:text-blue-400"
+									variant="default"
+								>
+									Blue Team
+								</Badge>
 							)}
 						</div>
-						<Tooltip delayDuration={500}>
-							<TooltipTrigger asChild>
-								<button
-									className="flex items-center gap-1.5 text-foreground text-sm hover:text-foreground/80"
-									type="button"
-								>
-									<InfoIcon className="size-4" weight="duotone" />
-									<span className="hidden sm:inline">A/B Test Experiment</span>
-								</button>
-							</TooltipTrigger>
-							<TooltipContent className="max-w-xs">
+						<Tooltip
+							content={
 								<div className="space-y-2">
 									<p className="font-medium">A/B Test Experiment</p>
 									<p className="text-xs leading-relaxed">
 										Live demo: ~50% of users see Red Team, ~50% see Blue Team.
 									</p>
 								</div>
-							</TooltipContent>
+							}
+							delay={500}
+						>
+							<button
+								className="flex items-center gap-1.5 text-foreground text-sm hover:text-foreground/80"
+								type="button"
+							>
+								<InfoIcon className="size-4" weight="duotone" />
+								<span className="hidden sm:inline">A/B Test Experiment</span>
+							</button>
 						</Tooltip>
 					</div>
 				) : (

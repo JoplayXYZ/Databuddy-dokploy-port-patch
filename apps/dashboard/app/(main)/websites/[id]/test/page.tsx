@@ -1,18 +1,18 @@
 "use client";
 
 import type { DateRange } from "@databuddy/shared/types/analytics";
-import { CalendarDotsIcon } from "@phosphor-icons/react";
-import { FunnelIcon } from "@phosphor-icons/react";
-import { PencilSimpleIcon } from "@phosphor-icons/react";
-import { PlusIcon } from "@phosphor-icons/react";
+import { CalendarDotsIcon } from "@phosphor-icons/react/dist/ssr";
+import { FunnelIcon } from "@phosphor-icons/react/dist/ssr";
+import { PencilSimpleIcon } from "@phosphor-icons/react/dist/ssr";
+import { PlusIcon } from "@phosphor-icons/react/dist/ssr";
 import { useAtomValue } from "jotai";
 import { useParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import type { Layout } from "react-grid-layout";
 import GridLayout, { useContainerWidth } from "react-grid-layout";
 import { StatCard } from "@/components/analytics/stat-card";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ds/button";
+import { Card } from "@/components/ds/card";
 import {
 	formattedDateRangeAtom,
 	timeGranularityAtom,
@@ -154,7 +154,7 @@ export default function TestPage() {
 						{cards.length} card{cards.length === 1 ? "" : "s"}
 					</p>
 				</div>
-				<Button onClick={handleOpenAddSheet} size="sm" variant="outline">
+				<Button onClick={handleOpenAddSheet} size="sm" variant="secondary">
 					<PlusIcon className="mr-1.5 size-4" />
 					Add Card
 				</Button>

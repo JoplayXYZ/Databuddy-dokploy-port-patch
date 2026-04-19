@@ -22,16 +22,16 @@ import html from "shiki/langs/html.mjs";
 import tsx from "shiki/langs/tsx.mjs";
 import vesper from "shiki/themes/vesper.mjs";
 import { toast } from "sonner";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@/components/ds/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ds/card";
 import {
 	Collapsible,
 	CollapsibleContent,
 	CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { Switch } from "@/components/ui/switch";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Switch } from "@/components/ds/switch";
+import { Tabs } from "@/components/ds/tabs";
 import { orpc } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
 import {
@@ -183,7 +183,7 @@ function TrackingStatusBanner({
 					: "border-amber-500/30 bg-amber-500/5"
 			)}
 		>
-			<CardContent className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between">
+			<Card.Content className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between">
 				<div className="flex items-center gap-3">
 					<div
 						className={cn(
@@ -205,7 +205,7 @@ function TrackingStatusBanner({
 							<h3 className="font-semibold text-sm">
 								{isSetup ? "Tracking Active" : "Awaiting Installation"}
 							</h3>
-							<Badge variant={isSetup ? "green" : "amber"}>
+							<Badge variant={isSetup ? "success" : "warning"}>
 								{isSetup ? "Live" : "Pending"}
 							</Badge>
 						</div>
@@ -229,7 +229,7 @@ function TrackingStatusBanner({
 					/>
 					{isRefreshing ? "Checking…" : "Check Status"}
 				</Button>
-			</CardContent>
+			</Card.Content>
 		</Card>
 	);
 }
@@ -256,19 +256,19 @@ function InstallationStep({
 
 	return (
 		<div className="space-y-4">
-			<Tabs className="w-full" defaultValue="script" variant="underline">
-				<TabsList>
-					<TabsTrigger value="script">
+			<Tabs className="w-full" defaultValue="script">
+				<Tabs.List>
+					<Tabs.Tab value="script">
 						<CodeIcon className="size-3.5" weight="duotone" />
 						Script Tag
-					</TabsTrigger>
-					<TabsTrigger value="npm">
+					</Tabs.Tab>
+					<Tabs.Tab value="npm">
 						<PackageIcon className="size-3.5" weight="duotone" />
 						SDK Package
-					</TabsTrigger>
-				</TabsList>
+					</Tabs.Tab>
+				</Tabs.List>
 
-				<TabsContent className="mt-4 space-y-3" value="script">
+				<Tabs.Panel className="mt-4 space-y-3" value="script">
 					<p className="text-muted-foreground text-sm">
 						Add this script to the{" "}
 						<code className="rounded bg-accent px-1.5 py-0.5 font-mono text-xs">
@@ -298,27 +298,23 @@ function InstallationStep({
 							installation.
 						</p>
 					</div>
-				</TabsContent>
+				</Tabs.Panel>
 
-				<TabsContent className="mt-4 space-y-4" value="npm">
+				<Tabs.Panel className="mt-4 space-y-4" value="npm">
 					<div className="space-y-3">
 						<p className="text-muted-foreground text-sm">
 							Install the package using your preferred package manager:
 						</p>
-						<Tabs className="w-full" defaultValue="bun" variant="underline">
-							<TabsList>
+						<Tabs className="w-full" defaultValue="bun">
+							<Tabs.List>
 								{Object.keys(installCommands).map((manager) => (
-									<TabsTrigger
-										className="text-xs"
-										key={manager}
-										value={manager}
-									>
+									<Tabs.Tab className="text-xs" key={manager} value={manager}>
 										{manager}
-									</TabsTrigger>
+									</Tabs.Tab>
 								))}
-							</TabsList>
+							</Tabs.List>
 							{Object.entries(installCommands).map(([manager, command]) => (
-								<TabsContent className="mt-3" key={manager} value={manager}>
+								<Tabs.Panel className="mt-3" key={manager} value={manager}>
 									<CodeSnippet
 										code={command}
 										copied={copiedBlockId === `${manager}-install`}
@@ -330,7 +326,7 @@ function InstallationStep({
 											)
 										}
 									/>
-								</TabsContent>
+								</Tabs.Panel>
 							))}
 						</Tabs>
 					</div>
@@ -347,7 +343,7 @@ function InstallationStep({
 							}
 						/>
 					</div>
-				</TabsContent>
+				</Tabs.Panel>
 			</Tabs>
 
 			<div className="flex items-center gap-2 pt-2">
@@ -769,7 +765,7 @@ export function WebsiteTrackingSetupTab({ websiteId }: TrackingSetupTabProps) {
 			<div className="space-y-4">
 				{/* Step 1: Install */}
 				<Card className="gap-0 py-0">
-					<CardContent className="p-0">
+					<Card.Content className="p-0">
 						<div className="border-b p-4">
 							<StepIndicator
 								description="Add the tracking script to your website"
@@ -788,12 +784,12 @@ export function WebsiteTrackingSetupTab({ websiteId }: TrackingSetupTabProps) {
 								websiteId={websiteId}
 							/>
 						</div>
-					</CardContent>
+					</Card.Content>
 				</Card>
 
 				{/* Step 2: Configure */}
 				<Card className="gap-0 py-0">
-					<CardContent className="p-0">
+					<Card.Content className="p-0">
 						<div className="border-b p-4">
 							<StepIndicator
 								description="Choose what data to collect"
@@ -808,12 +804,12 @@ export function WebsiteTrackingSetupTab({ websiteId }: TrackingSetupTabProps) {
 								trackingOptions={trackingOptions}
 							/>
 						</div>
-					</CardContent>
+					</Card.Content>
 				</Card>
 
 				{/* Step 3: Diagnostics */}
 				<Card className="gap-0 py-0">
-					<CardContent className="p-0">
+					<Card.Content className="p-0">
 						<div className="border-b p-4">
 							<StepIndicator
 								description="Test your setup and troubleshoot issues"
@@ -824,7 +820,7 @@ export function WebsiteTrackingSetupTab({ websiteId }: TrackingSetupTabProps) {
 						<div className="p-4">
 							<DiagnosticsStep />
 						</div>
-					</CardContent>
+					</Card.Content>
 				</Card>
 			</div>
 

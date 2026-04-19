@@ -7,14 +7,8 @@ import { TrashIcon } from "@phosphor-icons/react";
 import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Card } from "@/components/ds/card";
+import { DropdownMenu } from "@/components/ds/dropdown-menu";
 import { orpc } from "@/lib/orpc";
 
 const granularityLabels: Record<string, string> = {
@@ -78,7 +72,7 @@ export function MonitorCard({
 
 	return (
 		<Card className="rounded">
-			<CardContent className="p-6">
+			<Card.Content className="p-6">
 				<div className="flex items-start justify-between">
 					<div className="flex items-start gap-4">
 						<div className="flex size-12 items-center justify-center rounded border bg-secondary-brighter">
@@ -113,17 +107,15 @@ export function MonitorCard({
 					</div>
 
 					<DropdownMenu>
-						<DropdownMenuTrigger asChild>
-							<Button size="sm" variant="ghost">
-								<DotsThreeIcon size={20} weight="duotone" />
-							</Button>
-						</DropdownMenuTrigger>
-						<DropdownMenuContent align="end">
-							<DropdownMenuItem onClick={onEditAction}>
+						<DropdownMenu.Trigger className="inline-flex h-8 items-center justify-center gap-1.5 rounded-md bg-transparent px-3 font-medium text-muted-foreground text-sm transition-all duration-(--duration-quick) ease-(--ease-smooth) hover:bg-interactive-hover hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 disabled:pointer-events-none disabled:opacity-50">
+							<DotsThreeIcon size={20} weight="duotone" />
+						</DropdownMenu.Trigger>
+						<DropdownMenu.Content align="end">
+							<DropdownMenu.Item onClick={onEditAction}>
 								<PencilIcon size={16} />
 								Edit
-							</DropdownMenuItem>
-							<DropdownMenuItem
+							</DropdownMenu.Item>
+							<DropdownMenu.Item
 								disabled={
 									isPausing ||
 									pauseMutation.isPending ||
@@ -133,18 +125,18 @@ export function MonitorCard({
 							>
 								<HeartbeatIcon size={16} />
 								{schedule.isPaused ? "Resume" : "Pause"}
-							</DropdownMenuItem>
-							<DropdownMenuItem
+							</DropdownMenu.Item>
+							<DropdownMenu.Item
 								className="text-destructive focus:text-destructive"
 								onClick={onDeleteAction}
 							>
 								<TrashIcon size={16} />
 								Delete
-							</DropdownMenuItem>
-						</DropdownMenuContent>
+							</DropdownMenu.Item>
+						</DropdownMenu.Content>
 					</DropdownMenu>
 				</div>
-			</CardContent>
+			</Card.Content>
 		</Card>
 	);
 }
