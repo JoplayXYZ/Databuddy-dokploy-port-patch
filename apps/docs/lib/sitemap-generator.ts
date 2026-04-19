@@ -33,6 +33,7 @@ const priorityRules = [
 	{ pattern: "/manifesto", priority: 0.65 },
 	{ pattern: "/sponsors", priority: 0.6 },
 	{ pattern: "/ambassadors", priority: 0.6 },
+	{ pattern: "/careers", priority: 0.6 },
 	{ pattern: "/privacy", priority: 0.5 },
 	{ pattern: "/terms", priority: 0.5 },
 	{ pattern: "/data-policy", priority: 0.5 },
@@ -89,7 +90,8 @@ function getChangeFrequency(url: string): "weekly" | "monthly" | "yearly" {
 	if (
 		url.includes("/contributors") ||
 		url.includes("/sponsors") ||
-		url.includes("/ambassadors")
+		url.includes("/ambassadors") ||
+		url.includes("/careers")
 	) {
 		return "monthly";
 	}
@@ -175,6 +177,7 @@ export async function generateSitemapEntries(): Promise<MetadataRoute.Sitemap> {
 			"/sponsors",
 			"/terms",
 			"/ambassadors",
+			"/careers",
 			"/data-policy",
 			"/dpa",
 		];
