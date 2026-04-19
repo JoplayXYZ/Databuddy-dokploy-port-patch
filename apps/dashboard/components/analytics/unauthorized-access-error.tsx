@@ -1,22 +1,16 @@
 "use client";
 
-import { WarningIcon } from "@phosphor-icons/react";
+import { WarningIcon } from "@phosphor-icons/react/dist/ssr";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
-} from "@/components/ui/card";
+import { Button } from "@/components/ds/button";
+import { Card } from "@/components/ds/card";
 
 export function UnauthorizedAccessError() {
 	const router = useRouter();
 
 	return (
 		<Card className="mx-auto my-8 w-full max-w-lg border-red-200 bg-red-50 dark:border-red-800/50 dark:bg-red-950/20">
-			<CardHeader className="pb-3">
+			<Card.Header className="pb-3">
 				<div className="flex items-center gap-3">
 					<div className="rounded-full bg-red-100 p-2.5 dark:bg-red-900/30">
 						<WarningIcon
@@ -26,14 +20,14 @@ export function UnauthorizedAccessError() {
 						/>
 					</div>
 					<div>
-						<CardTitle className="text-lg">Access Denied</CardTitle>
-						<CardDescription className="mt-1">
+						<Card.Title className="text-lg">Access Denied</Card.Title>
+						<Card.Description className="mt-1">
 							You don't have permission to view this website's analytics.
-						</CardDescription>
+						</Card.Description>
 					</div>
 				</div>
-			</CardHeader>
-			<CardContent className="pt-0">
+			</Card.Header>
+			<Card.Content className="pt-0">
 				<p className="mb-5 text-muted-foreground text-sm">
 					Contact the website owner if you think this is an error.
 				</p>
@@ -43,7 +37,7 @@ export function UnauthorizedAccessError() {
 				>
 					Back to Websites
 				</Button>
-			</CardContent>
+			</Card.Content>
 		</Card>
 	);
 }

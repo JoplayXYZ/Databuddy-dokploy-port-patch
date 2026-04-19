@@ -1,6 +1,6 @@
 import type { CellContext, ColumnDef } from "@tanstack/react-table";
 import type { ReactNode } from "react";
-import { PercentageBadge } from "@/components/ui/percentage-badge";
+import { PercentageBadge } from "@/components/ds/badge";
 import { formatNumber } from "@/lib/formatters";
 
 export interface IconTextEntry {

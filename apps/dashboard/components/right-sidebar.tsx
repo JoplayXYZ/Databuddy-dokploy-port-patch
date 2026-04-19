@@ -1,10 +1,9 @@
 import type { IconProps } from "@phosphor-icons/react";
 import { BookOpenIcon } from "@phosphor-icons/react";
-import type { VariantProps } from "class-variance-authority";
 import type { ComponentType } from "react";
-import { Badge, type badgeVariants } from "@/components/ui/badge";
+import { Badge } from "@/components/ds/badge";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@/components/ds/skeleton";
 import { Tip } from "@/components/ui/tip";
 import { cn } from "@/lib/utils";
 
@@ -29,7 +28,13 @@ export function RightSidebar({ children, className }: RightSidebarProps) {
 interface SectionProps {
 	badge?: {
 		label: string;
-		variant?: VariantProps<typeof badgeVariants>["variant"];
+		variant?:
+			| "default"
+			| "primary"
+			| "success"
+			| "warning"
+			| "destructive"
+			| "muted";
 	};
 	border?: boolean;
 	children: React.ReactNode;
@@ -50,7 +55,7 @@ function Section({
 				<div className="mb-3 flex items-center gap-2">
 					<h3 className="font-semibold">{title}</h3>
 					{badge && (
-						<Badge variant={badge.variant || "gray"}>{badge.label}</Badge>
+						<Badge variant={badge.variant || "muted"}>{badge.label}</Badge>
 					)}
 				</div>
 			)}
@@ -62,7 +67,13 @@ function Section({
 interface InfoCardProps {
 	badge?: {
 		label: string;
-		variant?: VariantProps<typeof badgeVariants>["variant"];
+		variant?:
+			| "default"
+			| "primary"
+			| "success"
+			| "warning"
+			| "destructive"
+			| "muted";
 	};
 	className?: string;
 	description?: string;
@@ -95,7 +106,7 @@ function InfoCard({
 				<div className="flex items-center gap-2">
 					<p className="truncate font-semibold">{title}</p>
 					{badge && (
-						<Badge variant={badge.variant || "gray"}>{badge.label}</Badge>
+						<Badge variant={badge.variant || "muted"}>{badge.label}</Badge>
 					)}
 				</div>
 				{description && (

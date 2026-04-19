@@ -1,18 +1,10 @@
 "use client";
 
-import { CircleNotchIcon } from "@phosphor-icons/react";
 import type { PreviewAttachResponse } from "autumn-js";
 import type React from "react";
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import {
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogFooter,
-	DialogHeader,
-	DialogTitle,
-} from "@/components/ui/dialog";
+import { Button } from "@/components/ds/button";
+import { Dialog } from "@/components/ds/dialog";
 import { cn } from "@/lib/utils";
 
 export interface AttachDialogProps {
@@ -33,30 +25,32 @@ export default function AttachDialog({
 
 	return (
 		<Dialog onOpenChange={setOpen} open={open}>
-			<DialogContent className="w-[95vw] max-w-md sm:w-full">
-				<DialogHeader>
-					<DialogTitle>Confirm Subscription</DialogTitle>
-					<DialogDescription>
+			<Dialog.Content className="w-[95vw] max-w-md sm:w-full">
+				<Dialog.Header>
+					<Dialog.Title>Confirm Subscription</Dialog.Title>
+					<Dialog.Description>
 						By clicking confirm, your payment method will be charged.
-					</DialogDescription>
-				</DialogHeader>
+					</Dialog.Description>
+				</Dialog.Header>
 
-				{preview.total > 0 && (
-					<div className="flex items-center justify-between rounded border bg-accent/50 px-3 py-2">
-						<span className="text-muted-foreground text-sm">Due today</span>
-						<span className="font-semibold">
-							{new Intl.NumberFormat("en-US", {
-								style: "currency",
-								currency: preview.currency,
-							}).format(preview.total)}
-						</span>
-					</div>
-				)}
+				<Dialog.Body>
+					{preview.total > 0 && (
+						<div className="flex items-center justify-between rounded border bg-accent/50 px-3 py-2">
+							<span className="text-muted-foreground text-sm">Due today</span>
+							<span className="font-semibold">
+								{new Intl.NumberFormat("en-US", {
+									style: "currency",
+									currency: preview.currency,
+								}).format(preview.total)}
+							</span>
+						</div>
+					)}
+				</Dialog.Body>
 
-				<DialogFooter>
+				<Dialog.Footer>
 					<Button
 						className="w-full"
-						disabled={loading}
+						loading={loading}
 						onClick={async () => {
 							setLoading(true);
 							try {
@@ -67,13 +61,11 @@ export default function AttachDialog({
 							}
 						}}
 					>
-						{loading && (
-							<CircleNotchIcon className="mr-2 size-4 animate-spin" />
-						)}
 						Confirm Purchase
 					</Button>
-				</DialogFooter>
-			</DialogContent>
+				</Dialog.Footer>
+				<Dialog.Close />
+			</Dialog.Content>
 		</Dialog>
 	);
 }
@@ -125,22 +117,20 @@ export const QuantityInput = ({
 		>
 			<div className="flex items-center gap-1">
 				<Button
-					className="size-6 pb-0.5"
+					className="size-6 p-0 pb-0.5"
 					disabled={currentValue <= 0}
 					onClick={() =>
 						currentValue > 0 && handleValueChange(currentValue - 1)
 					}
-					size="icon"
-					variant="outline"
+					variant="secondary"
 				>
 					-
 				</Button>
 				<span className="w-8 text-center text-foreground">{currentValue}</span>
 				<Button
-					className="size-6 pb-0.5"
+					className="size-6 p-0 pb-0.5"
 					onClick={() => handleValueChange(currentValue + 1)}
-					size="icon"
-					variant="outline"
+					variant="secondary"
 				>
 					+
 				</Button>
@@ -164,7 +154,7 @@ export const PricingDialogButton = ({
 	className,
 }: {
 	children: React.ReactNode;
-	size?: "sm" | "lg" | "default" | "icon";
+	size?: "sm" | "lg";
 	onClick: () => void;
 	disabled?: boolean;
 	className?: string;

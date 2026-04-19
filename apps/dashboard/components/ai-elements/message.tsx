@@ -23,12 +23,7 @@ import {
 } from "@/components/ai-elements/markdown-table";
 import { Button } from "@/components/ui/button";
 import { ButtonGroup, ButtonGroupText } from "@/components/ui/button-group";
-import {
-	Tooltip,
-	TooltipContent,
-	TooltipProvider,
-	TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip } from "@/components/ds/tooltip";
 import { cn } from "@/lib/utils";
 
 export type MessageProps = HTMLAttributes<HTMLDivElement> & {
@@ -99,16 +94,7 @@ export const MessageAction = ({
 	);
 
 	if (tooltip) {
-		return (
-			<TooltipProvider>
-				<Tooltip>
-					<TooltipTrigger asChild>{button}</TooltipTrigger>
-					<TooltipContent>
-						<p>{tooltip}</p>
-					</TooltipContent>
-				</Tooltip>
-			</TooltipProvider>
-		);
+		return <Tooltip content={<p>{tooltip}</p>}>{button}</Tooltip>;
 	}
 
 	return button;
@@ -402,15 +388,10 @@ export function MessageAttachment({
 				</>
 			) : (
 				<>
-					<Tooltip>
-						<TooltipTrigger asChild>
-							<div className="flex size-full shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-								<PaperclipIcon className="size-4" />
-							</div>
-						</TooltipTrigger>
-						<TooltipContent>
-							<p>{attachmentLabel}</p>
-						</TooltipContent>
+					<Tooltip content={<p>{attachmentLabel}</p>}>
+						<div className="flex size-full shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+							<PaperclipIcon className="size-4" />
+						</div>
 					</Tooltip>
 					{onRemove && (
 						<Button

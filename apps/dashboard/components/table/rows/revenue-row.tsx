@@ -3,7 +3,7 @@ import { MapPinIcon } from "@phosphor-icons/react";
 import { QuestionIcon } from "@phosphor-icons/react";
 import type { CellContext, ColumnDef } from "@tanstack/react-table";
 import { BrowserIcon, CountryFlag, OSIcon } from "@/components/icon";
-import { PercentageBadge } from "@/components/ui/percentage-badge";
+import { PercentageBadge } from "@/components/ds/badge";
 import { formatNumber } from "@/lib/formatters";
 
 export interface RevenueEntry {

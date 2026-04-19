@@ -1,14 +1,6 @@
 import { Handle, Position } from "@xyflow/react";
 import type { ComponentProps } from "react";
-import {
-	Card,
-	CardAction,
-	CardContent,
-	CardDescription,
-	CardFooter,
-	CardHeader,
-	CardTitle,
-} from "@/components/ui/card";
+import { Card } from "@/components/ds/card";
 import { cn } from "@/lib/utils";
 
 export type NodeProps = ComponentProps<typeof Card> & {
@@ -32,39 +24,41 @@ export const Node = ({ handles, className, ...props }: NodeProps) => (
 	</Card>
 );
 
-export type NodeHeaderProps = ComponentProps<typeof CardHeader>;
+export type NodeHeaderProps = ComponentProps<typeof Card.Header>;
 
 export const NodeHeader = ({ className, ...props }: NodeHeaderProps) => (
-	<CardHeader
+	<Card.Header
 		className={cn("gap-0.5 rounded-t-md border-b bg-secondary p-3!", className)}
 		{...props}
 	/>
 );
 
-export type NodeTitleProps = ComponentProps<typeof CardTitle>;
+export type NodeTitleProps = ComponentProps<typeof Card.Title>;
 
-export const NodeTitle = (props: NodeTitleProps) => <CardTitle {...props} />;
+export const NodeTitle = (props: NodeTitleProps) => <Card.Title {...props} />;
 
-export type NodeDescriptionProps = ComponentProps<typeof CardDescription>;
+export type NodeDescriptionProps = ComponentProps<typeof Card.Description>;
 
 export const NodeDescription = (props: NodeDescriptionProps) => (
-	<CardDescription {...props} />
+	<Card.Description {...props} />
 );
 
-export type NodeActionProps = ComponentProps<typeof CardAction>;
+export type NodeActionProps = ComponentProps<typeof Card.Action>;
 
-export const NodeAction = (props: NodeActionProps) => <CardAction {...props} />;
+export const NodeAction = (props: NodeActionProps) => (
+	<Card.Action {...props} />
+);
 
-export type NodeContentProps = ComponentProps<typeof CardContent>;
+export type NodeContentProps = ComponentProps<typeof Card.Content>;
 
 export const NodeContent = ({ className, ...props }: NodeContentProps) => (
-	<CardContent className={cn("p-3", className)} {...props} />
+	<Card.Content className={cn("p-3", className)} {...props} />
 );
 
-export type NodeFooterProps = ComponentProps<typeof CardFooter>;
+export type NodeFooterProps = ComponentProps<typeof Card.Footer>;
 
 export const NodeFooter = ({ className, ...props }: NodeFooterProps) => (
-	<CardFooter
+	<Card.Footer
 		className={cn("rounded-b-md border-t bg-secondary p-3!", className)}
 		{...props}
 	/>

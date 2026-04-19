@@ -22,7 +22,7 @@ import { Checkbox } from "@/components/ds/checkbox";
 import { Dialog } from "@/components/ds/dialog";
 import { Divider } from "@/components/ds/divider";
 import { Field } from "@/components/ds/field";
-import { Input } from "@/components/ds/input";
+import { Input } from "@/components/ui/input";
 import { Sheet } from "@/components/ds/sheet";
 import { Switch } from "@/components/ds/switch";
 import { Text } from "@/components/ds/text";

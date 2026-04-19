@@ -14,7 +14,7 @@ import {
 	HoverCardContent,
 	HoverCardTrigger,
 } from "@/components/ui/hover-card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@/components/ds/skeleton";
 import dayjs from "@/lib/dayjs";
 import { formatNumber } from "@/lib/formatters";
 import { cn } from "@/lib/utils";

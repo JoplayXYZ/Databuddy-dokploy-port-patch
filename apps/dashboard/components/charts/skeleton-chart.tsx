@@ -1,4 +1,4 @@
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@/components/ds/skeleton";
 import { chartSurfaceClassName } from "@/lib/chart-presentation";
 import { cn } from "@/lib/utils";
 

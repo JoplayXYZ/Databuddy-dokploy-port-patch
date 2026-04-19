@@ -1,12 +1,12 @@
 "use client";
 
 import { trackError } from "@databuddy/sdk";
-import { ArrowLeftIcon } from "@phosphor-icons/react";
-import { WarningCircleIcon } from "@phosphor-icons/react";
+import { ArrowLeftIcon } from "@phosphor-icons/react/dist/ssr";
+import { WarningCircleIcon } from "@phosphor-icons/react/dist/ssr";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ds/button";
+import { Card } from "@/components/ds/card";
 
 interface ErrorBoundaryProps {
 	children: React.ReactNode;
@@ -47,7 +47,7 @@ export function ErrorBoundary({ children, fallback }: ErrorBoundaryProps) {
 		return (
 			<div className="flex h-full min-h-[400px] w-full items-center justify-center p-6">
 				<Card className="flex w-full max-w-md flex-col items-center justify-center rounded border-none bg-transparent shadow-none">
-					<CardContent className="flex flex-col items-center justify-center px-6 py-12 text-center sm:px-8 sm:py-14 lg:px-12">
+					<Card.Content className="flex flex-col items-center justify-center px-6 py-12 text-center sm:px-8 sm:py-14 lg:px-12">
 						<div
 							aria-hidden="true"
 							className="flex size-12 items-center justify-center rounded-2xl bg-destructive/10"
@@ -84,7 +84,7 @@ export function ErrorBoundary({ children, fallback }: ErrorBoundaryProps) {
 								<Button
 									className="flex-1"
 									onClick={() => router.back()}
-									variant="outline"
+									variant="secondary"
 								>
 									<ArrowLeftIcon className="mr-2 size-4" weight="duotone" />
 									Go Back
@@ -100,19 +100,18 @@ export function ErrorBoundary({ children, fallback }: ErrorBoundaryProps) {
 									setHasError(false);
 									setError(null);
 								}}
-								variant="default"
 							>
 								Try Again
 							</Button>
 							<Button
 								className={canGoBack ? "flex-1" : "w-full"}
 								onClick={() => window.location.reload()}
-								variant="outline"
+								variant="secondary"
 							>
 								Reload Page
 							</Button>
 						</div>
-					</CardContent>
+					</Card.Content>
 				</Card>
 			</div>
 		);

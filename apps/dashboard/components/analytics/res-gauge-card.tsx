@@ -7,13 +7,9 @@ import { WarningCircleIcon } from "@phosphor-icons/react";
 import { WarningIcon } from "@phosphor-icons/react";
 import { memo, useMemo } from "react";
 import { GaugeChart, type GaugeRating } from "@/components/charts/gauge-chart";
-import { Card, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import {
-	Tooltip,
-	TooltipContent,
-	TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Card } from "@/components/ds/card";
+import { Skeleton } from "@/components/ds/skeleton";
+import { Tooltip } from "@/components/ds/tooltip";
 import { cn } from "@/lib/utils";
 import {
 	calculateRES,
@@ -105,37 +101,37 @@ function MetricBreakdownItem({ data }: { data: MetricScoreData }) {
 					: "text-muted-foreground";
 
 	return (
-		<Tooltip>
-			<TooltipTrigger asChild>
-				<div className="flex items-center justify-between gap-2 rounded px-1.5 py-1 transition-colors hover:bg-accent">
-					<div className="flex items-center gap-1.5">
-						<span className="font-medium text-foreground text-xs">
-							{data.metric}
-						</span>
-						<span className="text-muted-foreground text-xs">
-							({weightPercent}%)
-						</span>
-					</div>
-					<div className="flex items-center gap-2">
-						<span
-							className={cn("font-medium text-xs tabular-nums", statusColor)}
-						>
-							{formatValue(data.rawValue)}
-						</span>
-						{data.score !== null && (
-							<span className="text-muted-foreground text-xs tabular-nums">
-								{data.score}
-							</span>
-						)}
-					</div>
+		<Tooltip
+			content={
+				<>
+					<p className="font-medium text-sm">{label?.name || data.metric}</p>
+					<p className="text-muted-foreground text-xs">
+						Score: {data.score ?? "N/A"} · Weight: {weightPercent}%
+					</p>
+				</>
+			}
+			side="left"
+		>
+			<div className="flex items-center justify-between gap-2 rounded px-1.5 py-1 transition-colors hover:bg-accent">
+				<div className="flex items-center gap-1.5">
+					<span className="font-medium text-foreground text-xs">
+						{data.metric}
+					</span>
+					<span className="text-muted-foreground text-xs">
+						({weightPercent}%)
+					</span>
 				</div>
-			</TooltipTrigger>
-			<TooltipContent side="left">
-				<p className="font-medium text-sm">{label?.name || data.metric}</p>
-				<p className="text-muted-foreground text-xs">
-					Score: {data.score ?? "N/A"} · Weight: {weightPercent}%
-				</p>
-			</TooltipContent>
+				<div className="flex items-center gap-2">
+					<span className={cn("font-medium text-xs tabular-nums", statusColor)}>
+						{formatValue(data.rawValue)}
+					</span>
+					{data.score !== null && (
+						<span className="text-muted-foreground text-xs tabular-nums">
+							{data.score}
+						</span>
+					)}
+				</div>
+			</div>
 		</Tooltip>
 	);
 }
@@ -143,7 +139,7 @@ function MetricBreakdownItem({ data }: { data: MetricScoreData }) {
 function RESGaugeCardSkeleton({ className }: { className?: string }) {
 	return (
 		<Card className={cn("gap-0 border-l-4 py-0", className)}>
-			<CardContent className="flex items-center gap-4 p-4">
+			<Card.Content className="flex items-center gap-4 p-4">
 				<Skeleton className="size-24 shrink-0 rounded-full" />
 				<div className="flex-1 space-y-2">
 					<Skeleton className="h-5 w-40" />
@@ -155,7 +151,7 @@ function RESGaugeCardSkeleton({ className }: { className?: string }) {
 						<Skeleton className="h-3 w-full" />
 					</div>
 				</div>
-			</CardContent>
+			</Card.Content>
 		</Card>
 	);
 }
@@ -201,7 +197,7 @@ export const RESGaugeCard = memo(function RESGaugeCard({
 				className
 			)}
 		>
-			<CardContent className="flex items-stretch gap-4 p-4">
+			<Card.Content className="flex items-stretch gap-4 p-4">
 				<div className="flex shrink-0 flex-col items-center justify-center">
 					<GaugeChart
 						formatValue={(v) => String(Math.round(v))}
@@ -310,7 +306,7 @@ export const RESGaugeCard = memo(function RESGaugeCard({
 						</div>
 					</div>
 				)}
-			</CardContent>
+			</Card.Content>
 		</Card>
 	);
 });

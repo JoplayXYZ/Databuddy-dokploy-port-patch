@@ -1,25 +1,20 @@
 "use client";
 
-import { CheckIcon } from "@phosphor-icons/react";
-import { CopyIcon } from "@phosphor-icons/react";
-import { HeartbeatIcon } from "@phosphor-icons/react";
+import { CheckIcon } from "@phosphor-icons/react/dist/ssr";
+import { CopyIcon } from "@phosphor-icons/react/dist/ssr";
+import { HeartbeatIcon } from "@phosphor-icons/react/dist/ssr";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Badge } from "@/components/ui/badge";
-import {
-	Dialog,
-	DialogContent,
-	DialogHeader,
-	DialogTitle,
-} from "@/components/ui/dialog";
+import { Badge } from "@/components/ds/badge";
+import { Dialog } from "@/components/ds/dialog";
 import {
 	Drawer,
 	DrawerContent,
 	DrawerHeader,
 	DrawerTitle,
 } from "@/components/ui/drawer";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@/components/ds/skeleton";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { getFeatureLabel } from "@/lib/feature-gates";
 import { orpc } from "@/lib/orpc";
@@ -57,7 +52,7 @@ function InviteLinkRow({ link }: { link: InviteLink }) {
 			</code>
 
 			{isRedeemed ? (
-				<Badge variant="green">Claimed</Badge>
+				<Badge variant="success">Claimed</Badge>
 			) : (
 				<button
 					aria-label="Copy invite link"
@@ -152,12 +147,13 @@ export function FeatureInviteDialog({
 
 	return (
 		<Dialog onOpenChange={onOpenChangeAction} open={open}>
-			<DialogContent className="w-[95vw] max-w-sm sm:w-full">
-				<DialogHeader>
-					<DialogTitle>Your Invites</DialogTitle>
-				</DialogHeader>
-				{content}
-			</DialogContent>
+			<Dialog.Content className="w-[95vw] max-w-sm sm:w-full">
+				<Dialog.Close />
+				<Dialog.Header>
+					<Dialog.Title>Your Invites</Dialog.Title>
+				</Dialog.Header>
+				<Dialog.Body>{content}</Dialog.Body>
+			</Dialog.Content>
 		</Dialog>
 	);
 }

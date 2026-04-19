@@ -1,25 +1,11 @@
 "use client";
 
-import { ArrowSquareOutIcon } from "@phosphor-icons/react";
-import { WarningIcon } from "@phosphor-icons/react";
+import { ArrowSquareOutIcon } from "@phosphor-icons/react/dist/ssr";
+import { WarningIcon } from "@phosphor-icons/react/dist/ssr";
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import {
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogFooter,
-	DialogHeader,
-	DialogTitle,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "@/components/ui/select";
+import { Button } from "@/components/ds/button";
+import { Dialog } from "@/components/ds/dialog";
+import { Select } from "@/components/ds/select";
 import { type Organization, useOrganizations } from "@/hooks/use-organizations";
 
 function getDicebearUrl(seed: string): string {
@@ -81,17 +67,17 @@ export function TransferToOrgDialog({
 
 	return (
 		<Dialog onOpenChange={handleClose} open={open}>
-			<DialogContent className="sm:max-w-md">
-				<DialogHeader>
-					<DialogTitle>{title}</DialogTitle>
-					<DialogDescription>{description}</DialogDescription>
-				</DialogHeader>
+			<Dialog.Content className="sm:max-w-md">
+				<Dialog.Header>
+					<Dialog.Title>{title}</Dialog.Title>
+					<Dialog.Description>{description}</Dialog.Description>
+				</Dialog.Header>
 
-				<div className="space-y-4">
+				<Dialog.Body className="space-y-4">
 					<div className="space-y-2">
-						<Label className="text-muted-foreground text-xs">
+						<span className="font-medium text-foreground text-xs">
 							Current Workspace
-						</Label>
+						</span>
 						<div className="flex items-center gap-2.5 rounded border bg-secondary p-2.5">
 							<img
 								alt={currentOrg?.name ?? "Current workspace"}
@@ -109,19 +95,30 @@ export function TransferToOrgDialog({
 					</div>
 
 					<div className="space-y-2">
-						<Label htmlFor="target-org">Transfer to</Label>
+						<label
+							className="font-medium text-foreground text-xs"
+							htmlFor="target-org"
+						>
+							Transfer to
+						</label>
 						<Select
 							disabled={isLoadingOrgs || availableOrgs.length === 0}
-							onValueChange={setSelectedOrgId}
+							onValueChange={(v) => setSelectedOrgId(String(v))}
 							value={selectedOrgId}
 						>
-							<SelectTrigger className="w-full" id="target-org">
-								<SelectValue placeholder="Choose a workspace" />
-							</SelectTrigger>
-							<SelectContent>
+							<Select.Trigger id="target-org">
+								{selectedOrgId ? (
+									<Select.Value />
+								) : (
+									<span className="text-muted-foreground">
+										Choose a workspace
+									</span>
+								)}
+							</Select.Trigger>
+							<Select.Content>
 								{availableOrgs.length > 0 ? (
 									availableOrgs.map((org: Organization) => (
-										<SelectItem key={org.id} value={org.id}>
+										<Select.Item key={org.id} value={org.id}>
 											<div className="flex items-center gap-2">
 												<img
 													alt={org.name}
@@ -132,14 +129,14 @@ export function TransferToOrgDialog({
 												/>
 												<span>{org.name}</span>
 											</div>
-										</SelectItem>
+										</Select.Item>
 									))
 								) : (
-									<SelectItem disabled value="no-orgs">
+									<Select.Item disabled value="no-orgs">
 										No workspaces available
-									</SelectItem>
+									</Select.Item>
 								)}
-							</SelectContent>
+							</Select.Content>
 						</Select>
 					</div>
 
@@ -163,36 +160,27 @@ export function TransferToOrgDialog({
 							</p>
 						</div>
 					) : null}
-				</div>
+				</Dialog.Body>
 
-				<DialogFooter>
+				<Dialog.Footer>
 					<Button
 						disabled={isPending}
 						onClick={() => handleClose(false)}
-						type="button"
-						variant="outline"
+						variant="secondary"
 					>
 						Cancel
 					</Button>
 					<Button
-						disabled={!selectedOrgId || isPending}
+						disabled={!selectedOrgId}
+						loading={isPending}
 						onClick={handleTransfer}
-						type="button"
 					>
-						{isPending ? (
-							<>
-								<div className="mr-2 size-4 animate-spin rounded-full border-2 border-white/20 border-t-white" />
-								Transferring…
-							</>
-						) : (
-							<>
-								<ArrowSquareOutIcon className="mr-2 size-4" weight="fill" />
-								Transfer
-							</>
-						)}
+						<ArrowSquareOutIcon className="size-4" weight="fill" />
+						Transfer
 					</Button>
-				</DialogFooter>
-			</DialogContent>
+				</Dialog.Footer>
+				<Dialog.Close />
+			</Dialog.Content>
 		</Dialog>
 	);
 }

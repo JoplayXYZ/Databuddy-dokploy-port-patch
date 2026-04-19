@@ -1,6 +1,6 @@
 import { ClockIcon } from "@phosphor-icons/react";
 import type { CellContext, ColumnDef } from "@tanstack/react-table";
-import { PercentageBadge } from "@/components/ui/percentage-badge";
+import { PercentageBadge } from "@/components/ds/badge";
 import dayjs from "@/lib/dayjs";
 import { formatNumber } from "@/lib/formatters";
 

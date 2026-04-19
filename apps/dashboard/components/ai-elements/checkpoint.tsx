@@ -3,12 +3,8 @@
 import { BookmarkIcon, type LucideProps } from "lucide-react";
 import type { ComponentProps, HTMLAttributes } from "react";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import {
-	Tooltip,
-	TooltipContent,
-	TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Divider } from "@/components/ds/divider";
+import { Tooltip } from "@/components/ds/tooltip";
 import { cn } from "@/lib/utils";
 
 export type CheckpointProps = HTMLAttributes<HTMLDivElement>;
@@ -26,7 +22,7 @@ export const Checkpoint = ({
 		{...props}
 	>
 		{children}
-		<Separator />
+		<Divider />
 	</div>
 );
 
@@ -54,15 +50,10 @@ export const CheckpointTrigger = ({
 	...props
 }: CheckpointTriggerProps) =>
 	tooltip ? (
-		<Tooltip>
-			<TooltipTrigger asChild>
-				<Button size={size} type="button" variant={variant} {...props}>
-					{children}
-				</Button>
-			</TooltipTrigger>
-			<TooltipContent align="start" side="bottom">
-				{tooltip}
-			</TooltipContent>
+		<Tooltip content={tooltip} side="bottom">
+			<Button size={size} type="button" variant={variant} {...props}>
+				{children}
+			</Button>
 		</Tooltip>
 	) : (
 		<Button size={size} type="button" variant={variant} {...props}>

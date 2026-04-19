@@ -9,7 +9,7 @@ import {
 	useEffect,
 	useState,
 } from "react";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@/components/ds/badge";
 import {
 	Carousel,
 	type CarouselApi,
@@ -62,7 +62,7 @@ export const InlineCitationCardTrigger = ({
 	<HoverCardTrigger asChild>
 		<Badge
 			className={cn("ml-1 rounded-full", className)}
-			variant="secondary"
+			variant="muted"
 			{...props}
 		>
 			{sources[0] ? (

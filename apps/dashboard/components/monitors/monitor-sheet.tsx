@@ -1,9 +1,9 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CodeIcon } from "@phosphor-icons/react";
-import { GearIcon } from "@phosphor-icons/react";
-import { InfoIcon } from "@phosphor-icons/react";
+import { CodeIcon } from "@phosphor-icons/react/dist/ssr";
+import { GearIcon } from "@phosphor-icons/react/dist/ssr";
+import { InfoIcon } from "@phosphor-icons/react/dist/ssr";
 import { useMutation } from "@tanstack/react-query";
 import clsx from "clsx";
 import { useEffect, useState } from "react";
@@ -11,7 +11,7 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { useOrganizationsContext } from "@/components/providers/organizations-provider";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ds/button";
 import {
 	Form,
 	FormControl,
@@ -21,21 +21,9 @@ import {
 	FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import {
-	Sheet,
-	SheetBody,
-	SheetContent,
-	SheetDescription,
-	SheetFooter,
-	SheetHeader,
-	SheetTitle,
-} from "@/components/ui/sheet";
-import { Switch } from "@/components/ui/switch";
-import {
-	Tooltip,
-	TooltipContent,
-	TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Sheet } from "@/components/ds/sheet";
+import { Switch } from "@/components/ds/switch";
+import { Tooltip } from "@/components/ds/tooltip";
 import { useWebsite } from "@/hooks/use-websites";
 import { orpc } from "@/lib/orpc";
 import { CollapsibleSection } from "./collapsible-section";
@@ -209,24 +197,25 @@ export function MonitorSheet({
 
 	return (
 		<Sheet onOpenChange={onCloseAction} open={open}>
-			<SheetContent className="w-full sm:max-w-xl">
-				<SheetHeader>
-					<SheetTitle>
+			<Sheet.Content className="w-full sm:max-w-xl">
+				<Sheet.Close />
+				<Sheet.Header>
+					<Sheet.Title>
 						{isEditing ? "Edit Monitor" : "Create Monitor"}
-					</SheetTitle>
-					<SheetDescription>
+					</Sheet.Title>
+					<Sheet.Description>
 						{isEditing
 							? "Update your uptime monitor settings"
 							: "Set up a new uptime monitor"}
-					</SheetDescription>
-				</SheetHeader>
+					</Sheet.Description>
+				</Sheet.Header>
 
 				<Form {...form}>
 					<form
 						className="flex flex-1 flex-col overflow-hidden"
 						onSubmit={form.handleSubmit(handleSubmit)}
 					>
-						<SheetBody className="space-y-6">
+						<Sheet.Body className="space-y-6">
 							<div className="space-y-4">
 								<FormField
 									control={form.control}
@@ -279,19 +268,8 @@ export function MonitorSheet({
 									<FormItem>
 										<FormLabel className="flex items-center gap-2">
 											Check Frequency
-											<Tooltip>
-												<TooltipTrigger asChild>
-													<InfoIcon className="size-4" weight="duotone" />
-												</TooltipTrigger>
-												<TooltipContent className="max-w-xs">
-													<div className="space-y-2">
-														<p className="text-xs leading-relaxed">
-															How often the monitor will check your website's
-															availability. More frequent checks provide faster
-															alerting but may be limited by your plan.
-														</p>
-													</div>
-												</TooltipContent>
+											<Tooltip content="How often the monitor will check your website's availability. More frequent checks provide faster alerting but may be limited by your plan.">
+												<InfoIcon className="size-4" weight="duotone" />
 											</Tooltip>
 										</FormLabel>
 										<div className="flex items-center justify-center gap-0 rounded border">
@@ -313,7 +291,7 @@ export function MonitorSheet({
 														key={option.value}
 														onClick={() => field.onChange(option.value)}
 														type="button"
-														variant={isActive ? "outline" : "ghost"}
+														variant={isActive ? "secondary" : "ghost"}
 													>
 														{option.label}
 													</Button>
@@ -347,19 +325,8 @@ export function MonitorSheet({
 													<div className="space-y-1">
 														<FormLabel className="flex items-center gap-2 font-normal text-sm">
 															Timeout
-															<Tooltip>
-																<TooltipTrigger asChild>
-																	<InfoIcon
-																		className="size-4"
-																		weight="duotone"
-																	/>
-																</TooltipTrigger>
-																<TooltipContent className="max-w-xs">
-																	<p className="text-xs leading-relaxed">
-																		Maximum time to wait for a response. Default
-																		is 30 seconds.
-																	</p>
-																</TooltipContent>
+															<Tooltip content="Maximum time to wait for a response. Default is 30 seconds.">
+																<InfoIcon className="size-4" weight="duotone" />
 															</Tooltip>
 														</FormLabel>
 														<p className="text-muted-foreground text-xs">
@@ -450,27 +417,28 @@ export function MonitorSheet({
 									</div>
 								</CollapsibleSection>
 							</div>
-						</SheetBody>
+						</Sheet.Body>
 
-						<SheetFooter>
+						<Sheet.Footer>
 							<Button
 								onClick={() => onCloseAction(false)}
 								type="button"
-								variant="outline"
+								variant="secondary"
 							>
 								Cancel
 							</Button>
 							<Button
 								className="min-w-28"
-								disabled={isPending || !form.formState.isValid}
+								disabled={!form.formState.isValid}
+								loading={isPending}
 								type="submit"
 							>
-								{isPending ? "Saving..." : isEditing ? "Update" : "Create"}
+								{isEditing ? "Update" : "Create"}
 							</Button>
-						</SheetFooter>
+						</Sheet.Footer>
 					</form>
 				</Form>
-			</SheetContent>
+			</Sheet.Content>
 		</Sheet>
 	);
 }

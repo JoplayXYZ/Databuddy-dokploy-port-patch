@@ -4,7 +4,7 @@ import { Button } from "@/components/ds/button";
 import { Dialog } from "@/components/ds/dialog";
 import { DropdownMenu } from "@/components/ds/dropdown-menu";
 import { Field } from "@/components/ds/field";
-import { Input } from "@/components/ds/input";
+import { Input } from "@/components/ui/input";
 import { useOrganizationInvitations } from "@/hooks/use-organization-invitations";
 import { CaretUpDown, UserPlus } from "@phosphor-icons/react/dist/ssr";
 import { useState } from "react";

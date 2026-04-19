@@ -14,17 +14,10 @@ import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { FaviconImage } from "@/components/analytics/favicon-image";
 import { TransferToOrgDialog } from "@/components/transfer-to-org-dialog";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ds/badge";
 import { List } from "@/components/ui/composables/list";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuSeparator,
-	DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Skeleton } from "@/components/ui/skeleton";
+import { DropdownMenu } from "@/components/ds/dropdown-menu";
+import { Skeleton } from "@/components/ds/skeleton";
 import { useBatchDynamicQuery } from "@/hooks/use-dynamic-query";
 import dayjs from "@/lib/dayjs";
 import { orpc } from "@/lib/orpc";
@@ -159,31 +152,27 @@ function MonitorActions({
 	return (
 		<>
 			<DropdownMenu>
-				<DropdownMenuTrigger asChild>
-					<Button
-						aria-label="Monitor actions"
-						className="size-8 opacity-50 hover:opacity-100 data-[state=open]:opacity-100"
-						data-dropdown-trigger
-						size="icon"
-						variant="ghost"
-					>
-						<DotsThreeIcon className="size-5" weight="bold" />
-					</Button>
-				</DropdownMenuTrigger>
-				<DropdownMenuContent align="end" className="w-52">
-					<DropdownMenuItem className="gap-2" onClick={onEditAction}>
+				<DropdownMenu.Trigger
+					aria-label="Monitor actions"
+					className="inline-flex size-8 items-center justify-center gap-1.5 rounded-md bg-transparent p-0 font-medium text-muted-foreground opacity-50 transition-all duration-(--duration-quick) ease-(--ease-smooth) hover:bg-interactive-hover hover:text-foreground hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 disabled:pointer-events-none disabled:opacity-50 data-[state=open]:opacity-100"
+					data-dropdown-trigger
+				>
+					<DotsThreeIcon className="size-5" weight="bold" />
+				</DropdownMenu.Trigger>
+				<DropdownMenu.Content align="end" className="w-52">
+					<DropdownMenu.Item className="gap-2" onClick={onEditAction}>
 						<PencilSimpleIcon className="size-4" weight="duotone" />
 						Edit Monitor
-					</DropdownMenuItem>
-					<DropdownMenuItem
+					</DropdownMenu.Item>
+					<DropdownMenu.Item
 						className="gap-2"
 						disabled={manualCheckMutation.isPending || schedule.isPaused}
 						onClick={handleManualCheck}
 					>
 						<LightningIcon className="size-4" weight="duotone" />
 						Check Now
-					</DropdownMenuItem>
-					<DropdownMenuItem
+					</DropdownMenu.Item>
+					<DropdownMenu.Item
 						className="gap-2"
 						disabled={
 							isPausing || pauseMutation.isPending || resumeMutation.isPending
@@ -196,18 +185,18 @@ function MonitorActions({
 							<PauseIcon className="size-4" weight="duotone" />
 						)}
 						{schedule.isPaused ? "Resume" : "Pause"}
-					</DropdownMenuItem>
+					</DropdownMenu.Item>
 					{schedule.organizationId ? (
-						<DropdownMenuItem
+						<DropdownMenu.Item
 							className="gap-2"
 							onClick={() => setIsTransferOpen(true)}
 						>
 							<ArrowSquareOutIcon className="size-4" weight="duotone" />
 							Transfer to Workspace
-						</DropdownMenuItem>
+						</DropdownMenu.Item>
 					) : null}
-					<DropdownMenuSeparator />
-					<DropdownMenuItem
+					<DropdownMenu.Separator />
+					<DropdownMenu.Item
 						className="gap-2 text-destructive focus:text-destructive"
 						disabled={deleteMutation.isPending}
 						onClick={handleDelete}
@@ -215,8 +204,8 @@ function MonitorActions({
 					>
 						<TrashIcon className="size-4 fill-destructive" weight="duotone" />
 						Delete Monitor
-					</DropdownMenuItem>
-				</DropdownMenuContent>
+					</DropdownMenu.Item>
+				</DropdownMenu.Content>
 			</DropdownMenu>
 
 			{schedule.organizationId ? (
@@ -429,7 +418,10 @@ export function MonitorRow({
 				</List.Cell>
 
 				<List.Cell className="w-16 pt-0.5">
-					<Badge className="shrink-0" variant={isActive ? "green" : "amber"}>
+					<Badge
+						className="shrink-0"
+						variant={isActive ? "success" : "warning"}
+					>
 						{isActive ? "Active" : "Paused"}
 					</Badge>
 				</List.Cell>

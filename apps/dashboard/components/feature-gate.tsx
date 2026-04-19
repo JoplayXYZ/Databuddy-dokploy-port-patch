@@ -16,7 +16,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { useBillingContext } from "@/components/providers/billing-provider";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card } from "@/components/ds/card";
 import { cn } from "@/lib/utils";
 
 const PLAN_CONFIG: Record<
@@ -79,7 +79,7 @@ export function FeatureGate({
 	return (
 		<div className="flex h-full min-h-[400px] items-center justify-center p-4">
 			<Card className="w-full max-w-md overflow-hidden pt-0">
-				<CardHeader className="dotted-bg flex flex-col items-center gap-4 border-b bg-accent py-8">
+				<Card.Header className="dotted-bg flex flex-col items-center gap-4 border-b bg-accent py-8">
 					<div className="flex size-14 items-center justify-center rounded border bg-card">
 						<LockSimpleIcon
 							className="size-7 text-muted-foreground"
@@ -96,9 +96,9 @@ export function FeatureGate({
 								"Upgrade to access this feature."}
 						</p>
 					</div>
-				</CardHeader>
+				</Card.Header>
 
-				<CardContent className="space-y-4 p-4">
+				<Card.Content className="space-y-4 p-4">
 					<div className="flex items-center justify-between rounded border bg-accent/50 px-3 py-2.5">
 						<span className="text-muted-foreground text-sm">Required plan</span>
 						<div className="flex items-center gap-1.5">
@@ -140,7 +140,7 @@ export function FeatureGate({
 							</p>
 						</div>
 					)}
-				</CardContent>
+				</Card.Content>
 			</Card>
 		</div>
 	);

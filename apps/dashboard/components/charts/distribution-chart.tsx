@@ -1,14 +1,8 @@
 import { PieChartIcon } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
-} from "@/components/ui/card";
+import { Card } from "@/components/ds/card";
 import { Chart } from "@/components/ui/composables/chart";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@/components/ds/skeleton";
 import {
 	chartRechartsLegendIconSize,
 	chartRechartsLegendStaticWrapperStyleMerge,
@@ -137,18 +131,18 @@ export function DistributionChart({
 	if (isLoading) {
 		return (
 			<Card className="w-full">
-				<CardHeader className="px-4 py-3">
+				<Card.Header className="px-4 py-3">
 					<Skeleton className="h-4 w-32 rounded" />
 					{description && <Skeleton className="mt-1 h-3 w-48 rounded" />}
-				</CardHeader>
-				<CardContent className="px-0 pt-0 pb-4">
+				</Card.Header>
+				<Card.Content className="px-0 pt-0 pb-4">
 					<div
 						className="flex items-center justify-center"
 						style={{ height: height - 50 }}
 					>
 						<Skeleton className="size-[120px] rounded-full" />
 					</div>
-				</CardContent>
+				</Card.Content>
 			</Card>
 		);
 	}
@@ -156,13 +150,15 @@ export function DistributionChart({
 	if (!chartData.length) {
 		return (
 			<Card className="w-full">
-				<CardHeader className="px-4 py-3">
-					<CardTitle className="font-medium text-sm">{title}</CardTitle>
+				<Card.Header className="px-4 py-3">
+					<Card.Title className="font-medium text-sm">{title}</Card.Title>
 					{description && (
-						<CardDescription className="text-xs">{description}</CardDescription>
+						<Card.Description className="text-xs">
+							{description}
+						</Card.Description>
 					)}
-				</CardHeader>
-				<CardContent className="flex items-center justify-center p-4">
+				</Card.Header>
+				<Card.Content className="flex items-center justify-center p-4">
 					<div className="py-6 text-center">
 						<PieChartIcon
 							className="mx-auto size-8 text-muted-foreground/40"
@@ -173,20 +169,20 @@ export function DistributionChart({
 							Data will appear as it's collected
 						</p>
 					</div>
-				</CardContent>
+				</Card.Content>
 			</Card>
 		);
 	}
 
 	return (
 		<Card className="w-full">
-			<CardHeader className="px-4 py-3">
-				<CardTitle className="font-medium text-sm">{title}</CardTitle>
+			<Card.Header className="px-4 py-3">
+				<Card.Title className="font-medium text-sm">{title}</Card.Title>
 				{description && (
-					<CardDescription className="text-xs">{description}</CardDescription>
+					<Card.Description className="text-xs">{description}</Card.Description>
 				)}
-			</CardHeader>
-			<CardContent className="px-0 pt-0 pb-4">
+			</Card.Header>
+			<Card.Content className="px-0 pt-0 pb-4">
 				<div style={{ width: "100%", height: height - 50 }}>
 					<ResponsiveContainer height="100%" width="100%">
 						<PieChart>
@@ -255,7 +251,7 @@ export function DistributionChart({
 						</PieChart>
 					</ResponsiveContainer>
 				</div>
-			</CardContent>
+			</Card.Content>
 		</Card>
 	);
 }

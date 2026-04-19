@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { StatusDot } from "@/components/ds/status-dot";
 import { useRealTimeStats } from "./use-realtime-stats";
 
 interface LiveUserIndicatorProps {
@@ -43,10 +44,7 @@ export function LiveUserIndicator({ websiteId }: LiveUserIndicatorProps) {
 
 	return (
 		<div className="flex h-8 shrink-0 items-center gap-2 rounded border px-3 text-sm">
-			<span className="relative flex size-2 shrink-0">
-				<span className="absolute inline-flex size-full animate-ping rounded-full bg-green-500 opacity-75" />
-				<span className="relative inline-flex size-2 rounded-full bg-green-500" />
-			</span>
+			<StatusDot color="success" pulse size="md" />
 			<span className={`tabular-nums ${getChangeColor()}`}>{count}</span>
 			<span className="hidden text-muted-foreground sm:inline">online</span>
 		</div>

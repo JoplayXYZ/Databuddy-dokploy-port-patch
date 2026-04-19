@@ -9,29 +9,21 @@ import {
 	PLAN_IDS,
 	type PlanId,
 } from "@databuddy/shared/types/features";
-import { ArrowDownIcon } from "@phosphor-icons/react";
-import { CheckIcon } from "@phosphor-icons/react";
-import { CircleNotchIcon } from "@phosphor-icons/react";
-import { CrownIcon } from "@phosphor-icons/react";
-import { RocketLaunchIcon } from "@phosphor-icons/react";
-import { SparkleIcon } from "@phosphor-icons/react";
-import { StarIcon } from "@phosphor-icons/react";
-import { WarningIcon } from "@phosphor-icons/react";
+import { ArrowDownIcon } from "@phosphor-icons/react/dist/ssr";
+import { CheckIcon } from "@phosphor-icons/react/dist/ssr";
+import { CrownIcon } from "@phosphor-icons/react/dist/ssr";
+import { RocketLaunchIcon } from "@phosphor-icons/react/dist/ssr";
+import { SparkleIcon } from "@phosphor-icons/react/dist/ssr";
+import { StarIcon } from "@phosphor-icons/react/dist/ssr";
+import { WarningIcon } from "@phosphor-icons/react/dist/ssr";
 import { useCustomer, useListPlans } from "autumn-js/react";
 import { createContext, useContext, useState } from "react";
 import { PricingTiersTooltip } from "@/app/(main)/billing/components/pricing-tiers-tooltip";
 import { getStripeMetadata } from "@/app/(main)/billing/utils/stripe-metadata";
-import { EmptyState } from "@/components/empty-state";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogFooter,
-	DialogHeader,
-	DialogTitle,
-} from "@/components/ui/dialog";
+import { EmptyState } from "@/components/ds/empty-state";
+import { Badge } from "@/components/ds/badge";
+import { Button } from "@/components/ds/button";
+import { Dialog } from "@/components/ds/dialog";
 import { getPricingTableContent } from "@/lib/autumn/pricing-table-content";
 import { formatLocaleNumber } from "@/lib/format-locale-number";
 import { cn } from "@/lib/utils";
@@ -246,40 +238,38 @@ function DowngradeConfirmDialog({
 
 	return (
 		<Dialog onOpenChange={onClose} open={isOpen}>
-			<DialogContent>
-				<DialogHeader>
-					<DialogTitle>Downgrade to {productName}</DialogTitle>
-					<DialogDescription>
+			<Dialog.Content>
+				<Dialog.Close />
+				<Dialog.Header>
+					<Dialog.Title>Downgrade to {productName}</Dialog.Title>
+					<Dialog.Description>
 						{currentProductName
 							? `Are you sure you want to downgrade from ${currentProductName} to ${productName}? Your current subscription will be cancelled and the new plan will begin at the end of your current billing period.`
 							: `Are you sure you want to downgrade to ${productName}? Your current subscription will be cancelled and the new plan will begin at the end of your current billing period.`}
-					</DialogDescription>
-				</DialogHeader>
-				<div className="flex items-center gap-3 py-2">
-					<div className="flex size-10 shrink-0 items-center justify-center border border-amber-500/20 bg-amber-500/10">
-						<ArrowDownIcon
-							className="text-amber-600 dark:text-amber-400"
-							size={18}
-							weight="duotone"
-						/>
+					</Dialog.Description>
+				</Dialog.Header>
+				<Dialog.Body>
+					<div className="flex items-center gap-3">
+						<div className="flex size-10 shrink-0 items-center justify-center border border-amber-500/20 bg-amber-500/10">
+							<ArrowDownIcon
+								className="size-[18px] text-amber-600 dark:text-amber-400"
+								weight="duotone"
+							/>
+						</div>
+						<p className="text-foreground text-sm">
+							You may lose access to features included in your current plan.
+						</p>
 					</div>
-					<p className="text-foreground text-sm">
-						You may lose access to features included in your current plan.
-					</p>
-				</div>
-				<DialogFooter>
-					<Button disabled={isConfirming} onClick={onClose} variant="outline">
+				</Dialog.Body>
+				<Dialog.Footer>
+					<Button onClick={onClose} variant="secondary">
 						Cancel
 					</Button>
-					<Button
-						disabled={isConfirming}
-						onClick={handleConfirm}
-						variant="default"
-					>
-						{isConfirming ? "Confirming..." : "Confirm Downgrade"}
+					<Button loading={isConfirming} onClick={handleConfirm}>
+						Confirm Downgrade
 					</Button>
-				</DialogFooter>
-			</DialogContent>
+				</Dialog.Footer>
+			</Dialog.Content>
 		</Dialog>
 	);
 }
@@ -384,13 +374,13 @@ function PricingCard({
 		>
 			<div className="flex items-center gap-3 p-5 pb-4">
 				<div className="flex size-9 shrink-0 items-center justify-center rounded-lg border bg-accent">
-					<Icon className="text-accent-foreground" size={16} weight="duotone" />
+					<Icon className="size-4 text-accent-foreground" weight="duotone" />
 				</div>
 				<div className="min-w-0 flex-1">
 					<div className="flex items-center gap-2">
 						<h3 className="truncate font-semibold">{plan.name}</h3>
 						{isSelected && (
-							<Badge className="shrink-0" variant="secondary">
+							<Badge className="shrink-0" variant="primary">
 								Selected
 							</Badge>
 						)}
@@ -459,15 +449,12 @@ function PricingCard({
 			<div className="p-5 pt-0">
 				<Button
 					className="w-full"
-					disabled={isDisabled || isAttaching}
+					disabled={isDisabled}
+					loading={isAttaching}
 					onClick={handleUpgradeClick}
-					variant={isRecommended ? "default" : "secondary"}
+					variant={isRecommended ? "primary" : "secondary"}
 				>
-					{isAttaching ? (
-						<CircleNotchIcon className="size-4 animate-spin" />
-					) : (
-						buttonText
-					)}
+					{buttonText}
 				</Button>
 			</div>
 
@@ -573,9 +560,7 @@ function GatedFeatureItem({
 				<div className="flex items-center gap-2">
 					<span>{name}</span>
 					{isNew && (
-						<Badge className="bg-brand-purple/10 text-brand-purple text-xs">
-							New
-						</Badge>
+						<Badge className="bg-brand-purple/10 text-brand-purple">New</Badge>
 					)}
 				</div>
 				{limitText && (

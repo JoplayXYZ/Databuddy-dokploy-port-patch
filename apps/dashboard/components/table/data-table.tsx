@@ -6,7 +6,7 @@ import {
 import type React from "react";
 import { useState } from "react";
 import ReactDOM from "react-dom";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@/components/ds/skeleton";
 import { cn } from "@/lib/utils";
 import { FullScreenModal } from "./fullscreen-modal";
 import { useFullScreen } from "./hooks/use-fullscreen";

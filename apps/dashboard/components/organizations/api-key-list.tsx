@@ -3,6 +3,7 @@ import { PlusIcon } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
 import dayjs from "@/lib/dayjs";
 import { orpc } from "@/lib/orpc";
+import { StatusDot } from "../ds/status-dot";
 import { EmptyState } from "../empty-state";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
@@ -140,7 +141,7 @@ export function ApiKeyList({
 										<TableCell className="p-3">
 											{k.enabled && !k.revokedAt ? (
 												<Badge variant="gray">
-													<div className="mr-1 h-1.5 w-1.5 rounded-full bg-green-500" />
+													<StatusDot color="success" size="sm" />
 													Active
 												</Badge>
 											) : (
@@ -148,7 +149,7 @@ export function ApiKeyList({
 													className="bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800/50 dark:text-gray-400"
 													variant="secondary"
 												>
-													<div className="mr-1 h-1.5 w-1.5 rounded-full bg-gray-400" />
+													<StatusDot color="muted" size="sm" />
 													Inactive
 												</Badge>
 											)}

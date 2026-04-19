@@ -24,8 +24,8 @@ import {
 	useRef,
 	useState,
 } from "react";
-import { EmptyState } from "@/components/empty-state";
-import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/ds/empty-state";
+import { Badge } from "@/components/ds/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -35,7 +35,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@/components/ds/skeleton";
 import {
 	Table,
 	TableBody,
@@ -147,7 +147,7 @@ function ActiveFiltersDisplay({ filters }: { filters: ActiveFilter[] }) {
 				<Badge
 					className="gap-1 pr-1"
 					key={`${filter.type}-${filter.value}`}
-					variant="outline"
+					variant="default"
 				>
 					<span className="text-muted-foreground">
 						{getFilterIcon(filter.type)}
@@ -859,7 +859,7 @@ export function EventsStreamContent({
 					<div className="flex-1" />
 
 					<div className="flex items-center gap-1.5">
-						<Badge className="tabular-nums" variant="gray">
+						<Badge className="tabular-nums" variant="muted">
 							{filteredEvents.length.toLocaleString()} event
 							{filteredEvents.length === 1 ? "" : "s"}
 						</Badge>

@@ -1,22 +1,15 @@
 "use client";
 
-import { CalendarIcon } from "@phosphor-icons/react";
-import { NoteIcon } from "@phosphor-icons/react";
-import { PencilIcon } from "@phosphor-icons/react";
-import { TagIcon } from "@phosphor-icons/react";
-import { TrashIcon } from "@phosphor-icons/react";
+import { CalendarIcon } from "@phosphor-icons/react/dist/ssr";
+import { NoteIcon } from "@phosphor-icons/react/dist/ssr";
+import { PencilIcon } from "@phosphor-icons/react/dist/ssr";
+import { TagIcon } from "@phosphor-icons/react/dist/ssr";
+import { TrashIcon } from "@phosphor-icons/react/dist/ssr";
 import { useState } from "react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { DeleteDialog } from "@/components/ui/delete-dialog";
-import {
-	Sheet,
-	SheetContent,
-	SheetDescription,
-	SheetHeader,
-	SheetTitle,
-	SheetTrigger,
-} from "@/components/ui/sheet";
+import { Badge } from "@/components/ds/badge";
+import { Button } from "@/components/ds/button";
+import { DeleteDialog } from "@/components/ds/delete-dialog";
+import { Sheet } from "@/components/ds/sheet";
 import { formatAnnotationDateRange } from "@/lib/annotation-utils";
 import type { Annotation } from "@/types/annotations";
 
@@ -50,29 +43,24 @@ export function AnnotationsPanel({
 	return (
 		<>
 			<Sheet onOpenChange={setIsOpen} open={isOpen}>
-				<SheetTrigger asChild>
-					<Button
-						className="size-7 text-muted-foreground hover:text-foreground"
-						size="icon"
-						variant="ghost"
-					>
-						<NoteIcon className="size-3.5" weight="duotone" />
-					</Button>
-				</SheetTrigger>
-				<SheetContent
+				<Sheet.Trigger className="inline-flex size-7 items-center justify-center gap-1.5 rounded-md bg-transparent p-0 font-medium text-muted-foreground transition-all duration-(--duration-quick) ease-(--ease-smooth) hover:bg-interactive-hover hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 disabled:pointer-events-none disabled:opacity-50">
+					<NoteIcon className="size-3.5" weight="duotone" />
+				</Sheet.Trigger>
+				<Sheet.Content
 					className="m-3 h-[calc(100%-1.5rem)] rounded border p-0 sm:max-w-sm"
 					side="right"
 				>
+					<Sheet.Close />
 					<div className="flex h-full flex-col">
-						<SheetHeader className="shrink-0 pr-5">
-							<SheetTitle className="text-base">Annotations</SheetTitle>
-							<SheetDescription className="text-xs">
+						<Sheet.Header className="shrink-0 pr-5">
+							<Sheet.Title className="text-base">Annotations</Sheet.Title>
+							<Sheet.Description className="text-xs">
 								{annotations.length} annotation
 								{annotations.length === 1 ? "" : "s"} on this chart
-							</SheetDescription>
-						</SheetHeader>
+							</Sheet.Description>
+						</Sheet.Header>
 
-						<div className="flex-1 overflow-y-auto p-2">
+						<Sheet.Body className="p-2">
 							{annotations.length === 0 ? (
 								<div className="flex flex-col items-center justify-center rounded border bg-card py-12 text-center">
 									<NoteIcon
@@ -116,7 +104,7 @@ export function AnnotationsPanel({
 															<Badge
 																className="h-4 gap-0.5 px-1 text-[10px]"
 																key={tag}
-																variant="outline"
+																variant="default"
 															>
 																<TagIcon className="size-2" />
 																{tag}
@@ -127,21 +115,20 @@ export function AnnotationsPanel({
 											<div className="flex shrink-0 gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
 												<Button
 													aria-label="Edit annotation"
-													className="size-6"
+													className="size-6 p-0"
 													onClick={() => {
 														onEdit(annotation);
 														setIsOpen(false);
 													}}
-													size="icon"
 													variant="ghost"
 												>
 													<PencilIcon className="size-3" weight="duotone" />
 												</Button>
 												<Button
 													aria-label="Delete annotation"
-													className="size-6 text-destructive hover:bg-destructive hover:text-destructive-foreground"
+													className="size-6 p-0"
 													onClick={() => setDeleteId(annotation.id)}
-													size="icon"
+													tone="danger"
 													variant="ghost"
 												>
 													<TrashIcon className="size-3" weight="duotone" />
@@ -151,9 +138,9 @@ export function AnnotationsPanel({
 									))}
 								</div>
 							)}
-						</div>
+						</Sheet.Body>
 					</div>
-				</SheetContent>
+				</Sheet.Content>
 			</Sheet>
 
 			<DeleteDialog

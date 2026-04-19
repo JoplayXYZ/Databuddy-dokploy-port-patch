@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { useOrganizationsContext } from "@/components/providers/organizations-provider";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ds/button";
 import {
 	Form,
 	FormControl,
@@ -17,7 +17,7 @@ import {
 	FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Field } from "@/components/ds/field";
 import {
 	Select,
 	SelectContent,
@@ -25,16 +25,8 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
-import {
-	Sheet,
-	SheetBody,
-	SheetContent,
-	SheetDescription,
-	SheetFooter,
-	SheetHeader,
-	SheetTitle,
-} from "@/components/ui/sheet";
-import { Switch } from "@/components/ui/switch";
+import { Sheet } from "@/components/ds/sheet";
+import { Switch } from "@/components/ds/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { orpc } from "@/lib/orpc";
 
@@ -168,24 +160,25 @@ export function StatusPageSheet({
 
 	return (
 		<Sheet onOpenChange={onCloseAction} open={open}>
-			<SheetContent className="w-full sm:max-w-xl">
-				<SheetHeader>
-					<SheetTitle>
+			<Sheet.Content className="w-full sm:max-w-xl">
+				<Sheet.Close />
+				<Sheet.Header>
+					<Sheet.Title>
 						{isEditing ? "Edit Status Page" : "Create Status Page"}
-					</SheetTitle>
-					<SheetDescription>
+					</Sheet.Title>
+					<Sheet.Description>
 						{isEditing
 							? "Update your status page details and appearance"
 							: "Set up a new public status page"}
-					</SheetDescription>
-				</SheetHeader>
+					</Sheet.Description>
+				</Sheet.Header>
 
 				<Form {...form}>
 					<form
 						className="flex flex-1 flex-col overflow-hidden"
 						onSubmit={form.handleSubmit(handleSubmit)}
 					>
-						<SheetBody className="space-y-6">
+						<Sheet.Body className="space-y-6">
 							<div className="space-y-4">
 								<FormField
 									control={form.control}
@@ -360,12 +353,12 @@ export function StatusPageSheet({
 									name="hideBranding"
 									render={({ field }) => (
 										<div className="flex items-center justify-between rounded border p-3">
-											<Label
+											<Field.Label
 												className="cursor-pointer text-sm"
 												htmlFor="hide-branding"
 											>
 												Hide "Powered by Databuddy"
-											</Label>
+											</Field.Label>
 											<Switch
 												checked={field.value}
 												id="hide-branding"
@@ -398,27 +391,28 @@ export function StatusPageSheet({
 									)}
 								/>
 							</div>
-						</SheetBody>
+						</Sheet.Body>
 
-						<SheetFooter>
+						<Sheet.Footer>
 							<Button
 								onClick={() => onCloseAction(false)}
 								type="button"
-								variant="outline"
+								variant="secondary"
 							>
 								Cancel
 							</Button>
 							<Button
 								className="min-w-28"
-								disabled={isPending || !form.formState.isValid}
+								disabled={!form.formState.isValid}
+								loading={isPending}
 								type="submit"
 							>
-								{isPending ? "Saving..." : isEditing ? "Update" : "Create"}
+								{isEditing ? "Update" : "Create"}
 							</Button>
-						</SheetFooter>
+						</Sheet.Footer>
 					</form>
 				</Form>
-			</SheetContent>
+			</Sheet.Content>
 		</Sheet>
 	);
 }

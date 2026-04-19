@@ -6,15 +6,7 @@ import {
 	MessageCircleIcon,
 } from "lucide-react";
 import { type ComponentProps, createContext, useContext } from "react";
-import { Button } from "@/components/ui/button";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuLabel,
-	DropdownMenuSeparator,
-	DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { DropdownMenu } from "@/components/ds/dropdown-menu";
 import { cn } from "@/lib/utils";
 
 const providers = {
@@ -203,163 +195,205 @@ export const OpenIn = ({ query, ...props }: OpenInProps) => (
 	</OpenInContext.Provider>
 );
 
-export type OpenInContentProps = ComponentProps<typeof DropdownMenuContent>;
+export type OpenInContentProps = ComponentProps<typeof DropdownMenu.Content>;
 
 export const OpenInContent = ({ className, ...props }: OpenInContentProps) => (
-	<DropdownMenuContent
+	<DropdownMenu.Content
 		align="start"
 		className={cn("w-[240px]", className)}
 		{...props}
 	/>
 );
 
-export type OpenInItemProps = ComponentProps<typeof DropdownMenuItem>;
+export type OpenInItemProps = ComponentProps<typeof DropdownMenu.Item>;
 
 export const OpenInItem = (props: OpenInItemProps) => (
-	<DropdownMenuItem {...props} />
+	<DropdownMenu.Item {...props} />
 );
 
-export type OpenInLabelProps = ComponentProps<typeof DropdownMenuLabel>;
+export type OpenInLabelProps = ComponentProps<typeof DropdownMenu.GroupLabel>;
 
 export const OpenInLabel = (props: OpenInLabelProps) => (
-	<DropdownMenuLabel {...props} />
+	<DropdownMenu.GroupLabel {...props} />
 );
 
-export type OpenInSeparatorProps = ComponentProps<typeof DropdownMenuSeparator>;
+export type OpenInSeparatorProps = ComponentProps<
+	typeof DropdownMenu.Separator
+>;
 
 export const OpenInSeparator = (props: OpenInSeparatorProps) => (
-	<DropdownMenuSeparator {...props} />
+	<DropdownMenu.Separator {...props} />
 );
 
-export type OpenInTriggerProps = ComponentProps<typeof DropdownMenuTrigger>;
+export type OpenInTriggerProps = ComponentProps<typeof DropdownMenu.Trigger>;
 
-export const OpenInTrigger = ({ children, ...props }: OpenInTriggerProps) => (
-	<DropdownMenuTrigger {...props} asChild>
+export const OpenInTrigger = ({
+	children,
+	className,
+	...props
+}: OpenInTriggerProps) => (
+	<DropdownMenu.Trigger
+		{...props}
+		className={cn(
+			"inline-flex h-9 items-center justify-center gap-1.5 rounded-md border border-input bg-background px-4 font-medium text-sm transition-all duration-(--duration-quick) ease-(--ease-smooth) hover:bg-interactive-hover hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 disabled:pointer-events-none disabled:opacity-50",
+			className
+		)}
+	>
 		{children ?? (
-			<Button type="button" variant="outline">
+			<>
 				Open in chat
 				<ChevronDownIcon className="size-4" />
-			</Button>
+			</>
 		)}
-	</DropdownMenuTrigger>
+	</DropdownMenu.Trigger>
 );
 
-export type OpenInChatGPTProps = ComponentProps<typeof DropdownMenuItem>;
+export type OpenInChatGPTProps = ComponentProps<typeof DropdownMenu.Item>;
 
 export const OpenInChatGPT = (props: OpenInChatGPTProps) => {
 	const { query } = useOpenInContext();
 	return (
-		<DropdownMenuItem asChild {...props}>
-			<a
-				className="flex items-center gap-2"
-				href={providers.chatgpt.createUrl(query)}
-				rel="noopener"
-				target="_blank"
-			>
-				<span className="shrink-0">{providers.chatgpt.icon}</span>
-				<span className="flex-1">{providers.chatgpt.title}</span>
-				<ExternalLinkIcon className="size-4 shrink-0" />
-			</a>
-		</DropdownMenuItem>
+		<DropdownMenu.Item
+			{...props}
+			render={
+				// biome-ignore lint/a11y/useAnchorContent: Ariakit render prop injects children
+				<a
+					aria-label={providers.chatgpt.title}
+					className="flex items-center gap-2"
+					href={providers.chatgpt.createUrl(query)}
+					rel="noopener"
+					target="_blank"
+				/>
+			}
+		>
+			<span className="shrink-0">{providers.chatgpt.icon}</span>
+			<span className="flex-1">{providers.chatgpt.title}</span>
+			<ExternalLinkIcon className="size-4 shrink-0" />
+		</DropdownMenu.Item>
 	);
 };
 
-export type OpenInClaudeProps = ComponentProps<typeof DropdownMenuItem>;
+export type OpenInClaudeProps = ComponentProps<typeof DropdownMenu.Item>;
 
 export const OpenInClaude = (props: OpenInClaudeProps) => {
 	const { query } = useOpenInContext();
 	return (
-		<DropdownMenuItem asChild {...props}>
-			<a
-				className="flex items-center gap-2"
-				href={providers.claude.createUrl(query)}
-				rel="noopener"
-				target="_blank"
-			>
-				<span className="shrink-0">{providers.claude.icon}</span>
-				<span className="flex-1">{providers.claude.title}</span>
-				<ExternalLinkIcon className="size-4 shrink-0" />
-			</a>
-		</DropdownMenuItem>
+		<DropdownMenu.Item
+			{...props}
+			render={
+				// biome-ignore lint/a11y/useAnchorContent: Ariakit render prop injects children
+				<a
+					aria-label={providers.claude.title}
+					className="flex items-center gap-2"
+					href={providers.claude.createUrl(query)}
+					rel="noopener"
+					target="_blank"
+				/>
+			}
+		>
+			<span className="shrink-0">{providers.claude.icon}</span>
+			<span className="flex-1">{providers.claude.title}</span>
+			<ExternalLinkIcon className="size-4 shrink-0" />
+		</DropdownMenu.Item>
 	);
 };
 
-export type OpenInT3Props = ComponentProps<typeof DropdownMenuItem>;
+export type OpenInT3Props = ComponentProps<typeof DropdownMenu.Item>;
 
 export const OpenInT3 = (props: OpenInT3Props) => {
 	const { query } = useOpenInContext();
 	return (
-		<DropdownMenuItem asChild {...props}>
-			<a
-				className="flex items-center gap-2"
-				href={providers.t3.createUrl(query)}
-				rel="noopener"
-				target="_blank"
-			>
-				<span className="shrink-0">{providers.t3.icon}</span>
-				<span className="flex-1">{providers.t3.title}</span>
-				<ExternalLinkIcon className="size-4 shrink-0" />
-			</a>
-		</DropdownMenuItem>
+		<DropdownMenu.Item
+			{...props}
+			render={
+				// biome-ignore lint/a11y/useAnchorContent: Ariakit render prop injects children
+				<a
+					aria-label={providers.t3.title}
+					className="flex items-center gap-2"
+					href={providers.t3.createUrl(query)}
+					rel="noopener"
+					target="_blank"
+				/>
+			}
+		>
+			<span className="shrink-0">{providers.t3.icon}</span>
+			<span className="flex-1">{providers.t3.title}</span>
+			<ExternalLinkIcon className="size-4 shrink-0" />
+		</DropdownMenu.Item>
 	);
 };
 
-export type OpenInSciraProps = ComponentProps<typeof DropdownMenuItem>;
+export type OpenInSciraProps = ComponentProps<typeof DropdownMenu.Item>;
 
 export const OpenInScira = (props: OpenInSciraProps) => {
 	const { query } = useOpenInContext();
 	return (
-		<DropdownMenuItem asChild {...props}>
-			<a
-				className="flex items-center gap-2"
-				href={providers.scira.createUrl(query)}
-				rel="noopener"
-				target="_blank"
-			>
-				<span className="shrink-0">{providers.scira.icon}</span>
-				<span className="flex-1">{providers.scira.title}</span>
-				<ExternalLinkIcon className="size-4 shrink-0" />
-			</a>
-		</DropdownMenuItem>
+		<DropdownMenu.Item
+			{...props}
+			render={
+				// biome-ignore lint/a11y/useAnchorContent: Ariakit render prop injects children
+				<a
+					aria-label={providers.scira.title}
+					className="flex items-center gap-2"
+					href={providers.scira.createUrl(query)}
+					rel="noopener"
+					target="_blank"
+				/>
+			}
+		>
+			<span className="shrink-0">{providers.scira.icon}</span>
+			<span className="flex-1">{providers.scira.title}</span>
+			<ExternalLinkIcon className="size-4 shrink-0" />
+		</DropdownMenu.Item>
 	);
 };
 
-export type OpenInv0Props = ComponentProps<typeof DropdownMenuItem>;
+export type OpenInv0Props = ComponentProps<typeof DropdownMenu.Item>;
 
 export const OpenInv0 = (props: OpenInv0Props) => {
 	const { query } = useOpenInContext();
 	return (
-		<DropdownMenuItem asChild {...props}>
-			<a
-				className="flex items-center gap-2"
-				href={providers.v0.createUrl(query)}
-				rel="noopener"
-				target="_blank"
-			>
-				<span className="shrink-0">{providers.v0.icon}</span>
-				<span className="flex-1">{providers.v0.title}</span>
-				<ExternalLinkIcon className="size-4 shrink-0" />
-			</a>
-		</DropdownMenuItem>
+		<DropdownMenu.Item
+			{...props}
+			render={
+				// biome-ignore lint/a11y/useAnchorContent: Ariakit render prop injects children
+				<a
+					aria-label={providers.v0.title}
+					className="flex items-center gap-2"
+					href={providers.v0.createUrl(query)}
+					rel="noopener"
+					target="_blank"
+				/>
+			}
+		>
+			<span className="shrink-0">{providers.v0.icon}</span>
+			<span className="flex-1">{providers.v0.title}</span>
+			<ExternalLinkIcon className="size-4 shrink-0" />
+		</DropdownMenu.Item>
 	);
 };
 
-export type OpenInCursorProps = ComponentProps<typeof DropdownMenuItem>;
+export type OpenInCursorProps = ComponentProps<typeof DropdownMenu.Item>;
 
 export const OpenInCursor = (props: OpenInCursorProps) => {
 	const { query } = useOpenInContext();
 	return (
-		<DropdownMenuItem asChild {...props}>
-			<a
-				className="flex items-center gap-2"
-				href={providers.cursor.createUrl(query)}
-				rel="noopener"
-				target="_blank"
-			>
-				<span className="shrink-0">{providers.cursor.icon}</span>
-				<span className="flex-1">{providers.cursor.title}</span>
-				<ExternalLinkIcon className="size-4 shrink-0" />
-			</a>
-		</DropdownMenuItem>
+		<DropdownMenu.Item
+			{...props}
+			render={
+				// biome-ignore lint/a11y/useAnchorContent: Ariakit render prop injects children
+				<a
+					aria-label={providers.cursor.title}
+					className="flex items-center gap-2"
+					href={providers.cursor.createUrl(query)}
+					rel="noopener"
+					target="_blank"
+				/>
+			}
+		>
+			<span className="shrink-0">{providers.cursor.icon}</span>
+			<span className="flex-1">{providers.cursor.title}</span>
+			<ExternalLinkIcon className="size-4 shrink-0" />
+		</DropdownMenu.Item>
 	);
 };

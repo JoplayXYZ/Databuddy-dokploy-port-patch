@@ -44,12 +44,7 @@ import {
 	CommandList,
 	CommandSeparator,
 } from "@/components/ui/command";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { DropdownMenu } from "@/components/ds/dropdown-menu";
 import {
 	HoverCard,
 	HoverCardContent,
@@ -385,7 +380,7 @@ export function PromptInputAttachments({
 }
 
 export type PromptInputActionAddAttachmentsProps = ComponentProps<
-	typeof DropdownMenuItem
+	typeof DropdownMenu.Item
 > & {
 	label?: string;
 };
@@ -397,7 +392,7 @@ export const PromptInputActionAddAttachments = ({
 	const attachments = usePromptInputAttachments();
 
 	return (
-		<DropdownMenuItem
+		<DropdownMenu.Item
 			{...props}
 			onSelect={(e) => {
 				e.preventDefault();
@@ -405,7 +400,7 @@ export const PromptInputActionAddAttachments = ({
 			}}
 		>
 			<ImageIcon className="mr-2 size-4" /> {label}
-		</DropdownMenuItem>
+		</DropdownMenu.Item>
 	);
 };
 
@@ -941,31 +936,31 @@ export const PromptInputActionMenuTrigger = ({
 	children,
 	...props
 }: PromptInputActionMenuTriggerProps) => (
-	<DropdownMenuTrigger asChild>
-		<PromptInputButton className={className} {...props}>
-			{children ?? <PlusIcon className="size-4" />}
-		</PromptInputButton>
-	</DropdownMenuTrigger>
+	<DropdownMenu.Trigger
+		render={<PromptInputButton className={className} {...props} />}
+	>
+		{children ?? <PlusIcon className="size-4" />}
+	</DropdownMenu.Trigger>
 );
 
 export type PromptInputActionMenuContentProps = ComponentProps<
-	typeof DropdownMenuContent
+	typeof DropdownMenu.Content
 >;
 export const PromptInputActionMenuContent = ({
 	className,
 	...props
 }: PromptInputActionMenuContentProps) => (
-	<DropdownMenuContent align="start" className={cn(className)} {...props} />
+	<DropdownMenu.Content align="start" className={cn(className)} {...props} />
 );
 
 export type PromptInputActionMenuItemProps = ComponentProps<
-	typeof DropdownMenuItem
+	typeof DropdownMenu.Item
 >;
 export const PromptInputActionMenuItem = ({
 	className,
 	...props
 }: PromptInputActionMenuItemProps) => (
-	<DropdownMenuItem className={cn(className)} {...props} />
+	<DropdownMenu.Item className={cn(className)} {...props} />
 );
 
 export type PromptInputSubmitProps = ComponentProps<typeof InputGroupButton> & {
@@ -974,7 +969,7 @@ export type PromptInputSubmitProps = ComponentProps<typeof InputGroupButton> & {
 
 export const PromptInputSubmit = ({
 	className,
-	variant = "default",
+	variant = "primary",
 	size = "icon-sm",
 	status,
 	children,

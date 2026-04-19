@@ -1,17 +1,18 @@
 "use client";
 
 import type { IconProps } from "@phosphor-icons/react";
-import { PlusIcon } from "@phosphor-icons/react";
+import { PlusIcon } from "@phosphor-icons/react/dist/ssr";
 import { cloneElement, memo, type ReactElement, type ReactNode } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ds/button";
+import { Card } from "@/components/ds/card";
 import { cn } from "@/lib/utils";
 
 export interface EmptyStateAction {
 	label: string;
 	onClick: () => void;
-	size?: "default" | "sm" | "lg" | "icon";
-	variant?: "default" | "destructive" | "ghost" | "outline";
+	size?: "sm" | "md" | "lg";
+	tone?: "danger";
+	variant?: "primary" | "secondary" | "ghost";
 }
 
 export interface EmptyStateProps {
@@ -164,7 +165,7 @@ export const EmptyState = memo(function EmptyState({
 				className={cardClasses}
 				role={isMainContent ? "main" : role}
 			>
-				<CardContent className={contentClasses}>
+				<Card.Content className={contentClasses}>
 					{renderIcon()}
 					<div
 						className={cn(
@@ -216,9 +217,10 @@ export const EmptyState = memo(function EmptyState({
 								{action && (
 									<Button
 										onClick={action.onClick}
-										size={action.size || "default"}
+										size={action.size}
+										tone={action.tone}
 										type="button"
-										variant={action.variant || "default"}
+										variant={action.variant}
 									>
 										{variant === "default" && (
 											<div className="absolute inset-0 translate-x-full bg-linear-to-r from-white/0 via-white/20 to-white/0 transition-transform duration-700 group-hover:translate-x-full motion-reduce:transform-none" />
@@ -243,8 +245,9 @@ export const EmptyState = memo(function EmptyState({
 										)}
 										onClick={secondaryAction.onClick}
 										size="lg"
+										tone={secondaryAction.tone}
 										type="button"
-										variant={secondaryAction.variant || "outline"}
+										variant={secondaryAction.variant || "secondary"}
 									>
 										{secondaryAction.label}
 									</Button>
@@ -252,7 +255,7 @@ export const EmptyState = memo(function EmptyState({
 							</div>
 						)}
 					</div>
-				</CardContent>
+				</Card.Content>
 			</Card>
 		);
 	};

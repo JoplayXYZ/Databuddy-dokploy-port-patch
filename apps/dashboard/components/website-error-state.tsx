@@ -1,11 +1,11 @@
 "use client";
 
-import { ArrowLeftIcon } from "@phosphor-icons/react";
-import { CommandIcon } from "@phosphor-icons/react";
-import { HouseIcon } from "@phosphor-icons/react";
-import { LockIcon } from "@phosphor-icons/react";
-import { MagnifyingGlassIcon } from "@phosphor-icons/react";
-import { WarningCircleIcon } from "@phosphor-icons/react";
+import { ArrowLeftIcon } from "@phosphor-icons/react/dist/ssr";
+import { CommandIcon } from "@phosphor-icons/react/dist/ssr";
+import { HouseIcon } from "@phosphor-icons/react/dist/ssr";
+import { LockIcon } from "@phosphor-icons/react/dist/ssr";
+import { MagnifyingGlassIcon } from "@phosphor-icons/react/dist/ssr";
+import { WarningCircleIcon } from "@phosphor-icons/react/dist/ssr";
 import { Command as CommandPrimitive } from "cmdk";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -18,15 +18,9 @@ import type {
 	NavigationItem,
 	NavigationSection,
 } from "@/components/layout/navigation/types";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import {
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogHeader,
-	DialogTitle,
-} from "@/components/ui/dialog";
+import { Button } from "@/components/ds/button";
+import { Card } from "@/components/ds/card";
+import { Dialog } from "@/components/ds/dialog";
 import { cn } from "@/lib/utils";
 
 const ALL_NAVIGATION: NavigationSection[] = [
@@ -247,26 +241,21 @@ export function WebsiteErrorState({
 						<Button
 							className="flex-1"
 							onClick={() => router.back()}
-							variant="outline"
+							variant="secondary"
 						>
 							<ArrowLeftIcon className="mr-2 size-4" weight="duotone" />
 							Go Back
 						</Button>
 					)}
-					<Button
-						asChild
-						className={
-							canGoBack
-								? "flex-1 bg-primary hover:bg-primary/90"
-								: "w-full bg-primary hover:bg-primary/90"
-						}
-						variant="default"
+					<Link
+						className={canGoBack ? "flex-1" : "w-full"}
+						href={isDemoRoute ? "/" : "/websites"}
 					>
-						<Link href={isDemoRoute ? "/" : "/websites"}>
+						<Button className="w-full">
 							<HouseIcon className="mr-2 size-4" weight="duotone" />
 							Back to Websites
-						</Link>
-					</Button>
+						</Button>
+					</Link>
 				</>
 			);
 		}
@@ -277,10 +266,9 @@ export function WebsiteErrorState({
 					{isDemoRoute ? (
 						<>
 							<Button
-								className="flex-1 bg-primary hover:bg-primary/90"
+								className="flex-1"
 								onClick={() => router.push("/auth/sign-in")}
 								size="lg"
-								variant="default"
 							>
 								Sign In
 							</Button>
@@ -288,7 +276,7 @@ export function WebsiteErrorState({
 								className="flex-1"
 								onClick={() => router.push("/")}
 								size="lg"
-								variant="outline"
+								variant="secondary"
 							>
 								Go to Homepage
 							</Button>
@@ -296,10 +284,9 @@ export function WebsiteErrorState({
 					) : (
 						<>
 							<Button
-								className="flex-1 bg-primary hover:bg-primary/90"
+								className="flex-1"
 								onClick={() => router.push("/websites")}
 								size="lg"
-								variant="default"
 							>
 								<ArrowLeftIcon className="mr-2 size-4" weight="duotone" />
 								Back to Websites
@@ -309,7 +296,7 @@ export function WebsiteErrorState({
 									className="flex-1"
 									onClick={() => router.push("/auth/sign-in")}
 									size="lg"
-									variant="outline"
+									variant="secondary"
 								>
 									Sign In
 								</Button>
@@ -322,19 +309,14 @@ export function WebsiteErrorState({
 
 		return (
 			<div className="flex w-full max-w-xs flex-col gap-4 sm:flex-row">
-				<Button
-					className="flex-1 bg-primary hover:bg-primary/90"
-					onClick={() => router.refresh()}
-					size="lg"
-					variant="default"
-				>
+				<Button className="flex-1" onClick={() => router.refresh()} size="lg">
 					Try Again
 				</Button>
 				<Button
 					className="flex-1"
 					onClick={() => router.push(isDemoRoute ? "/" : "/websites")}
 					size="lg"
-					variant="outline"
+					variant="secondary"
 				>
 					{isDemoRoute ? "Go to Homepage" : "Back to Websites"}
 				</Button>
@@ -348,7 +330,7 @@ export function WebsiteErrorState({
 	return (
 		<div className="flex min-h-full flex-col items-center justify-center p-4 sm:p-6 lg:p-8">
 			<Card className="flex w-full max-w-md flex-1 flex-col items-center justify-center rounded border-none bg-transparent shadow-none">
-				<CardContent className="flex flex-col items-center justify-center px-6 py-12 text-center sm:px-8 sm:py-14 lg:px-12">
+				<Card.Content className="flex flex-col items-center justify-center px-6 py-12 text-center sm:px-8 sm:py-14 lg:px-12">
 					<div
 						aria-hidden="true"
 						className={cn(
@@ -369,7 +351,6 @@ export function WebsiteErrorState({
 									"text-orange-500 dark:text-orange-400",
 								type === "unknown" && "text-destructive"
 							)}
-							size={24}
 							weight="fill"
 						/>
 					</div>
@@ -387,7 +368,7 @@ export function WebsiteErrorState({
 						<Button
 							className="mt-6 w-full max-w-xs"
 							onClick={() => setOpen(true)}
-							variant="outline"
+							variant="secondary"
 						>
 							<MagnifyingGlassIcon className="mr-2 size-4" weight="duotone" />
 							Search pages, settings...
@@ -400,91 +381,90 @@ export function WebsiteErrorState({
 
 					{type === "not_found" && (
 						<Dialog onOpenChange={setOpen} open={open}>
-							<DialogHeader className="sr-only">
-								<DialogTitle>Search</DialogTitle>
-								<DialogDescription>
-									Search for pages and settings
-								</DialogDescription>
-							</DialogHeader>
-							<DialogContent
-								className="gap-0 overflow-hidden p-0 sm:max-w-xl"
-								showCloseButton={false}
-							>
-								<CommandPrimitive
-									className="flex h-full w-full flex-col"
-									loop
-									onKeyDown={(e) => {
-										if (e.key === "Escape") {
-											setOpen(false);
-										}
-									}}
-								>
-									<div className="dotted-bg flex items-center gap-3 border-b bg-accent px-4 py-3">
-										<div className="flex size-8 shrink-0 items-center justify-center rounded bg-background">
-											<MagnifyingGlassIcon
-												className="size-4 text-muted-foreground"
-												weight="duotone"
-											/>
-										</div>
-										<CommandPrimitive.Input
-											className="h-8 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-											onValueChange={setSearch}
-											placeholder="Search pages, settings..."
-											value={search}
-										/>
-										<kbd className="hidden items-center gap-1 rounded border bg-background px-1.5 py-0.5 font-mono text-muted-foreground text-xs sm:flex">
-											<CommandIcon className="size-3" weight="bold" />
-											<span>K</span>
-										</kbd>
-									</div>
-
-									<CommandPrimitive.List className="max-h-80 scroll-py-2 overflow-y-auto p-2">
-										<CommandPrimitive.Empty className="flex flex-col items-center justify-center gap-2 py-12 text-center">
-											<MagnifyingGlassIcon
-												className="size-8 text-muted-foreground/50"
-												weight="duotone"
-											/>
-											<div>
-												<p className="font-medium text-muted-foreground text-sm">
-													No results found
-												</p>
-												<p className="text-muted-foreground/70 text-xs">
-													Try searching for something else
-												</p>
+							<Dialog.Content className="gap-0 overflow-hidden p-0 sm:max-w-xl">
+								<Dialog.Header className="sr-only">
+									<Dialog.Title>Search</Dialog.Title>
+									<Dialog.Description>
+										Search for pages and settings
+									</Dialog.Description>
+								</Dialog.Header>
+								<Dialog.Body className="p-0">
+									<CommandPrimitive
+										className="flex h-full w-full flex-col"
+										loop
+										onKeyDown={(e) => {
+											if (e.key === "Escape") {
+												setOpen(false);
+											}
+										}}
+									>
+										<div className="dotted-bg flex items-center gap-3 border-b bg-accent px-4 py-3">
+											<div className="flex size-8 shrink-0 items-center justify-center rounded bg-background">
+												<MagnifyingGlassIcon
+													className="size-4 text-muted-foreground"
+													weight="duotone"
+												/>
 											</div>
-										</CommandPrimitive.Empty>
-										{searchItems.map((item) => {
-											const ItemIcon = item.icon;
-											return (
-												<CommandPrimitive.Item
-													className={cn(
-														"group relative flex cursor-pointer select-none items-center gap-3 rounded px-2 py-2 outline-none",
-														"data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground"
-													)}
-													key={item.path}
-													onSelect={() => handleSelect(item)}
-													value={`${item.name} ${item.path}`}
-												>
-													<div className="flex size-7 shrink-0 items-center justify-center rounded bg-accent group-data-[selected=true]:bg-background">
-														<ItemIcon
-															className="size-4 text-muted-foreground"
-															weight="duotone"
-														/>
-													</div>
-													<div className="min-w-0 flex-1">
-														<p className="truncate font-medium text-sm leading-tight">
-															{item.name}
-														</p>
-														<p className="truncate text-muted-foreground text-xs">
-															{item.path}
-														</p>
-													</div>
-												</CommandPrimitive.Item>
-											);
-										})}
-									</CommandPrimitive.List>
-								</CommandPrimitive>
-							</DialogContent>
+											<CommandPrimitive.Input
+												className="h-8 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+												onValueChange={setSearch}
+												placeholder="Search pages, settings..."
+												value={search}
+											/>
+											<kbd className="hidden items-center gap-1 rounded border bg-background px-1.5 py-0.5 font-mono text-muted-foreground text-xs sm:flex">
+												<CommandIcon className="size-3" weight="bold" />
+												<span>K</span>
+											</kbd>
+										</div>
+
+										<CommandPrimitive.List className="max-h-80 scroll-py-2 overflow-y-auto p-2">
+											<CommandPrimitive.Empty className="flex flex-col items-center justify-center gap-2 py-12 text-center">
+												<MagnifyingGlassIcon
+													className="size-8 text-muted-foreground/50"
+													weight="duotone"
+												/>
+												<div>
+													<p className="font-medium text-muted-foreground text-sm">
+														No results found
+													</p>
+													<p className="text-muted-foreground/70 text-xs">
+														Try searching for something else
+													</p>
+												</div>
+											</CommandPrimitive.Empty>
+											{searchItems.map((item) => {
+												const ItemIcon = item.icon;
+												return (
+													<CommandPrimitive.Item
+														className={cn(
+															"group relative flex cursor-pointer select-none items-center gap-3 rounded px-2 py-2 outline-none",
+															"data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground"
+														)}
+														key={item.path}
+														onSelect={() => handleSelect(item)}
+														value={`${item.name} ${item.path}`}
+													>
+														<div className="flex size-7 shrink-0 items-center justify-center rounded bg-accent group-data-[selected=true]:bg-background">
+															<ItemIcon
+																className="size-4 text-muted-foreground"
+																weight="duotone"
+															/>
+														</div>
+														<div className="min-w-0 flex-1">
+															<p className="truncate font-medium text-sm leading-tight">
+																{item.name}
+															</p>
+															<p className="truncate text-muted-foreground text-xs">
+																{item.path}
+															</p>
+														</div>
+													</CommandPrimitive.Item>
+												);
+											})}
+										</CommandPrimitive.List>
+									</CommandPrimitive>
+								</Dialog.Body>
+							</Dialog.Content>
 						</Dialog>
 					)}
 
@@ -493,7 +473,7 @@ export function WebsiteErrorState({
 							{actions}
 						</div>
 					)}
-				</CardContent>
+				</Card.Content>
 			</Card>
 		</div>
 	);

@@ -4,13 +4,9 @@ import { InfoIcon } from "@phosphor-icons/react";
 import { TrendDownIcon } from "@phosphor-icons/react";
 import { TrendUpIcon } from "@phosphor-icons/react";
 import { GaugeChart, type GaugeRating } from "@/components/charts/gauge-chart";
-import { Card } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import {
-	Tooltip,
-	TooltipContent,
-	TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Card } from "@/components/ds/card";
+import { Skeleton } from "@/components/ds/skeleton";
+import { Tooltip } from "@/components/ds/tooltip";
 import { cn } from "@/lib/utils";
 
 interface VitalConfig {
@@ -302,55 +298,57 @@ export function VitalGaugeCard({
 				)}
 
 				<div className="absolute top-2 right-2">
-					<Tooltip>
-						<TooltipTrigger asChild>
-							<button
-								aria-label={`Learn more about ${config.label}`}
-								className="rounded p-1 text-muted-foreground/60 transition-colors hover:bg-background/50 hover:text-foreground"
-								onClick={(e) => e.stopPropagation()}
-								type="button"
-							>
-								<InfoIcon className="size-3.5" weight="duotone" />
-							</button>
-						</TooltipTrigger>
-						<TooltipContent className="max-w-xs p-0" side="top">
-							<div className="border-b bg-accent px-3 py-2">
-								<p className="font-semibold text-foreground text-sm">
-									{config.label}
-								</p>
-								<p className="mt-0.5 text-muted-foreground text-xs">
-									{config.explanation}
-								</p>
-							</div>
-							{rating === "poor" && config.improvementTips.length > 0 && (
-								<div className="border-b px-3 py-2">
-									<p className="mb-1 font-medium text-warning text-xs">
-										How to improve:
+					<Tooltip
+						content={
+							<div className="max-w-xs p-0">
+								<div className="border-b bg-accent px-3 py-2">
+									<p className="font-semibold text-foreground text-sm">
+										{config.label}
 									</p>
-									<ul className="space-y-0.5">
-										{config.improvementTips.slice(0, 3).map((tip) => (
-											<li className="text-muted-foreground text-xs" key={tip}>
-												• {tip}
-											</li>
-										))}
-									</ul>
+									<p className="mt-0.5 text-muted-foreground text-xs">
+										{config.explanation}
+									</p>
 								</div>
-							)}
-							<div className="flex justify-between bg-accent px-3 py-1.5">
-								<span className="text-muted-foreground text-xs">
-									Good: {config.lowerIsBetter === false ? "≥" : "≤"}{" "}
-									{config.name === "CLS"
-										? config.goodThreshold
-										: `${config.goodThreshold}${config.unit}`}
-								</span>
-								<span className="text-muted-foreground text-xs">
-									Poor: {config.lowerIsBetter === false ? "<" : ">"}{" "}
-									{config.name === "CLS"
-										? config.poorThreshold
-										: `${config.poorThreshold}${config.unit}`}
-								</span>
+								{rating === "poor" && config.improvementTips.length > 0 && (
+									<div className="border-b px-3 py-2">
+										<p className="mb-1 font-medium text-warning text-xs">
+											How to improve:
+										</p>
+										<ul className="space-y-0.5">
+											{config.improvementTips.slice(0, 3).map((tip) => (
+												<li className="text-muted-foreground text-xs" key={tip}>
+													• {tip}
+												</li>
+											))}
+										</ul>
+									</div>
+								)}
+								<div className="flex justify-between bg-accent px-3 py-1.5">
+									<span className="text-muted-foreground text-xs">
+										Good: {config.lowerIsBetter === false ? "≥" : "≤"}{" "}
+										{config.name === "CLS"
+											? config.goodThreshold
+											: `${config.goodThreshold}${config.unit}`}
+									</span>
+									<span className="text-muted-foreground text-xs">
+										Poor: {config.lowerIsBetter === false ? "<" : ">"}{" "}
+										{config.name === "CLS"
+											? config.poorThreshold
+											: `${config.poorThreshold}${config.unit}`}
+									</span>
+								</div>
 							</div>
-						</TooltipContent>
+						}
+						side="top"
+					>
+						<button
+							aria-label={`Learn more about ${config.label}`}
+							className="rounded p-1 text-muted-foreground/60 transition-colors hover:bg-background/50 hover:text-foreground"
+							onClick={(e) => e.stopPropagation()}
+							type="button"
+						>
+							<InfoIcon className="size-3.5" weight="duotone" />
+						</button>
 					</Tooltip>
 				</div>
 

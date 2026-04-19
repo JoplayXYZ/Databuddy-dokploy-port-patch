@@ -1,10 +1,10 @@
 "use client";
 
-import { WarningIcon } from "@phosphor-icons/react";
+import { WarningIcon } from "@phosphor-icons/react/dist/ssr";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ds/button";
 import { formatLocaleNumber } from "@/lib/format-locale-number";
 import { orpc } from "@/lib/orpc";
 

@@ -12,19 +12,12 @@ import Link from "next/link";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { TransferToOrgDialog } from "@/components/transfer-to-org-dialog";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ds/badge";
 import { List } from "@/components/ui/composables/list";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuSeparator,
-	DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Label } from "@/components/ui/label";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Switch } from "@/components/ui/switch";
+import { DropdownMenu } from "@/components/ds/dropdown-menu";
+import { Field } from "@/components/ds/field";
+import { Skeleton } from "@/components/ds/skeleton";
+import { Switch } from "@/components/ds/switch";
 import { getStatusPageUrl } from "@/lib/app-url";
 import { orpc } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
@@ -99,62 +92,62 @@ function StatusPageActions({
 	return (
 		<>
 			<DropdownMenu>
-				<DropdownMenuTrigger asChild>
-					<Button
-						aria-label="Status page actions"
-						className="size-8 opacity-50 hover:opacity-100 data-[state=open]:opacity-100"
-						data-dropdown-trigger
-						size="icon"
-						variant="ghost"
+				<DropdownMenu.Trigger
+					aria-label="Status page actions"
+					className="inline-flex size-8 items-center justify-center gap-1.5 rounded-md bg-transparent p-0 font-medium text-muted-foreground opacity-50 transition-all duration-(--duration-quick) ease-(--ease-smooth) hover:bg-interactive-hover hover:text-foreground hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 disabled:pointer-events-none disabled:opacity-50 data-[state=open]:opacity-100"
+					data-dropdown-trigger
+				>
+					<DotsThreeIcon className="size-5" weight="bold" />
+				</DropdownMenu.Trigger>
+				<DropdownMenu.Content align="end" className="w-52">
+					<DropdownMenu.Item
+						render={
+							<Link
+								className="gap-2"
+								href={`/monitors/status-pages/${statusPage.id}`}
+							/>
+						}
 					>
-						<DotsThreeIcon className="size-5" weight="bold" />
-					</Button>
-				</DropdownMenuTrigger>
-				<DropdownMenuContent align="end" className="w-52">
-					<DropdownMenuItem asChild>
-						<Link
-							className="gap-2"
-							href={`/monitors/status-pages/${statusPage.id}`}
-						>
-							<PencilSimpleIcon className="size-4" weight="duotone" />
-							Manage Monitors
-						</Link>
-					</DropdownMenuItem>
-					<DropdownMenuItem className="gap-2" onClick={onEditAction}>
+						<PencilSimpleIcon className="size-4" weight="duotone" />
+						Manage Monitors
+					</DropdownMenu.Item>
+					<DropdownMenu.Item className="gap-2" onClick={onEditAction}>
 						<PencilSimpleIcon className="size-4" weight="duotone" />
 						Edit Details
-					</DropdownMenuItem>
-					<DropdownMenuItem className="gap-2" onClick={handleCopyUrl}>
+					</DropdownMenu.Item>
+					<DropdownMenu.Item className="gap-2" onClick={handleCopyUrl}>
 						<CopyIcon className="size-4" weight="duotone" />
 						Copy URL
-					</DropdownMenuItem>
-					<DropdownMenuItem asChild>
-						<Link
-							className="gap-2"
-							href={url}
-							rel="noopener noreferrer"
-							target="_blank"
-						>
-							<ArrowSquareOutIcon className="size-4" weight="duotone" />
-							View Page
-						</Link>
-					</DropdownMenuItem>
-					<DropdownMenuItem
+					</DropdownMenu.Item>
+					<DropdownMenu.Item
+						render={
+							<Link
+								className="gap-2"
+								href={url}
+								rel="noopener noreferrer"
+								target="_blank"
+							/>
+						}
+					>
+						<ArrowSquareOutIcon className="size-4" weight="duotone" />
+						View Page
+					</DropdownMenu.Item>
+					<DropdownMenu.Item
 						className="gap-2"
 						onClick={() => setIsTransferOpen(true)}
 					>
 						<ArrowSquareOutIcon className="size-4" weight="duotone" />
 						Transfer to Workspace
-					</DropdownMenuItem>
-					<DropdownMenuSeparator />
-					<DropdownMenuItem
+					</DropdownMenu.Item>
+					<DropdownMenu.Separator />
+					<DropdownMenu.Item
 						className="gap-2 text-destructive focus:bg-destructive/10 focus:text-destructive"
 						onClick={onDeleteAction}
 					>
 						<TrashIcon className="size-4" weight="duotone" />
 						Delete
-					</DropdownMenuItem>
-				</DropdownMenuContent>
+					</DropdownMenu.Item>
+				</DropdownMenu.Content>
 			</DropdownMenu>
 
 			<TransferToOrgDialog
@@ -168,12 +161,12 @@ function StatusPageActions({
 				warning="The status page and its configuration will be transferred to {orgName}."
 			>
 				<div className="flex items-center justify-between rounded border p-3">
-					<Label
+					<Field.Label
 						className="cursor-pointer text-sm"
 						htmlFor="include-monitors-row"
 					>
 						Include all linked monitors
-					</Label>
+					</Field.Label>
 					<Switch
 						checked={includeMonitors}
 						id="include-monitors-row"
@@ -258,7 +251,7 @@ export function StatusPageRow({
 				<List.Cell className="w-20">
 					<Badge
 						className="shrink-0"
-						variant={hasMonitors ? "green" : "secondary"}
+						variant={hasMonitors ? "success" : "muted"}
 					>
 						{hasMonitors ? "Active" : "Empty"}
 					</Badge>
