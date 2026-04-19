@@ -37,17 +37,52 @@ const GLOBAL_ALLOWED_FILTERS = [
 	"utm_campaign",
 ] as const;
 
-const DANGEROUS_SQL_KEYWORDS = [
-	"DROP",
-	"DELETE",
-	"INSERT",
-	"UPDATE",
-	"CREATE",
-	"ALTER",
-	"TRUNCATE",
-	"EXEC",
-	"EXECUTE",
-] as const;
+const ALLOWED_GROUPBY_FIELDS = new Set([
+	"country",
+	"region",
+	"city",
+	"timezone",
+	"language",
+	"browser_name",
+	"browser_version",
+	"os_name",
+	"os_version",
+	"viewport_size",
+	"device_type",
+	"path",
+	"date",
+	"name",
+	"referrer",
+	"utm_source",
+	"utm_medium",
+	"utm_campaign",
+	"utm_term",
+	"utm_content",
+	"source",
+	"message",
+	"error_type",
+	"duration_range",
+	"depth_range",
+]);
+
+const ALLOWED_ORDERBY_FIELDS = new Set([
+	"visitors",
+	"sessions",
+	"pageviews",
+	"clicks",
+	"count",
+	"total",
+	"date",
+	"time",
+	"errors",
+	"p50_load_time",
+	"avg_scroll_depth",
+	"uptime_percentage",
+	"revenue",
+	"samples",
+	"total_events",
+	"unique_users",
+]);
 
 const SQL_EXPRESSIONS = {
 	normalizedPath: Expressions.path.normalized,
@@ -95,26 +130,41 @@ function escapeLikePattern(value: string): string {
 	return value.replace(/\\/g, "\\\\").replace(/[%_]/g, "\\$&");
 }
 
-function validateNoSqlInjection(field: string, context: string): void {
-	const upperField = field.toUpperCase();
-	for (const keyword of DANGEROUS_SQL_KEYWORDS) {
-		if (upperField.includes(keyword)) {
-			throw new Error(
-				`${context} field '${field}' contains dangerous keyword: ${keyword}`
-			);
-		}
+function validateGroupByField(field: string): void {
+	if (!ALLOWED_GROUPBY_FIELDS.has(field)) {
+		throw new Error(`Grouping by '${field}' is not permitted.`);
 	}
 }
 
-function buildDeviceTypeSQL(value: string, isNegative: boolean): string {
+const ORDER_BY_REGEX = /^(\w+)\s+(ASC|DESC)$/i;
+
+function validateOrderByField(orderBy: string): void {
+	const match = orderBy.match(ORDER_BY_REGEX);
+	const field = match?.[1];
+	if (!(field && ALLOWED_ORDERBY_FIELDS.has(field))) {
+		throw new Error(`Ordering by '${orderBy}' is not permitted.`);
+	}
+}
+
+function buildDeviceTypeSQL(
+	value: string,
+	isNegative: boolean,
+	key: string
+): FilterResult {
 	const lower = value.toLowerCase();
 	if (lower === "desktop") {
-		const clause = "(device_type = '' OR lower(device_type) = 'desktop')";
-		return isNegative ? `NOT ${clause}` : clause;
+		const clause = `(device_type = '' OR lower(device_type) = {${key}:String})`;
+		return {
+			clause: isNegative ? `NOT ${clause}` : clause,
+			params: { [key]: "desktop" },
+		};
 	}
-	return isNegative
-		? `lower(device_type) != '${lower}'`
-		: `lower(device_type) = '${lower}'`;
+	return {
+		clause: isNegative
+			? `lower(device_type) != {${key}:String}`
+			: `lower(device_type) = {${key}:String}`,
+		params: { [key]: lower },
+	};
 }
 
 interface FilterResult {
@@ -232,10 +282,7 @@ export class SimpleQueryBuilder {
 				filter.op === "ne" ||
 				filter.op === "not_in" ||
 				filter.op === "not_contains";
-			return {
-				clause: buildDeviceTypeSQL(filter.value, isNegative),
-				params: {},
-			};
+			return buildDeviceTypeSQL(filter.value, isNegative, key);
 		}
 
 		if (
@@ -305,7 +352,7 @@ export class SimpleQueryBuilder {
 			const whereClause = this.buildWhereClauseFromFilters(whereClauseParams);
 
 			if (this.request.organizationWebsiteIds) {
-				whereClauseParams.__orgLevel = true;
+				whereClauseParams.__orgLevel = "true";
 			}
 
 			const helpers = this.config.plugins?.sessionAttribution
@@ -650,12 +697,13 @@ export class SimpleQueryBuilder {
 			groupByFields.push(timeBucketAlias);
 		}
 
-		const groupBy = this.request.groupBy || this.config.groupBy;
-		if (groupBy?.length) {
-			for (const f of groupBy) {
-				validateNoSqlInjection(f, "Grouping");
+		if (this.request.groupBy?.length) {
+			for (const f of this.request.groupBy) {
+				validateGroupByField(f);
 			}
-			groupByFields.push(...groupBy);
+			groupByFields.push(...this.request.groupBy);
+		} else if (this.config.groupBy?.length) {
+			groupByFields.push(...this.config.groupBy);
 		}
 
 		if (groupByFields.length === 0) {
@@ -666,12 +714,14 @@ export class SimpleQueryBuilder {
 	}
 
 	private buildOrderByClause(): string {
-		const orderBy = this.request.orderBy || this.config.orderBy;
-		if (!orderBy) {
-			return "";
+		if (this.request.orderBy) {
+			validateOrderByField(this.request.orderBy);
+			return ` ORDER BY ${this.request.orderBy}`;
 		}
-		validateNoSqlInjection(orderBy, "Ordering");
-		return ` ORDER BY ${orderBy}`;
+		if (this.config.orderBy) {
+			return ` ORDER BY ${this.config.orderBy}`;
+		}
+		return "";
 	}
 
 	private buildLimitClause(): string {
