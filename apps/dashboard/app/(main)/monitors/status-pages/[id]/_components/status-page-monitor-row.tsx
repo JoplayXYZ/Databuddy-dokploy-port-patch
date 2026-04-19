@@ -9,11 +9,11 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@/components/ds/badge";
 import { Button } from "@/components/ui/button";
 import { List } from "@/components/ui/composables/list";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
+import { Field } from "@/components/ds/field";
+import { Switch } from "@/components/ds/switch";
 import { orpc } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
 
@@ -214,7 +214,7 @@ export function StatusPageMonitorRow({
 									</span>
 								)}
 								{isPaused && (
-									<Badge className="shrink-0" variant="amber">
+									<Badge className="shrink-0" variant="warning">
 										Paused
 									</Badge>
 								)}
@@ -251,12 +251,12 @@ export function StatusPageMonitorRow({
 							id={`hide-url-${monitor.id}`}
 							onCheckedChange={(v) => handleToggle("hideUrl", v)}
 						/>
-						<Label
+						<Field.Label
 							className="cursor-pointer font-normal text-muted-foreground text-xs"
 							htmlFor={`hide-url-${monitor.id}`}
 						>
 							Hide URL
-						</Label>
+						</Field.Label>
 					</div>
 					<div className="flex items-center gap-2">
 						<Switch
@@ -264,12 +264,12 @@ export function StatusPageMonitorRow({
 							id={`hide-uptime-${monitor.id}`}
 							onCheckedChange={(v) => handleToggle("hideUptimePercentage", v)}
 						/>
-						<Label
+						<Field.Label
 							className="cursor-pointer font-normal text-muted-foreground text-xs"
 							htmlFor={`hide-uptime-${monitor.id}`}
 						>
 							Hide Uptime
-						</Label>
+						</Field.Label>
 					</div>
 					<div className="flex items-center gap-2">
 						<Switch
@@ -277,12 +277,12 @@ export function StatusPageMonitorRow({
 							id={`hide-latency-${monitor.id}`}
 							onCheckedChange={(v) => handleToggle("hideLatency", v)}
 						/>
-						<Label
+						<Field.Label
 							className="cursor-pointer font-normal text-muted-foreground text-xs"
 							htmlFor={`hide-latency-${monitor.id}`}
 						>
 							Hide Latency
-						</Label>
+						</Field.Label>
 					</div>
 				</List.Cell>
 

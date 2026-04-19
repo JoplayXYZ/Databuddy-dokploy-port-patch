@@ -13,6 +13,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ds/badge";
 import { Button } from "@/components/ds/button";
+import { StatusDot } from "@/components/ds/status-dot";
 import { Card } from "@/components/ds/card";
 import { Dialog } from "@/components/ds/dialog";
 import { DropdownMenu } from "@/components/ds/dropdown-menu";
@@ -288,8 +289,9 @@ export default function NotificationsSettingsPage() {
 														<Badge
 															variant={alarm.enabled ? "success" : "warning"}
 														>
-															<span
-																className={`size-1.5 rounded-full ${alarm.enabled ? "bg-success" : "bg-warning"}`}
+															<StatusDot
+																color={alarm.enabled ? "success" : "warning"}
+																size="sm"
 															/>
 															{alarm.enabled ? "Active" : "Paused"}
 														</Badge>

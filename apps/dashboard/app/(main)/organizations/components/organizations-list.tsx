@@ -1,10 +1,10 @@
 "use client";
 
 import { authClient } from "@databuddy/auth/client";
-import { BuildingsIcon } from "@phosphor-icons/react";
-import { CaretRightIcon } from "@phosphor-icons/react";
-import { CheckCircleIcon } from "@phosphor-icons/react";
-import { PlusIcon } from "@phosphor-icons/react";
+import { BuildingsIcon } from "@phosphor-icons/react/dist/ssr";
+import { CaretRightIcon } from "@phosphor-icons/react/dist/ssr";
+import { CheckCircleIcon } from "@phosphor-icons/react/dist/ssr";
+import { PlusIcon } from "@phosphor-icons/react/dist/ssr";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -16,8 +16,8 @@ import {
 } from "@/components/providers/organizations-provider";
 import { RightSidebar } from "@/components/right-sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ds/badge";
+import { Button } from "@/components/ds/button";
 import dayjs from "@/lib/dayjs";
 import { cn, getOrganizationInitials } from "@/lib/utils";
 
@@ -103,7 +103,7 @@ function OrganizationRow({
 			</div>
 
 			{isActive && (
-				<Badge variant="green">
+				<Badge variant="success">
 					<CheckCircleIcon className="mr-1" size={12} weight="fill" />
 					Active
 				</Badge>

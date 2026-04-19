@@ -1,20 +1,20 @@
 "use client";
 
 import type { Icon as PhosphorIcon } from "@phosphor-icons/react";
-import { BuildingsIcon } from "@phosphor-icons/react";
-import { EnvelopeIcon } from "@phosphor-icons/react";
-import { GearIcon } from "@phosphor-icons/react";
-import { GlobeIcon } from "@phosphor-icons/react";
-import { UsersIcon } from "@phosphor-icons/react";
+import { BuildingsIcon } from "@phosphor-icons/react/dist/ssr";
+import { EnvelopeIcon } from "@phosphor-icons/react/dist/ssr";
+import { GearIcon } from "@phosphor-icons/react/dist/ssr";
+import { GlobeIcon } from "@phosphor-icons/react/dist/ssr";
+import { UsersIcon } from "@phosphor-icons/react/dist/ssr";
 import { useAtomValue } from "jotai";
 import { usePathname } from "next/navigation";
 import { useMemo, useState } from "react";
 import { PageHeader } from "@/app/(main)/websites/_components/page-header";
-import { EmptyState } from "@/components/empty-state";
+import { EmptyState } from "@/components/ds/empty-state";
 import { CreateOrganizationDialog } from "@/components/organizations/create-organization-dialog";
 import { InviteMemberDialog } from "@/components/organizations/invite-member-dialog";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ds/button";
+import { Skeleton } from "@/components/ds/skeleton";
 import {
 	activeOrganizationAtom,
 	isLoadingOrganizationsAtom,

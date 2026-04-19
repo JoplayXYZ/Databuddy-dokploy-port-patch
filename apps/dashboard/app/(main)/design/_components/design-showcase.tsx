@@ -11,7 +11,7 @@ import { Divider } from "@/components/ds/divider";
 import { DropdownMenu } from "@/components/ds/dropdown-menu";
 import { EmptyState } from "@/components/ds/empty-state";
 import { Field } from "@/components/ds/field";
-import { Input } from "@/components/ds/input";
+import { Input } from "@/components/ui/input";
 import { Popover } from "@/components/ds/popover";
 import { Select } from "@/components/ds/select";
 import { Sheet } from "@/components/ds/sheet";
@@ -20,7 +20,7 @@ import { Spinner } from "@/components/ds/spinner";
 import { Switch } from "@/components/ds/switch";
 import { Tabs } from "@/components/ds/tabs";
 import { Text } from "@/components/ds/text";
-import { Textarea } from "@/components/ds/textarea";
+import { Textarea } from "@/components/ui/textarea";
 import { Tooltip } from "@/components/ds/tooltip";
 import {
 	ArrowRight,

@@ -1,24 +1,17 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { HeartbeatIcon } from "@phosphor-icons/react";
-import { ListIcon } from "@phosphor-icons/react";
-import { PlusIcon } from "@phosphor-icons/react";
+import { HeartbeatIcon } from "@phosphor-icons/react/dist/ssr";
+import { ListIcon } from "@phosphor-icons/react/dist/ssr";
+import { PlusIcon } from "@phosphor-icons/react/dist/ssr";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { useOrganizationsContext } from "@/components/providers/organizations-provider";
-import { Button } from "@/components/ui/button";
-import {
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogFooter,
-	DialogHeader,
-	DialogTitle,
-} from "@/components/ui/dialog";
+import { Button } from "@/components/ds/button";
+import { Dialog } from "@/components/ds/dialog";
 import {
 	Form,
 	FormControl,
@@ -28,13 +21,7 @@ import {
 	FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "@/components/ui/select";
+import { DropdownMenu } from "@/components/ds/dropdown-menu";
 import { orpc } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
 
@@ -167,55 +154,66 @@ export function AddMonitorDialog({
 
 	return (
 		<Dialog onOpenChange={handleClose} open={open}>
-			<DialogContent className="sm:max-w-lg">
-				<DialogHeader>
-					<DialogTitle>Add Monitor</DialogTitle>
-					<DialogDescription>
+			<Dialog.Content className="sm:max-w-lg">
+				<Dialog.Close />
+				<Dialog.Header>
+					<Dialog.Title>Add Monitor</Dialog.Title>
+					<Dialog.Description>
 						Pick an existing monitor or create a new one.
-					</DialogDescription>
-				</DialogHeader>
+					</Dialog.Description>
+				</Dialog.Header>
 
-				<div className="flex gap-1 rounded border bg-accent/30 p-1">
-					<button
-						className={cn(
-							"flex flex-1 items-center justify-center gap-1.5 rounded px-3 py-1.5 font-medium text-sm transition-colors",
-							mode === "existing"
-								? "bg-background text-foreground shadow-sm"
-								: "text-muted-foreground hover:text-foreground"
-						)}
-						onClick={() => setMode("existing")}
-						type="button"
-					>
-						<ListIcon className="size-4" weight="duotone" />
-						Existing
-					</button>
-					<button
-						className={cn(
-							"flex flex-1 items-center justify-center gap-1.5 rounded px-3 py-1.5 font-medium text-sm transition-colors",
-							mode === "create"
-								? "bg-background text-foreground shadow-sm"
-								: "text-muted-foreground hover:text-foreground"
-						)}
-						onClick={() => setMode("create")}
-						type="button"
-					>
-						<PlusIcon className="size-4" />
-						Create New
-					</button>
-				</div>
+				<Dialog.Body className="space-y-4">
+					<div className="flex gap-1 rounded border bg-accent/30 p-1">
+						<button
+							className={cn(
+								"flex flex-1 items-center justify-center gap-1.5 rounded px-3 py-1.5 font-medium text-sm transition-colors",
+								mode === "existing"
+									? "bg-background text-foreground shadow-sm"
+									: "text-muted-foreground hover:text-foreground"
+							)}
+							onClick={() => setMode("existing")}
+							type="button"
+						>
+							<ListIcon className="size-4" weight="duotone" />
+							Existing
+						</button>
+						<button
+							className={cn(
+								"flex flex-1 items-center justify-center gap-1.5 rounded px-3 py-1.5 font-medium text-sm transition-colors",
+								mode === "create"
+									? "bg-background text-foreground shadow-sm"
+									: "text-muted-foreground hover:text-foreground"
+							)}
+							onClick={() => setMode("create")}
+							type="button"
+						>
+							<PlusIcon className="size-4" />
+							Create New
+						</button>
+					</div>
 
-				{mode === "existing" ? (
-					<>
+					{mode === "existing" ? (
 						<div className="space-y-2">
-							<Select
-								disabled={schedulesQuery.isLoading}
-								onValueChange={setSelectedScheduleId}
-								value={selectedScheduleId}
-							>
-								<SelectTrigger>
-									<SelectValue placeholder="Select a monitor..." />
-								</SelectTrigger>
-								<SelectContent>
+							<DropdownMenu>
+								<DropdownMenu.Trigger
+									className="flex h-9 w-full items-center justify-between rounded-md border bg-background px-3 text-sm disabled:pointer-events-none disabled:opacity-50"
+									disabled={schedulesQuery.isLoading}
+								>
+									{selectedScheduleId
+										? availableSchedules.find(
+												(s) => s.id === selectedScheduleId
+											)?.name ||
+											availableSchedules.find(
+												(s) => s.id === selectedScheduleId
+											)?.url ||
+											"Select a monitor..."
+										: "Select a monitor..."}
+								</DropdownMenu.Trigger>
+								<DropdownMenu.Content
+									align="start"
+									className="w-[var(--anchor-width)]"
+								>
 									{availableSchedules.length === 0 ? (
 										<div className="flex flex-col items-center gap-2 px-4 py-6 text-center">
 											<HeartbeatIcon
@@ -229,125 +227,138 @@ export function AddMonitorDialog({
 												className="mt-1"
 												onClick={() => setMode("create")}
 												size="sm"
-												variant="outline"
+												variant="secondary"
 											>
 												Create one
 											</Button>
 										</div>
 									) : (
-										availableSchedules.map((schedule) => (
-											<SelectItem key={schedule.id} value={schedule.id}>
-												{schedule.name || schedule.url}
-											</SelectItem>
-										))
+										<DropdownMenu.RadioGroup
+											onValueChange={setSelectedScheduleId}
+											value={selectedScheduleId}
+										>
+											{availableSchedules.map((schedule) => (
+												<DropdownMenu.RadioItem
+													key={schedule.id}
+													value={schedule.id}
+												>
+													{schedule.name || schedule.url}
+												</DropdownMenu.RadioItem>
+											))}
+										</DropdownMenu.RadioGroup>
 									)}
-								</SelectContent>
-							</Select>
+								</DropdownMenu.Content>
+							</DropdownMenu>
 						</div>
-
-						<DialogFooter>
-							<Button onClick={() => handleClose(false)} variant="outline">
-								Cancel
-							</Button>
-							<Button
-								disabled={!selectedScheduleId || isPending}
-								onClick={handleAddExisting}
+					) : (
+						<Form {...form}>
+							<form
+								className="space-y-4"
+								onSubmit={form.handleSubmit(handleCreate)}
 							>
-								{addMutation.isPending ? "Adding..." : "Add Monitor"}
-							</Button>
-						</DialogFooter>
-					</>
-				) : (
-					<Form {...form}>
-						<form
-							className="space-y-4"
-							onSubmit={form.handleSubmit(handleCreate)}
+								<FormField
+									control={form.control}
+									name="url"
+									render={({ field }) => (
+										<FormItem>
+											<FormLabel>URL</FormLabel>
+											<FormControl>
+												<Input
+													placeholder="https://api.example.com/health"
+													{...field}
+												/>
+											</FormControl>
+											<FormMessage />
+										</FormItem>
+									)}
+								/>
+
+								<FormField
+									control={form.control}
+									name="name"
+									render={({ field }) => (
+										<FormItem>
+											<FormLabel>Name (optional)</FormLabel>
+											<FormControl>
+												<Input placeholder="e.g. Production API" {...field} />
+											</FormControl>
+											<FormMessage />
+										</FormItem>
+									)}
+								/>
+
+								<FormField
+									control={form.control}
+									name="granularity"
+									render={({ field }) => (
+										<FormItem>
+											<FormLabel>Check Frequency</FormLabel>
+											<div className="flex items-center gap-0 rounded border">
+												{GRANULARITY_OPTIONS.map((opt, i) => {
+													const isActive = field.value === opt.value;
+													return (
+														<Button
+															className={cn(
+																"h-9 flex-1 cursor-pointer whitespace-nowrap rounded-none border-r px-0 font-medium text-sm last:border-r-0",
+																i === 0 && "rounded-l",
+																i === GRANULARITY_OPTIONS.length - 1 &&
+																	"rounded-r",
+																isActive
+																	? "bg-accent text-accent-foreground hover:bg-accent"
+																	: "hover:bg-accent/50"
+															)}
+															key={opt.value}
+															onClick={() => field.onChange(opt.value)}
+															type="button"
+															variant={isActive ? "secondary" : "ghost"}
+														>
+															{opt.label}
+														</Button>
+													);
+												})}
+											</div>
+											<FormMessage />
+										</FormItem>
+									)}
+								/>
+							</form>
+						</Form>
+					)}
+				</Dialog.Body>
+
+				{mode === "existing" ? (
+					<Dialog.Footer>
+						<Button onClick={() => handleClose(false)} variant="secondary">
+							Cancel
+						</Button>
+						<Button
+							disabled={!selectedScheduleId}
+							loading={isPending}
+							onClick={handleAddExisting}
 						>
-							<FormField
-								control={form.control}
-								name="url"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>URL</FormLabel>
-										<FormControl>
-											<Input
-												placeholder="https://api.example.com/health"
-												{...field}
-											/>
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-
-							<FormField
-								control={form.control}
-								name="name"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>Name (optional)</FormLabel>
-										<FormControl>
-											<Input placeholder="e.g. Production API" {...field} />
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-
-							<FormField
-								control={form.control}
-								name="granularity"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>Check Frequency</FormLabel>
-										<div className="flex items-center gap-0 rounded border">
-											{GRANULARITY_OPTIONS.map((opt, i) => {
-												const isActive = field.value === opt.value;
-												return (
-													<Button
-														className={cn(
-															"h-9 flex-1 cursor-pointer whitespace-nowrap rounded-none border-r px-0 font-medium text-sm last:border-r-0",
-															i === 0 && "rounded-l",
-															i === GRANULARITY_OPTIONS.length - 1 &&
-																"rounded-r",
-															isActive
-																? "bg-accent text-accent-foreground hover:bg-accent"
-																: "hover:bg-accent/50"
-														)}
-														key={opt.value}
-														onClick={() => field.onChange(opt.value)}
-														type="button"
-														variant={isActive ? "outline" : "ghost"}
-													>
-														{opt.label}
-													</Button>
-												);
-											})}
-										</div>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-
-							<DialogFooter>
-								<Button
-									onClick={() => handleClose(false)}
-									type="button"
-									variant="outline"
-								>
-									Cancel
-								</Button>
-								<Button
-									disabled={isPending || !form.formState.isValid}
-									type="submit"
-								>
-									{createMutation.isPending ? "Creating..." : "Create & Add"}
-								</Button>
-							</DialogFooter>
-						</form>
-					</Form>
+							Add Monitor
+						</Button>
+					</Dialog.Footer>
+				) : (
+					<Dialog.Footer>
+						<Button
+							onClick={() => handleClose(false)}
+							type="button"
+							variant="secondary"
+						>
+							Cancel
+						</Button>
+						<Button
+							disabled={!form.formState.isValid}
+							loading={isPending}
+							onClick={form.handleSubmit(handleCreate)}
+							type="button"
+						>
+							Create & Add
+						</Button>
+					</Dialog.Footer>
 				)}
-			</DialogContent>
+			</Dialog.Content>
 		</Dialog>
 	);
 }

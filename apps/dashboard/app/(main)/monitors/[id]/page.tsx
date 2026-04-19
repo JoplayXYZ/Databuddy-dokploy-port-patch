@@ -1,15 +1,15 @@
 "use client";
 
-import { ArrowClockwiseIcon } from "@phosphor-icons/react";
-import { ArrowLeftIcon } from "@phosphor-icons/react";
-import { ArrowSquareOutIcon } from "@phosphor-icons/react";
-import { GlobeIcon } from "@phosphor-icons/react";
-import { HeartbeatIcon } from "@phosphor-icons/react";
-import { LightningIcon } from "@phosphor-icons/react";
-import { PauseIcon } from "@phosphor-icons/react";
-import { PencilIcon } from "@phosphor-icons/react";
-import { PlayIcon } from "@phosphor-icons/react";
-import { TrashIcon } from "@phosphor-icons/react";
+import { ArrowClockwiseIcon } from "@phosphor-icons/react/dist/ssr";
+import { ArrowLeftIcon } from "@phosphor-icons/react/dist/ssr";
+import { ArrowSquareOutIcon } from "@phosphor-icons/react/dist/ssr";
+import { GlobeIcon } from "@phosphor-icons/react/dist/ssr";
+import { HeartbeatIcon } from "@phosphor-icons/react/dist/ssr";
+import { LightningIcon } from "@phosphor-icons/react/dist/ssr";
+import { PauseIcon } from "@phosphor-icons/react/dist/ssr";
+import { PencilIcon } from "@phosphor-icons/react/dist/ssr";
+import { PlayIcon } from "@phosphor-icons/react/dist/ssr";
+import { TrashIcon } from "@phosphor-icons/react/dist/ssr";
 import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
 import dynamic from "next/dynamic";
 import Link from "next/link";
@@ -19,7 +19,7 @@ import { toast } from "sonner";
 import { MonitorDetailLoading } from "@/app/(main)/monitors/_components/monitor-detail-loading";
 import { PageHeader } from "@/app/(main)/websites/_components/page-header";
 import { FaviconImage } from "@/components/analytics/favicon-image";
-import { EmptyState } from "@/components/empty-state";
+import { EmptyState } from "@/components/ds/empty-state";
 import { MonitorSheet } from "@/components/monitors/monitor-sheet";
 import { TransferToOrgDialog } from "@/components/transfer-to-org-dialog";
 import {
@@ -32,8 +32,8 @@ import {
 	AlertDialogHeader,
 	AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ds/button";
+import { Skeleton } from "@/components/ds/skeleton";
 import { useDateFilters } from "@/hooks/use-date-filters";
 import { useBatchDynamicQuery } from "@/hooks/use-dynamic-query";
 import { orpc } from "@/lib/orpc";
@@ -577,11 +577,12 @@ export default function MonitorDetailsPage() {
 						</Button>
 						<Button
 							aria-label="Refresh monitor data"
+							className="size-8 px-0"
 							disabled={isRefreshing}
 							onClick={handleRefresh}
-							size="icon-sm"
+							size="md"
 							type="button"
-							variant="outline"
+							variant="secondary"
 						>
 							<ArrowClockwiseIcon
 								className={isRefreshing ? "animate-spin" : ""}
@@ -593,7 +594,7 @@ export default function MonitorDetailsPage() {
 							onClick={handleManualCheck}
 							size="sm"
 							type="button"
-							variant="outline"
+							variant="secondary"
 						>
 							<LightningIcon
 								className={manualCheckMutation.isPending ? "animate-spin" : ""}
@@ -609,7 +610,7 @@ export default function MonitorDetailsPage() {
 							onClick={handleTogglePause}
 							size="sm"
 							type="button"
-							variant="outline"
+							variant="secondary"
 						>
 							{schedule.isPaused ? (
 								<>
@@ -628,7 +629,7 @@ export default function MonitorDetailsPage() {
 							onClick={handleEditMonitor}
 							size="sm"
 							type="button"
-							variant="outline"
+							variant="secondary"
 						>
 							<PencilIcon size={16} weight="duotone" />
 							<span className="hidden sm:inline">Configure</span>
@@ -638,7 +639,7 @@ export default function MonitorDetailsPage() {
 							onClick={() => setIsTransferOpen(true)}
 							size="sm"
 							type="button"
-							variant="outline"
+							variant="secondary"
 						>
 							<ArrowSquareOutIcon size={16} weight="duotone" />
 							<span className="hidden sm:inline">Transfer</span>
@@ -649,7 +650,7 @@ export default function MonitorDetailsPage() {
 							onClick={() => setIsDeleteDialogOpen(true)}
 							size="sm"
 							type="button"
-							variant="outline"
+							variant="secondary"
 						>
 							<TrashIcon size={16} weight="duotone" />
 							<span className="hidden sm:inline">Delete</span>

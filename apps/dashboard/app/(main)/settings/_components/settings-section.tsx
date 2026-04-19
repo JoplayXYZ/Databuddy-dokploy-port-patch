@@ -1,6 +1,6 @@
-import { CircleNotchIcon } from "@phosphor-icons/react";
+import { CircleNotchIcon } from "@phosphor-icons/react/dist/ssr";
 import { useHotkeys } from "react-hotkeys-hook";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ds/button";
 import { cn } from "@/lib/utils";
 
 interface SettingsSectionProps {

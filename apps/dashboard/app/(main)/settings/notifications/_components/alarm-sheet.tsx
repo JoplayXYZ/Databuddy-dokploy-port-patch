@@ -2,11 +2,11 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
-	EnvelopeSimple,
-	GlobeSimple,
-	Plus,
-	SlackLogo,
-	X,
+	EnvelopeSimpleIcon,
+	GlobeSimpleIcon,
+	PlusIcon,
+	SlackLogoIcon,
+	XIcon,
 } from "@phosphor-icons/react/dist/ssr";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
@@ -18,7 +18,7 @@ import { Accordion } from "@/components/ds/accordion";
 import { Button } from "@/components/ds/button";
 import { Divider } from "@/components/ds/divider";
 import { Field } from "@/components/ds/field";
-import { Input } from "@/components/ds/input";
+import { Input } from "@/components/ui/input";
 import { Sheet } from "@/components/ds/sheet";
 import { Switch } from "@/components/ds/switch";
 import { Text } from "@/components/ds/text";
@@ -37,19 +37,19 @@ const CHANNELS: Record<
 > = {
 	slack: {
 		label: "Slack",
-		icon: SlackLogo,
+		icon: SlackLogoIcon,
 		fieldLabel: "Webhook URL",
 		placeholder: "https://hooks.slack.com/services/...",
 	},
 	email: {
 		label: "Email",
-		icon: EnvelopeSimple,
+		icon: EnvelopeSimpleIcon,
 		fieldLabel: "Email address",
 		placeholder: "alerts@example.com",
 	},
 	webhook: {
 		label: "Webhook",
-		icon: GlobeSimple,
+		icon: GlobeSimpleIcon,
 		fieldLabel: "Endpoint URL",
 		placeholder: "https://api.example.com/webhooks/...",
 	},
@@ -151,7 +151,7 @@ function WebhookHeaders({
 					onClick={() => update([...pairs, { name: "", value: "" }])}
 					type="button"
 				>
-					<Plus className="size-3" />
+					<PlusIcon className="size-3" />
 					Add
 				</button>
 			</div>
@@ -183,7 +183,7 @@ function WebhookHeaders({
 						onClick={() => update(pairs.filter((_, j) => j !== i))}
 						type="button"
 					>
-						<X className="size-3" />
+						<XIcon className="size-3" />
 					</button>
 				</div>
 			))}
@@ -362,7 +362,7 @@ export function AlarmSheet({
 										`destinations.${index}.type`
 									) as DestType;
 									const channel = CHANNELS[destType];
-									const Icon = channel?.icon ?? GlobeSimple;
+									const Icon = channel?.icon ?? GlobeSimpleIcon;
 									const identifier = form.watch(
 										`destinations.${index}.identifier`
 									);
@@ -399,7 +399,7 @@ export function AlarmSheet({
 															onClick={() => remove(index)}
 															type="button"
 														>
-															<X className="size-3.5" />
+															<XIcon className="size-3.5" />
 														</button>
 													)}
 												</div>
@@ -489,6 +489,7 @@ export function AlarmSheet({
 						</Button>
 					</Sheet.Footer>
 				</form>
+				<Sheet.Close />
 			</Sheet.Content>
 		</Sheet>
 	);

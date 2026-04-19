@@ -7,7 +7,7 @@ import { Button } from "@/components/ds/button";
 import { Card } from "@/components/ds/card";
 import { Divider } from "@/components/ds/divider";
 import { Field } from "@/components/ds/field";
-import { Input } from "@/components/ds/input";
+import { Input } from "@/components/ui/input";
 import { Text } from "@/components/ds/text";
 import { type Organization, useOrganizations } from "@/hooks/use-organizations";
 import { ApiKeysSection } from "./api-keys-section";

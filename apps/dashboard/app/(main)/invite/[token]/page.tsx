@@ -1,22 +1,22 @@
 "use client";
 
 import type { IconProps } from "@phosphor-icons/react";
-import { ArrowRightIcon } from "@phosphor-icons/react";
-import { CheckCircleIcon } from "@phosphor-icons/react";
-import { HeartbeatIcon } from "@phosphor-icons/react";
-import { LightbulbFilamentIcon } from "@phosphor-icons/react";
-import { LightningIcon } from "@phosphor-icons/react";
-import { ProhibitIcon } from "@phosphor-icons/react";
-import { RobotIcon } from "@phosphor-icons/react";
-import { SpinnerGapIcon } from "@phosphor-icons/react";
-import { TrendUpIcon } from "@phosphor-icons/react";
-import { WaveformIcon } from "@phosphor-icons/react";
-import { XCircleIcon } from "@phosphor-icons/react";
+import { ArrowRightIcon } from "@phosphor-icons/react/dist/ssr";
+import { CheckCircleIcon } from "@phosphor-icons/react/dist/ssr";
+import { HeartbeatIcon } from "@phosphor-icons/react/dist/ssr";
+import { LightbulbFilamentIcon } from "@phosphor-icons/react/dist/ssr";
+import { LightningIcon } from "@phosphor-icons/react/dist/ssr";
+import { ProhibitIcon } from "@phosphor-icons/react/dist/ssr";
+import { RobotIcon } from "@phosphor-icons/react/dist/ssr";
+import { SpinnerGapIcon } from "@phosphor-icons/react/dist/ssr";
+import { TrendUpIcon } from "@phosphor-icons/react/dist/ssr";
+import { WaveformIcon } from "@phosphor-icons/react/dist/ssr";
+import { XCircleIcon } from "@phosphor-icons/react/dist/ssr";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
 import type { ForwardRefExoticComponent, RefAttributes } from "react";
 import { useCallback } from "react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ds/button";
 import {
 	getFeatureDescription,
 	getFeatureLabel,
@@ -120,7 +120,7 @@ function ErrorState({
 					<p className="text-muted-foreground text-sm">{message}</p>
 				</div>
 
-				<Button onClick={() => router.push("/home")} variant="outline">
+				<Button onClick={() => router.push("/home")} variant="secondary">
 					Back to Home
 				</Button>
 			</div>
@@ -249,12 +249,9 @@ function RedeemPrompt({
 				<div className="flex flex-col gap-2">
 					<Button
 						className="w-full gap-2"
-						disabled={isPending}
+						loading={isPending}
 						onClick={onRedeemAction}
 					>
-						{isPending ? (
-							<SpinnerGapIcon className="size-4 animate-spin" />
-						) : null}
 						{isPending ? "Unlocking…" : "Unlock Access"}
 					</Button>
 					<Button

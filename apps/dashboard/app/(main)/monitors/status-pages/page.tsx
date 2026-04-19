@@ -7,7 +7,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Suspense, useState } from "react";
 import { toast } from "sonner";
 import { PageHeader } from "@/app/(main)/websites/_components/page-header";
-import { EmptyState } from "@/components/empty-state";
+import { EmptyState } from "@/components/ds/empty-state";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { FeatureAccessGate } from "@/components/feature-access-gate";
 import { useOrganizationsContext } from "@/components/providers/organizations-provider";
@@ -19,7 +19,7 @@ import {
 import { StatusPageSheet } from "@/components/status-pages/status-page-sheet";
 import { Button } from "@/components/ui/button";
 import { List } from "@/components/ui/composables/list";
-import { DeleteDialog } from "@/components/ui/delete-dialog";
+import { DeleteDialog } from "@/components/ds/delete-dialog";
 import { useFeatureAccess } from "@/hooks/use-feature-access";
 import { orpc } from "@/lib/orpc";
 import { cn } from "@/lib/utils";

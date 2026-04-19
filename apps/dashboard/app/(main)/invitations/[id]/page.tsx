@@ -1,20 +1,19 @@
 "use client";
 
 import { authClient } from "@databuddy/auth/client";
-import { ArrowRightIcon } from "@phosphor-icons/react";
-import { BuildingsIcon } from "@phosphor-icons/react";
-import { CheckCircleIcon } from "@phosphor-icons/react";
-import { ClockIcon } from "@phosphor-icons/react";
-import { SpinnerGapIcon } from "@phosphor-icons/react";
-import { UserPlusIcon } from "@phosphor-icons/react";
-import { XCircleIcon } from "@phosphor-icons/react";
+import { ArrowRightIcon } from "@phosphor-icons/react/dist/ssr";
+import { BuildingsIcon } from "@phosphor-icons/react/dist/ssr";
+import { CheckCircleIcon } from "@phosphor-icons/react/dist/ssr";
+import { ClockIcon } from "@phosphor-icons/react/dist/ssr";
+import { UserPlusIcon } from "@phosphor-icons/react/dist/ssr";
+import { XCircleIcon } from "@phosphor-icons/react/dist/ssr";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
-import { EmptyState } from "@/components/empty-state";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ds/empty-state";
+import { Badge } from "@/components/ds/badge";
+import { Button } from "@/components/ds/button";
+import { Skeleton } from "@/components/ds/skeleton";
 import dayjs from "@/lib/dayjs";
 import { orpc } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
@@ -113,7 +112,7 @@ function InvitationDetails({
 							{invitation.inviterEmail}
 						</span>{" "}
 						invited you as a{" "}
-						<Badge className="ml-1" variant="secondary">
+						<Badge className="ml-1" variant="muted">
 							{formatRole(invitation.role)}
 						</Badge>
 					</p>
@@ -164,7 +163,7 @@ function InvitationDetails({
 								{dayjs(invitation.expiresAt).fromNow()}
 							</p>
 						</div>
-						{isExpiringSoon && <Badge variant="amber">Expiring</Badge>}
+						{isExpiringSoon && <Badge variant="warning">Expiring</Badge>}
 					</div>
 				</div>
 
@@ -172,19 +171,22 @@ function InvitationDetails({
 					<Button
 						className="flex-1 gap-2"
 						disabled={actionStatus !== "idle"}
+						loading={actionStatus === "accepting"}
 						onClick={onAcceptAction}
 					>
 						{actionStatus === "accepting" ? (
-							<SpinnerGapIcon className="size-4 animate-spin" />
+							"Joining…"
 						) : (
-							<UserPlusIcon className="size-4" weight="duotone" />
+							<>
+								<UserPlusIcon className="size-4" weight="duotone" />
+								Join Organization
+							</>
 						)}
-						{actionStatus === "accepting" ? "Joining…" : "Join Organization"}
 					</Button>
 					<Button
 						disabled={actionStatus !== "idle"}
 						onClick={onDeclineAction}
-						variant="outline"
+						variant="secondary"
 					>
 						Maybe Later
 					</Button>

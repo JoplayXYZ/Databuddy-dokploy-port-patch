@@ -12,7 +12,7 @@ import { useState } from "react";
 import { Badge } from "@/components/ds/badge";
 import { Button } from "@/components/ds/button";
 import { Dialog } from "@/components/ds/dialog";
-import { Textarea } from "@/components/ds/textarea";
+import { Textarea } from "@/components/ui/textarea";
 import dayjs from "@/lib/dayjs";
 import { cn } from "@/lib/utils";
 
