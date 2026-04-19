@@ -117,6 +117,7 @@
     "@types/react-dom": "catalog:",
     "@types/react-simple-maps": "^3.0.6",
     "@types/topojson-client": "^3.1.5",
+    "geist": "^1.7.0",
     "husky": "^9.1.7",
     "lint-staged": "^16.4.0",
     "tailwindcss": "^4.2.2",

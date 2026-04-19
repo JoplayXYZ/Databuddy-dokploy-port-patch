@@ -2,26 +2,20 @@ import "./globals.css";
 
 import { Databuddy } from "@databuddy/sdk/react";
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
-import localFont from "next/font/local";
+import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { APP_URL } from "@/lib/app-url";
 import Providers from "./providers";
 
-const inter = Inter({
+const geist = Geist({
 	subsets: ["latin"],
-	variable: "--font-inter",
+	variable: "--font-geist",
 	display: "swap",
 });
 
-const ltSuperiorMono = localFont({
-	src: [
-		{ path: "../fonts/lt-superior-mono/regular.otf", weight: "400" },
-		{ path: "../fonts/lt-superior-mono/medium.otf", weight: "500" },
-		{ path: "../fonts/lt-superior-mono/semibold.otf", weight: "600" },
-		{ path: "../fonts/lt-superior-mono/bold.otf", weight: "700" },
-	],
-	variable: "--font-lt-superior-mono",
+const geistMono = Geist_Mono({
+	subsets: ["latin"],
+	variable: "--font-geist-mono",
 	display: "swap",
 });
 
@@ -112,7 +106,7 @@ export default function RootLayout({
 
 	return (
 		<html
-			className={`${inter.className} ${inter.variable} ${ltSuperiorMono.variable} h-full overflow-hidden`}
+			className={`${geist.className} ${geist.variable} ${geistMono.variable} h-full overflow-hidden`}
 			lang="en"
 			suppressHydrationWarning
 		>

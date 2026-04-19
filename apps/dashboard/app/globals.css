@@ -63,8 +63,8 @@
   --color-brand-purple: var(--brand-purple);
 
   /* Typography */
-  --font-sans: var(--font-inter);
-  --font-mono: var(--font-lt-superior-mono);
+  --font-sans: var(--font-geist);
+  --font-mono: var(--font-geist-mono);
   --font-serif: Georgia, serif;
 
   /* Border Radius System */
