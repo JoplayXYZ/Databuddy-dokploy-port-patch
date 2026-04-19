@@ -41,27 +41,38 @@ const outboundLinksColumns: ColumnDef<OutboundLinkRow, unknown>[] = [
 		accessorKey: "href",
 		header: "URL",
 		cell: ({ getValue }: CellContext<OutboundLinkRow, unknown>) => {
-			const href = getValue();
-			if (typeof href !== "string" || !href) {
+			const raw = getValue();
+			if (typeof raw !== "string" || !raw) {
 				return <span className="text-muted-foreground">—</span>;
 			}
-			const domain = href.replace(PROTOCOL_REGEX, "").split("/")[0];
+			let href: string | null = null;
+			try {
+				const parsed = new URL(raw);
+				if (parsed.protocol === "http:" || parsed.protocol === "https:") {
+					href = parsed.toString();
+				}
+			} catch {}
+			const domain = raw.replace(PROTOCOL_REGEX, "").split("/")[0];
 			return (
 				<div className="flex flex-col gap-1">
-					<a
-						className="max-w-[300px] truncate font-medium text-primary hover:underline"
-						href={href}
-						rel="noopener noreferrer"
-						target="_blank"
-						title={href}
-					>
-						{domain}
-					</a>
+					{href ? (
+						<a
+							className="max-w-[300px] truncate font-medium text-primary hover:underline"
+							href={href}
+							rel="noopener noreferrer"
+							target="_blank"
+							title={href}
+						>
+							{domain}
+						</a>
+					) : (
+						<span className="max-w-[300px] truncate font-medium">{domain}</span>
+					)}
 					<span
 						className="max-w-[300px] truncate text-muted-foreground text-xs"
-						title={href}
+						title={raw}
 					>
-						{href}
+						{raw}
 					</span>
 				</div>
 			);

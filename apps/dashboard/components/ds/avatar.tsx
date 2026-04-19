@@ -35,6 +35,20 @@ export function Avatar({
 }: AvatarProps) {
 	const [failed, setFailed] = useState(false);
 
+	const safeSrc = (() => {
+		if (!src || typeof src !== "string") {
+			return null;
+		}
+		try {
+			const parsed = new URL(src, window.location.origin);
+			return parsed.protocol === "http:" || parsed.protocol === "https:"
+				? parsed.toString()
+				: null;
+		} catch {
+			return null;
+		}
+	})();
+
 	const initials =
 		fallback ??
 		(alt
@@ -46,7 +60,7 @@ export function Avatar({
 					.toUpperCase()
 			: "?");
 
-	if (!src || failed) {
+	if (!safeSrc || failed) {
 		return <span className={cn(avatar({ size }), className)}>{initials}</span>;
 	}
 
@@ -57,7 +71,7 @@ export function Avatar({
 			alt={alt}
 			className={cn(avatar({ size }), "object-cover", className)}
 			onError={() => setFailed(true)}
-			src={src}
+			src={safeSrc}
 			{...rest}
 		/>
 	);
