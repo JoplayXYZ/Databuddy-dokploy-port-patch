@@ -1,29 +1,22 @@
 "use client";
 
 import { authClient } from "@databuddy/auth/client";
-import { CaretRightIcon } from "@phosphor-icons/react";
-import { CreditCardIcon } from "@phosphor-icons/react";
-import { GearIcon } from "@phosphor-icons/react";
-import { PlusIcon } from "@phosphor-icons/react";
-import { SignOutIcon } from "@phosphor-icons/react";
-import { SpinnerGapIcon } from "@phosphor-icons/react";
+import {
+	CaretRightIcon,
+	CreditCardIcon,
+	GearIcon,
+	PlusIcon,
+	SignOutIcon,
+	SpinnerGapIcon,
+} from "@phosphor-icons/react/dist/ssr";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuSeparator,
-	DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-	Tooltip,
-	TooltipContent,
-	TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Avatar } from "@/components/ds/avatar";
+import { DropdownMenu } from "@/components/ds/dropdown-menu";
+import { Tooltip } from "@/components/ds/tooltip";
+import { Text } from "@/components/ds/text";
 
 export interface ProfileButtonUser {
 	email?: string | null;
@@ -59,6 +52,21 @@ interface DeviceSession {
 }
 
 const PRESERVED_QUERY_KEYS = [["auth", "session"], ["device-sessions"]];
+
+function getInitials(
+	name: string | null | undefined,
+	email: string | null | undefined
+) {
+	if (name) {
+		return name
+			.split(" ")
+			.map((n) => n[0])
+			.join("")
+			.toUpperCase()
+			.slice(0, 2);
+	}
+	return email?.[0]?.toUpperCase() || "U";
+}
 
 export function ProfileButtonClient({ user }: ProfileButtonClientProps) {
 	const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -125,36 +133,6 @@ export function ProfileButtonClient({ user }: ProfileButtonClientProps) {
 		setSwitchingTo(null);
 	};
 
-	const handleAddAccount = () => {
-		setIsOpen(false);
-		router.push("/login?add_account=true");
-	};
-
-	const handleSettings = () => {
-		setIsOpen(false);
-		router.push("/settings/account");
-	};
-
-	const handleBilling = () => {
-		setIsOpen(false);
-		router.push("/billing");
-	};
-
-	const getInitials = (
-		name: string | null | undefined,
-		email: string | null | undefined
-	) => {
-		if (name) {
-			return name
-				.split(" ")
-				.map((n) => n[0])
-				.join("")
-				.toUpperCase()
-				.slice(0, 2);
-		}
-		return email?.[0]?.toUpperCase() || "U";
-	};
-
 	const userInitials = getInitials(user?.name, user?.email);
 
 	const otherSessions =
@@ -164,82 +142,85 @@ export function ProfileButtonClient({ user }: ProfileButtonClientProps) {
 
 	return (
 		<DropdownMenu onOpenChange={setIsOpen} open={isOpen}>
-			<Tooltip>
-				<TooltipTrigger asChild>
-					<DropdownMenuTrigger
-						aria-label="Profile menu"
-						className="flex size-8 items-center justify-center rounded-full outline-hidden transition-opacity hover:opacity-80 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-						disabled={isLoggingOut || Boolean(switchingTo)}
-					>
-						<Avatar className="size-8">
-							<AvatarImage
-								alt={user?.name || "User"}
-								src={user?.image || undefined}
-							/>
-							<AvatarFallback className="bg-primary text-primary-foreground text-xs">
-								{userInitials}
-							</AvatarFallback>
-						</Avatar>
-					</DropdownMenuTrigger>
-				</TooltipTrigger>
-				<TooltipContent side="right">
-					<p>{user?.email ?? "Account"}</p>
-				</TooltipContent>
+			<Tooltip content={user?.email ?? "Account"} side="right">
+				<DropdownMenu.Trigger
+					aria-label="Profile menu"
+					className="flex size-8 items-center justify-center rounded-full transition-opacity duration-(--duration-quick) ease-(--ease-smooth) hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
+					disabled={isLoggingOut || Boolean(switchingTo)}
+				>
+					<Avatar
+						alt={user?.name || "User"}
+						className="size-8"
+						fallback={userInitials}
+						src={user?.image || undefined}
+					/>
+				</DropdownMenu.Trigger>
 			</Tooltip>
 
-			<DropdownMenuContent align="start" className="w-56" side="right">
+			<DropdownMenu.Content align="start" className="w-56" side="right">
 				{hasMultipleAccounts &&
 					otherSessions.map((session) => (
-						<DropdownMenuItem
-							className="gap-2.5"
+						<DropdownMenu.Item
 							disabled={switchingTo === session.session.id}
 							key={session.session.id}
 							onClick={() => handleSwitchAccount(session)}
 						>
-							<Avatar className="size-5">
-								<AvatarImage
-									alt={session.user.name}
-									src={session.user.image || undefined}
-								/>
-								<AvatarFallback className="bg-muted text-[10px] text-muted-foreground">
-									{getInitials(session.user.name, session.user.email)}
-								</AvatarFallback>
-							</Avatar>
-							<span className="min-w-0 flex-1 truncate text-sm">
+							<Avatar
+								alt={session.user.name}
+								className="size-5 text-[10px]"
+								fallback={getInitials(session.user.name, session.user.email)}
+								src={session.user.image || undefined}
+							/>
+							<Text className="min-w-0 flex-1 truncate" variant="body">
 								{session.user.email}
-							</span>
+							</Text>
 							{switchingTo === session.session.id ? (
 								<SpinnerGapIcon className="size-3.5 animate-spin text-muted-foreground" />
 							) : (
 								<CaretRightIcon className="size-3.5 text-muted-foreground" />
 							)}
-						</DropdownMenuItem>
+						</DropdownMenu.Item>
 					))}
 
-				{hasMultipleAccounts && <DropdownMenuSeparator />}
+				{hasMultipleAccounts && <DropdownMenu.Separator />}
 
-				<DropdownMenuItem onClick={handleAddAccount}>
+				<DropdownMenu.Item
+					onClick={() => {
+						setIsOpen(false);
+						router.push("/login?add_account=true");
+					}}
+				>
 					<PlusIcon className="size-4" />
 					Add account
-				</DropdownMenuItem>
-				<DropdownMenuItem onClick={handleSettings}>
-					<GearIcon weight="duotone" />
+				</DropdownMenu.Item>
+				<DropdownMenu.Item
+					onClick={() => {
+						setIsOpen(false);
+						router.push("/settings/account");
+					}}
+				>
+					<GearIcon className="size-4" weight="duotone" />
 					Settings
-				</DropdownMenuItem>
-				<DropdownMenuItem onClick={handleBilling}>
-					<CreditCardIcon weight="duotone" />
+				</DropdownMenu.Item>
+				<DropdownMenu.Item
+					onClick={() => {
+						setIsOpen(false);
+						router.push("/billing");
+					}}
+				>
+					<CreditCardIcon className="size-4" weight="duotone" />
 					Billing
-				</DropdownMenuItem>
-				<DropdownMenuSeparator />
-				<DropdownMenuItem
+				</DropdownMenu.Item>
+				<DropdownMenu.Separator />
+				<DropdownMenu.Item
 					disabled={isLoggingOut}
 					onClick={handleLogout}
 					variant="destructive"
 				>
-					<SignOutIcon weight="duotone" />
+					<SignOutIcon className="size-4" weight="duotone" />
 					{isLoggingOut ? "Signing out…" : "Sign out"}
-				</DropdownMenuItem>
-			</DropdownMenuContent>
+				</DropdownMenu.Item>
+			</DropdownMenu.Content>
 		</DropdownMenu>
 	);
 }

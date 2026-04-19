@@ -8,22 +8,20 @@ import { CalendarIcon } from "@phosphor-icons/react/dist/ssr";
 import { useMemo, useState } from "react";
 import { METRIC_COLORS } from "@/components/charts/metrics-constants";
 import { DateRangePicker } from "@/components/date-range-picker";
-import { EmptyState } from "@/components/ds/empty-state";
 import { Card } from "@/components/ds/card";
-import { Chart } from "@/components/ui/composables/chart";
+import { EmptyState } from "@/components/ds/empty-state";
 import { Skeleton } from "@/components/ds/skeleton";
 import { Tabs } from "@/components/ds/tabs";
+import { Chart } from "@/components/ui/composables/chart";
 import {
 	chartAxisTickDefault,
 	chartCartesianGridDefault,
-	chartPlotRegionClassName,
 	chartRechartsInteractiveLegendLabelClassName,
 	chartRechartsLegendIconSize,
 	chartRechartsLegendInteractiveWrapperStyle,
 	chartTooltipCustomSurfaceClassName,
 	chartTooltipHeaderRowClassName,
 } from "@/lib/chart-presentation";
-import { cn } from "@/lib/utils";
 import { calculateOverageCost, type OverageInfo } from "../utils/billing-utils";
 
 type ViewMode = "daily" | "cumulative";
@@ -47,6 +45,18 @@ const EVENT_TYPE_COLORS = {
 	outgoing_link: METRIC_COLORS.bounce_rate.primary,
 } as const;
 
+const EVENT_TYPES = Object.keys(EVENT_TYPE_COLORS);
+
+function formatYAxis(value: number): string {
+	if (value >= 1_000_000) {
+		return `${(value / 1_000_000).toFixed(1)}M`;
+	}
+	if (value >= 1000) {
+		return `${(value / 1000).toFixed(0)}k`;
+	}
+	return value.toString();
+}
+
 interface ConsumptionChartProps {
 	isLoading: boolean;
 	onDateRangeChange: (startDate: string, endDate: string) => void;
@@ -69,12 +79,12 @@ export function ConsumptionChart({
 		}
 
 		const dailyDataMap = new Map<string, Record<string, number>>();
-
-		const allDates: string[] = [
+		const allDates = [
 			...new Set(
 				usageData.dailyUsageByType.map((row: DailyUsageByTypeRow) => row.date)
 			),
 		].sort();
+
 		for (const date of allDates) {
 			dailyDataMap.set(date, {
 				event: 0,
@@ -92,17 +102,12 @@ export function ConsumptionChart({
 			}
 		}
 
-		const runningTotals = Object.keys(EVENT_TYPE_COLORS).reduce(
-			(acc, key) => {
-				acc[key] = 0;
-				return acc;
-			},
-			{} as Record<string, number>
-		);
+		const runningTotals: Record<string, number> = {};
+		for (const key of EVENT_TYPES) {
+			runningTotals[key] = 0;
+		}
 
-		const entries = Array.from(dailyDataMap.entries());
-
-		return entries.map(([date, eventCounts]) => {
+		return Array.from(dailyDataMap.entries()).map(([date, eventCounts]) => {
 			const dayData: Record<string, string | number> = {
 				date: new Date(date).toLocaleDateString("en-US", {
 					month: "short",
@@ -111,18 +116,17 @@ export function ConsumptionChart({
 				fullDate: date,
 			};
 
-			for (const eventType of Object.keys(EVENT_TYPE_COLORS)) {
+			for (const eventType of EVENT_TYPES) {
 				if (hiddenTypes[eventType]) {
 					dayData[eventType] = 0;
 					continue;
 				}
-				const actualAmount = eventCounts[eventType] || 0;
-
+				const amount = eventCounts[eventType] || 0;
 				if (viewMode === "cumulative") {
-					runningTotals[eventType] += actualAmount;
+					runningTotals[eventType] += amount;
 					dayData[eventType] = runningTotals[eventType];
 				} else {
-					dayData[eventType] = actualAmount;
+					dayData[eventType] = amount;
 				}
 			}
 
@@ -169,13 +173,12 @@ export function ConsumptionChart({
 
 	const maxValue = Math.max(
 		...chartData.map((d) =>
-			Object.keys(EVENT_TYPE_COLORS).reduce((sum, key) => {
+			EVENT_TYPES.reduce((sum, key) => {
 				const v = d[key];
 				return sum + (typeof v === "number" ? v : 0);
 			}, 0)
 		)
 	);
-	const yAxisMax = Math.ceil(maxValue * 1.1);
 
 	return (
 		<Card>
@@ -214,15 +217,12 @@ export function ConsumptionChart({
 				</div>
 			</Card.Header>
 			<Card.Content className="p-0">
-				<div
-					className={cn(chartPlotRegionClassName, "bg-accent/30 p-4 sm:p-6")}
-				>
+				<div className="px-2 pt-4 pb-2">
 					<div className="h-[280px]">
 						<ResponsiveContainer height="100%" width="100%">
 							<BarChart
 								data={chartData}
-								margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-								style={{ cursor: "default" }}
+								margin={{ top: 10, right: 10, left: 0, bottom: 5 }}
 							>
 								<defs>
 									{Object.entries(EVENT_TYPE_COLORS).map(([key, color]) => (
@@ -241,90 +241,83 @@ export function ConsumptionChart({
 								</defs>
 								<CartesianGrid {...chartCartesianGridDefault} />
 								<XAxis
-									axisLine={{ stroke: "var(--border)", strokeOpacity: 0.5 }}
+									axisLine={false}
 									dataKey="date"
-									tick={{ ...chartAxisTickDefault, fontWeight: 500 }}
+									tick={chartAxisTickDefault}
 									tickLine={false}
 								/>
 								<YAxis
 									axisLine={false}
-									domain={[0, yAxisMax]}
-									tick={{ ...chartAxisTickDefault, fontWeight: 500 }}
-									tickFormatter={(value) => {
-										if (value >= 1_000_000) {
-											return `${(value / 1_000_000).toFixed(1)}M`;
-										}
-										if (value >= 1000) {
-											return `${(value / 1000).toFixed(1)}k`;
-										}
-										return value.toString();
-									}}
+									domain={[0, Math.ceil(maxValue * 1.1)]}
+									tick={chartAxisTickDefault}
+									tickFormatter={formatYAxis}
 									tickLine={false}
 									width={45}
 								/>
 								<Tooltip
 									content={({ active, payload, label }) => {
-										if (active && payload?.length) {
-											return (
-												<div className={chartTooltipCustomSurfaceClassName()}>
-													<div className={chartTooltipHeaderRowClassName}>
-														<p className="font-semibold text-foreground text-sm">
-															{label}
-														</p>
-													</div>
-													<div className="space-y-2">
-														{payload
-															.filter(
-																(entry) =>
-																	entry.value && (entry.value as number) > 0
-															)
-															.map((entry, index) => {
-																const eventType =
-																	entry.dataKey as keyof typeof EVENT_TYPE_COLORS;
-																const color = EVENT_TYPE_COLORS[eventType];
-																const eventCount = entry.value as number;
-																const overageCost = usageData
-																	? calculateOverageCost(
-																			eventCount,
-																			usageData.totalEvents,
-																			overageInfo
-																		)
-																	: 0;
-
-																return (
-																	<div
-																		className="flex items-center justify-between gap-3"
-																		key={index}
-																	>
-																		<div className="flex items-center gap-2">
-																			<div
-																				className="size-2.5 shrink-0 rounded-full ring-2 ring-background"
-																				style={{ backgroundColor: color }}
-																			/>
-																			<span className="font-medium text-muted-foreground text-xs capitalize">
-																				{entry.dataKey
-																					?.toString()
-																					.replace("_", " ")}
-																			</span>
-																		</div>
-																		<div className="text-balance text-right">
-																			<div className="font-semibold text-foreground text-sm tabular-nums">
-																				{eventCount.toLocaleString()}
-																			</div>
-																			{overageCost > 0 && (
-																				<div className="text-muted-foreground text-xs">
-																					${overageCost.toFixed(2)}
-																				</div>
-																			)}
-																		</div>
-																	</div>
-																);
-															})}
-													</div>
-												</div>
-											);
+										if (!(active && payload?.length)) {
+											return null;
 										}
-										return null;
+
+										const visible = payload.filter(
+											(e) => e.value && (e.value as number) > 0
+										);
+										if (!visible.length) {
+											return null;
+										}
+
+										return (
+											<div className={chartTooltipCustomSurfaceClassName()}>
+												<div className={chartTooltipHeaderRowClassName}>
+													<span className="font-semibold text-foreground text-xs">
+														{label}
+													</span>
+												</div>
+												<div className="space-y-1.5">
+													{visible.map((entry) => {
+														const eventType =
+															entry.dataKey as keyof typeof EVENT_TYPE_COLORS;
+														const color = EVENT_TYPE_COLORS[eventType];
+														const count = entry.value as number;
+														const cost = usageData
+															? calculateOverageCost(
+																	count,
+																	usageData.totalEvents,
+																	overageInfo
+																)
+															: 0;
+
+														return (
+															<div
+																className="flex items-center justify-between gap-4"
+																key={eventType}
+															>
+																<div className="flex items-center gap-2">
+																	<span
+																		className="size-2 shrink-0 rounded-full"
+																		style={{ backgroundColor: color }}
+																	/>
+																	<span className="text-muted-foreground text-xs capitalize">
+																		{eventType.replace("_", " ")}
+																	</span>
+																</div>
+																<div className="text-right">
+																	<span className="font-medium text-foreground text-xs tabular-nums">
+																		{count.toLocaleString()}
+																	</span>
+																	{cost > 0 && (
+																		<span className="ml-1.5 text-muted-foreground text-xs tabular-nums">
+																			${cost.toFixed(2)}
+																		</span>
+																	)}
+																</div>
+															</div>
+														);
+													})}
+												</div>
+											</div>
+										);
 									}}
 									cursor={Chart.tooltipCursorBar}
 									wrapperStyle={{ outline: "none" }}
@@ -333,12 +326,10 @@ export function ConsumptionChart({
 									align="center"
 									formatter={(value) => {
 										const key = String(value);
-										const isHidden = hiddenTypes[key];
 										return (
 											<span
-												className={cn(
-													"inline-flex select-none items-center capitalize leading-none transition-all duration-200",
-													chartRechartsInteractiveLegendLabelClassName(isHidden)
+												className={chartRechartsInteractiveLegendLabelClassName(
+													!!hiddenTypes[key]
 												)}
 											>
 												{key.replace("_", " ")}
@@ -347,23 +338,24 @@ export function ConsumptionChart({
 									}}
 									iconSize={chartRechartsLegendIconSize}
 									iconType="circle"
-									layout="horizontal"
 									onClick={(payload) => {
-										const anyPayload = payload as unknown as {
+										const p = payload as unknown as {
 											dataKey?: string | number;
 											value?: string | number;
 										};
-										const raw = anyPayload?.dataKey ?? anyPayload?.value;
-										if (raw == null) {
+										const key = String(p?.dataKey ?? p?.value ?? "");
+										if (!key) {
 											return;
 										}
-										const key = String(raw);
-										setHiddenTypes((prev) => ({ ...prev, [key]: !prev[key] }));
+										setHiddenTypes((prev) => ({
+											...prev,
+											[key]: !prev[key],
+										}));
 									}}
 									verticalAlign="bottom"
 									wrapperStyle={chartRechartsLegendInteractiveWrapperStyle}
 								/>
-								{Object.keys(EVENT_TYPE_COLORS).map((eventType) => (
+								{EVENT_TYPES.map((eventType) => (
 									<Bar
 										dataKey={eventType}
 										fill={`url(#gradient-${eventType})`}
@@ -376,10 +368,6 @@ export function ConsumptionChart({
 											]
 										}
 										strokeWidth={0.5}
-										style={{
-											filter: "none",
-											transition: "none",
-										}}
 									/>
 								))}
 							</BarChart>

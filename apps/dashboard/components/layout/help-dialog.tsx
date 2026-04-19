@@ -1,26 +1,25 @@
-import { Button } from "@/components/ui/button";
+"use client";
+
 import {
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogFooter,
-	DialogHeader,
-	DialogTitle,
-} from "@/components/ui/dialog";
-import { KeyboardShortcuts } from "@/components/ui/keyboard-shortcuts";
-import { BookOpenIcon } from "@phosphor-icons/react";
-import { ChatCircleIcon } from "@phosphor-icons/react";
-import { KeyboardIcon } from "@phosphor-icons/react";
-import { PlayIcon } from "@phosphor-icons/react";
+	BookOpenIcon,
+	ChatCircleIcon,
+	KeyboardIcon,
+	PlayIcon,
+} from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
 import { useState } from "react";
+import { Button } from "@/components/ds/button";
+import { Dialog } from "@/components/ds/dialog";
+import { Text } from "@/components/ds/text";
+import { KeyboardShortcuts } from "@/components/ui/keyboard-shortcuts";
+import { cn } from "@/lib/utils";
 
 interface HelpDialogProps {
 	onOpenChangeAction: (open: boolean) => void;
 	open: boolean;
 }
 
-const helpItems = [
+const HELP_ITEMS = [
 	{
 		href: "https://www.databuddy.cc/docs",
 		icon: BookOpenIcon,
@@ -44,111 +43,117 @@ const helpItems = [
 	},
 ] as const;
 
+function HelpRow({
+	children,
+	className,
+	...rest
+}: React.ButtonHTMLAttributes<HTMLButtonElement>) {
+	return (
+		<button
+			className={cn(
+				"flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left",
+				"transition-colors duration-(--duration-quick) ease-(--ease-smooth)",
+				"hover:bg-interactive-hover",
+				"focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
+				className
+			)}
+			type="button"
+			{...rest}
+		>
+			{children}
+		</button>
+	);
+}
+
 export function HelpDialog({ open, onOpenChangeAction }: HelpDialogProps) {
 	const [showShortcuts, setShowShortcuts] = useState(false);
 
 	return (
-		<Dialog onOpenChange={onOpenChangeAction} open={open}>
-			<DialogContent className="sm:max-w-lg">
-				<DialogHeader className="text-center">
-					<DialogTitle>Help & Resources</DialogTitle>
-					<DialogDescription>
+		<Dialog
+			onOpenChange={(o) => {
+				if (!o) {
+					setShowShortcuts(false);
+				}
+				onOpenChangeAction(o);
+			}}
+			open={open}
+		>
+			<Dialog.Content>
+				<Dialog.Header>
+					<Dialog.Title>Help & Resources</Dialog.Title>
+					<Dialog.Description>
 						Get assistance and learn more about Databuddy
-					</DialogDescription>
-				</DialogHeader>
+					</Dialog.Description>
+				</Dialog.Header>
 
-				{showShortcuts ? (
-					<div className="max-h-[60vh] overflow-y-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-						<div className="mb-4 flex items-center justify-between">
-							<h3 className="font-semibold text-sm">Keyboard Shortcuts</h3>
-							<Button
-								onClick={() => setShowShortcuts(false)}
-								size="sm"
-								variant="ghost"
-							>
-								Back
-							</Button>
+				<Dialog.Body className="p-2">
+					{showShortcuts ? (
+						<div className="max-h-[60vh] overflow-y-auto">
+							<div className="mb-3 flex items-center justify-between px-3">
+								<Text variant="label">Keyboard Shortcuts</Text>
+								<Button
+									onClick={() => setShowShortcuts(false)}
+									size="sm"
+									variant="ghost"
+								>
+									Back
+								</Button>
+							</div>
+							<KeyboardShortcuts />
 						</div>
-						<KeyboardShortcuts />
-					</div>
-				) : (
-					<div className="space-y-2">
-						<Button
-							className="h-auto w-full justify-start p-4 text-left hover:bg-accent"
-							onClick={() => setShowShortcuts(true)}
-							variant="ghost"
-						>
-							<div className="flex items-start gap-4">
-								<div className="rounded-lg bg-accent-brighter p-2">
+					) : (
+						<div className="space-y-0.5">
+							<HelpRow onClick={() => setShowShortcuts(true)}>
+								<div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-secondary">
 									<KeyboardIcon
-										className="size-5 text-accent-foreground"
+										className="size-4 text-muted-foreground"
 										weight="duotone"
 									/>
 								</div>
 								<div className="min-w-0 flex-1">
-									<h4 className="font-semibold text-sm leading-none">
-										Keyboard Shortcuts
-									</h4>
-									<p className="mt-2 text-muted-foreground text-xs leading-relaxed">
+									<Text variant="label">Keyboard Shortcuts</Text>
+									<Text tone="muted" variant="caption">
 										View all available keyboard shortcuts
-									</p>
+									</Text>
 								</div>
-							</div>
-						</Button>
+							</HelpRow>
 
-						{helpItems.map((item) => {
-							const Icon = item.icon;
-							return (
-								<Link
-									href={item.href}
-									key={item.href}
-									{...(item.external && {
-										target: "_blank",
-										rel: "noopener noreferrer",
-									})}
-									className="block"
-								>
-									<Button
-										className="h-auto w-full justify-start p-4 text-left hover:bg-accent"
-										variant="ghost"
+							{HELP_ITEMS.map((item) => {
+								const Icon = item.icon;
+								return (
+									<Link
+										className={cn(
+											"flex items-center gap-3 rounded-md px-3 py-2.5",
+											"transition-colors duration-(--duration-quick) ease-(--ease-smooth)",
+											"hover:bg-interactive-hover",
+											"focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
+										)}
+										href={item.href}
+										key={item.href}
+										{...(item.external && {
+											target: "_blank",
+											rel: "noopener noreferrer",
+										})}
 									>
-										<div className="flex items-start gap-4">
-											<div className="rounded-lg bg-accent-brighter p-2">
-												<Icon
-													className="size-5 text-accent-foreground"
-													weight="duotone"
-												/>
-											</div>
-											<div className="min-w-0 flex-1">
-												<h4 className="font-semibold text-sm leading-none">
-													{item.title}
-												</h4>
-												<p className="mt-2 text-muted-foreground text-xs leading-relaxed">
-													{item.description}
-												</p>
-											</div>
+										<div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-secondary">
+											<Icon
+												className="size-4 text-muted-foreground"
+												weight="duotone"
+											/>
 										</div>
-									</Button>
-								</Link>
-							);
-						})}
-					</div>
-				)}
-
-				<DialogFooter>
-					<Button
-						className="w-full"
-						onClick={() => {
-							setShowShortcuts(false);
-							onOpenChangeAction(false);
-						}}
-						type="button"
-						variant="outline"
-					>
-						Close
-					</Button>
-				</DialogFooter>
-			</DialogContent>
+										<div className="min-w-0 flex-1">
+											<Text variant="label">{item.title}</Text>
+											<Text tone="muted" variant="caption">
+												{item.description}
+											</Text>
+										</div>
+									</Link>
+								);
+							})}
+						</div>
+					)}
+				</Dialog.Body>
+			</Dialog.Content>
 		</Dialog>
 	);
 }

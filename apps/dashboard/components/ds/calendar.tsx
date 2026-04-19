@@ -89,7 +89,7 @@ function Calendar({
 		<DayPicker
 			captionLayout={captionLayout}
 			className={cn(
-				"group/calendar p-3 [--cell-size:--spacing(8)]",
+				"group/calendar p-3 [--cell-size:--spacing(7)]",
 				String.raw`rtl:**:[.rdp-button\_next>svg]:rotate-180`,
 				String.raw`rtl:**:[.rdp-button\_previous>svg]:rotate-180`,
 				className
@@ -126,7 +126,7 @@ function Calendar({
 					defaultClassNames.month_caption
 				),
 				dropdowns: cn(
-					"flex h-(--cell-size) w-full items-center justify-center gap-1.5 font-medium text-sm",
+					"flex h-(--cell-size) w-full items-center justify-center gap-1.5 font-medium text-xs",
 					defaultClassNames.dropdowns
 				),
 				dropdown_root: cn(
@@ -135,9 +135,9 @@ function Calendar({
 				),
 				dropdown: cn("absolute inset-0 opacity-0", defaultClassNames.dropdown),
 				caption_label: cn(
-					"select-none font-medium text-sm",
+					"select-none font-medium text-xs",
 					captionLayout !== "label" &&
-						"flex h-8 items-center gap-1 rounded-md pr-1 pl-2 [&>svg]:size-3.5 [&>svg]:text-muted-foreground",
+						"flex h-(--cell-size) items-center gap-1 rounded-md pr-1 pl-2 [&>svg]:size-3.5 [&>svg]:text-muted-foreground",
 					defaultClassNames.caption_label
 				),
 				table: "w-full border-collapse",
@@ -222,7 +222,7 @@ function CalendarDayButton({
 	return (
 		<button
 			className={cn(
-				"inline-flex aspect-square size-auto w-full min-w-(--cell-size) cursor-pointer items-center justify-center rounded-md font-normal text-sm leading-none",
+				"inline-flex aspect-square size-auto w-full min-w-(--cell-size) cursor-pointer items-center justify-center rounded-md font-normal text-xs leading-none",
 				"transition-colors duration-(--duration-quick) ease-(--ease-smooth)",
 				"hover:bg-interactive-hover hover:text-foreground",
 				"focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60",

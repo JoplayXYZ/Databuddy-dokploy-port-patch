@@ -132,6 +132,7 @@ export const settingsNavigation: NavigationSection[] = [
 		createNavItem("Profile", IdentificationCardIcon, "/settings/account"),
 		createNavItem("Appearance", EyeIcon, "/settings/appearance"),
 		createNavItem("Notifications", BellIcon, "/settings/notifications"),
+		createNavItem("Feedback & Credits", SpeakerHighIcon, "/feedback"),
 	]),
 ];
 
@@ -335,6 +336,7 @@ const CATEGORY_PATH_MAP = [
 	{ pattern: "/organizations", category: "settings" as const },
 	{ pattern: "/billing", category: "settings" as const },
 	{ pattern: "/settings", category: "settings" as const },
+	{ pattern: "/feedback", category: "settings" as const },
 ] as const;
 
 export const getContextConfig = (pathname: string) => {

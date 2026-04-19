@@ -1,17 +1,11 @@
 "use client";
 
-import { ArrowDownIcon } from "@phosphor-icons/react";
+import { ArrowDownIcon } from "@phosphor-icons/react/dist/ssr";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import {
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogFooter,
-	DialogHeader,
-	DialogTitle,
-} from "@/components/ui/dialog";
+import { Button } from "@/components/ds/button";
+import { Dialog } from "@/components/ds/dialog";
+import { Text } from "@/components/ds/text";
 import { orpc } from "@/lib/orpc";
 
 interface RedeemDialogProps {
@@ -51,54 +45,51 @@ export function RedeemDialog({
 
 	return (
 		<Dialog onOpenChange={onOpenChangeAction} open={open}>
-			<DialogContent>
-				<DialogHeader>
-					<DialogTitle>Confirm Redemption</DialogTitle>
-					<DialogDescription>
+			<Dialog.Content>
+				<Dialog.Header>
+					<Dialog.Title>Confirm Redemption</Dialog.Title>
+					<Dialog.Description>
 						This will deduct credits from your balance and add events to your
 						account.
-					</DialogDescription>
-				</DialogHeader>
-
-				<div className="space-y-2">
-					<div className="flex items-center justify-between rounded border bg-secondary/50 px-4 py-3">
-						<span className="text-muted-foreground text-sm">Credits spent</span>
-						<span className="font-semibold tabular-nums">
+					</Dialog.Description>
+				</Dialog.Header>
+				<Dialog.Body className="space-y-2">
+					<div className="flex items-center justify-between rounded-md bg-secondary px-4 py-3">
+						<Text tone="muted" variant="body">
+							Credits spent
+						</Text>
+						<Text className="tabular-nums" variant="label">
 							{creditsRequired}
-						</span>
+						</Text>
 					</div>
 					<div className="flex justify-center">
 						<ArrowDownIcon
-							className="text-muted-foreground"
-							size={14}
+							className="size-3.5 text-muted-foreground"
 							weight="fill"
 						/>
 					</div>
-					<div className="flex items-center justify-between rounded border bg-secondary/50 px-4 py-3">
-						<span className="text-muted-foreground text-sm">Events added</span>
-						<span className="font-semibold text-green-600 tabular-nums dark:text-green-400">
+					<div className="flex items-center justify-between rounded-md bg-secondary px-4 py-3">
+						<Text tone="muted" variant="body">
+							Events added
+						</Text>
+						<Text className="text-success tabular-nums" variant="label">
 							+{rewardAmount.toLocaleString()} {rewardType}
-						</span>
+						</Text>
 					</div>
-				</div>
-
-				<DialogFooter>
-					<Button
-						onClick={() => onOpenChangeAction(false)}
-						type="button"
-						variant="outline"
-					>
-						Cancel
-					</Button>
+				</Dialog.Body>
+				<Dialog.Footer>
+					<Dialog.Close>
+						<Button variant="secondary">Cancel</Button>
+					</Dialog.Close>
 					<Button
 						disabled={redeemMutation.isPending}
+						loading={redeemMutation.isPending}
 						onClick={() => redeemMutation.mutate({ tierIndex })}
-						type="button"
 					>
-						{redeemMutation.isPending ? "Redeeming..." : "Confirm Redemption"}
+						Confirm Redemption
 					</Button>
-				</DialogFooter>
-			</DialogContent>
+				</Dialog.Footer>
+			</Dialog.Content>
 		</Dialog>
 	);
 }

@@ -1,10 +1,10 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@/components/ds/badge";
 
 const STATUS_CONFIG = {
-	pending: { label: "Pending", variant: "amber" },
-	approved: { label: "Approved", variant: "green" },
+	pending: { label: "Pending", variant: "warning" },
+	approved: { label: "Approved", variant: "success" },
 	rejected: { label: "Rejected", variant: "destructive" },
 } as const;
 

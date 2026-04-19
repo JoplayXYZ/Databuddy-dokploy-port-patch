@@ -91,6 +91,11 @@
   --animate-accordion-down: accordion-down 0.2s ease-out;
   --animate-accordion-up: accordion-up 0.2s ease-out;
 
+  /* Duration Scale */
+  --duration-instant: 100ms;
+  --duration-quick: 150ms;
+  --duration-base: 200ms;
+
   /* Easing Functions */
   --expo-out: cubic-bezier(0.16, 1, 0.3, 1);
   --expo-in: cubic-bezier(0.7, 0, 0.84, 0);

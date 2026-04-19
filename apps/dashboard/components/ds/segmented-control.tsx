@@ -36,10 +36,8 @@ function SegmentedControl<T extends string>({
 	return (
 		<div
 			className={cn(
-				"inline-flex items-center gap-0.5 rounded",
-				variant === "default" && "border p-0.5",
-				variant === "pill" && "bg-secondary p-0.5",
-				size === "sm" ? "h-7" : "h-8",
+				"inline-flex items-center rounded-md bg-secondary p-1",
+				size === "sm" ? "gap-0.5" : "gap-1",
 				disabled && "pointer-events-none opacity-50",
 				className
 			)}
@@ -51,18 +49,15 @@ function SegmentedControl<T extends string>({
 				return (
 					<label
 						className={cn(
-							"relative flex cursor-pointer items-center justify-center rounded px-2.5 font-medium",
+							"relative flex cursor-pointer items-center justify-center rounded font-medium",
 							"transition-colors duration-(--duration-quick) ease-(--ease-smooth)",
 							"focus-within:ring-2 focus-within:ring-ring/60",
-							size === "sm" ? "h-5 text-xs" : "h-6 text-xs",
-							variant === "default" &&
-								(isSelected
-									? "bg-secondary text-foreground"
-									: "text-muted-foreground hover:text-foreground"),
-							variant === "pill" &&
-								(isSelected
-									? "bg-primary text-primary-foreground"
-									: "text-muted-foreground hover:text-foreground")
+							size === "sm" ? "px-2 py-1 text-[11px]" : "px-3 py-1.5 text-xs",
+							isSelected
+								? variant === "pill"
+									? "bg-primary text-primary-foreground shadow-sm"
+									: "bg-card text-foreground shadow-sm"
+								: "text-muted-foreground hover:text-foreground"
 						)}
 						key={option.value}
 					>
