@@ -22,12 +22,19 @@ import { Text } from "@/components/ds/text";
 import { Textarea } from "@/components/ds/textarea";
 import { Tooltip } from "@/components/ds/tooltip";
 import {
-	TrendUp,
+	Bell,
 	Gear,
+	Globe,
 	Key,
+	Lock,
 	MagnifyingGlass,
+	Moon,
+	Palette,
 	Plus,
+	ShieldCheck,
+	Sun,
 	Trash,
+	TrendUp,
 	User,
 } from "@phosphor-icons/react/dist/ssr";
 import { useState } from "react";
@@ -762,6 +769,376 @@ export function DesignShowcase() {
 					</div>
 				</div>
 			</ShowcaseSection>
+
+			<ShowcaseSection
+				description="A composed settings page demonstrating how primitives combine into a real product surface."
+				id="settings-mockup"
+				title="Mockup — Settings"
+			>
+				<SettingsMockup />
+			</ShowcaseSection>
 		</div>
+	);
+}
+
+function SettingsMockup() {
+	const [theme, setTheme] = useState<"light" | "dark" | "system">("system");
+
+	return (
+		<Card>
+			<Card.Header>
+				<div className="flex items-center gap-2">
+					<Gear className="size-4 text-muted-foreground" />
+					<Card.Title>Settings</Card.Title>
+				</div>
+				<Card.Description>
+					Manage your account and preferences.
+				</Card.Description>
+			</Card.Header>
+			<Card.Content className="p-0">
+				<Tabs defaultValue="general">
+					<div className="border-border/60 border-b px-6">
+						<Tabs.List>
+							<Tabs.Tab value="general">
+								<User className="size-3" />
+								General
+							</Tabs.Tab>
+							<Tabs.Tab value="notifications">
+								<Bell className="size-3" />
+								Notifications
+							</Tabs.Tab>
+							<Tabs.Tab value="appearance">
+								<Palette className="size-3" />
+								Appearance
+							</Tabs.Tab>
+							<Tabs.Tab value="security">
+								<ShieldCheck className="size-3" />
+								Security
+							</Tabs.Tab>
+						</Tabs.List>
+					</div>
+
+					<Tabs.Panel className="p-6" value="general">
+						<div className="flex flex-col gap-6">
+							<div className="flex items-center gap-4">
+								<Avatar alt="Iza Nassiri" size="lg" />
+								<div className="flex flex-col gap-1">
+									<Text variant="label">Iza Nassiri</Text>
+									<Text tone="muted" variant="caption">
+										iza@databuddy.cc
+									</Text>
+								</div>
+								<Button className="ml-auto" size="sm" variant="secondary">
+									Change avatar
+								</Button>
+							</div>
+							<Divider />
+							<div className="grid gap-6 sm:grid-cols-2">
+								<Field>
+									<Field.Label>Full name</Field.Label>
+									<Input defaultValue="Iza Nassiri" />
+								</Field>
+								<Field>
+									<Field.Label>Email</Field.Label>
+									<Input
+										defaultValue="iza@databuddy.cc"
+										prefix={<Globe className="size-3.5" />}
+									/>
+								</Field>
+								<Field>
+									<Field.Label>Role</Field.Label>
+									<Select defaultValue="owner">
+										<Select.Trigger />
+										<Select.Content>
+											<Select.Item value="owner">Owner</Select.Item>
+											<Select.Item value="admin">Admin</Select.Item>
+											<Select.Item value="member">Member</Select.Item>
+											<Select.Item value="viewer">Viewer</Select.Item>
+										</Select.Content>
+									</Select>
+								</Field>
+								<Field>
+									<Field.Label>Timezone</Field.Label>
+									<Select defaultValue="utc3">
+										<Select.Trigger />
+										<Select.Content>
+											<Select.Item value="utc-8">UTC-8 (Pacific)</Select.Item>
+											<Select.Item value="utc-5">UTC-5 (Eastern)</Select.Item>
+											<Select.Item value="utc0">UTC+0 (London)</Select.Item>
+											<Select.Item value="utc1">UTC+1 (Paris)</Select.Item>
+											<Select.Item value="utc3">UTC+3 (Istanbul)</Select.Item>
+											<Select.Item value="utc8">UTC+8 (Singapore)</Select.Item>
+										</Select.Content>
+									</Select>
+								</Field>
+							</div>
+							<Field>
+								<Field.Label>Bio</Field.Label>
+								<Textarea defaultValue="Building Databuddy — privacy-first analytics for the modern web." />
+								<Field.Description>
+									Brief description for your profile.
+								</Field.Description>
+							</Field>
+						</div>
+					</Tabs.Panel>
+
+					<Tabs.Panel className="p-6" value="notifications">
+						<div className="flex flex-col gap-6">
+							<div className="flex flex-col gap-1">
+								<Text variant="label">Email notifications</Text>
+								<Text tone="muted" variant="caption">
+									Choose which updates you want to receive.
+								</Text>
+							</div>
+							<div className="flex flex-col gap-4">
+								<Switch
+									defaultChecked
+									description="Get notified when traffic spikes or drops unexpectedly."
+									label="Anomaly alerts"
+								/>
+								<Switch
+									defaultChecked
+									description="A summary of your analytics every Monday at 9am."
+									label="Weekly digest"
+								/>
+								<Switch
+									description="Detailed performance report at the end of each month."
+									label="Monthly report"
+								/>
+								<Switch
+									defaultChecked
+									description="Immediate alert when a monitored endpoint goes down."
+									label="Uptime incidents"
+								/>
+							</div>
+							<Divider />
+							<div className="flex flex-col gap-1">
+								<Text variant="label">In-app notifications</Text>
+								<Text tone="muted" variant="caption">
+									Control what appears in your notification center.
+								</Text>
+							</div>
+							<div className="flex flex-col gap-4">
+								<Switch
+									defaultChecked
+									description="When someone invites you to an organization."
+									label="Team invitations"
+								/>
+								<Switch
+									defaultChecked
+									description="When a tracked goal reaches its target."
+									label="Goal completions"
+								/>
+								<Switch
+									description="New features and product updates."
+									label="Feature announcements"
+								/>
+							</div>
+							<Divider />
+							<Field>
+								<Field.Label>Notification email</Field.Label>
+								<Input
+									defaultValue="iza@databuddy.cc"
+									prefix={<Bell className="size-3.5" />}
+								/>
+								<Field.Description>
+									Override the default email for notifications.
+								</Field.Description>
+							</Field>
+						</div>
+					</Tabs.Panel>
+
+					<Tabs.Panel className="p-6" value="appearance">
+						<div className="flex flex-col gap-6">
+							<div className="flex flex-col gap-1">
+								<Text variant="label">Theme</Text>
+								<Text tone="muted" variant="caption">
+									Select your preferred color scheme.
+								</Text>
+							</div>
+							<div className="grid grid-cols-3 gap-3">
+								{(["light", "dark", "system"] as const).map((t) => (
+									<button
+										className={`flex cursor-pointer flex-col items-center gap-2 rounded-lg border p-4 transition-colors ${theme === t ? "border-primary bg-primary/5" : "border-border/60 hover:border-border"}`}
+										key={t}
+										onClick={() => setTheme(t)}
+										type="button"
+									>
+										{t === "light" && <Sun className="size-5" />}
+										{t === "dark" && <Moon className="size-5" />}
+										{t === "system" && <Gear className="size-5" />}
+										<Text variant="caption">
+											{t.charAt(0).toUpperCase() + t.slice(1)}
+										</Text>
+									</button>
+								))}
+							</div>
+							<Divider />
+							<div className="flex flex-col gap-4">
+								<Switch
+									defaultChecked
+									description="Minimize animations throughout the interface."
+									label="Reduced motion"
+								/>
+								<Switch
+									description="Decrease spacing and font sizes for denser layouts."
+									label="Compact mode"
+								/>
+							</div>
+							<Divider />
+							<div className="grid gap-6 sm:grid-cols-2">
+								<Field>
+									<Field.Label>Date format</Field.Label>
+									<Select defaultValue="relative">
+										<Select.Trigger />
+										<Select.Content>
+											<Select.Item value="relative">
+												Relative (2 hours ago)
+											</Select.Item>
+											<Select.Item value="absolute">
+												Absolute (Apr 19, 2026)
+											</Select.Item>
+											<Select.Item value="iso">
+												ISO 8601 (2026-04-19)
+											</Select.Item>
+										</Select.Content>
+									</Select>
+								</Field>
+								<Field>
+									<Field.Label>Number format</Field.Label>
+									<Select defaultValue="short">
+										<Select.Trigger />
+										<Select.Content>
+											<Select.Item value="short">Short (12.5K)</Select.Item>
+											<Select.Item value="full">Full (12,500)</Select.Item>
+										</Select.Content>
+									</Select>
+								</Field>
+							</div>
+						</div>
+					</Tabs.Panel>
+
+					<Tabs.Panel className="p-6" value="security">
+						<div className="flex flex-col gap-6">
+							<div className="flex flex-col gap-1">
+								<Text variant="label">Password</Text>
+								<Text tone="muted" variant="caption">
+									Update your password to keep your account secure.
+								</Text>
+							</div>
+							<div className="grid gap-6 sm:grid-cols-2">
+								<Field>
+									<Field.Label>Current password</Field.Label>
+									<Input
+										placeholder="••••••••"
+										suffix={<Lock className="size-3.5" />}
+										type="password"
+									/>
+								</Field>
+								<div />
+								<Field>
+									<Field.Label>New password</Field.Label>
+									<Input
+										placeholder="••••••••"
+										suffix={<Key className="size-3.5" />}
+										type="password"
+									/>
+								</Field>
+								<Field>
+									<Field.Label>Confirm password</Field.Label>
+									<Input
+										placeholder="••••••••"
+										suffix={<Key className="size-3.5" />}
+										type="password"
+									/>
+								</Field>
+							</div>
+							<Divider />
+							<div className="flex flex-col gap-1">
+								<Text variant="label">Two-factor authentication</Text>
+								<Text tone="muted" variant="caption">
+									Add an extra layer of security to your account.
+								</Text>
+							</div>
+							<div className="flex items-center justify-between rounded-lg border border-border/60 p-4">
+								<div className="flex items-center gap-3">
+									<div className="flex size-10 items-center justify-center rounded-lg bg-secondary">
+										<ShieldCheck className="size-5 text-muted-foreground" />
+									</div>
+									<div className="flex flex-col gap-0.5">
+										<Text variant="label">Authenticator app</Text>
+										<Text tone="muted" variant="caption">
+											Use an app like 1Password or Authy.
+										</Text>
+									</div>
+								</div>
+								<Button size="sm" variant="secondary">
+									Enable
+								</Button>
+							</div>
+							<Divider />
+							<div className="flex flex-col gap-1">
+								<Text variant="label">Active sessions</Text>
+								<Text tone="muted" variant="caption">
+									Devices currently signed in to your account.
+								</Text>
+							</div>
+							<div className="flex flex-col gap-3">
+								{[
+									{
+										device: "MacBook Pro — Chrome",
+										location: "Istanbul, TR",
+										current: true,
+									},
+									{
+										device: "iPhone 15 — Safari",
+										location: "Istanbul, TR",
+										current: false,
+									},
+									{
+										device: "Windows PC — Firefox",
+										location: "London, UK",
+										current: false,
+									},
+								].map((s) => (
+									<div
+										className="flex items-center justify-between rounded-lg border border-border/60 p-3"
+										key={s.device}
+									>
+										<div className="flex items-center gap-3">
+											<div className="flex size-8 items-center justify-center rounded-md bg-secondary">
+												<Globe className="size-3.5 text-muted-foreground" />
+											</div>
+											<div className="flex flex-col gap-0.5">
+												<div className="flex items-center gap-2">
+													<Text variant="caption">{s.device}</Text>
+													{s.current && (
+														<Badge size="sm" variant="success">
+															Current
+														</Badge>
+													)}
+												</div>
+												<Text tone="muted" variant="caption">
+													{s.location}
+												</Text>
+											</div>
+										</div>
+										{!s.current && (
+											<Button size="sm" tone="danger" variant="ghost">
+												Revoke
+											</Button>
+										)}
+									</div>
+								))}
+							</div>
+						</div>
+					</Tabs.Panel>
+				</Tabs>
+			</Card.Content>
+			<Card.Footer>
+				<Button variant="secondary">Cancel</Button>
+				<Button>Save changes</Button>
+			</Card.Footer>
+		</Card>
 	);
 }
