@@ -38,10 +38,7 @@ import {
 	trackAgentUsageAndBill,
 } from "../ai/agents/execution";
 import { routeMessage } from "../ai/agents/router";
-import {
-	AGENT_THINKING_LEVELS,
-	type AgentConfig,
-} from "../ai/agents/types";
+import { AGENT_THINKING_LEVELS, type AgentConfig } from "../ai/agents/types";
 import {
 	type AgentModelKey,
 	AI_MODEL_MAX_RETRIES,
@@ -391,7 +388,9 @@ export const agent = new Elysia({ prefix: "/v1/agent" })
 					const timezone = body.timezone ?? "UTC";
 					const domain = website.domain ?? "unknown";
 					const lastMessage = getLastMessagePreview(body.messages);
-					const routeLabel = lastMessage ? routeMessage(lastMessage) : "complex";
+					const routeLabel = lastMessage
+						? routeMessage(lastMessage)
+						: "complex";
 					const modelKey: AgentModelKey =
 						routeLabel === "simple" ? "fast" : "analytics";
 
@@ -532,9 +531,7 @@ export const agent = new Elysia({ prefix: "/v1/agent" })
 								if (!firstChunkLogged) {
 									firstChunkLogged = true;
 									mergeWideEvent({
-										agent_ttft_ms: Math.round(
-											performance.now() - streamStart
-										),
+										agent_ttft_ms: Math.round(performance.now() - streamStart),
 										agent_ttft_total_from_request_ms: Math.round(
 											performance.now() - t0
 										),
@@ -582,11 +579,7 @@ export const agent = new Elysia({ prefix: "/v1/agent" })
 						});
 
 					const streamId = generateId();
-					const streamKey = streamBufferKey(
-						body.websiteId,
-						chatId,
-						streamId
-					);
+					const streamKey = streamBufferKey(body.websiteId, chatId, streamId);
 					await setActiveStream(body.websiteId, chatId, streamId);
 
 					if (persistedUserId) {
@@ -758,78 +751,75 @@ export const agent = new Elysia({ prefix: "/v1/agent" })
 		},
 		{ body: AgentRequestSchema, idleTimeout: 60_000 }
 	)
-	.get(
-		"/chat/:chatId/stream",
-		async ({ params, user, request }) => {
-			if (!user?.id) {
-				return jsonError(401, "AUTH_REQUIRED", "Authentication required");
-			}
-			const chat = await db.query.agentChats.findFirst({
-				where: and(
-					eq(agentChats.id, params.chatId),
-					eq(agentChats.userId, user.id)
-				),
-				columns: { id: true, websiteId: true },
-			});
-			if (!chat) {
-				return new Response(null, { status: 204 });
-			}
-			const streamId = await getActiveStream(chat.websiteId, chat.id);
-			if (!streamId) {
-				return new Response(null, { status: 204 });
-			}
-			const key = streamBufferKey(chat.websiteId, chat.id, streamId);
-
-			const abortController = new AbortController();
-			request.signal?.addEventListener("abort", () => {
-				abortController.abort();
-			});
-
-			const body = new ReadableStream<Uint8Array>({
-				async start(controller) {
-					try {
-						const history = await readStreamHistory(key);
-						let lastId = "0-0";
-						for (const entry of history) {
-							lastId = entry.id;
-							if (entry.done) {
-								controller.close();
-								return;
-							}
-							if (entry.data.byteLength > 0) {
-								controller.enqueue(entry.data);
-							}
-						}
-						for await (const entry of tailStream(key, lastId, {
-							signal: abortController.signal,
-						})) {
-							if (entry.done) {
-								controller.close();
-								return;
-							}
-							if (entry.data.byteLength > 0) {
-								controller.enqueue(entry.data);
-							}
-						}
-						controller.close();
-					} catch (streamError) {
-						controller.error(streamError);
-					}
-				},
-				cancel() {
-					abortController.abort();
-				},
-			});
-
-			return new Response(body, {
-				status: 200,
-				headers: {
-					"Content-Type": "text/event-stream",
-					"Cache-Control": "no-cache",
-					Connection: "keep-alive",
-					"X-Accel-Buffering": "no",
-					"x-vercel-ai-ui-message-stream": "v1",
-				},
-			});
+	.get("/chat/:chatId/stream", async ({ params, user, request }) => {
+		if (!user?.id) {
+			return jsonError(401, "AUTH_REQUIRED", "Authentication required");
 		}
-	);
+		const chat = await db.query.agentChats.findFirst({
+			where: and(
+				eq(agentChats.id, params.chatId),
+				eq(agentChats.userId, user.id)
+			),
+			columns: { id: true, websiteId: true },
+		});
+		if (!chat) {
+			return new Response(null, { status: 204 });
+		}
+		const streamId = await getActiveStream(chat.websiteId, chat.id);
+		if (!streamId) {
+			return new Response(null, { status: 204 });
+		}
+		const key = streamBufferKey(chat.websiteId, chat.id, streamId);
+
+		const abortController = new AbortController();
+		request.signal?.addEventListener("abort", () => {
+			abortController.abort();
+		});
+
+		const body = new ReadableStream<Uint8Array>({
+			async start(controller) {
+				try {
+					const history = await readStreamHistory(key);
+					let lastId = "0-0";
+					for (const entry of history) {
+						lastId = entry.id;
+						if (entry.done) {
+							controller.close();
+							return;
+						}
+						if (entry.data.byteLength > 0) {
+							controller.enqueue(entry.data);
+						}
+					}
+					for await (const entry of tailStream(key, lastId, {
+						signal: abortController.signal,
+					})) {
+						if (entry.done) {
+							controller.close();
+							return;
+						}
+						if (entry.data.byteLength > 0) {
+							controller.enqueue(entry.data);
+						}
+					}
+					controller.close();
+				} catch (streamError) {
+					controller.error(streamError);
+				}
+			},
+			cancel() {
+				abortController.abort();
+			},
+		});
+
+		return new Response(body, {
+			status: 200,
+			headers: {
+				"Content-Type": "text/event-stream",
+				"Cache-Control": "no-cache",
+				Connection: "keep-alive",
+				"X-Accel-Buffering": "no",
+				"x-vercel-ai-ui-message-stream": "v1",
+			},
+		});
+	});

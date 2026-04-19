@@ -1,6 +1,10 @@
 import { stepCountIs } from "ai";
 import type { AppContext } from "../config/context";
-import { type AgentModelKey, ANTHROPIC_CACHE_1H, models } from "../config/models";
+import {
+	type AgentModelKey,
+	ANTHROPIC_CACHE_1H,
+	models,
+} from "../config/models";
 import {
 	buildAnalyticsInstructions,
 	buildFastInstructions,

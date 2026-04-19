@@ -17,7 +17,11 @@ export function routeMessage(text: string): RouteLabel {
 	if (trimmed.length <= 40 && EXPLICIT_SIMPLE.test(trimmed)) {
 		return "simple";
 	}
-	if (trimmed.length <= 80 && !DATA_INTENT.test(trimmed) && !QUESTION_DATA.test(trimmed)) {
+	if (
+		trimmed.length <= 80 &&
+		!DATA_INTENT.test(trimmed) &&
+		!QUESTION_DATA.test(trimmed)
+	) {
 		return "simple";
 	}
 	return "complex";
