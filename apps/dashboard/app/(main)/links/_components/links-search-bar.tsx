@@ -72,7 +72,9 @@ export function LinksSearchBar({
 					<span className="hidden sm:inline">{SORT_LABELS[sortBy]}</span>
 				</DropdownMenu.Trigger>
 				<DropdownMenu.Content align="end" className="w-36">
-					<DropdownMenu.GroupLabel>Sort by</DropdownMenu.GroupLabel>
+					<DropdownMenu.Group>
+						<DropdownMenu.GroupLabel>Sort by</DropdownMenu.GroupLabel>
+					</DropdownMenu.Group>
 					<DropdownMenu.Separator />
 					<DropdownMenu.RadioGroup
 						onValueChange={(value) => onSortByChangeAction(value as SortOption)}

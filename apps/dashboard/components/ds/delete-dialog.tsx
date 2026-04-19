@@ -60,7 +60,7 @@ export function DeleteDialog({
 				</Dialog.Header>
 				<Dialog.Body>
 					{children ? (
-						<>
+						<div className="flex flex-col gap-4">
 							{children}
 							<div className="flex items-center gap-3 rounded-md border border-destructive/20 bg-destructive/5 p-3">
 								<div className="flex size-8 shrink-0 items-center justify-center">
@@ -73,7 +73,7 @@ export function DeleteDialog({
 									This action cannot be undone.
 								</p>
 							</div>
-						</>
+						</div>
 					) : (
 						<div className="flex items-center gap-3 py-2">
 							<div className="flex size-10 shrink-0 items-center justify-center rounded-md border border-destructive/20 bg-destructive/10">

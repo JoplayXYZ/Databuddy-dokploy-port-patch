@@ -11,16 +11,7 @@ import {
 } from "@phosphor-icons/react";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
-import {
-	AlertDialog,
-	AlertDialogAction,
-	AlertDialogCancel,
-	AlertDialogContent,
-	AlertDialogDescription,
-	AlertDialogFooter,
-	AlertDialogHeader,
-	AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { DeleteDialog } from "@/components/ds/delete-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -168,40 +159,17 @@ export function ChatHistory() {
 				</PopoverContent>
 			</Popover>
 
-			<AlertDialog
-				onOpenChange={(nextOpen) => {
-					if (!nextOpen) {
-						setPendingDelete(null);
-					}
-				}}
-				open={pendingDelete !== null}
-			>
-				<AlertDialogContent>
-					<AlertDialogHeader>
-						<AlertDialogTitle className="text-balance">
-							Delete this conversation?
-						</AlertDialogTitle>
-						<AlertDialogDescription className="text-pretty">
-							{pendingDelete
-								? `"${pendingDelete.title}" will be permanently removed. This can't be undone.`
-								: null}
-						</AlertDialogDescription>
-					</AlertDialogHeader>
-					<AlertDialogFooter>
-						<AlertDialogCancel type="button">Cancel</AlertDialogCancel>
-						<AlertDialogAction
-							className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-							onClick={(e) => {
-								e.preventDefault();
-								handleConfirmDelete();
-							}}
-							type="button"
-						>
-							Delete
-						</AlertDialogAction>
-					</AlertDialogFooter>
-				</AlertDialogContent>
-			</AlertDialog>
+			<DeleteDialog
+				description={
+					pendingDelete
+						? `"${pendingDelete.title}" will be permanently removed. This can't be undone.`
+						: undefined
+				}
+				isOpen={pendingDelete !== null}
+				onClose={() => setPendingDelete(null)}
+				onConfirm={handleConfirmDelete}
+				title="Delete this conversation?"
+			/>
 		</>
 	);
 }

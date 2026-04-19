@@ -22,16 +22,7 @@ import { FaviconImage } from "@/components/analytics/favicon-image";
 import { EmptyState } from "@/components/ds/empty-state";
 import { MonitorSheet } from "@/components/monitors/monitor-sheet";
 import { TransferToOrgDialog } from "@/components/transfer-to-org-dialog";
-import {
-	AlertDialog,
-	AlertDialogAction,
-	AlertDialogCancel,
-	AlertDialogContent,
-	AlertDialogDescription,
-	AlertDialogFooter,
-	AlertDialogHeader,
-	AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { DeleteDialog } from "@/components/ds/delete-dialog";
 import { Button } from "@/components/ds/button";
 import { Skeleton } from "@/components/ds/skeleton";
 import { useDateFilters } from "@/hooks/use-date-filters";
@@ -767,30 +758,15 @@ export default function MonitorDetailsPage() {
 				warning="All monitoring data and configuration will be transferred to {orgName}."
 			/>
 
-			<AlertDialog
-				onOpenChange={setIsDeleteDialogOpen}
-				open={isDeleteDialogOpen}
-			>
-				<AlertDialogContent>
-					<AlertDialogHeader>
-						<AlertDialogTitle>Delete Monitor</AlertDialogTitle>
-						<AlertDialogDescription>
-							Are you sure you want to delete this uptime monitor? This action
-							cannot be undone.
-						</AlertDialogDescription>
-					</AlertDialogHeader>
-					<AlertDialogFooter>
-						<AlertDialogCancel>Cancel</AlertDialogCancel>
-						<AlertDialogAction
-							className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-							disabled={deleteMutation.isPending}
-							onClick={handleDeleteMonitor}
-						>
-							{deleteMutation.isPending ? "Deleting..." : "Delete Monitor"}
-						</AlertDialogAction>
-					</AlertDialogFooter>
-				</AlertDialogContent>
-			</AlertDialog>
+			<DeleteDialog
+				confirmLabel="Delete Monitor"
+				description="Are you sure you want to delete this uptime monitor? This action cannot be undone."
+				isDeleting={deleteMutation.isPending}
+				isOpen={isDeleteDialogOpen}
+				onClose={() => setIsDeleteDialogOpen(false)}
+				onConfirm={handleDeleteMonitor}
+				title="Delete Monitor"
+			/>
 		</div>
 	);
 }

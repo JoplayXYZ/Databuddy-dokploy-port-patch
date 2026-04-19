@@ -12,16 +12,7 @@ import { toast } from "sonner";
 import { EmptyState } from "@/components/ds/empty-state";
 import { FeatureAccessGate } from "@/components/feature-access-gate";
 import { MonitorSheet } from "@/components/monitors/monitor-sheet";
-import {
-	AlertDialog,
-	AlertDialogAction,
-	AlertDialogCancel,
-	AlertDialogContent,
-	AlertDialogDescription,
-	AlertDialogFooter,
-	AlertDialogHeader,
-	AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { DeleteDialog } from "@/components/ds/delete-dialog";
 import { Badge } from "@/components/ds/badge";
 import { Button } from "@/components/ds/button";
 import { Skeleton } from "@/components/ds/skeleton";
@@ -411,31 +402,15 @@ export default function PulsePage() {
 				websiteId={websiteId as string}
 			/>
 
-			<AlertDialog
-				onOpenChange={setIsDeleteDialogOpen}
-				open={isDeleteDialogOpen}
-			>
-				<AlertDialogContent>
-					<AlertDialogHeader>
-						<AlertDialogTitle>Delete Monitor</AlertDialogTitle>
-						<AlertDialogDescription>
-							Are you sure you want to delete this uptime monitor? This action
-							cannot be undone and all historical data will be preserved but no
-							new checks will be performed.
-						</AlertDialogDescription>
-					</AlertDialogHeader>
-					<AlertDialogFooter>
-						<AlertDialogCancel>Cancel</AlertDialogCancel>
-						<AlertDialogAction
-							className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-							disabled={deleteMutation.isPending}
-							onClick={handleDeleteMonitor}
-						>
-							{deleteMutation.isPending ? "Deleting..." : "Delete Monitor"}
-						</AlertDialogAction>
-					</AlertDialogFooter>
-				</AlertDialogContent>
-			</AlertDialog>
+			<DeleteDialog
+				confirmLabel="Delete Monitor"
+				description="Are you sure you want to delete this uptime monitor? This action cannot be undone and all historical data will be preserved but no new checks will be performed."
+				isDeleting={deleteMutation.isPending}
+				isOpen={isDeleteDialogOpen}
+				onClose={() => setIsDeleteDialogOpen(false)}
+				onConfirm={handleDeleteMonitor}
+				title="Delete Monitor"
+			/>
 		</div>
 	);
 }

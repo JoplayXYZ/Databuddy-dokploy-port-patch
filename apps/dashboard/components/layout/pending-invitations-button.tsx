@@ -49,7 +49,9 @@ export function PendingInvitationsButton() {
 			</Tooltip>
 
 			<DropdownMenu.Content align="start" className="w-72" side="right">
-				<DropdownMenu.GroupLabel>Pending Invitations</DropdownMenu.GroupLabel>
+				<DropdownMenu.Group>
+					<DropdownMenu.GroupLabel>Pending Invitations</DropdownMenu.GroupLabel>
+				</DropdownMenu.Group>
 				{invitations.map((invitation) => (
 					<DropdownMenu.Item
 						className="h-auto items-start gap-3 py-2"

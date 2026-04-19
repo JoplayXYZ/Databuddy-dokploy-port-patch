@@ -2,10 +2,13 @@
 
 import { Accordion } from "@/components/ds/accordion";
 import { Avatar } from "@/components/ds/avatar";
-import { Badge } from "@/components/ds/badge";
+import { Badge, PercentageBadge } from "@/components/ds/badge";
 import { Button } from "@/components/ds/button";
+import { Calendar } from "@/components/ds/calendar";
 import { Card } from "@/components/ds/card";
 import { Checkbox } from "@/components/ds/checkbox";
+import { CopyButton } from "@/components/ds/copy-button";
+import { DeleteDialog } from "@/components/ds/delete-dialog";
 import { Dialog } from "@/components/ds/dialog";
 import { Divider } from "@/components/ds/divider";
 import { DropdownMenu } from "@/components/ds/dropdown-menu";
@@ -13,10 +16,13 @@ import { EmptyState } from "@/components/ds/empty-state";
 import { Field } from "@/components/ds/field";
 import { Input } from "@/components/ui/input";
 import { Popover } from "@/components/ds/popover";
+import { Progress } from "@/components/ds/progress";
+import { SegmentedControl } from "@/components/ds/segmented-control";
 import { Select } from "@/components/ds/select";
 import { Sheet } from "@/components/ds/sheet";
 import { Skeleton } from "@/components/ds/skeleton";
 import { Spinner } from "@/components/ds/spinner";
+import { StatusDot } from "@/components/ds/status-dot";
 import { Switch } from "@/components/ds/switch";
 import { Tabs } from "@/components/ds/tabs";
 import { Text } from "@/components/ds/text";
@@ -30,7 +36,6 @@ import {
 	Check,
 	CheckCircle,
 	Clock,
-	Copy,
 	CreditCard,
 	DotsThree,
 	EnvelopeSimple,
@@ -51,6 +56,7 @@ import {
 	TrendUp,
 	User,
 	UsersThree,
+	Warning,
 } from "@phosphor-icons/react/dist/ssr";
 import { useState } from "react";
 import { ShowcaseRow, ShowcaseSection } from "./showcase-section";
@@ -79,6 +85,17 @@ const TEXT_VARIANTS = [
 
 export function DesignShowcase() {
 	const [sheetOpen, setSheetOpen] = useState(false);
+	const [segmentedValue, setSegmentedValue] = useState("weekly");
+	const [segmentedPill, setSegmentedPill] = useState("area");
+	const [calendarDate, setCalendarDate] = useState<Date | undefined>(
+		new Date()
+	);
+	const [calendarRange, setCalendarRange] = useState<{
+		from: Date;
+		to?: Date;
+	}>({ from: new Date(), to: new Date(Date.now() + 6 * 86_400_000) });
+	const [deleteOpen, setDeleteOpen] = useState(false);
+	const [deleteChildrenOpen, setDeleteChildrenOpen] = useState(false);
 
 	return (
 		<div className="mx-auto w-full max-w-5xl space-y-0 overflow-auto px-4 py-8 md:px-6 md:py-10">
@@ -661,15 +678,17 @@ export function DesignShowcase() {
 							<Button variant="secondary">Actions</Button>
 						</DropdownMenu.Trigger>
 						<DropdownMenu.Content align="start">
-							<DropdownMenu.GroupLabel>Navigate</DropdownMenu.GroupLabel>
-							<DropdownMenu.Item>
-								<Gear className="size-3.5" />
-								Settings
-							</DropdownMenu.Item>
-							<DropdownMenu.Item>
-								<User className="size-3.5" />
-								Profile
-							</DropdownMenu.Item>
+							<DropdownMenu.Group>
+								<DropdownMenu.GroupLabel>Navigate</DropdownMenu.GroupLabel>
+								<DropdownMenu.Item>
+									<Gear className="size-3.5" />
+									Settings
+								</DropdownMenu.Item>
+								<DropdownMenu.Item>
+									<User className="size-3.5" />
+									Profile
+								</DropdownMenu.Item>
+							</DropdownMenu.Group>
 							<DropdownMenu.Separator />
 							<DropdownMenu.Item variant="destructive">
 								<Trash className="size-3.5" />
@@ -838,6 +857,307 @@ export function DesignShowcase() {
 						/>
 					</div>
 				</div>
+			</ShowcaseSection>
+
+			<ShowcaseSection
+				description="Semantic dot indicator — four colors, four sizes, optional pulse animation."
+				id="status-dot"
+				title="StatusDot"
+			>
+				<ShowcaseRow label="Colors">
+					<div className="flex items-center gap-1.5">
+						<StatusDot color="success" />
+						<Text variant="caption">success</Text>
+					</div>
+					<div className="flex items-center gap-1.5">
+						<StatusDot color="warning" />
+						<Text variant="caption">warning</Text>
+					</div>
+					<div className="flex items-center gap-1.5">
+						<StatusDot color="danger" />
+						<Text variant="caption">danger</Text>
+					</div>
+					<div className="flex items-center gap-1.5">
+						<StatusDot color="muted" />
+						<Text variant="caption">muted</Text>
+					</div>
+					<div className="flex items-center gap-1.5">
+						<StatusDot color="info" />
+						<Text variant="caption">info</Text>
+					</div>
+				</ShowcaseRow>
+				<ShowcaseRow label="Sizes">
+					<div className="flex items-center gap-4">
+						{(["xs", "sm", "md", "lg"] as const).map((s) => (
+							<div className="flex flex-col items-center gap-2" key={s}>
+								<StatusDot color="success" size={s} />
+								<Text mono tone="muted" variant="caption">
+									{s}
+								</Text>
+							</div>
+						))}
+					</div>
+				</ShowcaseRow>
+				<ShowcaseRow label="Pulse">
+					<div className="flex items-center gap-1.5">
+						<StatusDot color="success" pulse />
+						<Text variant="caption">3 users online</Text>
+					</div>
+					<div className="flex items-center gap-1.5">
+						<StatusDot color="danger" pulse />
+						<Text variant="caption">Incident active</Text>
+					</div>
+				</ShowcaseRow>
+			</ShowcaseSection>
+
+			<ShowcaseSection
+				description="Badge that auto-colors by percentage threshold — green ≥50%, blue ≥25%, amber ≥10%, muted below."
+				id="percentage-badge"
+				title="PercentageBadge"
+			>
+				<ShowcaseRow label="Thresholds">
+					<PercentageBadge percentage={87.3} />
+					<PercentageBadge percentage={42.1} />
+					<PercentageBadge percentage={18.6} />
+					<PercentageBadge percentage={5.2} />
+					<PercentageBadge percentage={0} />
+				</ShowcaseRow>
+			</ShowcaseSection>
+
+			<ShowcaseSection
+				description="Determinate progress bar with semantic tones and two sizes."
+				id="progress"
+				title="Progress"
+			>
+				<ShowcaseRow label="Tones">
+					<div className="flex w-full flex-col gap-3">
+						<div className="flex items-center gap-3">
+							<Text
+								className="w-16 shrink-0 text-right"
+								mono
+								tone="muted"
+								variant="caption"
+							>
+								primary
+							</Text>
+							<Progress className="flex-1" tone="primary" value={62} />
+						</div>
+						<div className="flex items-center gap-3">
+							<Text
+								className="w-16 shrink-0 text-right"
+								mono
+								tone="muted"
+								variant="caption"
+							>
+								success
+							</Text>
+							<Progress className="flex-1" tone="success" value={84} />
+						</div>
+						<div className="flex items-center gap-3">
+							<Text
+								className="w-16 shrink-0 text-right"
+								mono
+								tone="muted"
+								variant="caption"
+							>
+								warning
+							</Text>
+							<Progress className="flex-1" tone="warning" value={45} />
+						</div>
+						<div className="flex items-center gap-3">
+							<Text
+								className="w-16 shrink-0 text-right"
+								mono
+								tone="muted"
+								variant="caption"
+							>
+								danger
+							</Text>
+							<Progress className="flex-1" tone="danger" value={91} />
+						</div>
+					</div>
+				</ShowcaseRow>
+				<ShowcaseRow label="Sizes">
+					<div className="flex w-full flex-col gap-3">
+						<div className="flex items-center gap-3">
+							<Text
+								className="w-8 shrink-0 text-right"
+								mono
+								tone="muted"
+								variant="caption"
+							>
+								sm
+							</Text>
+							<Progress className="flex-1" size="sm" value={55} />
+						</div>
+						<div className="flex items-center gap-3">
+							<Text
+								className="w-8 shrink-0 text-right"
+								mono
+								tone="muted"
+								variant="caption"
+							>
+								md
+							</Text>
+							<Progress className="flex-1" size="md" value={55} />
+						</div>
+					</div>
+				</ShowcaseRow>
+			</ShowcaseSection>
+
+			<ShowcaseSection
+				description="Mutually exclusive option group — default (card indicator) and pill (primary bg) variants at two sizes."
+				id="segmented-control"
+				title="SegmentedControl"
+			>
+				<ShowcaseRow label="Default">
+					<SegmentedControl
+						onChange={setSegmentedValue}
+						options={[
+							{ label: "Daily", value: "daily" },
+							{ label: "Weekly", value: "weekly" },
+							{ label: "Monthly", value: "monthly" },
+						]}
+						value={segmentedValue}
+					/>
+				</ShowcaseRow>
+				<ShowcaseRow label="Pill">
+					<SegmentedControl
+						onChange={setSegmentedPill}
+						options={[
+							{ label: "Area", value: "area" },
+							{ label: "Line", value: "line" },
+							{ label: "Bar", value: "bar" },
+						]}
+						value={segmentedPill}
+						variant="pill"
+					/>
+				</ShowcaseRow>
+				<ShowcaseRow label="Small + disabled">
+					<SegmentedControl
+						onChange={setSegmentedValue}
+						options={[
+							{ label: "Light", value: "daily" },
+							{ label: "Dark", value: "weekly" },
+							{ label: "System", value: "monthly" },
+						]}
+						size="sm"
+						value={segmentedValue}
+					/>
+					<SegmentedControl
+						disabled
+						onChange={() => {}}
+						options={[
+							{ label: "On", value: "on" },
+							{ label: "Off", value: "off" },
+						]}
+						value="on"
+					/>
+				</ShowcaseRow>
+			</ShowcaseSection>
+
+			<ShowcaseSection
+				description="Date picker built on react-day-picker — single date selection and date range modes."
+				id="calendar"
+				title="Calendar"
+			>
+				<ShowcaseRow label="Single date">
+					<Calendar
+						mode="single"
+						onSelect={setCalendarDate}
+						selected={calendarDate}
+					/>
+				</ShowcaseRow>
+				<ShowcaseRow label="Date range">
+					<Calendar
+						mode="range"
+						onSelect={(range) => {
+							if (range?.from) {
+								setCalendarRange({ from: range.from, to: range.to });
+							}
+						}}
+						selected={calendarRange}
+					/>
+				</ShowcaseRow>
+			</ShowcaseSection>
+
+			<ShowcaseSection
+				description="One-click copy with built-in tooltip and check feedback. Icon-only or with label."
+				id="copy-button"
+				title="CopyButton"
+			>
+				<ShowcaseRow label="Icon-only">
+					<div className="flex items-center gap-2 rounded-md bg-secondary px-3 py-2">
+						<Text mono variant="caption">
+							sk_live_abc123def456
+						</Text>
+						<CopyButton value="sk_live_abc123def456" />
+					</div>
+				</ShowcaseRow>
+				<ShowcaseRow label="With label">
+					<CopyButton
+						label="Copy API key"
+						value="sk_live_abc123def456"
+						variant="secondary"
+					/>
+					<CopyButton
+						label="Copy URL"
+						size="lg"
+						value="https://databuddy.cc"
+						variant="secondary"
+					/>
+				</ShowcaseRow>
+			</ShowcaseSection>
+
+			<ShowcaseSection
+				description="Pre-composed destructive confirmation dialog with auto-close on completion."
+				id="delete-dialog"
+				title="DeleteDialog"
+			>
+				<ShowcaseRow>
+					<Button
+						onClick={() => setDeleteOpen(true)}
+						tone="danger"
+						variant="secondary"
+					>
+						<Trash className="size-3.5" />
+						Delete item
+					</Button>
+					<DeleteDialog
+						isOpen={deleteOpen}
+						itemName="My Website"
+						onClose={() => setDeleteOpen(false)}
+						onConfirm={() => setDeleteOpen(false)}
+						title="Delete website"
+					/>
+					<Button
+						onClick={() => setDeleteChildrenOpen(true)}
+						tone="danger"
+						variant="secondary"
+					>
+						<Warning className="size-3.5" />
+						With extra content
+					</Button>
+					<DeleteDialog
+						description="Removing this API key will immediately revoke access for all services using it."
+						isOpen={deleteChildrenOpen}
+						onClose={() => setDeleteChildrenOpen(false)}
+						onConfirm={() => setDeleteChildrenOpen(false)}
+						title="Revoke API key"
+					>
+						<div className="flex items-center gap-3 rounded-md bg-secondary p-3">
+							<div className="flex size-8 items-center justify-center rounded-md bg-muted">
+								<Key className="size-3.5 text-muted-foreground" />
+							</div>
+							<div className="flex flex-col">
+								<Text variant="caption">Production key</Text>
+								<Text mono tone="muted" variant="caption">
+									sk_live_...f456
+								</Text>
+							</div>
+						</div>
+					</DeleteDialog>
+				</ShowcaseRow>
 			</ShowcaseSection>
 
 			<ShowcaseSection
@@ -1291,7 +1611,15 @@ function AnalyticsMockup() {
 		<div className="flex flex-col gap-6">
 			<div className="flex items-center justify-between">
 				<div className="flex flex-col gap-1">
-					<Text variant="heading">Analytics</Text>
+					<div className="flex items-center gap-2">
+						<Text variant="heading">Analytics</Text>
+						<div className="flex items-center gap-1.5 rounded-full bg-success/10 px-2 py-0.5">
+							<StatusDot color="success" pulse size="xs" />
+							<Text className="text-success" variant="caption">
+								12 online
+							</Text>
+						</div>
+					</div>
 					<Text tone="muted" variant="caption">
 						Last 7 days vs previous period
 					</Text>
@@ -1354,12 +1682,7 @@ function AnalyticsMockup() {
 									<Text className="truncate" mono variant="caption">
 										{p.path}
 									</Text>
-									<div className="h-1.5 w-full rounded-full bg-secondary">
-										<div
-											className="h-full rounded-full bg-primary"
-											style={{ width: `${p.pct}%` }}
-										/>
-									</div>
+									<Progress size="sm" value={p.pct} />
 								</div>
 								<Text
 									className="shrink-0 tabular-nums"
@@ -1416,12 +1739,7 @@ function AnalyticsMockup() {
 								<Text className="w-16 shrink-0" variant="caption">
 									{d.device}
 								</Text>
-								<div className="h-2 flex-1 rounded-full bg-secondary">
-									<div
-										className="h-full rounded-full bg-primary"
-										style={{ width: `${d.pct}%` }}
-									/>
-								</div>
+								<Progress className="flex-1" size="sm" value={d.pct} />
 								<Text
 									className="w-8 shrink-0 text-right tabular-nums"
 									mono
@@ -1596,13 +1914,16 @@ function TeamMockup() {
 						>
 							{m.role}
 						</Badge>
-						<Badge
-							className="w-20 justify-center"
-							size="sm"
-							variant={m.status === "active" ? "success" : "warning"}
-						>
-							{m.status === "active" ? "Active" : "Pending"}
-						</Badge>
+						<div className="flex w-20 items-center justify-center gap-1.5">
+							<StatusDot
+								color={m.status === "active" ? "success" : "warning"}
+								pulse={m.status === "active"}
+								size="sm"
+							/>
+							<Text variant="caption">
+								{m.status === "active" ? "Active" : "Pending"}
+							</Text>
+						</div>
 						<div className="flex w-10 justify-end">
 							{m.role !== "Owner" && (
 								<DropdownMenu>
@@ -1717,14 +2038,10 @@ function BillingMockup() {
 									{u.used.toLocaleString()} / {u.limit.toLocaleString()}
 								</Text>
 							</div>
-							<div className="h-2 w-full rounded-full bg-secondary">
-								<div
-									className={`h-full rounded-full ${(u.used / u.limit) > 0.8 ? "bg-destructive" : "bg-primary"}`}
-									style={{
-										width: `${Math.min((u.used / u.limit) * 100, 100)}%`,
-									}}
-								/>
-							</div>
+							<Progress
+								tone={u.used / u.limit > 0.8 ? "danger" : "primary"}
+								value={(u.used / u.limit) * 100}
+							/>
 						</div>
 					))}
 				</Card.Content>
@@ -1927,19 +2244,16 @@ function OnboardingMockup() {
 								Add this snippet to your site's &lt;head&gt; tag.
 							</Text>
 						</div>
-						<div className="relative rounded-lg bg-muted/50 p-4">
+						<div className="relative rounded-lg bg-muted/50 p-4 pr-12">
 							<Text className="break-all" mono variant="caption">
 								{
 									'<script defer src="https://cdn.databuddy.cc/tracker.js" data-client-id="ck_live_abc123"></script>'
 								}
 							</Text>
-							<Button
+							<CopyButton
 								className="absolute top-2 right-2"
-								size="sm"
-								variant="ghost"
-							>
-								<Copy className="size-3.5" />
-							</Button>
+								value='<script defer src="https://cdn.databuddy.cc/tracker.js" data-client-id="ck_live_abc123"></script>'
+							/>
 						</div>
 						<Divider />
 						<div className="flex flex-col gap-1">
@@ -1948,17 +2262,14 @@ function OnboardingMockup() {
 								For React, Next.js, and other frameworks.
 							</Text>
 						</div>
-						<div className="relative rounded-lg bg-muted/50 p-4">
+						<div className="relative rounded-lg bg-muted/50 p-4 pr-12">
 							<Text mono variant="caption">
 								npm install @databuddy/sdk
 							</Text>
-							<Button
+							<CopyButton
 								className="absolute top-2 right-2"
-								size="sm"
-								variant="ghost"
-							>
-								<Copy className="size-3.5" />
-							</Button>
+								value="npm install @databuddy/sdk"
+							/>
 						</div>
 						<div className="flex items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 p-3">
 							<Clock className="size-4 shrink-0 text-primary" />

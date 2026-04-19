@@ -31,16 +31,7 @@ import {
 	type PageEntry,
 	type ReferrerEntry,
 } from "@/components/table/rows";
-import {
-	AlertDialog,
-	AlertDialogAction,
-	AlertDialogCancel,
-	AlertDialogContent,
-	AlertDialogDescription,
-	AlertDialogFooter,
-	AlertDialogHeader,
-	AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { DeleteDialog } from "@/components/ds/delete-dialog";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu } from "@/components/ds/dropdown-menu";
 import { useBatchDynamicQuery } from "@/hooks/use-dynamic-query";
@@ -484,36 +475,20 @@ export function InsightsPageContent() {
 				)}
 			</div>
 
-			<AlertDialog onOpenChange={setClearDialogOpen} open={clearDialogOpen}>
-				<AlertDialogContent>
-					<AlertDialogHeader>
-						<AlertDialogTitle className="text-balance">
-							Clear all insights?
-						</AlertDialogTitle>
-						<AlertDialogDescription className="text-pretty">
-							This removes every stored insight for this organization from the
-							database. Fresh insights will be generated on the next analysis
-							run.
-						</AlertDialogDescription>
-					</AlertDialogHeader>
-					<AlertDialogFooter>
-						<AlertDialogCancel type="button">Cancel</AlertDialogCancel>
-						<AlertDialogAction
-							className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-							disabled={clearInsightsMutation.isPending || !orgId}
-							onClick={(e) => {
-								e.preventDefault();
-								if (orgId) {
-									clearInsightsMutation.mutate();
-								}
-							}}
-							type="button"
-						>
-							{clearInsightsMutation.isPending ? "Clearing…" : "Clear all"}
-						</AlertDialogAction>
-					</AlertDialogFooter>
-				</AlertDialogContent>
-			</AlertDialog>
+			<DeleteDialog
+				confirmDisabled={!orgId}
+				confirmLabel="Clear all"
+				description="This removes every stored insight for this organization from the database. Fresh insights will be generated on the next analysis run."
+				isDeleting={clearInsightsMutation.isPending}
+				isOpen={clearDialogOpen}
+				onClose={() => setClearDialogOpen(false)}
+				onConfirm={() => {
+					if (orgId) {
+						clearInsightsMutation.mutate();
+					}
+				}}
+				title="Clear all insights?"
+			/>
 		</>
 	);
 }
