@@ -52,6 +52,9 @@
     "check": "ultracite check",
     "fix": "ultracite fix"
   },
+  "overrides": {
+    "protobufjs": ">=7.5.5"
+  },
   "type": "module",
   "workspaces": {
     "packages": [
