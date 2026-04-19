@@ -6,10 +6,10 @@ import { HouseIcon } from "@phosphor-icons/react";
 import { PlusIcon } from "@phosphor-icons/react";
 import Link from "next/link";
 import { useState } from "react";
-import { EmptyState } from "@/components/empty-state";
+import { EmptyState } from "@/components/ds/empty-state";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Card } from "@/components/ds/card";
+import { Skeleton } from "@/components/ds/skeleton";
 import { WebsiteDialog } from "@/components/website-dialog";
 import { useWebsites } from "@/hooks/use-websites";
 import { cn } from "@/lib/utils";
@@ -25,10 +25,10 @@ import { useSmartInsights } from "./hooks/use-smart-insights";
 function WebsiteCardSkeleton() {
 	return (
 		<Card className="animate-pulse overflow-hidden pt-0">
-			<CardHeader className="dotted-bg gap-0! border-b bg-accent px-3 pt-4 pb-0!">
+			<Card.Header className="dotted-bg gap-0! border-b bg-accent px-3 pt-4 pb-0!">
 				<Skeleton className="mx-auto h-24 w-full rounded sm:h-28" />
-			</CardHeader>
-			<CardContent className="px-4 py-3">
+			</Card.Header>
+			<Card.Content className="px-4 py-3">
 				<div className="flex items-center gap-3">
 					<Skeleton className="size-7 shrink-0 rounded" />
 					<div className="flex min-w-0 flex-1 items-center justify-between gap-2">
@@ -42,7 +42,7 @@ function WebsiteCardSkeleton() {
 						</div>
 					</div>
 				</div>
-			</CardContent>
+			</Card.Content>
 		</Card>
 	);
 }

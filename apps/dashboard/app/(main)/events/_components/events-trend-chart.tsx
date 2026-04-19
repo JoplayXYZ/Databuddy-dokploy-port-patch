@@ -1,15 +1,15 @@
 "use client";
 
-import { ArrowCounterClockwiseIcon } from "@phosphor-icons/react";
-import { ChartBarIcon } from "@phosphor-icons/react";
-import { ChartLineUpIcon } from "@phosphor-icons/react";
-import { LightningIcon } from "@phosphor-icons/react";
-import { ListBulletsIcon } from "@phosphor-icons/react";
+import { ArrowCounterClockwiseIcon } from "@phosphor-icons/react/dist/ssr";
+import { ChartBarIcon } from "@phosphor-icons/react/dist/ssr";
+import { ChartLineUpIcon } from "@phosphor-icons/react/dist/ssr";
+import { LightningIcon } from "@phosphor-icons/react/dist/ssr";
+import { ListBulletsIcon } from "@phosphor-icons/react/dist/ssr";
 import { useCallback, useMemo, useState } from "react";
 import { METRIC_COLORS } from "@/components/charts/metrics-constants";
 import { useDynamicDasharray } from "@/components/charts/use-dynamic-dasharray";
 import { TableEmptyState } from "@/components/table/table-empty-state";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ds/button";
 import { Chart } from "@/components/ui/composables/chart";
 import { InlineToggle } from "@/components/ui/inline-toggle";
 import {
@@ -385,7 +385,7 @@ export function EventsTrendChart({
 							className="h-7 gap-1 px-2 text-xs"
 							onClick={resetZoom}
 							size="sm"
-							variant="outline"
+							variant="secondary"
 						>
 							<ArrowCounterClockwiseIcon className="size-3" weight="bold" />
 							Reset

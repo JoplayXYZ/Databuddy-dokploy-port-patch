@@ -1,13 +1,13 @@
 "use client";
 
-import { CopyIcon } from "@phosphor-icons/react";
-import { DownloadSimpleIcon } from "@phosphor-icons/react";
-import { ImageIcon } from "@phosphor-icons/react";
-import { XIcon } from "@phosphor-icons/react";
+import { CopyIcon } from "@phosphor-icons/react/dist/ssr";
+import { DownloadSimpleIcon } from "@phosphor-icons/react/dist/ssr";
+import { ImageIcon } from "@phosphor-icons/react/dist/ssr";
+import { XIcon } from "@phosphor-icons/react/dist/ssr";
 import { useCallback, useRef, useState } from "react";
 import { QRCode } from "react-qrcode-logo";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ds/button";
 import { cn } from "@/lib/utils";
 import { LINKS_FULL_URL } from "./link-constants";
 
@@ -153,7 +153,7 @@ export function LinkQrCode({
 			{showControls && (
 				<>
 					<div className="flex justify-center gap-2">
-						<Button onClick={copyQrCode} size="sm" variant="outline">
+						<Button onClick={copyQrCode} size="sm" variant="secondary">
 							<CopyIcon size={16} weight="duotone" />
 							Copy
 						</Button>

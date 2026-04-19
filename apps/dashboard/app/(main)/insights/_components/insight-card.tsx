@@ -28,13 +28,8 @@ import {
 	formatInsightFreshness,
 } from "@/app/(main)/insights/lib/insight-meta";
 import { InsightMetrics } from "@/components/insight-metrics";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Skeleton } from "@/components/ui/skeleton";
+import { DropdownMenu } from "@/components/ds/dropdown-menu";
+import { Skeleton } from "@/components/ds/skeleton";
 import {
 	changePercentChipClassName,
 	formatSignedChangePercent,
@@ -378,18 +373,15 @@ export function InsightCard({
 								</Link>
 
 								<DropdownMenu>
-									<DropdownMenuTrigger asChild>
-										<button
-											aria-label="More actions"
-											className="flex size-6 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-											onClick={(e) => e.stopPropagation()}
-											type="button"
-										>
-											<DotsThreeIcon className="size-4" weight="bold" />
-										</button>
-									</DropdownMenuTrigger>
-									<DropdownMenuContent align="start" className="w-44">
-										<DropdownMenuItem
+									<DropdownMenu.Trigger
+										aria-label="More actions"
+										className="flex size-6 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+										onClick={(e) => e.stopPropagation()}
+									>
+										<DotsThreeIcon className="size-4" weight="bold" />
+									</DropdownMenu.Trigger>
+									<DropdownMenu.Content align="start" className="w-44">
+										<DropdownMenu.Item
 											onClick={(e) => {
 												e.stopPropagation();
 												copyAgentPromptAction();
@@ -397,12 +389,12 @@ export function InsightCard({
 										>
 											<CopyIcon className="size-4" weight="duotone" />
 											Copy prompt
-										</DropdownMenuItem>
-										<DropdownMenuItem onClick={copyLinkAction}>
+										</DropdownMenu.Item>
+										<DropdownMenu.Item onClick={copyLinkAction}>
 											<LinkIcon className="size-4" weight="duotone" />
 											Copy link
-										</DropdownMenuItem>
-									</DropdownMenuContent>
+										</DropdownMenu.Item>
+									</DropdownMenu.Content>
 								</DropdownMenu>
 
 								<div className="ml-auto flex items-center gap-1.5">

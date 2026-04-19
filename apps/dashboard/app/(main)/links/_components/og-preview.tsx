@@ -1,18 +1,18 @@
 "use client";
 
-import { ArrowCounterClockwiseIcon } from "@phosphor-icons/react";
-import { ArrowsClockwiseIcon } from "@phosphor-icons/react";
-import { CheckCircleIcon } from "@phosphor-icons/react";
-import { CircleNotchIcon } from "@phosphor-icons/react";
-import { XIcon as CloseIcon } from "@phosphor-icons/react";
-import { ImageIcon } from "@phosphor-icons/react";
-import { VideoIcon } from "@phosphor-icons/react";
-import { WarningCircleIcon } from "@phosphor-icons/react";
+import { ArrowCounterClockwiseIcon } from "@phosphor-icons/react/dist/ssr";
+import { ArrowsClockwiseIcon } from "@phosphor-icons/react/dist/ssr";
+import { CheckCircleIcon } from "@phosphor-icons/react/dist/ssr";
+import { CircleNotchIcon } from "@phosphor-icons/react/dist/ssr";
+import { XIcon as CloseIcon } from "@phosphor-icons/react/dist/ssr";
+import { ImageIcon } from "@phosphor-icons/react/dist/ssr";
+import { VideoIcon } from "@phosphor-icons/react/dist/ssr";
+import { WarningCircleIcon } from "@phosphor-icons/react/dist/ssr";
 import { useCallback, useMemo } from "react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ds/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
+import { Field } from "@/components/ds/field";
+import { Switch } from "@/components/ds/switch";
 import { Textarea } from "@/components/ui/textarea";
 import {
 	type FetchedOgData,
@@ -120,7 +120,7 @@ export function OgPreview({
 											onClick={retryImage}
 											size="sm"
 											type="button"
-											variant="outline"
+											variant="secondary"
 										>
 											<ArrowsClockwiseIcon className="mr-1.5 size-3.5" />
 											Retry
@@ -205,9 +205,9 @@ export function OgPreview({
 			</div>
 
 			<div className="flex items-center justify-between">
-				<Label className="text-sm" htmlFor="use-custom-og">
+				<Field.Label className="text-sm" htmlFor="use-custom-og">
 					Use custom social preview
-				</Label>
+				</Field.Label>
 				<Switch
 					checked={useCustomOg}
 					id="use-custom-og"
@@ -219,9 +219,9 @@ export function OgPreview({
 				<div className="space-y-3 border-primary/20 border-l-2 pl-4">
 					<div className="grid gap-1.5">
 						<div className="flex items-center justify-between">
-							<Label className="text-xs" htmlFor="og-title">
+							<Field.Label className="text-xs" htmlFor="og-title">
 								Title
-							</Label>
+							</Field.Label>
 							<span
 								aria-live="polite"
 								className="text-muted-foreground text-xs tabular-nums"
@@ -245,9 +245,9 @@ export function OgPreview({
 
 					<div className="grid gap-1.5">
 						<div className="flex items-center justify-between">
-							<Label className="text-xs" htmlFor="og-description">
+							<Field.Label className="text-xs" htmlFor="og-description">
 								Description
-							</Label>
+							</Field.Label>
 							<span
 								aria-live="polite"
 								className="text-muted-foreground text-xs tabular-nums"
@@ -274,9 +274,9 @@ export function OgPreview({
 
 					<div className="grid gap-1.5">
 						<div className="flex items-center justify-between">
-							<Label className="text-xs" htmlFor="og-image">
+							<Field.Label className="text-xs" htmlFor="og-image">
 								Image URL
-							</Label>
+							</Field.Label>
 							{customImageUrl && (
 								<span className="flex items-center gap-1 text-xs">
 									{imageStatus === "loading" && (
@@ -332,13 +332,13 @@ export function OgPreview({
 					</div>
 
 					<div className="grid gap-1.5">
-						<Label
+						<Field.Label
 							className="flex items-center gap-1.5 text-xs"
 							htmlFor="og-video"
 						>
 							<VideoIcon size={12} weight="duotone" />
 							Video URL (optional)
-						</Label>
+						</Field.Label>
 						<Input
 							className="h-8 text-sm"
 							id="og-video"

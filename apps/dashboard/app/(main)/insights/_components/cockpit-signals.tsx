@@ -3,13 +3,8 @@
 import { useInsightsFeed } from "@/app/(main)/insights/hooks/use-insights-feed";
 import { useInsightsLocalState } from "@/app/(main)/insights/hooks/use-insights-local-state";
 import { useOrganizationsContext } from "@/components/providers/organizations-provider";
-import { Button } from "@/components/ui/button";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ds/button";
+import { DropdownMenu } from "@/components/ds/dropdown-menu";
 import type { Insight, InsightSeverity } from "@/lib/insight-types";
 import { cn } from "@/lib/utils";
 import { ArrowClockwiseIcon } from "@phosphor-icons/react/dist/ssr/ArrowClockwise";
@@ -231,49 +226,43 @@ export function CockpitSignals(): ReactElement {
 				<div className="flex items-center gap-2 border-b px-4 py-2">
 					{websites.length > 1 && (
 						<DropdownMenu>
-							<DropdownMenuTrigger asChild>
-								<button
-									className="flex items-center gap-1.5 rounded px-2 py-1 font-medium text-muted-foreground text-xs transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
-									disabled={controlsLocked}
-									type="button"
-								>
-									<span className="truncate">{selectedWebsiteName}</span>
-									<CaretDownIcon className="size-3" weight="fill" />
-								</button>
-							</DropdownMenuTrigger>
-							<DropdownMenuContent align="start" className="w-[200px]">
-								<DropdownMenuItem onClick={() => setWebsiteFilter("all")}>
+							<DropdownMenu.Trigger
+								className="flex items-center gap-1.5 rounded px-2 py-1 font-medium text-muted-foreground text-xs transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+								disabled={controlsLocked}
+							>
+								<span className="truncate">{selectedWebsiteName}</span>
+								<CaretDownIcon className="size-3" weight="fill" />
+							</DropdownMenu.Trigger>
+							<DropdownMenu.Content align="start" className="w-[200px]">
+								<DropdownMenu.Item onClick={() => setWebsiteFilter("all")}>
 									All Websites
-								</DropdownMenuItem>
+								</DropdownMenu.Item>
 								{websites.map((w) => (
-									<DropdownMenuItem
+									<DropdownMenu.Item
 										key={w.id}
 										onClick={() => setWebsiteFilter(w.id)}
 									>
 										{w.name}
-									</DropdownMenuItem>
+									</DropdownMenu.Item>
 								))}
-							</DropdownMenuContent>
+							</DropdownMenu.Content>
 						</DropdownMenu>
 					)}
 
 					<DropdownMenu>
-						<DropdownMenuTrigger asChild>
-							<button
-								className={cn(
-									"flex items-center gap-1.5 rounded px-2 py-1 font-medium text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
-									severityFilter === "all"
-										? "text-muted-foreground hover:text-foreground"
-										: "bg-primary/10 text-primary"
-								)}
-								type="button"
-							>
-								<FunnelIcon className="size-3.5" />
-								{selectedSeverityLabel}
-								<CaretDownIcon className="size-3" weight="fill" />
-							</button>
-						</DropdownMenuTrigger>
-						<DropdownMenuContent align="start">
+						<DropdownMenu.Trigger
+							className={cn(
+								"flex items-center gap-1.5 rounded px-2 py-1 font-medium text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
+								severityFilter === "all"
+									? "text-muted-foreground hover:text-foreground"
+									: "bg-primary/10 text-primary"
+							)}
+						>
+							<FunnelIcon className="size-3.5" />
+							{selectedSeverityLabel}
+							<CaretDownIcon className="size-3" weight="fill" />
+						</DropdownMenu.Trigger>
+						<DropdownMenu.Content align="start">
 							{SEVERITY_OPTIONS.map((opt) => {
 								const count =
 									opt.value === "all" ? counts.total : counts[opt.value];
@@ -281,7 +270,7 @@ export function CockpitSignals(): ReactElement {
 									return null;
 								}
 								return (
-									<DropdownMenuItem
+									<DropdownMenu.Item
 										key={opt.value}
 										onClick={() => setSeverityFilter(opt.value)}
 									>
@@ -289,33 +278,28 @@ export function CockpitSignals(): ReactElement {
 										<span className="font-mono text-muted-foreground text-xs tabular-nums">
 											{count}
 										</span>
-									</DropdownMenuItem>
+									</DropdownMenu.Item>
 								);
 							})}
-						</DropdownMenuContent>
+						</DropdownMenu.Content>
 					</DropdownMenu>
 
 					<DropdownMenu>
-						<DropdownMenuTrigger asChild>
-							<button
-								className="flex items-center gap-1.5 rounded px-2 py-1 font-medium text-muted-foreground text-xs transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
-								type="button"
-							>
-								<ArrowsDownUpIcon className="size-3.5" />
-								{selectedSortLabel}
-								<CaretDownIcon className="size-3" weight="fill" />
-							</button>
-						</DropdownMenuTrigger>
-						<DropdownMenuContent align="start">
+						<DropdownMenu.Trigger className="flex items-center gap-1.5 rounded px-2 py-1 font-medium text-muted-foreground text-xs transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50">
+							<ArrowsDownUpIcon className="size-3.5" />
+							{selectedSortLabel}
+							<CaretDownIcon className="size-3" weight="fill" />
+						</DropdownMenu.Trigger>
+						<DropdownMenu.Content align="start">
 							{SORT_OPTIONS.map((opt) => (
-								<DropdownMenuItem
+								<DropdownMenu.Item
 									key={opt.value}
 									onClick={() => setSortMode(opt.value)}
 								>
 									{opt.label}
-								</DropdownMenuItem>
+								</DropdownMenu.Item>
 							))}
-						</DropdownMenuContent>
+						</DropdownMenu.Content>
 					</DropdownMenu>
 
 					{dismissedIdSet.size > 0 && (
@@ -404,7 +388,7 @@ export function CockpitSignals(): ReactElement {
 								disabled={isFetchingNextPage}
 								onClick={() => fetchNextPage()}
 								type="button"
-								variant="outline"
+								variant="secondary"
 							>
 								{isFetchingNextPage ? (
 									<>
@@ -484,7 +468,7 @@ function ErrorState({ onRetryAction }: { onRetryAction: () => void }) {
 					AI analysis timed out or failed. Try again.
 				</p>
 			</div>
-			<Button onClick={onRetryAction} size="sm" variant="outline">
+			<Button onClick={onRetryAction} size="sm" variant="secondary">
 				<ArrowClockwiseIcon className="size-4" />
 				Retry
 			</Button>
@@ -531,7 +515,7 @@ function NoMatchState({
 					onClick={onClearAction}
 					size="sm"
 					type="button"
-					variant="outline"
+					variant="secondary"
 				>
 					Clear filters
 				</Button>
@@ -540,7 +524,7 @@ function NoMatchState({
 						onClick={onShowDismissedAction}
 						size="sm"
 						type="button"
-						variant="outline"
+						variant="secondary"
 					>
 						Show dismissed
 					</Button>

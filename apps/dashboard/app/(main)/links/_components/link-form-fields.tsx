@@ -16,7 +16,7 @@ import {
 	FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Field } from "@/components/ds/field";
 import { cn } from "@/lib/utils";
 import { CollapsibleSection } from "./collapsible-section";
 import { ExpirationPicker } from "./expiration-picker";
@@ -205,9 +205,9 @@ export function LinkFormFields({
 							name="expiredRedirectUrl"
 							render={({ field }) => (
 								<FormItem>
-									<Label className="text-xs" htmlFor="expired-redirect">
+									<Field.Label className="text-xs" htmlFor="expired-redirect">
 										Redirect URL after expiration
-									</Label>
+									</Field.Label>
 									<FormControl>
 										<Input
 											className="h-9"
@@ -248,13 +248,13 @@ export function LinkFormFields({
 								name="iosUrl"
 								render={({ field }) => (
 									<FormItem>
-										<Label
+										<Field.Label
 											className="flex items-center gap-1.5 text-xs"
 											htmlFor="ios-url"
 										>
 											<AppleLogoIcon size={14} weight="fill" />
 											iOS URL
-										</Label>
+										</Field.Label>
 										<FormControl>
 											<Input
 												className="h-9"
@@ -277,13 +277,13 @@ export function LinkFormFields({
 								name="androidUrl"
 								render={({ field }) => (
 									<FormItem>
-										<Label
+										<Field.Label
 											className="flex items-center gap-1.5 text-xs"
 											htmlFor="android-url"
 										>
 											<AndroidLogoIcon size={14} weight="fill" />
 											Android URL
-										</Label>
+										</Field.Label>
 										<FormControl>
 											<Input
 												className="h-9"

@@ -1,26 +1,17 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CircleNotchIcon } from "@phosphor-icons/react";
-import { CopyIcon } from "@phosphor-icons/react";
-import { LinkSimpleIcon } from "@phosphor-icons/react";
-import { QrCodeIcon } from "@phosphor-icons/react";
+import { CopyIcon } from "@phosphor-icons/react/dist/ssr";
+import { LinkSimpleIcon } from "@phosphor-icons/react/dist/ssr";
+import { QrCodeIcon } from "@phosphor-icons/react/dist/ssr";
 import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { type SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { useOrganizationsContext } from "@/components/providers/organizations-provider";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ds/button";
 import { Form } from "@/components/ui/form";
-import {
-	Sheet,
-	SheetBody,
-	SheetContent,
-	SheetDescription,
-	SheetFooter,
-	SheetHeader,
-	SheetTitle,
-} from "@/components/ui/sheet";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Sheet } from "@/components/ds/sheet";
+import { Tabs } from "@/components/ds/tabs";
 import { type Link, useCreateLink, useUpdateLink } from "@/hooks/use-links";
 import dayjs from "@/lib/dayjs";
 import { LINKS_BASE_URL, LINKS_FULL_URL } from "./link-constants";
@@ -274,57 +265,49 @@ function LinkSheetInner({ open, onOpenChange, link, onSave }: LinkSheetProps) {
 	};
 
 	const footer = (
-		<SheetFooter>
+		<Sheet.Footer>
 			<Button
 				onClick={() => onOpenChange(false)}
 				type="button"
-				variant="outline"
+				variant="secondary"
 			>
 				Cancel
 			</Button>
 			<Button
 				className="min-w-28"
-				disabled={isPending || isSubmitDisabled}
+				disabled={isSubmitDisabled}
+				loading={isPending}
 				type="submit"
 			>
-				{isPending ? (
-					<>
-						<CircleNotchIcon className="animate-spin" size={16} />
-						{isEditing ? "Saving…" : "Creating…"}
-					</>
-				) : isEditing ? (
-					"Save Changes"
-				) : (
-					"Create Link"
-				)}
+				{isEditing ? "Save Changes" : "Create Link"}
 			</Button>
-		</SheetFooter>
+		</Sheet.Footer>
 	);
 
 	return (
 		<Sheet onOpenChange={handleOpenChange} open={open}>
-			<SheetContent className="sm:max-w-xl" side="right">
-				<SheetHeader>
+			<Sheet.Content className="sm:max-w-xl" side="right">
+				<Sheet.Close />
+				<Sheet.Header>
 					<div className="flex items-center gap-4">
 						<div className="flex size-11 items-center justify-center rounded border bg-secondary">
 							<LinkSimpleIcon
-								className="text-primary"
-								size={20}
+								className="size-5 text-primary"
 								weight="duotone"
 							/>
 						</div>
 						<div>
-							<SheetTitle className="text-balance text-lg">
+							<Sheet.Title className="text-balance text-lg">
 								{isEditing ? "Edit Link" : "Create Link"}
-							</SheetTitle>
-							<SheetDescription className="text-pretty">
+							</Sheet.Title>
+							<Sheet.Description className="text-pretty">
 								{isEditing
 									? `Editing ${link?.name || link?.slug}`
 									: "Create a short link to track clicks and analytics"}
-							</SheetDescription>
+							</Sheet.Description>
 						</div>
 					</div>
-				</SheetHeader>
+				</Sheet.Header>
 
 				<Form {...form}>
 					<form
@@ -335,28 +318,31 @@ function LinkSheetInner({ open, onOpenChange, link, onSave }: LinkSheetProps) {
 							<Tabs
 								className="flex flex-1 flex-col overflow-hidden"
 								defaultValue="details"
-								variant="underline"
 							>
-								<TabsList className="shrink-0">
-									<TabsTrigger value="details">
+								<Tabs.List className="shrink-0">
+									<Tabs.Tab value="details">
 										<LinkSimpleIcon
 											aria-hidden="true"
-											size={16}
+											className="size-4"
 											weight="duotone"
 										/>
 										Details
-									</TabsTrigger>
-									<TabsTrigger value="qr-code">
-										<QrCodeIcon aria-hidden="true" size={16} weight="duotone" />
+									</Tabs.Tab>
+									<Tabs.Tab value="qr-code">
+										<QrCodeIcon
+											aria-hidden="true"
+											className="size-4"
+											weight="duotone"
+										/>
 										QR Code
-									</TabsTrigger>
-								</TabsList>
+									</Tabs.Tab>
+								</Tabs.List>
 
-								<TabsContent
+								<Tabs.Panel
 									className="mt-0 flex-1 overflow-y-auto"
 									value="details"
 								>
-									<SheetBody className="space-y-6">
+									<Sheet.Body className="space-y-6">
 										<div className="flex items-center justify-between gap-3 rounded border border-primary/20 bg-primary/5 px-3 py-2.5">
 											<div className="min-w-0 flex-1">
 												<p className="text-muted-foreground text-xs">
@@ -371,39 +357,39 @@ function LinkSheetInner({ open, onOpenChange, link, onSave }: LinkSheetProps) {
 												onClick={handleCopyLink}
 												size="sm"
 												type="button"
-												variant="outline"
+												variant="secondary"
 											>
-												<CopyIcon size={16} />
+												<CopyIcon className="size-4" />
 												Copy
 											</Button>
 										</div>
 
 										<LinkFormFields {...formFieldsProps} isEditMode={true} />
-									</SheetBody>
-								</TabsContent>
+									</Sheet.Body>
+								</Tabs.Panel>
 
-								<TabsContent
+								<Tabs.Panel
 									className="mt-0 flex-1 overflow-y-auto"
 									value="qr-code"
 								>
-									<SheetBody>
+									<Sheet.Body>
 										<LinkQrCode name={link.name} slug={link.slug} />
-									</SheetBody>
-								</TabsContent>
+									</Sheet.Body>
+								</Tabs.Panel>
 
 								{footer}
 							</Tabs>
 						) : (
 							<>
-								<SheetBody className="space-y-6">
+								<Sheet.Body className="space-y-6">
 									<LinkFormFields {...formFieldsProps} isEditMode={false} />
-								</SheetBody>
+								</Sheet.Body>
 								{footer}
 							</>
 						)}
 					</form>
 				</Form>
-			</SheetContent>
+			</Sheet.Content>
 		</Sheet>
 	);
 }

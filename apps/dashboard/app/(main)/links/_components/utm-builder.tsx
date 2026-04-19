@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Field } from "@/components/ds/field";
 
 const PROTOCOL_REGEX = /^https?:\/\//;
 
@@ -151,10 +151,10 @@ export function UtmBuilder({ value, onChange, baseUrl }: UtmBuilderProps) {
 			<div className="grid gap-3">
 				{UTM_FIELDS.map((field) => (
 					<div className="grid gap-1.5" key={field.key}>
-						<Label className="text-xs" htmlFor={field.key}>
+						<Field.Label className="text-xs" htmlFor={field.key}>
 							{field.label}
 							<span className="ml-1 text-muted-foreground">({field.key})</span>
-						</Label>
+						</Field.Label>
 						<Input
 							className="h-9"
 							id={field.key}
@@ -168,7 +168,9 @@ export function UtmBuilder({ value, onChange, baseUrl }: UtmBuilderProps) {
 
 			{previewUrl && previewUrl !== baseUrl && (
 				<div className="space-y-1.5">
-					<Label className="text-muted-foreground text-xs">Preview URL</Label>
+					<Field.Label className="text-muted-foreground text-xs">
+						Preview URL
+					</Field.Label>
 					<div className="break-all rounded border bg-muted/30 p-2.5 font-mono text-xs">
 						{previewUrl}
 					</div>

@@ -4,7 +4,7 @@ import { ArrowClockwiseIcon } from "@phosphor-icons/react/dist/ssr/ArrowClockwis
 import { SparkleIcon } from "@phosphor-icons/react/dist/ssr/Sparkle";
 import { useAtomValue } from "jotai";
 import dayjs from "@/lib/dayjs";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@/components/ds/skeleton";
 import { cn } from "@/lib/utils";
 import { useOrgNarrative } from "../hooks/use-org-narrative";
 import { insightsRangeAtom } from "../lib/time-range";

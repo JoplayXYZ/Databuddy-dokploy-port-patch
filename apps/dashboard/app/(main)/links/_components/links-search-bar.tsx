@@ -1,19 +1,11 @@
 "use client";
 
-import { FunnelIcon } from "@phosphor-icons/react";
-import { MagnifyingGlassIcon } from "@phosphor-icons/react";
-import { SortAscendingIcon } from "@phosphor-icons/react";
-import { XIcon } from "@phosphor-icons/react";
-import { Button } from "@/components/ui/button";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuLabel,
-	DropdownMenuRadioGroup,
-	DropdownMenuRadioItem,
-	DropdownMenuSeparator,
-	DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { FunnelIcon } from "@phosphor-icons/react/dist/ssr";
+import { MagnifyingGlassIcon } from "@phosphor-icons/react/dist/ssr";
+import { SortAscendingIcon } from "@phosphor-icons/react/dist/ssr";
+import { XIcon } from "@phosphor-icons/react/dist/ssr";
+import { Button } from "@/components/ds/button";
+import { DropdownMenu } from "@/components/ds/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import type { SortOption } from "./use-filtered-links";
@@ -67,40 +59,39 @@ export function LinksSearchBar({
 			</div>
 
 			<DropdownMenu>
-				<DropdownMenuTrigger asChild>
-					<Button
-						className={cn(
-							"h-7 gap-1 border-transparent px-2 text-xs shadow-none",
-							sortBy !== "newest" && "border-primary/30 text-primary"
-						)}
-						size="sm"
-						variant="outline"
-					>
-						<SortAscendingIcon size={14} weight="bold" />
-						<span className="hidden sm:inline">{SORT_LABELS[sortBy]}</span>
-					</Button>
-				</DropdownMenuTrigger>
-				<DropdownMenuContent align="end" className="w-36">
-					<DropdownMenuLabel>Sort by</DropdownMenuLabel>
-					<DropdownMenuSeparator />
-					<DropdownMenuRadioGroup
+				<DropdownMenu.Trigger
+					className={cn(
+						"inline-flex items-center justify-center gap-1.5 rounded-md font-medium transition-all duration-(--duration-quick) ease-(--ease-smooth) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 disabled:pointer-events-none disabled:opacity-50",
+						"bg-secondary text-foreground hover:bg-interactive-hover",
+						"h-7 px-2.5 text-xs",
+						"gap-1 border-transparent px-2 shadow-none",
+						sortBy !== "newest" && "border-primary/30 text-primary"
+					)}
+				>
+					<SortAscendingIcon size={14} weight="bold" />
+					<span className="hidden sm:inline">{SORT_LABELS[sortBy]}</span>
+				</DropdownMenu.Trigger>
+				<DropdownMenu.Content align="end" className="w-36">
+					<DropdownMenu.GroupLabel>Sort by</DropdownMenu.GroupLabel>
+					<DropdownMenu.Separator />
+					<DropdownMenu.RadioGroup
 						onValueChange={(value) => onSortByChangeAction(value as SortOption)}
 						value={sortBy}
 					>
-						<DropdownMenuRadioItem value="newest">
+						<DropdownMenu.RadioItem value="newest">
 							Newest first
-						</DropdownMenuRadioItem>
-						<DropdownMenuRadioItem value="oldest">
+						</DropdownMenu.RadioItem>
+						<DropdownMenu.RadioItem value="oldest">
 							Oldest first
-						</DropdownMenuRadioItem>
-						<DropdownMenuRadioItem value="name-asc">
+						</DropdownMenu.RadioItem>
+						<DropdownMenu.RadioItem value="name-asc">
 							Name (A-Z)
-						</DropdownMenuRadioItem>
-						<DropdownMenuRadioItem value="name-desc">
+						</DropdownMenu.RadioItem>
+						<DropdownMenu.RadioItem value="name-desc">
 							Name (Z-A)
-						</DropdownMenuRadioItem>
-					</DropdownMenuRadioGroup>
-				</DropdownMenuContent>
+						</DropdownMenu.RadioItem>
+					</DropdownMenu.RadioGroup>
+				</DropdownMenu.Content>
 			</DropdownMenu>
 
 			{hasActiveFilters && (

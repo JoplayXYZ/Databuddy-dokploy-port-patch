@@ -1,14 +1,14 @@
 "use client";
 
-import { HeartbeatIcon } from "@phosphor-icons/react";
-import { LockIcon } from "@phosphor-icons/react";
-import { PlusIcon } from "@phosphor-icons/react";
+import { HeartbeatIcon } from "@phosphor-icons/react/dist/ssr";
+import { LockIcon } from "@phosphor-icons/react/dist/ssr";
+import { PlusIcon } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo } from "react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ds/badge";
+import { Button } from "@/components/ds/button";
+import { Skeleton } from "@/components/ds/skeleton";
 import { useBatchDynamicQuery } from "@/hooks/use-dynamic-query";
 import dayjs from "@/lib/dayjs";
 import { formatDateOnly } from "@/lib/time";
@@ -195,7 +195,7 @@ function LockedCard() {
 					<HeartbeatIcon className="size-4 text-primary" weight="duotone" />
 					<h3 className="font-semibold text-foreground text-sm">Monitors</h3>
 				</div>
-				<Badge variant="secondary">Coming soon</Badge>
+				<Badge variant="muted">Coming soon</Badge>
 			</div>
 			<div className="flex flex-col items-center gap-3 px-4 py-6 text-center">
 				<div className="flex size-10 items-center justify-center rounded border bg-secondary">

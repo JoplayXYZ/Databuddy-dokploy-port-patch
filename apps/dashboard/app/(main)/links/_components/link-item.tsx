@@ -10,21 +10,10 @@ import { LinkIcon } from "@phosphor-icons/react";
 import NextLink from "next/link";
 import { toast } from "sonner";
 import { FaviconImage } from "@/components/analytics/favicon-image";
-import { EmptyState } from "@/components/empty-state";
-import { Button } from "@/components/ui/button";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuSeparator,
-	DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Skeleton } from "@/components/ui/skeleton";
-import {
-	Tooltip,
-	TooltipContent,
-	TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { EmptyState } from "@/components/ds/empty-state";
+import { DropdownMenu } from "@/components/ds/dropdown-menu";
+import { Skeleton } from "@/components/ds/skeleton";
+import { Tooltip } from "@/components/ds/tooltip";
 import type { Link } from "@/hooks/use-links";
 import { fromNow, localDayjs } from "@/lib/time";
 import { cn } from "@/lib/utils";
@@ -51,43 +40,47 @@ function LinkActions({
 }) {
 	return (
 		<DropdownMenu>
-			<DropdownMenuTrigger asChild>
-				<Button
-					aria-label="Link actions"
-					className="size-7 opacity-0 group-hover:opacity-100 data-[state=open]:opacity-100"
-					size="icon"
-					variant="ghost"
-				>
-					<DotsThreeIcon className="size-4" weight="bold" />
-				</Button>
-			</DropdownMenuTrigger>
-			<DropdownMenuContent align="end" className="w-40">
-				<DropdownMenuItem
+			<DropdownMenu.Trigger
+				aria-label="Link actions"
+				className={cn(
+					"inline-flex items-center justify-center gap-1.5 rounded-md font-medium",
+					"transition-all duration-(--duration-quick) ease-(--ease-smooth)",
+					"focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
+					"disabled:pointer-events-none disabled:opacity-50",
+					"size-8 p-0",
+					"bg-transparent text-muted-foreground hover:bg-interactive-hover hover:text-foreground",
+					"size-7 opacity-0 group-hover:opacity-100 data-[state=open]:opacity-100"
+				)}
+			>
+				<DotsThreeIcon className="size-4" weight="bold" />
+			</DropdownMenu.Trigger>
+			<DropdownMenu.Content align="end" className="w-40">
+				<DropdownMenu.Item
 					className="gap-2"
 					onClick={() => copyShortUrl(link.slug)}
 				>
 					<CopyIcon className="size-4" weight="duotone" />
 					Copy URL
-				</DropdownMenuItem>
-				<DropdownMenuItem className="gap-2" onClick={() => onShowQr(link)}>
+				</DropdownMenu.Item>
+				<DropdownMenu.Item className="gap-2" onClick={() => onShowQr(link)}>
 					<QrCodeIcon className="size-4" weight="duotone" />
 					QR Code
-				</DropdownMenuItem>
-				<DropdownMenuSeparator />
-				<DropdownMenuItem className="gap-2" onClick={() => onEdit(link)}>
+				</DropdownMenu.Item>
+				<DropdownMenu.Separator />
+				<DropdownMenu.Item className="gap-2" onClick={() => onEdit(link)}>
 					<PencilSimpleIcon className="size-4" weight="duotone" />
 					Edit
-				</DropdownMenuItem>
-				<DropdownMenuSeparator />
-				<DropdownMenuItem
+				</DropdownMenu.Item>
+				<DropdownMenu.Separator />
+				<DropdownMenu.Item
 					className="gap-2 text-destructive focus:text-destructive"
 					onClick={() => onDelete(link.id)}
 					variant="destructive"
 				>
 					<TrashIcon className="size-4" weight="duotone" />
 					Delete
-				</DropdownMenuItem>
-			</DropdownMenuContent>
+				</DropdownMenu.Item>
+			</DropdownMenu.Content>
 		</DropdownMenu>
 	);
 }
@@ -107,25 +100,26 @@ function ExpiryBadge({ link }: { link: Link }) {
 	}
 
 	return (
-		<Tooltip delayDuration={200}>
-			<TooltipTrigger asChild>
-				<span
-					className={cn(
-						"flex items-center gap-1 rounded px-1.5 py-0.5 text-xs",
-						isExpired
-							? "bg-destructive/10 text-destructive"
-							: "bg-amber-500/10 text-amber-600 dark:text-amber-400"
-					)}
-				>
-					<ClockCountdownIcon className="size-3" weight="duotone" />
-					{isExpired ? "Expired" : localDayjs(link.expiresAt).fromNow(true)}
-				</span>
-			</TooltipTrigger>
-			<TooltipContent side="top">
-				{isExpired
+		<Tooltip
+			content={
+				isExpired
 					? `Expired ${localDayjs(link.expiresAt).format("MMM D, YYYY")}`
-					: `Expires ${localDayjs(link.expiresAt).format("MMM D, YYYY")}`}
-			</TooltipContent>
+					: `Expires ${localDayjs(link.expiresAt).format("MMM D, YYYY")}`
+			}
+			delay={200}
+			side="top"
+		>
+			<span
+				className={cn(
+					"flex items-center gap-1 rounded px-1.5 py-0.5 text-xs",
+					isExpired
+						? "bg-destructive/10 text-destructive"
+						: "bg-amber-500/10 text-amber-600 dark:text-amber-400"
+				)}
+			>
+				<ClockCountdownIcon className="size-3" weight="duotone" />
+				{isExpired ? "Expired" : localDayjs(link.expiresAt).fromNow(true)}
+			</span>
 		</Tooltip>
 	);
 }

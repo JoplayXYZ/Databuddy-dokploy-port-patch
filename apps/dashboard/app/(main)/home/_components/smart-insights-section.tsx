@@ -6,7 +6,7 @@ import { SparkleIcon } from "@phosphor-icons/react";
 import { WarningCircleIcon } from "@phosphor-icons/react";
 import { useState } from "react";
 import { InsightCard } from "@/app/(main)/insights/_components/insight-card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@/components/ds/skeleton";
 import type { Insight } from "@/lib/insight-types";
 import { cn } from "@/lib/utils";
 

@@ -1,12 +1,6 @@
 "use client";
 
-import {
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogHeader,
-	DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog } from "@/components/ds/dialog";
 import type { Link } from "@/hooks/use-links";
 import { LinkQrCode } from "./link-qr-code";
 
@@ -23,15 +17,17 @@ export function QrCodeDialog({ link, open, onOpenChange }: QrCodeDialogProps) {
 
 	return (
 		<Dialog onOpenChange={onOpenChange} open={open}>
-			<DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
-				<DialogHeader>
-					<DialogTitle className="text-center">{link.name}</DialogTitle>
-					<DialogDescription className="text-center">
+			<Dialog.Content className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
+				<Dialog.Header>
+					<Dialog.Title className="text-center">{link.name}</Dialog.Title>
+					<Dialog.Description className="text-center">
 						Customize and download your QR code
-					</DialogDescription>
-				</DialogHeader>
-				<LinkQrCode name={link.name} slug={link.slug} />
-			</DialogContent>
+					</Dialog.Description>
+				</Dialog.Header>
+				<Dialog.Body>
+					<LinkQrCode name={link.name} slug={link.slug} />
+				</Dialog.Body>
+			</Dialog.Content>
 		</Dialog>
 	);
 }

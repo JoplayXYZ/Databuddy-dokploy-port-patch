@@ -5,14 +5,9 @@ import { CaretDownIcon } from "@phosphor-icons/react";
 import { LightningIcon } from "@phosphor-icons/react";
 import { PageHeader } from "@/app/(main)/websites/_components/page-header";
 import { Button } from "@/components/ui/button";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuSeparator,
-	DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Skeleton } from "@/components/ui/skeleton";
+import { DropdownMenu } from "@/components/ds/dropdown-menu";
+import { Skeleton } from "@/components/ds/skeleton";
+import { cn } from "@/lib/utils";
 import { useEventsPageContext } from "./events-page-context";
 
 function getDropdownLabel(
@@ -45,47 +40,52 @@ export function EventsPageHeader() {
 	return (
 		<PageHeader
 			badgeContent="Alpha"
-			badgeVariant="amber"
+			badgeVariant="warning"
 			description="Track and analyze custom events across all websites"
 			icon={<LightningIcon weight="duotone" />}
 			right={
 				<div className="flex items-center gap-2">
 					<DropdownMenu>
-						<DropdownMenuTrigger asChild>
-							<Button
-								className="min-w-[140px] justify-between"
-								disabled={isLoadingWebsites}
-								variant="outline"
-							>
-								{isLoadingWebsites ? (
-									<Skeleton className="h-4 w-20" />
-								) : (
-									<span className="truncate">
-										{getDropdownLabel(websiteFilterMode, selectedWebsite)}
-									</span>
-								)}
-								<CaretDownIcon className="ml-2 size-4" weight="fill" />
-							</Button>
-						</DropdownMenuTrigger>
-						<DropdownMenuContent align="end" className="w-[200px]">
-							<DropdownMenuItem onClick={() => setWebsiteFilterMode("all")}>
+						<DropdownMenu.Trigger
+							className={cn(
+								"inline-flex items-center justify-center gap-1.5 rounded-md font-medium",
+								"transition-all duration-(--duration-quick) ease-(--ease-smooth)",
+								"focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
+								"disabled:pointer-events-none disabled:opacity-50",
+								"h-8 px-3 text-xs",
+								"bg-secondary text-foreground hover:bg-interactive-hover",
+								"min-w-[140px] justify-between"
+							)}
+							disabled={isLoadingWebsites}
+						>
+							{isLoadingWebsites ? (
+								<Skeleton className="h-4 w-20" />
+							) : (
+								<span className="truncate">
+									{getDropdownLabel(websiteFilterMode, selectedWebsite)}
+								</span>
+							)}
+							<CaretDownIcon className="ml-2 size-4" weight="fill" />
+						</DropdownMenu.Trigger>
+						<DropdownMenu.Content align="end" className="w-[200px]">
+							<DropdownMenu.Item onClick={() => setWebsiteFilterMode("all")}>
 								All Websites
-							</DropdownMenuItem>
-							<DropdownMenuItem
+							</DropdownMenu.Item>
+							<DropdownMenu.Item
 								onClick={() => setWebsiteFilterMode("no-website")}
 							>
 								No Website
-							</DropdownMenuItem>
-							{websites.length > 0 && <DropdownMenuSeparator />}
+							</DropdownMenu.Item>
+							{websites.length > 0 && <DropdownMenu.Separator />}
 							{websites.map((website) => (
-								<DropdownMenuItem
+								<DropdownMenu.Item
 									key={website.id}
 									onClick={() => setWebsiteFilterMode(website.id)}
 								>
 									{website.name || website.domain}
-								</DropdownMenuItem>
+								</DropdownMenu.Item>
 							))}
-						</DropdownMenuContent>
+						</DropdownMenu.Content>
 					</DropdownMenu>
 					<Button
 						aria-label="Refresh events data"

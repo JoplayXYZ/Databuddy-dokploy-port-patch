@@ -20,7 +20,7 @@ import { useInsightsLocalState } from "@/app/(main)/insights/hooks/use-insights-
 import { PageHeader } from "@/app/(main)/websites/_components/page-header";
 import { FaviconImage } from "@/components/analytics/favicon-image";
 import { StatCard } from "@/components/analytics/stat-card";
-import { EmptyState } from "@/components/empty-state";
+import { EmptyState } from "@/components/ds/empty-state";
 import { useOrganizationsContext } from "@/components/providers/organizations-provider";
 import { DataTable } from "@/components/table/data-table";
 import {
@@ -42,12 +42,7 @@ import {
 	AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { DropdownMenu } from "@/components/ds/dropdown-menu";
 import { useBatchDynamicQuery } from "@/hooks/use-dynamic-query";
 import { useWebsites } from "@/hooks/use-websites";
 import dayjs from "@/lib/dayjs";
@@ -126,28 +121,32 @@ function FocusSitePicker({ websites, value, onChange }: FocusSitePickerProps) {
 	}
 	return (
 		<DropdownMenu>
-			<DropdownMenuTrigger asChild>
-				<Button
-					className="min-w-[180px] justify-between"
-					type="button"
-					variant="outline"
-				>
-					<span className="flex min-w-0 items-center gap-2">
-						<FaviconImage
-							className="shrink-0 rounded"
-							domain={selected.domain}
-							size={16}
-						/>
-						<span className="truncate font-medium text-sm">
-							{selected.name ?? selected.domain}
-						</span>
+			<DropdownMenu.Trigger
+				className={cn(
+					"inline-flex items-center justify-center gap-1.5 rounded-md font-medium",
+					"transition-all duration-(--duration-quick) ease-(--ease-smooth)",
+					"focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
+					"disabled:pointer-events-none disabled:opacity-50",
+					"h-8 px-3 text-xs",
+					"bg-secondary text-foreground hover:bg-interactive-hover",
+					"min-w-[180px] justify-between"
+				)}
+			>
+				<span className="flex min-w-0 items-center gap-2">
+					<FaviconImage
+						className="shrink-0 rounded"
+						domain={selected.domain}
+						size={16}
+					/>
+					<span className="truncate font-medium text-sm">
+						{selected.name ?? selected.domain}
 					</span>
-					<CaretDownIcon className="ml-2 size-4 shrink-0" weight="fill" />
-				</Button>
-			</DropdownMenuTrigger>
-			<DropdownMenuContent align="end" className="w-[240px]">
+				</span>
+				<CaretDownIcon className="ml-2 size-4 shrink-0" weight="fill" />
+			</DropdownMenu.Trigger>
+			<DropdownMenu.Content align="end" className="w-[240px]">
 				{list.map((site) => (
-					<DropdownMenuItem
+					<DropdownMenu.Item
 						className="gap-2"
 						key={site.id}
 						onClick={() => onChange(site.id)}
@@ -160,9 +159,9 @@ function FocusSitePicker({ websites, value, onChange }: FocusSitePickerProps) {
 						<span className="min-w-0 flex-1 truncate">
 							{site.name ?? site.domain}
 						</span>
-					</DropdownMenuItem>
+					</DropdownMenu.Item>
 				))}
-			</DropdownMenuContent>
+			</DropdownMenu.Content>
 		</DropdownMenu>
 	);
 }

@@ -12,8 +12,8 @@ import { toast } from "sonner";
 import { PageHeader } from "@/app/(main)/websites/_components/page-header";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { DeleteDialog } from "@/components/ui/delete-dialog";
+import { Card } from "@/components/ds/card";
+import { DeleteDialog } from "@/components/ds/delete-dialog";
 import { type Link, useDeleteLink, useLinks } from "@/hooks/use-links";
 import {
 	LinksList,
@@ -74,7 +74,7 @@ export default function LinksPage() {
 		return (
 			<div className="p-4">
 				<Card className="border-destructive/20 bg-destructive/5">
-					<CardContent className="pt-6">
+					<Card.Content className="pt-6">
 						<div className="flex items-center gap-2">
 							<TrendDownIcon
 								className="size-5 text-destructive"
@@ -87,7 +87,7 @@ export default function LinksPage() {
 						<p className="mt-2 text-pretty text-destructive/80 text-sm">
 							There was an issue fetching your links. Please try again.
 						</p>
-					</CardContent>
+					</Card.Content>
 				</Card>
 			</div>
 		);

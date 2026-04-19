@@ -5,7 +5,7 @@ import { ChartBarIcon } from "@phosphor-icons/react";
 import { ListBulletsIcon } from "@phosphor-icons/react";
 import { parseAsString, useQueryState } from "nuqs";
 import { useMemo } from "react";
-import { EmptyState } from "@/components/empty-state";
+import { EmptyState } from "@/components/ds/empty-state";
 import {
 	Select,
 	SelectContent,
