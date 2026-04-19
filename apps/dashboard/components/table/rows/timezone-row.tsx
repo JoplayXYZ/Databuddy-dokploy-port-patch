@@ -1,4 +1,4 @@
-import { ClockIcon } from "@phosphor-icons/react";
+import { IconClockFillDuo18 } from "nucleo-ui-fill-duo-18";
 import type { CellContext, ColumnDef } from "@tanstack/react-table";
 import { PercentageBadge } from "@/components/ui/percentage-badge";
 import dayjs from "@/lib/dayjs";
@@ -22,7 +22,7 @@ export function createTimezoneColumns(): ColumnDef<TimezoneEntry>[] {
 				const timezoneName = entry.name;
 				return (
 					<div className="flex items-center gap-2">
-						<ClockIcon className="size-4 text-primary" />
+						<IconClockFillDuo18 className="size-4 text-primary" />
 						<div>
 							<div className="font-medium">{timezoneName}</div>
 						</div>

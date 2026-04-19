@@ -1,10 +1,12 @@
 "use client";
 
-import { CheckCircleIcon } from "@phosphor-icons/react";
-import { InfoIcon } from "@phosphor-icons/react";
-import { SpinnerIcon } from "@phosphor-icons/react";
-import { WarningCircleIcon } from "@phosphor-icons/react";
-import { XCircleIcon } from "@phosphor-icons/react";
+import {
+	IconCircleCheckFillDuo18,
+	IconCircleInfoFillDuo18,
+	IconCircleWarningFillDuo18,
+	IconCircleXmarkFillDuo18,
+	IconLoader2FillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import { useTheme } from "next-themes";
 import { Toaster as Sonner, type ToasterProps } from "sonner";
 
@@ -19,31 +21,27 @@ function Toaster({ ...props }: ToasterProps) {
 			gap={8}
 			icons={{
 				success: (
-					<CheckCircleIcon
+					<IconCircleCheckFillDuo18
 						className="size-5 text-emerald-600 dark:text-emerald-400"
-						weight="fill"
 					/>
 				),
 				error: (
-					<XCircleIcon
+					<IconCircleXmarkFillDuo18
 						className="size-5 text-red-600 dark:text-red-400"
-						weight="fill"
 					/>
 				),
 				warning: (
-					<WarningCircleIcon
+					<IconCircleWarningFillDuo18
 						className="size-5 text-amber-600 dark:text-amber-400"
-						weight="fill"
 					/>
 				),
 				info: (
-					<InfoIcon
+					<IconCircleInfoFillDuo18
 						className="size-5 text-blue-600 dark:text-blue-400"
-						weight="fill"
 					/>
 				),
 				loading: (
-					<SpinnerIcon className="size-5 animate-spin text-foreground" />
+					<IconLoader2FillDuo18 className="size-5 animate-spin text-foreground" />
 				),
 			}}
 			offset={16}

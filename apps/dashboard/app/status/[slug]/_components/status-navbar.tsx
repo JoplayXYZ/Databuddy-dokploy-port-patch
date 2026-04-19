@@ -1,7 +1,8 @@
-import { LifebuoyIcon } from "@phosphor-icons/react/ssr";
+ct/ssr";
 import Image from "next/image";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 
+import { IconLifeRingFillDuo18 } from "nucleo-ui-fill-duo-18";
 interface StatusNavbarProps {
 	logoUrl?: string | null;
 	name?: string;
@@ -59,7 +60,7 @@ export function StatusNavbar({
 							rel="noopener noreferrer"
 							target="_blank"
 						>
-							<LifebuoyIcon className="size-3.5" weight="duotone" />
+							<IconLifeRingFillDuo18 className="size-3.5" />
 							<span className="hidden sm:inline">Get Support</span>
 						</a>
 					) : null}

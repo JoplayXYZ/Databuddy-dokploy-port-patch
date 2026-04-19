@@ -1,8 +1,10 @@
 "use client";
 
 import { authClient } from "@databuddy/auth/client";
-import { CrownIcon } from "@phosphor-icons/react";
-import { TrashIcon } from "@phosphor-icons/react";
+import {
+	IconCrownFillDuo18,
+	IconTrashFillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -130,10 +132,9 @@ function MemberRow({
 				<div className="flex items-center gap-2">
 					<p className="truncate font-medium">{member.user.name}</p>
 					{member.role === "owner" && (
-						<CrownIcon
+						<IconCrownFillDuo18
 							className="shrink-0 text-amber-500"
 							size={14}
-							weight="fill"
 						/>
 					)}
 				</div>
@@ -160,7 +161,7 @@ function MemberRow({
 					}
 					variant="outline"
 				>
-					<TrashIcon size={14} />
+					<IconTrashFillDuo18 size={14} />
 				</Button>
 			) : (
 				<div className="size-7" />

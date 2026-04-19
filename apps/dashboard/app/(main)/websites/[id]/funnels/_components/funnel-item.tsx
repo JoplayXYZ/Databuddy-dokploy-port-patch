@@ -1,9 +1,11 @@
 "use client";
 
-import { CaretRightIcon } from "@phosphor-icons/react";
-import { DotsThreeIcon } from "@phosphor-icons/react";
-import { PencilSimpleIcon } from "@phosphor-icons/react";
-import { TrashIcon } from "@phosphor-icons/react";
+import {
+	IconChevronRightFillDuo18,
+	IconDotsVerticalFillDuo18,
+	IconPencilFillDuo18,
+	IconTrashFillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import { Button } from "@/components/ui/button";
 import { List } from "@/components/ui/composables/list";
 import {
@@ -148,12 +150,11 @@ export function FunnelItem({
 									: "border-transparent bg-muted text-muted-foreground"
 							)}
 						>
-							<CaretRightIcon
+							<IconChevronRightFillDuo18
 								className={cn(
 									"size-4 transition-transform duration-200",
 									isExpanded && "rotate-90"
 								)}
-								weight="fill"
 							/>
 						</div>
 					</List.Cell>
@@ -225,7 +226,7 @@ export function FunnelItem({
 									size="icon"
 									variant="ghost"
 								>
-									<DotsThreeIcon className="size-5" weight="bold" />
+									<IconDotsVerticalFillDuo18 className="size-5" />
 								</Button>
 							</DropdownMenuTrigger>
 							<DropdownMenuContent align="end" className="w-40">
@@ -233,7 +234,7 @@ export function FunnelItem({
 									className="gap-2"
 									onClick={() => onEdit(funnel)}
 								>
-									<PencilSimpleIcon className="size-4" weight="duotone" />
+									<IconPencilFillDuo18 className="size-4" />
 									Edit
 								</DropdownMenuItem>
 								<DropdownMenuSeparator />
@@ -242,9 +243,8 @@ export function FunnelItem({
 									onClick={() => onDelete(funnel.id)}
 									variant="destructive"
 								>
-									<TrashIcon
+									<IconTrashFillDuo18
 										className="size-4 fill-destructive"
-										weight="duotone"
 									/>
 									Delete
 								</DropdownMenuItem>

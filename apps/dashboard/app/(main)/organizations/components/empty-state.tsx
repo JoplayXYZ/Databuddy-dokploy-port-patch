@@ -1,7 +1,6 @@
 "use client";
 
-import type { Icon } from "@phosphor-icons/react";
-import type { ReactNode } from "react";
+import type {  ReactNode, FC, SVGProps } from "react";
 
 interface EmptyStateProps {
 	action?: ReactNode;
@@ -9,13 +8,13 @@ interface EmptyStateProps {
 	features?: Array<{
 		label: string;
 	}>;
-	icon: Icon;
+	icon: FC<SVGProps<SVGSVGElement> & { size?: number | string }>;
 	title: string;
 	variant?: "default" | "success" | "warning" | "destructive";
 }
 
 export function EmptyState({
-	icon: Icon,
+	icon: FC<SVGProps<SVGSVGElement> & { size?: number | string }>,
 	title,
 	description,
 	features,
@@ -34,10 +33,9 @@ export function EmptyState({
 			<div
 				className={`mx-auto mb-6 w-fit rounded-2xl border p-6 sm:mb-8 sm:p-8 ${variantStyles[variant]}`}
 			>
-				<Icon
+				<FC<SVGProps<SVGSVGElement> & { size?: number | string }>
 					className="size-12 text-accent-foreground sm:size-16"
 					size={48}
-					weight="duotone"
 				/>
 			</div>
 			<h3 className="mb-3 font-bold text-xl sm:mb-4 sm:text-2xl">{title}</h3>

@@ -1,7 +1,9 @@
 "use client";
 
-import { ArrowSquareOutIcon } from "@phosphor-icons/react";
-import { WarningIcon } from "@phosphor-icons/react";
+import {
+	IconAlertWarningFillDuo18,
+	IconExternalLinkFillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -147,7 +149,7 @@ export function TransferToOrgDialog({
 
 					{!isLoadingOrgs && availableOrgs.length === 0 ? (
 						<div className="flex items-start gap-2 rounded border border-orange-200 bg-orange-50 p-3 text-orange-800 dark:border-orange-800 dark:bg-orange-950/20 dark:text-orange-200">
-							<WarningIcon className="mt-0.5 size-4 shrink-0" />
+							<IconAlertWarningFillDuo18 className="mt-0.5 size-4 shrink-0" />
 							<p className="text-xs">
 								No other workspaces available. Create a new workspace or get
 								invited to one to transfer.
@@ -157,7 +159,7 @@ export function TransferToOrgDialog({
 
 					{selectedOrg && warning ? (
 						<div className="flex items-start gap-2 rounded border border-orange-200 bg-orange-50 p-3 text-orange-800 dark:border-orange-800 dark:bg-orange-950/20 dark:text-orange-200">
-							<WarningIcon className="mt-0.5 size-4 shrink-0" />
+							<IconAlertWarningFillDuo18 className="mt-0.5 size-4 shrink-0" />
 							<p className="text-xs">
 								{warning.replace("{orgName}", selectedOrg.name)}
 							</p>
@@ -186,7 +188,7 @@ export function TransferToOrgDialog({
 							</>
 						) : (
 							<>
-								<ArrowSquareOutIcon className="mr-2 size-4" weight="fill" />
+								<IconExternalLinkFillDuo18 className="mr-2 size-4" />
 								Transfer
 							</>
 						)}

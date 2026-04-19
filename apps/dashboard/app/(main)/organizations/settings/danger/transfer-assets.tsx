@@ -1,9 +1,11 @@
 "use client";
 
-import { ArrowRightIcon } from "@phosphor-icons/react";
-import { ArrowsLeftRightIcon } from "@phosphor-icons/react";
-import { BuildingsIcon } from "@phosphor-icons/react";
-import { GlobeIcon } from "@phosphor-icons/react";
+import {
+	IconArrowRightFillDuo18,
+	IconArrowsOppositeDirectionXFillDuo18,
+	IconGlobeFillDuo18,
+	IconOfficeFillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import { useState } from "react";
 import { toast } from "sonner";
 import { FaviconImage } from "@/components/analytics/favicon-image";
@@ -43,7 +45,7 @@ function WebsiteItem({ website, selected, onClickAction }: WebsiteItemProps) {
 				domain={website.domain}
 				fallbackIcon={
 					<div className="flex size-6 items-center justify-center rounded bg-secondary">
-						<GlobeIcon className="text-accent-foreground" size={12} />
+						<IconGlobeFillDuo18 className="text-accent-foreground" size={12} />
 					</div>
 				}
 				size={24}
@@ -113,7 +115,7 @@ export function TransferAssets({ organizationId }: TransferAssetsProps) {
 	if (organizationWebsites.length === 0) {
 		return (
 			<div className="flex flex-col items-center justify-center rounded border border-dashed py-12 text-center">
-				<ArrowsLeftRightIcon
+				<IconArrowsOppositeDirectionXFillDuo18
 					className="mb-3 text-muted-foreground/50"
 					size={32}
 				/>
@@ -131,10 +133,9 @@ export function TransferAssets({ organizationId }: TransferAssetsProps) {
 		<div className="space-y-4">
 			<div className="flex flex-col">
 				<div className="mb-3 flex items-center gap-2">
-					<BuildingsIcon
+					<IconOfficeFillDuo18
 						className="text-accent-foreground"
 						size={14}
-						weight="duotone"
 					/>
 					<span className="font-medium text-sm">Workspace Websites</span>
 					<span className="text-muted-foreground text-xs">
@@ -171,7 +172,7 @@ export function TransferAssets({ organizationId }: TransferAssetsProps) {
 								otherOrganizations.map((org) => (
 									<SelectItem key={org.id} value={org.id}>
 										<div className="flex items-center gap-2">
-											<BuildingsIcon className="size-4" />
+											<IconOfficeFillDuo18 className="size-4" />
 											<span>{org.name}</span>
 										</div>
 									</SelectItem>
@@ -196,7 +197,7 @@ export function TransferAssets({ organizationId }: TransferAssetsProps) {
 					<div className="size-4 animate-spin rounded-full border-2 border-primary/30 border-t-primary" />
 				) : (
 					<>
-						<ArrowRightIcon className="mr-2" size={16} />
+						<IconArrowRightFillDuo18 className="mr-2" size={16} />
 						Transfer Website
 					</>
 				)}

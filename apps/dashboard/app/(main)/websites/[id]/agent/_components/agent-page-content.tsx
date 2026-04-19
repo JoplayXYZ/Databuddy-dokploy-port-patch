@@ -1,13 +1,14 @@
 "use client";
 
 import {
-	ArrowRightIcon,
-	BrainIcon,
-	ChartBarIcon,
-	LightningIcon,
-	SparkleIcon,
-	TableIcon,
-} from "@phosphor-icons/react";
+	IconArrowRightFillDuo18,
+	IconBoltLightningFillDuo18,
+	IconBrainFillDuo18,
+	IconChartBarTrendUpFillDuo18,
+	IconSparkleFillDuo18,
+	IconTableFillDuo18,
+} from "nucleo-ui-fill-duo-18";
+s/react";
 import { useQuery } from "@tanstack/react-query";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -43,10 +44,10 @@ interface AgentPageContentProps {
 }
 
 const FALLBACK_ICONS = [
-	ChartBarIcon,
-	BrainIcon,
-	TableIcon,
-	LightningIcon,
+	IconChartBarTrendUpFillDuo18,
+	IconBrainFillDuo18,
+	IconTableFillDuo18,
+	IconBoltLightningFillDuo18,
 ] as const;
 
 const LOADING_DELAY_MS = 250;
@@ -218,7 +219,7 @@ function WelcomeState({
 					: prompts.map((item, idx) => {
 							const Icon =
 								item.source === "insight"
-									? SparkleIcon
+									? IconSparkleFillDuo18
 									: (FALLBACK_ICONS[idx] ?? FALLBACK_ICONS[0]);
 							return (
 								<button
@@ -238,7 +239,7 @@ function WelcomeState({
 												: "bg-accent/60 text-muted-foreground"
 										)}
 									>
-										<Icon className="size-3.5" weight="duotone" />
+										<Icon className="size-3.5" />
 									</div>
 									<div className="min-w-0 flex-1">
 										<p className="line-clamp-2 text-sm leading-tight">
@@ -250,7 +251,7 @@ function WelcomeState({
 												: "Suggested"}
 										</p>
 									</div>
-									<ArrowRightIcon className="mt-0.5 size-3.5 shrink-0 text-transparent transition-colors group-hover:text-muted-foreground" />
+									<IconArrowRightFillDuo18 className="mt-0.5 size-3.5 shrink-0 text-transparent transition-colors group-hover:text-muted-foreground" />
 								</button>
 							);
 						})}
@@ -292,7 +293,7 @@ function AgentCreditBalance() {
 						onClick={() => router.push("/billing")}
 						type="button"
 					>
-						<SparkleIcon className="size-3" weight="duotone" />
+						<IconSparkleFillDuo18 className="size-3" />
 						<span className="font-medium tabular-nums">∞ credits</span>
 					</button>
 				</TooltipTrigger>
@@ -320,7 +321,7 @@ function AgentCreditBalance() {
 					onClick={() => router.push("/billing")}
 					type="button"
 				>
-					<SparkleIcon className="size-3" weight="duotone" />
+					<IconSparkleFillDuo18 className="size-3" />
 					<span className="font-medium tabular-nums">
 						{balance.toLocaleString()} / {limit.toLocaleString()}
 					</span>

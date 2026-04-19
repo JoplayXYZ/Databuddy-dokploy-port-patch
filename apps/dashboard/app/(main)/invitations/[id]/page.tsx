@@ -1,13 +1,15 @@
 "use client";
 
 import { authClient } from "@databuddy/auth/client";
-import { ArrowRightIcon } from "@phosphor-icons/react";
-import { BuildingsIcon } from "@phosphor-icons/react";
-import { CheckCircleIcon } from "@phosphor-icons/react";
-import { ClockIcon } from "@phosphor-icons/react";
-import { SpinnerGapIcon } from "@phosphor-icons/react";
-import { UserPlusIcon } from "@phosphor-icons/react";
-import { XCircleIcon } from "@phosphor-icons/react";
+import {
+	IconArrowRightFillDuo18,
+	IconCircleCheckFillDuo18,
+	IconCircleXmarkFillDuo18,
+	IconClockFillDuo18,
+	IconLoader2FillDuo18,
+	IconOfficeFillDuo18,
+	IconUserPlusFillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
@@ -94,9 +96,8 @@ function InvitationDetails({
 			<div className="w-full max-w-md space-y-6">
 				<div className="flex justify-center">
 					<div className="rounded border bg-secondary p-4">
-						<UserPlusIcon
+						<IconUserPlusFillDuo18
 							className="size-8 text-accent-foreground"
-							weight="fill"
 						/>
 					</div>
 				</div>
@@ -122,9 +123,8 @@ function InvitationDetails({
 				<div className="space-y-3 rounded border bg-card p-4">
 					<div className="flex items-center gap-3">
 						<div className="flex size-10 shrink-0 items-center justify-center rounded bg-secondary">
-							<BuildingsIcon
+							<IconOfficeFillDuo18
 								className="size-5 text-accent-foreground"
-								weight="duotone"
 							/>
 						</div>
 						<div className="min-w-0 flex-1">
@@ -146,14 +146,13 @@ function InvitationDetails({
 								isExpiringSoon ? "bg-amber-500/10" : "bg-secondary"
 							)}
 						>
-							<ClockIcon
+							<IconClockFillDuo18
 								className={cn(
 									"size-5",
 									isExpiringSoon
 										? "text-amber-600 dark:text-amber-400"
 										: "text-accent-foreground"
 								)}
-								weight="duotone"
 							/>
 						</div>
 						<div className="min-w-0 flex-1">
@@ -175,9 +174,9 @@ function InvitationDetails({
 						onClick={onAcceptAction}
 					>
 						{actionStatus === "accepting" ? (
-							<SpinnerGapIcon className="size-4 animate-spin" />
+							<IconLoader2FillDuo18 className="size-4 animate-spin" />
 						) : (
-							<UserPlusIcon className="size-4" weight="duotone" />
+							<IconUserPlusFillDuo18 className="size-4" />
 						)}
 						{actionStatus === "accepting" ? "Joining…" : "Join Organization"}
 					</Button>
@@ -202,9 +201,8 @@ function SuccessState({ organizationName }: { organizationName: string }) {
 			<div className="w-full max-w-md space-y-6 text-center">
 				<div className="flex justify-center">
 					<div className="rounded border border-green-500/20 bg-green-500/10 p-4">
-						<CheckCircleIcon
+						<IconCircleCheckFillDuo18
 							className="size-8 text-green-600 dark:text-green-400"
-							weight="fill"
 						/>
 					</div>
 				</div>
@@ -220,7 +218,7 @@ function SuccessState({ organizationName }: { organizationName: string }) {
 
 				<Button className="gap-2" onClick={() => router.push("/websites")}>
 					Go to Dashboard
-					<ArrowRightIcon className="size-4" />
+					<IconArrowRightFillDuo18 className="size-4" />
 				</Button>
 			</div>
 		</div>
@@ -237,7 +235,7 @@ function ExpiredState() {
 				onClick: () => router.push("/websites"),
 			}}
 			description="This invitation has expired or is no longer valid. Please contact the organization admin for a new invitation."
-			icon={<XCircleIcon />}
+			icon={<IconCircleXmarkFillDuo18 />}
 			title="Invitation Expired"
 			variant="error"
 		/>
@@ -258,7 +256,7 @@ function AlreadyMemberState({
 				onClick: () => router.push("/websites"),
 			}}
 			description={`You're already a member of ${organizationName}.`}
-			icon={<CheckCircleIcon />}
+			icon={<IconCircleCheckFillDuo18 />}
 			title="Already a Member"
 			variant="minimal"
 		/>
@@ -275,7 +273,7 @@ function ErrorState({ message }: { message: string }) {
 				onClick: () => router.push("/websites"),
 			}}
 			description={message}
-			icon={<XCircleIcon />}
+			icon={<IconCircleXmarkFillDuo18 />}
 			title="Something went wrong"
 			variant="error"
 		/>
@@ -342,7 +340,7 @@ export default function AcceptInvitationPage() {
 			<div className="flex h-full flex-col">
 				<PageHeader
 					description="Loading invitation…"
-					icon={<UserPlusIcon />}
+					icon={<IconUserPlusFillDuo18 />}
 					title="Invitation"
 				/>
 				<ContentSkeleton />
@@ -358,7 +356,7 @@ export default function AcceptInvitationPage() {
 			<div className="flex h-full flex-col">
 				<PageHeader
 					description="Unable to process invitation"
-					icon={<UserPlusIcon />}
+					icon={<IconUserPlusFillDuo18 />}
 					title="Invitation"
 				/>
 				{isExpired ? <ExpiredState /> : <ErrorState message={error.message} />}
@@ -371,7 +369,7 @@ export default function AcceptInvitationPage() {
 			<div className="flex h-full flex-col">
 				<PageHeader
 					description="Invitation not found"
-					icon={<UserPlusIcon />}
+					icon={<IconUserPlusFillDuo18 />}
 					title="Invitation"
 				/>
 				<ErrorState message="Invitation not found" />
@@ -403,7 +401,7 @@ export default function AcceptInvitationPage() {
 		<div className="flex h-full flex-col">
 			<PageHeader
 				description={getDescription()}
-				icon={<UserPlusIcon />}
+				icon={<IconUserPlusFillDuo18 />}
 				title="Invitation"
 			/>
 

@@ -1,9 +1,11 @@
 "use client";
 
-import { ArrowClockwiseIcon as ArrowClockwise } from "@phosphor-icons/react";
-import { TargetIcon as Target } from "@phosphor-icons/react";
-import { TrendUpIcon as TrendUp } from "@phosphor-icons/react";
-import { UsersIcon as Users } from "@phosphor-icons/react";
+import {
+	IconArrowTrendUpFillDuo18 as TrendUp,
+	IconRefreshFillDuo18 as ArrowClockwise,
+	IconTargetFillDuo18 as Target,
+	IconUsersFillDuo18 as Users,
+} from "nucleo-ui-fill-duo-18";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatNumber } from "@/lib/formatters";
@@ -61,7 +63,7 @@ export function GoalAnalytics({
 							size="sm"
 							variant="outline"
 						>
-							<ArrowClockwise size={16} weight="duotone" />
+							<ArrowClockwise size={16} />
 							Retry
 						</Button>
 					</div>
@@ -91,7 +93,7 @@ export function GoalAnalytics({
 					<CardContent className="p-6">
 						<div className="flex items-center gap-3">
 							<div className="flex size-10 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/20">
-								<Users className="text-foreground" size={20} weight="duotone" />
+								<Users className="text-foreground" size={20} />
 							</div>
 							<div>
 								<p className="font-medium text-muted-foreground text-sm">
@@ -112,7 +114,6 @@ export function GoalAnalytics({
 								<Target
 									className="text-green-600 dark:text-green-400"
 									size={20}
-									weight="duotone"
 								/>
 							</div>
 							<div>
@@ -134,7 +135,6 @@ export function GoalAnalytics({
 								<TrendUp
 									className="text-purple-600 dark:text-purple-400"
 									size={20}
-									weight="duotone"
 								/>
 							</div>
 							<div>

@@ -1,7 +1,9 @@
 "use client";
 
-import { ChatTextIcon } from "@phosphor-icons/react";
-import { XIcon } from "@phosphor-icons/react";
+import {
+	IconMessageFillDuo18,
+	IconXmarkFillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
@@ -130,10 +132,9 @@ export function FeedbackPrompt() {
 		<div className="fixed right-4 bottom-4 z-50 w-72 rounded border bg-card p-4 shadow-lg">
 			<div className="mb-3 flex items-start justify-between gap-2">
 				<div className="flex size-8 shrink-0 items-center justify-center rounded border bg-secondary">
-					<ChatTextIcon
+					<IconMessageFillDuo18
 						className="text-accent-foreground"
 						size={14}
-						weight="duotone"
 					/>
 				</div>
 				<button
@@ -142,7 +143,7 @@ export function FeedbackPrompt() {
 					onClick={handleDismissAction}
 					type="button"
 				>
-					<XIcon size={14} />
+					<IconXmarkFillDuo18 size={14} />
 				</button>
 			</div>
 			<p className="mb-1 text-balance font-medium text-sm">{prompt.heading}</p>

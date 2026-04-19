@@ -1,12 +1,14 @@
 "use client";
 
-import { ArrowDownIcon } from "@phosphor-icons/react";
-import { ArrowUpIcon } from "@phosphor-icons/react";
-import { BugIcon } from "@phosphor-icons/react";
-import { EyeIcon } from "@phosphor-icons/react";
-import { LightningIcon } from "@phosphor-icons/react";
-import { WarningCircleIcon } from "@phosphor-icons/react";
-import { WarningIcon } from "@phosphor-icons/react";
+import {
+	IconAlertWarningFillDuo18,
+	IconArrowDownFillDuo18,
+	IconArrowUpFillDuo18,
+	IconBoltLightningFillDuo18,
+	IconBugFillDuo18,
+	IconCircleWarningFillDuo18,
+	IconEyeFillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import type { ElementType } from "react";
 import { Badge } from "@/components/ui/badge";
 import { List } from "@/components/ui/composables/list";
@@ -34,17 +36,17 @@ const METRIC_CONFIG: Record<
 > = {
 	pageviews: {
 		label: "Pageviews",
-		icon: EyeIcon,
+		icon: IconEyeFillDuo18,
 		bg: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
 	},
 	custom_events: {
 		label: "Custom Event",
-		icon: LightningIcon,
+		icon: IconBoltLightningFillDuo18,
 		bg: "bg-violet-500/10 text-violet-600 dark:text-violet-400",
 	},
 	errors: {
 		label: "Errors",
-		icon: BugIcon,
+		icon: IconBugFillDuo18,
 		bg: "bg-red-500/10 text-red-600 dark:text-red-400",
 	},
 };
@@ -78,8 +80,8 @@ export function AnomalyItem({ anomaly }: AnomalyItemProps) {
 	const config = METRIC_CONFIG[anomaly.metric] ?? METRIC_CONFIG.pageviews;
 	const MetricIcon = config.icon;
 	const isCritical = anomaly.severity === "critical";
-	const SeverityIcon = isCritical ? WarningCircleIcon : WarningIcon;
-	const DirectionIcon = anomaly.type === "spike" ? ArrowUpIcon : ArrowDownIcon;
+	const SeverityIcon = isCritical ? IconCircleWarningFillDuo18 : IconAlertWarningFillDuo18;
+	const DirectionIcon = anomaly.type === "spike" ? IconArrowUpFillDuo18 : IconArrowDownFillDuo18;
 	const changeColor =
 		anomaly.type === "spike" ? "text-destructive" : "text-blue-500";
 
@@ -92,7 +94,7 @@ export function AnomalyItem({ anomaly }: AnomalyItemProps) {
 						config.bg
 					)}
 				>
-					<MetricIcon className="size-4" weight="duotone" />
+					<MetricIcon className="size-4" />
 				</div>
 			</List.Cell>
 
@@ -111,7 +113,7 @@ export function AnomalyItem({ anomaly }: AnomalyItemProps) {
 						className="gap-1"
 						variant={isCritical ? "destructive" : "amber"}
 					>
-						<SeverityIcon className="size-3" weight="fill" />
+						<SeverityIcon className="size-3" />
 						{anomaly.severity}
 					</Badge>
 					<span className="text-muted-foreground text-xs">
@@ -139,7 +141,6 @@ export function AnomalyItem({ anomaly }: AnomalyItemProps) {
 					>
 						<DirectionIcon
 							className={cn("mb-px inline size-3", changeColor)}
-							weight="fill"
 						/>
 						{Math.abs(anomaly.percentChange).toFixed(1)}%
 					</span>

@@ -1,5 +1,7 @@
-import { ArrowSquareOutIcon } from "@phosphor-icons/react";
-import { LockSimpleIcon } from "@phosphor-icons/react";
+import {
+	IconExternalLinkFillDuo18,
+	IconLockFillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import Link from "next/link";
 import { useMemo } from "react";
 import { FaviconImage } from "@/components/analytics/favicon-image";
@@ -60,12 +62,12 @@ export function NavigationItem({
 					className="shrink-0 rounded"
 					domain={domain}
 					fallbackIcon={
-						<Icon aria-hidden className="size-5 shrink-0" weight="duotone" />
+						<Icon aria-hidden className="size-5 shrink-0" />
 					}
 					size={20}
 				/>
 			) : (
-				<Icon aria-hidden className="size-4 shrink-0" weight="duotone" />
+				<Icon aria-hidden className="size-4 shrink-0" />
 			)}
 			<span className="min-w-0 flex-1 truncate">{name}</span>
 		</>
@@ -80,7 +82,7 @@ export function NavigationItem({
 			>
 				{content}
 				<div className="flex shrink-0 items-center gap-1.5">
-					<LockSimpleIcon aria-hidden className="size-3" />
+					<IconLockFillDuo18 aria-hidden className="size-3" />
 					{lockedPlanName && (
 						<span className="rounded bg-sidebar-accent px-1.5 py-0.5 font-medium text-[10px] text-sidebar-foreground/50 uppercase">
 							{lockedPlanName}
@@ -157,10 +159,9 @@ export function NavigationItem({
 					</span>
 				)}
 				{isExternal && (
-					<ArrowSquareOutIcon
+					<IconExternalLinkFillDuo18
 						aria-hidden
 						className="size-3 text-sidebar-ring opacity-0 transition-opacity duration-200 group-hover:opacity-100"
-						weight="duotone"
 					/>
 				)}
 			</div>

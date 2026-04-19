@@ -1,10 +1,12 @@
 "use client";
 
-import { CalendarIcon } from "@phosphor-icons/react";
-import { NoteIcon } from "@phosphor-icons/react";
-import { PencilIcon } from "@phosphor-icons/react";
-import { TagIcon } from "@phosphor-icons/react";
-import { TrashIcon } from "@phosphor-icons/react";
+import {
+	IconCalendarFillDuo18,
+	IconNoteFillDuo18,
+	IconPencilFillDuo18,
+	IconTagFillDuo18,
+	IconTrashFillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -56,7 +58,7 @@ export function AnnotationsPanel({
 						size="icon"
 						variant="ghost"
 					>
-						<NoteIcon className="size-3.5" weight="duotone" />
+						<IconNoteFillDuo18 className="size-3.5" />
 					</Button>
 				</SheetTrigger>
 				<SheetContent
@@ -75,9 +77,8 @@ export function AnnotationsPanel({
 						<div className="flex-1 overflow-y-auto p-2">
 							{annotations.length === 0 ? (
 								<div className="flex flex-col items-center justify-center rounded border bg-card py-12 text-center">
-									<NoteIcon
+									<IconNoteFillDuo18
 										className="size-6 text-muted-foreground/40"
-										weight="duotone"
 									/>
 									<p className="mt-3 font-medium text-foreground text-sm">
 										No annotations yet
@@ -103,7 +104,7 @@ export function AnnotationsPanel({
 												</p>
 												<div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
 													<span className="flex items-center gap-1 text-[11px] text-muted-foreground">
-														<CalendarIcon className="size-3" />
+														<IconCalendarFillDuo18 className="size-3" />
 														{formatAnnotationDateRange(
 															annotation.xValue,
 															annotation.xEndValue,
@@ -118,7 +119,7 @@ export function AnnotationsPanel({
 																key={tag}
 																variant="outline"
 															>
-																<TagIcon className="size-2" />
+																<IconTagFillDuo18 className="size-2" />
 																{tag}
 															</Badge>
 														))}
@@ -135,7 +136,7 @@ export function AnnotationsPanel({
 													size="icon"
 													variant="ghost"
 												>
-													<PencilIcon className="size-3" weight="duotone" />
+													<IconPencilFillDuo18 className="size-3" />
 												</Button>
 												<Button
 													aria-label="Delete annotation"
@@ -144,7 +145,7 @@ export function AnnotationsPanel({
 													size="icon"
 													variant="ghost"
 												>
-													<TrashIcon className="size-3" weight="duotone" />
+													<IconTrashFillDuo18 className="size-3" />
 												</Button>
 											</div>
 										</div>

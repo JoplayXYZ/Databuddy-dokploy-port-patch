@@ -1,11 +1,13 @@
 "use client";
 
-import { ArrowClockwiseIcon } from "@phosphor-icons/react";
-import { CheckIcon } from "@phosphor-icons/react";
-import { ClockIcon } from "@phosphor-icons/react";
-import { EnvelopeIcon } from "@phosphor-icons/react";
-import { UserPlusIcon } from "@phosphor-icons/react";
-import { XIcon } from "@phosphor-icons/react";
+import {
+	IconCheckFillDuo18,
+	IconClockFillDuo18,
+	IconEnvelopeFillDuo18,
+	IconRefreshFillDuo18,
+	IconUserPlusFillDuo18,
+	IconXmarkFillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import { useState } from "react";
 import { EmptyState } from "@/components/empty-state";
 import { InviteMemberDialog } from "@/components/organizations/invite-member-dialog";
@@ -30,14 +32,14 @@ function ErrorState({ onRetry }: { onRetry: () => void }) {
 	return (
 		<div className="flex h-full flex-col items-center justify-center p-8 text-center">
 			<div className="mb-4 flex size-16 items-center justify-center rounded-full bg-destructive/10">
-				<EnvelopeIcon className="text-destructive" size={28} weight="duotone" />
+				<IconEnvelopeFillDuo18 className="text-destructive" size={28} />
 			</div>
 			<h3 className="mb-1 font-semibold text-lg">Failed to load</h3>
 			<p className="mb-6 max-w-sm text-muted-foreground text-sm">
 				Something went wrong while loading invitations
 			</p>
 			<Button onClick={onRetry} variant="outline">
-				<ArrowClockwiseIcon className="mr-2" size={16} />
+				<IconRefreshFillDuo18 className="mr-2" size={16} />
 				Try again
 			</Button>
 		</div>
@@ -47,17 +49,17 @@ function ErrorState({ onRetry }: { onRetry: () => void }) {
 function TabEmptyState({ type }: { type: "pending" | "expired" | "accepted" }) {
 	const config = {
 		pending: {
-			icon: ClockIcon,
+			icon: IconClockFillDuo18,
 			title: "No pending invitations",
 			description: "All sent invitations have been responded to",
 		},
 		expired: {
-			icon: XIcon,
+			icon: IconXmarkFillDuo18,
 			title: "No expired invitations",
 			description: "Great! No invitations have expired",
 		},
 		accepted: {
-			icon: CheckIcon,
+			icon: IconCheckFillDuo18,
 			title: "No accepted invitations",
 			description: "Accepted invitations will appear here",
 		},
@@ -87,7 +89,7 @@ function EmptyInvitationsState({
 				size: "sm",
 			}}
 			description="There are no pending invitations for this organization. All invited members have either joined or declined their invitations."
-			icon={<EnvelopeIcon weight="duotone" />}
+			icon={<IconEnvelopeFillDuo18 />}
 			title="No Pending Invitations"
 			variant="minimal"
 		/>
@@ -150,21 +152,21 @@ export function InvitationsView({
 						<div className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b bg-background/95 px-4 py-3 backdrop-blur">
 							<TabsList>
 								<TabsTrigger value="pending">
-									<ClockIcon weight="duotone" />
+									<IconClockFillDuo18 />
 									Pending
 									{pendingCount > 0 && (
 										<TabsBadge forValue="pending">{pendingCount}</TabsBadge>
 									)}
 								</TabsTrigger>
 								<TabsTrigger value="expired">
-									<XIcon weight="bold" />
+									<IconXmarkFillDuo18 />
 									Expired
 									{expiredCount > 0 && (
 										<TabsBadge forValue="expired">{expiredCount}</TabsBadge>
 									)}
 								</TabsTrigger>
 								<TabsTrigger value="accepted">
-									<CheckIcon weight="bold" />
+									<IconCheckFillDuo18 />
 									Accepted
 									{acceptedCount > 0 && (
 										<TabsBadge forValue="accepted">{acceptedCount}</TabsBadge>
@@ -214,12 +216,12 @@ export function InvitationsView({
 							className="w-full"
 							onClick={() => setShowInviteDialog(true)}
 						>
-							<UserPlusIcon className="mr-2" size={16} />
+							<IconUserPlusFillDuo18 className="mr-2" size={16} />
 							Send Invitation
 						</Button>
 						<RightSidebar.InfoCard
 							description="Pending"
-							icon={EnvelopeIcon}
+							icon={IconEnvelopeFillDuo18}
 							title={`${pendingCount} / ${totalCount}`}
 						/>
 						<RightSidebar.DocsLink />

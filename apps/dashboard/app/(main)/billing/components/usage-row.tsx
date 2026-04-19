@@ -1,12 +1,14 @@
 "use client";
 
-import { ChartBarIcon } from "@phosphor-icons/react";
-import { ClockIcon } from "@phosphor-icons/react";
-import { DatabaseIcon } from "@phosphor-icons/react";
-import { GiftIcon } from "@phosphor-icons/react";
-import { LightningIcon } from "@phosphor-icons/react";
-import { UsersIcon } from "@phosphor-icons/react";
-import { WarningIcon } from "@phosphor-icons/react";
+import {
+	IconAlertWarningFillDuo18,
+	IconBoltLightningFillDuo18,
+	IconChartBarTrendUpFillDuo18,
+	IconClockFillDuo18,
+	IconDatabaseFillDuo18,
+	IconGiftFillDuo18,
+	IconUsersFillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import Link from "next/link";
 import { memo } from "react";
 import { Badge } from "@/components/ui/badge";
@@ -29,23 +31,23 @@ function formatCurrency(amount: number): string {
 	return `$${amount.toFixed(4)}`;
 }
 
-const FEATURE_ICONS: Record<string, typeof ChartBarIcon> = {
-	event: ChartBarIcon,
-	storage: DatabaseIcon,
-	user: UsersIcon,
-	member: UsersIcon,
-	message: ChartBarIcon,
-	website: ChartBarIcon,
+const FEATURE_ICONS: Record<string, typeof IconChartBarTrendUpFillDuo18> = {
+	event: IconChartBarTrendUpFillDuo18,
+	storage: IconDatabaseFillDuo18,
+	user: IconUsersFillDuo18,
+	member: IconUsersFillDuo18,
+	message: IconChartBarTrendUpFillDuo18,
+	website: IconChartBarTrendUpFillDuo18,
 };
 
-function getFeatureIcon(name: string): typeof ChartBarIcon {
+function getFeatureIcon(name: string): typeof IconChartBarTrendUpFillDuo18 {
 	const lowercaseName = name.toLowerCase();
 	for (const [key, Icon] of Object.entries(FEATURE_ICONS)) {
 		if (lowercaseName.includes(key)) {
 			return Icon;
 		}
 	}
-	return ChartBarIcon;
+	return IconChartBarTrendUpFillDuo18;
 }
 
 export const UsageRow = memo(function UsageRowComponent({
@@ -91,7 +93,6 @@ export const UsageRow = memo(function UsageRowComponent({
 						<Icon
 							className="text-muted-foreground"
 							size={18}
-							weight="duotone"
 						/>
 					</div>
 					<div>
@@ -99,7 +100,7 @@ export const UsageRow = memo(function UsageRowComponent({
 							<span className="font-medium">{feature.name}</span>
 							{feature.hasExtraCredits && (
 								<Badge variant="secondary">
-									<GiftIcon className="mr-1" size={10} weight="fill" />
+									<IconGiftFillDuo18 className="mr-1" size={10} />
 									Bonus
 								</Badge>
 							)}
@@ -108,13 +109,13 @@ export const UsageRow = memo(function UsageRowComponent({
 									className="bg-destructive/10 text-destructive"
 									variant="secondary"
 								>
-									<WarningIcon className="mr-1" size={10} weight="fill" />
+									<IconAlertWarningFillDuo18 className="mr-1" size={10} />
 									Limit reached
 								</Badge>
 							)}
 						</div>
 						<div className="flex items-center gap-1 text-muted-foreground text-sm">
-							<ClockIcon size={12} />
+							<IconClockFillDuo18 size={12} />
 							{getResetText(feature)}
 						</div>
 					</div>
@@ -122,7 +123,7 @@ export const UsageRow = memo(function UsageRowComponent({
 
 				{feature.unlimited ? (
 					<Badge variant="secondary">
-						<LightningIcon className="mr-1" size={12} />
+						<IconBoltLightningFillDuo18 className="mr-1" size={12} />
 						Unlimited
 					</Badge>
 				) : feature.hasExtraCredits ? (
@@ -200,7 +201,7 @@ function BilledOverageRow({
 	intervalLabel,
 }: {
 	feature: FeatureUsage;
-	Icon: typeof ChartBarIcon;
+	Icon: typeof IconChartBarTrendUpFillDuo18;
 	intervalLabel: string | null;
 }) {
 	const overage = feature.overage;
@@ -222,13 +223,12 @@ function BilledOverageRow({
 						<Icon
 							className="text-muted-foreground"
 							size={18}
-							weight="duotone"
 						/>
 					</div>
 					<div>
 						<span className="font-medium">{feature.name}</span>
 						<div className="flex items-center gap-1 text-muted-foreground text-sm">
-							<ClockIcon size={12} />
+							<IconClockFillDuo18 size={12} />
 							{getResetText(feature)}
 						</div>
 					</div>

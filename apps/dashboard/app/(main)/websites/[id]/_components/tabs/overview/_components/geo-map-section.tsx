@@ -1,7 +1,7 @@
 "use client";
 
 import type { LocationData } from "@databuddy/shared/types/website";
-import { GlobeIcon } from "@phosphor-icons/react";
+import { IconGlobeFillDuo18 } from "nucleo-ui-fill-duo-18";
 import dynamic from "next/dynamic";
 import { useMemo } from "react";
 import { CountryFlag } from "@/components/icon";
@@ -161,9 +161,8 @@ export function GeoMapSection({ countries, isLoading }: GeoMapSectionProps) {
 						</div>
 					) : (
 						<div className="flex flex-col items-center justify-center bg-accent p-4 text-center">
-							<GlobeIcon
+							<IconGlobeFillDuo18
 								className="size-6 text-muted-foreground/30"
-								weight="duotone"
 							/>
 							<p className="mt-2 text-muted-foreground text-xs">
 								No location data

@@ -1,528 +1,692 @@
 "use client";
 
-import { ChartBarIcon } from "@phosphor-icons/react";
-import { ListIcon } from "@phosphor-icons/react";
-import { MagnifyingGlassIcon } from "@phosphor-icons/react";
-import { PlusIcon } from "@phosphor-icons/react";
-import { UserIcon } from "@phosphor-icons/react";
+import { Avatar } from "@/components/ds/avatar";
+import { Badge } from "@/components/ds/badge";
+import { Button } from "@/components/ds/button";
+import { Card } from "@/components/ds/card";
+import { Checkbox } from "@/components/ds/checkbox";
+import { Dialog } from "@/components/ds/dialog";
+import { Divider } from "@/components/ds/divider";
+import { DropdownMenu } from "@/components/ds/dropdown-menu";
+import { EmptyState } from "@/components/ds/empty-state";
+import { Field } from "@/components/ds/field";
+import { Input } from "@/components/ds/input";
+import { Popover } from "@/components/ds/popover";
+import { Select } from "@/components/ds/select";
+import { Sheet } from "@/components/ds/sheet";
+import { Skeleton } from "@/components/ds/skeleton";
+import { Spinner } from "@/components/ds/spinner";
+import { Switch } from "@/components/ds/switch";
+import { Tabs } from "@/components/ds/tabs";
+import { Text } from "@/components/ds/text";
+import { Textarea } from "@/components/ds/textarea";
+import { Tooltip } from "@/components/ds/tooltip";
+import {
+	IconChartBarTrendUpFillDuo18,
+	IconGearFillDuo18,
+	IconKeyFillDuo18,
+	IconMagnifierFillDuo18,
+	IconPlusFillDuo18,
+	IconTrashFillDuo18,
+	IconUserFillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import { useState } from "react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import {
-	AlertDialog,
-	AlertDialogAction,
-	AlertDialogCancel,
-	AlertDialogContent,
-	AlertDialogDescription,
-	AlertDialogFooter,
-	AlertDialogHeader,
-	AlertDialogTitle,
-	AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
-} from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuLabel,
-	DropdownMenuSeparator,
-	DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { PercentageBadge } from "@/components/ui/percentage-badge";
-import { Progress } from "@/components/ui/progress";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { SegmentedControl } from "@/components/ui/segmented-control";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Switch } from "@/components/ui/switch";
-import {
-	Tabs,
-	TabsBadge,
-	TabsContent,
-	TabsList,
-	TabsTrigger,
-} from "@/components/ui/tabs";
-import { Textarea } from "@/components/ui/textarea";
-import { Toggle } from "@/components/ui/toggle";
-import {
-	Tooltip,
-	TooltipContent,
-	TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { cn } from "@/lib/utils";
+import { ShowcaseRow, ShowcaseSection } from "./showcase-section";
 
-const BUTTON_VARIANTS = [
-	"default",
-	"destructive",
-	"outline",
-	"secondary",
-	"ghost",
-] as const;
-
-const BUTTON_SIZES = ["default", "sm", "lg", "icon"] as const;
+const BUTTON_VARIANTS = ["primary", "secondary", "ghost"] as const;
+const BUTTON_TONES = ["neutral", "danger"] as const;
+const BUTTON_SIZES = ["sm", "md", "lg"] as const;
 
 const BADGE_VARIANTS = [
 	"default",
-	"gray",
-	"blue",
-	"green",
-	"amber",
-	"secondary",
+	"primary",
+	"success",
+	"warning",
 	"destructive",
-	"outline",
+	"muted",
 ] as const;
 
-function ShowcaseSection({
-	title,
-	description,
-	children,
-	className,
-}: {
-	title: string;
-	description?: string;
-	children: React.ReactNode;
-	className?: string;
-}) {
-	return (
-		<section className={cn("space-y-3", className)}>
-			<div>
-				<h2 className="text-balance font-semibold text-lg">{title}</h2>
-				{description ? (
-					<p className="mt-1 text-pretty text-muted-foreground text-sm">
-						{description}
-					</p>
-				) : null}
-			</div>
-			<div className="rounded border border-border bg-card p-6 shadow-sm">
-				{children}
-			</div>
-		</section>
-	);
-}
+const TEXT_VARIANTS = [
+	"display",
+	"title",
+	"heading",
+	"body",
+	"label",
+	"caption",
+] as const;
 
 export function DesignShowcase() {
-	const [segment, setSegment] = useState<"a" | "b" | "c">("a");
-	const [switchOn, setSwitchOn] = useState(true);
+	const [sheetOpen, setSheetOpen] = useState(false);
 
 	return (
-		<div className="mx-auto w-full max-w-5xl space-y-12 overflow-auto px-4 py-8 md:px-6 md:py-10">
-			<header className="space-y-2">
-				<h1 className="text-balance font-bold text-2xl tracking-tight md:text-3xl">
-					Design showcase
-				</h1>
-				<p className="max-w-2xl text-pretty text-muted-foreground text-sm">
-					Placeholder labels and sample copy are for layout only. Extend this
-					page as new primitives and variants land—see{" "}
-					<code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs">
-						.cursor/rules/design-system.mdc
-					</code>
-					.
-				</p>
+		<div className="mx-auto w-full max-w-5xl space-y-0 overflow-auto px-4 py-8 md:px-6 md:py-10">
+			<header className="flex flex-col gap-1 pb-12">
+				<Text variant="display">Design system</Text>
+				<Text className="max-w-2xl text-pretty" tone="muted" variant="body">
+					Every primitive in{" "}
+					<Text as="code" className="rounded bg-secondary px-1.5 py-0.5" mono variant="caption">
+						components/ds/
+					</Text>
+					{" "}— built on Base UI, styled with Tailwind, iconography from Nucleo
+					fill-duo.
+				</Text>
 			</header>
 
 			<ShowcaseSection
-				description="Variants × sizes. Icon size uses an icon-only affordance."
+				description="Polymorphic component — renders the semantic element for each variant automatically. Supports tone, mono, and custom `as` overrides."
+				id="text"
+				title="Text"
+			>
+				<ShowcaseRow label="Scale">
+					<div className="flex w-full flex-col gap-3">
+						{TEXT_VARIANTS.map((v) => (
+							<div className="flex items-baseline gap-4" key={v}>
+								<Text className="w-14 shrink-0 text-right" mono tone="muted" variant="caption">
+									{v}
+								</Text>
+								<Text variant={v}>The quick brown fox jumps</Text>
+							</div>
+						))}
+					</div>
+				</ShowcaseRow>
+				<ShowcaseRow label="Tones">
+					<Text>Default</Text>
+					<Divider orientation="vertical" className="h-4" />
+					<Text tone="muted">Muted</Text>
+					<Divider orientation="vertical" className="h-4" />
+					<Text tone="destructive">Destructive</Text>
+				</ShowcaseRow>
+				<ShowcaseRow label="Mono">
+					<Text mono>0xDEADBEEF</Text>
+					<Text mono tone="muted" variant="caption">
+						sha-a5a6f35
+					</Text>
+				</ShowcaseRow>
+			</ShowcaseSection>
+
+			<ShowcaseSection
+				description="Three variants (primary, secondary, ghost) × two tones (neutral, danger) × three sizes."
+				id="button"
 				title="Button"
 			>
-				<div className="flex flex-col gap-6">
-					{BUTTON_VARIANTS.map((variant) => (
-						<div className="flex flex-wrap items-center gap-2" key={variant}>
-							<span className="w-28 shrink-0 font-mono text-muted-foreground text-xs">
-								{variant}
-							</span>
-							{BUTTON_SIZES.map((size) => (
-								<Button
-									key={size}
-									size={size === "icon" ? "icon" : size}
-									type="button"
-									variant={variant}
-								>
-									{size === "icon" ? (
-										<PlusIcon className="size-4" weight="duotone" />
-									) : (
-										`${size}`
-									)}
-								</Button>
+				{BUTTON_TONES.map((tone) => (
+					<ShowcaseRow key={tone} label={tone}>
+						<div className="flex flex-col gap-3">
+							{BUTTON_VARIANTS.map((variant) => (
+								<div className="flex items-center gap-2" key={variant}>
+									<Text className="w-20 shrink-0 text-right" mono tone="muted" variant="caption">
+										{variant}
+									</Text>
+									{BUTTON_SIZES.map((size) => (
+										<Button key={size} size={size} tone={tone} variant={variant}>
+											{size}
+										</Button>
+									))}
+									<Button disabled size="md" tone={tone} variant={variant}>
+										disabled
+									</Button>
+								</div>
 							))}
 						</div>
-					))}
-				</div>
+					</ShowcaseRow>
+				))}
+				<ShowcaseRow label="With icons">
+					<Button>
+						<IconPlusFillDuo18 className="size-3.5" />
+						Create
+					</Button>
+					<Button tone="danger">
+						<IconTrashFillDuo18 className="size-3.5" />
+						Delete
+					</Button>
+					<Button variant="secondary">
+						<IconGearFillDuo18 className="size-3.5" />
+						Settings
+					</Button>
+					<Button variant="ghost">
+						<IconUserFillDuo18 className="size-3.5" />
+						Profile
+					</Button>
+				</ShowcaseRow>
 			</ShowcaseSection>
 
 			<ShowcaseSection
-				description="Semantic color tokens for status and labels."
+				description="Six semantic variants at two sizes. Pill-shaped, inline."
+				id="badge"
 				title="Badge"
 			>
-				<div className="flex flex-wrap gap-2">
-					{BADGE_VARIANTS.map((variant) => (
-						<Badge key={variant} variant={variant}>
-							{variant}
-						</Badge>
+				<ShowcaseRow label="md">
+					{BADGE_VARIANTS.map((v) => (
+						<Badge key={v} variant={v}>{v}</Badge>
 					))}
-				</div>
+				</ShowcaseRow>
+				<ShowcaseRow label="sm">
+					{BADGE_VARIANTS.map((v) => (
+						<Badge key={v} size="sm" variant={v}>{v}</Badge>
+					))}
+				</ShowcaseRow>
 			</ShowcaseSection>
 
 			<ShowcaseSection
-				description="Text fields and multiline. Prefix/suffix slots for icons."
-				title="Input & textarea"
-			>
-				<div className="grid max-w-md gap-4">
-					<div className="space-y-2">
-						<Label htmlFor="design-input-default">Default</Label>
-						<Input
-							id="design-input-default"
-							placeholder="Placeholder text"
-							type="text"
-						/>
-					</div>
-					<div className="space-y-2">
-						<Label htmlFor="design-input-ghost">Ghost</Label>
-						<Input
-							id="design-input-ghost"
-							placeholder="Ghost variant"
-							variant="ghost"
-						/>
-					</div>
-					<div className="space-y-2">
-						<Label htmlFor="design-input-affix">With prefix</Label>
-						<Input
-							id="design-input-affix"
-							placeholder="Search…"
-							prefix={
-								<MagnifyingGlassIcon className="size-4" weight="duotone" />
-							}
-							type="search"
-						/>
-					</div>
-					<div className="space-y-2">
-						<Label htmlFor="design-textarea">Textarea</Label>
-						<Textarea
-							id="design-textarea"
-							minRows={3}
-							placeholder="Longer placeholder copy for multiline fields."
-						/>
-					</div>
-				</div>
-			</ShowcaseSection>
-
-			<ShowcaseSection
-				description="Surface, header, and body spacing."
+				description="Composed surface — Card.Header (muted bg), Card.Content, Card.Footer (angled-rectangle-gradient). All slots optional."
+				id="card"
 				title="Card"
 			>
-				<Card className="max-w-md">
-					<CardHeader>
-						<CardTitle>Card title</CardTitle>
-						<CardDescription>
-							Optional description text for the card context.
-						</CardDescription>
-					</CardHeader>
-					<CardContent className="text-pretty text-muted-foreground text-sm">
-						Body content goes here. Use for grouped settings, summaries, or form
-						sections.
-					</CardContent>
-				</Card>
-			</ShowcaseSection>
-
-			<ShowcaseSection
-				description="Inline messages and validation tone."
-				title="Alert"
-			>
-				<div className="grid max-w-lg gap-3">
-					<Alert>
-						<ChartBarIcon className="size-4" weight="duotone" />
-						<AlertTitle>Default alert</AlertTitle>
-						<AlertDescription>
-							Supporting description with neutral emphasis.
-						</AlertDescription>
-					</Alert>
-					<Alert variant="destructive">
-						<ListIcon className="size-4" weight="duotone" />
-						<AlertTitle>Destructive</AlertTitle>
-						<AlertDescription>
-							Use for errors or blocking issues the user must address.
-						</AlertDescription>
-					</Alert>
+				<div className="grid gap-4 sm:grid-cols-2">
+					<Card>
+						<Card.Header>
+							<Card.Title>Full card</Card.Title>
+							<Card.Description>Header, content, and footer.</Card.Description>
+						</Card.Header>
+						<Card.Content>
+							<Text tone="muted">Content area — forms, lists, anything.</Text>
+						</Card.Content>
+						<Card.Footer>
+							<Button variant="secondary" size="sm">Cancel</Button>
+							<Button size="sm">Save</Button>
+						</Card.Footer>
+					</Card>
+					<Card>
+						<Card.Header>
+							<Card.Title>Header only</Card.Title>
+							<Card.Description>No content or footer slots used.</Card.Description>
+						</Card.Header>
+					</Card>
+					<Card>
+						<Card.Content className="flex items-center gap-3">
+							<Avatar alt="Iza" size="md" />
+							<div className="flex min-w-0 flex-1 flex-col">
+								<Text variant="label">Iza</Text>
+								<Text tone="muted" variant="caption">iza@databuddy.cc</Text>
+							</div>
+							<Badge variant="primary" size="sm">Owner</Badge>
+						</Card.Content>
+					</Card>
+					<Card>
+						<Card.Content className="flex flex-col items-center gap-2 py-8">
+							<Spinner size="md" />
+							<Text tone="muted" variant="caption">Loading…</Text>
+						</Card.Content>
+					</Card>
 				</div>
 			</ShowcaseSection>
 
 			<ShowcaseSection
-				description="Loading placeholders for lists and cards."
-				title="Skeleton"
+				description="Field wires label, description, error, and aria attributes to its child input via context. No manual id plumbing needed."
+				id="field"
+				title="Field & Input"
 			>
-				<div className="flex max-w-md flex-col gap-3">
-					<Skeleton className="h-10 w-full rounded" />
-					<div className="flex gap-3">
-						<Skeleton className="size-12 rounded" />
-						<div className="flex flex-1 flex-col gap-2">
-							<Skeleton className="h-4 w-3/4 rounded" />
-							<Skeleton className="h-3 w-1/2 rounded" />
-						</div>
-					</div>
-				</div>
-			</ShowcaseSection>
-
-			<ShowcaseSection
-				description="Binary and single-choice controls."
-				title="Switch, checkbox, radio"
-			>
-				<div className="flex max-w-md flex-col gap-6">
-					<div className="flex items-center gap-2">
-						<Switch
-							aria-label="Example switch"
-							checked={switchOn}
-							onCheckedChange={setSwitchOn}
+				<div className="grid gap-6 sm:grid-cols-2">
+					<Field>
+						<Field.Label>Default</Field.Label>
+						<Input placeholder="Placeholder text" />
+						<Field.Description>Helper text below the input.</Field.Description>
+					</Field>
+					<Field>
+						<Field.Label>With prefix</Field.Label>
+						<Input
+							placeholder="Search…"
+							prefix={<IconMagnifierFillDuo18 className="size-3.5" />}
 						/>
-						<Label className="font-normal">Switch label</Label>
-					</div>
-					<div className="flex items-center gap-2">
-						<Checkbox defaultChecked id="design-cb" />
-						<Label className="font-normal" htmlFor="design-cb">
-							Checkbox label
-						</Label>
-					</div>
-					<RadioGroup className="gap-2" defaultValue="one">
-						<div className="flex items-center gap-2">
-							<RadioGroupItem id="r1" value="one" />
-							<Label className="font-normal" htmlFor="r1">
-								Option one
-							</Label>
-						</div>
-						<div className="flex items-center gap-2">
-							<RadioGroupItem id="r2" value="two" />
-							<Label className="font-normal" htmlFor="r2">
-								Option two
-							</Label>
-						</div>
-					</RadioGroup>
+					</Field>
+					<Field>
+						<Field.Label>With suffix</Field.Label>
+						<Input
+							defaultValue="sk_live_..."
+							suffix={<IconKeyFillDuo18 className="size-3.5" />}
+						/>
+					</Field>
+					<Field error>
+						<Field.Label>Error state</Field.Label>
+						<Input defaultValue="bad-value" />
+						<Field.Error>Domain is already taken.</Field.Error>
+					</Field>
+					<Field>
+						<Field.Label>Disabled</Field.Label>
+						<Input defaultValue="read-only" disabled />
+					</Field>
+					<Field>
+						<Field.Label>Prefix + suffix</Field.Label>
+						<Input
+							placeholder="amount"
+							prefix="$"
+							suffix="USD"
+						/>
+					</Field>
 				</div>
 			</ShowcaseSection>
 
 			<ShowcaseSection
-				description="Default, underline, and pills tab styles."
-				title="Tabs"
+				description="Plain textarea wired to Field context. Supports all standard textarea attributes."
+				id="textarea"
+				title="Textarea"
 			>
-				<div className="space-y-8">
-					<Tabs defaultValue="tab1">
-						<TabsList>
-							<TabsTrigger value="tab1">
-								First
-								<TabsBadge forValue="tab1">3</TabsBadge>
-							</TabsTrigger>
-							<TabsTrigger value="tab2">Second</TabsTrigger>
-						</TabsList>
-						<TabsContent className="text-muted-foreground text-sm" value="tab1">
-							Panel one content.
-						</TabsContent>
-						<TabsContent className="text-muted-foreground text-sm" value="tab2">
-							Panel two content.
-						</TabsContent>
-					</Tabs>
-
-					<Tabs defaultValue="u1" variant="underline">
-						<TabsList className="w-full">
-							<TabsTrigger className="flex-1" value="u1">
-								Overview
-							</TabsTrigger>
-							<TabsTrigger className="flex-1" value="u2">
-								Details
-							</TabsTrigger>
-						</TabsList>
-						<TabsContent className="text-muted-foreground text-sm" value="u1">
-							Underline variant — panel A.
-						</TabsContent>
-						<TabsContent className="text-muted-foreground text-sm" value="u2">
-							Underline variant — panel B.
-						</TabsContent>
-					</Tabs>
-
-					<Tabs defaultValue="p1" variant="pills">
-						<TabsList>
-							<TabsTrigger value="p1">Day</TabsTrigger>
-							<TabsTrigger value="p2">Week</TabsTrigger>
-						</TabsList>
-						<TabsContent className="text-muted-foreground text-sm" value="p1">
-							Pills — day range.
-						</TabsContent>
-						<TabsContent className="text-muted-foreground text-sm" value="p2">
-							Pills — week range.
-						</TabsContent>
-					</Tabs>
+				<div className="grid gap-6 sm:grid-cols-2">
+					<Field>
+						<Field.Label>Default</Field.Label>
+						<Textarea placeholder="Write something…" />
+					</Field>
+					<Field error>
+						<Field.Label>With error</Field.Label>
+						<Textarea defaultValue="Too short" />
+						<Field.Error>Minimum 20 characters.</Field.Error>
+					</Field>
 				</div>
 			</ShowcaseSection>
 
 			<ShowcaseSection
-				description="Horizontal rule between blocks."
-				title="Separator"
-			>
-				<div className="space-y-2 text-sm">
-					<p className="text-muted-foreground">Block above</p>
-					<Separator />
-					<p className="text-muted-foreground">Block below</p>
-				</div>
-			</ShowcaseSection>
-
-			<ShowcaseSection
-				description="Determinate progress (0–100)."
-				title="Progress"
-			>
-				<div className="max-w-md space-y-4">
-					<Progress value={40} />
-					<Progress value={66} />
-				</div>
-			</ShowcaseSection>
-
-			<ShowcaseSection
-				description="Image, initials fallback, and sizes."
-				title="Avatar"
-			>
-				<div className="flex flex-wrap items-center gap-4">
-					<Avatar className="size-10">
-						<AvatarFallback className="bg-muted text-xs">AB</AvatarFallback>
-					</Avatar>
-					<Avatar className="size-10">
-						<AvatarFallback className="bg-primary text-primary-foreground">
-							<UserIcon className="size-5" weight="duotone" />
-						</AvatarFallback>
-					</Avatar>
-				</div>
-			</ShowcaseSection>
-
-			<ShowcaseSection
-				description="Trigger + menu surface; icon trigger has an aria-label."
-				title="Dropdown menu"
-			>
-				<DropdownMenu>
-					<DropdownMenuTrigger asChild>
-						<Button aria-label="Open menu" type="button" variant="outline">
-							Open menu
-						</Button>
-					</DropdownMenuTrigger>
-					<DropdownMenuContent align="start" className="w-56">
-						<DropdownMenuLabel>Section</DropdownMenuLabel>
-						<DropdownMenuItem>Item one</DropdownMenuItem>
-						<DropdownMenuItem>Item two</DropdownMenuItem>
-						<DropdownMenuSeparator />
-						<DropdownMenuItem variant="destructive">
-							Destructive
-						</DropdownMenuItem>
-					</DropdownMenuContent>
-				</DropdownMenu>
-			</ShowcaseSection>
-
-			<ShowcaseSection
-				description="Single-select list in a popover."
+				description="Single-select dropdown with built-in label registry — Select.Value automatically displays the selected item's text label."
+				id="select"
 				title="Select"
 			>
-				<Select defaultValue="b">
-					<SelectTrigger className="w-[220px]">
-						<SelectValue placeholder="Choose…" />
-					</SelectTrigger>
-					<SelectContent>
-						<SelectItem value="a">Option A</SelectItem>
-						<SelectItem value="b">Option B</SelectItem>
-						<SelectItem value="c">Option C</SelectItem>
-					</SelectContent>
-				</Select>
-			</ShowcaseSection>
-
-			<ShowcaseSection
-				description="Hover or focus the control to reveal."
-				title="Tooltip"
-			>
-				<Tooltip>
-					<TooltipTrigger asChild>
-						<Button type="button" variant="outline">
-							Hover me
-						</Button>
-					</TooltipTrigger>
-					<TooltipContent className="max-w-xs text-balance" side="bottom">
-						Tooltip body copy for supplementary context.
-					</TooltipContent>
-				</Tooltip>
-			</ShowcaseSection>
-
-			<ShowcaseSection
-				description="Destructive confirmation pattern."
-				title="Alert dialog"
-			>
-				<AlertDialog>
-					<AlertDialogTrigger asChild>
-						<Button type="button" variant="destructive">
-							Open alert dialog
-						</Button>
-					</AlertDialogTrigger>
-					<AlertDialogContent>
-						<AlertDialogHeader>
-							<AlertDialogTitle>Confirm action</AlertDialogTitle>
-							<AlertDialogDescription>
-								Placeholder description. This is a destructive or irreversible
-								flow.
-							</AlertDialogDescription>
-						</AlertDialogHeader>
-						<AlertDialogFooter>
-							<AlertDialogCancel type="button">Cancel</AlertDialogCancel>
-							<AlertDialogAction type="button">Continue</AlertDialogAction>
-						</AlertDialogFooter>
-					</AlertDialogContent>
-				</AlertDialog>
-			</ShowcaseSection>
-
-			<ShowcaseSection
-				description="Two or three options in a compact control."
-				title="Segmented control"
-			>
-				<SegmentedControl
-					onValueChangeAction={(v) => setSegment(v)}
-					options={[
-						{ value: "a", label: "Alpha" },
-						{ value: "b", label: "Beta" },
-						{ value: "c", label: "Gamma" },
-					]}
-					value={segment}
-				/>
-			</ShowcaseSection>
-
-			<ShowcaseSection
-				description="Percent deltas with tiered emphasis."
-				title="Percentage badge"
-			>
-				<div className="flex flex-wrap gap-2">
-					<PercentageBadge percentage={62} />
-					<PercentageBadge percentage={28} />
-					<PercentageBadge percentage={12} />
-					<PercentageBadge percentage={4} />
+				<div className="grid gap-6 sm:grid-cols-2">
+					<Field>
+						<Field.Label>Plan</Field.Label>
+						<Select defaultValue="pro">
+							<Select.Trigger />
+							<Select.Content>
+								<Select.Item value="free">Free</Select.Item>
+								<Select.Item value="pro">Pro</Select.Item>
+								<Select.Item value="enterprise">Enterprise</Select.Item>
+							</Select.Content>
+						</Select>
+					</Field>
+					<Field>
+						<Field.Label>With groups</Field.Label>
+						<Select defaultValue="7d">
+							<Select.Trigger />
+							<Select.Content>
+								<Select.Group>
+									<Select.GroupLabel>Quick</Select.GroupLabel>
+									<Select.Item value="24h">Last 24 hours</Select.Item>
+									<Select.Item value="7d">Last 7 days</Select.Item>
+									<Select.Item value="30d">Last 30 days</Select.Item>
+								</Select.Group>
+								<Select.Group>
+									<Select.GroupLabel>Calendar</Select.GroupLabel>
+									<Select.Item value="mtd">Month to date</Select.Item>
+									<Select.Item value="ytd">Year to date</Select.Item>
+								</Select.Group>
+							</Select.Content>
+						</Select>
+					</Field>
 				</div>
 			</ShowcaseSection>
 
 			<ShowcaseSection
-				description="Pressable toggle with on/off visual state."
-				title="Toggle"
+				description="Both support standalone use or composed with label + description. Wired to Field context when nested."
+				id="controls"
+				title="Switch & Checkbox"
 			>
-				<div className="flex flex-wrap gap-2">
-					<Toggle aria-label="Toggle bold" type="button">
-						<ChartBarIcon className="size-4" weight="duotone" />
-					</Toggle>
-					<Toggle type="button" variant="outline">
-						Outlined
-					</Toggle>
+				<ShowcaseRow label="Switch">
+					<div className="flex flex-col gap-4">
+						<div className="flex items-center gap-6">
+							<Switch />
+							<Switch defaultChecked />
+							<Switch disabled />
+							<Switch defaultChecked disabled />
+						</div>
+						<Divider />
+						<Switch defaultChecked label="Email notifications" description="Receive alerts when anomalies are detected." />
+						<Switch label="Weekly digest" description="A summary of your analytics every Monday." />
+					</div>
+				</ShowcaseRow>
+				<ShowcaseRow label="Checkbox">
+					<div className="flex flex-col gap-4">
+						<div className="flex items-center gap-6">
+							<Checkbox />
+							<Checkbox defaultChecked />
+							<Checkbox disabled />
+							<Checkbox defaultChecked disabled />
+						</div>
+						<Divider />
+						<Checkbox defaultChecked label="I agree to the terms" description="You must accept before continuing." />
+						<Checkbox label="Subscribe to changelog" />
+					</div>
+				</ShowcaseRow>
+			</ShowcaseSection>
+
+			<ShowcaseSection
+				description="Pill-style tabs with animated indicator. Tabs.Tab, Tabs.Panel, Tabs.List."
+				id="tabs"
+				title="Tabs"
+			>
+				<Tabs defaultValue="overview">
+					<Tabs.List>
+						<Tabs.Tab value="overview">Overview</Tabs.Tab>
+						<Tabs.Tab value="analytics">Analytics</Tabs.Tab>
+						<Tabs.Tab value="settings">Settings</Tabs.Tab>
+						<Tabs.Tab disabled value="disabled">Disabled</Tabs.Tab>
+					</Tabs.List>
+					<Tabs.Panel className="pt-4" value="overview">
+						<Card>
+							<Card.Content>
+								<Text tone="muted">Overview panel — tab content can be anything.</Text>
+							</Card.Content>
+						</Card>
+					</Tabs.Panel>
+					<Tabs.Panel className="pt-4" value="analytics">
+						<Card>
+							<Card.Content>
+								<Text tone="muted">Analytics panel.</Text>
+							</Card.Content>
+						</Card>
+					</Tabs.Panel>
+					<Tabs.Panel className="pt-4" value="settings">
+						<Card>
+							<Card.Content>
+								<Text tone="muted">Settings panel.</Text>
+							</Card.Content>
+						</Card>
+					</Tabs.Panel>
+				</Tabs>
+			</ShowcaseSection>
+
+			<ShowcaseSection
+				description="Three sizes. Falls back to initials derived from `alt` or an explicit `fallback` string."
+				id="avatar"
+				title="Avatar"
+			>
+				<ShowcaseRow label="Sizes">
+					<Avatar alt="Small" size="sm" />
+					<Avatar alt="Medium" size="md" />
+					<Avatar alt="Large User" size="lg" />
+				</ShowcaseRow>
+				<ShowcaseRow label="Fallbacks">
+					<Avatar fallback="DB" size="md" />
+					<Avatar fallback="?" size="md" />
+					<Avatar alt="Jane Doe" size="md" />
+					<Avatar src="https://bad-url.invalid/nope.png" alt="Broken" size="md" />
+				</ShowcaseRow>
+			</ShowcaseSection>
+
+			<ShowcaseSection
+				description="Hover or focus the trigger to reveal. Clones the child ref — works on any focusable element."
+				id="tooltip"
+				title="Tooltip"
+			>
+				<ShowcaseRow>
+					<Tooltip content="I appear on top" side="top">
+						<Button variant="secondary">Top</Button>
+					</Tooltip>
+					<Tooltip content="I appear below" side="bottom">
+						<Button variant="secondary">Bottom</Button>
+					</Tooltip>
+					<Tooltip content="I appear to the left" side="left">
+						<Button variant="secondary">Left</Button>
+					</Tooltip>
+					<Tooltip content="I appear to the right" side="right">
+						<Button variant="secondary">Right</Button>
+					</Tooltip>
+					<Tooltip content="Works on any element">
+						<Badge variant="success">Hover me</Badge>
+					</Tooltip>
+				</ShowcaseRow>
+			</ShowcaseSection>
+
+			<ShowcaseSection
+				description="Modal with Header (muted bg), Body, Footer (angled-rectangle-gradient). Close button auto-positioned top-right, or wrap any child with Dialog.Close."
+				id="dialog"
+				title="Dialog"
+			>
+				<ShowcaseRow>
+					<Dialog>
+						<Dialog.Trigger>
+							<Button variant="secondary">Default dialog</Button>
+						</Dialog.Trigger>
+						<Dialog.Content>
+							<Dialog.Close />
+							<Dialog.Header>
+								<Dialog.Title>Edit website</Dialog.Title>
+								<Dialog.Description>Change the name and domain for this property.</Dialog.Description>
+							</Dialog.Header>
+							<Dialog.Body className="flex flex-col gap-4">
+								<Field>
+									<Field.Label>Name</Field.Label>
+									<Input defaultValue="My Website" />
+								</Field>
+								<Field>
+									<Field.Label>Domain</Field.Label>
+									<Input defaultValue="example.com" />
+								</Field>
+							</Dialog.Body>
+							<Dialog.Footer>
+								<Dialog.Close>
+									<Button variant="secondary">Cancel</Button>
+								</Dialog.Close>
+								<Button>Save</Button>
+							</Dialog.Footer>
+						</Dialog.Content>
+					</Dialog>
+					<Dialog>
+						<Dialog.Trigger>
+							<Button tone="danger" variant="secondary">Destructive dialog</Button>
+						</Dialog.Trigger>
+						<Dialog.Content>
+							<Dialog.Close />
+							<Dialog.Header>
+								<Dialog.Title>Delete website</Dialog.Title>
+								<Dialog.Description>This will permanently remove all analytics data. This action cannot be undone.</Dialog.Description>
+							</Dialog.Header>
+							<Dialog.Footer>
+								<Dialog.Close>
+									<Button variant="secondary">Cancel</Button>
+								</Dialog.Close>
+								<Button tone="danger">Delete forever</Button>
+							</Dialog.Footer>
+						</Dialog.Content>
+					</Dialog>
+				</ShowcaseRow>
+			</ShowcaseSection>
+
+			<ShowcaseSection
+				description="Slide-out panel — same sub-component API as Dialog. Supports `side` prop for left or right."
+				id="sheet"
+				title="Sheet"
+			>
+				<ShowcaseRow>
+					<Sheet onOpenChange={setSheetOpen} open={sheetOpen}>
+						<Sheet.Trigger>
+							<Button variant="secondary">Open sheet</Button>
+						</Sheet.Trigger>
+						<Sheet.Content>
+							<Sheet.Close />
+							<Sheet.Header>
+								<Sheet.Title>Website details</Sheet.Title>
+								<Sheet.Description>View and edit this property.</Sheet.Description>
+							</Sheet.Header>
+							<Sheet.Body className="flex flex-col gap-4">
+								<Field>
+									<Field.Label>Name</Field.Label>
+									<Input defaultValue="databuddy.cc" />
+								</Field>
+								<Field>
+									<Field.Label>Notes</Field.Label>
+									<Textarea placeholder="Internal notes…" />
+								</Field>
+							</Sheet.Body>
+							<Sheet.Footer>
+								<Button onClick={() => setSheetOpen(false)} variant="secondary">Cancel</Button>
+								<Button>Save</Button>
+							</Sheet.Footer>
+						</Sheet.Content>
+					</Sheet>
+				</ShowcaseRow>
+			</ShowcaseSection>
+
+			<ShowcaseSection
+				description="Floating menu with items, groups, separators, and a destructive variant."
+				id="dropdown"
+				title="Dropdown menu"
+			>
+				<ShowcaseRow>
+					<DropdownMenu>
+						<DropdownMenu.Trigger>
+							<Button variant="secondary">Actions</Button>
+						</DropdownMenu.Trigger>
+						<DropdownMenu.Content align="start">
+							<DropdownMenu.GroupLabel>Navigate</DropdownMenu.GroupLabel>
+							<DropdownMenu.Item>
+								<IconGearFillDuo18 className="size-3.5" />
+								Settings
+							</DropdownMenu.Item>
+							<DropdownMenu.Item>
+								<IconUserFillDuo18 className="size-3.5" />
+								Profile
+							</DropdownMenu.Item>
+							<DropdownMenu.Separator />
+							<DropdownMenu.Item variant="destructive">
+								<IconTrashFillDuo18 className="size-3.5" />
+								Delete
+							</DropdownMenu.Item>
+						</DropdownMenu.Content>
+					</DropdownMenu>
+					<DropdownMenu>
+						<DropdownMenu.Trigger>
+							<Button variant="ghost" size="sm">
+								<IconGearFillDuo18 className="size-3.5" />
+								Icon trigger
+							</Button>
+						</DropdownMenu.Trigger>
+						<DropdownMenu.Content>
+							<DropdownMenu.Item>Option A</DropdownMenu.Item>
+							<DropdownMenu.Item>Option B</DropdownMenu.Item>
+							<DropdownMenu.Item>Option C</DropdownMenu.Item>
+						</DropdownMenu.Content>
+					</DropdownMenu>
+				</ShowcaseRow>
+			</ShowcaseSection>
+
+			<ShowcaseSection
+				description="Anchored floating panel with title and description."
+				id="popover"
+				title="Popover"
+			>
+				<ShowcaseRow>
+					<Popover>
+						<Popover.Trigger>
+							<Button variant="secondary">Open popover</Button>
+						</Popover.Trigger>
+						<Popover.Content>
+							<Popover.Title>Invite teammate</Popover.Title>
+							<Popover.Description className="mt-1">
+								Enter their email to send an invite.
+							</Popover.Description>
+							<div className="mt-3 flex flex-col gap-2">
+								<Input placeholder="name@company.com" />
+								<Button size="sm">Send invite</Button>
+							</div>
+						</Popover.Content>
+					</Popover>
+				</ShowcaseRow>
+			</ShowcaseSection>
+
+			<ShowcaseSection
+				description="Horizontal or vertical rule. Defaults to horizontal."
+				id="divider"
+				title="Divider"
+			>
+				<ShowcaseRow label="Horizontal">
+					<div className="w-full space-y-2">
+						<Text tone="muted" variant="caption">Section A</Text>
+						<Divider />
+						<Text tone="muted" variant="caption">Section B</Text>
+					</div>
+				</ShowcaseRow>
+				<ShowcaseRow label="Vertical">
+					<div className="flex h-8 items-center gap-3">
+						<Text tone="muted" variant="caption">Left</Text>
+						<Divider orientation="vertical" />
+						<Text tone="muted" variant="caption">Right</Text>
+					</div>
+				</ShowcaseRow>
+			</ShowcaseSection>
+
+			<ShowcaseSection
+				description="Animated pulse placeholder for loading states. Shape it with className."
+				id="skeleton"
+				title="Skeleton"
+			>
+				<ShowcaseRow label="Card skeleton">
+					<div className="flex w-full max-w-sm flex-col gap-4 rounded-lg border border-border/60 p-5">
+						<div className="flex items-center gap-3">
+							<Skeleton className="size-10 rounded-full" />
+							<div className="flex flex-1 flex-col gap-2">
+								<Skeleton className="h-3.5 w-28" />
+								<Skeleton className="h-3 w-40" />
+							</div>
+						</div>
+						<Skeleton className="h-20 w-full" />
+						<div className="flex gap-2">
+							<Skeleton className="h-8 w-20" />
+							<Skeleton className="h-8 w-20" />
+						</div>
+					</div>
+				</ShowcaseRow>
+				<ShowcaseRow label="Table skeleton">
+					<div className="flex w-full max-w-sm flex-col gap-3">
+						<Skeleton className="h-8 w-full" />
+						<Skeleton className="h-6 w-full" />
+						<Skeleton className="h-6 w-full" />
+						<Skeleton className="h-6 w-3/4" />
+					</div>
+				</ShowcaseRow>
+			</ShowcaseSection>
+
+			<ShowcaseSection
+				description="Nucleo AI loading icon with spin animation. Three sizes."
+				id="spinner"
+				title="Spinner"
+			>
+				<ShowcaseRow label="Sizes">
+					<div className="flex items-center gap-6">
+						<div className="flex flex-col items-center gap-2">
+							<Spinner size="sm" />
+							<Text mono tone="muted" variant="caption">sm</Text>
+						</div>
+						<div className="flex flex-col items-center gap-2">
+							<Spinner size="md" />
+							<Text mono tone="muted" variant="caption">md</Text>
+						</div>
+						<div className="flex flex-col items-center gap-2">
+							<Spinner size="lg" />
+							<Text mono tone="muted" variant="caption">lg</Text>
+						</div>
+					</div>
+				</ShowcaseRow>
+				<ShowcaseRow label="In context">
+					<Button disabled>
+						<Spinner size="sm" />
+						Saving…
+					</Button>
+				</ShowcaseRow>
+			</ShowcaseSection>
+
+			<ShowcaseSection
+				description="Centered placeholder with optional icon, title, description, and action slot."
+				id="empty-state"
+				title="Empty state"
+			>
+				<div className="grid gap-4 sm:grid-cols-2">
+					<div className="rounded-lg border border-border/60 border-dashed py-16">
+						<EmptyState
+							action={
+								<Button size="sm">
+									<IconPlusFillDuo18 className="size-3.5" />
+									Add website
+								</Button>
+							}
+							description="Get started by adding your first website to track."
+							icon={<IconChartBarTrendUpFillDuo18 />}
+							title="No websites yet"
+						/>
+					</div>
+					<div className="rounded-lg border border-border/60 border-dashed py-16">
+						<EmptyState
+							description="Try adjusting your filters or date range."
+							title="No data"
+						/>
+					</div>
 				</div>
 			</ShowcaseSection>
 		</div>

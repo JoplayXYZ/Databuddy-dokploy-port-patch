@@ -1,12 +1,14 @@
 "use client";
 
-import { BellIcon } from "@phosphor-icons/react";
-import { CircleNotchIcon } from "@phosphor-icons/react";
-import { DotsThreeIcon } from "@phosphor-icons/react";
-import { PencilIcon } from "@phosphor-icons/react";
-import { PlusIcon } from "@phosphor-icons/react";
-import { TestTubeIcon } from "@phosphor-icons/react";
-import { TrashIcon } from "@phosphor-icons/react";
+import {
+	IconBellFillDuo18,
+	IconDotsVerticalFillDuo18,
+	IconFlaskFillDuo18,
+	IconLoader2FillDuo18,
+	IconPencilFillDuo18,
+	IconPlusFillDuo18,
+	IconTrashFillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -181,9 +183,8 @@ export default function NotificationsSettingsPage() {
 				<div className="flex shrink-0 flex-col justify-between gap-3 border-b p-4 sm:flex-row sm:items-center sm:p-5">
 					<div className="flex items-center gap-3">
 						<div className="rounded-lg border bg-secondary p-2.5">
-							<BellIcon
+							<IconBellFillDuo18
 								className="size-5 text-accent-foreground"
-								weight="duotone"
 							/>
 						</div>
 						<div className="min-w-0">
@@ -201,7 +202,7 @@ export default function NotificationsSettingsPage() {
 						</div>
 					</div>
 					<Button onClick={handleNew}>
-						<PlusIcon className="mr-2 size-4" />
+						<IconPlusFillDuo18 className="mr-2 size-4" />
 						New Alert
 					</Button>
 				</div>
@@ -234,7 +235,7 @@ export default function NotificationsSettingsPage() {
 						<EmptyState
 							action={{ label: "New Alert", onClick: handleNew }}
 							description="Create alerts with Slack, email, or webhook destinations. Attach them to monitors and anomaly rules from their settings."
-							icon={<BellIcon weight="duotone" />}
+							icon={<IconBellFillDuo18 />}
 							title="No alerts yet"
 							variant="minimal"
 						/>
@@ -251,10 +252,9 @@ export default function NotificationsSettingsPage() {
 									<div className="group flex items-center hover:bg-accent/50">
 										<div className="flex flex-1 items-center gap-4 px-4 py-3 sm:px-6 sm:py-4">
 											<div className="flex size-10 shrink-0 items-center justify-center rounded-lg border bg-secondary">
-												<BellIcon
+												<IconBellFillDuo18
 													className="text-accent-foreground"
 													size={20}
-													weight="duotone"
 												/>
 											</div>
 											<div className="min-w-0 flex-1">
@@ -319,12 +319,12 @@ export default function NotificationsSettingsPage() {
 														size="icon"
 														variant="ghost"
 													>
-														<DotsThreeIcon className="size-5" weight="bold" />
+														<IconDotsVerticalFillDuo18 className="size-5" />
 													</Button>
 												</DropdownMenuTrigger>
 												<DropdownMenuContent align="end" className="w-40">
 													<DropdownMenuItem onClick={() => handleEdit(alarm)}>
-														<PencilIcon className="size-4" weight="duotone" />
+														<IconPencilFillDuo18 className="size-4" />
 														Edit
 													</DropdownMenuItem>
 													<DropdownMenuItem
@@ -332,11 +332,10 @@ export default function NotificationsSettingsPage() {
 														onClick={() => handleTest(alarm)}
 													>
 														{isTesting ? (
-															<CircleNotchIcon className="size-4 animate-spin" />
+															<IconLoader2FillDuo18 className="size-4 animate-spin" />
 														) : (
-															<TestTubeIcon
+															<IconFlaskFillDuo18
 																className="size-4"
-																weight="duotone"
 															/>
 														)}
 														{isTesting ? "Sending…" : "Send test"}
@@ -345,7 +344,7 @@ export default function NotificationsSettingsPage() {
 														className="text-destructive focus:text-destructive"
 														onClick={() => setDeletingAlarm(alarm)}
 													>
-														<TrashIcon className="size-4" weight="duotone" />
+														<IconTrashFillDuo18 className="size-4" />
 														Delete
 													</DropdownMenuItem>
 												</DropdownMenuContent>

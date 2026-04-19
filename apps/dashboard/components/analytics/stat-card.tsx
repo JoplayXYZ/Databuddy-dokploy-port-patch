@@ -1,8 +1,10 @@
 "use client";
 
-import { MinusIcon } from "@phosphor-icons/react";
-import { TrendDownIcon } from "@phosphor-icons/react";
-import { TrendUpIcon } from "@phosphor-icons/react";
+import {
+	IconArrowTrendDownFillDuo18,
+	IconArrowTrendUpFillDuo18,
+	IconMinusFillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import type { ElementType } from "react";
 import {
 	Chart,
@@ -99,16 +101,16 @@ function TrendIndicator({
 				: "text-destructive";
 
 	const Icon = isPositive
-		? TrendUpIcon
+		? IconArrowTrendUpFillDuo18
 		: isNegative
-			? TrendDownIcon
-			: MinusIcon;
+			? IconArrowTrendDownFillDuo18
+			: IconMinusFillDuo18;
 
 	const safeValue = value == null || Number.isNaN(value) ? 0 : value;
 
 	return (
 		<span className={cn("flex items-center gap-1", colorClass, className)}>
-			<Icon className="size-4" weight={isNeutral ? "regular" : "fill"} />
+			<Icon className="size-4" />
 			<span className="font-semibold text-xs">
 				{isPositive ? "+" : ""}
 				{Math.abs(safeValue).toFixed(0)}%
@@ -260,7 +262,7 @@ export function StatCard({
 			<Chart.Footer className="border-t-0">
 				{Icon && (
 					<div className="flex size-7 shrink-0 items-center justify-center rounded bg-accent">
-						<Icon className="size-4 text-muted-foreground" weight="duotone" />
+						<Icon className="size-4 text-muted-foreground" />
 					</div>
 				)}
 				<div className="min-w-0 flex-1">

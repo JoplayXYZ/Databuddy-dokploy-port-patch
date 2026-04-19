@@ -1,6 +1,6 @@
 "use client";
 
-import { CaretDownIcon } from "@phosphor-icons/react";
+import { IconChevronDownFillDuo18 } from "nucleo-ui-fill-duo-18";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 
@@ -24,12 +24,11 @@ export function SectionGroup({
 				onClick={() => setCollapsed((prev) => !prev)}
 				type="button"
 			>
-				<CaretDownIcon
+				<IconChevronDownFillDuo18
 					className={cn(
 						"size-3.5 shrink-0 text-muted-foreground transition-transform",
 						collapsed && "-rotate-90"
 					)}
-					weight="fill"
 				/>
 				<h3 className="font-semibold text-sm">{name}</h3>
 			</button>

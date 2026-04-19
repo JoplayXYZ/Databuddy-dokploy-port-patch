@@ -5,9 +5,10 @@ import {
 	getCountryName,
 } from "@databuddy/shared/country-codes";
 import type { ProfileData } from "@databuddy/shared/types/analytics";
-import { GlobeIcon } from "@phosphor-icons/react";
-import { UsersIcon } from "@phosphor-icons/react";
-import { UsersThreeIcon } from "@phosphor-icons/react";
+import {
+	IconGlobeFillDuo18,
+	IconUsersFillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import {
 	type ColumnDef,
 	flexRender,
@@ -214,7 +215,7 @@ export default function UsersPage() {
 					return (
 						<div className="flex items-center gap-2">
 							{isUnknown ? (
-								<GlobeIcon className="size-4 shrink-0 text-muted-foreground" />
+								<IconGlobeFillDuo18 className="size-4 shrink-0 text-muted-foreground" />
 							) : (
 								<CountryFlag country={countryCode} size="sm" />
 							)}
@@ -335,7 +336,7 @@ export default function UsersPage() {
 			<div className="flex h-full flex-col">
 				<PageHeader
 					description="Visitor profiles and activity"
-					icon={<UsersThreeIcon />}
+					icon={<IconUsersFillDuo18 />}
 					title="Users"
 				/>
 
@@ -372,12 +373,12 @@ export default function UsersPage() {
 			<div className="flex h-full flex-col">
 				<PageHeader
 					description="Visitor profiles and activity"
-					icon={<UsersThreeIcon />}
+					icon={<IconUsersFillDuo18 />}
 					title="Users"
 				/>
 
 				<div className="flex min-h-0 flex-1 flex-col items-center justify-center py-24 text-center text-muted-foreground">
-					<UsersIcon className="mb-4 size-12 opacity-50" />
+					<IconUsersFillDuo18 className="mb-4 size-12 opacity-50" />
 					<p className="mb-2 font-medium text-lg">Failed to load users</p>
 					<p className="text-sm">
 						{error?.message || "There was an error loading the users"}
@@ -392,13 +393,13 @@ export default function UsersPage() {
 			<div className="flex h-full flex-col">
 				<PageHeader
 					description="Visitor profiles and activity"
-					icon={<UsersThreeIcon />}
+					icon={<IconUsersFillDuo18 />}
 					title="Users"
 				/>
 
 				<EmptyState
 					description="Users appear here once visitors arrive."
-					icon={<UsersIcon />}
+					icon={<IconUsersFillDuo18 />}
 					title="No users yet"
 					variant="minimal"
 				/>
@@ -411,7 +412,7 @@ export default function UsersPage() {
 			<PageHeader
 				count={allUsers.length}
 				description="View detailed visitor profiles and activity"
-				icon={<UsersThreeIcon />}
+				icon={<IconUsersFillDuo18 />}
 				title="Users"
 			/>
 

@@ -1,9 +1,9 @@
-import { ClockIcon } from "@phosphor-icons/react/ssr";
-import type { Metadata } from "next";
-import Link from "next/link";
 import { Branding } from "@/components/logo/branding";
 import { Button } from "@/components/ui/button";
+import type { Metadata } from "next";
+import Link from "next/link";
 
+import { IconClockFillDuo18 } from "nucleo-ui-fill-duo-18";
 export const metadata: Metadata = {
 	title: "Link Expired - Databuddy",
 	description: "This link has expired and is no longer available.",
@@ -24,9 +24,8 @@ export default function LinkExpiredPage() {
 			<main className="flex flex-1 flex-col items-center justify-center px-6">
 				<div className="flex w-full max-w-sm flex-col items-center">
 					<div className="mb-5 flex size-12 items-center justify-center rounded bg-accent">
-						<ClockIcon
+						<IconClockFillDuo18
 							className="size-6 text-muted-foreground"
-							weight="duotone"
 						/>
 					</div>
 

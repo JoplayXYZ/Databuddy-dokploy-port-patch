@@ -1,15 +1,16 @@
 "use client";
 
-import type { Icon } from "@phosphor-icons/react";
-import { CheckIcon } from "@phosphor-icons/react";
-import { CircleNotchIcon } from "@phosphor-icons/react";
-import { EyeIcon } from "@phosphor-icons/react";
-import { MouseMiddleClickIcon } from "@phosphor-icons/react";
-import { PencilSimpleIcon } from "@phosphor-icons/react";
-import { TargetIcon } from "@phosphor-icons/react";
-import { TrashIcon } from "@phosphor-icons/react";
+import {
+	IconCheckFillDuo18,
+	IconEyeFillDuo18,
+	IconLoader2FillDuo18,
+	IconMouse2FillDuo18,
+	IconPencilFillDuo18,
+	IconTargetFillDuo18,
+	IconTrashFillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import { useParams } from "next/navigation";
-import { useCallback, useState } from "react";
+import type {  useCallback, useState, FC, SVGProps } from "react";
 import { toast } from "sonner";
 import { EditGoalDialog } from "@/app/(main)/websites/[id]/goals/_components/edit-goal-dialog";
 import { Badge } from "@/components/ui/badge";
@@ -35,7 +36,7 @@ export interface GoalPreviewProps extends BaseComponentProps {
 
 interface ModeConfig {
 	accent: string;
-	ButtonIcon: Icon;
+	ButtonIcon: FC<SVGProps<SVGSVGElement> & { size?: number | string }>;
 	confirmLabel: string;
 	confirmMessage: string;
 	title: string;
@@ -49,7 +50,7 @@ const MODE_CONFIG: Record<string, ModeConfig> = {
 		confirmMessage: "Yes, create it",
 		accent: "",
 		variant: "default",
-		ButtonIcon: CheckIcon,
+		ButtonIcon: IconCheckFillDuo18,
 	},
 	update: {
 		title: "Update Goal",
@@ -57,7 +58,7 @@ const MODE_CONFIG: Record<string, ModeConfig> = {
 		confirmMessage: "Yes, update it",
 		accent: "border-amber-500/30",
 		variant: "default",
-		ButtonIcon: CheckIcon,
+		ButtonIcon: IconCheckFillDuo18,
 	},
 	delete: {
 		title: "Delete Goal",
@@ -65,7 +66,7 @@ const MODE_CONFIG: Record<string, ModeConfig> = {
 		confirmMessage: "Yes, delete it",
 		accent: "border-destructive/30",
 		variant: "destructive",
-		ButtonIcon: TrashIcon,
+		ButtonIcon: IconTrashFillDuo18,
 	},
 };
 
@@ -135,9 +136,8 @@ export function GoalPreviewRenderer({
 			>
 				<div className="flex items-center gap-2.5 border-b px-3 py-2">
 					<div className="flex size-6 items-center justify-center rounded bg-accent">
-						<TargetIcon
+						<IconTargetFillDuo18
 							className="size-3.5 text-muted-foreground"
-							weight="duotone"
 						/>
 					</div>
 					<p className="font-medium text-sm">{config.title}</p>
@@ -162,14 +162,12 @@ export function GoalPreviewRenderer({
 							<p className="mb-1.5 text-muted-foreground text-xs">Target</p>
 							<div className="flex items-center gap-2 rounded border bg-muted/30 px-2 py-1.5">
 								{goal.type === "EVENT" ? (
-									<MouseMiddleClickIcon
+									<IconMouse2FillDuo18
 										className="size-4 text-muted-foreground"
-										weight="duotone"
 									/>
 								) : (
-									<EyeIcon
+									<IconEyeFillDuo18
 										className="size-4 text-muted-foreground"
-										weight="duotone"
 									/>
 								)}
 								<span className="min-w-0 flex-1 truncate font-mono text-xs">
@@ -192,7 +190,7 @@ export function GoalPreviewRenderer({
 						size="sm"
 						variant="ghost"
 					>
-						<PencilSimpleIcon className="size-3.5" />
+						<IconPencilFillDuo18 className="size-3.5" />
 						Edit
 					</Button>
 					<Button
@@ -202,9 +200,9 @@ export function GoalPreviewRenderer({
 						variant={config.variant}
 					>
 						{isConfirming ? (
-							<CircleNotchIcon className="size-3.5 animate-spin" />
+							<IconLoader2FillDuo18 className="size-3.5 animate-spin" />
 						) : (
-							<config.ButtonIcon className="size-3.5" weight="bold" />
+							<config.ButtonIcon className="size-3.5" />
 						)}
 						{config.confirmLabel}
 					</Button>

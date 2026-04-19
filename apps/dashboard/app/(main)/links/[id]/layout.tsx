@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowClockwiseIcon } from "@phosphor-icons/react";
+import { IconRefreshFillDuo18 } from "nucleo-ui-fill-duo-18";
 import { useQueryClient } from "@tanstack/react-query";
 import clsx from "clsx";
 import { useParams } from "next/navigation";
@@ -227,7 +227,7 @@ export default function LinkStatsLayout({ children }: LinkStatsLayoutProps) {
 							onClick={handleRefresh}
 							variant="outline"
 						>
-							<ArrowClockwiseIcon
+							<IconRefreshFillDuo18
 								aria-hidden="true"
 								className={`size-4 ${isRefreshing ? "animate-spin" : ""}`}
 							/>

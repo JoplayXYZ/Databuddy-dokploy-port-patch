@@ -1,7 +1,7 @@
 "use client";
 
 import { useFlags } from "@databuddy/sdk/react";
-import { CaretDownIcon } from "@phosphor-icons/react";
+import { IconChevronDownFillDuo18 } from "nucleo-ui-fill-duo-18";
 import { usePathname } from "next/navigation";
 import { useMemo } from "react";
 import { Button } from "@/components/ui/button";
@@ -61,14 +61,13 @@ export function MobileCategorySelector({
 							{currentCategory?.icon ? (
 								<currentCategory.icon
 									className="size-4 text-sidebar-foreground"
-									weight="duotone"
 								/>
 							) : null}
 							<span className="text-sidebar-foreground text-sm">
 								{currentCategory?.name || "Select Category"}
 							</span>
 						</div>
-						<CaretDownIcon className="size-4" />
+						<IconChevronDownFillDuo18 className="size-4" />
 					</Button>
 				</DropdownMenuTrigger>
 				<DropdownMenuContent className="z-120 w-full min-w-(--radix-dropdown-menu-trigger-width)">
@@ -91,7 +90,6 @@ export function MobileCategorySelector({
 										"size-4",
 										isActive ? "text-sidebar-ring" : "text-muted-foreground"
 									)}
-									weight={isActive ? "fill" : "duotone"}
 								/>
 								<span>{category.name}</span>
 							</DropdownMenuItem>

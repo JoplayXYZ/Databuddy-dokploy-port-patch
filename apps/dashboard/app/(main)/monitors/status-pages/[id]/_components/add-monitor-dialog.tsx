@@ -1,9 +1,11 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { HeartbeatIcon } from "@phosphor-icons/react";
-import { ListIcon } from "@phosphor-icons/react";
-import { PlusIcon } from "@phosphor-icons/react";
+import {
+	IconBulletListFillDuo18,
+	IconChartActivityFillDuo18,
+	IconPlusFillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -186,7 +188,7 @@ export function AddMonitorDialog({
 						onClick={() => setMode("existing")}
 						type="button"
 					>
-						<ListIcon className="size-4" weight="duotone" />
+						<IconBulletListFillDuo18 className="size-4" />
 						Existing
 					</button>
 					<button
@@ -199,7 +201,7 @@ export function AddMonitorDialog({
 						onClick={() => setMode("create")}
 						type="button"
 					>
-						<PlusIcon className="size-4" />
+						<IconPlusFillDuo18 className="size-4" />
 						Create New
 					</button>
 				</div>
@@ -218,9 +220,8 @@ export function AddMonitorDialog({
 								<SelectContent>
 									{availableSchedules.length === 0 ? (
 										<div className="flex flex-col items-center gap-2 px-4 py-6 text-center">
-											<HeartbeatIcon
+											<IconChartActivityFillDuo18
 												className="size-8 text-muted-foreground/40"
-												weight="duotone"
 											/>
 											<p className="text-muted-foreground text-sm">
 												No available monitors.

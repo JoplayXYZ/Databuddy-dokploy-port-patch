@@ -1,6 +1,8 @@
-import { ArrowDownIcon } from "@phosphor-icons/react";
-import { ArrowUpIcon } from "@phosphor-icons/react";
-import { DatabaseIcon } from "@phosphor-icons/react";
+import {
+	IconArrowDownFillDuo18,
+	IconArrowUpFillDuo18,
+	IconDatabaseFillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import { flexRender, type Table } from "@tanstack/react-table";
 import type React from "react";
 import { Fragment, memo, useCallback, useState } from "react";
@@ -246,7 +248,7 @@ function TableContentInner<TData extends { name: string | number }>({
 			<div style={{ height: minHeight }}>
 				<TableEmptyState
 					description="Data will appear here when available and ready to display."
-					icon={<DatabaseIcon className="size-6 text-accent" />}
+					icon={<IconDatabaseFillDuo18 className="size-6 text-accent" />}
 					title={emptyMessage}
 				/>
 			</div>
@@ -371,9 +373,9 @@ function TableContentInner<TData extends { name: string | number }>({
 															type="button"
 														>
 															{expandedRow === row.id ? (
-																<ArrowDownIcon className="h-3.5 w-3.5 text-sidebar-foreground/70" />
+																<IconArrowDownFillDuo18 className="h-3.5 w-3.5 text-sidebar-foreground/70" />
 															) : (
-																<ArrowUpIcon className="h-3.5 w-3.5 text-sidebar-foreground/70" />
+																<IconArrowUpFillDuo18 className="h-3.5 w-3.5 text-sidebar-foreground/70" />
 															)}
 														</button>
 													)}

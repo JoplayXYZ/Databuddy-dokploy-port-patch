@@ -1,7 +1,9 @@
 "use client";
 
-import { ArrowsClockwiseIcon } from "@phosphor-icons/react";
-import { PencilSimpleIcon } from "@phosphor-icons/react";
+import {
+	IconPencilFillDuo18,
+	IconRefresh2FillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import { nanoid } from "nanoid";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -79,7 +81,7 @@ export function OrganizationAvatarEditor({
 						onClick={() => setIsModalOpen(true)}
 						type="button"
 					>
-						<PencilSimpleIcon className="text-accent" size={16} />
+						<IconPencilFillDuo18 className="text-accent" size={16} />
 					</button>
 				</div>
 				<div className="space-y-1">
@@ -119,7 +121,7 @@ export function OrganizationAvatarEditor({
 									type="button"
 									variant="outline"
 								>
-									<ArrowsClockwiseIcon size={16} />
+									<IconRefresh2FillDuo18 size={16} />
 								</Button>
 							</div>
 							<p className="text-muted-foreground text-xs">

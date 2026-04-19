@@ -1,12 +1,14 @@
 "use client";
 
 import type { UsageResponse } from "@databuddy/shared/types/billing";
-import { BugIcon } from "@phosphor-icons/react";
-import { ChartBarIcon } from "@phosphor-icons/react";
-import { LightningIcon } from "@phosphor-icons/react";
-import { LinkIcon } from "@phosphor-icons/react";
-import { SparkleIcon } from "@phosphor-icons/react";
-import { TableIcon } from "@phosphor-icons/react";
+import {
+	IconBoltLightningFillDuo18,
+	IconBugFillDuo18,
+	IconChartBarTrendUpFillDuo18,
+	IconLink5FillDuo18,
+	IconSparkleFillDuo18,
+	IconTableFillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import { EmptyState } from "@/components/empty-state";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -16,31 +18,31 @@ const EVENT_TYPE_CONFIG = {
 	event: {
 		name: "Page Views & Events",
 		description: "Standard analytics events and page views",
-		icon: ChartBarIcon,
+		icon: IconChartBarTrendUpFillDuo18,
 		color: "blue",
 	},
 	error: {
 		name: "Error Events",
 		description: "JavaScript errors and exceptions",
-		icon: BugIcon,
+		icon: IconBugFillDuo18,
 		color: "red",
 	},
 	web_vitals: {
 		name: "Web Vitals",
 		description: "Core Web Vitals performance metrics",
-		icon: LightningIcon,
+		icon: IconBoltLightningFillDuo18,
 		color: "green",
 	},
 	custom_event: {
 		name: "Custom Events",
 		description: "Custom tracking events",
-		icon: SparkleIcon,
+		icon: IconSparkleFillDuo18,
 		color: "purple",
 	},
 	outgoing_link: {
 		name: "Outgoing Links",
 		description: "External link click tracking",
-		icon: LinkIcon,
+		icon: IconLink5FillDuo18,
 		color: "orange",
 	},
 } as const;
@@ -81,7 +83,7 @@ export function UsageBreakdownTable({
 	if (!usageData?.eventTypeBreakdown?.length) {
 		return (
 			<EmptyState
-				icon={<TableIcon />}
+				icon={<IconTableFillDuo18 />}
 				title="No Data Available"
 				variant="minimal"
 			/>
@@ -134,7 +136,6 @@ export function UsageBreakdownTable({
 							<div className="flex size-10 shrink-0 items-center justify-center rounded border border-accent-foreground/10 bg-secondary">
 								<IconComponent
 									className="size-5 text-accent-foreground"
-									weight="duotone"
 								/>
 							</div>
 							<div className="min-w-0 flex-1">
@@ -170,9 +171,8 @@ export function UsageBreakdownTable({
 
 			{sortedBreakdown.length === 0 && (
 				<div className="py-12 text-center">
-					<TableIcon
+					<IconTableFillDuo18
 						className="mx-auto mb-4 size-12 text-muted-foreground"
-						weight="duotone"
 					/>
 					<h3 className="font-semibold text-foreground text-lg">
 						No Event Data

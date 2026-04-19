@@ -4,20 +4,21 @@ import { filterOptions } from "@databuddy/shared/lists/filters";
 import type { DateRange } from "@databuddy/shared/types/analytics";
 import type { CustomQueryConfig } from "@databuddy/shared/types/custom-query";
 import type { QueryOutputField } from "@databuddy/shared/types/query";
-import { CalendarDotsIcon } from "@phosphor-icons/react";
-import { CaretDownIcon } from "@phosphor-icons/react";
-import { ChartBarIcon } from "@phosphor-icons/react";
-import { ChartLineUpIcon } from "@phosphor-icons/react";
-import { CheckIcon } from "@phosphor-icons/react";
-import { CodeIcon } from "@phosphor-icons/react";
-import { FunnelIcon } from "@phosphor-icons/react";
-import { GaugeIcon } from "@phosphor-icons/react";
-import { PencilSimpleIcon } from "@phosphor-icons/react";
-import { PlusIcon } from "@phosphor-icons/react";
-import { SpinnerGapIcon } from "@phosphor-icons/react";
-import { SquaresFourIcon } from "@phosphor-icons/react";
-import { TextTIcon } from "@phosphor-icons/react";
-import { TrashIcon } from "@phosphor-icons/react";
+import {
+	IconCalendarEventFillDuo18,
+	IconChartBarTrendUpFillDuo18,
+	IconCheckFillDuo18,
+	IconChevronDownFillDuo18,
+	IconCodeFillDuo18,
+	IconFilterFillDuo18,
+	IconGauge2FillDuo18,
+	IconGrid2FillDuo18,
+	IconLanguageFillDuo18,
+	IconLoader2FillDuo18,
+	IconPencilFillDuo18,
+	IconPlusFillDuo18,
+	IconTrashFillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { StatCardDisplayMode } from "@/components/analytics/stat-card";
 import { StatCard } from "@/components/analytics/stat-card";
@@ -409,14 +410,12 @@ export function CardSheet({
 					<div className="flex items-center gap-4">
 						<div className="flex size-11 items-center justify-center rounded border bg-secondary">
 							{isEditMode ? (
-								<PencilSimpleIcon
+								<IconPencilFillDuo18
 									className="size-5 text-primary"
-									weight="duotone"
 								/>
 							) : (
-								<SquaresFourIcon
+								<IconGrid2FillDuo18
 									className="size-5 text-primary"
-									weight="duotone"
 								/>
 							)}
 						</div>
@@ -464,7 +463,7 @@ export function CardSheet({
 								type="button"
 								variant="outline"
 							>
-								<GaugeIcon className="size-4" weight="duotone" />
+								<IconGauge2FillDuo18 className="size-4" />
 								Predefined
 							</Button>
 							<Button
@@ -476,7 +475,7 @@ export function CardSheet({
 								type="button"
 								variant="outline"
 							>
-								<CodeIcon className="size-4" weight="duotone" />
+								<IconCodeFillDuo18 className="size-4" />
 								Custom Query
 							</Button>
 						</div>
@@ -510,7 +509,6 @@ export function CardSheet({
 															return (
 																<Icon
 																	className="size-4 shrink-0 text-muted-foreground"
-																	weight="duotone"
 																/>
 															);
 														})()}
@@ -523,7 +521,7 @@ export function CardSheet({
 														Select a data source…
 													</span>
 												)}
-												<CaretDownIcon className="ml-2 size-4 shrink-0 opacity-50" />
+												<IconChevronDownFillDuo18 className="ml-2 size-4 shrink-0 opacity-50" />
 											</Button>
 										</PopoverTrigger>
 										<PopoverContent
@@ -544,9 +542,8 @@ export function CardSheet({
 														<CommandGroup
 															heading={
 																<div className="flex items-center gap-1.5">
-																	<GaugeIcon
+																	<IconGauge2FillDuo18
 																		className="size-3.5 text-muted-foreground"
-																		weight="duotone"
 																	/>
 																	Metrics
 																	<span className="ml-auto text-[10px] text-muted-foreground/60">
@@ -563,7 +560,7 @@ export function CardSheet({
 																		onSelect={() => handleQueryTypeSelect(type)}
 																		value={`${type.title} ${type.category}`}
 																	>
-																		<CheckIcon
+																		<IconCheckFillDuo18
 																			className={cn(
 																				"mr-2 size-4 shrink-0",
 																				selectedQueryType?.key === type.key
@@ -573,7 +570,6 @@ export function CardSheet({
 																		/>
 																		<Icon
 																			className="mr-2 size-4 shrink-0 text-muted-foreground"
-																			weight="duotone"
 																		/>
 																		<div className="min-w-0 flex-1">
 																			<p className="truncate font-medium text-sm">
@@ -593,9 +589,8 @@ export function CardSheet({
 														<CommandGroup
 															heading={
 																<div className="flex items-center gap-1.5">
-																	<ChartLineUpIcon
+																	<IconChartBarTrendUpFillDuo18
 																		className="size-3.5 text-muted-foreground"
-																		weight="duotone"
 																	/>
 																	Trends
 																	<span className="ml-auto text-[10px] text-muted-foreground/60">
@@ -612,7 +607,7 @@ export function CardSheet({
 																		onSelect={() => handleQueryTypeSelect(type)}
 																		value={`${type.title} ${type.category}`}
 																	>
-																		<CheckIcon
+																		<IconCheckFillDuo18
 																			className={cn(
 																				"mr-2 size-4 shrink-0",
 																				selectedQueryType?.key === type.key
@@ -622,7 +617,6 @@ export function CardSheet({
 																		/>
 																		<Icon
 																			className="mr-2 size-4 shrink-0 text-muted-foreground"
-																			weight="duotone"
 																		/>
 																		<div className="min-w-0 flex-1">
 																			<p className="truncate font-medium text-sm">
@@ -665,7 +659,7 @@ export function CardSheet({
 														Select a field…
 													</span>
 												)}
-												<CaretDownIcon className="ml-2 size-4 shrink-0 opacity-50" />
+												<IconChevronDownFillDuo18 className="ml-2 size-4 shrink-0 opacity-50" />
 											</Button>
 										</PopoverTrigger>
 										<PopoverContent
@@ -685,7 +679,7 @@ export function CardSheet({
 																onSelect={() => handleFieldSelect(field)}
 																value={field.label || field.name}
 															>
-																<CheckIcon
+																<IconCheckFillDuo18
 																	className={cn(
 																		"mr-2 size-4",
 																		selectedField?.name === field.name
@@ -724,8 +718,8 @@ export function CardSheet({
 									<div className="flex gap-2">
 										{(
 											[
-												{ value: "text", label: "Text", icon: TextTIcon },
-												{ value: "chart", label: "Chart", icon: ChartBarIcon },
+												{ value: "text", label: "Text", icon: IconLanguageFillDuo18 },
+												{ value: "chart", label: "Chart", icon: IconChartBarTrendUpFillDuo18 },
 											] as const
 										).map((mode) => {
 											const isSelected = displayMode === mode.value;
@@ -749,7 +743,6 @@ export function CardSheet({
 																? "text-primary"
 																: "text-muted-foreground"
 														)}
-														weight="duotone"
 													/>
 													<span className="font-medium text-sm">
 														{mode.label}
@@ -813,7 +806,7 @@ export function CardSheet({
 
 							<div className="space-y-2">
 								<Label className="flex items-center gap-1.5 text-muted-foreground">
-									<CalendarDotsIcon className="size-3.5" weight="duotone" />
+									<IconCalendarEventFillDuo18 className="size-3.5" />
 									Date Range
 								</Label>
 								<Popover
@@ -834,7 +827,7 @@ export function CardSheet({
 											>
 												{getPresetLabel(dateRangePreset)}
 											</span>
-											<CaretDownIcon className="ml-2 size-4 shrink-0 opacity-50" />
+											<IconChevronDownFillDuo18 className="ml-2 size-4 shrink-0 opacity-50" />
 										</Button>
 									</PopoverTrigger>
 									<PopoverContent
@@ -854,7 +847,7 @@ export function CardSheet({
 															}}
 															value={preset.label}
 														>
-															<CheckIcon
+															<IconCheckFillDuo18
 																className={cn(
 																	"mr-2 size-4",
 																	dateRangePreset === preset.value
@@ -874,7 +867,7 @@ export function CardSheet({
 
 							<div className="space-y-2">
 								<Label className="flex items-center gap-1.5 text-muted-foreground">
-									<FunnelIcon className="size-3.5" weight="duotone" />
+									<IconFilterFillDuo18 className="size-3.5" />
 									Filters
 								</Label>
 
@@ -945,7 +938,7 @@ export function CardSheet({
 													size="icon"
 													variant="ghost"
 												>
-													<TrashIcon size={14} />
+													<IconTrashFillDuo18 size={14} />
 												</Button>
 											</div>
 										))}
@@ -959,7 +952,7 @@ export function CardSheet({
 									type="button"
 									variant="outline"
 								>
-									<PlusIcon className="size-4" />
+									<IconPlusFillDuo18 className="size-4" />
 									Add Filter
 								</Button>
 							</div>
@@ -975,7 +968,7 @@ export function CardSheet({
 							type="button"
 							variant="ghost"
 						>
-							<TrashIcon className="size-4" weight="duotone" />
+							<IconTrashFillDuo18 className="size-4" />
 							Delete
 						</Button>
 					) : (
@@ -993,7 +986,7 @@ export function CardSheet({
 						>
 							{isSubmitting ? (
 								<>
-									<SpinnerGapIcon className="animate-spin" size={16} />
+									<IconLoader2FillDuo18 className="animate-spin" size={16} />
 									{isEditMode ? "Saving…" : "Adding…"}
 								</>
 							) : isEditMode ? (

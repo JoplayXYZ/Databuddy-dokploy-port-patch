@@ -3,10 +3,11 @@
 import { track } from "@databuddy/sdk";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
-	EnvelopeSimpleIcon,
-	SpinnerIcon,
-	UsersIcon,
-} from "@phosphor-icons/react";
+	IconEnvelopeFillDuo18,
+	IconLoader2FillDuo18,
+	IconUsersFillDuo18,
+} from "nucleo-ui-fill-duo-18";
+t";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -90,7 +91,7 @@ export function StepInviteTeam() {
 		<div className="space-y-6">
 			<div className="flex items-center gap-3">
 				<div className="flex size-10 items-center justify-center rounded bg-primary/10">
-					<UsersIcon className="size-5 text-primary" weight="duotone" />
+					<IconUsersFillDuo18 className="size-5 text-primary" />
 				</div>
 				<div>
 					<h2 className="text-balance font-semibold text-lg">
@@ -148,7 +149,7 @@ export function StepInviteTeam() {
 						type="submit"
 					>
 						{isInviting ? (
-							<SpinnerIcon className="size-4 animate-spin" />
+							<IconLoader2FillDuo18 className="size-4 animate-spin" />
 						) : (
 							"Invite"
 						)}
@@ -168,7 +169,7 @@ export function StepInviteTeam() {
 								key={invite.email}
 								variant="secondary"
 							>
-								<EnvelopeSimpleIcon className="size-3" weight="duotone" />
+								<IconEnvelopeFillDuo18 className="size-3" />
 								<span className="text-xs">{invite.email}</span>
 							</Badge>
 						))}

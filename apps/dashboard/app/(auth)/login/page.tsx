@@ -1,12 +1,13 @@
 "use client";
 
 import { authClient } from "@databuddy/auth/client";
-import { EyeIcon } from "@phosphor-icons/react";
-import { EyeSlashIcon } from "@phosphor-icons/react";
-import { GithubLogoIcon } from "@phosphor-icons/react";
-import { GoogleLogoIcon } from "@phosphor-icons/react";
-import { SparkleIcon } from "@phosphor-icons/react";
-import { SpinnerIcon } from "@phosphor-icons/react";
+import {
+	IconEyeFillDuo18,
+	IconEyeSlashFillDuo18,
+	IconLoader2FillDuo18,
+	IconSparkleFillDuo18,
+} from "nucleo-ui-fill-duo-18";
+import { IconGithubLogo as IconGithubLogo, IconGoogleLogo as IconGoogleLogo } from "@/components/icons/brand-icons";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { parseAsString, useQueryState } from "nuqs";
@@ -105,7 +106,7 @@ function LoginPage() {
 								type="button"
 								variant="outline"
 							>
-								<GithubLogoIcon className="size-4" />
+								<IconGithubLogo className="size-4" />
 								Sign in with GitHub
 								{lastUsed === "github" && (
 									<Badge
@@ -124,7 +125,7 @@ function LoginPage() {
 								type="button"
 								variant="outline"
 							>
-								<GoogleLogoIcon className="size-4" />
+								<IconGoogleLogo className="size-4" />
 								Sign in with Google
 								{lastUsed === "google" && (
 									<Badge
@@ -145,7 +146,7 @@ function LoginPage() {
 									variant="outline"
 								>
 									<Link href="/login/magic">
-										<SparkleIcon className="size-4" />
+										<IconSparkleFillDuo18 className="size-4" />
 										Sign in with Magic Link
 									</Link>
 								</Button>
@@ -221,9 +222,9 @@ function LoginPage() {
 										variant="ghost"
 									>
 										{showPassword ? (
-											<EyeSlashIcon className="size-4" />
+											<IconEyeSlashFillDuo18 className="size-4" />
 										) : (
-											<EyeIcon className="size-4" />
+											<IconEyeFillDuo18 className="size-4" />
 										)}
 									</Button>
 								</div>
@@ -231,7 +232,7 @@ function LoginPage() {
 							<Button className="w-full" disabled={isLoading} type="submit">
 								{isLoading ? (
 									<>
-										<SpinnerIcon className="mr-2 size-4 animate-spin" />
+										<IconLoader2FillDuo18 className="mr-2 size-4 animate-spin" />
 										Signing in...
 									</>
 								) : (
@@ -270,7 +271,7 @@ export default function Page() {
 				<div className="flex h-dvh items-center justify-center bg-background">
 					<div className="relative">
 						<div className="absolute inset-0 animate-ping rounded-full bg-primary/20 blur-xl" />
-						<SpinnerIcon className="relative size-8 animate-spin text-primary" />
+						<IconLoader2FillDuo18 className="relative size-8 animate-spin text-primary" />
 					</div>
 				</div>
 			}

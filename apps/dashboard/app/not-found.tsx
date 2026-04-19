@@ -1,9 +1,11 @@
 "use client";
 
-import { ArrowLeftIcon } from "@phosphor-icons/react";
-import { CommandIcon } from "@phosphor-icons/react";
-import { HouseIcon } from "@phosphor-icons/react";
-import { MagnifyingGlassIcon } from "@phosphor-icons/react";
+import {
+	IconArrowLeftFillDuo18,
+	IconCommandFillDuo18,
+	IconHouse4FillDuo18,
+	IconMagnifierFillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import { Command as CommandPrimitive } from "cmdk";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -32,7 +34,7 @@ const ALL_NAVIGATION: NavigationSection[] = [
 ];
 
 interface SearchItem {
-	icon: typeof MagnifyingGlassIcon;
+	icon: typeof IconMagnifierFillDuo18;
 	name: string;
 	path: string;
 }
@@ -44,7 +46,7 @@ function toSearchItem(item: NavigationItem): SearchItem | null {
 	return {
 		name: item.name,
 		path: item.href,
-		icon: item.icon || MagnifyingGlassIcon,
+		icon: item.icon || IconMagnifierFillDuo18,
 	};
 }
 
@@ -94,9 +96,8 @@ export default function NotFound() {
 					aria-hidden="true"
 					className="flex size-12 items-center justify-center rounded bg-accent"
 				>
-					<MagnifyingGlassIcon
+					<IconMagnifierFillDuo18
 						className="size-6 text-muted-foreground"
-						weight="duotone"
 					/>
 				</div>
 
@@ -114,10 +115,10 @@ export default function NotFound() {
 					onClick={() => setOpen(true)}
 					variant="outline"
 				>
-					<MagnifyingGlassIcon className="mr-2 size-4" weight="duotone" />
+					<IconMagnifierFillDuo18 className="mr-2 size-4" />
 					Search pages, settings...
 					<kbd className="ml-auto hidden items-center gap-1 rounded border bg-background px-1.5 py-0.5 font-mono text-muted-foreground text-xs sm:flex">
-						<CommandIcon className="size-3" weight="bold" />
+						<IconCommandFillDuo18 className="size-3" />
 						<span>K</span>
 					</kbd>
 				</Button>
@@ -129,13 +130,13 @@ export default function NotFound() {
 							onClick={() => router.back()}
 							variant="outline"
 						>
-							<ArrowLeftIcon className="mr-2 size-4" weight="duotone" />
+							<IconArrowLeftFillDuo18 className="mr-2 size-4" />
 							Go Back
 						</Button>
 					)}
 					<Button asChild className="flex-1" variant="default">
 						<Link href="/websites">
-							<HouseIcon className="mr-2 size-4" weight="duotone" />
+							<IconHouse4FillDuo18 className="mr-2 size-4" />
 							Back to Websites
 						</Link>
 					</Button>
@@ -162,9 +163,8 @@ export default function NotFound() {
 					>
 						<div className="dotted-bg flex items-center gap-3 border-b bg-accent px-4 py-3">
 							<div className="flex size-8 shrink-0 items-center justify-center rounded bg-background">
-								<MagnifyingGlassIcon
+								<IconMagnifierFillDuo18
 									className="size-4 text-muted-foreground"
-									weight="duotone"
 								/>
 							</div>
 							<CommandPrimitive.Input
@@ -174,16 +174,15 @@ export default function NotFound() {
 								value={search}
 							/>
 							<kbd className="hidden items-center gap-1 rounded border bg-background px-1.5 py-0.5 font-mono text-muted-foreground text-xs sm:flex">
-								<CommandIcon className="size-3" weight="bold" />
+								<IconCommandFillDuo18 className="size-3" />
 								<span>K</span>
 							</kbd>
 						</div>
 
 						<CommandPrimitive.List className="max-h-80 scroll-py-2 overflow-y-auto p-2">
 							<CommandPrimitive.Empty className="flex flex-col items-center justify-center gap-2 py-12 text-center">
-								<MagnifyingGlassIcon
+								<IconMagnifierFillDuo18
 									className="size-8 text-muted-foreground/50"
-									weight="duotone"
 								/>
 								<div>
 									<p className="font-medium text-muted-foreground text-sm">
@@ -209,7 +208,6 @@ export default function NotFound() {
 										<div className="flex size-7 shrink-0 items-center justify-center rounded bg-accent group-data-[selected=true]:bg-background">
 											<ItemIcon
 												className="size-4 text-muted-foreground"
-												weight="duotone"
 											/>
 										</div>
 										<div className="min-w-0 flex-1">

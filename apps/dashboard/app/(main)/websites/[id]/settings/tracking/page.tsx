@@ -1,6 +1,6 @@
 "use client";
 
-import { CodeIcon } from "@phosphor-icons/react";
+import { IconCodeFillDuo18 } from "nucleo-ui-fill-duo-18";
 import { useParams } from "next/navigation";
 import { PageHeader } from "../../../_components/page-header";
 import { WebsiteTrackingSetupTab } from "../../_components/tabs/tracking-setup-tab";
@@ -13,7 +13,7 @@ export default function TrackingSetupPage() {
 		<div className="flex h-full flex-col">
 			<PageHeader
 				description="Install and configure tracking"
-				icon={<CodeIcon />}
+				icon={<IconCodeFillDuo18 />}
 				title="Tracking Setup"
 			/>
 

@@ -1,6 +1,6 @@
 import { useFlags } from "@databuddy/sdk/react";
 import { FEATURE_METADATA } from "@databuddy/shared/types/features";
-import { CaretDownIcon } from "@phosphor-icons/react";
+import { IconChevronDownFillDuo18 } from "nucleo-ui-fill-duo-18";
 import clsx from "clsx";
 import { memo } from "react";
 import { useBillingContext } from "@/components/providers/billing-provider";
@@ -107,9 +107,9 @@ export const NavigationSection = memo(function NavigationSectionComponent({
 				onClick={() => toggleAccordion(title, true)}
 				type="button"
 			>
-				<Icon className="size-5 shrink-0 text-sidebar-ring" weight="duotone" />
+				<Icon className="size-5 shrink-0 text-sidebar-ring" />
 				<span className="min-w-0 flex-1 truncate text-sm">{title}</span>
-				<CaretDownIcon
+				<IconChevronDownFillDuo18
 					className={clsx(
 						"size-4 shrink-0 text-sidebar-foreground/60 transition-transform duration-200",
 						isExpanded ? "rotate-180" : ""

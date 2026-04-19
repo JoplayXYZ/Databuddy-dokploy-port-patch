@@ -1,23 +1,24 @@
 "use client";
 
-import { DesktopIcon } from "@phosphor-icons/react";
-import { DeviceMobileIcon } from "@phosphor-icons/react";
-import { DeviceTabletIcon } from "@phosphor-icons/react";
-import { GameControllerIcon } from "@phosphor-icons/react";
-import { LaptopIcon } from "@phosphor-icons/react";
-import { QuestionIcon } from "@phosphor-icons/react";
-import { TelevisionIcon } from "@phosphor-icons/react";
-import { DeviceTabletIcon as XrIcon } from "@phosphor-icons/react";
+import {
+	IconCircleQuestionFillDuo18,
+	IconComputerFillDuo18,
+	IconGamepad2FillDuo18,
+	IconLaptopFillDuo18,
+	IconMobile2FillDuo18,
+	IconTabletFillDuo18,
+	IconTvFillDuo18,
+} from "nucleo-ui-fill-duo-18";
 
 const deviceTypeIconMap: Record<string, React.ElementType> = {
-	desktop: DesktopIcon,
-	mobile: DeviceMobileIcon,
-	tablet: DeviceTabletIcon,
-	laptop: LaptopIcon,
-	smarttv: TelevisionIcon,
-	console: GameControllerIcon,
-	xr: XrIcon,
-	embedded: LaptopIcon,
+	desktop: IconComputerFillDuo18,
+	mobile: IconMobile2FillDuo18,
+	tablet: IconTabletFillDuo18,
+	laptop: IconLaptopFillDuo18,
+	smarttv: IconTvFillDuo18,
+	console: IconGamepad2FillDuo18,
+	xr: IconTabletFillDuo18,
+	embedded: IconLaptopFillDuo18,
 };
 
 const deviceTypeColorMap: Record<string, string> = {
@@ -37,7 +38,7 @@ interface DeviceTypeCellProps {
 
 export function DeviceTypeCell({ device_type }: DeviceTypeCellProps) {
 	const key = (device_type ?? "").toLowerCase();
-	const Icon = deviceTypeIconMap[key] || QuestionIcon;
+	const Icon = deviceTypeIconMap[key] || IconCircleQuestionFillDuo18;
 	const colorClass = deviceTypeColorMap[key] || "text-gray-400";
 
 	return (
@@ -46,7 +47,6 @@ export function DeviceTypeCell({ device_type }: DeviceTypeCellProps) {
 				className={colorClass}
 				size={20}
 				style={{ minWidth: 20, minHeight: 20 }}
-				weight="duotone"
 			/>
 			<span className="font-medium">{device_type ?? "Unknown"}</span>
 		</div>

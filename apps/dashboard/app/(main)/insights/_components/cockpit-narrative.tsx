@@ -1,7 +1,7 @@
 "use client";
 
-import { ArrowClockwiseIcon } from "@phosphor-icons/react/dist/ssr/ArrowClockwise";
-import { SparkleIcon } from "@phosphor-icons/react/dist/ssr/Sparkle";
+;
+parkle";
 import { useAtomValue } from "jotai";
 import dayjs from "@/lib/dayjs";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { useOrgNarrative } from "../hooks/use-org-narrative";
 import { insightsRangeAtom } from "../lib/time-range";
 
+import { IconRefreshFillDuo18, IconSparkleFillDuo18 } from "nucleo-ui-fill-duo-18";
 export function CockpitNarrative() {
 	const range = useAtomValue(insightsRangeAtom);
 	const { data, isLoading, isError, refetch, isFetching } =
@@ -21,10 +22,9 @@ export function CockpitNarrative() {
 		>
 			<div className="flex items-center justify-between gap-3 border-b px-4 py-3">
 				<div className="flex items-center gap-2">
-					<SparkleIcon
+					<IconSparkleFillDuo18
 						aria-hidden
 						className="size-4 text-primary"
-						weight="duotone"
 					/>
 					<h3 className="font-semibold text-foreground text-sm">
 						This {rangeLabel(range)}
@@ -58,7 +58,7 @@ export function CockpitNarrative() {
 							onClick={() => refetch()}
 							type="button"
 						>
-							<ArrowClockwiseIcon
+							<IconRefreshFillDuo18
 								aria-hidden
 								className={cn("size-3", isFetching && "animate-spin")}
 							/>

@@ -1,6 +1,6 @@
 "use client";
 
-import { ChartLineIcon } from "@phosphor-icons/react";
+import { IconChartLine2FillDuo18 } from "nucleo-ui-fill-duo-18";
 import { useAtom } from "jotai";
 import { useMemo } from "react";
 import { SkeletonChart } from "@/components/charts/skeleton-chart";
@@ -143,7 +143,7 @@ export function RevenueChart({
 				<div className="flex items-center justify-center p-8">
 					<div className="flex flex-col items-center py-12 text-center">
 						<div className="relative flex size-12 items-center justify-center rounded bg-accent">
-							<ChartLineIcon className="size-6" />
+							<IconChartLine2FillDuo18 className="size-6" />
 						</div>
 						<p className="mt-6 font-medium text-foreground text-lg">
 							No data available

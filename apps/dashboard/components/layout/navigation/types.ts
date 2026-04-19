@@ -1,5 +1,5 @@
+import type { FC, SVGProps } from "react";
 import type { GatedFeatureId } from "@databuddy/shared/types/features";
-import type { Icon } from "@phosphor-icons/react";
 
 export interface NavigationItem {
 	alpha?: boolean;
@@ -17,7 +17,7 @@ export interface NavigationItem {
 	hideFromDemo?: boolean;
 	highlight?: boolean;
 	href: string;
-	icon: Icon;
+	icon: FC<SVGProps<SVGSVGElement> & { size?: number | string }>;
 	name: string;
 	production?: boolean;
 	rootLevel?: boolean;
@@ -29,7 +29,7 @@ export interface NavigationItem {
 export interface NavigationSection {
 	/** Feature flag key - if set, section will only show when the flag is enabled */
 	flag?: string;
-	icon: Icon;
+	icon: FC<SVGProps<SVGSVGElement> & { size?: number | string }>;
 	items: NavigationItem[];
 	title: string;
 }
@@ -40,7 +40,7 @@ export interface Category {
 	/** Feature flag key - if set, category will only show when the flag is enabled */
 	flag?: string;
 	hideFromDemo?: boolean;
-	icon: Icon;
+	icon: FC<SVGProps<SVGSVGElement> & { size?: number | string }>;
 	id: string;
 	name: string;
 	production?: boolean;

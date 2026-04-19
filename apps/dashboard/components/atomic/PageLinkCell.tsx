@@ -1,7 +1,9 @@
 "use client";
 
-import { ArrowSquareOutIcon } from "@phosphor-icons/react";
-import { FileTextIcon } from "@phosphor-icons/react";
+import {
+	IconExternalLinkFillDuo18,
+	IconFileContentFillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import type React from "react";
 import { formatDomainLink } from "@/app/(main)/websites/[id]/_components/utils/analytics-helpers";
 import { cn } from "@/lib/utils";
@@ -50,9 +52,8 @@ export const PageLinkCell: React.FC<PageLinkCellProps> = ({
 			rel={isExternal ? "noopener noreferrer" : undefined}
 			target={isExternal ? "_blank" : undefined}
 		>
-			<FileTextIcon
+			<IconFileContentFillDuo18
 				className={cn("shrink-0", iconClassName)}
-				weight="duotone"
 			/>
 			<span
 				className={cn("truncate group-hover:text-primary", textClassName)}
@@ -61,9 +62,8 @@ export const PageLinkCell: React.FC<PageLinkCellProps> = ({
 				{display}
 			</span>
 			{isExternal && (
-				<ArrowSquareOutIcon
+				<IconExternalLinkFillDuo18
 					className="size-3 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100"
-					weight="duotone"
 				/>
 			)}
 		</a>

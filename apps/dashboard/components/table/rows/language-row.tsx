@@ -1,4 +1,4 @@
-import { TranslateIcon } from "@phosphor-icons/react";
+import { IconLanguageFillDuo18 } from "nucleo-ui-fill-duo-18";
 import type { CellContext, ColumnDef } from "@tanstack/react-table";
 import { PercentageBadge } from "@/components/ui/percentage-badge";
 import { formatNumber } from "@/lib/formatters";
@@ -40,7 +40,7 @@ export function createLanguageColumns(
 				}
 				return (
 					<div className="flex items-center gap-2">
-						<TranslateIcon className="size-4 text-primary" />
+						<IconLanguageFillDuo18 className="size-4 text-primary" />
 						<div>
 							<div className="font-medium">{readableName}</div>
 							{code && code !== language && (

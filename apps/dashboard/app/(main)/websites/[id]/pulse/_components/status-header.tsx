@@ -1,10 +1,12 @@
 "use client";
 
-import { CircleIcon } from "@phosphor-icons/react";
-import { PauseIcon } from "@phosphor-icons/react";
-import { PencilIcon } from "@phosphor-icons/react";
-import { PlayIcon } from "@phosphor-icons/react";
-import { TrashIcon } from "@phosphor-icons/react";
+import {
+	IconDotsFillDuo18,
+	IconMediaPauseFillDuo18,
+	IconMediaPlayFillDuo18,
+	IconPencilFillDuo18,
+	IconTrashFillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -152,12 +154,12 @@ export function StatusHeader({
 					>
 						{schedule.isPaused ? (
 							<>
-								<PlayIcon size={14} weight="fill" />
+								<IconMediaPlayFillDuo18 size={14} />
 								Resume
 							</>
 						) : (
 							<>
-								<PauseIcon size={14} weight="fill" />
+								<IconMediaPauseFillDuo18 size={14} />
 								Pause
 							</>
 						)}
@@ -168,13 +170,13 @@ export function StatusHeader({
 						size="sm"
 						variant="outline"
 					>
-						<PencilIcon size={14} weight="duotone" />
+						<IconPencilFillDuo18 size={14} />
 						Configure
 					</Button>
 					<DropdownMenu>
 						<DropdownMenuTrigger asChild>
 							<Button className="size-8" size="icon" variant="ghost">
-								<CircleIcon className="size-4" weight="bold" />
+								<IconDotsFillDuo18 className="size-4" />
 								<span className="sr-only">More options</span>
 							</Button>
 						</DropdownMenuTrigger>
@@ -183,7 +185,7 @@ export function StatusHeader({
 								className="text-destructive focus:text-destructive"
 								onClick={onDeleteAction}
 							>
-								<TrashIcon className="mr-2" size={16} />
+								<IconTrashFillDuo18 className="mr-2" size={16} />
 								Delete Monitor
 							</DropdownMenuItem>
 						</DropdownMenuContent>

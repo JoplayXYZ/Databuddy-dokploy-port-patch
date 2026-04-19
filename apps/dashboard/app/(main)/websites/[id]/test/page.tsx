@@ -1,10 +1,12 @@
 "use client";
 
 import type { DateRange } from "@databuddy/shared/types/analytics";
-import { CalendarDotsIcon } from "@phosphor-icons/react";
-import { FunnelIcon } from "@phosphor-icons/react";
-import { PencilSimpleIcon } from "@phosphor-icons/react";
-import { PlusIcon } from "@phosphor-icons/react";
+import {
+	IconCalendarEventFillDuo18,
+	IconFilterFillDuo18,
+	IconPencilFillDuo18,
+	IconPlusFillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import { useAtomValue } from "jotai";
 import { useParams } from "next/navigation";
 import { useMemo, useState } from "react";
@@ -155,7 +157,7 @@ export default function TestPage() {
 					</p>
 				</div>
 				<Button onClick={handleOpenAddSheet} size="sm" variant="outline">
-					<PlusIcon className="mr-1.5 size-4" />
+					<IconPlusFillDuo18 className="mr-1.5 size-4" />
 					Add Card
 				</Button>
 			</div>
@@ -200,12 +202,12 @@ export default function TestPage() {
 									<div className="absolute top-2 right-2 flex items-center gap-1 opacity-0 transition-opacity group-hover/card:opacity-100">
 										{hasCustomDateRange && (
 											<div className="flex size-6 items-center justify-center rounded bg-primary/10">
-												<CalendarDotsIcon className="size-3 text-primary" />
+												<IconCalendarEventFillDuo18 className="size-3 text-primary" />
 											</div>
 										)}
 										{hasFilters && (
 											<div className="flex size-6 items-center justify-center rounded bg-primary/10">
-												<FunnelIcon className="size-3 text-primary" />
+												<IconFilterFillDuo18 className="size-3 text-primary" />
 											</div>
 										)}
 										<button
@@ -213,7 +215,7 @@ export default function TestPage() {
 											onClick={() => handleEditCard(card)}
 											type="button"
 										>
-											<PencilSimpleIcon className="size-3.5 text-muted-foreground" />
+											<IconPencilFillDuo18 className="size-3.5 text-muted-foreground" />
 										</button>
 									</div>
 								</div>
@@ -227,7 +229,7 @@ export default function TestPage() {
 					onClick={handleOpenAddSheet}
 				>
 					<div className="flex size-10 items-center justify-center rounded-full bg-accent transition-colors group-hover:bg-primary/10">
-						<PlusIcon className="size-5 text-muted-foreground transition-colors group-hover:text-primary" />
+						<IconPlusFillDuo18 className="size-5 text-muted-foreground transition-colors group-hover:text-primary" />
 					</div>
 					<span className="font-medium text-muted-foreground text-sm transition-colors group-hover:text-foreground">
 						Add Card

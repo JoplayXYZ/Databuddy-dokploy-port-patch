@@ -1,10 +1,12 @@
 "use client";
 
-import { CheckCircleIcon } from "@phosphor-icons/react";
-import { TrendDownIcon } from "@phosphor-icons/react";
-import { TrendUpIcon } from "@phosphor-icons/react";
-import { WarningCircleIcon } from "@phosphor-icons/react";
-import { WarningIcon } from "@phosphor-icons/react";
+import {
+	IconAlertWarningFillDuo18,
+	IconArrowTrendDownFillDuo18,
+	IconArrowTrendUpFillDuo18,
+	IconCircleCheckFillDuo18,
+	IconCircleWarningFillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import { memo, useMemo } from "react";
 import { GaugeChart, type GaugeRating } from "@/components/charts/gauge-chart";
 import { Card, CardContent } from "@/components/ui/card";
@@ -221,10 +223,10 @@ export const RESGaugeCard = memo(function RESGaugeCard({
 							)}
 						>
 							{trendIsPositive && (
-								<TrendUpIcon className="size-3" weight="bold" />
+								<IconArrowTrendUpFillDuo18 className="size-3" />
 							)}
 							{trendIsNegative && (
-								<TrendDownIcon className="size-3" weight="bold" />
+								<IconArrowTrendDownFillDuo18 className="size-3" />
 							)}
 							<span>{Math.abs(Math.round(trend?.change ?? 0))} pts</span>
 						</div>
@@ -241,21 +243,18 @@ export const RESGaugeCard = memo(function RESGaugeCard({
 								)}
 							>
 								{res.status === "good" && (
-									<CheckCircleIcon
+									<IconCircleCheckFillDuo18
 										className="size-4 text-success"
-										weight="duotone"
 									/>
 								)}
 								{res.status === "needs-improvement" && (
-									<WarningCircleIcon
+									<IconCircleWarningFillDuo18
 										className="size-4 text-warning"
-										weight="duotone"
 									/>
 								)}
 								{res.status === "poor" && (
-									<WarningIcon
+									<IconAlertWarningFillDuo18
 										className="size-4 text-destructive"
-										weight="duotone"
 									/>
 								)}
 							</div>

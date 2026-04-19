@@ -1,10 +1,12 @@
 "use client";
 
-import { HeartbeatIcon } from "@phosphor-icons/react";
-import { PauseIcon } from "@phosphor-icons/react";
-import { PencilIcon } from "@phosphor-icons/react";
-import { PlayIcon } from "@phosphor-icons/react";
-import { TrashIcon } from "@phosphor-icons/react";
+import {
+	IconChartActivityFillDuo18,
+	IconMediaPauseFillDuo18,
+	IconMediaPlayFillDuo18,
+	IconPencilFillDuo18,
+	IconTrashFillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
 import { useMemo, useState } from "react";
@@ -307,18 +309,18 @@ export default function PulsePage() {
 			>
 				{schedule.isPaused ? (
 					<>
-						<PlayIcon size={16} weight="fill" />
+						<IconMediaPlayFillDuo18 size={16} />
 						Resume
 					</>
 				) : (
 					<>
-						<PauseIcon size={16} weight="fill" />
+						<IconMediaPauseFillDuo18 size={16} />
 						Pause
 					</>
 				)}
 			</Button>
 			<Button onClick={handleEditMonitor} size="sm" variant="outline">
-				<PencilIcon size={16} weight="duotone" />
+				<IconPencilFillDuo18 size={16} />
 				Configure
 			</Button>
 			<Button
@@ -327,7 +329,7 @@ export default function PulsePage() {
 				size="sm"
 				variant="outline"
 			>
-				<TrashIcon size={16} weight="duotone" />
+				<IconTrashFillDuo18 size={16} />
 				Delete
 			</Button>
 		</>
@@ -339,10 +341,9 @@ export default function PulsePage() {
 				additionalActions={headerActions}
 				description="Track uptime and availability"
 				icon={
-					<HeartbeatIcon
+					<IconChartActivityFillDuo18
 						className="size-6 text-accent-foreground"
 						size={16}
-						weight="duotone"
 					/>
 				}
 				isRefreshing={isRefreshing}
@@ -394,7 +395,7 @@ export default function PulsePage() {
 								}}
 								className="h-full py-0"
 								description="Track availability and get alerts when the site goes down."
-								icon={<HeartbeatIcon weight="duotone" />}
+								icon={<IconChartActivityFillDuo18 />}
 								title="No monitor yet"
 								variant="minimal"
 							/>

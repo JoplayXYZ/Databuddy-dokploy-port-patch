@@ -1,13 +1,15 @@
 "use client";
 
-import { ArrowClockwiseIcon } from "@phosphor-icons/react";
-import { ArrowSquareOutIcon } from "@phosphor-icons/react";
-import { BugIcon } from "@phosphor-icons/react";
-import { ClockIcon } from "@phosphor-icons/react";
-import { TargetIcon } from "@phosphor-icons/react";
-import { TrendDownIcon } from "@phosphor-icons/react";
-import { UsersIcon } from "@phosphor-icons/react";
-import { WarningCircleIcon } from "@phosphor-icons/react";
+import {
+	IconArrowTrendDownFillDuo18,
+	IconBugFillDuo18,
+	IconCircleWarningFillDuo18,
+	IconClockFillDuo18,
+	IconExternalLinkFillDuo18,
+	IconRefreshFillDuo18,
+	IconTargetFillDuo18,
+	IconUsersFillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { StatCard } from "@/components/analytics/stat-card";
@@ -53,10 +55,10 @@ function AnalyticsSkeleton() {
 	return (
 		<div className="space-y-6">
 			<div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-				<StatCard icon={UsersIcon} isLoading title="Users" value={0} />
-				<StatCard icon={TargetIcon} isLoading title="Conversion" value={0} />
-				<StatCard icon={TrendDownIcon} isLoading title="Drop-off" value={0} />
-				<StatCard icon={ClockIcon} isLoading title="Avg Time" value={0} />
+				<StatCard icon={IconUsersFillDuo18} isLoading title="Users" value={0} />
+				<StatCard icon={IconTargetFillDuo18} isLoading title="Conversion" value={0} />
+				<StatCard icon={IconArrowTrendDownFillDuo18} isLoading title="Drop-off" value={0} />
+				<StatCard icon={IconClockFillDuo18} isLoading title="Avg Time" value={0} />
 			</div>
 
 			<div className="space-y-3">
@@ -157,9 +159,8 @@ export function FunnelAnalytics({
 				<div className="flex items-center justify-between">
 					<div className="flex items-center gap-3">
 						<div className="flex size-9 items-center justify-center rounded bg-destructive/10">
-							<WarningCircleIcon
+							<IconCircleWarningFillDuo18
 								className="size-5 text-destructive"
-								weight="fill"
 							/>
 						</div>
 						<div>
@@ -177,7 +178,7 @@ export function FunnelAnalytics({
 						size="sm"
 						variant="outline"
 					>
-						<ArrowClockwiseIcon className="size-3.5" weight="fill" />
+						<IconRefreshFillDuo18 className="size-3.5" />
 						Retry
 					</Button>
 				</div>
@@ -200,7 +201,7 @@ export function FunnelAnalytics({
 					chartData={usersChartData}
 					chartStepType={chartStepType}
 					chartType={chartType}
-					icon={UsersIcon}
+					icon={IconUsersFillDuo18}
 					showChart={hasChartData}
 					title="Users"
 					value={displayData.total_users_entered}
@@ -210,7 +211,7 @@ export function FunnelAnalytics({
 					chartStepType={chartStepType}
 					chartType={chartType}
 					formatChartValue={(v) => safePercent(v)}
-					icon={TargetIcon}
+					icon={IconTargetFillDuo18}
 					showChart={hasChartData}
 					title="Conversion"
 					value={safePercent(displayData.overall_conversion_rate)}
@@ -219,7 +220,7 @@ export function FunnelAnalytics({
 					chartData={dropoffChartData}
 					chartStepType={chartStepType}
 					chartType={chartType}
-					icon={TrendDownIcon}
+					icon={IconArrowTrendDownFillDuo18}
 					invertTrend
 					showChart={hasChartData}
 					title="Drop-off"
@@ -232,7 +233,7 @@ export function FunnelAnalytics({
 					formatChartValue={(v) =>
 						v < 60 ? `${Math.round(v)}s` : `${Math.round(v / 60)}m`
 					}
-					icon={ClockIcon}
+					icon={IconClockFillDuo18}
 					showChart={hasChartData}
 					title="Avg Time"
 					value={displayData.avg_completion_time_formatted || "—"}
@@ -242,7 +243,7 @@ export function FunnelAnalytics({
 			{hasErrorCorrelation && (
 				<div className="amber-angled-rectangle-gradient flex items-center gap-3 rounded border border-warning/20 bg-warning/5 p-3">
 					<div className="flex size-8 shrink-0 items-center justify-center rounded bg-warning/10">
-						<BugIcon className="size-4 text-warning" weight="duotone" />
+						<IconBugFillDuo18 className="size-4 text-warning" />
 					</div>
 					<div className="min-w-0 flex-1">
 						<p className="font-medium text-foreground text-sm">
@@ -260,7 +261,7 @@ export function FunnelAnalytics({
 						href={`/websites/${websiteId}/errors`}
 					>
 						View errors
-						<ArrowSquareOutIcon className="size-3" />
+						<IconExternalLinkFillDuo18 className="size-3" />
 					</Link>
 				</div>
 			)}

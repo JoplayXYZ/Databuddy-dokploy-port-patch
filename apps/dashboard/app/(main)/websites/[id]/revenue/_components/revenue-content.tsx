@@ -1,23 +1,25 @@
 "use client";
 
-import { ArrowClockwiseIcon } from "@phosphor-icons/react";
-import { ArrowSquareOutIcon } from "@phosphor-icons/react";
-import { ArrowsCounterClockwiseIcon } from "@phosphor-icons/react";
-import { CaretDownIcon } from "@phosphor-icons/react";
-import { CheckIcon } from "@phosphor-icons/react";
-import { CheckCircleIcon } from "@phosphor-icons/react";
-import { ClipboardIcon } from "@phosphor-icons/react";
-import { CreditCardIcon } from "@phosphor-icons/react";
-import { CurrencyDollarIcon } from "@phosphor-icons/react";
-import { EyeIcon } from "@phosphor-icons/react";
-import { EyeSlashIcon } from "@phosphor-icons/react";
-import { GearIcon } from "@phosphor-icons/react";
-import { LinkIcon } from "@phosphor-icons/react";
-import { ReceiptIcon } from "@phosphor-icons/react";
-import { SpinnerIcon } from "@phosphor-icons/react";
-import { StripeLogoIcon } from "@phosphor-icons/react";
-import { TrendUpIcon } from "@phosphor-icons/react";
-import { UsersIcon } from "@phosphor-icons/react";
+import {
+	IconArrowTrendUpFillDuo18,
+	IconCheckFillDuo18,
+	IconChevronDownFillDuo18,
+	IconCircleCheckFillDuo18,
+	IconClipboardContentFillDuo18,
+	IconCoinsFillDuo18,
+	IconCreditCardFillDuo18,
+	IconExternalLinkFillDuo18,
+	IconEyeFillDuo18,
+	IconEyeSlashFillDuo18,
+	IconGearFillDuo18,
+	IconLink5FillDuo18,
+	IconLoader2FillDuo18,
+	IconReceiptFillDuo18,
+	IconRefresh2FillDuo18,
+	IconRefreshFillDuo18,
+	IconUsersFillDuo18,
+} from "nucleo-ui-fill-duo-18";
+import { IconStripeLogo as IconStripeLogo } from "@/components/icons/brand-icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAtom } from "jotai";
 import { AnimatePresence, motion } from "motion/react";
@@ -160,16 +162,15 @@ function CollapsibleSection({
 					type="button"
 				>
 					<div className="flex items-center gap-2.5">
-						<Icon size={16} weight="duotone" />
+						<Icon size={16} />
 						<span className="font-medium text-sm">{title}</span>
 						{badge}
 					</div>
-					<CaretDownIcon
+					<IconChevronDownFillDuo18
 						className={cn(
 							"size-4 text-muted-foreground transition-transform duration-200",
 							isExpanded && "rotate-180"
 						)}
-						weight="fill"
 					/>
 				</button>
 			</div>
@@ -293,9 +294,8 @@ function RevenueSettingsSheet({
 				<SheetHeader>
 					<div className="flex items-center gap-3">
 						<div className="flex size-10 items-center justify-center rounded border bg-secondary">
-							<CurrencyDollarIcon
+							<IconCoinsFillDuo18
 								className="size-5 text-primary"
-								weight="duotone"
 							/>
 						</div>
 						<div>
@@ -310,20 +310,19 @@ function RevenueSettingsSheet({
 				<SheetBody>
 					{isLoading ? (
 						<div className="flex items-center justify-center py-12">
-							<SpinnerIcon className="size-6 animate-spin text-muted-foreground" />
+							<IconLoader2FillDuo18 className="size-6 animate-spin text-muted-foreground" />
 						</div>
 					) : (
 						<div className="space-y-1">
 							<CollapsibleSection
 								badge={
 									webhookHash ? (
-										<CheckCircleIcon
+										<IconCircleCheckFillDuo18
 											className="size-4 text-success"
-											weight="duotone"
 										/>
 									) : undefined
 								}
-								icon={LinkIcon}
+								icon={IconLink5FillDuo18}
 								isExpanded={expandedSection === "webhooks"}
 								onToggleAction={() => toggleSection("webhooks")}
 								title="Webhook URLs"
@@ -342,7 +341,7 @@ function RevenueSettingsSheet({
 													target="_blank"
 												>
 													Open dashboard
-													<ArrowSquareOutIcon className="size-3" />
+													<IconExternalLinkFillDuo18 className="size-3" />
 												</a>
 											</div>
 											<div className="flex items-center gap-2">
@@ -357,11 +356,10 @@ function RevenueSettingsSheet({
 													variant="ghost"
 												>
 													{copiedUrl === "stripe" ? (
-														<CheckIcon className="size-4 text-success" />
+														<IconCheckFillDuo18 className="size-4 text-success" />
 													) : (
-														<ClipboardIcon
+														<IconClipboardContentFillDuo18
 															className="size-4"
-															weight="duotone"
 														/>
 													)}
 												</Button>
@@ -380,7 +378,7 @@ function RevenueSettingsSheet({
 													target="_blank"
 												>
 													Open dashboard
-													<ArrowSquareOutIcon className="size-3" />
+													<IconExternalLinkFillDuo18 className="size-3" />
 												</a>
 											</div>
 											<div className="flex items-center gap-2">
@@ -395,11 +393,10 @@ function RevenueSettingsSheet({
 													variant="ghost"
 												>
 													{copiedUrl === "paddle" ? (
-														<CheckIcon className="size-4 text-success" />
+														<IconCheckFillDuo18 className="size-4 text-success" />
 													) : (
-														<ClipboardIcon
+														<IconClipboardContentFillDuo18
 															className="size-4"
-															weight="duotone"
 														/>
 													)}
 												</Button>
@@ -413,9 +410,9 @@ function RevenueSettingsSheet({
 											type="button"
 										>
 											{regenerateMutation.isPending ? (
-												<SpinnerIcon className="size-3 animate-spin" />
+												<IconLoader2FillDuo18 className="size-3 animate-spin" />
 											) : (
-												<ArrowClockwiseIcon className="size-3" />
+												<IconRefreshFillDuo18 className="size-3" />
 											)}
 											Regenerate URLs
 										</button>
@@ -433,7 +430,7 @@ function RevenueSettingsSheet({
 											variant="outline"
 										>
 											{createWebhookMutation.isPending ? (
-												<SpinnerIcon className="mr-2 size-4 animate-spin" />
+												<IconLoader2FillDuo18 className="mr-2 size-4 animate-spin" />
 											) : null}
 											Generate Webhook URLs
 										</Button>
@@ -444,13 +441,12 @@ function RevenueSettingsSheet({
 							<CollapsibleSection
 								badge={
 									config?.stripeConfigured ? (
-										<CheckCircleIcon
+										<IconCircleCheckFillDuo18
 											className="size-4 text-success"
-											weight="duotone"
 										/>
 									) : undefined
 								}
-								icon={StripeLogoIcon}
+								icon={IconStripeLogo}
 								isExpanded={expandedSection === "stripe"}
 								onToggleAction={() => toggleSection("stripe")}
 								title="Stripe"
@@ -476,9 +472,9 @@ function RevenueSettingsSheet({
 												variant="ghost"
 											>
 												{showStripeSecret ? (
-													<EyeSlashIcon className="size-4" weight="duotone" />
+													<IconEyeSlashFillDuo18 className="size-4" />
 												) : (
-													<EyeIcon className="size-4" weight="duotone" />
+													<IconEyeFillDuo18 className="size-4" />
 												)}
 											</Button>
 										</div>
@@ -521,13 +517,12 @@ function RevenueSettingsSheet({
 							<CollapsibleSection
 								badge={
 									config?.paddleConfigured ? (
-										<CheckCircleIcon
+										<IconCircleCheckFillDuo18
 											className="size-4 text-success"
-											weight="duotone"
 										/>
 									) : undefined
 								}
-								icon={CurrencyDollarIcon}
+								icon={IconCoinsFillDuo18}
 								isExpanded={expandedSection === "paddle"}
 								onToggleAction={() => toggleSection("paddle")}
 								title="Paddle"
@@ -555,9 +550,9 @@ function RevenueSettingsSheet({
 												variant="ghost"
 											>
 												{showPaddleSecret ? (
-													<EyeSlashIcon className="size-4" weight="duotone" />
+													<IconEyeSlashFillDuo18 className="size-4" />
 												) : (
-													<EyeIcon className="size-4" weight="duotone" />
+													<IconEyeFillDuo18 className="size-4" />
 												)}
 											</Button>
 										</div>
@@ -617,7 +612,7 @@ function RevenueSettingsSheet({
 						onClick={handleSave}
 					>
 						{upsertMutation.isPending ? (
-							<SpinnerIcon className="size-4 animate-spin" />
+							<IconLoader2FillDuo18 className="size-4 animate-spin" />
 						) : (
 							"Save"
 						)}
@@ -721,13 +716,13 @@ export function RevenueContent({ websiteId }: RevenueContentProps) {
 			<WebsitePageHeader
 				additionalActions={
 					<Button onClick={() => setSettingsOpen(true)} variant="outline">
-						<GearIcon className="mr-2 size-4" weight="duotone" />
+						<IconGearFillDuo18 className="mr-2 size-4" />
 						Configure
 					</Button>
 				}
 				description="Track revenue from Stripe and Paddle"
 				docsUrl="https://databuddy.cc/docs/revenue"
-				icon={<CurrencyDollarIcon />}
+				icon={<IconCoinsFillDuo18 />}
 				isLoading={isLoading}
 				subtitle={getSubtitle()}
 				title="Revenue"
@@ -739,7 +734,7 @@ export function RevenueContent({ websiteId }: RevenueContentProps) {
 					<div className="grid grid-cols-2 gap-3 md:grid-cols-5">
 						<StatCard
 							displayMode="text"
-							icon={ReceiptIcon}
+							icon={IconReceiptFillDuo18}
 							id="transactions"
 							isLoading={isLoading}
 							title="Transactions"
@@ -747,7 +742,7 @@ export function RevenueContent({ websiteId }: RevenueContentProps) {
 						/>
 						<StatCard
 							displayMode="text"
-							icon={CreditCardIcon}
+							icon={IconCreditCardFillDuo18}
 							id="avg-transaction"
 							isLoading={isLoading}
 							title="Avg Transaction"
@@ -760,7 +755,7 @@ export function RevenueContent({ websiteId }: RevenueContentProps) {
 									: undefined
 							}
 							displayMode="text"
-							icon={ArrowsCounterClockwiseIcon}
+							icon={IconRefresh2FillDuo18}
 							id="refunds"
 							isLoading={isLoading}
 							title="Refunds"
@@ -768,7 +763,7 @@ export function RevenueContent({ websiteId }: RevenueContentProps) {
 						/>
 						<StatCard
 							displayMode="text"
-							icon={UsersIcon}
+							icon={IconUsersFillDuo18}
 							id="unique-customers"
 							isLoading={isLoading}
 							title="Customers"
@@ -781,7 +776,7 @@ export function RevenueContent({ websiteId }: RevenueContentProps) {
 									: undefined
 							}
 							displayMode="text"
-							icon={TrendUpIcon}
+							icon={IconArrowTrendUpFillDuo18}
 							id="attribution-rate"
 							isLoading={isLoading}
 							title="Attribution Rate"
@@ -831,7 +826,7 @@ export function RevenueContent({ websiteId }: RevenueContentProps) {
 							? "Revenue appears here once webhooks process transactions."
 							: "Connect Stripe or Paddle to track revenue."
 					}
-					icon={<CurrencyDollarIcon />}
+					icon={<IconCoinsFillDuo18 />}
 					showPlusBadge={false}
 					title={
 						isConfigured ? "No revenue data yet" : "Set up revenue tracking"

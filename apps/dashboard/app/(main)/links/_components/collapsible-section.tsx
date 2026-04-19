@@ -1,4 +1,4 @@
-import { CaretDownIcon } from "@phosphor-icons/react";
+import { IconChevronDownFillDuo18 } from "nucleo-ui-fill-duo-18";
 import { cn } from "@/lib/utils";
 
 interface CollapsibleSectionProps {
@@ -31,7 +31,7 @@ export function CollapsibleSection({
 					type="button"
 				>
 					<div className="flex items-center gap-2.5">
-						<Icon aria-hidden="true" size={16} weight="duotone" />
+						<Icon aria-hidden="true" size={16} />
 						<span className="font-medium text-sm">{title}</span>
 						{showBadge && (
 							<span className="flex size-5 items-center justify-center rounded-full bg-primary font-medium text-primary-foreground text-xs">
@@ -44,13 +44,12 @@ export function CollapsibleSection({
 							</span>
 						)}
 					</div>
-					<CaretDownIcon
+					<IconChevronDownFillDuo18
 						aria-hidden="true"
 						className={cn(
 							"size-4 text-muted-foreground transition-transform duration-200",
 							isExpanded && "rotate-180"
 						)}
-						weight="fill"
 					/>
 				</button>
 			</div>

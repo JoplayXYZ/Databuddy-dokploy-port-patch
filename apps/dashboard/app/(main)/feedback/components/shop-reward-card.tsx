@@ -1,6 +1,6 @@
 "use client";
 
-import { LightningIcon } from "@phosphor-icons/react";
+import { IconBoltLightningFillDuo18 } from "nucleo-ui-fill-duo-18";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -34,10 +34,9 @@ export function ShopRewardCard({
 			<div className="space-y-3">
 				<div className="flex items-center justify-between">
 					<div className="flex size-9 shrink-0 items-center justify-center rounded border bg-secondary">
-						<LightningIcon
+						<IconBoltLightningFillDuo18
 							className="text-accent-foreground"
 							size={16}
-							weight="duotone"
 						/>
 					</div>
 					<span className="text-muted-foreground text-xs tabular-nums">

@@ -1,24 +1,5 @@
 "use client";
 
-import type { Icon } from "@phosphor-icons/react";
-import {
-	ArrowSquareOutIcon,
-	CommandIcon,
-	GlobeIcon,
-	MagnifyingGlassIcon,
-} from "@phosphor-icons/react";
-import { useDebouncedCallback } from "@tanstack/react-pacer";
-import { Command as CommandPrimitive } from "cmdk";
-import { usePathname, useRouter } from "next/navigation";
-import {
-	createContext,
-	type ReactNode,
-	useCallback,
-	useContext,
-	useMemo,
-	useState,
-} from "react";
-import { useHotkeys } from "react-hotkeys-hook";
 import {
 	homeNavigation,
 	resourcesNavigation,
@@ -41,13 +22,33 @@ import {
 } from "@/components/ui/dialog";
 import { useWebsites } from "@/hooks/use-websites";
 import { cn } from "@/lib/utils";
+import { useDebouncedCallback } from "@tanstack/react-pacer";
+import { Command as CommandPrimitive } from "cmdk";
+import { usePathname, useRouter } from "next/navigation";
+import {
+	IconCommandFillDuo18,
+	IconExternalLinkFillDuo18,
+	IconGlobeFillDuo18,
+	IconMagnifierFillDuo18,
+} from "nucleo-ui-fill-duo-18";
+import {
+	createContext,
+	FC,
+	type ReactNode,
+	SVGProps,
+	useCallback,
+	useContext,
+	useMemo,
+	useState
+} from "react";
+import { useHotkeys } from "react-hotkeys-hook";
 
 interface SearchItem {
 	alpha?: boolean;
 	badge?: { text: string };
 	disabled?: boolean;
 	external?: boolean;
-	icon: Icon;
+	icon: FC<SVGProps<SVGSVGElement> & { size?: number | string }>;
 	name: string;
 	path: string;
 	tag?: string;
@@ -193,7 +194,7 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
 				items: websites.map((w) => ({
 					name: w.name || w.domain,
 					path: `/websites/${w.id}`,
-					icon: GlobeIcon,
+					icon: IconGlobeFillDuo18,
 				})),
 			});
 		}
@@ -292,9 +293,8 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
 					>
 						<div className="dotted-bg flex items-center gap-3 border-b bg-accent px-4 py-3">
 							<div className="flex size-8 shrink-0 items-center justify-center rounded bg-background">
-								<MagnifyingGlassIcon
+								<IconMagnifierFillDuo18
 									className="size-4 text-muted-foreground"
-									weight="duotone"
 								/>
 							</div>
 							<CommandPrimitive.Input
@@ -304,16 +304,15 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
 								value={search}
 							/>
 							<kbd className="hidden items-center gap-1 rounded border bg-background px-1.5 py-0.5 font-mono text-muted-foreground text-xs sm:flex">
-								<CommandIcon className="size-3" weight="bold" />
+								<IconCommandFillDuo18 className="size-3" />
 								<span>K</span>
 							</kbd>
 						</div>
 
 						<CommandPrimitive.List className="max-h-80 scroll-py-2 overflow-y-auto p-2">
 							<CommandPrimitive.Empty className="flex flex-col items-center justify-center gap-2 py-12 text-center">
-								<MagnifyingGlassIcon
+								<IconMagnifierFillDuo18
 									className="size-8 text-muted-foreground/50"
-									weight="duotone"
 								/>
 								<div>
 									<p className="font-medium text-muted-foreground text-sm">
@@ -395,7 +394,7 @@ function SearchResultItem({
 			value={`${item.name} ${item.path}`}
 		>
 			<div className="flex size-7 shrink-0 items-center justify-center rounded bg-accent group-data-[selected=true]:bg-background">
-				<ItemIcon className="size-4 text-muted-foreground" weight="duotone" />
+				<ItemIcon className="size-4 text-muted-foreground" />
 			</div>
 
 			<div className="min-w-0 flex-1">
@@ -430,9 +429,8 @@ function SearchResultItem({
 				)}
 
 				{item.external && (
-					<ArrowSquareOutIcon
+					<IconExternalLinkFillDuo18
 						className="size-4 text-muted-foreground"
-						weight="duotone"
 					/>
 				)}
 			</div>

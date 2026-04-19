@@ -1,33 +1,35 @@
-import { ChartLineUpIcon } from "@phosphor-icons/react";
-import { ClockIcon } from "@phosphor-icons/react";
-import { CursorClickIcon } from "@phosphor-icons/react";
-import { DevicesIcon } from "@phosphor-icons/react";
-import { GlobeIcon } from "@phosphor-icons/react";
-import { LinkIcon } from "@phosphor-icons/react";
-import { SquaresFourIcon } from "@phosphor-icons/react";
-import { UsersIcon } from "@phosphor-icons/react";
-import { WarningIcon } from "@phosphor-icons/react";
+import {
+	IconAlertWarningFillDuo18,
+	IconChartBarTrendUpFillDuo18,
+	IconClockFillDuo18,
+	IconComputerFillDuo18,
+	IconGlobeFillDuo18,
+	IconGrid2FillDuo18,
+	IconHandPointerFillDuo18,
+	IconLink5FillDuo18,
+	IconUsersFillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import type { ElementType } from "react";
 
 /** Icon mapping for query type categories */
 export const CATEGORY_ICONS: Record<string, ElementType> = {
-	Analytics: ChartLineUpIcon,
-	Realtime: ClockIcon,
-	Devices: DevicesIcon,
-	Geo: GlobeIcon,
-	Traffic: LinkIcon,
-	Engagement: CursorClickIcon,
-	Errors: WarningIcon,
-	Users: UsersIcon,
-	Sessions: UsersIcon,
-	Pages: LinkIcon,
-	Performance: ClockIcon,
-	Other: SquaresFourIcon,
+	Analytics: IconChartBarTrendUpFillDuo18,
+	Realtime: IconClockFillDuo18,
+	Devices: IconComputerFillDuo18,
+	Geo: IconGlobeFillDuo18,
+	Traffic: IconLink5FillDuo18,
+	Engagement: IconHandPointerFillDuo18,
+	Errors: IconAlertWarningFillDuo18,
+	Users: IconUsersFillDuo18,
+	Sessions: IconUsersFillDuo18,
+	Pages: IconLink5FillDuo18,
+	Performance: IconClockFillDuo18,
+	Other: IconGrid2FillDuo18,
 };
 
 /** Get the icon component for a category */
 export function getCategoryIcon(category: string): ElementType {
-	return CATEGORY_ICONS[category] || SquaresFourIcon;
+	return CATEGORY_ICONS[category] || IconGrid2FillDuo18;
 }
 
 /** Color mapping for categories (for future use in charts, badges, etc) */

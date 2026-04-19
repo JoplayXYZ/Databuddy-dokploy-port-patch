@@ -1,8 +1,10 @@
 "use client";
 
-import { CoinIcon } from "@phosphor-icons/react";
-import { ShoppingCartIcon } from "@phosphor-icons/react";
-import { TrendUpIcon } from "@phosphor-icons/react";
+import {
+	IconArrowTrendUpFillDuo18,
+	IconBasketShoppingFillDuo18,
+	IconCoinsFillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface FeedbackCreditsCardProps {
@@ -45,10 +47,9 @@ export function FeedbackCreditsCard({
 		<div className="flex flex-wrap items-center gap-6 border-b p-5">
 			<div className="flex items-center gap-3">
 				<div className="flex size-10 shrink-0 items-center justify-center rounded border bg-secondary">
-					<CoinIcon
+					<IconCoinsFillDuo18
 						className="text-accent-foreground"
 						size={18}
-						weight="duotone"
 					/>
 				</div>
 				<div>
@@ -63,10 +64,9 @@ export function FeedbackCreditsCard({
 
 			<div className="flex gap-6">
 				<div className="flex items-center gap-2">
-					<TrendUpIcon
+					<IconArrowTrendUpFillDuo18
 						className="text-muted-foreground"
 						size={14}
-						weight="duotone"
 					/>
 					<div>
 						<p className="text-muted-foreground text-xs">Earned</p>
@@ -76,10 +76,9 @@ export function FeedbackCreditsCard({
 					</div>
 				</div>
 				<div className="flex items-center gap-2">
-					<ShoppingCartIcon
+					<IconBasketShoppingFillDuo18
 						className="text-muted-foreground"
 						size={14}
-						weight="duotone"
 					/>
 					<div>
 						<p className="text-muted-foreground text-xs">Spent</p>

@@ -1,6 +1,6 @@
 "use client";
 
-import { Info } from "@phosphor-icons/react";
+import { IconCircleInfoFillDuo18 } from "nucleo-ui-fill-duo-18";
 import {
 	HoverCard,
 	HoverCardContent,
@@ -66,7 +66,7 @@ export function PricingTiersTooltip({
 					)}
 					type="button"
 				>
-					<Info size={12} />
+					<IconCircleInfoFillDuo18 size={12} />
 					{showText && <span>View pricing tiers</span>}
 				</button>
 			</HoverCardTrigger>

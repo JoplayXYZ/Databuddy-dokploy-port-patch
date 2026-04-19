@@ -1,7 +1,9 @@
 "use client";
 
-import { CheckCircleIcon } from "@phosphor-icons/react";
-import { CircleNotchIcon } from "@phosphor-icons/react";
+import {
+	IconCircleCheckFillDuo18,
+	IconLoader2FillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import type { ComponentProps, ReactNode } from "react";
 import { memo } from "react";
 import { cn } from "@/lib/utils";
@@ -22,14 +24,12 @@ export const ToolStep = memo(
 			{...props}
 		>
 			{status === "complete" ? (
-				<CheckCircleIcon
+				<IconCircleCheckFillDuo18
 					className="size-3 shrink-0 text-muted-foreground/60"
-					weight="fill"
 				/>
 			) : (
-				<CircleNotchIcon
+				<IconLoader2FillDuo18
 					className="size-3 shrink-0 animate-spin"
-					weight="bold"
 				/>
 			)}
 			<span>{label}</span>

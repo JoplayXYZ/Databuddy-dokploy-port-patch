@@ -1,15 +1,17 @@
 "use client";
 
-import { ArrowSquareOutIcon } from "@phosphor-icons/react";
-import { CheckIcon } from "@phosphor-icons/react";
-import { ClockIcon } from "@phosphor-icons/react";
-import { CodeIcon } from "@phosphor-icons/react";
-import { CopyIcon } from "@phosphor-icons/react";
-import { GlobeIcon } from "@phosphor-icons/react";
-import { HashIcon } from "@phosphor-icons/react";
-import { LinkIcon } from "@phosphor-icons/react";
-import { StackIcon } from "@phosphor-icons/react";
-import { UserIcon } from "@phosphor-icons/react";
+import {
+	IconCheckFillDuo18,
+	IconClockFillDuo18,
+	IconCodeFillDuo18,
+	IconCopyFillDuo18,
+	IconExternalLinkFillDuo18,
+	IconGlobeFillDuo18,
+	IconHashtagFillDuo18,
+	IconLink5FillDuo18,
+	IconStackYFillDuo18,
+	IconUserFillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import type { ReactNode } from "react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -80,9 +82,9 @@ const CopyButton = ({
 			variant="ghost"
 		>
 			{isCopied ? (
-				<CheckIcon className="size-3.5 text-green-500" weight="bold" />
+				<IconCheckFillDuo18 className="size-3.5 text-green-500" />
 			) : (
-				<CopyIcon className="size-3.5 text-muted-foreground" />
+				<IconCopyFillDuo18 className="size-3.5 text-muted-foreground" />
 			)}
 		</Button>
 	);
@@ -169,7 +171,7 @@ Context:
 					size="sm"
 					variant="outline"
 				>
-					<LinkIcon className="size-3.5" weight="duotone" />
+					<IconLink5FillDuo18 className="size-3.5" />
 					Copy URL
 				</Button>
 			),
@@ -187,7 +189,7 @@ Context:
 			node: (
 				<Button asChild size="sm" variant="ghost">
 					<a href={error.path} rel="noopener noreferrer" target="_blank">
-						<ArrowSquareOutIcon className="size-3.5" weight="duotone" />
+						<IconExternalLinkFillDuo18 className="size-3.5" />
 						Open Page
 					</a>
 				</Button>
@@ -205,7 +207,7 @@ Context:
 					size="sm"
 					variant="ghost"
 				>
-					<HashIcon className="size-3.5" weight="duotone" />
+					<IconHashtagFillDuo18 className="size-3.5" />
 					Copy Session
 				</Button>
 			),
@@ -222,7 +224,7 @@ Context:
 					size="sm"
 					variant="ghost"
 				>
-					<StackIcon className="size-3.5" weight="duotone" />
+					<IconStackYFillDuo18 className="size-3.5" />
 					Copy Stack
 				</Button>
 			),
@@ -235,9 +237,8 @@ Context:
 			label: "Page URL",
 			value: error.path || "—",
 			icon: (
-				<LinkIcon
+				<IconLink5FillDuo18
 					className="size-4 shrink-0 text-muted-foreground"
-					weight="duotone"
 				/>
 			),
 			copySection: error.path ? "url" : null,
@@ -248,9 +249,8 @@ Context:
 			label: "Session ID",
 			value: error.session_id || "—",
 			icon: (
-				<HashIcon
+				<IconHashtagFillDuo18
 					className="size-4 shrink-0 text-muted-foreground"
-					weight="duotone"
 				/>
 			),
 			copySection: error.session_id ? "session" : null,
@@ -261,9 +261,8 @@ Context:
 			label: "User ID",
 			value: error.anonymous_id || "—",
 			icon: (
-				<UserIcon
+				<IconUserFillDuo18
 					className="size-4 shrink-0 text-muted-foreground"
-					weight="duotone"
 				/>
 			),
 			copySection: error.anonymous_id ? "user" : null,
@@ -277,9 +276,8 @@ Context:
 			label: "Event ID",
 			value: error.event_id,
 			icon: (
-				<StackIcon
+				<IconStackYFillDuo18
 					className="size-4 shrink-0 text-muted-foreground"
-					weight="duotone"
 				/>
 			),
 		},
@@ -288,9 +286,8 @@ Context:
 			label: "Client ID",
 			value: error.client_id,
 			icon: (
-				<UserIcon
+				<IconUserFillDuo18
 					className="size-4 shrink-0 text-muted-foreground"
-					weight="duotone"
 				/>
 			),
 		},
@@ -298,16 +295,15 @@ Context:
 			key: "ip",
 			label: "IP Address",
 			value: error.ip,
-			icon: <GlobeIcon className="size-4 shrink-0 text-muted-foreground" />,
+			icon: <IconGlobeFillDuo18 className="size-4 shrink-0 text-muted-foreground" />,
 		},
 		{
 			key: "agent",
 			label: "User Agent",
 			value: error.user_agent,
 			icon: (
-				<CodeIcon
+				<IconCodeFillDuo18
 					className="size-4 shrink-0 text-muted-foreground"
-					weight="duotone"
 				/>
 			),
 		},
@@ -329,7 +325,7 @@ Context:
 								<Badge className={getSeverityColor(severity)}>{severity}</Badge>
 							</div>
 							<SheetDescription className="flex flex-wrap items-center gap-1.5 text-muted-foreground text-xs sm:text-sm">
-								<ClockIcon className="size-3.5" weight="duotone" />
+								<IconClockFillDuo18 className="size-3.5" />
 								<span>{relativeTimeStr}</span>
 								<span className="text-muted-foreground/50">•</span>
 								<span className="font-mono">
@@ -362,7 +358,7 @@ Context:
 					<section className="space-y-3">
 						<div className="flex items-center justify-between">
 							<div className="flex items-center gap-2">
-								<CodeIcon className="size-4 text-primary" weight="duotone" />
+								<IconCodeFillDuo18 className="size-4 text-primary" />
 								<span className="font-medium text-foreground text-sm">
 									Error Message
 								</span>
@@ -388,9 +384,8 @@ Context:
 								<AccordionItem value="stack">
 									<AccordionTrigger>
 										<div className="flex items-center gap-2">
-											<StackIcon
+											<IconStackYFillDuo18
 												className="size-4 text-chart-2"
-												weight="duotone"
 											/>
 											<span className="font-medium text-foreground text-sm">
 												Stack Trace
@@ -421,7 +416,7 @@ Context:
 					{(error.filename || error.lineno) && (
 						<section className="space-y-3">
 							<div className="flex items-center gap-2">
-								<CodeIcon className="size-4 text-chart-3" weight="duotone" />
+								<IconCodeFillDuo18 className="size-4 text-chart-3" />
 								<span className="font-medium text-foreground text-sm">
 									Source Location
 								</span>
@@ -541,7 +536,7 @@ Context:
 								<div className="flex items-center gap-2">
 									{locationLabel === "Unknown" ? (
 										<>
-											<GlobeIcon className="size-4 text-muted-foreground" />
+											<IconGlobeFillDuo18 className="size-4 text-muted-foreground" />
 											<span className="text-muted-foreground text-sm">
 												Unknown
 											</span>
@@ -602,9 +597,9 @@ Context:
 						variant="outline"
 					>
 						{copiedSection === "all" ? (
-							<CheckIcon className="size-4 text-green-500" weight="bold" />
+							<IconCheckFillDuo18 className="size-4 text-green-500" />
 						) : (
-							<CopyIcon className="size-4" />
+							<IconCopyFillDuo18 className="size-4" />
 						)}
 						Copy All
 					</Button>

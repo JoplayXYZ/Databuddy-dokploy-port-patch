@@ -1,10 +1,10 @@
 "use client";
 
 import {
-	ArrowClockwiseIcon,
-	WarningIcon,
-	XIcon,
-} from "@phosphor-icons/react";
+	IconAlertWarningFillDuo18,
+	IconRefreshFillDuo18,
+	IconXmarkFillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import { useCallback, useState } from "react";
 import { cn } from "@/lib/utils";
 
@@ -73,9 +73,8 @@ export function AgentErrorMessage({
 			className="flex items-center gap-2 py-1.5 text-xs"
 			role="alert"
 		>
-			<WarningIcon
+			<IconAlertWarningFillDuo18
 				className="size-3.5 shrink-0 text-destructive"
-				weight="fill"
 			/>
 			<span className="min-w-0 flex-1 truncate text-muted-foreground">
 				{message}
@@ -89,9 +88,8 @@ export function AgentErrorMessage({
 				title="Try again"
 				type="button"
 			>
-				<ArrowClockwiseIcon
+				<IconRefreshFillDuo18
 					className={cn("size-3.5", isRetrying && "animate-spin")}
-					weight="bold"
 				/>
 				<span>Try again</span>
 			</button>
@@ -103,7 +101,7 @@ export function AgentErrorMessage({
 				title="Dismiss"
 				type="button"
 			>
-				<XIcon className="size-3" weight="bold" />
+				<IconXmarkFillDuo18 className="size-3" />
 			</button>
 		</div>
 	);

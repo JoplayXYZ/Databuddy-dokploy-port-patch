@@ -1,6 +1,6 @@
 "use client";
 
-import { ChartPieIcon } from "@phosphor-icons/react";
+import { IconChartPieFillDuo18 } from "nucleo-ui-fill-duo-18";
 import { memo, useCallback, useState } from "react";
 import { ChartErrorBoundary } from "@/components/chart-error-boundary";
 import { Card } from "@/components/ui/card";
@@ -136,9 +136,8 @@ const MiniPieChart = memo(
 					</div>
 					<div className="flex items-center gap-2.5 px-2.5 py-2.5">
 						<div className="flex size-7 shrink-0 items-center justify-center rounded bg-accent">
-							<ChartPieIcon
+							<IconChartPieFillDuo18
 								className="size-4 text-muted-foreground"
-								weight="duotone"
 							/>
 						</div>
 						<div className="min-w-0 flex-1">
@@ -198,9 +197,8 @@ const MiniPieChart = memo(
 				</div>
 				<div className="flex items-center gap-2.5 px-2.5 py-2.5">
 					<div className="flex size-7 shrink-0 items-center justify-center rounded bg-accent">
-						<ChartPieIcon
+						<IconChartPieFillDuo18
 							className="size-4 text-muted-foreground"
-							weight="duotone"
 						/>
 					</div>
 					<div className="min-w-0 flex-1">

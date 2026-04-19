@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { UserPlusIcon } from "@phosphor-icons/react";
+import { IconUserPlusFillDuo18 } from "nucleo-ui-fill-duo-18";
 import { useForm } from "react-hook-form";
 import { z } from "zod/v4";
 import {
@@ -75,9 +75,8 @@ export function InviteMemberDialog({
 		<FormDialog
 			description="Send invitation to join organization"
 			icon={
-				<UserPlusIcon
+				<IconUserPlusFillDuo18
 					className="size-5 text-accent-foreground"
-					weight="duotone"
 				/>
 			}
 			isSubmitting={isInviting}

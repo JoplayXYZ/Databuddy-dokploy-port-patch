@@ -1,7 +1,10 @@
 "use client";
 
 import { track } from "@databuddy/sdk";
-import { ArrowLeftIcon, ArrowRightIcon } from "@phosphor-icons/react";
+import {
+	IconArrowLeftFillDuo18,
+	IconArrowRightFillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -232,7 +235,7 @@ export default function OnboardingPage() {
 						onClick={goBack}
 						variant="ghost"
 					>
-						<ArrowLeftIcon className="mr-1 size-4" weight="bold" />
+						<IconArrowLeftFillDuo18 className="mr-1 size-4" />
 						Back
 					</Button>
 					<Button disabled={!canContinue} onClick={handleContinue}>
@@ -240,7 +243,7 @@ export default function OnboardingPage() {
 						!completedSteps.has("tracking")
 							? "Skip for now"
 							: "Continue"}
-						<ArrowRightIcon className="ml-1 size-4" weight="bold" />
+						<IconArrowRightFillDuo18 className="ml-1 size-4" />
 					</Button>
 				</div>
 			)}

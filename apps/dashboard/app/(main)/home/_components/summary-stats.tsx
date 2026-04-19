@@ -1,12 +1,14 @@
 "use client";
 
-import { EyeIcon } from "@phosphor-icons/react";
-import { HeartbeatIcon } from "@phosphor-icons/react";
-import { LockIcon } from "@phosphor-icons/react";
-import { MinusIcon } from "@phosphor-icons/react";
-import { TrendDownIcon } from "@phosphor-icons/react";
-import { TrendUpIcon } from "@phosphor-icons/react";
-import { UsersIcon } from "@phosphor-icons/react";
+import {
+	IconArrowTrendDownFillDuo18,
+	IconArrowTrendUpFillDuo18,
+	IconChartActivityFillDuo18,
+	IconEyeFillDuo18,
+	IconLockFillDuo18,
+	IconMinusFillDuo18,
+	IconUsersFillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -81,10 +83,10 @@ export function SummaryStats({
 
 	const TrendIcon =
 		trendDirection === "up"
-			? TrendUpIcon
+			? IconArrowTrendUpFillDuo18
 			: trendDirection === "down"
-				? TrendDownIcon
-				: MinusIcon;
+				? IconArrowTrendDownFillDuo18
+				: IconMinusFillDuo18;
 
 	return (
 		<div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
@@ -99,9 +101,8 @@ export function SummaryStats({
 				<CardContent className="px-4 py-3">
 					<div className="flex items-center gap-3">
 						<div className="flex size-7 shrink-0 items-center justify-center rounded bg-accent">
-							<UsersIcon
+							<IconUsersFillDuo18
 								className="size-4 text-muted-foreground"
-								weight="duotone"
 							/>
 						</div>
 						<div className="min-w-0 flex-1">
@@ -133,9 +134,8 @@ export function SummaryStats({
 				<CardContent className="px-4 py-3">
 					<div className="flex items-center gap-3">
 						<div className="flex size-7 shrink-0 items-center justify-center rounded bg-accent">
-							<EyeIcon
+							<IconEyeFillDuo18
 								className="size-4 text-muted-foreground"
-								weight="duotone"
 							/>
 						</div>
 						<div className="min-w-0 flex-1">
@@ -157,7 +157,6 @@ export function SummaryStats({
 							>
 								<TrendIcon
 									className="size-3.5"
-									weight={trendDirection === "neutral" ? "regular" : "fill"}
 								/>
 								{trendDirection === "up" && "+"}
 								{trendDirection === "down" && "-"}
@@ -230,9 +229,8 @@ export function SummaryStats({
 						<CardContent className="px-4 py-3">
 							<div className="flex items-center gap-3">
 								<div className="flex size-7 shrink-0 items-center justify-center rounded bg-accent">
-									<HeartbeatIcon
+									<IconChartActivityFillDuo18
 										className="size-4 text-muted-foreground"
-										weight="duotone"
 									/>
 								</div>
 								<div className="min-w-0 flex-1">
@@ -259,18 +257,16 @@ export function SummaryStats({
 				<Card className="h-full gap-0 overflow-hidden border bg-card py-0">
 					<CardHeader className="dotted-bg relative gap-0! border-b bg-accent px-0 pt-4 pb-0!">
 						<div className="flex h-16 items-center justify-center">
-							<LockIcon
+							<IconLockFillDuo18
 								className="size-6 text-muted-foreground"
-								weight="duotone"
 							/>
 						</div>
 					</CardHeader>
 					<CardContent className="px-4 py-3">
 						<div className="flex items-center gap-3">
 							<div className="flex size-7 shrink-0 items-center justify-center rounded bg-accent">
-								<HeartbeatIcon
+								<IconChartActivityFillDuo18
 									className="size-4 text-muted-foreground"
-									weight="duotone"
 								/>
 							</div>
 							<div className="min-w-0 flex-1">

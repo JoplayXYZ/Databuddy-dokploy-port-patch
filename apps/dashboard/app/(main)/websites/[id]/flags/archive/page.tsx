@@ -1,6 +1,6 @@
 "use client";
 
-import { ArchiveIcon } from "@phosphor-icons/react";
+import { IconArchiveFillDuo18 } from "nucleo-ui-fill-duo-18";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAtom } from "jotai";
 import { useParams } from "next/navigation";
@@ -99,7 +99,7 @@ export default function ArchivePage() {
 						<div className="flex flex-1 items-center justify-center py-16">
 							<EmptyState
 								description="Archive a flag from the Flags tab to retire it here."
-								icon={<ArchiveIcon weight="duotone" />}
+								icon={<IconArchiveFillDuo18 />}
 								title="No archived flags"
 								variant="minimal"
 							/>

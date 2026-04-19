@@ -1,12 +1,14 @@
 "use client";
 
-import { CalendarBlankIcon } from "@phosphor-icons/react";
-import { ClockIcon } from "@phosphor-icons/react";
-import { LightningIcon } from "@phosphor-icons/react";
-import { LinkIcon } from "@phosphor-icons/react";
-import { TagIcon } from "@phosphor-icons/react";
-import { UserIcon } from "@phosphor-icons/react";
-import { UsersIcon } from "@phosphor-icons/react";
+import {
+	IconBoltLightningFillDuo18,
+	IconCalendarFillDuo18,
+	IconClockFillDuo18,
+	IconLink5FillDuo18,
+	IconTagFillDuo18,
+	IconUserFillDuo18,
+	IconUsersFillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import Link from "next/link";
 import { notFound, useParams } from "next/navigation";
 import { useMemo } from "react";
@@ -77,9 +79,8 @@ export default function EventDetailPage() {
 				<div className="rounded border border-destructive/20 bg-destructive/5 p-6">
 					<div className="flex flex-col items-center text-center">
 						<div className="mb-4 flex size-12 items-center justify-center rounded bg-destructive/10">
-							<LightningIcon
+							<IconBoltLightningFillDuo18
 								className="size-6 text-destructive"
-								weight="duotone"
 							/>
 						</div>
 						<h4 className="mb-2 font-semibold text-destructive">
@@ -112,7 +113,7 @@ export default function EventDetailPage() {
 				<div className="flex flex-1 items-center justify-center py-16">
 					<EmptyState
 						description="This event has no data in the selected time range."
-						icon={<LightningIcon />}
+						icon={<IconBoltLightningFillDuo18 />}
 						title={`No events found for "${eventName}"`}
 						variant="minimal"
 					/>
@@ -124,7 +125,7 @@ export default function EventDetailPage() {
 							chartData={isLoading ? undefined : miniChartData.total_events}
 							chartStepType={chartStepType}
 							chartType={chartType}
-							icon={LightningIcon}
+							icon={IconBoltLightningFillDuo18}
 							id="event-total"
 							isLoading={isLoading}
 							showChart
@@ -135,7 +136,7 @@ export default function EventDetailPage() {
 							chartData={isLoading ? undefined : miniChartData.unique_users}
 							chartStepType={chartStepType}
 							chartType={chartType}
-							icon={UserIcon}
+							icon={IconUserFillDuo18}
 							id="event-users"
 							isLoading={isLoading}
 							showChart
@@ -146,7 +147,7 @@ export default function EventDetailPage() {
 							chartData={isLoading ? undefined : miniChartData.unique_sessions}
 							chartStepType={chartStepType}
 							chartType={chartType}
-							icon={UsersIcon}
+							icon={IconUsersFillDuo18}
 							id="event-sessions"
 							isLoading={isLoading}
 							showChart
@@ -157,7 +158,7 @@ export default function EventDetailPage() {
 							chartData={isLoading ? undefined : miniChartData.unique_pages}
 							chartStepType={chartStepType}
 							chartType={chartType}
-							icon={CalendarBlankIcon}
+							icon={IconCalendarFillDuo18}
 							id="event-pages"
 							isLoading={isLoading}
 							showChart
@@ -201,7 +202,7 @@ export default function EventDetailPage() {
 										key={`${event.timestamp}-${event.session_id}-${idx}`}
 									>
 										<div className="flex shrink-0 flex-col items-center text-muted-foreground">
-											<ClockIcon className="size-4" weight="duotone" />
+											<IconClockFillDuo18 className="size-4" />
 										</div>
 										<div className="min-w-0 flex-1">
 											<div className="flex items-center gap-2">
@@ -214,7 +215,7 @@ export default function EventDetailPage() {
 											</div>
 											{event.path && (
 												<div className="mt-0.5 flex items-center gap-1.5 text-muted-foreground text-xs">
-													<LinkIcon className="size-3" />
+													<IconLink5FillDuo18 className="size-3" />
 													<span className="truncate">{event.path}</span>
 												</div>
 											)}
@@ -287,9 +288,8 @@ function PropertyCard({ property }: PropertyCardProps) {
 		<div className="rounded border bg-background">
 			<div className="flex items-center justify-between border-b px-3 py-2">
 				<div className="flex items-center gap-2">
-					<TagIcon
+					<IconTagFillDuo18
 						className="size-3.5 text-muted-foreground"
-						weight="duotone"
 					/>
 					<span className="font-medium text-foreground text-sm">
 						{property.key}

@@ -1,7 +1,9 @@
 "use client";
 
-import { BuildingsIcon } from "@phosphor-icons/react";
-import { EnvelopeIcon } from "@phosphor-icons/react";
+import {
+	IconEnvelopeFillDuo18,
+	IconOfficeFillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import Link from "next/link";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
@@ -39,7 +41,7 @@ export function PendingInvitationsButton() {
 							type="button"
 							variant="ghost"
 						>
-							<EnvelopeIcon className="size-5" weight="duotone" />
+							<IconEnvelopeFillDuo18 className="size-5" />
 							<Badge
 								className={cn(
 									"absolute -top-1 -right-1 flex size-4 items-center justify-center p-0 text-[10px]",
@@ -73,9 +75,8 @@ export function PendingInvitationsButton() {
 							onClick={() => setIsOpen(false)}
 						>
 							<div className="flex size-8 shrink-0 items-center justify-center rounded bg-primary/10">
-								<BuildingsIcon
+								<IconOfficeFillDuo18
 									className="size-4 text-primary"
-									weight="duotone"
 								/>
 							</div>
 							<div className="min-w-0 flex-1">

@@ -1,12 +1,14 @@
 "use client";
 
 import { authClient } from "@databuddy/auth/client";
-import { CaretDownIcon } from "@phosphor-icons/react";
-import { CheckIcon } from "@phosphor-icons/react";
-import { CreditCardIcon } from "@phosphor-icons/react";
-import { GearIcon } from "@phosphor-icons/react";
-import { PlusIcon } from "@phosphor-icons/react";
-import { SpinnerGapIcon } from "@phosphor-icons/react";
+import {
+	IconCheckFillDuo18,
+	IconChevronDownFillDuo18,
+	IconCreditCardFillDuo18,
+	IconGearFillDuo18,
+	IconLoader2FillDuo18,
+	IconPlusFillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import { useQueryClient } from "@tanstack/react-query";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -114,13 +116,12 @@ function OrganizationSelectorTrigger({
 					</p>
 				</div>
 				{isSettingActiveOrganization ? (
-					<SpinnerGapIcon
+					<IconLoader2FillDuo18
 						aria-label="Switching workspace"
 						className="size-4 shrink-0 animate-spin text-sidebar-accent-foreground/60"
-						weight="duotone"
 					/>
 				) : (
-					<CaretDownIcon
+					<IconChevronDownFillDuo18
 						className={cn(
 							"size-4 shrink-0 text-sidebar-accent-foreground/60 transition-transform duration-200",
 							isOpen ? "rotate-180" : ""
@@ -269,7 +270,7 @@ export function OrganizationSelector() {
 										</span>
 									</div>
 									{activeOrganization?.id === org.id && (
-										<CheckIcon className="size-4 text-accent-foreground" />
+										<IconCheckFillDuo18 className="size-4 text-accent-foreground" />
 									)}
 								</DropdownMenuItem>
 							))}
@@ -281,9 +282,8 @@ export function OrganizationSelector() {
 						className={MENU_ITEM_BASE_CLASSES}
 						onClick={() => navigateTo("/organizations/settings")}
 					>
-						<GearIcon
+						<IconGearFillDuo18
 							className="size-5 text-accent-foreground"
-							weight="duotone"
 						/>
 						<span className="font-medium text-sm">Workspace settings</span>
 					</DropdownMenuItem>
@@ -291,9 +291,8 @@ export function OrganizationSelector() {
 						className={MENU_ITEM_BASE_CLASSES}
 						onClick={() => navigateTo("/billing")}
 					>
-						<CreditCardIcon
+						<IconCreditCardFillDuo18
 							className="size-5 text-accent-foreground"
-							weight="duotone"
 						/>
 						<span className="font-medium text-sm">Billing</span>
 						{planLabel && (
@@ -310,7 +309,7 @@ export function OrganizationSelector() {
 							setIsOpen(false);
 						}}
 					>
-						<PlusIcon className="size-5 text-accent-foreground" />
+						<IconPlusFillDuo18 className="size-5 text-accent-foreground" />
 						<span className="font-medium text-sm">Create Organization</span>
 					</DropdownMenuItem>
 				</DropdownMenuContent>

@@ -1,9 +1,11 @@
 "use client";
 
 import { authClient } from "@databuddy/auth/client";
-import { ArrowLeftIcon } from "@phosphor-icons/react";
-import { SparkleIcon } from "@phosphor-icons/react";
-import { SpinnerIcon } from "@phosphor-icons/react";
+import {
+	IconArrowLeftFillDuo18,
+	IconLoader2FillDuo18,
+	IconSparkleFillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { parseAsString, useQueryState } from "nuqs";
@@ -81,7 +83,7 @@ function MagicLinkPage() {
 							/>
 						</div>
 						<div className="flex items-center gap-3 rounded-lg border border-border bg-muted/30 p-3 text-sm">
-							<SparkleIcon className="size-4 shrink-0 text-foreground" />
+							<IconSparkleFillDuo18 className="size-4 shrink-0 text-foreground" />
 							<p className="text-muted-foreground">
 								We&apos;ll send a secure link to your email that will sign you
 								in instantly — no password needed.
@@ -90,12 +92,12 @@ function MagicLinkPage() {
 						<Button className="w-full" disabled={isLoading} type="submit">
 							{isLoading ? (
 								<>
-									<SpinnerIcon className="mr-2 size-4 animate-spin" />
+									<IconLoader2FillDuo18 className="mr-2 size-4 animate-spin" />
 									Sending magic link...
 								</>
 							) : (
 								<>
-									<SparkleIcon className="mr-2 size-4" />
+									<IconSparkleFillDuo18 className="mr-2 size-4" />
 									Send magic link
 								</>
 							)}
@@ -108,7 +110,7 @@ function MagicLinkPage() {
 					className="h-auto flex-1 cursor-pointer p-0 text-right text-[13px] text-accent-foreground/60 duration-200 hover:text-accent-foreground"
 					href="/login"
 				>
-					<ArrowLeftIcon className="mr-1 inline size-3" />
+					<IconArrowLeftFillDuo18 className="mr-1 inline size-3" />
 					Back to login
 				</Link>
 			</div>
@@ -123,7 +125,7 @@ export default function Page() {
 				<div className="flex h-dvh items-center justify-center bg-background">
 					<div className="relative">
 						<div className="absolute inset-0 animate-ping rounded-full bg-primary/20 blur-xl" />
-						<SpinnerIcon className="relative size-8 animate-spin text-primary" />
+						<IconLoader2FillDuo18 className="relative size-8 animate-spin text-primary" />
 					</div>
 				</div>
 			}

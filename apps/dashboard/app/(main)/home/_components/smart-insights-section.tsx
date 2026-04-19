@@ -1,9 +1,11 @@
 "use client";
 
-import { ArrowClockwiseIcon } from "@phosphor-icons/react";
-import { CheckCircleIcon } from "@phosphor-icons/react";
-import { SparkleIcon } from "@phosphor-icons/react";
-import { WarningCircleIcon } from "@phosphor-icons/react";
+import {
+	IconCircleCheckFillDuo18,
+	IconCircleWarningFillDuo18,
+	IconRefreshFillDuo18,
+	IconSparkleFillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import { useState } from "react";
 import { InsightCard } from "@/app/(main)/insights/_components/insight-card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -45,9 +47,8 @@ function AnalyzingState() {
 		<div className="space-y-0 divide-y">
 			<div className="flex items-center gap-3 px-4 py-4">
 				<div className="flex size-7 shrink-0 items-center justify-center rounded bg-primary/10">
-					<SparkleIcon
+					<IconSparkleFillDuo18
 						className="size-4 animate-pulse text-primary"
-						weight="duotone"
 					/>
 				</div>
 				<div className="min-w-0 flex-1">
@@ -69,7 +70,7 @@ function EmptyState() {
 	return (
 		<div className="flex items-center gap-3 px-4 py-4">
 			<div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-emerald-500/10">
-				<CheckCircleIcon className="size-5 text-emerald-500" weight="fill" />
+				<IconCircleCheckFillDuo18 className="size-5 text-emerald-500" />
 			</div>
 			<div className="min-w-0 flex-1">
 				<p className="font-medium text-foreground text-sm">
@@ -87,7 +88,7 @@ function ErrorState({ onRetryAction }: { onRetryAction?: () => void }) {
 	return (
 		<div className="flex items-center gap-3 px-4 py-4">
 			<div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-red-500/10">
-				<WarningCircleIcon className="size-5 text-red-500" weight="duotone" />
+				<IconCircleWarningFillDuo18 className="size-5 text-red-500" />
 			</div>
 			<div className="min-w-0 flex-1">
 				<p className="font-medium text-foreground text-sm">
@@ -140,7 +141,7 @@ export function SmartInsightsSection({
 		return (
 			<div className={cardShell(variant)}>
 				<div className="flex items-center gap-2 border-b px-4 py-3">
-					<SparkleIcon className="size-4 text-primary" weight="duotone" />
+					<IconSparkleFillDuo18 className="size-4 text-primary" />
 					<h3 className="font-semibold text-foreground text-sm">
 						Actionable Insights
 					</h3>
@@ -155,7 +156,7 @@ export function SmartInsightsSection({
 			<div className={cardShell(variant)}>
 				<div className="flex items-center justify-between border-b px-4 py-3">
 					<div className="flex items-center gap-2">
-						<SparkleIcon className="size-4 text-primary" weight="duotone" />
+						<IconSparkleFillDuo18 className="size-4 text-primary" />
 						<h3 className="font-semibold text-foreground text-sm">
 							Actionable Insights
 						</h3>
@@ -174,9 +175,8 @@ export function SmartInsightsSection({
 			<div className="flex items-center justify-between border-b px-4 py-3">
 				<div className="flex min-w-0 flex-1 flex-col gap-0.5">
 					<div className="flex items-center gap-2">
-						<SparkleIcon
+						<IconSparkleFillDuo18
 							className="size-4 shrink-0 text-primary"
-							weight="duotone"
 						/>
 						<h3 className="font-semibold text-foreground text-sm">
 							Actionable Insights
@@ -202,7 +202,7 @@ export function SmartInsightsSection({
 							onClick={onRefreshAction}
 							type="button"
 						>
-							<ArrowClockwiseIcon
+							<IconRefreshFillDuo18
 								className={cn("size-3.5", isFetching && "animate-spin")}
 							/>
 						</button>

@@ -1,6 +1,6 @@
 "use client";
 
-import { ClockIcon } from "@phosphor-icons/react";
+import { IconClockFillDuo18 } from "nucleo-ui-fill-duo-18";
 import { useRouter } from "next/navigation";
 import { useCallback, useRef, useState } from "react";
 import { useInterval } from "@/hooks/use-interval";
@@ -42,7 +42,7 @@ export function LastUpdated({ timestamp }: LastUpdatedProps) {
 	return (
 		<div className="flex items-center justify-between text-muted-foreground text-xs">
 			<div className="flex items-center gap-1.5">
-				<ClockIcon className="size-3.5 shrink-0" weight="duotone" />
+				<IconClockFillDuo18 className="size-3.5 shrink-0" />
 				<span>
 					Last checked {formatDateTime(timestamp)}{" "}
 					<span className="text-muted-foreground/60">{abbreviation || tz}</span>

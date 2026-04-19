@@ -1,6 +1,6 @@
 "use client";
 
-import { PlanetIcon } from "@phosphor-icons/react";
+import { IconEarthFillDuo18 } from "nucleo-ui-fill-duo-18";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAtom, useSetAtom } from "jotai";
 import { useParams } from "next/navigation";
@@ -96,10 +96,9 @@ export default function PublicWebsiteLayout({
 								className="size-5"
 								domain={websiteData?.domain || ""}
 								fallbackIcon={
-									<PlanetIcon
+									<IconEarthFillDuo18
 										className="text-sidebar-ring"
 										size={20}
-										weight="duotone"
 									/>
 								}
 								size={20}

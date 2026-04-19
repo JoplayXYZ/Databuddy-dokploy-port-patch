@@ -1,13 +1,15 @@
 "use client";
 
 import { DATE_FORMATS, formatDate } from "@lib/formatters";
-import { CalendarIcon } from "@phosphor-icons/react";
-import { ClockIcon } from "@phosphor-icons/react";
-import { LightningIcon } from "@phosphor-icons/react";
-import { PlusIcon } from "@phosphor-icons/react";
-import { PowerIcon } from "@phosphor-icons/react";
-import { TrashIcon } from "@phosphor-icons/react";
-import { XIcon } from "@phosphor-icons/react";
+import {
+	IconArrowDoorOut2FillDuo18,
+	IconBoltLightningFillDuo18,
+	IconCalendarFillDuo18,
+	IconClockFillDuo18,
+	IconPlusFillDuo18,
+	IconTrashFillDuo18,
+	IconXmarkFillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import { AnimatePresence, motion } from "motion/react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -43,7 +45,7 @@ function DateTimePicker({
 					type="button"
 					variant="outline"
 				>
-					<CalendarIcon size={14} />
+					<IconCalendarFillDuo18 size={14} />
 					{value
 						? formatDate(new Date(value), DATE_FORMATS.DATE_TIME_12H)
 						: "Select date & time…"}
@@ -63,7 +65,7 @@ function DateTimePicker({
 					selected={dateValue}
 				/>
 				<div className="flex items-center gap-2 border-t p-3">
-					<ClockIcon className="text-muted-foreground" size={14} />
+					<IconClockFillDuo18 className="text-muted-foreground" size={14} />
 					<Input
 						className="h-8 flex-1"
 						defaultValue={
@@ -163,7 +165,7 @@ export function ScheduleManager({ form, flagId }: ScheduleManagerProps) {
 						type="button"
 					>
 						<div className="flex size-8 items-center justify-center rounded bg-green-500/10">
-							<PowerIcon className="text-green-500" size={16} weight="fill" />
+							<IconArrowDoorOut2FillDuo18 className="text-green-500" size={16} />
 						</div>
 						<div>
 							<p className="font-medium text-sm">Enable</p>
@@ -177,10 +179,9 @@ export function ScheduleManager({ form, flagId }: ScheduleManagerProps) {
 						type="button"
 					>
 						<div className="flex size-8 items-center justify-center rounded bg-red-500/10">
-							<PowerIcon
+							<IconArrowDoorOut2FillDuo18
 								className="rotate-180 text-red-500"
 								size={16}
-								weight="fill"
 							/>
 						</div>
 						<div>
@@ -197,7 +198,7 @@ export function ScheduleManager({ form, flagId }: ScheduleManagerProps) {
 						type="button"
 					>
 						<div className="flex size-8 items-center justify-center rounded bg-primary/10">
-							<LightningIcon className="text-primary" size={16} weight="fill" />
+							<IconBoltLightningFillDuo18 className="text-primary" size={16} />
 						</div>
 						<div>
 							<p className="font-medium text-sm">Gradual rollout</p>
@@ -217,17 +218,16 @@ export function ScheduleManager({ form, flagId }: ScheduleManagerProps) {
 			<div className="flex items-center justify-between">
 				<div className="flex items-center gap-2">
 					{scheduleType === "enable" && (
-						<PowerIcon className="text-green-500" size={16} weight="fill" />
+						<IconArrowDoorOut2FillDuo18 className="text-green-500" size={16} />
 					)}
 					{scheduleType === "disable" && (
-						<PowerIcon
+						<IconArrowDoorOut2FillDuo18
 							className="rotate-180 text-red-500"
 							size={16}
-							weight="fill"
 						/>
 					)}
 					{scheduleType === "update_rollout" && (
-						<LightningIcon className="text-primary" size={16} weight="fill" />
+						<IconBoltLightningFillDuo18 className="text-primary" size={16} />
 					)}
 					<span className="font-medium text-sm">
 						{scheduleType === "enable"
@@ -242,7 +242,7 @@ export function ScheduleManager({ form, flagId }: ScheduleManagerProps) {
 					onClick={disableSchedule}
 					type="button"
 				>
-					<XIcon size={14} />
+					<IconXmarkFillDuo18 size={14} />
 				</button>
 			</div>
 
@@ -294,7 +294,7 @@ export function ScheduleManager({ form, flagId }: ScheduleManagerProps) {
 									onClick={() => removeRolloutStep(index)}
 									type="button"
 								>
-									<TrashIcon size={14} />
+									<IconTrashFillDuo18 size={14} />
 								</button>
 							</motion.div>
 						))}
@@ -307,7 +307,7 @@ export function ScheduleManager({ form, flagId }: ScheduleManagerProps) {
 						type="button"
 						variant="outline"
 					>
-						<PlusIcon size={14} />
+						<IconPlusFillDuo18 size={14} />
 						Add step
 					</Button>
 				</div>

@@ -5,12 +5,13 @@ import {
 	getPlanFeatureLimit,
 	isWithinLimit,
 } from "@databuddy/shared/types/features";
-import type { IconProps } from "@phosphor-icons/react";
-import { ArrowClockwiseIcon } from "@phosphor-icons/react";
-import { ArrowLeftIcon } from "@phosphor-icons/react";
-import { BookIcon } from "@phosphor-icons/react";
-import { PlusIcon } from "@phosphor-icons/react";
-import { WarningIcon } from "@phosphor-icons/react";
+import {
+	IconAlertWarningFillDuo18,
+	IconArrowLeftFillDuo18,
+	IconBookFillDuo18,
+	IconPlusFillDuo18,
+	IconRefreshFillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import Link from "next/link";
 import { cloneElement, type ReactNode } from "react";
 import { useBillingContext } from "@/components/providers/billing-provider";
@@ -77,7 +78,7 @@ interface WebsitePageHeaderProps {
 	feature?: GatedFeatureId;
 
 	hasError?: boolean;
-	icon: React.ReactElement<IconProps>;
+	icon: React.ReactElement<SVGProps<SVGSVGElement> & { size?: number | string }>;
 
 	isLoading?: boolean;
 	isRefreshing?: boolean;
@@ -170,7 +171,7 @@ export function WebsitePageHeader({
 						}
 					>
 						{!withinLimit && (
-							<WarningIcon className="mr-1 size-3" weight="fill" />
+							<IconAlertWarningFillDuo18 className="mr-1 size-3" />
 						)}
 						{currentUsage} /{" "}
 						{limit === "unlimited"
@@ -227,7 +228,7 @@ export function WebsitePageHeader({
 						{showBackButton ? (
 							<Button asChild size="sm" variant="ghost">
 								<Link href={`/websites/${websiteId}`}>
-									<ArrowLeftIcon size={16} />
+									<IconArrowLeftFillDuo18 size={16} />
 									<span className="xs:inline hidden">Back</span>
 								</Link>
 							</Button>
@@ -257,7 +258,7 @@ export function WebsitePageHeader({
 								rel="noopener noreferrer"
 								target="_blank"
 							>
-								<BookIcon size={16} />
+								<IconBookFillDuo18 size={16} />
 								<span className="xs:inline hidden">Docs</span>
 							</Link>
 						</Button>
@@ -269,7 +270,7 @@ export function WebsitePageHeader({
 							onClick={onRefreshAction}
 							variant="outline"
 						>
-							<ArrowClockwiseIcon
+							<IconRefreshFillDuo18
 								className={isRefreshing ? "animate-spin" : ""}
 								size={16}
 							/>
@@ -298,7 +299,7 @@ export function WebsitePageHeader({
 									aria-label="Back to website overview"
 									href={`/websites/${websiteId}`}
 								>
-									<ArrowLeftIcon size={16} />
+									<IconArrowLeftFillDuo18 size={16} />
 									<span className="hidden sm:inline">Back</span>
 								</Link>
 							</Button>
@@ -339,7 +340,7 @@ export function WebsitePageHeader({
 								rel="noopener noreferrer"
 								target="_blank"
 							>
-								<BookIcon size={16} />
+								<IconBookFillDuo18 size={16} />
 								<span className="sm:hidden">Docs</span>
 								<span className="hidden sm:inline">Documentation</span>
 							</Link>
@@ -351,7 +352,7 @@ export function WebsitePageHeader({
 							onClick={onRefreshAction}
 							variant="outline"
 						>
-							<ArrowClockwiseIcon
+							<IconRefreshFillDuo18
 								className={isRefreshing ? "animate-spin" : ""}
 								size={16}
 							/>
@@ -365,7 +366,7 @@ export function WebsitePageHeader({
 								<TooltipTrigger asChild>
 									<div>
 										<Button disabled={!withinLimit} onClick={onCreateAction}>
-											<PlusIcon size={16} />
+											<IconPlusFillDuo18 size={16} />
 											{createActionLabel}
 										</Button>
 									</div>
@@ -417,7 +418,7 @@ export function WebsitePageHeader({
 										size="sm"
 										variant="outline"
 									>
-										<ArrowClockwiseIcon className="size-4" size={16} />
+										<IconRefreshFillDuo18 className="size-4" size={16} />
 										Retry
 									</Button>
 								) : null}

@@ -1,7 +1,7 @@
 "use client";
 
 import type { LocationData } from "@databuddy/shared/types/website";
-import { GlobeIcon } from "@phosphor-icons/react";
+import { IconGlobeFillDuo18 } from "nucleo-ui-fill-duo-18";
 import { useAtom } from "jotai";
 import dynamic from "next/dynamic";
 import { useParams } from "next/navigation";
@@ -176,9 +176,8 @@ function WebsiteMapPage() {
 				<Card className="w-full gap-0 border bg-card/95 py-0 shadow-lg backdrop-blur-sm">
 					<CardHeader className="border-b bg-accent px-2.5 py-2 sm:px-3 sm:py-2.5 [.border-b]:pb-2">
 						<CardTitle className="flex items-center gap-2 font-semibold text-xs sm:text-sm">
-							<GlobeIcon
+							<IconGlobeFillDuo18
 								className="size-3.5 text-primary sm:size-4"
-								weight="duotone"
 							/>
 							Top Countries
 						</CardTitle>
@@ -210,9 +209,8 @@ function WebsiteMapPage() {
 							</div>
 						) : (
 							<div className="flex flex-col items-center justify-center p-4 text-center sm:p-6">
-								<GlobeIcon
+								<IconGlobeFillDuo18
 									className="size-6 text-muted-foreground/30 sm:size-8"
-									weight="duotone"
 								/>
 								<p className="mt-2 text-muted-foreground text-xs">
 									No location data yet

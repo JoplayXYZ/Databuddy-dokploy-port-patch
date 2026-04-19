@@ -1,13 +1,15 @@
 "use client";
 
-import { BracketsSquareIcon } from "@phosphor-icons/react";
-import { CopyIcon } from "@phosphor-icons/react";
-import { FunnelIcon } from "@phosphor-icons/react";
-import { LightningIcon } from "@phosphor-icons/react";
-import { LinkIcon } from "@phosphor-icons/react";
-import { MagnifyingGlassIcon } from "@phosphor-icons/react";
-import { TagIcon } from "@phosphor-icons/react";
-import { XIcon } from "@phosphor-icons/react";
+import {
+	IconBoltLightningFillDuo18,
+	IconCodeFillDuo18,
+	IconCopyFillDuo18,
+	IconFilterFillDuo18,
+	IconLink5FillDuo18,
+	IconMagnifierFillDuo18,
+	IconTagFillDuo18,
+	IconXmarkFillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import { useDebouncedCallback } from "@tanstack/react-pacer";
 import type { ColumnDef } from "@tanstack/react-table";
 import {
@@ -121,15 +123,15 @@ interface ActiveFilter {
 function getFilterIcon(type: ActiveFilter["type"]) {
 	switch (type) {
 		case "event":
-			return <LightningIcon className="size-3" weight="fill" />;
+			return <IconBoltLightningFillDuo18 className="size-3" />;
 		case "path":
-			return <LinkIcon className="size-3" />;
+			return <IconLink5FillDuo18 className="size-3" />;
 		case "property":
-			return <TagIcon className="size-3" weight="fill" />;
+			return <IconTagFillDuo18 className="size-3" />;
 		case "hasProps":
-			return <BracketsSquareIcon className="size-3" />;
+			return <IconCodeFillDuo18 className="size-3" />;
 		default:
-			return <FunnelIcon className="size-3" />;
+			return <IconFilterFillDuo18 className="size-3" />;
 	}
 }
 
@@ -163,7 +165,7 @@ function ActiveFiltersDisplay({ filters }: { filters: ActiveFilter[] }) {
 						onClick={filter.onRemoveAction}
 						type="button"
 					>
-						<XIcon className="size-3" weight="bold" />
+						<IconXmarkFillDuo18 className="size-3" />
 					</button>
 				</Badge>
 			))}
@@ -509,7 +511,7 @@ export function EventsStreamContent({
 							title={`Filter by ${row.original.path}`}
 							type="button"
 						>
-							<LinkIcon className="size-3.5 shrink-0" />
+							<IconLink5FillDuo18 className="size-3.5 shrink-0" />
 							<span className="max-w-[200px] truncate">
 								{row.original.path}
 							</span>
@@ -579,7 +581,7 @@ export function EventsStreamContent({
 						title="Copy event JSON"
 						variant="ghost"
 					>
-						<CopyIcon className="size-3.5" />
+						<IconCopyFillDuo18 className="size-3.5" />
 					</Button>
 				),
 				size: 40,
@@ -654,7 +656,7 @@ export function EventsStreamContent({
 					description={
 						error?.message || "There was an error loading the events"
 					}
-					icon={<LightningIcon />}
+					icon={<IconBoltLightningFillDuo18 />}
 					title="Failed to load events"
 					variant="error"
 				/>
@@ -676,7 +678,7 @@ export function EventsStreamContent({
 							to send custom events.
 						</>
 					}
-					icon={<LightningIcon />}
+					icon={<IconBoltLightningFillDuo18 />}
 					title="No events yet"
 					variant="minimal"
 				/>
@@ -691,9 +693,8 @@ export function EventsStreamContent({
 			<div className="shrink-0 space-y-1.5 border-b px-2 py-1.5">
 				<div className="flex flex-wrap items-center gap-1.5">
 					<div className="flex items-center gap-1.5">
-						<LightningIcon
+						<IconBoltLightningFillDuo18
 							className="size-4 text-muted-foreground"
-							weight="duotone"
 						/>
 						<Select
 							onValueChange={setSelectedEventType}
@@ -722,7 +723,7 @@ export function EventsStreamContent({
 					<div className="h-4 w-px bg-border/60" />
 
 					<div className="flex items-center gap-1.5">
-						<LinkIcon className="size-4 text-muted-foreground" />
+						<IconLink5FillDuo18 className="size-4 text-muted-foreground" />
 						<Select onValueChange={setSelectedPath} value={selectedPath}>
 							<SelectTrigger
 								className={cn(
@@ -747,9 +748,8 @@ export function EventsStreamContent({
 					<div className="h-4 w-px bg-border/60" />
 
 					<div className="flex items-center gap-1.5">
-						<TagIcon
+						<IconTagFillDuo18
 							className="size-4 text-muted-foreground"
-							weight="duotone"
 						/>
 						<Select
 							onValueChange={(v) => setHasProperties(v as HasPropertiesFilter)}
@@ -830,9 +830,8 @@ export function EventsStreamContent({
 					<div className="h-4 w-px bg-border/60" />
 
 					<div className="relative w-[180px] flex-none">
-						<MagnifyingGlassIcon
+						<IconMagnifierFillDuo18
 							className="absolute top-1/2 left-2.5 z-10 size-3.5 -translate-y-1/2 text-muted-foreground"
-							weight="bold"
 						/>
 						<Input
 							className={cn(
@@ -851,7 +850,7 @@ export function EventsStreamContent({
 								onClick={() => handleSearchInputChange("")}
 								type="button"
 							>
-								<XIcon className="size-3.5" />
+								<IconXmarkFillDuo18 className="size-3.5" />
 							</button>
 						)}
 					</div>
@@ -871,7 +870,7 @@ export function EventsStreamContent({
 								size="sm"
 								variant="ghost"
 							>
-								<XIcon className="size-3" />
+								<IconXmarkFillDuo18 className="size-3" />
 								Clear
 							</Button>
 						)}

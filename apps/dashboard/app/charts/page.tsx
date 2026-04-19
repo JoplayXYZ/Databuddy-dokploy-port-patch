@@ -1,9 +1,11 @@
 "use client";
 
-import { ChartBarIcon } from "@phosphor-icons/react";
-import { ChartLineIcon } from "@phosphor-icons/react";
-import { ChartPieIcon } from "@phosphor-icons/react";
-import { WaveformIcon } from "@phosphor-icons/react";
+import {
+	IconChartBarTrendUpFillDuo18,
+	IconChartLine2FillDuo18,
+	IconChartPieFillDuo18,
+	IconWaveformLinesFillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import { StatCard } from "@/components/analytics/stat-card";
 import { MiniPieChart } from "@/components/charts/pie-chart";
 import {
@@ -71,7 +73,7 @@ export default function ChartsPage() {
 				<Card className="gap-4">
 					<CardHeader>
 						<div className="flex items-center gap-2">
-							<WaveformIcon className="size-5" weight="duotone" />
+							<IconWaveformLinesFillDuo18 className="size-5" />
 							<CardTitle>Area Chart</CardTitle>
 						</div>
 						<CardDescription>Filled area under the line</CardDescription>
@@ -133,7 +135,7 @@ export default function ChartsPage() {
 				<Card className="gap-4">
 					<CardHeader>
 						<div className="flex items-center gap-2">
-							<ChartLineIcon className="size-5" weight="duotone" />
+							<IconChartLine2FillDuo18 className="size-5" />
 							<CardTitle>Line Chart</CardTitle>
 						</div>
 						<CardDescription>Simple line without fill</CardDescription>
@@ -195,7 +197,7 @@ export default function ChartsPage() {
 				<Card className="gap-4">
 					<CardHeader>
 						<div className="flex items-center gap-2">
-							<ChartBarIcon className="size-5" weight="duotone" />
+							<IconChartBarTrendUpFillDuo18 className="size-5" />
 							<CardTitle>Bar Chart</CardTitle>
 						</div>
 						<CardDescription>Vertical bars for each data point</CardDescription>
@@ -251,7 +253,7 @@ export default function ChartsPage() {
 				<Card className="gap-4">
 					<CardHeader>
 						<div className="flex items-center gap-2">
-							<ChartPieIcon className="size-5" weight="duotone" />
+							<IconChartPieFillDuo18 className="size-5" />
 							<CardTitle>Pie Chart</CardTitle>
 						</div>
 						<CardDescription>Distribution visualization</CardDescription>

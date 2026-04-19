@@ -1,4 +1,4 @@
-import { MapPinIcon } from "@phosphor-icons/react";
+import { IconLocationFillDuo18 } from "nucleo-ui-fill-duo-18";
 import type { CellContext, ColumnDef } from "@tanstack/react-table";
 import { CountryFlag } from "@/components/icon";
 import { PercentageBadge } from "@/components/ui/percentage-badge";
@@ -34,9 +34,8 @@ export function createGeoColumns({ type }: GeoRowProps): ColumnDef<GeoEntry>[] {
 						return <CountryFlag country={countryCode} size={16} />;
 					}
 					return (
-						<MapPinIcon
+						<IconLocationFillDuo18
 							className="size-4 text-muted-foreground"
-							weight="duotone"
 						/>
 					);
 				};

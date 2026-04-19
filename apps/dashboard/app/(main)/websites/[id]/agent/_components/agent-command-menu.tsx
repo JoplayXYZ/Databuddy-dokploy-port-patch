@@ -1,15 +1,16 @@
 "use client";
 
 import {
-	ChartBarIcon,
-	ClipboardTextIcon,
-	CompassIcon,
-	FileTextIcon,
-	FunnelIcon,
-	LightningIcon,
-	MagnifyingGlassIcon,
-	WarningIcon,
-} from "@phosphor-icons/react";
+	IconAlertWarningFillDuo18,
+	IconBoltLightningFillDuo18,
+	IconChartBarTrendUpFillDuo18,
+	IconClipboardContentFillDuo18,
+	IconCompassFillDuo18,
+	IconFileContentFillDuo18,
+	IconFilterFillDuo18,
+	IconMagnifierFillDuo18,
+} from "nucleo-ui-fill-duo-18";
+hosphor-icons/react";
 import {
 	Popover,
 	PopoverAnchor,
@@ -18,19 +19,19 @@ import {
 import { cn } from "@/lib/utils";
 import type { AgentCommand } from "./agent-commands";
 
-const COMMAND_ICONS: Record<string, typeof MagnifyingGlassIcon> = {
-	"/analyze": MagnifyingGlassIcon,
-	"/sources": CompassIcon,
-	"/funnel": FunnelIcon,
-	"/pages": FileTextIcon,
-	"/live": LightningIcon,
-	"/anomalies": WarningIcon,
-	"/compare": ChartBarIcon,
-	"/report": ClipboardTextIcon,
+const COMMAND_ICONS: Record<string, typeof IconMagnifierFillDuo18> = {
+	"/analyze": IconMagnifierFillDuo18,
+	"/sources": IconCompassFillDuo18,
+	"/funnel": IconFilterFillDuo18,
+	"/pages": IconFileContentFillDuo18,
+	"/live": IconBoltLightningFillDuo18,
+	"/anomalies": IconAlertWarningFillDuo18,
+	"/compare": IconChartBarTrendUpFillDuo18,
+	"/report": IconClipboardContentFillDuo18,
 };
 
 function getCommandIcon(command: string) {
-	return COMMAND_ICONS[command] ?? MagnifyingGlassIcon;
+	return COMMAND_ICONS[command] ?? IconMagnifierFillDuo18;
 }
 
 interface AgentCommandMenuProps {
@@ -93,7 +94,6 @@ export function AgentCommandMenu({
 									<div className="flex size-8 shrink-0 items-center justify-center rounded border bg-background">
 										<Icon
 											className="size-4 text-foreground/60"
-											weight="duotone"
 										/>
 									</div>
 									<div className="min-w-0 flex-1">

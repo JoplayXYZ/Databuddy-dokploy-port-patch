@@ -1,8 +1,10 @@
 "use client";
 
-import { CheckIcon } from "@phosphor-icons/react";
-import { CopyIcon } from "@phosphor-icons/react";
-import { HeartbeatIcon } from "@phosphor-icons/react";
+import {
+	IconChartActivityFillDuo18,
+	IconCheckFillDuo18,
+	IconCopyFillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -66,9 +68,9 @@ function InviteLinkRow({ link }: { link: InviteLink }) {
 					type="button"
 				>
 					{copied ? (
-						<CheckIcon className="size-3.5 text-green-600" weight="bold" />
+						<IconCheckFillDuo18 className="size-3.5 text-green-600" />
 					) : (
-						<CopyIcon className="size-3.5" weight="duotone" />
+						<IconCopyFillDuo18 className="size-3.5" />
 					)}
 				</button>
 			)}
@@ -91,7 +93,7 @@ function InviteLinksContent({ flagKey }: { flagKey: string }) {
 		<div className="space-y-5">
 			<div className="space-y-1 text-balance text-center">
 				<div className="mx-auto mb-3 flex size-10 items-center justify-center rounded border bg-secondary">
-					<HeartbeatIcon className="size-5 text-foreground" weight="duotone" />
+					<IconChartActivityFillDuo18 className="size-5 text-foreground" />
 				</div>
 				<p className="font-medium text-foreground text-sm">
 					You have access to {label}

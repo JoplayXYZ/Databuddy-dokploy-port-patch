@@ -1,6 +1,6 @@
 "use client";
 
-import { ChartLineIcon } from "@phosphor-icons/react";
+import { IconChartLine2FillDuo18 } from "nucleo-ui-fill-duo-18";
 import { useMemo } from "react";
 import {
 	Chart,
@@ -72,7 +72,7 @@ export function SimpleMetricsChart({
 			<Chart.Content<SimpleChartReadyPayload>
 				emptyProps={{
 					description: "No samples in this range.",
-					icon: <ChartLineIcon weight="duotone" />,
+					icon: <IconChartLine2FillDuo18 />,
 					title: "No data",
 				}}
 				loading={<Chart.DefaultLoading height={height} />}

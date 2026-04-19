@@ -1,6 +1,6 @@
 "use client";
 
-import { WarningIcon } from "@phosphor-icons/react";
+import { IconAlertWarningFillDuo18 } from "nucleo-ui-fill-duo-18";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,10 +19,9 @@ export function UnauthorizedAccessError() {
 			<CardHeader className="pb-3">
 				<div className="flex items-center gap-3">
 					<div className="rounded-full bg-red-100 p-2.5 dark:bg-red-900/30">
-						<WarningIcon
+						<IconAlertWarningFillDuo18
 							className="size-6 text-red-600 dark:text-red-400"
 							size={24}
-							weight="fill"
 						/>
 					</div>
 					<div>

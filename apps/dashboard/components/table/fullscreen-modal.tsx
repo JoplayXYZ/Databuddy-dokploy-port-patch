@@ -1,4 +1,4 @@
-import { XIcon } from "@phosphor-icons/react";
+import { IconXmarkFillDuo18 } from "nucleo-ui-fill-duo-18";
 import {
 	type ColumnDef,
 	getCoreRowModel,
@@ -100,7 +100,7 @@ export function FullScreenModal<TData extends { name: string | number }>({
 						title="Close"
 						type="button"
 					>
-						<XIcon size={20} />
+						<IconXmarkFillDuo18 size={20} />
 					</button>
 				</div>
 			</div>

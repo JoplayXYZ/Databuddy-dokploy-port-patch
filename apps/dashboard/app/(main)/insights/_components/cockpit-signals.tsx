@@ -12,14 +12,14 @@ import {
 } from "@/components/ui/dropdown-menu";
 import type { Insight, InsightSeverity } from "@/lib/insight-types";
 import { cn } from "@/lib/utils";
-import { ArrowClockwiseIcon } from "@phosphor-icons/react/dist/ssr/ArrowClockwise";
-import { ArrowsDownUpIcon } from "@phosphor-icons/react/dist/ssr/ArrowsDownUp";
-import { CaretDownIcon } from "@phosphor-icons/react/dist/ssr/CaretDown";
-import { CheckCircleIcon } from "@phosphor-icons/react/dist/ssr/CheckCircle";
-import { FunnelIcon } from "@phosphor-icons/react/dist/ssr/Funnel";
-import { SparkleIcon } from "@phosphor-icons/react/dist/ssr/Sparkle";
-import { WarningCircleIcon } from "@phosphor-icons/react/dist/ssr/WarningCircle";
-import { XIcon } from "@phosphor-icons/react/dist/ssr/X";
+;
+t/ssr/ArrowsDownUp";
+aretDown";
+Circle";
+Funnel";
+parkle";
+Circle";
+dist/ssr/X";
 import {
 	type ReactElement,
 	useCallback,
@@ -30,6 +30,7 @@ import {
 } from "react";
 import { InsightCard } from "./insight-card";
 
+import { IconArrowsOppositeDirectionYFillDuo18, IconChevronDownFillDuo18, IconCircleCheckFillDuo18, IconCircleWarningFillDuo18, IconFilterFillDuo18, IconRefreshFillDuo18, IconSparkleFillDuo18, IconXmarkFillDuo18 } from "nucleo-ui-fill-duo-18";
 type SeverityFilter = "all" | InsightSeverity;
 type SortMode = "priority" | "newest" | "change";
 
@@ -212,10 +213,9 @@ export function CockpitSignals(): ReactElement {
 		>
 			<div className="flex items-center justify-between gap-3 border-b px-4 py-3">
 				<div className="flex items-center gap-2">
-					<SparkleIcon
+					<IconSparkleFillDuo18
 						aria-hidden
 						className="size-4 text-primary"
-						weight="duotone"
 					/>
 					<h3 className="font-semibold text-foreground text-sm">Signals</h3>
 				</div>
@@ -238,7 +238,7 @@ export function CockpitSignals(): ReactElement {
 									type="button"
 								>
 									<span className="truncate">{selectedWebsiteName}</span>
-									<CaretDownIcon className="size-3" weight="fill" />
+									<IconChevronDownFillDuo18 className="size-3" />
 								</button>
 							</DropdownMenuTrigger>
 							<DropdownMenuContent align="start" className="w-[200px]">
@@ -268,9 +268,9 @@ export function CockpitSignals(): ReactElement {
 								)}
 								type="button"
 							>
-								<FunnelIcon className="size-3.5" />
+								<IconFilterFillDuo18 className="size-3.5" />
 								{selectedSeverityLabel}
-								<CaretDownIcon className="size-3" weight="fill" />
+								<IconChevronDownFillDuo18 className="size-3" />
 							</button>
 						</DropdownMenuTrigger>
 						<DropdownMenuContent align="start">
@@ -301,9 +301,9 @@ export function CockpitSignals(): ReactElement {
 								className="flex items-center gap-1.5 rounded px-2 py-1 font-medium text-muted-foreground text-xs transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
 								type="button"
 							>
-								<ArrowsDownUpIcon className="size-3.5" />
+								<IconArrowsOppositeDirectionYFillDuo18 className="size-3.5" />
 								{selectedSortLabel}
-								<CaretDownIcon className="size-3" weight="fill" />
+								<IconChevronDownFillDuo18 className="size-3" />
 							</button>
 						</DropdownMenuTrigger>
 						<DropdownMenuContent align="start">
@@ -341,7 +341,7 @@ export function CockpitSignals(): ReactElement {
 							onClick={clearFilters}
 							type="button"
 						>
-							<XIcon className="size-3" />
+							<IconXmarkFillDuo18 className="size-3" />
 							Clear
 						</button>
 					)}
@@ -408,7 +408,7 @@ export function CockpitSignals(): ReactElement {
 							>
 								{isFetchingNextPage ? (
 									<>
-										<ArrowClockwiseIcon className="size-4 animate-spin" />
+										<IconRefreshFillDuo18 className="size-4 animate-spin" />
 										Loading…
 									</>
 								) : (
@@ -451,15 +451,14 @@ function InsightsFetchStatusRow({
 			role="status"
 		>
 			{variant === "refresh" ? (
-				<ArrowClockwiseIcon
+				<IconRefreshFillDuo18
 					aria-hidden
 					className="size-4 shrink-0 animate-spin text-primary"
 				/>
 			) : (
-				<SparkleIcon
+				<IconSparkleFillDuo18
 					aria-hidden
 					className="size-4 shrink-0 animate-pulse text-primary"
-					weight="duotone"
 				/>
 			)}
 			<div className="min-w-0">
@@ -476,7 +475,7 @@ function ErrorState({ onRetryAction }: { onRetryAction: () => void }) {
 	return (
 		<div className="flex flex-col items-center justify-center gap-4 py-16 text-center">
 			<div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-red-500/10">
-				<WarningCircleIcon className="size-5 text-red-500" weight="duotone" />
+				<IconCircleWarningFillDuo18 className="size-5 text-red-500" />
 			</div>
 			<div className="space-y-1">
 				<p className="font-medium text-foreground">Couldn't load insights</p>
@@ -485,7 +484,7 @@ function ErrorState({ onRetryAction }: { onRetryAction: () => void }) {
 				</p>
 			</div>
 			<Button onClick={onRetryAction} size="sm" variant="outline">
-				<ArrowClockwiseIcon className="size-4" />
+				<IconRefreshFillDuo18 className="size-4" />
 				Retry
 			</Button>
 		</div>
@@ -496,7 +495,7 @@ function AllHealthyState() {
 	return (
 		<div className="flex flex-col items-center justify-center gap-4 py-16 text-center">
 			<div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-emerald-500/10">
-				<CheckCircleIcon className="size-5 text-emerald-500" weight="fill" />
+				<IconCircleCheckFillDuo18 className="size-5 text-emerald-500" />
 			</div>
 			<div className="space-y-1">
 				<p className="font-medium text-foreground">All systems healthy</p>
@@ -518,7 +517,7 @@ function NoMatchState({
 	return (
 		<div className="flex flex-col items-center justify-center gap-4 py-16 text-center">
 			<div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-accent">
-				<FunnelIcon className="size-5 text-muted-foreground" weight="duotone" />
+				<IconFilterFillDuo18 className="size-5 text-muted-foreground" />
 			</div>
 			<div className="space-y-1">
 				<p className="font-medium text-foreground">No matching insights</p>

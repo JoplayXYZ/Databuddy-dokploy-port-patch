@@ -2,11 +2,13 @@
 
 import { useFlag } from "@databuddy/sdk/react";
 import { GATED_FEATURES } from "@databuddy/shared/types/features";
-import { ArchiveIcon } from "@phosphor-icons/react";
-import { FlagIcon } from "@phosphor-icons/react";
-import { InfoIcon } from "@phosphor-icons/react";
-import { LayoutIcon } from "@phosphor-icons/react";
-import { UsersThreeIcon } from "@phosphor-icons/react";
+import {
+	IconArchiveFillDuo18,
+	IconCircleInfoFillDuo18,
+	IconFlag2FillDuo18,
+	IconLayoutLeftFillDuo18,
+	IconUsersFillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import { useQuery } from "@tanstack/react-query";
 import { useAtom } from "jotai";
 import { useParams, usePathname } from "next/navigation";
@@ -143,13 +145,13 @@ export default function FlagsLayout({
 				}
 				icon={
 					isTemplatesPage ? (
-						<LayoutIcon className="size-6 text-accent-foreground" />
+						<IconLayoutLeftFillDuo18 className="size-6 text-accent-foreground" />
 					) : isGroupsPage ? (
-						<UsersThreeIcon className="size-6 text-accent-foreground" />
+						<IconUsersFillDuo18 className="size-6 text-accent-foreground" />
 					) : isArchivePage ? (
-						<ArchiveIcon className="size-6 text-accent-foreground" />
+						<IconArchiveFillDuo18 className="size-6 text-accent-foreground" />
 					) : (
-						<FlagIcon className="size-6 text-accent-foreground" />
+						<IconFlag2FillDuo18 className="size-6 text-accent-foreground" />
 					)
 				}
 				isLoading={isLoading}
@@ -196,28 +198,28 @@ export default function FlagsLayout({
 						id: "flags",
 						label: "Flags",
 						href: `/websites/${websiteId}/flags`,
-						icon: FlagIcon,
+						icon: IconFlag2FillDuo18,
 						count: activeFlags.length,
 					},
 					{
 						id: "groups",
 						label: "Groups",
 						href: `/websites/${websiteId}/flags/groups`,
-						icon: UsersThreeIcon,
+						icon: IconUsersFillDuo18,
 						count: groups?.length,
 					},
 					{
 						id: "templates",
 						label: "Templates",
 						href: `/websites/${websiteId}/flags/templates`,
-						icon: LayoutIcon,
+						icon: IconLayoutLeftFillDuo18,
 						count: templates?.length,
 					},
 					{
 						id: "archive",
 						label: "Archive",
 						href: `/websites/${websiteId}/flags/archive`,
-						icon: ArchiveIcon,
+						icon: IconArchiveFillDuo18,
 						count: archivedFlags.length,
 					},
 				]}
@@ -230,9 +232,9 @@ export default function FlagsLayout({
 					<div className="flex items-center gap-3">
 						<div className="flex items-center gap-2">
 							{isExperimentOn ? (
-								<FlagIcon className="size-4 text-destructive" weight="fill" />
+								<IconFlag2FillDuo18 className="size-4 text-destructive" />
 							) : (
-								<FlagIcon className="size-4 text-blue-600" weight="fill" />
+								<IconFlag2FillDuo18 className="size-4 text-blue-600" />
 							)}
 							{isExperimentOn ? (
 								<Badge variant="destructive">Red Team</Badge>
@@ -246,7 +248,7 @@ export default function FlagsLayout({
 									className="flex items-center gap-1.5 text-foreground text-sm hover:text-foreground/80"
 									type="button"
 								>
-									<InfoIcon className="size-4" weight="duotone" />
+									<IconCircleInfoFillDuo18 className="size-4" />
 									<span className="hidden sm:inline">A/B Test Experiment</span>
 								</button>
 							</TooltipTrigger>

@@ -1,14 +1,16 @@
 "use client";
 
-import { ArrowLeftIcon } from "@phosphor-icons/react";
-import { CalendarIcon } from "@phosphor-icons/react";
-import { CircleNotchIcon } from "@phosphor-icons/react";
-import { CurrencyDollarIcon } from "@phosphor-icons/react";
-import { GearIcon } from "@phosphor-icons/react";
-import { LightningIcon } from "@phosphor-icons/react";
-import { QuestionIcon } from "@phosphor-icons/react";
-import { SmileyIcon } from "@phosphor-icons/react";
-import { WarningCircleIcon } from "@phosphor-icons/react";
+import {
+	IconArrowLeftFillDuo18,
+	IconBoltLightningFillDuo18,
+	IconCalendarFillDuo18,
+	IconCircleQuestionFillDuo18,
+	IconCircleWarningFillDuo18,
+	IconCoinsFillDuo18,
+	IconFaceSmileFillDuo18,
+	IconGearFillDuo18,
+	IconLoader2FillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -55,16 +57,16 @@ export interface CancelFeedback {
 }
 
 const CANCEL_REASONS: CancelReason[] = [
-	{ id: "too_expensive", label: "Too expensive", icon: CurrencyDollarIcon },
-	{ id: "missing_features", label: "Missing features I need", icon: GearIcon },
-	{ id: "not_using", label: "Not using it enough", icon: SmileyIcon },
-	{ id: "switching", label: "Switching to another tool", icon: LightningIcon },
+	{ id: "too_expensive", label: "Too expensive", icon: IconCoinsFillDuo18 },
+	{ id: "missing_features", label: "Missing features I need", icon: IconGearFillDuo18 },
+	{ id: "not_using", label: "Not using it enough", icon: IconFaceSmileFillDuo18 },
+	{ id: "switching", label: "Switching to another tool", icon: IconBoltLightningFillDuo18 },
 	{
 		id: "technical_issues",
 		label: "Technical issues",
-		icon: WarningCircleIcon,
+		icon: IconCircleWarningFillDuo18,
 	},
-	{ id: "other", label: "Other reason", icon: QuestionIcon },
+	{ id: "other", label: "Other reason", icon: IconCircleQuestionFillDuo18 },
 ];
 
 export function CancelSubscriptionDialog({
@@ -151,7 +153,6 @@ export function CancelSubscriptionDialog({
 												<IconComponent
 													className="text-accent-foreground"
 													size={16}
-													weight="duotone"
 												/>
 											</div>
 											<span className="font-medium text-sm">
@@ -212,10 +213,9 @@ export function CancelSubscriptionDialog({
 							>
 								<div className="flex items-start gap-3">
 									<div className="flex size-10 shrink-0 items-center justify-center rounded border bg-accent">
-										<CalendarIcon
+										<IconCalendarFillDuo18
 											className="text-accent-foreground"
 											size={20}
-											weight="duotone"
 										/>
 									</div>
 									<div className="flex-1">
@@ -244,10 +244,9 @@ export function CancelSubscriptionDialog({
 							>
 								<div className="flex items-start gap-3">
 									<div className="flex size-10 shrink-0 items-center justify-center rounded border border-destructive/20 bg-destructive/10">
-										<LightningIcon
+										<IconBoltLightningFillDuo18
 											className="text-destructive"
 											size={20}
-											weight="duotone"
 										/>
 									</div>
 									<div className="flex-1">
@@ -262,10 +261,9 @@ export function CancelSubscriptionDialog({
 
 						{selected === "immediate" && (
 							<div className="flex items-start gap-2 rounded border border-destructive/20 bg-destructive/5 p-3 text-sm">
-								<WarningCircleIcon
+								<IconCircleWarningFillDuo18
 									className="mt-0.5 shrink-0 text-destructive"
 									size={16}
-									weight="fill"
 								/>
 								<span className="text-destructive">
 									This action cannot be undone. You will lose access to all{" "}
@@ -281,7 +279,7 @@ export function CancelSubscriptionDialog({
 								onClick={handleBackToFeedback}
 								variant="outline"
 							>
-								<ArrowLeftIcon size={14} />
+								<IconArrowLeftFillDuo18 size={14} />
 								Back
 							</Button>
 							<Button
@@ -291,7 +289,7 @@ export function CancelSubscriptionDialog({
 								variant={selected === "immediate" ? "destructive" : "default"}
 							>
 								{confirming && (
-									<CircleNotchIcon className="mr-2 size-4 animate-spin" />
+									<IconLoader2FillDuo18 className="mr-2 size-4 animate-spin" />
 								)}
 								{selected === "immediate"
 									? "Cancel now"

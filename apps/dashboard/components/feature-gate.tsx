@@ -6,12 +6,14 @@ import {
 	getMinimumPlanForFeature,
 	PLAN_IDS,
 } from "@databuddy/shared/types/features";
-import { ArrowRightIcon } from "@phosphor-icons/react";
-import { CrownIcon } from "@phosphor-icons/react";
-import { LockSimpleIcon } from "@phosphor-icons/react";
-import { RocketLaunchIcon } from "@phosphor-icons/react";
-import { SparkleIcon } from "@phosphor-icons/react";
-import { StarIcon } from "@phosphor-icons/react";
+import {
+	IconArrowRightFillDuo18,
+	IconCrownFillDuo18,
+	IconLockFillDuo18,
+	IconRocketFillDuo18,
+	IconSparkleFillDuo18,
+	IconStarFillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { useBillingContext } from "@/components/providers/billing-provider";
@@ -21,22 +23,22 @@ import { cn } from "@/lib/utils";
 
 const PLAN_CONFIG: Record<
 	string,
-	{ name: string; icon: typeof StarIcon; color: string }
+	{ name: string; icon: typeof IconStarFillDuo18; color: string }
 > = {
 	[PLAN_IDS.FREE]: {
 		name: "Free",
-		icon: SparkleIcon,
+		icon: IconSparkleFillDuo18,
 		color: "text-muted-foreground",
 	},
 	[PLAN_IDS.HOBBY]: {
 		name: "Hobby",
-		icon: RocketLaunchIcon,
+		icon: IconRocketFillDuo18,
 		color: "text-success",
 	},
-	[PLAN_IDS.PRO]: { name: "Pro", icon: StarIcon, color: "text-primary" },
+	[PLAN_IDS.PRO]: { name: "Pro", icon: IconStarFillDuo18, color: "text-primary" },
 	[PLAN_IDS.SCALE]: {
 		name: "Scale",
-		icon: CrownIcon,
+		icon: IconCrownFillDuo18,
 		color: "text-brand-amber",
 	},
 };
@@ -81,9 +83,8 @@ export function FeatureGate({
 			<Card className="w-full max-w-md overflow-hidden pt-0">
 				<CardHeader className="dotted-bg flex flex-col items-center gap-4 border-b bg-accent py-8">
 					<div className="flex size-14 items-center justify-center rounded border bg-card">
-						<LockSimpleIcon
+						<IconLockFillDuo18
 							className="size-7 text-muted-foreground"
-							weight="duotone"
 						/>
 					</div>
 					<div className="text-center">
@@ -104,7 +105,6 @@ export function FeatureGate({
 						<div className="flex items-center gap-1.5">
 							<PlanIcon
 								className={cn("size-4", planConfig.color)}
-								weight="duotone"
 							/>
 							<span className={cn("font-semibold text-sm", planConfig.color)}>
 								{planConfig.name}
@@ -117,7 +117,6 @@ export function FeatureGate({
 						<div className="flex items-center gap-1.5">
 							<CurrentIcon
 								className={cn("size-4", currentConfig.color)}
-								weight="duotone"
 							/>
 							<span className="font-medium text-foreground text-sm">
 								{currentConfig.name}
@@ -128,9 +127,9 @@ export function FeatureGate({
 					{canUserUpgrade ? (
 						<Button asChild className="group w-full gap-2" size="lg">
 							<Link href="/billing/plans">
-								<RocketLaunchIcon className="size-5" weight="duotone" />
+								<IconRocketFillDuo18 className="size-5" />
 								Upgrade to {planConfig.name}
-								<ArrowRightIcon className="size-4 transition-transform group-hover:translate-x-0.5" />
+								<IconArrowRightFillDuo18 className="size-4 transition-transform group-hover:translate-x-0.5" />
 							</Link>
 						</Button>
 					) : (

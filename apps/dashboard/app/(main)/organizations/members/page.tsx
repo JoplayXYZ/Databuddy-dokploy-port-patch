@@ -1,6 +1,9 @@
 "use client";
 
-import { EnvelopeIcon, UsersIcon } from "@phosphor-icons/react";
+import {
+	IconEnvelopeFillDuo18,
+	IconUsersFillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -47,11 +50,11 @@ export default function MembersPage() {
 		>
 			<TabsList>
 				<TabsTrigger value="members">
-					<UsersIcon weight="duotone" />
+					<IconUsersFillDuo18 />
 					Members
 				</TabsTrigger>
 				<TabsTrigger value="invitations">
-					<EnvelopeIcon weight="duotone" />
+					<IconEnvelopeFillDuo18 />
 					Invitations
 				</TabsTrigger>
 			</TabsList>

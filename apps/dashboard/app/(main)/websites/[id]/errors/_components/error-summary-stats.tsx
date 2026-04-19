@@ -1,7 +1,9 @@
-import { ActivityIcon } from "@phosphor-icons/react";
-import { TrendUpIcon } from "@phosphor-icons/react";
-import { UsersIcon } from "@phosphor-icons/react";
-import { WarningCircleIcon } from "@phosphor-icons/react";
+import {
+	IconArrowTrendUpFillDuo18,
+	IconChartActivityFillDuo18,
+	IconCircleWarningFillDuo18,
+	IconUsersFillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import type { ErrorSummary } from "./types";
@@ -18,7 +20,7 @@ function ErrorStatCard({
 }: {
 	title: string;
 	value: string;
-	icon: typeof WarningCircleIcon;
+	icon: typeof IconCircleWarningFillDuo18;
 	variant?: "default" | "destructive" | "warning";
 }) {
 	const variantStyles = {
@@ -47,7 +49,7 @@ function ErrorStatCard({
 						styles.iconBg
 					)}
 				>
-					<Icon className={cn("size-4", styles.iconColor)} weight="duotone" />
+					<Icon className={cn("size-4", styles.iconColor)} />
 				</div>
 				<div className="min-w-0 flex-1">
 					<p className="truncate font-semibold text-base tabular-nums leading-tight">
@@ -63,24 +65,24 @@ function ErrorStatCard({
 export const ErrorSummaryStats = ({ errorSummary }: ErrorSummaryStatsProps) => (
 	<div className="grid grid-cols-2 gap-2">
 		<ErrorStatCard
-			icon={WarningCircleIcon}
+			icon={IconCircleWarningFillDuo18}
 			title="Total Errors"
 			value={(errorSummary.totalErrors || 0).toLocaleString()}
 			variant="destructive"
 		/>
 		<ErrorStatCard
-			icon={TrendUpIcon}
+			icon={IconArrowTrendUpFillDuo18}
 			title="Error Rate"
 			value={`${(errorSummary.errorRate || 0).toFixed(2)}%`}
 			variant="warning"
 		/>
 		<ErrorStatCard
-			icon={UsersIcon}
+			icon={IconUsersFillDuo18}
 			title="Affected Users"
 			value={(errorSummary.affectedUsers || 0).toLocaleString()}
 		/>
 		<ErrorStatCard
-			icon={ActivityIcon}
+			icon={IconChartActivityFillDuo18}
 			title="Affected Sessions"
 			value={(errorSummary.affectedSessions || 0).toLocaleString()}
 		/>

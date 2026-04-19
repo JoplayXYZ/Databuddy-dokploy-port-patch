@@ -1,8 +1,10 @@
 "use client";
 
-import { ArrowClockwiseIcon } from "@phosphor-icons/react";
-import { TrendUpIcon } from "@phosphor-icons/react";
-import { WarningCircleIcon } from "@phosphor-icons/react";
+import {
+	IconArrowTrendUpFillDuo18,
+	IconCircleWarningFillDuo18,
+	IconRefreshFillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import { Button } from "@/components/ui/button";
 
 /**
@@ -13,10 +15,9 @@ export function EmptyUsageState() {
 	return (
 		<div className="flex flex-col items-center justify-center py-16 text-center">
 			<div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-secondary">
-				<TrendUpIcon
+				<IconArrowTrendUpFillDuo18
 					className="text-secondary-foreground"
 					size={24}
-					weight="duotone"
 				/>
 			</div>
 			<p className="font-semibold">No usage data yet</p>
@@ -43,10 +44,9 @@ export function ErrorState({ error, onRetry }: ErrorStateProps) {
 	return (
 		<div className="flex h-full flex-col items-center justify-center p-8">
 			<div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-destructive/10">
-				<WarningCircleIcon
+				<IconCircleWarningFillDuo18
 					className="text-destructive"
 					size={24}
-					weight="duotone"
 				/>
 			</div>
 			<p className="font-semibold">Something went wrong</p>
@@ -54,7 +54,7 @@ export function ErrorState({ error, onRetry }: ErrorStateProps) {
 				{errorMessage}
 			</p>
 			<Button className="mt-2" onClick={onRetry} size="sm" variant="outline">
-				<ArrowClockwiseIcon size={14} />
+				<IconRefreshFillDuo18 size={14} />
 				Try again
 			</Button>
 		</div>

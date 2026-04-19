@@ -1,7 +1,9 @@
 "use client";
 
-import { PlusIcon } from "@phosphor-icons/react";
-import { XCircleIcon } from "@phosphor-icons/react";
+import {
+	IconCircleXmarkFillDuo18,
+	IconPlusFillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -114,7 +116,7 @@ export function TagsChat({
 									type="button"
 									variant="ghost"
 								>
-									<XCircleIcon className="size-3" weight="duotone" />
+									<IconCircleXmarkFillDuo18 className="size-3" />
 								</Button>
 							</div>
 						))}
@@ -135,7 +137,7 @@ export function TagsChat({
 						onClick={() => addTag(draft)}
 						type="button"
 					>
-						<PlusIcon className="size-4" /> Add
+						<IconPlusFillDuo18 className="size-4" /> Add
 					</Button>
 				</div>
 

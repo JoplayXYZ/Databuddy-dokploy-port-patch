@@ -1,7 +1,9 @@
 "use client";
 
-import { ArrowSquareOutIcon } from "@phosphor-icons/react";
-import { FunnelIcon } from "@phosphor-icons/react";
+import {
+	IconExternalLinkFillDuo18,
+	IconFilterFillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import { useAtom } from "jotai";
 import Link from "next/link";
 import { notFound, useParams } from "next/navigation";
@@ -62,7 +64,7 @@ export default function EventsStreamPage() {
 						<span className="rounded bg-primary/10 px-2 py-1 font-medium text-primary text-xs transition-colors group-hover:bg-primary/20">
 							{event.event_name}
 						</span>
-						<ArrowSquareOutIcon className="size-3 text-primary opacity-0 transition-opacity group-hover:opacity-100" />
+						<IconExternalLinkFillDuo18 className="size-3 text-primary opacity-0 transition-opacity group-hover:opacity-100" />
 					</Link>
 					<button
 						aria-label={`Filter by ${event.event_name}`}
@@ -71,7 +73,7 @@ export default function EventsStreamPage() {
 						title="Filter by this event"
 						type="button"
 					>
-						<FunnelIcon className="size-3.5" weight="duotone" />
+						<IconFilterFillDuo18 className="size-3.5" />
 					</button>
 				</div>
 			);

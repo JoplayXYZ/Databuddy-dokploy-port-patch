@@ -1,7 +1,7 @@
 "use client";
 
 import type { Website } from "@databuddy/shared/types/website";
-import { GlobeIcon } from "@phosphor-icons/react";
+import { IconGlobeFillDuo18 } from "nucleo-ui-fill-duo-18";
 import { FaviconImage } from "@/components/analytics/favicon-image";
 import { cn } from "@/lib/utils";
 
@@ -31,7 +31,7 @@ function WebsiteCard({
 				domain={website.domain}
 				fallbackIcon={
 					<div className="rounded bg-primary/10 p-1">
-						<GlobeIcon className="size-3 text-primary" size={12} />
+						<IconGlobeFillDuo18 className="size-3 text-primary" size={12} />
 					</div>
 				}
 				size={16}
@@ -74,10 +74,9 @@ export function WebsiteSelector({
 				))
 			) : (
 				<div className="py-6 text-center">
-					<GlobeIcon
+					<IconGlobeFillDuo18
 						className="mx-auto mb-2 size-6 text-accent-foreground"
 						size={24}
-						weight="duotone"
 					/>
 					<p className="text-muted-foreground text-xs">No websites found</p>
 				</div>

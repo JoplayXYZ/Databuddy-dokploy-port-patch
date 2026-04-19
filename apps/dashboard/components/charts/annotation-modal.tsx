@@ -1,10 +1,12 @@
 "use client";
 
-import { EyeIcon } from "@phosphor-icons/react";
-import { EyeSlashIcon } from "@phosphor-icons/react";
-import { PlusIcon } from "@phosphor-icons/react";
-import { XIcon } from "@phosphor-icons/react";
-import { SpinnerGapIcon } from "@phosphor-icons/react";
+import {
+	IconEyeFillDuo18,
+	IconEyeSlashFillDuo18,
+	IconLoader2FillDuo18,
+	IconPlusFillDuo18,
+	IconXmarkFillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import { useState } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { Badge } from "@/components/ui/badge";
@@ -246,7 +248,7 @@ export function AnnotationModal(props: AnnotationModalProps) {
 										variant="secondary"
 									>
 										{tag}
-										<XIcon className="size-2.5" />
+										<IconXmarkFillDuo18 className="size-2.5" />
 									</Badge>
 								))}
 							</div>
@@ -272,7 +274,7 @@ export function AnnotationModal(props: AnnotationModalProps) {
 								size="icon"
 								variant="outline"
 							>
-								<PlusIcon className="size-3" />
+								<IconPlusFillDuo18 className="size-3" />
 							</Button>
 						</div>
 						{availableTags.length > 0 && (
@@ -321,14 +323,12 @@ export function AnnotationModal(props: AnnotationModalProps) {
 					<div className="flex items-center justify-between rounded border px-3 py-2">
 						<div className="flex items-center gap-2">
 							{isPublic ? (
-								<EyeIcon
+								<IconEyeFillDuo18
 									className="size-3.5 text-foreground"
-									weight="duotone"
 								/>
 							) : (
-								<EyeSlashIcon
+								<IconEyeSlashFillDuo18
 									className="size-3.5 text-muted-foreground"
-									weight="duotone"
 								/>
 							)}
 							<span className="text-foreground text-sm">Public</span>
@@ -356,7 +356,7 @@ export function AnnotationModal(props: AnnotationModalProps) {
 						onClick={handleSubmit}
 					>
 						{loading && (
-							<SpinnerGapIcon className="mr-1.5 size-3.5 animate-spin" />
+							<IconLoader2FillDuo18 className="mr-1.5 size-3.5 animate-spin" />
 						)}
 						{isCreate ? "Create" : "Save"}
 					</Button>

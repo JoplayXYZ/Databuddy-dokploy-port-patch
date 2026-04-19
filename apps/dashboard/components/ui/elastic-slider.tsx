@@ -1,7 +1,9 @@
 "use client";
 
-import { MinusIcon } from "@phosphor-icons/react";
-import { PlusIcon } from "@phosphor-icons/react";
+import {
+	IconMinusFillDuo18,
+	IconPlusFillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import {
 	motion,
 	useMotionValue,
@@ -42,8 +44,8 @@ export function Slider({
 	max = 100,
 	step = 1,
 	className,
-	leftIcon = <MinusIcon size={16} />,
-	rightIcon = <PlusIcon size={16} />,
+	leftIcon = <IconMinusFillDuo18 size={16} />,
+	rightIcon = <IconPlusFillDuo18 size={16} />,
 	showValue = true,
 	disabled = false,
 }: SliderProps) {

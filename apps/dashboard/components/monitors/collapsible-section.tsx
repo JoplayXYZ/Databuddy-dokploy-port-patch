@@ -1,6 +1,6 @@
 "use client";
 
-import { CaretDownIcon } from "@phosphor-icons/react";
+import { IconChevronDownFillDuo18 } from "nucleo-ui-fill-duo-18";
 import { AnimatePresence, motion } from "motion/react";
 import { cn } from "@/lib/utils";
 
@@ -29,7 +29,7 @@ export function CollapsibleSection({
 				type="button"
 			>
 				<div className="flex items-center gap-2.5">
-					<Icon size={16} weight="duotone" />
+					<Icon size={16} />
 					<span className="font-medium text-sm">{title}</span>
 					{badge !== undefined && badge > 0 && (
 						<span className="flex size-5 items-center justify-center rounded-full bg-primary font-medium text-primary-foreground text-xs">
@@ -37,12 +37,11 @@ export function CollapsibleSection({
 						</span>
 					)}
 				</div>
-				<CaretDownIcon
+				<IconChevronDownFillDuo18
 					className={cn(
 						"size-4 text-muted-foreground transition-transform duration-200",
 						isExpanded && "rotate-180"
 					)}
-					weight="fill"
 				/>
 			</button>
 

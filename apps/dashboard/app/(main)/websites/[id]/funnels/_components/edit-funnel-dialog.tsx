@@ -7,10 +7,12 @@ import {
 	Droppable,
 	type DropResult,
 } from "@hello-pangea/dnd";
-import { DotsNineIcon } from "@phosphor-icons/react";
-import { FunnelIcon } from "@phosphor-icons/react";
-import { PlusIcon } from "@phosphor-icons/react";
-import { TrashIcon } from "@phosphor-icons/react";
+import {
+	IconFilterFillDuo18,
+	IconPlusFillDuo18,
+	IconSquareGridFillDuo18,
+	IconTrashFillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AutocompleteInput } from "@/components/ui/autocomplete-input";
 import { Button } from "@/components/ui/button";
@@ -312,10 +314,9 @@ export function EditFunnelDialog({
 				<SheetHeader>
 					<div className="flex items-start gap-4">
 						<div className="flex size-11 items-center justify-center rounded border bg-background">
-							<FunnelIcon
+							<IconFilterFillDuo18
 								className="text-accent-foreground"
 								size={22}
-								weight="fill"
 							/>
 						</div>
 						<div className="min-w-0 flex-1">
@@ -402,7 +403,7 @@ export function EditFunnelDialog({
 															{...provided.dragHandleProps}
 															className="cursor-grab text-muted-foreground hover:text-foreground active:cursor-grabbing"
 														>
-															<DotsNineIcon size={16} />
+															<IconSquareGridFillDuo18 size={16} />
 														</div>
 
 														<div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-accent-foreground font-semibold text-accent text-xs">
@@ -460,7 +461,7 @@ export function EditFunnelDialog({
 																size="icon"
 																variant="ghost"
 															>
-																<TrashIcon size={14} />
+																<IconTrashFillDuo18 size={14} />
 															</Button>
 														)}
 													</div>
@@ -480,7 +481,7 @@ export function EditFunnelDialog({
 							size="sm"
 							variant="outline"
 						>
-							<PlusIcon size={14} />
+							<IconPlusFillDuo18 size={14} />
 							Add Step
 						</Button>
 					</section>
@@ -575,7 +576,7 @@ export function EditFunnelDialog({
 											size="icon"
 											variant="ghost"
 										>
-											<TrashIcon size={14} />
+											<IconTrashFillDuo18 size={14} />
 										</Button>
 									</div>
 								))}
@@ -588,7 +589,7 @@ export function EditFunnelDialog({
 							size="sm"
 							variant="outline"
 						>
-							<PlusIcon size={14} />
+							<IconPlusFillDuo18 size={14} />
 							Add Filter
 						</Button>
 					</section>

@@ -1,10 +1,12 @@
 "use client";
 
-import { ArrowRightIcon } from "@phosphor-icons/react";
-import { ArrowSquareOutIcon } from "@phosphor-icons/react";
-import { BuildingsIcon } from "@phosphor-icons/react";
-import { InfoIcon } from "@phosphor-icons/react";
-import { WarningIcon } from "@phosphor-icons/react";
+import {
+	IconAlertWarningFillDuo18,
+	IconArrowRightFillDuo18,
+	IconCircleInfoFillDuo18,
+	IconExternalLinkFillDuo18,
+	IconOfficeFillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import { useParams, useRouter } from "next/navigation";
 import { Suspense, useCallback, useState } from "react";
 import { toast } from "sonner";
@@ -89,7 +91,7 @@ function TransferPageContent() {
 			<div className="flex h-full flex-col">
 				<PageHeader
 					description="Move to another organization"
-					icon={<ArrowSquareOutIcon />}
+					icon={<IconExternalLinkFillDuo18 />}
 					title="Transfer Website"
 				/>
 				<div className="flex flex-1 items-center justify-center">
@@ -127,7 +129,7 @@ function TransferPageContent() {
 		<div className="flex h-full flex-col">
 			<PageHeader
 				description="Move this website to a different organization"
-				icon={<ArrowSquareOutIcon />}
+				icon={<IconExternalLinkFillDuo18 />}
 				title="Transfer Website"
 			/>
 			<div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-none">
@@ -135,7 +137,7 @@ function TransferPageContent() {
 					<div className="space-y-4">
 						<div className="flex items-center gap-3">
 							<div className="flex min-w-0 flex-1 items-center gap-3 rounded-lg border bg-secondary p-3">
-								<BuildingsIcon className="size-5 shrink-0 text-muted-foreground" />
+								<IconOfficeFillDuo18 className="size-5 shrink-0 text-muted-foreground" />
 								<div className="min-w-0 flex-1">
 									<p className="mb-0.5 text-muted-foreground text-xs">From</p>
 									<p className="truncate font-medium text-sm">
@@ -144,10 +146,10 @@ function TransferPageContent() {
 								</div>
 							</div>
 
-							<ArrowRightIcon className="size-4 shrink-0 text-muted-foreground" />
+							<IconArrowRightFillDuo18 className="size-4 shrink-0 text-muted-foreground" />
 
 							<div className="flex min-w-0 flex-1 items-center gap-3 rounded-lg border bg-secondary p-3">
-								<BuildingsIcon className="size-5 shrink-0 text-muted-foreground" />
+								<IconOfficeFillDuo18 className="size-5 shrink-0 text-muted-foreground" />
 								<div className="min-w-0 flex-1">
 									<p className="mb-0.5 text-muted-foreground text-xs">To</p>
 									<p className="truncate font-medium text-sm">
@@ -159,7 +161,7 @@ function TransferPageContent() {
 
 						<NoticeBanner
 							description="Ownership and all data move to the target organization. Its members will gain access."
-							icon={<InfoIcon />}
+							icon={<IconCircleInfoFillDuo18 />}
 							title="What transfers"
 						/>
 					</div>
@@ -184,7 +186,7 @@ function TransferPageContent() {
 										availableOrgs.map((org: Organization) => (
 											<SelectItem key={org.id} value={org.id}>
 												<div className="flex items-center gap-2">
-													<BuildingsIcon className="size-4" />
+													<IconOfficeFillDuo18 className="size-4" />
 													<span>{org.name}</span>
 												</div>
 											</SelectItem>
@@ -201,7 +203,7 @@ function TransferPageContent() {
 						{availableOrgs.length === 0 && (
 							<NoticeBanner
 								description="Create or join another organization to transfer this website."
-								icon={<WarningIcon />}
+								icon={<IconAlertWarningFillDuo18 />}
 								title="No target organizations"
 							/>
 						)}
@@ -211,7 +213,7 @@ function TransferPageContent() {
 				{selectedOrgId && (
 					<section className="border-b px-4 py-5 sm:px-6">
 						<Alert className="border-orange-200 bg-orange-50 text-orange-800 dark:border-orange-800 dark:bg-orange-950/20 dark:text-orange-200">
-							<WarningIcon className="size-4" />
+							<IconAlertWarningFillDuo18 className="size-4" />
 							<AlertDescription className="text-xs">
 								<div>
 									<strong className="font-semibold">Important:</strong> This
@@ -237,7 +239,7 @@ function TransferPageContent() {
 						onClick={() => setShowConfirmDialog(true)}
 						size="sm"
 					>
-						<ArrowSquareOutIcon className="mr-2 size-4" />
+						<IconExternalLinkFillDuo18 className="mr-2 size-4" />
 						Transfer Website
 					</Button>
 				</section>
@@ -280,7 +282,7 @@ function TransferPageContent() {
 											width={32}
 										/>
 									) : (
-										<BuildingsIcon className="size-4 text-muted-foreground" />
+										<IconOfficeFillDuo18 className="size-4 text-muted-foreground" />
 									)}
 								</div>
 								<div className="min-w-0 flex-1">
@@ -292,9 +294,8 @@ function TransferPageContent() {
 							</div>
 
 							<div className="flex justify-center">
-								<ArrowRightIcon
+								<IconArrowRightFillDuo18
 									className="size-4 rotate-90 text-muted-foreground"
-									weight="bold"
 								/>
 							</div>
 
@@ -309,7 +310,7 @@ function TransferPageContent() {
 											width={32}
 										/>
 									) : (
-										<BuildingsIcon className="size-4 text-primary" />
+										<IconOfficeFillDuo18 className="size-4 text-primary" />
 									)}
 								</div>
 								<div className="min-w-0 flex-1">
@@ -347,7 +348,7 @@ function TransferPageContent() {
 								</>
 							) : (
 								<>
-									<ArrowSquareOutIcon className="mr-2 size-4" weight="fill" />
+									<IconExternalLinkFillDuo18 className="mr-2 size-4" />
 									Confirm Transfer
 								</>
 							)}
@@ -366,7 +367,7 @@ export default function TransferPage() {
 				<div className="flex h-full flex-col">
 					<PageHeader
 						description="Move to another organization"
-						icon={<ArrowSquareOutIcon />}
+						icon={<IconExternalLinkFillDuo18 />}
 						title="Transfer Website"
 					/>
 					<div className="flex flex-1 items-center justify-center">

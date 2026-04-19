@@ -1,12 +1,14 @@
 "use client";
 
-import { ClockCountdownIcon } from "@phosphor-icons/react";
-import { CopyIcon } from "@phosphor-icons/react";
-import { DotsThreeIcon } from "@phosphor-icons/react";
-import { LinkIcon } from "@phosphor-icons/react";
-import { PencilSimpleIcon } from "@phosphor-icons/react";
-import { PlusIcon } from "@phosphor-icons/react";
-import { TrashIcon } from "@phosphor-icons/react";
+import {
+	IconCopyFillDuo18,
+	IconDotsVerticalFillDuo18,
+	IconLink5FillDuo18,
+	IconPencilFillDuo18,
+	IconPlusFillDuo18,
+	IconTimer2FillDuo18,
+	IconTrashFillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import { useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
@@ -77,7 +79,7 @@ function ExpirationBadge({ date }: { date: string | null }) {
 			className="gap-1 text-[10px]"
 			variant={isExpired ? "destructive" : isSoon ? "amber" : "secondary"}
 		>
-			<ClockCountdownIcon className="size-3" weight="duotone" />
+			<IconTimer2FillDuo18 className="size-3" />
 			{isExpired ? "Expired" : expires.fromNow(true)}
 		</Badge>
 	);
@@ -129,7 +131,7 @@ function LinkRow({
 			tabIndex={0}
 		>
 			<div className="shrink-0 rounded border border-transparent bg-accent p-1.5 text-primary transition-colors group-hover:border-primary/20 group-hover:bg-primary/10">
-				<LinkIcon className="size-3.5" weight="duotone" />
+				<IconLink5FillDuo18 className="size-3.5" />
 			</div>
 
 			<div className="min-w-0 flex-1">
@@ -144,9 +146,8 @@ function LinkRow({
 						type="button"
 					>
 						<span>{shortUrl}</span>
-						<CopyIcon
+						<IconCopyFillDuo18
 							className="size-2.5 text-muted-foreground"
-							weight="duotone"
 						/>
 					</button>
 					<span className="truncate text-muted-foreground text-xs">
@@ -175,17 +176,17 @@ function LinkRow({
 							size="icon"
 							variant="ghost"
 						>
-							<DotsThreeIcon className="size-4" weight="bold" />
+							<IconDotsVerticalFillDuo18 className="size-4" />
 						</Button>
 					</DropdownMenuTrigger>
 					<DropdownMenuContent align="end" className="w-40">
 						<DropdownMenuItem className="gap-2" onClick={handleCopy}>
-							<CopyIcon className="size-4" weight="duotone" />
+							<IconCopyFillDuo18 className="size-4" />
 							Copy
 						</DropdownMenuItem>
 						<DropdownMenuSeparator />
 						<DropdownMenuItem className="gap-2" onClick={onEdit}>
-							<PencilSimpleIcon className="size-4" weight="duotone" />
+							<IconPencilFillDuo18 className="size-4" />
 							Edit
 						</DropdownMenuItem>
 						<DropdownMenuSeparator />
@@ -194,7 +195,7 @@ function LinkRow({
 							onClick={onDelete}
 							variant="destructive"
 						>
-							<TrashIcon className="size-4" weight="duotone" />
+							<IconTrashFillDuo18 className="size-4" />
 							Delete
 						</DropdownMenuItem>
 					</DropdownMenuContent>
@@ -245,9 +246,8 @@ export function LinksListRenderer({ title, links, className }: LinksListProps) {
 				className={className ?? "gap-0 overflow-hidden border bg-card py-0"}
 			>
 				<div className="flex flex-col items-center justify-center gap-2 py-8 text-center">
-					<LinkIcon
+					<IconLink5FillDuo18
 						className="size-8 text-muted-foreground/40"
-						weight="duotone"
 					/>
 					<p className="font-medium text-sm">No links found</p>
 					<p className="text-muted-foreground text-xs">
@@ -259,7 +259,7 @@ export function LinksListRenderer({ title, links, className }: LinksListProps) {
 						size="sm"
 						variant="outline"
 					>
-						<PlusIcon className="size-4" />
+						<IconPlusFillDuo18 className="size-4" />
 						Create Link
 					</Button>
 				</div>
@@ -281,7 +281,7 @@ export function LinksListRenderer({ title, links, className }: LinksListProps) {
 					<div className="flex items-center justify-between border-b px-3 py-2">
 						<p className="font-medium text-sm">{title}</p>
 						<Button onClick={openCreate} size="sm" variant="ghost">
-							<PlusIcon className="size-3.5" />
+							<IconPlusFillDuo18 className="size-3.5" />
 							New
 						</Button>
 					</div>

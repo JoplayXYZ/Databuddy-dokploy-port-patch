@@ -1,11 +1,13 @@
 "use client";
 
-import { CaretRightIcon } from "@phosphor-icons/react";
-import { DotsThreeIcon } from "@phosphor-icons/react";
-import { FunnelIcon } from "@phosphor-icons/react";
-import { PencilSimpleIcon } from "@phosphor-icons/react";
-import { PlusIcon } from "@phosphor-icons/react";
-import { TrashIcon } from "@phosphor-icons/react";
+import {
+	IconChevronRightFillDuo18,
+	IconDotsVerticalFillDuo18,
+	IconFilterFillDuo18,
+	IconPencilFillDuo18,
+	IconPlusFillDuo18,
+	IconTrashFillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
@@ -66,7 +68,7 @@ function FunnelRow({
 			tabIndex={0}
 		>
 			<div className="shrink-0 rounded border border-transparent bg-accent p-1.5 text-muted-foreground transition-colors group-hover:border-primary/20 group-hover:bg-primary/10 group-hover:text-primary">
-				<FunnelIcon className="size-3.5" weight="duotone" />
+				<IconFilterFillDuo18 className="size-3.5" />
 			</div>
 
 			<div className="min-w-0 flex-1">
@@ -96,7 +98,7 @@ function FunnelRow({
 						/>
 					))}
 					{funnel.steps.length > 4 && (
-						<CaretRightIcon className="size-3 text-muted-foreground" />
+						<IconChevronRightFillDuo18 className="size-3 text-muted-foreground" />
 					)}
 				</div>
 			</div>
@@ -121,12 +123,12 @@ function FunnelRow({
 							size="icon"
 							variant="ghost"
 						>
-							<DotsThreeIcon className="size-4" weight="bold" />
+							<IconDotsVerticalFillDuo18 className="size-4" />
 						</Button>
 					</DropdownMenuTrigger>
 					<DropdownMenuContent align="end" className="w-40">
 						<DropdownMenuItem className="gap-2" onClick={onEdit}>
-							<PencilSimpleIcon className="size-4" weight="duotone" />
+							<IconPencilFillDuo18 className="size-4" />
 							Edit
 						</DropdownMenuItem>
 						<DropdownMenuSeparator />
@@ -135,7 +137,7 @@ function FunnelRow({
 							onClick={onDelete}
 							variant="destructive"
 						>
-							<TrashIcon className="size-4" weight="duotone" />
+							<IconTrashFillDuo18 className="size-4" />
 							Delete
 						</DropdownMenuItem>
 					</DropdownMenuContent>
@@ -247,9 +249,8 @@ export function FunnelsListRenderer({
 				className={className ?? "gap-0 overflow-hidden border bg-card py-0"}
 			>
 				<div className="flex flex-col items-center justify-center gap-2 py-8 text-center">
-					<FunnelIcon
+					<IconFilterFillDuo18
 						className="size-8 text-muted-foreground/40"
-						weight="duotone"
 					/>
 					<p className="font-medium text-sm">No funnels found</p>
 					<p className="text-muted-foreground text-xs">
@@ -261,7 +262,7 @@ export function FunnelsListRenderer({
 						size="sm"
 						variant="outline"
 					>
-						<PlusIcon className="size-4" />
+						<IconPlusFillDuo18 className="size-4" />
 						Create Funnel
 					</Button>
 				</div>
@@ -287,7 +288,7 @@ export function FunnelsListRenderer({
 					<div className="flex items-center justify-between border-b px-3 py-2">
 						<p className="font-medium text-sm">{title}</p>
 						<Button onClick={openCreate} size="sm" variant="ghost">
-							<PlusIcon className="size-3.5" />
+							<IconPlusFillDuo18 className="size-3.5" />
 							New
 						</Button>
 					</div>

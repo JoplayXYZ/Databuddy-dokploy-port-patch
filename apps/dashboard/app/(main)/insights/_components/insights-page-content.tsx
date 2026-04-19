@@ -1,14 +1,14 @@
 "use client";
 
-import { ArrowClockwiseIcon } from "@phosphor-icons/react/dist/ssr/ArrowClockwise";
-import { CaretDownIcon } from "@phosphor-icons/react/dist/ssr/CaretDown";
-import { ChartLineIcon } from "@phosphor-icons/react/dist/ssr/ChartLine";
-import { CursorIcon } from "@phosphor-icons/react/dist/ssr/Cursor";
-import { GlobeIcon } from "@phosphor-icons/react/dist/ssr/Globe";
-import { SparkleIcon } from "@phosphor-icons/react/dist/ssr/Sparkle";
-import { TimerIcon } from "@phosphor-icons/react/dist/ssr/Timer";
-import { TrashIcon } from "@phosphor-icons/react/dist/ssr/Trash";
-import { UsersIcon } from "@phosphor-icons/react/dist/ssr/Users";
+;
+aretDown";
+artLine";
+st/ssr/Cursor";
+/Globe";
+parkle";
+r/Timer";
+/Trash";
+/Users";
 import type { ColumnDef } from "@tanstack/react-table";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAtom, useAtomValue } from "jotai";
@@ -65,6 +65,7 @@ import { CockpitNarrative } from "./cockpit-narrative";
 import { CockpitSignals } from "./cockpit-signals";
 import { TimeRangeSelector } from "./time-range-selector";
 
+import { IconChartLine2FillDuo18, IconChevronDownFillDuo18, IconCursorDefaultFillDuo18, IconGlobeFillDuo18, IconRefreshFillDuo18, IconSparkleFillDuo18, IconTimer2FillDuo18, IconTrashFillDuo18, IconUsersFillDuo18 } from "nucleo-ui-fill-duo-18";
 const insightsFocusSiteAtom = atomWithStorage<string | null>(
 	"insights.focus-site",
 	null
@@ -142,7 +143,7 @@ function FocusSitePicker({ websites, value, onChange }: FocusSitePickerProps) {
 							{selected.name ?? selected.domain}
 						</span>
 					</span>
-					<CaretDownIcon className="ml-2 size-4 shrink-0" weight="fill" />
+					<IconChevronDownFillDuo18 className="ml-2 size-4 shrink-0" />
 				</Button>
 			</DropdownMenuTrigger>
 			<DropdownMenuContent align="end" className="w-[240px]">
@@ -342,7 +343,7 @@ export function InsightsPageContent() {
 				<PageHeader
 					count={isLoading ? undefined : insights.length}
 					description="Understand your business at a glance"
-					icon={<SparkleIcon weight="duotone" />}
+					icon={<IconSparkleFillDuo18 />}
 					right={
 						<div className="flex items-center gap-2">
 							<FocusSitePicker
@@ -359,7 +360,7 @@ export function InsightsPageContent() {
 								type="button"
 								variant="outline"
 							>
-								<ArrowClockwiseIcon
+								<IconRefreshFillDuo18
 									aria-hidden
 									className={cn(
 										"size-4",
@@ -373,7 +374,7 @@ export function InsightsPageContent() {
 								type="button"
 								variant="outline"
 							>
-								<TrashIcon className="size-4" weight="duotone" />
+								<IconTrashFillDuo18 className="size-4" />
 								Clear all
 							</Button>
 						</div>
@@ -391,7 +392,7 @@ export function InsightsPageContent() {
 							<StatCard
 								chartData={cockpitLoading ? undefined : miniCharts.visitors}
 								formatValue={formatNumber}
-								icon={UsersIcon}
+								icon={IconUsersFillDuo18}
 								id="cockpit-visitors"
 								isLoading={cockpitLoading}
 								showChart
@@ -405,7 +406,7 @@ export function InsightsPageContent() {
 							<StatCard
 								chartData={cockpitLoading ? undefined : miniCharts.sessions}
 								formatValue={formatNumber}
-								icon={ChartLineIcon}
+								icon={IconChartLine2FillDuo18}
 								id="cockpit-sessions"
 								isLoading={cockpitLoading}
 								showChart
@@ -415,7 +416,7 @@ export function InsightsPageContent() {
 							<StatCard
 								chartData={cockpitLoading ? undefined : miniCharts.pageviews}
 								formatValue={formatNumber}
-								icon={GlobeIcon}
+								icon={IconGlobeFillDuo18}
 								id="cockpit-pageviews"
 								isLoading={cockpitLoading}
 								showChart
@@ -427,7 +428,7 @@ export function InsightsPageContent() {
 							<StatCard
 								chartData={cockpitLoading ? undefined : miniCharts.bounce}
 								formatValue={(v) => `${v.toFixed(1)}%`}
-								icon={CursorIcon}
+								icon={IconCursorDefaultFillDuo18}
 								id="cockpit-bounce"
 								invertTrend
 								isLoading={cockpitLoading}
@@ -443,7 +444,7 @@ export function InsightsPageContent() {
 								chartData={cockpitLoading ? undefined : miniCharts.duration}
 								formatChartValue={formatDuration}
 								formatValue={formatDuration}
-								icon={TimerIcon}
+								icon={IconTimer2FillDuo18}
 								id="cockpit-duration"
 								isLoading={cockpitLoading}
 								showChart
@@ -529,7 +530,7 @@ function EmptyOrgState() {
 				},
 			}}
 			description="Add a website to see insights across your organization."
-			icon={<GlobeIcon weight="duotone" />}
+			icon={<IconGlobeFillDuo18 />}
 			title="No websites yet"
 			variant="minimal"
 		/>

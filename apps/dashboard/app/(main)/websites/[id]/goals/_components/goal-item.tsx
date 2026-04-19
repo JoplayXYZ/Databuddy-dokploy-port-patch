@@ -1,10 +1,12 @@
 "use client";
 
-import { DotsThreeIcon } from "@phosphor-icons/react";
-import { EyeIcon } from "@phosphor-icons/react";
-import { MouseMiddleClickIcon } from "@phosphor-icons/react";
-import { PencilSimpleIcon } from "@phosphor-icons/react";
-import { TrashIcon } from "@phosphor-icons/react";
+import {
+	IconDotsVerticalFillDuo18,
+	IconEyeFillDuo18,
+	IconMouse2FillDuo18,
+	IconPencilFillDuo18,
+	IconTrashFillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import { Button } from "@/components/ui/button";
 import { List } from "@/components/ui/composables/list";
 import {
@@ -33,11 +35,11 @@ interface GoalItemProps {
 
 const GOAL_TYPE_CONFIG = {
 	PAGE_VIEW: {
-		icon: EyeIcon,
+		icon: IconEyeFillDuo18,
 		bg: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
 	},
 	EVENT: {
-		icon: MouseMiddleClickIcon,
+		icon: IconMouse2FillDuo18,
 		bg: "bg-violet-500/10 text-violet-600 dark:text-violet-400",
 	},
 } as const;
@@ -84,7 +86,7 @@ export function GoalItem({
 						config.bg
 					)}
 				>
-					<TypeIcon className="size-4" weight="duotone" />
+					<TypeIcon className="size-4" />
 				</div>
 			</List.Cell>
 
@@ -152,12 +154,12 @@ export function GoalItem({
 							size="icon"
 							variant="ghost"
 						>
-							<DotsThreeIcon className="size-5" weight="bold" />
+							<IconDotsVerticalFillDuo18 className="size-5" />
 						</Button>
 					</DropdownMenuTrigger>
 					<DropdownMenuContent align="end" className="w-40">
 						<DropdownMenuItem className="gap-2" onClick={() => onEdit(goal)}>
-							<PencilSimpleIcon className="size-4" weight="duotone" />
+							<IconPencilFillDuo18 className="size-4" />
 							Edit
 						</DropdownMenuItem>
 						<DropdownMenuSeparator />
@@ -166,7 +168,7 @@ export function GoalItem({
 							onClick={() => onDelete(goal.id)}
 							variant="destructive"
 						>
-							<TrashIcon className="size-4 fill-destructive" weight="duotone" />
+							<IconTrashFillDuo18 className="size-4 fill-destructive" />
 							Delete
 						</DropdownMenuItem>
 					</DropdownMenuContent>

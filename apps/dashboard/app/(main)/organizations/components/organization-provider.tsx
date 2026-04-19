@@ -1,16 +1,17 @@
 "use client";
 
-import type { Icon as PhosphorIcon } from "@phosphor-icons/react";
-import { BuildingsIcon } from "@phosphor-icons/react";
-import { EnvelopeIcon } from "@phosphor-icons/react";
-import { GearIcon } from "@phosphor-icons/react";
-import { GlobeIcon } from "@phosphor-icons/react";
-import { KeyIcon } from "@phosphor-icons/react";
-import { UsersIcon } from "@phosphor-icons/react";
-import { WarningIcon } from "@phosphor-icons/react";
+import {
+	IconAlertWarningFillDuo18,
+	IconEnvelopeFillDuo18,
+	IconGearFillDuo18,
+	IconGlobeFillDuo18,
+	IconKeyFillDuo18,
+	IconOfficeFillDuo18,
+	IconUsersFillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import { useAtomValue } from "jotai";
 import { usePathname } from "next/navigation";
-import { useMemo, useState } from "react";
+import type {  useMemo, useState, FC, SVGProps } from "react";
 import { PageHeader } from "@/app/(main)/websites/_components/page-header";
 import { EmptyState } from "@/components/empty-state";
 import { CreateOrganizationDialog } from "@/components/organizations/create-organization-dialog";
@@ -41,42 +42,42 @@ const PAGE_INFO_MAP: Record<string, PageInfo> = {
 	"/organizations": {
 		title: "Organizations",
 		description: "Manage your organizations and team collaboration",
-		icon: BuildingsIcon,
+		icon: IconOfficeFillDuo18,
 	},
 	"/organizations/members": {
 		title: "Team Members",
 		description: "Manage team members and their roles",
-		icon: UsersIcon,
+		icon: IconUsersFillDuo18,
 		requiresOrg: true,
 	},
 	"/organizations/invitations": {
 		title: "Pending Invitations",
 		description: "View and manage pending team invitations",
-		icon: EnvelopeIcon,
+		icon: IconEnvelopeFillDuo18,
 		requiresOrg: true,
 	},
 	"/organizations/settings": {
 		title: "General Settings",
 		description: "Manage organization name, slug, and basic settings",
-		icon: GearIcon,
+		icon: IconGearFillDuo18,
 		requiresOrg: true,
 	},
 	"/organizations/settings/websites": {
 		title: "Website Management",
 		description: "Manage websites associated with this organization",
-		icon: GlobeIcon,
+		icon: IconGlobeFillDuo18,
 		requiresOrg: true,
 	},
 	"/organizations/settings/api-keys": {
 		title: "API Keys",
 		description: "Create and manage API keys for this organization",
-		icon: KeyIcon,
+		icon: IconKeyFillDuo18,
 		requiresOrg: true,
 	},
 	"/organizations/settings/danger": {
 		title: "Danger Zone",
 		description: "Irreversible and destructive actions",
-		icon: WarningIcon,
+		icon: IconAlertWarningFillDuo18,
 		requiresOrg: true,
 	},
 };
@@ -84,7 +85,7 @@ const PAGE_INFO_MAP: Record<string, PageInfo> = {
 const DEFAULT_PAGE_INFO: PageInfo = {
 	title: "Organizations",
 	description: "Manage your organizations and team collaboration",
-	icon: BuildingsIcon,
+	icon: IconOfficeFillDuo18,
 };
 
 export function OrganizationProvider({
@@ -103,7 +104,7 @@ export function OrganizationProvider({
 	const {
 		title,
 		description,
-		icon: Icon,
+		icon: FC<SVGProps<SVGSVGElement> & { size?: number | string }>,
 		requiresOrg,
 		actionButton,
 	} = useMemo(() => PAGE_INFO_MAP[pathname] ?? DEFAULT_PAGE_INFO, [pathname]);
@@ -140,7 +141,7 @@ export function OrganizationProvider({
 			<div className="flex h-full flex-col">
 				<PageHeader
 					description={description}
-					icon={<Icon />}
+					icon={<FC<SVGProps<SVGSVGElement> & { size?: number | string }> />}
 					right={
 						actionButton && (
 							<Button
@@ -167,7 +168,7 @@ export function OrganizationProvider({
 						onClick: () => setShowCreateDialog(true),
 					}}
 					description="This feature requires an active organization."
-					icon={<BuildingsIcon size={16} weight="duotone" />}
+					icon={<IconOfficeFillDuo18 size={16} />}
 					title="No organization selected"
 					variant="minimal"
 				/>
@@ -179,7 +180,7 @@ export function OrganizationProvider({
 		<div className="flex h-full flex-col">
 			<PageHeader
 				description={description}
-				icon={<Icon />}
+				icon={<FC<SVGProps<SVGSVGElement> & { size?: number | string }> />}
 				right={
 					actionButton && (
 						<Button

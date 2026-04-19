@@ -1,7 +1,9 @@
 "use client";
 
-import { ChartLineIcon } from "@phosphor-icons/react";
-import { SpinnerIcon } from "@phosphor-icons/react";
+import {
+	IconChartLine2FillDuo18,
+	IconLoader2FillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import { useMemo } from "react";
 import { EmptyState } from "@/components/empty-state";
 import { Chart } from "@/components/ui/composables/chart";
@@ -126,7 +128,7 @@ export function RetentionRateChart({
 		return (
 			<div className="flex h-full items-center justify-center">
 				<div className="flex flex-col items-center gap-3">
-					<SpinnerIcon className="size-6 animate-spin text-primary" />
+					<IconLoader2FillDuo18 className="size-6 animate-spin text-primary" />
 					<span className="text-muted-foreground text-sm">
 						Loading chart...
 					</span>
@@ -140,7 +142,7 @@ export function RetentionRateChart({
 			<EmptyState
 				description="No retention rate data available for the selected time period"
 				icon={
-					<ChartLineIcon className="text-muted-foreground" weight="duotone" />
+					<IconChartLine2FillDuo18 className="text-muted-foreground" />
 				}
 				title="No data"
 				variant="minimal"

@@ -1,8 +1,9 @@
-import { CheckCircleIcon } from "@phosphor-icons/react/ssr";
+ct/ssr";
 import Link from "next/link";
 import { Logo } from "@/components/layout/logo";
 import { Button } from "@/components/ui/button";
 
+import { IconCircleCheckFillDuo18 } from "nucleo-ui-fill-duo-18";
 export default function PaymentSuccess() {
 	return (
 		<div className="flex h-dvh flex-col items-center justify-center bg-background p-4 sm:p-6">
@@ -15,7 +16,7 @@ export default function PaymentSuccess() {
 					aria-hidden="true"
 					className="flex size-12 items-center justify-center rounded bg-green-500/10"
 				>
-					<CheckCircleIcon className="size-6 text-green-500" weight="duotone" />
+					<IconCircleCheckFillDuo18 className="size-6 text-green-500" />
 				</div>
 
 				<div className="mt-6 space-y-2">

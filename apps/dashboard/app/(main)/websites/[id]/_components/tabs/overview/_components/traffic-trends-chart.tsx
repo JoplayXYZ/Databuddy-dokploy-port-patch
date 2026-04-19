@@ -1,12 +1,14 @@
 "use client";
 
-import { EyeIcon } from "@phosphor-icons/react";
-import { EyeSlashIcon } from "@phosphor-icons/react";
-import { NoteIcon } from "@phosphor-icons/react";
-import { XIcon } from "@phosphor-icons/react";
-import { ChartLineIcon } from "@phosphor-icons/react";
-import { WarningIcon } from "@phosphor-icons/react";
-import { WarningCircleIcon } from "@phosphor-icons/react";
+import {
+	IconAlertWarningFillDuo18,
+	IconChartLine2FillDuo18,
+	IconCircleWarningFillDuo18,
+	IconEyeFillDuo18,
+	IconEyeSlashFillDuo18,
+	IconNoteFillDuo18,
+	IconXmarkFillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useAtom } from "jotai";
 import { useMemo, useState } from "react";
@@ -514,9 +516,9 @@ export function TrafficTrendsRechartsPlot({
 									variant="ghost"
 								>
 									{showAnnotations ? (
-										<EyeIcon className="size-3.5" />
+										<IconEyeFillDuo18 className="size-3.5" />
 									) : (
-										<EyeSlashIcon className="size-3.5" />
+										<IconEyeSlashFillDuo18 className="size-3.5" />
 									)}
 								</Button>
 								<AnnotationsPanel
@@ -549,9 +551,9 @@ export function TrafficTrendsRechartsPlot({
 										onClick={() => setTipDismissed(true)}
 										type="button"
 									>
-										<NoteIcon className="size-3" weight="duotone" />
+										<IconNoteFillDuo18 className="size-3" />
 										<span>Drag to annotate</span>
-										<XIcon className="size-2.5" />
+										<IconXmarkFillDuo18 className="size-2.5" />
 									</button>
 								</div>
 							)}
@@ -964,10 +966,9 @@ export function TrafficTrendsChart({
 						</p>
 						{dateRange.granularity === "hourly" && dateDiff > 7 ? (
 							<div className="mt-1 flex items-start gap-1 text-amber-600 text-xs">
-								<WarningIcon
+								<IconAlertWarningFillDuo18
 									className="mt-0.5 shrink-0"
 									size={14}
-									weight="fill"
 								/>
 								<span className="leading-relaxed">
 									Large date ranges may affect performance
@@ -986,12 +987,12 @@ export function TrafficTrendsChart({
 				emptyProps={{
 					description:
 						"Your analytics data will appear here as visitors interact with your website",
-					icon: <ChartLineIcon className="size-12" weight="duotone" />,
+					icon: <IconChartLine2FillDuo18 className="size-12" />,
 					title: "No data available",
 				}}
 				errorProps={{
 					description: "We couldn’t load traffic data. Try again in a moment.",
-					icon: <WarningCircleIcon className="size-12" weight="duotone" />,
+					icon: <IconCircleWarningFillDuo18 className="size-12" />,
 					title: "Something went wrong",
 					variant: "error",
 				}}

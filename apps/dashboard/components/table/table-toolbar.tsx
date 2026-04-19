@@ -1,4 +1,4 @@
-import { ArrowsOutSimpleIcon } from "@phosphor-icons/react";
+import { IconArrowsExpandDiagonal2FillDuo18 } from "nucleo-ui-fill-duo-18";
 import { SectionBrandOverlay } from "@/components/logo/section-brand-overlay";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -45,7 +45,7 @@ export function TableToolbar({
 							type="button"
 							variant="ghost"
 						>
-							<ArrowsOutSimpleIcon className="size-4" weight="fill" />
+							<IconArrowsExpandDiagonal2FillDuo18 className="size-4" />
 						</Button>
 					)}
 				</div>

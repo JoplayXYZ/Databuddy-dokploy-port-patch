@@ -1,5 +1,7 @@
-import { KeyIcon } from "@phosphor-icons/react";
-import { PlusIcon } from "@phosphor-icons/react";
+import {
+	IconKeyFillDuo18,
+	IconPlusFillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import { useQuery } from "@tanstack/react-query";
 import dayjs from "@/lib/dayjs";
 import { orpc } from "@/lib/orpc";
@@ -83,7 +85,7 @@ export function ApiKeyList({
 		return (
 			<EmptyState
 				description="Please try again in a moment"
-				icon={<KeyIcon weight="duotone" />}
+				icon={<IconKeyFillDuo18 />}
 				title="Failed to load API keys"
 				variant="error"
 			/>
@@ -104,7 +106,7 @@ export function ApiKeyList({
 							</p>
 						</div>
 						<Button onClick={onCreateNew} size="sm" type="button">
-							<PlusIcon className="size-3" />
+							<IconPlusFillDuo18 className="size-3" />
 							Create
 						</Button>
 					</div>
@@ -187,7 +189,7 @@ export function ApiKeyList({
 						onClick: () => onCreateNew?.(),
 					}}
 					description="Create your first API key to start integrating with our platform."
-					icon={<KeyIcon weight="duotone" />}
+					icon={<IconKeyFillDuo18 />}
 					title="No API keys yet"
 					variant="minimal"
 				/>

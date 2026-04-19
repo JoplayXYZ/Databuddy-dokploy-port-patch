@@ -1,7 +1,9 @@
 "use client";
 
-import { MagnifyingGlassPlusIcon } from "@phosphor-icons/react";
-import { NoteIcon } from "@phosphor-icons/react";
+import {
+	IconMagnifierFillDuo18,
+	IconNoteFillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import { useHotkeys } from "react-hotkeys-hook";
 
 interface RangeSelectionPopupProps {
@@ -94,9 +96,8 @@ export function RangeSelectionPopup({
 						onClick={handleZoom}
 						type="button"
 					>
-						<MagnifyingGlassPlusIcon
+						<IconMagnifierFillDuo18
 							className="size-3.5 text-muted-foreground"
-							weight="duotone"
 						/>
 						<span className="flex-1 text-foreground text-xs">
 							Zoom to range
@@ -111,9 +112,8 @@ export function RangeSelectionPopup({
 							onClick={onAddAnnotationAction}
 							type="button"
 						>
-							<NoteIcon
+							<IconNoteFillDuo18
 								className="size-3.5 text-muted-foreground"
-								weight="duotone"
 							/>
 							<span className="flex-1 text-foreground text-xs">
 								Add annotation…

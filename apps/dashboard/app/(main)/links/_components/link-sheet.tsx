@@ -1,10 +1,12 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CircleNotchIcon } from "@phosphor-icons/react";
-import { CopyIcon } from "@phosphor-icons/react";
-import { LinkSimpleIcon } from "@phosphor-icons/react";
-import { QrCodeIcon } from "@phosphor-icons/react";
+import {
+	IconCopyFillDuo18,
+	IconLink5FillDuo18,
+	IconLoader2FillDuo18,
+	IconQrcodeFillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { type SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -289,7 +291,7 @@ function LinkSheetInner({ open, onOpenChange, link, onSave }: LinkSheetProps) {
 			>
 				{isPending ? (
 					<>
-						<CircleNotchIcon className="animate-spin" size={16} />
+						<IconLoader2FillDuo18 className="animate-spin" size={16} />
 						{isEditing ? "Saving…" : "Creating…"}
 					</>
 				) : isEditing ? (
@@ -307,10 +309,9 @@ function LinkSheetInner({ open, onOpenChange, link, onSave }: LinkSheetProps) {
 				<SheetHeader>
 					<div className="flex items-center gap-4">
 						<div className="flex size-11 items-center justify-center rounded border bg-secondary">
-							<LinkSimpleIcon
+							<IconLink5FillDuo18
 								className="text-primary"
 								size={20}
-								weight="duotone"
 							/>
 						</div>
 						<div>
@@ -339,15 +340,14 @@ function LinkSheetInner({ open, onOpenChange, link, onSave }: LinkSheetProps) {
 							>
 								<TabsList className="shrink-0">
 									<TabsTrigger value="details">
-										<LinkSimpleIcon
+										<IconLink5FillDuo18
 											aria-hidden="true"
 											size={16}
-											weight="duotone"
 										/>
 										Details
 									</TabsTrigger>
 									<TabsTrigger value="qr-code">
-										<QrCodeIcon aria-hidden="true" size={16} weight="duotone" />
+										<IconQrcodeFillDuo18 aria-hidden="true" size={16} />
 										QR Code
 									</TabsTrigger>
 								</TabsList>
@@ -373,7 +373,7 @@ function LinkSheetInner({ open, onOpenChange, link, onSave }: LinkSheetProps) {
 												type="button"
 												variant="outline"
 											>
-												<CopyIcon size={16} />
+												<IconCopyFillDuo18 size={16} />
 												Copy
 											</Button>
 										</div>

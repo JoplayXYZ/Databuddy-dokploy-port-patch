@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
 	experimental: {
-		optimizePackageImports: ["@phosphor-icons/react"],
+		optimizePackageImports: ["nucleo-ui-fill-duo-18", "nucleo-core-fill-24", "nucleo-core-outline-24"],
 	},
 	serverExternalPackages: ["pg"],
 	typescript: {

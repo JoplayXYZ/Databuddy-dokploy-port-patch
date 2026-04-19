@@ -1,14 +1,16 @@
 "use client";
 
 import { authClient } from "@databuddy/auth/client";
-import { CaretDownIcon } from "@phosphor-icons/react";
-import { CheckCircleIcon } from "@phosphor-icons/react";
-import { CircleNotchIcon } from "@phosphor-icons/react";
-import { CopyIcon } from "@phosphor-icons/react";
-import { DeviceMobileIcon } from "@phosphor-icons/react";
-import { KeyIcon } from "@phosphor-icons/react";
-import { ShieldCheckIcon } from "@phosphor-icons/react";
-import { WarningCircleIcon } from "@phosphor-icons/react";
+import {
+	IconChevronDownFillDuo18,
+	IconCircleCheckFillDuo18,
+	IconCircleWarningFillDuo18,
+	IconCopyFillDuo18,
+	IconKeyFillDuo18,
+	IconLoader2FillDuo18,
+	IconMobile2FillDuo18,
+	IconShieldCheckFillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import { useMutation } from "@tanstack/react-query";
 import { QRCodeSVG } from "qrcode.react";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -255,9 +257,8 @@ export function TwoFactorDialog({
 						<div className="space-y-4">
 							<div className="flex items-center gap-3 rounded border bg-blue-500/10 p-4">
 								<div className="flex size-10 items-center justify-center rounded-full bg-blue-500/20">
-									<KeyIcon
+									<IconKeyFillDuo18
 										className="size-5 text-blue-600 dark:text-blue-400"
-										weight="duotone"
 									/>
 								</div>
 								<div>
@@ -360,14 +361,13 @@ export function TwoFactorDialog({
 											onClick={() => setShowSecret(!showSecret)}
 											type="button"
 										>
-											<DeviceMobileIcon
+											<IconMobile2FillDuo18
 												className="size-4 text-muted-foreground"
-												weight="duotone"
 											/>
 											<span className="flex-1 text-muted-foreground">
 												Can't scan? Enter code manually
 											</span>
-											<CaretDownIcon
+											<IconChevronDownFillDuo18
 												className={cn(
 													"size-3 text-muted-foreground transition-transform",
 													showSecret && "rotate-180"
@@ -389,7 +389,7 @@ export function TwoFactorDialog({
 														size="sm"
 														variant="ghost"
 													>
-														<CopyIcon className="size-4" />
+														<IconCopyFillDuo18 className="size-4" />
 													</Button>
 												</div>
 											</div>
@@ -404,9 +404,8 @@ export function TwoFactorDialog({
 					{step === "verify" && (
 						<div className="flex flex-col items-center space-y-6">
 							<div className="flex size-14 items-center justify-center rounded-full bg-primary/10">
-								<ShieldCheckIcon
+								<IconShieldCheckFillDuo18
 									className="size-7 text-primary"
-									weight="duotone"
 								/>
 							</div>
 
@@ -456,7 +455,7 @@ export function TwoFactorDialog({
 							</div>
 
 							<div className="flex items-center gap-2 rounded border border-amber-500/30 bg-amber-500/10 p-3 text-amber-700 dark:text-amber-400">
-								<WarningCircleIcon className="size-5 shrink-0" />
+								<IconCircleWarningFillDuo18 className="size-5 shrink-0" />
 								<p className="text-xs">
 									Store these codes in a safe place. Each code can only be used
 									once to recover your account if you lose access to your
@@ -471,9 +470,8 @@ export function TwoFactorDialog({
 						<div className="space-y-4">
 							<div className="flex items-center gap-3 rounded border bg-green-500/10 p-4">
 								<div className="flex size-10 items-center justify-center rounded-full bg-green-500/20">
-									<ShieldCheckIcon
+									<IconShieldCheckFillDuo18
 										className="size-5 text-green-600 dark:text-green-400"
-										weight="duotone"
 									/>
 								</div>
 								<div>
@@ -508,9 +506,9 @@ export function TwoFactorDialog({
 											variant="ghost"
 										>
 											{copiedBackup ? (
-												<CheckCircleIcon className="size-4 text-green-500" />
+												<IconCircleCheckFillDuo18 className="size-4 text-green-500" />
 											) : (
-												<CopyIcon className="size-4" />
+												<IconCopyFillDuo18 className="size-4" />
 											)}
 										</Button>
 									</div>
@@ -541,7 +539,7 @@ export function TwoFactorDialog({
 								onClick={() => setPasswordMutation.mutate()}
 							>
 								{setPasswordMutation.isPending && (
-									<CircleNotchIcon className="mr-2 size-4 animate-spin" />
+									<IconLoader2FillDuo18 className="mr-2 size-4 animate-spin" />
 								)}
 								Set Password & Continue
 							</Button>
@@ -558,7 +556,7 @@ export function TwoFactorDialog({
 								onClick={() => enableMutation.mutate()}
 							>
 								{enableMutation.isPending && (
-									<CircleNotchIcon className="mr-2 size-4 animate-spin" />
+									<IconLoader2FillDuo18 className="mr-2 size-4 animate-spin" />
 								)}
 								Continue
 							</Button>
@@ -586,7 +584,7 @@ export function TwoFactorDialog({
 								onClick={() => verifyMutation.mutate()}
 							>
 								{verifyMutation.isPending && (
-									<CircleNotchIcon className="mr-2 size-4 animate-spin" />
+									<IconLoader2FillDuo18 className="mr-2 size-4 animate-spin" />
 								)}
 								Verify & Enable
 							</Button>
@@ -602,12 +600,12 @@ export function TwoFactorDialog({
 							>
 								{copiedBackup ? (
 									<>
-										<CheckCircleIcon className="mr-2 size-4 text-green-500" />
+										<IconCircleCheckFillDuo18 className="mr-2 size-4 text-green-500" />
 										Copied!
 									</>
 								) : (
 									<>
-										<CopyIcon className="mr-2 size-4" />
+										<IconCopyFillDuo18 className="mr-2 size-4" />
 										Copy Codes
 									</>
 								)}
@@ -626,7 +624,7 @@ export function TwoFactorDialog({
 								variant="outline"
 							>
 								{regenerateBackupMutation.isPending && (
-									<CircleNotchIcon className="mr-2 size-4 animate-spin" />
+									<IconLoader2FillDuo18 className="mr-2 size-4 animate-spin" />
 								)}
 								New Backup Codes
 							</Button>
@@ -636,7 +634,7 @@ export function TwoFactorDialog({
 								variant="destructive"
 							>
 								{disableMutation.isPending && (
-									<CircleNotchIcon className="mr-2 size-4 animate-spin" />
+									<IconLoader2FillDuo18 className="mr-2 size-4 animate-spin" />
 								)}
 								Disable 2FA
 							</Button>

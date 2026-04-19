@@ -1,6 +1,6 @@
 "use client";
 
-import { WarningIcon } from "@phosphor-icons/react";
+import { IconAlertWarningFillDuo18 } from "nucleo-ui-fill-duo-18";
 import { useAtom } from "jotai";
 import { useParams } from "next/navigation";
 import { WebsiteOverviewTab } from "@/app/(main)/websites/[id]/_components/tabs/overview-tab";
@@ -27,10 +27,9 @@ export default function PublicDashboardPage() {
 				<EmptyState
 					description="This dashboard is not available or has been set to private."
 					icon={
-						<WarningIcon
+						<IconAlertWarningFillDuo18
 							aria-hidden="true"
 							className="size-12"
-							weight="duotone"
 						/>
 					}
 					title="Dashboard not available"

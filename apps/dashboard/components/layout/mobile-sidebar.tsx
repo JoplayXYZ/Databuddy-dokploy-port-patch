@@ -7,12 +7,14 @@ import { Drawer, DrawerContent } from "@/components/ui/drawer";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { authClient } from "@databuddy/auth/client";
-import { ListIcon } from "@phosphor-icons/react";
-import { MagnifyingGlassIcon } from "@phosphor-icons/react";
-import { MonitorIcon } from "@phosphor-icons/react";
-import { MoonIcon } from "@phosphor-icons/react";
-import { SignOutIcon } from "@phosphor-icons/react";
-import { SunIcon } from "@phosphor-icons/react";
+import {
+	IconArrowDoorOut2FillDuo18,
+	IconBulletListFillDuo18,
+	IconMagnifierFillDuo18,
+	IconMonitorFillDuo18,
+	IconMoonFillDuo18,
+	IconSunFillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import { useTheme } from "next-themes";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -27,9 +29,9 @@ function MobileThemeToggle() {
 	const currentTheme = theme ?? "system";
 
 	const themes = [
-		{ id: "light" as const, icon: SunIcon, label: "Light" },
-		{ id: "dark" as const, icon: MoonIcon, label: "Dark" },
-		{ id: "system" as const, icon: MonitorIcon, label: "System" },
+		{ id: "light" as const, icon: IconSunFillDuo18, label: "Light" },
+		{ id: "dark" as const, icon: IconMoonFillDuo18, label: "Dark" },
+		{ id: "system" as const, icon: IconMonitorFillDuo18, label: "System" },
 	];
 
 	return (
@@ -50,7 +52,6 @@ function MobileThemeToggle() {
 					<Icon
 						className="size-3.5"
 						suppressHydrationWarning
-						weight="duotone"
 					/>
 					<span suppressHydrationWarning>{label}</span>
 				</button>
@@ -119,7 +120,7 @@ export function MobileSidebar() {
 							type="button"
 							variant="ghost"
 						>
-							<ListIcon className="size-5" weight="duotone" />
+							<IconBulletListFillDuo18 className="size-5" />
 						</Button>
 
 						<Link
@@ -140,7 +141,7 @@ export function MobileSidebar() {
 						type="button"
 						variant="ghost"
 					>
-						<MagnifyingGlassIcon className="size-5" weight="duotone" />
+						<IconMagnifierFillDuo18 className="size-5" />
 					</Button>
 				</div>
 			</header>
@@ -179,7 +180,6 @@ export function MobileSidebar() {
 										>
 											<Icon
 												className="size-3.5"
-												weight={isActive ? "fill" : "duotone"}
 											/>
 											<span>{category.name}</span>
 										</button>
@@ -225,7 +225,7 @@ export function MobileSidebar() {
 									type="button"
 									variant="ghost"
 								>
-									<SignOutIcon className="size-4" weight="duotone" />
+									<IconArrowDoorOut2FillDuo18 className="size-4" />
 								</Button>
 							</div>
 						) : null}

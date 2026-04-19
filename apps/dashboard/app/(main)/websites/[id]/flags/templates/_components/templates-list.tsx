@@ -1,6 +1,6 @@
 "use client";
 
-import { LayoutIcon } from "@phosphor-icons/react";
+import { IconLayoutLeftFillDuo18 } from "nucleo-ui-fill-duo-18";
 import { EmptyState } from "@/components/empty-state";
 import type { TemplatesListProps } from "../../_components/types";
 import { TemplateItem } from "./template-item";
@@ -19,7 +19,7 @@ export function TemplatesList({
 			<div className="flex flex-1 items-center justify-center py-16">
 				<EmptyState
 					description="Ready-made flag setups will appear here."
-					icon={<LayoutIcon weight="duotone" />}
+					icon={<IconLayoutLeftFillDuo18 />}
 					title="No templates available"
 					variant="minimal"
 				/>

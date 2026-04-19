@@ -1,3 +1,4 @@
+import { APP_URL } from "@/lib/app-url";
 import { db } from "@databuddy/db";
 import {
 	type CachedLink,
@@ -7,7 +8,6 @@ import {
 } from "@databuddy/redis";
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
-import { APP_URL } from "@/lib/app-url";
 
 async function getLinkBySlug(slug: string): Promise<CachedLink | null> {
 	const cached = await getCachedLink(slug).catch(() => null);

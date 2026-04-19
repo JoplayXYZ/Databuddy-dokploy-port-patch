@@ -1,6 +1,6 @@
 "use client";
 
-import { UsersThreeIcon } from "@phosphor-icons/react";
+import { IconUsersFillDuo18 } from "nucleo-ui-fill-duo-18";
 import { EmptyState } from "@/components/empty-state";
 import type { GroupsListProps } from "../../_components/types";
 import { GroupItem } from "./group-item";
@@ -25,7 +25,7 @@ export function GroupsList({
 						onClick: onCreateGroupAction,
 					}}
 					description="Reusable sets of users you can target from any flag."
-					icon={<UsersThreeIcon weight="duotone" />}
+					icon={<IconUsersFillDuo18 />}
 					title="No target groups yet"
 					variant="minimal"
 				/>

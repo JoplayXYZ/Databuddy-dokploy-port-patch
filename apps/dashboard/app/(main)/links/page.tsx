@@ -1,12 +1,12 @@
 "use client";
 
 import {
-	ArrowClockwiseIcon,
-	MagnifyingGlassIcon,
-	PlusIcon,
-	TrendDownIcon,
-} from "@phosphor-icons/react";
-import { LinkIcon } from "@phosphor-icons/react";
+	IconArrowTrendDownFillDuo18,
+	IconLink5FillDuo18,
+	IconMagnifierFillDuo18,
+	IconPlusFillDuo18,
+	IconRefreshFillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { PageHeader } from "@/app/(main)/websites/_components/page-header";
@@ -76,9 +76,8 @@ export default function LinksPage() {
 				<Card className="border-destructive/20 bg-destructive/5">
 					<CardContent className="pt-6">
 						<div className="flex items-center gap-2">
-							<TrendDownIcon
+							<IconArrowTrendDownFillDuo18
 								className="size-5 text-destructive"
-								weight="duotone"
 							/>
 							<p className="text-balance font-medium text-destructive">
 								Error loading links
@@ -100,7 +99,7 @@ export default function LinksPage() {
 					badgeContent="Early Access"
 					count={isLoading ? undefined : links.length}
 					description="Create and track short links with analytics"
-					icon={<LinkIcon weight="duotone" />}
+					icon={<IconLink5FillDuo18 />}
 					right={
 						<>
 							<Button
@@ -110,13 +109,13 @@ export default function LinksPage() {
 								size="icon"
 								variant="outline"
 							>
-								<ArrowClockwiseIcon
+								<IconRefreshFillDuo18
 									className={busy ? "animate-spin" : ""}
 									size={16}
 								/>
 							</Button>
 							<Button onClick={openCreate}>
-								<PlusIcon size={16} />
+								<IconPlusFillDuo18 size={16} />
 								Create Link
 							</Button>
 						</>
@@ -141,9 +140,8 @@ export default function LinksPage() {
 					<LinksListSkeleton />
 				) : noResults ? (
 					<div className="flex flex-1 flex-col items-center justify-center gap-2 py-16">
-						<MagnifyingGlassIcon
+						<IconMagnifierFillDuo18
 							className="size-8 text-muted-foreground/40"
-							weight="duotone"
 						/>
 						<p className="text-pretty text-muted-foreground text-sm">
 							No links match &ldquo;{search}&rdquo;

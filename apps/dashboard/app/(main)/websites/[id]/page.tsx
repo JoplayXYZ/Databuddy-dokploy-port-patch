@@ -1,6 +1,6 @@
 "use client";
 
-import { WarningIcon } from "@phosphor-icons/react";
+import { IconAlertWarningFillDuo18 } from "nucleo-ui-fill-duo-18";
 import { useAtom } from "jotai";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -38,10 +38,9 @@ export default function WebsiteDetailsPage() {
 					}
 					description="The website you are looking for does not exist or you do not have access."
 					icon={
-						<WarningIcon
+						<IconAlertWarningFillDuo18
 							aria-hidden="true"
 							className="size-12"
-							weight="duotone"
 						/>
 					}
 					title="Website not found"

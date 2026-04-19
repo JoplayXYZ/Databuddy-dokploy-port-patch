@@ -1,17 +1,19 @@
 "use client";
 
-import { ArrowClockwiseIcon } from "@phosphor-icons/react";
-import { BookOpenIcon } from "@phosphor-icons/react";
-import { BugIcon } from "@phosphor-icons/react";
-import { CaretDownIcon } from "@phosphor-icons/react";
-import { CheckIcon } from "@phosphor-icons/react";
-import { ClipboardIcon } from "@phosphor-icons/react";
-import { CodeIcon } from "@phosphor-icons/react";
-import { GearIcon } from "@phosphor-icons/react";
-import { LightningIcon } from "@phosphor-icons/react";
-import { PackageIcon } from "@phosphor-icons/react";
-import { PulseIcon } from "@phosphor-icons/react";
-import { WarningCircleIcon } from "@phosphor-icons/react";
+import {
+	IconBoltLightningFillDuo18,
+	IconBookOpenFillDuo18,
+	IconBoxFillDuo18,
+	IconBugFillDuo18,
+	IconCheckFillDuo18,
+	IconChevronDownFillDuo18,
+	IconCircleWarningFillDuo18,
+	IconClipboardContentFillDuo18,
+	IconCodeFillDuo18,
+	IconGearFillDuo18,
+	IconHeartPulseFillDuo18,
+	IconRefreshFillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import { useQuery } from "@tanstack/react-query";
 import { useAtom } from "jotai";
 import { useMemo, useState } from "react";
@@ -113,11 +115,10 @@ function CodeSnippet({
 					variant="ghost"
 				>
 					{copied ? (
-						<CheckIcon className="size-3.5 text-emerald-400" weight="bold" />
+						<IconCheckFillDuo18 className="size-3.5 text-emerald-400" />
 					) : (
-						<ClipboardIcon
+						<IconClipboardContentFillDuo18
 							className="size-3.5 text-white/70"
-							weight="duotone"
 						/>
 					)}
 				</Button>
@@ -152,7 +153,7 @@ function StepIndicator({
 				)}
 			>
 				{isComplete ? (
-					<CheckIcon className="size-4" weight="bold" />
+					<IconCheckFillDuo18 className="size-4" />
 				) : (
 					<span>{step}</span>
 				)}
@@ -192,11 +193,10 @@ function TrackingStatusBanner({
 						)}
 					>
 						{isSetup ? (
-							<PulseIcon className="size-5 text-success" weight="duotone" />
+							<IconHeartPulseFillDuo18 className="size-5 text-success" />
 						) : (
-							<WarningCircleIcon
+							<IconCircleWarningFillDuo18
 								className="size-5 text-amber-500"
-								weight="duotone"
 							/>
 						)}
 					</div>
@@ -223,9 +223,8 @@ function TrackingStatusBanner({
 					size="sm"
 					variant="outline"
 				>
-					<ArrowClockwiseIcon
+					<IconRefreshFillDuo18
 						className={cn("size-3.5", isRefreshing && "animate-spin")}
-						weight="bold"
 					/>
 					{isRefreshing ? "Checking…" : "Check Status"}
 				</Button>
@@ -259,11 +258,11 @@ function InstallationStep({
 			<Tabs className="w-full" defaultValue="script" variant="underline">
 				<TabsList>
 					<TabsTrigger value="script">
-						<CodeIcon className="size-3.5" weight="duotone" />
+						<IconCodeFillDuo18 className="size-3.5" />
 						Script Tag
 					</TabsTrigger>
 					<TabsTrigger value="npm">
-						<PackageIcon className="size-3.5" weight="duotone" />
+						<IconBoxFillDuo18 className="size-3.5" />
 						SDK Package
 					</TabsTrigger>
 				</TabsList>
@@ -288,9 +287,8 @@ function InstallationStep({
 						}
 					/>
 					<div className="flex items-start gap-2 rounded border border-dashed bg-background/50 p-3">
-						<LightningIcon
+						<IconBoltLightningFillDuo18
 							className="mt-0.5 size-4 shrink-0 text-amber-500"
-							weight="duotone"
 						/>
 						<p className="text-muted-foreground text-xs leading-relaxed">
 							The script loads asynchronously and won't block your page
@@ -361,11 +359,10 @@ function InstallationStep({
 				>
 					<span className="truncate">{websiteId}</span>
 					{copiedBlockId === "website-id" ? (
-						<CheckIcon className="size-3 text-success" weight="bold" />
+						<IconCheckFillDuo18 className="size-3 text-success" />
 					) : (
-						<ClipboardIcon
+						<IconClipboardContentFillDuo18
 							className="size-3 opacity-50 transition-opacity group-hover:opacity-100"
-							weight="duotone"
 						/>
 					)}
 				</button>
@@ -443,9 +440,8 @@ function ConfigurationStep({
 					>
 						<div className="flex items-center gap-3">
 							<div className="flex size-8 items-center justify-center rounded bg-accent">
-								<GearIcon
+								<IconGearFillDuo18
 									className="size-4 text-muted-foreground"
-									weight="duotone"
 								/>
 							</div>
 							<div className="text-left">
@@ -455,12 +451,11 @@ function ConfigurationStep({
 								</p>
 							</div>
 						</div>
-						<CaretDownIcon
+						<IconChevronDownFillDuo18
 							className={cn(
 								"size-4 text-muted-foreground transition-transform",
 								basicOpen && "rotate-180"
 							)}
-							weight="bold"
 						/>
 					</button>
 				</CollapsibleTrigger>
@@ -486,9 +481,8 @@ function ConfigurationStep({
 					>
 						<div className="flex items-center gap-3">
 							<div className="flex size-8 items-center justify-center rounded bg-accent">
-								<LightningIcon
+								<IconBoltLightningFillDuo18
 									className="size-4 text-muted-foreground"
-									weight="duotone"
 								/>
 							</div>
 							<div className="text-left">
@@ -499,12 +493,11 @@ function ConfigurationStep({
 								</p>
 							</div>
 						</div>
-						<CaretDownIcon
+						<IconChevronDownFillDuo18
 							className={cn(
 								"size-4 text-muted-foreground transition-transform",
 								advancedOpen && "rotate-180"
 							)}
-							weight="bold"
 						/>
 					</button>
 				</CollapsibleTrigger>
@@ -538,9 +531,8 @@ function DiagnosticsStep() {
 					>
 						<div className="flex items-center gap-3">
 							<div className="flex size-8 items-center justify-center rounded bg-accent">
-								<BugIcon
+								<IconBugFillDuo18
 									className="size-4 text-muted-foreground"
-									weight="duotone"
 								/>
 							</div>
 							<div className="text-left">
@@ -550,12 +542,11 @@ function DiagnosticsStep() {
 								</p>
 							</div>
 						</div>
-						<CaretDownIcon
+						<IconChevronDownFillDuo18
 							className={cn(
 								"size-4 text-muted-foreground transition-transform",
 								diagnosticsOpen && "rotate-180"
 							)}
-							weight="bold"
 						/>
 					</button>
 				</CollapsibleTrigger>
@@ -564,9 +555,8 @@ function DiagnosticsStep() {
 						<div className="space-y-3 rounded border bg-background/50 p-4">
 							<div className="space-y-2">
 								<div className="flex items-start gap-2">
-									<WarningCircleIcon
+									<IconCircleWarningFillDuo18
 										className="mt-0.5 size-4 shrink-0 text-amber-500"
-										weight="duotone"
 									/>
 									<div className="min-w-0 flex-1">
 										<h5 className="font-semibold text-sm">
@@ -581,9 +571,8 @@ function DiagnosticsStep() {
 
 							<div className="space-y-2">
 								<div className="flex items-start gap-2">
-									<WarningCircleIcon
+									<IconCircleWarningFillDuo18
 										className="mt-0.5 size-4 shrink-0 text-amber-500"
-										weight="duotone"
 									/>
 									<div className="min-w-0 flex-1">
 										<h5 className="font-semibold text-sm">Origin mismatch</h5>
@@ -599,9 +588,8 @@ function DiagnosticsStep() {
 
 							<div className="space-y-2">
 								<div className="flex items-start gap-2">
-									<WarningCircleIcon
+									<IconCircleWarningFillDuo18
 										className="mt-0.5 size-4 shrink-0 text-amber-500"
-										weight="duotone"
 									/>
 									<div className="min-w-0 flex-1">
 										<h5 className="font-semibold text-sm">
@@ -625,9 +613,8 @@ function DiagnosticsStep() {
 
 							<div className="space-y-2">
 								<div className="flex items-start gap-2">
-									<WarningCircleIcon
+									<IconCircleWarningFillDuo18
 										className="mt-0.5 size-4 shrink-0 text-amber-500"
-										weight="duotone"
 									/>
 									<div className="min-w-0 flex-1">
 										<h5 className="font-semibold text-sm">
@@ -645,9 +632,8 @@ function DiagnosticsStep() {
 
 							<div className="space-y-2">
 								<div className="flex items-start gap-2">
-									<LightningIcon
+									<IconBoltLightningFillDuo18
 										className="mt-0.5 size-4 shrink-0 text-blue-500"
-										weight="duotone"
 									/>
 									<div className="min-w-0 flex-1">
 										<h5 className="font-semibold text-sm">
@@ -663,9 +649,8 @@ function DiagnosticsStep() {
 
 							<div className="space-y-2">
 								<div className="flex items-start gap-2">
-									<WarningCircleIcon
+									<IconCircleWarningFillDuo18
 										className="mt-0.5 size-4 shrink-0 text-amber-500"
-										weight="duotone"
 									/>
 									<div className="min-w-0 flex-1">
 										<h5 className="font-semibold text-sm">
@@ -684,9 +669,8 @@ function DiagnosticsStep() {
 
 						<div className="rounded border border-blue-500/30 bg-blue-500/5 p-4">
 							<div className="flex items-start gap-2">
-								<BookOpenIcon
+								<IconBookOpenFillDuo18
 									className="mt-0.5 size-4 shrink-0 text-blue-500"
-									weight="duotone"
 								/>
 								<div className="min-w-0 flex-1">
 									<h5 className="font-semibold text-sm">
@@ -838,7 +822,7 @@ export function WebsiteTrackingSetupTab({ websiteId }: TrackingSetupTabProps) {
 						rel="noopener noreferrer"
 						target="_blank"
 					>
-						<BookOpenIcon className="size-4" weight="duotone" />
+						<IconBookOpenFillDuo18 className="size-4" />
 						Documentation
 					</a>
 				</Button>

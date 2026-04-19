@@ -1,11 +1,13 @@
 "use client";
 
-import { ArrowSquareOutIcon } from "@phosphor-icons/react";
-import { CheckCircleIcon } from "@phosphor-icons/react";
-import { ClockIcon } from "@phosphor-icons/react";
-import { FileTextIcon } from "@phosphor-icons/react";
-import { ReceiptIcon } from "@phosphor-icons/react";
-import { XCircleIcon } from "@phosphor-icons/react";
+import {
+	IconCircleCheckFillDuo18,
+	IconCircleXmarkFillDuo18,
+	IconClockFillDuo18,
+	IconExternalLinkFillDuo18,
+	IconFileContentFillDuo18,
+	IconReceiptFillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import type { Invoice } from "autumn-js";
 import { memo, useMemo } from "react";
 import { EmptyState } from "@/components/empty-state";
@@ -59,7 +61,7 @@ export default function HistoryPage() {
 						<EmptyState
 							className="h-full"
 							description="Invoices will appear here after your first payment"
-							icon={<ReceiptIcon />}
+							icon={<IconReceiptFillDuo18 />}
 							title="No invoices yet"
 							variant="minimal"
 						/>
@@ -98,7 +100,7 @@ export default function HistoryPage() {
 						<div className="flex w-full flex-col gap-2 lg:w-auto lg:p-5">
 							<Button className="w-full" onClick={onManageBilling}>
 								Billing Portal
-								<ArrowSquareOutIcon size={14} />
+								<IconExternalLinkFillDuo18 size={14} />
 							</Button>
 						</div>
 					</div>
@@ -144,7 +146,6 @@ const InvoiceRow = memo(function InvoiceRowComponent({
 											: "text-muted-foreground dark:text-muted-foreground/80"
 							)}
 							size={18}
-							weight="duotone"
 						/>
 					</div>
 					<div>
@@ -172,7 +173,7 @@ const InvoiceRow = memo(function InvoiceRowComponent({
 						size="sm"
 						variant="outline"
 					>
-						<FileTextIcon size={14} weight="duotone" />
+						<IconFileContentFillDuo18 size={14} />
 						View
 					</Button>
 				)}
@@ -207,9 +208,9 @@ function SubscriptionItem({
 				)}
 			>
 				{isActive ? (
-					<CheckCircleIcon className="text-primary" size={14} weight="fill" />
+					<IconCircleCheckFillDuo18 className="text-primary" size={14} />
 				) : (
-					<ClockIcon className="text-muted-foreground" size={14} />
+					<IconClockFillDuo18 className="text-muted-foreground" size={14} />
 				)}
 			</div>
 			<div className="min-w-0 flex-1">
@@ -255,10 +256,9 @@ function BillingSummary({ invoices }: { invoices: Invoice[] }) {
 	if (invoices.length === 0) {
 		return (
 			<div className="flex aspect-[1.586/1] w-full flex-col items-center justify-center rounded-xl border border-dashed bg-background">
-				<ReceiptIcon
+				<IconReceiptFillDuo18
 					className="mb-2 text-muted-foreground"
 					size={28}
-					weight="duotone"
 				/>
 				<span className="text-muted-foreground text-sm">
 					No billing history
@@ -335,22 +335,22 @@ function getInvoiceStatus(status: string) {
 		case "paid":
 			return {
 				label: "Paid",
-				icon: CheckCircleIcon,
+				icon: IconCircleCheckFillDuo18,
 				variant: "green" as const,
 			};
 		case "open":
 		case "pending":
-			return { label: "Pending", icon: ClockIcon, variant: "amber" as const };
+			return { label: "Pending", icon: IconClockFillDuo18, variant: "amber" as const };
 		case "failed":
 			return {
 				label: "Failed",
-				icon: XCircleIcon,
+				icon: IconCircleXmarkFillDuo18,
 				variant: "destructive" as const,
 			};
 		default:
 			return {
 				label: status,
-				icon: FileTextIcon,
+				icon: IconFileContentFillDuo18,
 				variant: "secondary" as const,
 			};
 	}

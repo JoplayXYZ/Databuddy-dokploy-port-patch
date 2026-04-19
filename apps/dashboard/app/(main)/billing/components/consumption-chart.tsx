@@ -4,7 +4,7 @@ import type {
 	DailyUsageByTypeRow,
 	UsageResponse,
 } from "@databuddy/shared/types/billing";
-import { CalendarIcon } from "@phosphor-icons/react";
+import { IconCalendarFillDuo18 } from "nucleo-ui-fill-duo-18";
 import { useMemo, useState } from "react";
 import { METRIC_COLORS } from "@/components/charts/metrics-constants";
 import { DateRangePicker } from "@/components/date-range-picker";
@@ -156,7 +156,7 @@ export function ConsumptionChart({
 	if (!usageData || chartData.length === 0) {
 		return (
 			<EmptyState
-				icon={<CalendarIcon />}
+				icon={<IconCalendarFillDuo18 />}
 				title="No Data Available"
 				variant="minimal"
 			/>

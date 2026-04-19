@@ -1,10 +1,12 @@
 "use client";
 
-import { CalendarIcon } from "@phosphor-icons/react";
-import { CaretRightIcon } from "@phosphor-icons/react";
-import { KeyIcon } from "@phosphor-icons/react";
-import { LockKeyIcon } from "@phosphor-icons/react";
-import { WarningIcon } from "@phosphor-icons/react";
+import {
+	IconAlertWarningFillDuo18,
+	IconCalendarFillDuo18,
+	IconChevronRightFillDuo18,
+	IconKeyFillDuo18,
+	IconLockFillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import type { ApiKeyListItem } from "@/components/organizations/api-key-types";
 import { Badge } from "@/components/ui/badge";
 import dayjs from "@/lib/dayjs";
@@ -39,16 +41,14 @@ export function ApiKeyRow({ apiKey, onSelect }: ApiKeyRowProps) {
 				)}
 			>
 				{isActive ? (
-					<KeyIcon
+					<IconKeyFillDuo18
 						className="text-muted-foreground group-hover:text-primary"
 						size={18}
-						weight="duotone"
 					/>
 				) : (
-					<LockKeyIcon
+					<IconLockFillDuo18
 						className="text-muted-foreground"
 						size={18}
-						weight="duotone"
 					/>
 				)}
 			</div>
@@ -65,7 +65,7 @@ export function ApiKeyRow({ apiKey, onSelect }: ApiKeyRowProps) {
 					</span>
 					{isExpired && (
 						<Badge variant="amber">
-							<WarningIcon className="mr-1" size={10} weight="fill" />
+							<IconAlertWarningFillDuo18 className="mr-1" size={10} />
 							Expired
 						</Badge>
 					)}
@@ -75,7 +75,7 @@ export function ApiKeyRow({ apiKey, onSelect }: ApiKeyRowProps) {
 						{apiKey.start}
 					</code>
 					<span className="flex items-center gap-1 text-xs">
-						<CalendarIcon size={12} />
+						<IconCalendarFillDuo18 size={12} />
 						{dayjs(apiKey.createdAt).format("MMM D, YYYY")}
 					</span>
 				</div>
@@ -90,13 +90,12 @@ export function ApiKeyRow({ apiKey, onSelect }: ApiKeyRowProps) {
 				<Badge variant="gray">{isRevoked ? "Revoked" : "Disabled"}</Badge>
 			)}
 
-			<CaretRightIcon
+			<IconChevronRightFillDuo18
 				className={cn(
 					"text-muted-foreground/40 transition-all",
 					isActive && "group-hover:translate-x-0.5 group-hover:text-primary"
 				)}
 				size={16}
-				weight="bold"
 			/>
 		</button>
 	);

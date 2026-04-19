@@ -1,11 +1,13 @@
 "use client";
 
-import { ArrowClockwiseIcon } from "@phosphor-icons/react";
-import { ArrowSquareOutIcon } from "@phosphor-icons/react";
-import { BrowserIcon } from "@phosphor-icons/react";
-import { HeartbeatIcon } from "@phosphor-icons/react";
-import { PlusIcon } from "@phosphor-icons/react";
-import { SirenIcon } from "@phosphor-icons/react";
+import {
+	IconAlertWarningFillDuo18,
+	IconChartActivityFillDuo18,
+	IconExternalLinkFillDuo18,
+	IconPlusFillDuo18,
+	IconRefreshFillDuo18,
+	IconWindowFillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
@@ -123,7 +125,7 @@ export default function StatusPageDetailsPage() {
 						onClick: () => statusPageQuery.refetch(),
 					}}
 					description="Something went wrong while loading the status page."
-					icon={<BrowserIcon weight="duotone" />}
+					icon={<IconWindowFillDuo18 />}
 					title="Failed to load"
 					variant="error"
 				/>
@@ -138,7 +140,7 @@ export default function StatusPageDetailsPage() {
 						onClick: () => setIsDialogOpen(true),
 					}}
 					description="Add an existing monitor or create a new one to display on this status page."
-					icon={<HeartbeatIcon weight="duotone" />}
+					icon={<IconChartActivityFillDuo18 />}
 					title="No monitors added"
 					variant="minimal"
 				/>
@@ -164,7 +166,7 @@ export default function StatusPageDetailsPage() {
 			<div className="flex h-full min-h-0 flex-col">
 				<PageHeader
 					description="Manage monitors and what appears on your public status page."
-					icon={<BrowserIcon />}
+					icon={<IconWindowFillDuo18 />}
 					right={
 						statusPage ? (
 							<>
@@ -186,7 +188,7 @@ export default function StatusPageDetailsPage() {
 									size="icon"
 									variant="outline"
 								>
-									<ArrowClockwiseIcon
+									<IconRefreshFillDuo18
 										className={cn(
 											(statusPageQuery.isLoading ||
 												statusPageQuery.isFetching) &&
@@ -199,11 +201,11 @@ export default function StatusPageDetailsPage() {
 									size="sm"
 									variant="outline"
 								>
-									<ArrowSquareOutIcon weight="duotone" />
+									<IconExternalLinkFillDuo18 />
 									<span className="hidden sm:inline">Transfer</span>
 								</Button>
 								<Button onClick={() => setIsDialogOpen(true)} size="sm">
-									<PlusIcon />
+									<IconPlusFillDuo18 />
 									Add Monitor
 								</Button>
 							</>
@@ -234,11 +236,11 @@ export default function StatusPageDetailsPage() {
 				>
 					<TabsList>
 						<TabsTrigger value="monitors">
-							<HeartbeatIcon size={16} weight="duotone" />
+							<IconChartActivityFillDuo18 size={16} />
 							Monitors
 						</TabsTrigger>
 						<TabsTrigger disabled value="incidents">
-							<SirenIcon size={16} weight="duotone" />
+							<IconAlertWarningFillDuo18 size={16} />
 							Incidents
 							<Badge className="px-1.5 py-0" variant="secondary">
 								Soon
@@ -260,7 +262,7 @@ export default function StatusPageDetailsPage() {
 						<div className="flex flex-1 items-center justify-center py-16">
 							<EmptyState
 								description="Incident management is coming soon. You'll be able to create and track incidents directly from here."
-								icon={<SirenIcon weight="duotone" />}
+								icon={<IconAlertWarningFillDuo18 />}
 								showPlusBadge={false}
 								title="Coming Soon"
 								variant="minimal"

@@ -1,10 +1,12 @@
 "use client";
 
-import { CalendarIcon } from "@phosphor-icons/react";
-import { CheckIcon } from "@phosphor-icons/react";
-import { ClockIcon } from "@phosphor-icons/react";
-import { InfinityIcon } from "@phosphor-icons/react";
-import { XIcon } from "@phosphor-icons/react";
+import {
+	IconCalendarFillDuo18,
+	IconCheckFillDuo18,
+	IconClockFillDuo18,
+	IconInfinityFillDuo18,
+	IconXmarkFillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import { useCallback, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -199,16 +201,14 @@ export function ExpirationPicker({
 						variant="outline"
 					>
 						{value ? (
-							<CalendarIcon
+							<IconCalendarFillDuo18
 								aria-hidden="true"
 								className="size-4 shrink-0"
-								weight="duotone"
 							/>
 						) : (
-							<InfinityIcon
+							<IconInfinityFillDuo18
 								aria-hidden="true"
 								className="size-4 shrink-0"
-								weight="duotone"
 							/>
 						)}
 						<span className="truncate">{formatDisplay(currentDate)}</span>
@@ -224,7 +224,7 @@ export function ExpirationPicker({
 						}}
 						type="button"
 					>
-						<XIcon aria-hidden="true" className="size-3.5" />
+						<IconXmarkFillDuo18 aria-hidden="true" className="size-3.5" />
 					</button>
 				)}
 			</div>
@@ -263,10 +263,9 @@ export function ExpirationPicker({
 
 						<div className="border-t px-4 py-3">
 							<div className="flex items-center gap-3">
-								<ClockIcon
+								<IconClockFillDuo18
 									aria-hidden="true"
 									className="size-4 text-muted-foreground"
-									weight="duotone"
 								/>
 								<label className="text-sm" htmlFor="expiration-time">
 									Time
@@ -365,14 +364,13 @@ export function ExpirationPicker({
 								onClick={() => setShowCustom(true)}
 								type="button"
 							>
-								<CalendarIcon
+								<IconCalendarFillDuo18
 									aria-hidden="true"
 									className="size-4"
-									weight="duotone"
 								/>
 								<span>Custom date & time</span>
 								{activePreset === "custom" && (
-									<CheckIcon aria-hidden="true" className="ml-auto size-3.5" />
+									<IconCheckFillDuo18 aria-hidden="true" className="ml-auto size-3.5" />
 								)}
 							</button>
 
@@ -386,14 +384,13 @@ export function ExpirationPicker({
 								onClick={handleClear}
 								type="button"
 							>
-								<InfinityIcon
+								<IconInfinityFillDuo18
 									aria-hidden="true"
 									className="size-4"
-									weight="duotone"
 								/>
 								<span>Never expires</span>
 								{!value && (
-									<CheckIcon aria-hidden="true" className="ml-auto size-3.5" />
+									<IconCheckFillDuo18 aria-hidden="true" className="ml-auto size-3.5" />
 								)}
 							</button>
 						</div>

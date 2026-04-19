@@ -1,9 +1,11 @@
 "use client";
 
-import { ArrowClockwiseIcon } from "@phosphor-icons/react";
-import { GlobeIcon } from "@phosphor-icons/react";
-import { HouseIcon } from "@phosphor-icons/react";
-import { PlusIcon } from "@phosphor-icons/react";
+import {
+	IconGlobeFillDuo18,
+	IconHouse4FillDuo18,
+	IconPlusFillDuo18,
+	IconRefreshFillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import Link from "next/link";
 import { useState } from "react";
 import { EmptyState } from "@/components/empty-state";
@@ -101,7 +103,7 @@ export default function HomePage() {
 		<div className="flex h-full flex-col">
 			<PageHeader
 				description="Overview of your analytics across all websites"
-				icon={<HouseIcon />}
+				icon={<IconHouse4FillDuo18 />}
 				right={
 					<>
 						<Button
@@ -117,7 +119,7 @@ export default function HomePage() {
 							size="icon"
 							variant="outline"
 						>
-							<ArrowClockwiseIcon
+							<IconRefreshFillDuo18
 								aria-hidden
 								className={cn(
 									"size-4",
@@ -140,7 +142,7 @@ export default function HomePage() {
 							size="default"
 						>
 							<div className="absolute inset-0 -translate-x-full bg-linear-to-r from-white/0 via-white/20 to-white/0 transition-transform duration-700 group-hover:translate-x-full" />
-							<PlusIcon className="relative z-10 size-4 transition-transform duration-300 group-hover:rotate-90" />
+							<IconPlusFillDuo18 className="relative z-10 size-4 transition-transform duration-300 group-hover:rotate-90" />
 							<span className="relative z-10 truncate">New Website</span>
 						</Button>
 					</>
@@ -216,7 +218,7 @@ export default function HomePage() {
 								onClick: handleRefetch,
 							}}
 							description="There was an issue fetching your websites."
-							icon={<GlobeIcon />}
+							icon={<IconGlobeFillDuo18 />}
 							title="Failed to load"
 							variant="error"
 						/>
@@ -229,7 +231,7 @@ export default function HomePage() {
 								onClick: () => setDialogOpen(true),
 							}}
 							description="Start tracking your website analytics by adding your first website."
-							icon={<GlobeIcon weight="duotone" />}
+							icon={<IconGlobeFillDuo18 />}
 							title="No websites yet"
 							variant="minimal"
 						/>

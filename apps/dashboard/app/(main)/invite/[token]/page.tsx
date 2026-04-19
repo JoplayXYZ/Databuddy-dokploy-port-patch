@@ -1,17 +1,18 @@
 "use client";
 
-import type { IconProps } from "@phosphor-icons/react";
-import { ArrowRightIcon } from "@phosphor-icons/react";
-import { CheckCircleIcon } from "@phosphor-icons/react";
-import { HeartbeatIcon } from "@phosphor-icons/react";
-import { LightbulbFilamentIcon } from "@phosphor-icons/react";
-import { LightningIcon } from "@phosphor-icons/react";
-import { ProhibitIcon } from "@phosphor-icons/react";
-import { RobotIcon } from "@phosphor-icons/react";
-import { SpinnerGapIcon } from "@phosphor-icons/react";
-import { TrendUpIcon } from "@phosphor-icons/react";
-import { WaveformIcon } from "@phosphor-icons/react";
-import { XCircleIcon } from "@phosphor-icons/react";
+import {
+	IconArrowRightFillDuo18,
+	IconArrowTrendUpFillDuo18,
+	IconBanFillDuo18,
+	IconBoltLightningFillDuo18,
+	IconChartActivityFillDuo18,
+	IconCircleCheckFillDuo18,
+	IconCircleXmarkFillDuo18,
+	IconLightbulbFillDuo18,
+	IconLoader2FillDuo18,
+	IconRobotFillDuo18,
+	IconWaveformLinesFillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
 import type { ForwardRefExoticComponent, RefAttributes } from "react";
@@ -25,20 +26,20 @@ import {
 import { orpc } from "@/lib/orpc";
 
 type PhosphorIcon = ForwardRefExoticComponent<
-	IconProps & RefAttributes<SVGSVGElement>
+	SVGProps<SVGSVGElement> & { size?: number | string } & RefAttributes<SVGSVGElement>
 >;
 
 const FLAG_KEY_ICONS: Record<string, PhosphorIcon> = {
-	monitors: HeartbeatIcon,
-	insights: LightbulbFilamentIcon,
-	revenue: TrendUpIcon,
-	anomalies: WaveformIcon,
-	pulse: LightningIcon,
-	agent: RobotIcon,
+	monitors: IconChartActivityFillDuo18,
+	insights: IconLightbulbFillDuo18,
+	revenue: IconArrowTrendUpFillDuo18,
+	anomalies: IconWaveformLinesFillDuo18,
+	pulse: IconBoltLightningFillDuo18,
+	agent: IconRobotFillDuo18,
 };
 
 function getFeatureIcon(flagKey: string): PhosphorIcon {
-	return FLAG_KEY_ICONS[flagKey] ?? LightningIcon;
+	return FLAG_KEY_ICONS[flagKey] ?? IconBoltLightningFillDuo18;
 }
 
 function SuccessState({ flagKey }: { flagKey: string }) {
@@ -52,9 +53,8 @@ function SuccessState({ flagKey }: { flagKey: string }) {
 			<div className="w-full max-w-sm space-y-6 text-center">
 				<div className="flex justify-center">
 					<div className="rounded border border-green-500/20 bg-green-500/10 p-4">
-						<CheckCircleIcon
+						<IconCircleCheckFillDuo18
 							className="size-8 text-green-600 dark:text-green-400"
-							weight="fill"
 						/>
 					</div>
 				</div>
@@ -71,7 +71,6 @@ function SuccessState({ flagKey }: { flagKey: string }) {
 						<div className="flex size-9 shrink-0 items-center justify-center rounded bg-secondary">
 							<FeatureIcon
 								className="size-4.5 text-foreground"
-								weight="duotone"
 							/>
 						</div>
 						<div className="text-left">
@@ -88,7 +87,7 @@ function SuccessState({ flagKey }: { flagKey: string }) {
 					onClick={() => router.push(getFeatureRoute(flagKey))}
 				>
 					Get Started
-					<ArrowRightIcon className="size-4" weight="fill" />
+					<IconArrowRightFillDuo18 className="size-4" />
 				</Button>
 			</div>
 		</div>
@@ -141,7 +140,7 @@ function classifyError(error: unknown): {
 			message:
 				"This invite link has been revoked. Ask the person who shared it for a new one.",
 			icon: (
-				<ProhibitIcon className="size-8 text-destructive" weight="duotone" />
+				<IconBanFillDuo18 className="size-8 text-destructive" />
 			),
 		};
 	}
@@ -152,7 +151,7 @@ function classifyError(error: unknown): {
 			message:
 				"This invite link has already been used by someone else. Ask for a new link.",
 			icon: (
-				<XCircleIcon className="size-8 text-destructive" weight="duotone" />
+				<IconCircleXmarkFillDuo18 className="size-8 text-destructive" />
 			),
 		};
 	}
@@ -163,7 +162,7 @@ function classifyError(error: unknown): {
 			message:
 				"This invite link doesn't exist or is invalid. Double-check the link and try again.",
 			icon: (
-				<XCircleIcon className="size-8 text-destructive" weight="duotone" />
+				<IconCircleXmarkFillDuo18 className="size-8 text-destructive" />
 			),
 		};
 	}
@@ -174,7 +173,7 @@ function classifyError(error: unknown): {
 			error instanceof Error
 				? error.message
 				: "An unexpected error occurred. Please try again.",
-		icon: <XCircleIcon className="size-8 text-destructive" weight="duotone" />,
+		icon: <IconCircleXmarkFillDuo18 className="size-8 text-destructive" />,
 	};
 }
 
@@ -182,7 +181,7 @@ function LoadingState() {
 	return (
 		<div className="flex flex-1 items-center justify-center p-4 sm:p-8">
 			<div className="flex flex-col items-center gap-4">
-				<SpinnerGapIcon className="size-6 animate-spin text-muted-foreground" />
+				<IconLoader2FillDuo18 className="size-6 animate-spin text-muted-foreground" />
 				<p className="text-muted-foreground text-sm">Loading invite...</p>
 			</div>
 		</div>
@@ -208,7 +207,7 @@ function RedeemPrompt({
 			<div className="w-full max-w-sm space-y-6 text-center">
 				<div className="flex justify-center">
 					<div className="rounded border bg-secondary p-4">
-						<FeatureIcon className="size-8 text-foreground" weight="duotone" />
+						<FeatureIcon className="size-8 text-foreground" />
 					</div>
 				</div>
 
@@ -223,23 +222,20 @@ function RedeemPrompt({
 				<div className="rounded border bg-card p-3 text-left">
 					<ul className="space-y-2 text-muted-foreground text-xs">
 						<li className="flex items-start gap-2">
-							<CheckCircleIcon
+							<IconCircleCheckFillDuo18
 								className="mt-0.5 size-3.5 shrink-0 text-green-600"
-								weight="fill"
 							/>
 							Permanent access — no expiration
 						</li>
 						<li className="flex items-start gap-2">
-							<CheckCircleIcon
+							<IconCircleCheckFillDuo18
 								className="mt-0.5 size-3.5 shrink-0 text-green-600"
-								weight="fill"
 							/>
 							Invite-only — not publicly available
 						</li>
 						<li className="flex items-start gap-2">
-							<CheckCircleIcon
+							<IconCircleCheckFillDuo18
 								className="mt-0.5 size-3.5 shrink-0 text-green-600"
-								weight="fill"
 							/>
 							You'll get your own invite links to share
 						</li>
@@ -253,7 +249,7 @@ function RedeemPrompt({
 						onClick={onRedeemAction}
 					>
 						{isPending ? (
-							<SpinnerGapIcon className="size-4 animate-spin" />
+							<IconLoader2FillDuo18 className="size-4 animate-spin" />
 						) : null}
 						{isPending ? "Unlocking…" : "Unlock Access"}
 					</Button>
@@ -349,7 +345,7 @@ export default function RedeemInvitePage() {
 			<div className="flex h-dvh flex-col">
 				<ErrorState
 					icon={
-						<XCircleIcon className="size-8 text-destructive" weight="duotone" />
+						<IconCircleXmarkFillDuo18 className="size-8 text-destructive" />
 					}
 					message="This invite link has already been used by someone else. Ask for a new link."
 					title="Already Claimed"
@@ -363,9 +359,8 @@ export default function RedeemInvitePage() {
 			<div className="flex h-dvh flex-col">
 				<ErrorState
 					icon={
-						<ProhibitIcon
+						<IconBanFillDuo18
 							className="size-8 text-destructive"
-							weight="duotone"
 						/>
 					}
 					message="This invite link has been revoked. Ask the person who shared it for a new one."

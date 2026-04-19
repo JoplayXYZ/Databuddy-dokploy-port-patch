@@ -12,7 +12,7 @@ import {
 } from "@/hooks/use-funnels";
 import type { CreateFunnelData } from "@/types/funnels";
 import { GATED_FEATURES } from "@databuddy/shared/types/features";
-import { FunnelIcon } from "@phosphor-icons/react";
+import { IconFilterFillDuo18 } from "nucleo-ui-fill-duo-18";
 import dynamic from "next/dynamic";
 import { useParams } from "next/navigation";
 import { useState } from "react";
@@ -139,7 +139,7 @@ export default function FunnelsPage() {
 					description="See where users drop off in a multi-step journey"
 					feature={GATED_FEATURES.FUNNELS}
 					hasError={listOutcome.status === "error"}
-					icon={<FunnelIcon className="size-6" weight="duotone" />}
+					icon={<IconFilterFillDuo18 className="size-6" />}
 					isLoading={isLoading}
 					isRefreshing={isFetching}
 					onCreateAction={() => setEditing("new")}
@@ -162,7 +162,7 @@ export default function FunnelsPage() {
 							},
 							description:
 								"Define a multi-step journey to see where users drop off.",
-							icon: <FunnelIcon className="size-6" weight="duotone" />,
+							icon: <IconFilterFillDuo18 className="size-6" />,
 							title: "No funnels yet",
 						}}
 						errorProps={{
@@ -170,7 +170,7 @@ export default function FunnelsPage() {
 							description:
 								error?.message ??
 								"Something went wrong while loading funnel data.",
-							icon: <FunnelIcon className="size-6" weight="duotone" />,
+							icon: <IconFilterFillDuo18 className="size-6" />,
 							title: "Failed to load funnels",
 						}}
 						loading={<FunnelsListSkeleton />}

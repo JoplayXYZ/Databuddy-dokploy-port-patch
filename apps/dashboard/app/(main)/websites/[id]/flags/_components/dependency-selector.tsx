@@ -1,9 +1,11 @@
 "use client";
 
-import { CheckCircleIcon } from "@phosphor-icons/react";
-import { CircleIcon } from "@phosphor-icons/react";
-import { PlusIcon } from "@phosphor-icons/react";
-import { XIcon } from "@phosphor-icons/react";
+import {
+	IconCircleCheckFillDuo18,
+	IconDotsFillDuo18,
+	IconPlusFillDuo18,
+	IconXmarkFillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -88,7 +90,7 @@ export function DependencySelector({
 										onClick={() => handleRemove(flag.key)}
 										type="button"
 									>
-										<XIcon size={12} />
+										<IconXmarkFillDuo18 size={12} />
 									</button>
 								</motion.div>
 							);
@@ -106,7 +108,7 @@ export function DependencySelector({
 							type="button"
 							variant="ghost"
 						>
-							<PlusIcon size={14} />
+							<IconPlusFillDuo18 size={14} />
 							Add dependency
 						</Button>
 					</PopoverTrigger>
@@ -137,13 +139,12 @@ export function DependencySelector({
 											type="button"
 										>
 											{isActive ? (
-												<CheckCircleIcon
+												<IconCircleCheckFillDuo18
 													className="shrink-0 text-green-500"
 													size={14}
-													weight="fill"
 												/>
 											) : (
-												<CircleIcon
+												<IconDotsFillDuo18
 													className="shrink-0 text-amber-500"
 													size={14}
 												/>

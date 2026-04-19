@@ -3,7 +3,7 @@
 import { filterOptions } from "@databuddy/shared/lists/filters";
 import type { DynamicQueryFilter } from "@databuddy/shared/types/api";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { FloppyDiskIcon } from "@phosphor-icons/react";
+import { IconFloppyDiskFillDuo18 } from "nucleo-ui-fill-duo-18";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -99,9 +99,8 @@ export function SaveFilterDialog({
 					: `Save ${filters.length} filter${filters.length === 1 ? "" : "s"} for later`
 			}
 			icon={
-				<FloppyDiskIcon
+				<IconFloppyDiskFillDuo18
 					className="size-5 text-accent-foreground"
-					weight="duotone"
 				/>
 			}
 			isSubmitting={isLoading}

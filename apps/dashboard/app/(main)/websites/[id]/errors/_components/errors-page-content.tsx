@@ -1,7 +1,7 @@
 "use client";
 
 import { GATED_FEATURES } from "@databuddy/shared/types/features";
-import { BugIcon } from "@phosphor-icons/react";
+import { IconBugFillDuo18 } from "nucleo-ui-fill-duo-18";
 import { useAtom, useAtomValue } from "jotai";
 import { use, useCallback } from "react";
 import { FeatureGate } from "@/components/feature-gate";
@@ -95,7 +95,7 @@ export const ErrorsPageContent = ({ params }: ErrorsPageContentProps) => {
 				<div className="rounded border border-destructive/20 bg-destructive/5 p-6">
 					<div className="flex flex-col items-center text-center">
 						<div className="mb-4 flex size-12 items-center justify-center rounded bg-destructive/10">
-							<BugIcon className="size-6 text-destructive" weight="duotone" />
+							<IconBugFillDuo18 className="size-6 text-destructive" />
 						</div>
 						<h4 className="mb-2 font-semibold text-destructive">
 							Failed to load errors

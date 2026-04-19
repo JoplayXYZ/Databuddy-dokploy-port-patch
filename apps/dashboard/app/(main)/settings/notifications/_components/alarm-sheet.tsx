@@ -1,10 +1,12 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { EnvelopeSimple } from "@phosphor-icons/react";
-import { GlobeSimple } from "@phosphor-icons/react";
-import { SlackLogo } from "@phosphor-icons/react";
-import { X } from "@phosphor-icons/react";
+import {
+	IconEnvelopeFillDuo18,
+	IconGlobeFillDuo18,
+	IconXmarkFillDuo18,
+} from "nucleo-ui-fill-duo-18";
+import { IconSlackLogo as IconSlackLogo } from "@/components/icons/brand-icons";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
@@ -46,19 +48,19 @@ const CHANNELS: Record<
 > = {
 	slack: {
 		label: "Slack",
-		icon: SlackLogo,
+		icon: IconSlackLogo,
 		fieldLabel: "Webhook URL",
 		placeholder: "https://hooks.slack.com/services/...",
 	},
 	email: {
 		label: "Email",
-		icon: EnvelopeSimple,
+		icon: IconEnvelopeFillDuo18,
 		fieldLabel: "Email address",
 		placeholder: "alerts@example.com",
 	},
 	webhook: {
 		label: "Webhook",
-		icon: GlobeSimple,
+		icon: IconGlobeFillDuo18,
 		fieldLabel: "Endpoint URL",
 		placeholder: "https://api.example.com/webhooks/...",
 	},
@@ -302,7 +304,7 @@ export function AlarmSheet({
 											`destinations.${index}.type`
 										) as DestType;
 										const channel = CHANNELS[destType];
-										const Icon = channel?.icon ?? GlobeSimple;
+										const Icon = channel?.icon ?? IconGlobeFillDuo18;
 
 										return (
 											<div className="rounded-lg border" key={field.id}>
@@ -310,7 +312,6 @@ export function AlarmSheet({
 													<div className="flex items-center gap-2">
 														<Icon
 															className="size-4 text-muted-foreground"
-															weight="duotone"
 														/>
 														<span className="font-medium text-sm">
 															{channel?.label ?? destType}
@@ -323,7 +324,7 @@ export function AlarmSheet({
 															onClick={() => remove(index)}
 															type="button"
 														>
-															<X className="size-3.5" />
+															<IconXmarkFillDuo18 className="size-3.5" />
 														</button>
 													)}
 												</div>
@@ -412,7 +413,7 @@ export function AlarmSheet({
 												type="button"
 												variant="outline"
 											>
-												<Icon className="size-3.5" weight="duotone" />
+												<Icon className="size-3.5" />
 												{config.label}
 											</Button>
 										);

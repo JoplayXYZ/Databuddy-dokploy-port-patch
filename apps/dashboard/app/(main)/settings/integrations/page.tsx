@@ -1,6 +1,6 @@
 "use client";
 
-import { PlugIcon } from "@phosphor-icons/react";
+import { IconPlugFillDuo18 } from "nucleo-ui-fill-duo-18";
 import { RightSidebar } from "@/components/right-sidebar";
 import { ComingSoon } from "../_components/settings-section";
 
@@ -11,9 +11,8 @@ export default function IntegrationsSettingsPage() {
 				<ComingSoon
 					description="Connect Stripe, GitHub, Google, Slack, Discord and more. We're working hard to bring you these integrations soon."
 					icon={
-						<PlugIcon
+						<IconPlugFillDuo18
 							className="size-8 text-muted-foreground"
-							weight="duotone"
 						/>
 					}
 					title="Integrations Coming Soon"

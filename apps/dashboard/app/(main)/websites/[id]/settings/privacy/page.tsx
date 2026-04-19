@@ -1,9 +1,11 @@
 "use client";
 
-import { CheckIcon } from "@phosphor-icons/react";
-import { ClipboardIcon } from "@phosphor-icons/react";
-import { InfoIcon } from "@phosphor-icons/react";
-import { ShareIcon } from "@phosphor-icons/react";
+import {
+	IconCheckFillDuo18,
+	IconCircleInfoFillDuo18,
+	IconClipboardContentFillDuo18,
+	IconShareRight2FillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
 import { useCallback } from "react";
@@ -75,7 +77,7 @@ export default function PrivacyPage() {
 				badgeContent={isPublic ? "Public" : "Private"}
 				badgeVariant={isPublic ? "blue" : "secondary"}
 				description="Share a read-only public overview"
-				icon={<ShareIcon />}
+				icon={<IconShareRight2FillDuo18 />}
 				title="Privacy"
 			/>
 			<div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-none">
@@ -89,7 +91,7 @@ export default function PrivacyPage() {
 							</p>
 							{isPublic && (
 								<Badge className="mt-3" variant="blue">
-									<CheckIcon className="size-3" size={12} weight="bold" />
+									<IconCheckFillDuo18 className="size-3" size={12} />
 									Public access enabled
 								</Badge>
 							)}
@@ -124,13 +126,13 @@ export default function PrivacyPage() {
 										size="sm"
 										variant="ghost"
 									>
-										<ClipboardIcon className="size-4" />
+										<IconClipboardContentFillDuo18 className="size-4" />
 									</Button>
 								</code>
 							</div>
 							<NoticeBanner
 								description="This URL opens your public overview only. Visitors cannot open settings, other analytics sections, or delete your site."
-								icon={<InfoIcon />}
+								icon={<IconCircleInfoFillDuo18 />}
 							/>
 						</div>
 					</section>

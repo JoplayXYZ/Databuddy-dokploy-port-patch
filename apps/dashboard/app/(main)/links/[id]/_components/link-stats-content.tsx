@@ -1,9 +1,11 @@
 "use client";
 
-import { CursorClickIcon } from "@phosphor-icons/react";
-import { GlobeIcon } from "@phosphor-icons/react";
-import { LinkIcon } from "@phosphor-icons/react";
-import { UsersIcon } from "@phosphor-icons/react";
+import {
+	IconGlobeFillDuo18,
+	IconHandPointerFillDuo18,
+	IconLink5FillDuo18,
+	IconUsersFillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import { useParams, useRouter } from "next/navigation";
 import { useMemo } from "react";
 import { StatCard } from "@/components/analytics";
@@ -220,7 +222,7 @@ export function LinkStatsContent() {
 						onClick: () => router.push("/links"),
 					}}
 					description="The link you're looking for doesn't exist or has been deleted."
-					icon={<LinkIcon />}
+					icon={<IconLink5FillDuo18 />}
 					title="Link not found"
 					variant="error"
 				/>
@@ -236,7 +238,7 @@ export function LinkStatsContent() {
 					chartStepType="monotone"
 					chartType="area"
 					description={`${formatNumber(todayClicks)} today`}
-					icon={CursorClickIcon}
+					icon={IconHandPointerFillDuo18}
 					id="clicks-chart"
 					isLoading={isLoading}
 					showChart={true}
@@ -248,7 +250,7 @@ export function LinkStatsContent() {
 					chartStepType="monotone"
 					chartType="area"
 					description="Unique traffic sources"
-					icon={UsersIcon}
+					icon={IconUsersFillDuo18}
 					id="referrers-count"
 					isLoading={isLoading}
 					showChart={true}
@@ -260,7 +262,7 @@ export function LinkStatsContent() {
 					chartStepType="monotone"
 					chartType="area"
 					description="Geographic reach"
-					icon={GlobeIcon}
+					icon={IconGlobeFillDuo18}
 					id="countries-count"
 					isLoading={isLoading}
 					showChart={true}

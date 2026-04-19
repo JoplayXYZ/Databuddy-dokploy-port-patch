@@ -1,6 +1,6 @@
 "use client";
 
-import { CreditCardIcon } from "@phosphor-icons/react";
+import { IconCreditCardFillDuo18 } from "nucleo-ui-fill-duo-18";
 import { usePathname } from "next/navigation";
 import { PageHeader } from "../../websites/_components/page-header";
 
@@ -31,7 +31,7 @@ export function BillingHeader() {
 	return (
 		<PageHeader
 			description={description}
-			icon={<CreditCardIcon weight="duotone" />}
+			icon={<IconCreditCardFillDuo18 />}
 			title={title}
 		/>
 	);

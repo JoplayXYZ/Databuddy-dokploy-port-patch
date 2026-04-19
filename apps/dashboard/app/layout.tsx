@@ -2,21 +2,15 @@ import "./globals.css";
 
 import { Databuddy } from "@databuddy/sdk/react";
 import type { Metadata, Viewport } from "next";
+import { Inter } from "next/font/google";
 import localFont from "next/font/local";
 import { Toaster } from "@/components/ui/sonner";
 import { APP_URL } from "@/lib/app-url";
 import Providers from "./providers";
 
-const ltSuperior = localFont({
-	src: [
-		{ path: "../fonts/lt-superior/light.otf", weight: "300" },
-		{ path: "../fonts/lt-superior/regular.otf", weight: "400" },
-		{ path: "../fonts/lt-superior/medium.otf", weight: "500" },
-		{ path: "../fonts/lt-superior/semibold.otf", weight: "600" },
-		{ path: "../fonts/lt-superior/bold.otf", weight: "700" },
-		{ path: "../fonts/lt-superior/extrabold.otf", weight: "800" },
-	],
-	variable: "--font-lt-superior",
+const inter = Inter({
+	subsets: ["latin"],
+	variable: "--font-inter",
 	display: "swap",
 });
 

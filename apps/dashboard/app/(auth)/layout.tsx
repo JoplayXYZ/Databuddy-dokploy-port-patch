@@ -1,10 +1,10 @@
-import { CaretLeftIcon, SpinnerIcon } from "@phosphor-icons/react/ssr";
-import Link from "next/link";
-import { Suspense } from "react";
 import Iridescence from "@/components/bits/Iridiscence";
 import { Logo } from "@/components/layout/logo";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { Suspense } from "react";
 
+import { IconChevronLeftFillDuo18, IconLoader2FillDuo18 } from "nucleo-ui-fill-duo-18";
 export default function AuthLayout({
 	children,
 }: {
@@ -26,7 +26,7 @@ export default function AuthLayout({
 						className="group px-0! text-white/50 hover:bg-transparent hover:text-white/80"
 						variant="ghost"
 					>
-						<CaretLeftIcon className="size-4 transition-transform duration-200 group-hover:translate-x-[-4px]" />
+						<IconChevronLeftFillDuo18 className="size-4 transition-transform duration-200 group-hover:translate-x-[-4px]" />
 						Back
 					</Button>
 				</Link>
@@ -51,7 +51,7 @@ export default function AuthLayout({
 						<Suspense
 							fallback={
 								<div className="flex h-40 items-center justify-center">
-									<SpinnerIcon className="size-8 animate-spin text-primary" />
+									<IconLoader2FillDuo18 className="size-8 animate-spin text-primary" />
 								</div>
 							}
 						>

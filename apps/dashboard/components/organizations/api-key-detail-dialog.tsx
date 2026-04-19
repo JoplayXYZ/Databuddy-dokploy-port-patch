@@ -2,13 +2,15 @@
 
 import { API_SCOPES, type ApiScope } from "@databuddy/api-keys/scopes";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowsClockwiseIcon } from "@phosphor-icons/react";
-import { CheckCircleIcon } from "@phosphor-icons/react";
-import { CheckIcon } from "@phosphor-icons/react";
-import { CopyIcon } from "@phosphor-icons/react";
-import { KeyIcon } from "@phosphor-icons/react";
-import { ProhibitIcon } from "@phosphor-icons/react";
-import { TrashIcon } from "@phosphor-icons/react";
+import {
+	IconBanFillDuo18,
+	IconCheckFillDuo18,
+	IconCircleCheckFillDuo18,
+	IconCopyFillDuo18,
+	IconKeyFillDuo18,
+	IconRefresh2FillDuo18,
+	IconTrashFillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -213,7 +215,7 @@ export function ApiKeyDetailDialog({
 					<SheetHeader className="shrink-0 pr-5">
 						<div className="flex items-start gap-4">
 							<div className="flex size-11 items-center justify-center rounded border bg-secondary-brighter">
-								<KeyIcon className="text-foreground" size={22} weight="fill" />
+								<IconKeyFillDuo18 className="text-foreground" size={22} />
 							</div>
 							<div className="min-w-0 flex-1">
 								<SheetTitle className="truncate text-lg">
@@ -251,13 +253,12 @@ export function ApiKeyDetailDialog({
 											variant="ghost"
 										>
 											{copied ? (
-												<CheckCircleIcon
+												<IconCircleCheckFillDuo18
 													className="text-green-600"
 													size={14}
-													weight="fill"
 												/>
 											) : (
-												<CopyIcon size={14} />
+												<IconCopyFillDuo18 size={14} />
 											)}
 										</Button>
 									</div>
@@ -316,7 +317,7 @@ export function ApiKeyDetailDialog({
 																: "border-muted-foreground/30"
 														}`}
 													>
-														{hasScope && <CheckIcon size={12} weight="bold" />}
+														{hasScope && <IconCheckFillDuo18 size={12} />}
 													</div>
 													<span className="truncate">{scope.label}</span>
 													{isDefault && (
@@ -355,7 +356,7 @@ export function ApiKeyDetailDialog({
 									type="button"
 									variant="outline"
 								>
-									<ArrowsClockwiseIcon size={14} />
+									<IconRefresh2FillDuo18 size={14} />
 									{rotateMutation.isPending ? "Rotating…" : "Rotate"}
 								</Button>
 								<Button
@@ -365,7 +366,7 @@ export function ApiKeyDetailDialog({
 									type="button"
 									variant="outline"
 								>
-									<ProhibitIcon size={14} />
+									<IconBanFillDuo18 size={14} />
 									{revokeMutation.isPending ? "Revoking…" : "Revoke"}
 								</Button>
 								<Button
@@ -375,7 +376,7 @@ export function ApiKeyDetailDialog({
 									type="button"
 									variant="ghost"
 								>
-									<TrashIcon size={14} />
+									<IconTrashFillDuo18 size={14} />
 									Delete
 								</Button>
 							</div>

@@ -2,7 +2,10 @@
 
 import { track } from "@databuddy/sdk";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { GlobeIcon, SpinnerIcon } from "@phosphor-icons/react";
+import {
+	IconGlobeFillDuo18,
+	IconLoader2FillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -85,7 +88,7 @@ export function StepCreateWebsite({ onComplete }: StepCreateWebsiteProps) {
 		<div className="space-y-6">
 			<div className="flex items-center gap-3">
 				<div className="flex size-10 items-center justify-center rounded bg-primary/10">
-					<GlobeIcon className="size-5 text-primary" weight="duotone" />
+					<IconGlobeFillDuo18 className="size-5 text-primary" />
 				</div>
 				<div>
 					<h2 className="text-balance font-semibold text-lg">
@@ -155,7 +158,7 @@ export function StepCreateWebsite({ onComplete }: StepCreateWebsiteProps) {
 					>
 						{createWebsiteMutation.isPending ? (
 							<>
-								<SpinnerIcon className="mr-2 size-4 animate-spin" />
+								<IconLoader2FillDuo18 className="mr-2 size-4 animate-spin" />
 								Creating...
 							</>
 						) : (

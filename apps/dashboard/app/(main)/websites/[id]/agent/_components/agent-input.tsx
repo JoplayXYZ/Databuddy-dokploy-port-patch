@@ -1,12 +1,12 @@
 "use client";
 
 import {
-	BrainIcon,
-	ClockCountdownIcon,
-	PaperPlaneRightIcon,
-	StopIcon,
-	XIcon,
-} from "@phosphor-icons/react";
+	IconBrainFillDuo18,
+	IconMediaStopFillDuo18,
+	IconPaperPlane2FillDuo18,
+	IconTimer2FillDuo18,
+	IconXmarkFillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import { useAtom } from "jotai";
 import { useMemo, useState } from "react";
 import {
@@ -178,7 +178,7 @@ export function AgentInput() {
 										type="button"
 										variant="default"
 									>
-										<StopIcon className="size-3.5" weight="fill" />
+										<IconMediaStopFillDuo18 className="size-3.5" />
 									</Button>
 								) : (
 									<Button
@@ -188,9 +188,8 @@ export function AgentInput() {
 										size="icon"
 										type="submit"
 									>
-										<PaperPlaneRightIcon
+										<IconPaperPlane2FillDuo18
 											className="size-3.5"
-											weight={input.trim() ? "fill" : "duotone"}
 										/>
 									</Button>
 								)}
@@ -251,9 +250,8 @@ function ThinkingControl() {
 						onClick={cycleThinking}
 						type="button"
 					>
-						<BrainIcon
+						<IconBrainFillDuo18
 							className="size-3.5"
-							weight={isOn ? "fill" : "duotone"}
 						/>
 						<span className="font-medium">{THINKING_LABELS[thinking]}</span>
 					</button>
@@ -322,9 +320,8 @@ function PendingPill({
 
 	return (
 		<div className="mb-2 flex items-center gap-2 rounded border border-border/60 bg-muted/40 px-2.5 py-1.5 text-xs">
-			<ClockCountdownIcon
+			<IconTimer2FillDuo18
 				className="size-3.5 shrink-0 text-muted-foreground"
-				weight="duotone"
 			/>
 			<span className="shrink-0 font-medium text-muted-foreground">
 				{count === 1 ? "1 queued" : `${count} queued`}
@@ -338,7 +335,7 @@ function PendingPill({
 				onClick={() => onRemove(latestIndex)}
 				type="button"
 			>
-				<XIcon className="size-3.5" />
+				<IconXmarkFillDuo18 className="size-3.5" />
 			</button>
 			{count > 1 ? (
 				<button

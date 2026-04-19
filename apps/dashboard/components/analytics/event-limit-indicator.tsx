@@ -1,6 +1,6 @@
 "use client";
 
-import { WarningIcon } from "@phosphor-icons/react";
+import { IconAlertWarningFillDuo18 } from "nucleo-ui-fill-duo-18";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -33,9 +33,8 @@ export function EventLimitIndicator() {
 		return (
 			<div className="flex items-center justify-between rounded border border-red-200 bg-red-50 px-3 py-2 text-sm dark:border-red-800 dark:bg-red-950/20">
 				<div className="flex items-center gap-2">
-					<WarningIcon
+					<IconAlertWarningFillDuo18
 						className="size-4 text-red-600 dark:text-red-400"
-						weight="fill"
 					/>
 					<div>
 						<span className="font-medium text-red-600 dark:text-red-400">
@@ -74,9 +73,8 @@ export function EventLimitIndicator() {
 	return (
 		<div className="flex items-center justify-between rounded border border-amber-200 bg-amber-50 px-3 py-2 text-sm dark:border-amber-800 dark:bg-amber-950/20">
 			<div className="flex items-center gap-2">
-				<WarningIcon
+				<IconAlertWarningFillDuo18
 					className={`size-4 ${isDestructive ? "text-red-600 dark:text-red-400" : "text-amber-600 dark:text-amber-400"}`}
-					weight="fill"
 				/>
 				<div className="text-muted-foreground">
 					<span>

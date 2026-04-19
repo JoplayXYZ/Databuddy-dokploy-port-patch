@@ -1,6 +1,6 @@
 "use client";
 
-import { MapPinIcon } from "@phosphor-icons/react";
+import { IconLocationFillDuo18 } from "nucleo-ui-fill-duo-18";
 import type { CellContext, ColumnDef } from "@tanstack/react-table";
 import { DeviceTypeCell } from "@/components/analytics";
 import { ReferrerSourceCell } from "@/components/atomic/ReferrerSourceCell";
@@ -105,9 +105,8 @@ export function createGeoColumns(
 						return <CountryFlag country={name} size={16} />;
 					}
 					return (
-						<MapPinIcon
+						<IconLocationFillDuo18
 							className="size-4 text-muted-foreground"
-							weight="duotone"
 						/>
 					);
 				};

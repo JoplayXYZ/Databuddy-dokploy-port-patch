@@ -1,7 +1,9 @@
 "use client";
 
-import { CheckCircleIcon } from "@phosphor-icons/react";
-import { WarningIcon } from "@phosphor-icons/react";
+import {
+	IconAlertWarningFillDuo18,
+	IconCircleCheckFillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import { useQuery } from "@tanstack/react-query";
 import { use, useMemo } from "react";
 import { List } from "@/components/ui/composables/list";
@@ -84,9 +86,8 @@ export function AnomaliesPageContent({ params }: AnomaliesPageContentProps) {
 				description="Detects unusual patterns in event data"
 				hasError={isError}
 				icon={
-					<WarningIcon
+					<IconAlertWarningFillDuo18
 						className="size-6 text-accent-foreground"
-						weight="duotone"
 					/>
 				}
 				isLoading={isLoading}
@@ -102,13 +103,13 @@ export function AnomaliesPageContent({ params }: AnomaliesPageContentProps) {
 					emptyProps={{
 						description:
 							"No unusual patterns in the last hour compared to your 7-day baseline. Pageviews, errors, and custom events are checked automatically.",
-						icon: <CheckCircleIcon weight="duotone" />,
+						icon: <IconCircleCheckFillDuo18 />,
 						title: "All clear",
 					}}
 					errorProps={{
 						action: { label: "Retry", onClick: () => refetch() },
 						description: "Something went wrong while scanning for anomalies.",
-						icon: <WarningIcon weight="duotone" />,
+						icon: <IconAlertWarningFillDuo18 />,
 						title: "Failed to load anomalies",
 					}}
 					loading={<AnomaliesListSkeleton />}

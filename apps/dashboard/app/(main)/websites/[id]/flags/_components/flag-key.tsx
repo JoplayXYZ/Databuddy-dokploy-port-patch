@@ -1,5 +1,7 @@
-import { CheckIcon } from "@phosphor-icons/react";
-import { CopyIcon } from "@phosphor-icons/react";
+import {
+	IconCheckFillDuo18,
+	IconCopyFillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import { Button } from "@/components/ui/button";
 import {
 	Tooltip,
@@ -32,9 +34,9 @@ export function FlagKey({
 				>
 					{flag.key}
 					{isCopied ? (
-						<CheckIcon className="size-3 text-green-500" />
+						<IconCheckFillDuo18 className="size-3 text-green-500" />
 					) : (
-						<CopyIcon className="size-3 opacity-50" />
+						<IconCopyFillDuo18 className="size-3 opacity-50" />
 					)}
 				</Button>
 			</TooltipTrigger>

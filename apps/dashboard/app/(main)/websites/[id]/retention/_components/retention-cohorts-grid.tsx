@@ -1,7 +1,9 @@
 "use client";
 
-import { SpinnerIcon } from "@phosphor-icons/react";
-import { TableIcon } from "@phosphor-icons/react";
+import {
+	IconLoader2FillDuo18,
+	IconTableFillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import { useMemo } from "react";
 import { EmptyState } from "@/components/empty-state";
 import dayjs from "@/lib/dayjs";
@@ -87,7 +89,7 @@ export function RetentionCohortsGrid({
 		return (
 			<div className="flex items-center justify-center py-16">
 				<div className="flex flex-col items-center gap-3">
-					<SpinnerIcon className="size-6 animate-spin text-primary" />
+					<IconLoader2FillDuo18 className="size-6 animate-spin text-primary" />
 					<span className="text-muted-foreground text-sm">
 						Loading cohorts...
 					</span>
@@ -100,7 +102,7 @@ export function RetentionCohortsGrid({
 		return (
 			<EmptyState
 				description="No retention data for this time range"
-				icon={<TableIcon className="text-muted-foreground" weight="duotone" />}
+				icon={<IconTableFillDuo18 className="text-muted-foreground" />}
 				title="No cohorts yet"
 				variant="minimal"
 			/>

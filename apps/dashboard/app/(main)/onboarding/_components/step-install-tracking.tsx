@@ -2,15 +2,15 @@
 
 import { track } from "@databuddy/sdk";
 import {
-	ArrowClockwiseIcon,
-	CheckIcon,
-	ClipboardIcon,
-	CodeIcon,
-	PackageIcon,
-	PulseIcon,
-	SparkleIcon,
-	WarningCircleIcon,
-} from "@phosphor-icons/react";
+	IconBoxFillDuo18,
+	IconCheckFillDuo18,
+	IconCircleWarningFillDuo18,
+	IconClipboardContentFillDuo18,
+	IconCodeFillDuo18,
+	IconHeartPulseFillDuo18,
+	IconRefreshFillDuo18,
+	IconSparkleFillDuo18,
+} from "nucleo-ui-fill-duo-18";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { createHighlighterCoreSync } from "shiki/core";
@@ -313,11 +313,10 @@ function CodeBlock({
 					variant="ghost"
 				>
 					{copied ? (
-						<CheckIcon className="size-3.5 text-emerald-400" weight="bold" />
+						<IconCheckFillDuo18 className="size-3.5 text-emerald-400" />
 					) : (
-						<ClipboardIcon
+						<IconClipboardContentFillDuo18
 							className="size-3.5 text-white/70"
-							weight="duotone"
 						/>
 					)}
 				</Button>
@@ -396,7 +395,7 @@ export function StepInstallTracking({
 		<div className="space-y-6">
 			<div className="flex items-center gap-3">
 				<div className="flex size-10 items-center justify-center rounded bg-primary/10">
-					<CodeIcon className="size-5 text-primary" weight="duotone" />
+					<IconCodeFillDuo18 className="size-5 text-primary" />
 				</div>
 				<div>
 					<h2 className="text-balance font-semibold text-lg">
@@ -419,11 +418,10 @@ export function StepInstallTracking({
 				<CardContent className="flex items-center justify-between p-3">
 					<div className="flex items-center gap-3">
 						{isSetup ? (
-							<PulseIcon className="size-5 text-success" weight="duotone" />
+							<IconHeartPulseFillDuo18 className="size-5 text-success" />
 						) : (
-							<WarningCircleIcon
+							<IconCircleWarningFillDuo18
 								className="size-5 text-amber-500"
-								weight="duotone"
 							/>
 						)}
 						<div className="flex items-center gap-2">
@@ -441,9 +439,8 @@ export function StepInstallTracking({
 						size="sm"
 						variant="outline"
 					>
-						<ArrowClockwiseIcon
+						<IconRefreshFillDuo18
 							className={cn("size-3.5", isRefreshing && "animate-spin")}
-							weight="bold"
 						/>
 						{isRefreshing ? "Checking..." : "Check Status"}
 					</Button>
@@ -453,15 +450,15 @@ export function StepInstallTracking({
 			<Tabs className="w-full" defaultValue="ai" variant="underline">
 				<TabsList>
 					<TabsTrigger value="ai">
-						<SparkleIcon className="size-3.5" weight="duotone" />
+						<IconSparkleFillDuo18 className="size-3.5" />
 						Install with AI
 					</TabsTrigger>
 					<TabsTrigger value="npm">
-						<PackageIcon className="size-3.5" weight="duotone" />
+						<IconBoxFillDuo18 className="size-3.5" />
 						SDK Package
 					</TabsTrigger>
 					<TabsTrigger value="script">
-						<CodeIcon className="size-3.5" weight="duotone" />
+						<IconCodeFillDuo18 className="size-3.5" />
 						Script Tag
 					</TabsTrigger>
 				</TabsList>
@@ -508,15 +505,13 @@ export function StepInstallTracking({
 								</div>
 								<div className="shrink-0">
 									{copiedBlockId === tool.id ? (
-										<CheckIcon
+										<IconCheckFillDuo18
 											className="size-4"
 											style={{ color: tool.color }}
-											weight="bold"
 										/>
 									) : (
-										<ClipboardIcon
+										<IconClipboardContentFillDuo18
 											className="size-4 text-muted-foreground opacity-0 group-hover:opacity-100"
-											weight="duotone"
 										/>
 									)}
 								</div>
@@ -592,11 +587,10 @@ export function StepInstallTracking({
 				>
 					<span className="truncate">{websiteId}</span>
 					{copiedBlockId === "website-id" ? (
-						<CheckIcon className="size-3 text-success" weight="bold" />
+						<IconCheckFillDuo18 className="size-3 text-success" />
 					) : (
-						<ClipboardIcon
+						<IconClipboardContentFillDuo18
 							className="size-3 opacity-50 group-hover:opacity-100"
-							weight="duotone"
 						/>
 					)}
 				</button>

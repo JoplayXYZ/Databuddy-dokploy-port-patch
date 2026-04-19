@@ -1,14 +1,15 @@
 "use client";
 
 import {
-	ChatCircleDotsIcon,
-	CheckIcon,
-	ClockCounterClockwiseIcon,
-	MagnifyingGlassIcon,
-	PencilSimpleIcon,
-	TrashIcon,
-	XIcon,
-} from "@phosphor-icons/react";
+	IconChatBotFillDuo18,
+	IconCheckFillDuo18,
+	IconClockRotateClockwiseFillDuo18,
+	IconMagnifierFillDuo18,
+	IconPencilFillDuo18,
+	IconTrashFillDuo18,
+	IconXmarkFillDuo18,
+} from "nucleo-ui-fill-duo-18";
+";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -101,15 +102,14 @@ export function ChatHistory() {
 			<Popover onOpenChange={setOpen} open={open}>
 				<PopoverTrigger asChild>
 					<Button aria-label="Chat history" size="sm" variant="ghost">
-						<ClockCounterClockwiseIcon className="size-4" weight="duotone" />
+						<IconClockRotateClockwiseFillDuo18 className="size-4" />
 					</Button>
 				</PopoverTrigger>
 				<PopoverContent align="end" className="w-80 p-0" sideOffset={8}>
 					<div className="border-b p-2">
 						<div className="relative">
-							<MagnifyingGlassIcon
+							<IconMagnifierFillDuo18
 								className="absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground"
-								weight="duotone"
 							/>
 							<Input
 								className="h-8 rounded border-border/60 pl-7 text-xs"
@@ -131,9 +131,8 @@ export function ChatHistory() {
 							if (chats.length === 0) {
 								return (
 									<div className="flex flex-col items-center gap-2 p-6">
-										<ChatCircleDotsIcon
+										<IconChatBotFillDuo18
 											className="size-8 text-muted-foreground/40"
-											weight="duotone"
 										/>
 										<p className="text-muted-foreground text-xs">
 											No conversations yet
@@ -264,7 +263,7 @@ function ChatRow({
 					onClick={() => onRenameSave(draft)}
 					type="button"
 				>
-					<CheckIcon className="size-3.5" weight="bold" />
+					<IconCheckFillDuo18 className="size-3.5" />
 				</button>
 				<button
 					aria-label="Cancel rename"
@@ -272,7 +271,7 @@ function ChatRow({
 					onClick={onRenameCancel}
 					type="button"
 				>
-					<XIcon className="size-3.5" />
+					<IconXmarkFillDuo18 className="size-3.5" />
 				</button>
 			</div>
 		);
@@ -302,7 +301,7 @@ function ChatRow({
 					onClick={onRenameStart}
 					type="button"
 				>
-					<PencilSimpleIcon className="size-3.5" weight="duotone" />
+					<IconPencilFillDuo18 className="size-3.5" />
 				</button>
 				<button
 					aria-label={`Delete conversation: ${chat.title}`}
@@ -310,7 +309,7 @@ function ChatRow({
 					onClick={onDelete}
 					type="button"
 				>
-					<TrashIcon className="size-3.5" weight="duotone" />
+					<IconTrashFillDuo18 className="size-3.5" />
 				</button>
 			</div>
 		</div>

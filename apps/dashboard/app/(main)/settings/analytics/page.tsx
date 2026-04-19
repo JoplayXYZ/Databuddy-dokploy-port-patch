@@ -1,6 +1,6 @@
 "use client";
 
-import { ChartLineIcon } from "@phosphor-icons/react";
+import { IconChartLine2FillDuo18 } from "nucleo-ui-fill-duo-18";
 import { RightSidebar } from "@/components/right-sidebar";
 import { SettingsSection } from "../_components/settings-section";
 
@@ -13,9 +13,8 @@ export default function AnalyticsSettingsPage() {
 					title="Analytics Settings"
 				>
 					<div className="flex flex-col items-center justify-center gap-3 py-12 text-center">
-						<ChartLineIcon
+						<IconChartLine2FillDuo18
 							className="size-12 text-muted-foreground"
-							weight="duotone"
 						/>
 						<p className="text-muted-foreground text-sm">
 							Analytics settings coming soon
