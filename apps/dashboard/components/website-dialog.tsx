@@ -6,17 +6,11 @@ import { useEffect } from "react";
 import { type SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
+import { Button } from "@/components/ds/button";
+import { Dialog } from "@/components/ds/dialog";
+import { Field } from "@/components/ds/field";
+import { Input } from "@/components/ds/input";
 import { useOrganizationsContext } from "@/components/providers/organizations-provider";
-import {
-	Form,
-	FormControl,
-	FormField,
-	FormItem,
-	FormLabel,
-	FormMessage,
-} from "@/components/ui/form";
-import { FormDialog } from "@/components/ui/form-dialog";
-import { Input } from "@/components/ui/input";
 import {
 	useCreateWebsite,
 	useUpdateWebsite,
@@ -159,77 +153,82 @@ export function WebsiteDialog({
 	const isPending =
 		createWebsiteMutation.isPending || updateWebsiteMutation.isPending;
 
-	// Should not access directly (form.formState.isValid); that doesn't trigger re-render
-	// https://react-hook-form.com/docs/useform/formstate
 	const { isValid, isDirty } = form.formState;
 	const isSubmitDisabled = !(isValid && isDirty);
 
+	const nameError = form.formState.errors.name?.message;
+	const domainError = form.formState.errors.domain?.message;
+
 	return (
-		<FormDialog
-			description={
-				isEditing
-					? "Update the details of your existing website."
-					: "A new website to start tracking analytics."
-			}
-			isSubmitting={isPending}
-			onOpenChange={onOpenChange}
-			onSubmit={form.handleSubmit(handleSubmit)}
-			open={open}
-			submitDisabled={isSubmitDisabled}
-			submitLabel={isEditing ? "Save changes" : "Create website"}
-			title={isEditing ? "Edit Website" : "Create a new website"}
-		>
-			<Form {...form}>
-				<FormField
-					control={form.control}
-					name="name"
-					render={({ field }) => (
-						<FormItem>
-							<FormLabel>Name</FormLabel>
-							<FormControl>
-								<Input placeholder="Your project's name" {...field} />
-							</FormControl>
-							<FormMessage />
-						</FormItem>
-					)}
-				/>
-				<FormField
-					control={form.control}
-					name="domain"
-					render={({ field }) => (
-						<FormItem>
-							<FormLabel>Domain</FormLabel>
-							<FormControl>
-								<div className="flex items-center">
-									<span className="inline-flex h-9 items-center rounded-none border border-r-0 bg-dialog px-3 text-accent-foreground text-sm">
-										https://
-									</span>
-									<Input
-										placeholder="your-company.com"
-										{...field}
-										className="rounded-l-none border border-border border-l-0"
-										onChange={(e) => {
-											let domain = e.target.value.trim();
-											if (
-												domain.startsWith("http://") ||
-												domain.startsWith("https://")
-											) {
-												try {
-													domain = new URL(domain).hostname;
-												} catch {
-													// Do nothing
-												}
+		<Dialog onOpenChange={onOpenChange} open={open}>
+			<Dialog.Content>
+				<Dialog.Header>
+					<Dialog.Title>
+						{isEditing ? "Edit Website" : "Create a new website"}
+					</Dialog.Title>
+					<Dialog.Description>
+						{isEditing
+							? "Update the details of your existing website."
+							: "A new website to start tracking analytics."}
+					</Dialog.Description>
+				</Dialog.Header>
+				<Dialog.Body>
+					<fieldset className="space-y-4" disabled={isPending}>
+						<Field error={!!nameError}>
+							<Field.Label>Name</Field.Label>
+							<Input
+								placeholder="Your project's name"
+								{...form.register("name")}
+							/>
+							{nameError && <Field.Error>{nameError}</Field.Error>}
+						</Field>
+
+						<Field error={!!domainError}>
+							<Field.Label>Domain</Field.Label>
+							<Input
+								placeholder="your-company.com"
+								prefix="https://"
+								{...form.register("domain", {
+									onChange: (e) => {
+										let domain = e.target.value.trim();
+										if (
+											domain.startsWith("http://") ||
+											domain.startsWith("https://")
+										) {
+											try {
+												domain = new URL(domain).hostname;
+											} catch {
+												// Do nothing
 											}
-											field.onChange(domain.replace(wwwRegex, ""));
-										}}
-									/>
-								</div>
-							</FormControl>
-							<FormMessage />
-						</FormItem>
-					)}
-				/>
-			</Form>
-		</FormDialog>
+										}
+										form.setValue("domain", domain.replace(wwwRegex, ""), {
+											shouldValidate: true,
+										});
+									},
+								})}
+							/>
+							{domainError && <Field.Error>{domainError}</Field.Error>}
+						</Field>
+					</fieldset>
+				</Dialog.Body>
+				<Dialog.Footer>
+					<Button
+						disabled={isPending}
+						onClick={() => onOpenChange(false)}
+						variant="secondary"
+					>
+						Cancel
+					</Button>
+					<Button
+						disabled={isSubmitDisabled}
+						loading={isPending}
+						onClick={form.handleSubmit(handleSubmit)}
+					>
+						{isEditing ? "Save changes" : "Create website"}
+					</Button>
+				</Dialog.Footer>
+				<Dialog.Close />
+			</Dialog.Content>
+		</Dialog>
 	);
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { SpinnerIcon } from "@phosphor-icons/react";
+import { SpinnerIcon } from "@phosphor-icons/react/dist/ssr";
 import { parseAsString, useQueryState } from "nuqs";
 import { Suspense } from "react";
 import PricingTable from "@/components/autumn/pricing-table";

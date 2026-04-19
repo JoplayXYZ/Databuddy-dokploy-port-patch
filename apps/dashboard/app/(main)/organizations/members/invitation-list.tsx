@@ -1,92 +1,96 @@
 "use client";
 
-import { EnvelopeIcon } from "@phosphor-icons/react";
-import { TrashIcon } from "@phosphor-icons/react";
-import { useState } from "react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { DeleteDialog } from "@/components/ui/delete-dialog";
+import { Badge } from "@/components/ds/badge";
+import { Button } from "@/components/ds/button";
+import { Dialog } from "@/components/ds/dialog";
+import { DropdownMenu } from "@/components/ds/dropdown-menu";
+import { Text } from "@/components/ds/text";
 import type { CancelInvitation } from "@/hooks/use-organizations";
-import type { Invitation } from "@/stores/jotai/organizationAtoms";
 import dayjs from "@/lib/dayjs";
-import { cn } from "@/lib/utils";
+import type { Invitation } from "@/stores/jotai/organizationAtoms";
+import { DotsThree, Envelope, XCircle } from "@phosphor-icons/react/dist/ssr";
+import { useState } from "react";
 
 interface InvitationToCancel {
 	email: string;
 	id: string;
 }
 
-interface InvitationRowProps {
-	invitation: Invitation;
-	isCancellingInvitation: boolean;
-	onConfirmCancel: (inv: InvitationToCancel) => void;
+const STATUS_CONFIG = {
+	pending: { label: "Pending", variant: "warning" as const },
+	accepted: { label: "Accepted", variant: "success" as const },
+	expired: { label: "Expired", variant: "muted" as const },
+};
+
+function resolveStatus(invitation: Invitation) {
+	const isExpired =
+		invitation.status === "pending" &&
+		dayjs(invitation.expiresAt).isBefore(dayjs());
+
+	if (isExpired) {
+		return { ...STATUS_CONFIG.expired, isPending: false };
+	}
+
+	const isPending =
+		invitation.status === "pending" &&
+		dayjs(invitation.expiresAt).isAfter(dayjs());
+
+	const key = (invitation.status as keyof typeof STATUS_CONFIG) ?? "expired";
+	return {
+		...(STATUS_CONFIG[key] ?? STATUS_CONFIG.expired),
+		isPending,
+	};
 }
 
 function InvitationRow({
 	invitation,
 	isCancellingInvitation,
 	onConfirmCancel,
-}: InvitationRowProps) {
-	const isExpired =
-		invitation.status === "pending" &&
-		dayjs(invitation.expiresAt).isBefore(dayjs());
-
-	const isPending =
-		invitation.status === "pending" &&
-		dayjs(invitation.expiresAt).isAfter(dayjs());
-
-	const statusConfig = {
-		pending: {
-			label: "Pending",
-			className: "border-amber-500/20 bg-amber-500/10 text-amber-600",
-		},
-		accepted: {
-			label: "Accepted",
-			className: "border-green-500/20 bg-green-500/10 text-green-600",
-		},
-		expired: {
-			label: "Expired",
-			className: "border-secondary bg-secondary text-secondary-foreground",
-		},
-	};
-
-	const actualStatus = isExpired
-		? "expired"
-		: ((invitation.status as keyof typeof statusConfig) ?? "expired");
-
-	const status = statusConfig[actualStatus] ?? statusConfig.expired;
+}: {
+	invitation: Invitation;
+	isCancellingInvitation: boolean;
+	onConfirmCancel: (inv: InvitationToCancel) => void;
+}) {
+	const { label, variant, isPending } = resolveStatus(invitation);
 
 	return (
-		<div className="grid grid-cols-[auto_1fr_auto_auto] items-center gap-4 px-5 py-4">
+		<div className="flex items-center gap-3 px-5 py-3">
 			<div className="flex size-8 items-center justify-center rounded-full bg-secondary">
-				<EnvelopeIcon className="text-secondary-foreground" size={14} />
+				<Envelope className="text-muted-foreground" size={14} />
 			</div>
-
-			<div className="min-w-0">
-				<p className="truncate font-medium">{invitation.email}</p>
-				<p className="truncate text-muted-foreground text-sm">
-					{invitation.role ?? "member"} ·{" "}
-					{isExpired ? "Expired" : isPending ? "Expires" : "Expired"}{" "}
+			<div className="min-w-0 flex-1">
+				<Text className="truncate" variant="label">
+					{invitation.email}
+				</Text>
+				<Text className="truncate" tone="muted" variant="caption">
+					{invitation.role ?? "member"} · {isPending ? "Expires" : "Expired"}{" "}
 					{dayjs(invitation.expiresAt).fromNow()}
-				</p>
+				</Text>
 			</div>
-
-			<Badge className={cn(status.className, "h-7")} variant="secondary">
-				{status.label}
-			</Badge>
-
+			<Badge variant={variant}>{label}</Badge>
 			{isPending ? (
-				<Button
-					className="size-7 p-0 hover:border-destructive/30 hover:bg-destructive/10 hover:text-destructive"
-					disabled={isCancellingInvitation}
-					onClick={() =>
-						onConfirmCancel({ id: invitation.id, email: invitation.email })
-					}
-					size="sm"
-					variant="outline"
-				>
-					<TrashIcon size={14} />
-				</Button>
+				<DropdownMenu>
+					<DropdownMenu.Trigger
+						className="inline-flex size-7 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-interactive-hover hover:text-foreground disabled:pointer-events-none disabled:opacity-50"
+						disabled={isCancellingInvitation}
+					>
+						<DotsThree size={16} weight="bold" />
+					</DropdownMenu.Trigger>
+					<DropdownMenu.Content align="end" side="bottom">
+						<DropdownMenu.Item
+							onClick={() =>
+								onConfirmCancel({
+									id: invitation.id,
+									email: invitation.email,
+								})
+							}
+							variant="destructive"
+						>
+							<XCircle size={14} />
+							Cancel invitation
+						</DropdownMenu.Item>
+					</DropdownMenu.Content>
+				</DropdownMenu>
 			) : (
 				<div className="size-7" />
 			)}
@@ -131,17 +135,37 @@ export function InvitationList({
 				))}
 			</div>
 
-			<DeleteDialog
-				cancelLabel="Keep"
-				confirmLabel="Cancel Invitation"
-				description={`Are you sure you want to cancel the invitation for ${invitationToCancel?.email}? This action cannot be undone.`}
-				isDeleting={isCancellingInvitation}
-				isOpen={!!invitationToCancel}
-				itemName={invitationToCancel?.email}
-				onClose={() => setInvitationToCancel(null)}
-				onConfirm={handleCancel}
-				title="Cancel Invitation"
-			/>
+			<Dialog
+				onOpenChange={(open) => {
+					if (!open) {
+						setInvitationToCancel(null);
+					}
+				}}
+				open={!!invitationToCancel}
+			>
+				<Dialog.Content>
+					<Dialog.Close />
+					<Dialog.Header>
+						<Dialog.Title>Cancel Invitation</Dialog.Title>
+						<Dialog.Description>
+							Are you sure you want to cancel the invitation for{" "}
+							{invitationToCancel?.email}?
+						</Dialog.Description>
+					</Dialog.Header>
+					<Dialog.Footer>
+						<Dialog.Close>
+							<Button variant="secondary">Keep</Button>
+						</Dialog.Close>
+						<Button
+							loading={isCancellingInvitation}
+							onClick={handleCancel}
+							tone="danger"
+						>
+							Cancel Invitation
+						</Button>
+					</Dialog.Footer>
+				</Dialog.Content>
+			</Dialog>
 		</>
 	);
 }

@@ -1,27 +1,20 @@
 "use client";
 
-import { ArrowLeftIcon } from "@phosphor-icons/react";
-import { CalendarIcon } from "@phosphor-icons/react";
-import { CircleNotchIcon } from "@phosphor-icons/react";
-import { CurrencyDollarIcon } from "@phosphor-icons/react";
-import { GearIcon } from "@phosphor-icons/react";
-import { LightningIcon } from "@phosphor-icons/react";
-import { QuestionIcon } from "@phosphor-icons/react";
-import { SmileyIcon } from "@phosphor-icons/react";
-import { WarningCircleIcon } from "@phosphor-icons/react";
+import { ArrowLeftIcon } from "@phosphor-icons/react/dist/ssr";
+import { CalendarIcon } from "@phosphor-icons/react/dist/ssr";
+import { CurrencyDollarIcon } from "@phosphor-icons/react/dist/ssr";
+import { GearIcon } from "@phosphor-icons/react/dist/ssr";
+import { LightningIcon } from "@phosphor-icons/react/dist/ssr";
+import { QuestionIcon } from "@phosphor-icons/react/dist/ssr";
+import { SmileyIcon } from "@phosphor-icons/react/dist/ssr";
+import { WarningCircleIcon } from "@phosphor-icons/react/dist/ssr";
 import { useState } from "react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogFooter,
-	DialogHeader,
-	DialogTitle,
-} from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ds/badge";
+import { Button } from "@/components/ds/button";
+import { Dialog } from "@/components/ds/dialog";
+import { Textarea } from "@/components/ds/textarea";
 import dayjs from "@/lib/dayjs";
+import { cn } from "@/lib/utils";
 
 interface CancelSubscriptionDialogProps {
 	currentPeriodEnd?: number;
@@ -122,62 +115,64 @@ export function CancelSubscriptionDialog({
 
 	return (
 		<Dialog onOpenChange={resetAndClose} open={open}>
-			<DialogContent className="w-[95vw] max-w-md sm:w-full">
+			<Dialog.Content className="w-[95vw] max-w-md sm:w-full">
 				{step === "feedback" ? (
 					<>
-						<DialogHeader>
-							<DialogTitle>Before you go...</DialogTitle>
-							<DialogDescription>
+						<Dialog.Header>
+							<Dialog.Title>Before you go...</Dialog.Title>
+							<Dialog.Description>
 								We'd love to know why you're cancelling so we can improve
-							</DialogDescription>
-						</DialogHeader>
+							</Dialog.Description>
+						</Dialog.Header>
 
-						<div className="space-y-2">
+						<Dialog.Body className="space-y-1.5">
 							{CANCEL_REASONS.map((reason) => {
 								const IconComponent = reason.icon;
+								const isActive = selectedReason === reason.id;
 								return (
 									<button
-										className={`w-full rounded border p-3 text-left transition-all ${
-											selectedReason === reason.id
-												? "border-primary bg-primary/5 ring-1 ring-primary"
-												: "hover:bg-accent/50"
-										}`}
+										className={cn(
+											"w-full rounded-md border border-border/60 p-3 text-left",
+											"transition-colors duration-(--duration-quick) ease-(--ease-smooth)",
+											isActive
+												? "border-primary bg-primary/10 ring-2 ring-primary/60"
+												: "hover:bg-interactive-hover"
+										)}
 										key={reason.id}
 										onClick={() => setSelectedReason(reason.id)}
 										type="button"
 									>
 										<div className="flex items-center gap-3">
-											<div className="flex size-8 shrink-0 items-center justify-center rounded border bg-accent">
+											<div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-secondary">
 												<IconComponent
-													className="text-accent-foreground"
-													size={16}
+													className="size-4 text-accent-foreground"
 													weight="duotone"
 												/>
 											</div>
-											<span className="font-medium text-sm">
+											<span className="font-medium text-xs">
 												{reason.label}
 											</span>
 										</div>
 									</button>
 								);
 							})}
-						</div>
 
-						{selectedReason && (
-							<Textarea
-								className="resize-none"
-								onChange={(event) => setFeedbackDetails(event.target.value)}
-								placeholder="Tell us more (optional)..."
-								rows={3}
-								value={feedbackDetails}
-							/>
-						)}
+							{selectedReason && (
+								<Textarea
+									className="mt-2 resize-none"
+									onChange={(event) => setFeedbackDetails(event.target.value)}
+									placeholder="Tell us more (optional)..."
+									rows={3}
+									value={feedbackDetails}
+								/>
+							)}
+						</Dialog.Body>
 
-						<DialogFooter className="flex-col gap-2 sm:flex-row">
+						<Dialog.Footer className="flex-col gap-2 sm:flex-row">
 							<Button
 								className="w-full sm:w-auto"
 								onClick={resetAndClose}
-								variant="outline"
+								variant="secondary"
 							>
 								Keep subscription
 							</Button>
@@ -188,42 +183,46 @@ export function CancelSubscriptionDialog({
 							>
 								Continue
 							</Button>
-						</DialogFooter>
+						</Dialog.Footer>
 					</>
 				) : (
 					<>
-						<DialogHeader>
-							<DialogTitle>Cancel {planName}</DialogTitle>
-							<DialogDescription>
+						<Dialog.Header>
+							<Dialog.Title>Cancel {planName}</Dialog.Title>
+							<Dialog.Description>
 								Choose when you'd like to cancel your subscription
-							</DialogDescription>
-						</DialogHeader>
+							</Dialog.Description>
+						</Dialog.Header>
 
-						<div className="space-y-2">
+						<Dialog.Body className="space-y-1.5">
 							<button
-								className={`w-full rounded border p-4 text-left transition-all ${
+								className={cn(
+									"w-full rounded-md border border-border/60 p-3 text-left",
+									"transition-colors duration-(--duration-quick) ease-(--ease-smooth)",
+									"disabled:pointer-events-none disabled:opacity-50",
 									selected === "end_of_period"
-										? "border-primary bg-primary/5 ring-1 ring-primary"
-										: "hover:bg-accent/50"
-								} disabled:cursor-not-allowed disabled:opacity-50`}
+										? "border-primary bg-primary/10 ring-2 ring-primary/60"
+										: "hover:bg-interactive-hover"
+								)}
 								disabled={isLoading || confirming}
 								onClick={() => setSelected("end_of_period")}
 								type="button"
 							>
 								<div className="flex items-start gap-3">
-									<div className="flex size-10 shrink-0 items-center justify-center rounded border bg-accent">
+									<div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-secondary">
 										<CalendarIcon
-											className="text-accent-foreground"
-											size={20}
+											className="size-4 text-accent-foreground"
 											weight="duotone"
 										/>
 									</div>
 									<div className="flex-1">
 										<div className="flex items-center gap-2">
-											<span className="font-medium">Cancel at period end</span>
-											<Badge variant="secondary">Recommended</Badge>
+											<span className="font-medium text-xs">
+												Cancel at period end
+											</span>
+											<Badge variant="muted">Recommended</Badge>
 										</div>
-										<p className="mt-1 text-muted-foreground text-sm">
+										<p className="mt-1 text-muted-foreground text-xs">
 											{periodEndDate
 												? `Keep access until ${periodEndDate}`
 												: "Keep access until your billing period ends"}
@@ -233,74 +232,75 @@ export function CancelSubscriptionDialog({
 							</button>
 
 							<button
-								className={`w-full rounded border p-4 text-left transition-all ${
+								className={cn(
+									"w-full rounded-md border border-border/60 p-3 text-left",
+									"transition-colors duration-(--duration-quick) ease-(--ease-smooth)",
+									"disabled:pointer-events-none disabled:opacity-50",
 									selected === "immediate"
-										? "border-destructive bg-destructive/5 ring-1 ring-destructive"
-										: "hover:bg-accent/50"
-								} disabled:cursor-not-allowed disabled:opacity-50`}
+										? "border-destructive bg-destructive/10 ring-2 ring-destructive/60"
+										: "hover:bg-interactive-hover"
+								)}
 								disabled={isLoading || confirming}
 								onClick={() => setSelected("immediate")}
 								type="button"
 							>
 								<div className="flex items-start gap-3">
-									<div className="flex size-10 shrink-0 items-center justify-center rounded border border-destructive/20 bg-destructive/10">
+									<div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-destructive/10">
 										<LightningIcon
-											className="text-destructive"
-											size={20}
+											className="size-4 text-destructive"
 											weight="duotone"
 										/>
 									</div>
 									<div className="flex-1">
-										<span className="font-medium">Cancel immediately</span>
-										<p className="mt-1 text-muted-foreground text-sm">
+										<span className="font-medium text-xs">
+											Cancel immediately
+										</span>
+										<p className="mt-1 text-muted-foreground text-xs">
 											Lose access now. Any pending usage will be invoiced.
 										</p>
 									</div>
 								</div>
 							</button>
-						</div>
 
-						{selected === "immediate" && (
-							<div className="flex items-start gap-2 rounded border border-destructive/20 bg-destructive/5 p-3 text-sm">
-								<WarningCircleIcon
-									className="mt-0.5 shrink-0 text-destructive"
-									size={16}
-									weight="fill"
-								/>
-								<span className="text-destructive">
-									This action cannot be undone. You will lose access to all{" "}
-									{planName} features immediately.
-								</span>
-							</div>
-						)}
+							{selected === "immediate" && (
+								<div className="flex items-start gap-2 rounded-md border border-destructive/20 bg-destructive/5 p-3">
+									<WarningCircleIcon
+										className="mt-0.5 size-4 shrink-0 text-destructive"
+										weight="fill"
+									/>
+									<span className="text-destructive text-xs">
+										This action cannot be undone. You will lose access to all{" "}
+										{planName} features immediately.
+									</span>
+								</div>
+							)}
+						</Dialog.Body>
 
-						<DialogFooter className="flex-col gap-2 sm:flex-row">
+						<Dialog.Footer className="flex-col gap-2 sm:flex-row">
 							<Button
 								className="w-full gap-1.5 sm:w-auto"
 								disabled={isLoading || confirming}
 								onClick={handleBackToFeedback}
-								variant="outline"
+								variant="secondary"
 							>
-								<ArrowLeftIcon size={14} />
+								<ArrowLeftIcon className="size-3.5" />
 								Back
 							</Button>
 							<Button
 								className="w-full sm:w-auto"
 								disabled={!selected || isLoading || confirming}
+								loading={confirming}
 								onClick={handleConfirm}
-								variant={selected === "immediate" ? "destructive" : "default"}
+								tone={selected === "immediate" ? "danger" : undefined}
 							>
-								{confirming && (
-									<CircleNotchIcon className="mr-2 size-4 animate-spin" />
-								)}
 								{selected === "immediate"
 									? "Cancel now"
 									: "Confirm cancellation"}
 							</Button>
-						</DialogFooter>
+						</Dialog.Footer>
 					</>
 				)}
-			</DialogContent>
+			</Dialog.Content>
 		</Dialog>
 	);
 }

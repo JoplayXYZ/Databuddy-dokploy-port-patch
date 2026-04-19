@@ -2,36 +2,28 @@
 
 import type { ApiScope } from "@databuddy/api-keys/scopes";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CheckCircleIcon } from "@phosphor-icons/react";
-import { CheckIcon } from "@phosphor-icons/react";
-import { CopyIcon } from "@phosphor-icons/react";
-import { KeyIcon } from "@phosphor-icons/react";
-import { PlusIcon } from "@phosphor-icons/react";
-import { TrashIcon } from "@phosphor-icons/react";
+import {
+	CheckCircle,
+	Copy,
+	Key,
+	Plus,
+	Trash,
+} from "@phosphor-icons/react/dist/ssr";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { Accordion } from "@/components/ds/accordion";
+import { Badge } from "@/components/ds/badge";
+import { Button } from "@/components/ds/button";
+import { Checkbox } from "@/components/ds/checkbox";
+import { Divider } from "@/components/ds/divider";
+import { Field } from "@/components/ds/field";
+import { Input } from "@/components/ds/input";
+import { Select } from "@/components/ds/select";
+import { Sheet } from "@/components/ds/sheet";
+import { Text } from "@/components/ds/text";
 import { orpc } from "@/lib/orpc";
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
-import { Label } from "../ui/label";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "../ui/select";
-import {
-	Sheet,
-	SheetBody,
-	SheetContent,
-	SheetDescription,
-	SheetFooter,
-	SheetHeader,
-	SheetTitle,
-} from "../ui/sheet";
 import { type ApiKeyAccessEntry, SCOPE_OPTIONS } from "./api-key-types";
 
 interface ApiKeyCreateDialogProps {
@@ -104,10 +96,15 @@ export function ApiKeyCreateDialog({
 	};
 
 	const handleCopy = async () => {
-		if (created?.secret) {
+		if (!created?.secret) {
+			return;
+		}
+		try {
 			await navigator.clipboard.writeText(created.secret);
 			setCopied(true);
 			setTimeout(() => setCopied(false), 2000);
+		} catch {
+			// fallback
 		}
 	};
 
@@ -156,7 +153,6 @@ export function ApiKeyCreateDialog({
 			resources.global = globalScopes;
 		}
 
-		// Add website-specific scopes with proper prefix
 		for (const entry of websiteAccess) {
 			if (entry.resourceId && entry.scopes.length > 0) {
 				resources[`website:${entry.resourceId}`] = entry.scopes;
@@ -174,264 +170,258 @@ export function ApiKeyCreateDialog({
 		});
 	});
 
-	// Success view
+	const nameError = form.formState.errors.name?.message;
+
 	if (created) {
 		return (
 			<Sheet onOpenChange={handleClose} open={open}>
-				<SheetContent className="sm:max-w-md" side="right">
+				<Sheet.Content className="sm:max-w-md" side="right">
 					<div className="flex h-full flex-col items-center justify-center p-8 text-center">
-						<div className="mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">
-							<CheckCircleIcon
-								className="text-green-600 dark:text-green-400"
-								size={32}
+						<div className="mb-4 flex size-12 items-center justify-center rounded-full bg-success/15">
+							<CheckCircle
+								className="text-success"
+								size={24}
 								weight="duotone"
 							/>
 						</div>
-						<SheetHeader className="mb-6 border-0 bg-transparent p-0 text-center">
-							<SheetTitle className="text-xl">API Key Created</SheetTitle>
-							<SheetDescription className="text-sm">
-								Copy this secret now — you won't see it again.
-							</SheetDescription>
-						</SheetHeader>
 
-						<div className="w-full max-w-sm space-y-4">
-							<div className="relative rounded border bg-muted/50">
-								<code className="block break-all p-4 pr-12 font-mono text-sm">
-									{created.secret}
-								</code>
-								<Button
-									className="absolute top-2.5 right-2.5"
-									onClick={handleCopy}
-									size="icon"
-									variant="ghost"
-								>
-									{copied ? (
-										<CheckCircleIcon className="text-green-500" size={18} />
-									) : (
-										<CopyIcon size={18} />
-									)}
-								</Button>
+						<Text className="mb-1" variant="heading">
+							Key created
+						</Text>
+						<Text className="mb-5 max-w-[260px]" tone="muted" variant="caption">
+							This secret is only shown once. Copy it now and store it somewhere
+							safe.
+						</Text>
+
+						<div className="w-full space-y-4">
+							<div className="group relative overflow-hidden rounded-md border bg-muted/40">
+								<div className="px-3 py-2">
+									<Text tone="muted" variant="caption">
+										Secret key
+									</Text>
+								</div>
+								<Divider />
+								<div className="relative px-3 py-3">
+									<code className="block break-all pr-8 font-mono text-[11px] text-foreground leading-relaxed">
+										{created.secret}
+									</code>
+									<button
+										className="absolute top-2.5 right-2.5 inline-flex size-6 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-interactive-hover hover:text-foreground"
+										onClick={handleCopy}
+										type="button"
+									>
+										{copied ? (
+											<CheckCircle
+												className="text-success"
+												size={13}
+												weight="fill"
+											/>
+										) : (
+											<Copy size={13} />
+										)}
+									</button>
+								</div>
 							</div>
-							<Button className="w-full" onClick={handleClose} size="lg">
+
+							<Button className="w-full" onClick={handleClose}>
 								Done
 							</Button>
 						</div>
 					</div>
-				</SheetContent>
+				</Sheet.Content>
 			</Sheet>
 		);
 	}
 
-	// Create form
+	const availableWebsites = websites?.filter(
+		(w) => !websiteAccess.some((e) => e.resourceId === w.id)
+	);
+
 	return (
 		<Sheet onOpenChange={handleClose} open={open}>
-			<SheetContent className="sm:max-w-md" side="right">
-				<SheetHeader>
-					<div className="flex items-center gap-4">
-						<div className="flex h-11 w-11 items-center justify-center rounded border bg-secondary-brighter">
-							<KeyIcon
-								className="text-accent-foreground"
-								size={22}
-								weight="fill"
-							/>
+			<Sheet.Content className="sm:max-w-md" side="right">
+				<Sheet.Header>
+					<div className="flex items-center gap-3">
+						<div className="flex size-8 items-center justify-center rounded-md bg-primary/10">
+							<Key className="text-primary" size={14} weight="fill" />
 						</div>
 						<div>
-							<SheetTitle className="text-lg">Create API Key</SheetTitle>
-							<SheetDescription>
-								Generate a new key with permissions
-							</SheetDescription>
+							<Sheet.Title>Create API Key</Sheet.Title>
+							<Sheet.Description>
+								Generate a key for programmatic access
+							</Sheet.Description>
 						</div>
 					</div>
-				</SheetHeader>
+				</Sheet.Header>
 
 				<form
-					className="flex flex-1 flex-col overflow-y-auto"
+					className="flex flex-1 flex-col overflow-hidden"
 					onSubmit={onSubmit}
 				>
-					<SheetBody className="space-y-6">
-						<section className="space-y-3">
-							<Label className="font-medium" htmlFor="name">
-								Key Name
-							</Label>
-							<Input
-								id="name"
-								placeholder="e.g., Production API Key"
-								{...form.register("name")}
-							/>
-							{form.formState.errors.name && (
-								<p className="text-destructive text-sm">
-									{form.formState.errors.name.message}
-								</p>
-							)}
+					<Sheet.Body className="space-y-0 px-0">
+						<section className="px-5 py-4">
+							<Field error={!!nameError}>
+								<Field.Label>Name</Field.Label>
+								<Input
+									placeholder="e.g., Production, CI/CD, Staging"
+									{...form.register("name")}
+								/>
+								{nameError && <Field.Error>{nameError}</Field.Error>}
+								<Field.Description>
+									A label to identify this key later
+								</Field.Description>
+							</Field>
 						</section>
 
-						<section className="space-y-2">
-							<Label className="font-medium">Permissions</Label>
-							<div className="rounded border bg-card p-1">
-								<div className="grid grid-cols-2 gap-1">
-									{SCOPE_OPTIONS.map((scope) => {
-										const isSelected = globalScopes.includes(scope.value);
-										const isDefault = scope.value === "read:data";
-										return (
-											<button
-												className="flex items-center gap-2 rounded px-3 py-2.5 text-left text-sm hover:bg-muted/50"
-												key={scope.value}
-												onClick={() => toggleGlobalScope(scope.value)}
-												type="button"
-											>
-												<div
-													className={`flex size-4 shrink-0 items-center justify-center rounded-sm border ${
-														isSelected
-															? "border-primary bg-primary text-primary-foreground"
-															: "border-muted-foreground/30"
-													}`}
-												>
-													{isSelected && <CheckIcon size={12} weight="bold" />}
-												</div>
-												<span className="truncate">{scope.label}</span>
-												{isDefault && (
-													<span className="text-[10px] text-muted-foreground">
-														default
-													</span>
-												)}
-											</button>
-										);
-									})}
+						<Divider />
+
+						<Accordion defaultOpen>
+							<Accordion.Trigger>
+								<Text variant="label">Permissions</Text>
+								<Badge className="ml-auto" size="sm" variant="muted">
+									{globalScopes.length} selected
+								</Badge>
+							</Accordion.Trigger>
+							<Accordion.Content className="px-5">
+								<div className="rounded-md border">
+									{SCOPE_OPTIONS.map((scope, i) => (
+										<div key={scope.value}>
+											{i > 0 && <Divider />}
+											<div className="px-3 py-2">
+												<Checkbox
+													checked={globalScopes.includes(scope.value)}
+													label={
+														<span className="flex items-center gap-2">
+															{scope.label}
+															{scope.value === "read:data" && (
+																<Badge size="sm" variant="muted">
+																	default
+																</Badge>
+															)}
+														</span>
+													}
+													onCheckedChange={() => toggleGlobalScope(scope.value)}
+												/>
+											</div>
+										</div>
+									))}
 								</div>
-							</div>
-						</section>
+							</Accordion.Content>
+						</Accordion>
 
 						{websites && websites.length > 0 && (
-							<section className="space-y-3">
-								<Label className="font-medium">
-									Website Restrictions{" "}
-									<span className="font-normal text-muted-foreground">
-										(optional)
-									</span>
-								</Label>
+							<>
+								<Divider />
 
-								<div className="flex gap-2">
-									<Select onValueChange={setWebsiteToAdd} value={websiteToAdd}>
-										<SelectTrigger className="h-10 flex-1">
-											<SelectValue placeholder="Select a website..." />
-										</SelectTrigger>
-										<SelectContent>
-											{websites
-												.filter(
-													(w) =>
-														!websiteAccess.some((e) => e.resourceId === w.id)
-												)
-												.map((w) => (
-													<SelectItem key={w.id} value={w.id}>
-														{w.name || w.domain}
-													</SelectItem>
-												))}
-										</SelectContent>
-									</Select>
-									<Button
-										disabled={!websiteToAdd}
-										onClick={addWebsite}
-										size="icon"
-										type="button"
-										variant="outline"
-									>
-										<PlusIcon size={16} />
-									</Button>
-								</div>
+								<Accordion>
+									<Accordion.Trigger>
+										<Text variant="label">Restrict to websites</Text>
+										{websiteAccess.length > 0 && (
+											<Badge className="ml-auto" size="sm" variant="muted">
+												{websiteAccess.length} website
+												{websiteAccess.length === 1 ? "" : "s"}
+											</Badge>
+										)}
+									</Accordion.Trigger>
+									<Accordion.Content className="space-y-3 px-5">
+										<Text tone="muted" variant="caption">
+											Limit this key to specific websites. Leave empty for
+											workspace-wide access.
+										</Text>
 
-								{websiteAccess.length > 0 && (
-									<div className="space-y-3">
-										{websiteAccess.map((entry) => {
-											const website = websites.find(
-												(w) => w.id === entry.resourceId
-											);
-											return (
-												<div
-													className="rounded border bg-muted/20 p-3"
-													key={entry.resourceId}
-												>
-													<div className="mb-3 flex items-center justify-between">
-														<span className="font-medium text-sm">
-															{(website?.name || website?.domain) ??
-																entry.resourceId}
-														</span>
-														<Button
-															className="size-7"
-															onClick={() =>
-																removeWebsite(entry.resourceId ?? "")
-															}
-															size="icon"
-															type="button"
-															variant="ghost"
+										<div className="flex gap-2">
+											<Select
+												onValueChange={(val) => setWebsiteToAdd(val as string)}
+												value={websiteToAdd ?? ""}
+											>
+												<Select.Trigger className="flex-1" />
+												<Select.Content>
+													{availableWebsites?.map((w) => (
+														<Select.Item key={w.id} value={w.id}>
+															{w.name || w.domain}
+														</Select.Item>
+													))}
+												</Select.Content>
+											</Select>
+											<Button
+												disabled={!websiteToAdd}
+												onClick={addWebsite}
+												size="md"
+												variant="secondary"
+											>
+												<Plus size={14} />
+											</Button>
+										</div>
+
+										{websiteAccess.length > 0 && (
+											<div className="space-y-2">
+												{websiteAccess.map((entry) => {
+													const website = websites.find(
+														(w) => w.id === entry.resourceId
+													);
+													return (
+														<div
+															className="rounded-md border"
+															key={entry.resourceId}
 														>
-															<TrashIcon size={14} />
-														</Button>
-													</div>
-													<div className="grid grid-cols-2 gap-1">
-														{SCOPE_OPTIONS.slice(0, 6).map((scope) => {
-															const isSelected = entry.scopes.includes(
-																scope.value
-															);
-															return (
-																<button
-																	className={`flex items-center gap-2 rounded px-2 py-1.5 text-left text-xs ${
-																		isSelected
-																			? "bg-primary/20 text-foreground"
-																			: "hover:bg-muted"
-																	}`}
-																	key={scope.value}
+															<div className="flex items-center justify-between px-3 py-2">
+																<Text variant="label">
+																	{website?.name ||
+																		website?.domain ||
+																		entry.resourceId}
+																</Text>
+																<Button
 																	onClick={() =>
-																		toggleWebsiteScope(
-																			entry.resourceId ?? "",
-																			scope.value
-																		)
+																		removeWebsite(entry.resourceId ?? "")
 																	}
-																	type="button"
+																	size="sm"
+																	tone="danger"
+																	variant="ghost"
 																>
-																	<div
-																		className={`flex size-3 shrink-0 items-center justify-center rounded-sm border ${
-																			isSelected
-																				? "border-primary bg-primary text-primary-foreground"
-																				: "border-muted-foreground/30"
-																		}`}
-																	>
-																		{isSelected && (
-																			<CheckIcon size={8} weight="bold" />
-																		)}
+																	<Trash size={12} />
+																</Button>
+															</div>
+															<Divider />
+															<div className="px-3 py-1.5">
+																{SCOPE_OPTIONS.slice(0, 6).map((scope) => (
+																	<div className="py-1" key={scope.value}>
+																		<Checkbox
+																			checked={entry.scopes.includes(
+																				scope.value
+																			)}
+																			label={scope.label}
+																			onCheckedChange={() =>
+																				toggleWebsiteScope(
+																					entry.resourceId ?? "",
+																					scope.value
+																				)
+																			}
+																		/>
 																	</div>
-																	<span className="truncate">
-																		{scope.label}
-																	</span>
-																</button>
-															);
-														})}
-													</div>
-												</div>
-											);
-										})}
-									</div>
-								)}
-							</section>
+																))}
+															</div>
+														</div>
+													);
+												})}
+											</div>
+										)}
+									</Accordion.Content>
+								</Accordion>
+							</>
 						)}
-					</SheetBody>
+					</Sheet.Body>
 
-					<SheetFooter>
-						<Button onClick={handleClose} type="button" variant="outline">
+					<Sheet.Footer>
+						<Button onClick={handleClose} variant="secondary">
 							Cancel
 						</Button>
-						<Button disabled={mutation.isPending} type="submit">
-							{mutation.isPending ? (
-								"Creating..."
-							) : (
-								<>
-									<PlusIcon size={16} />
-									Create Key
-								</>
-							)}
+						<Button loading={mutation.isPending} type="submit">
+							Create Key
 						</Button>
-					</SheetFooter>
+					</Sheet.Footer>
 				</form>
-			</SheetContent>
+				<Sheet.Close />
+			</Sheet.Content>
 		</Sheet>
 	);
 }

@@ -1,4 +1,4 @@
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@/components/ds/badge";
 
 interface PlanStatusBadgeProps {
 	isCanceled: boolean;
@@ -10,14 +10,10 @@ export function PlanStatusBadge({
 	isScheduled,
 }: PlanStatusBadgeProps) {
 	if (isCanceled) {
-		return (
-			<Badge className="bg-destructive/10 text-destructive" variant="secondary">
-				Cancelling
-			</Badge>
-		);
+		return <Badge variant="destructive">Cancelling</Badge>;
 	}
 	if (isScheduled) {
-		return <Badge variant="secondary">Scheduled</Badge>;
+		return <Badge variant="default">Scheduled</Badge>;
 	}
-	return <Badge variant="green">Active</Badge>;
+	return <Badge variant="success">Active</Badge>;
 }

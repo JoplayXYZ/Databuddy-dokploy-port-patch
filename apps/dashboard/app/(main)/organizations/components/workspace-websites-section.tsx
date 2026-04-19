@@ -1,17 +1,18 @@
 "use client";
 
-import { CaretRightIcon } from "@phosphor-icons/react";
-import { GlobeIcon } from "@phosphor-icons/react";
-import { PlusIcon } from "@phosphor-icons/react";
-import { useQuery } from "@tanstack/react-query";
-import Link from "next/link";
-import { useState } from "react";
 import { FaviconImage } from "@/components/analytics/favicon-image";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ds/button";
+import { Card } from "@/components/ds/card";
+import { EmptyState } from "@/components/ds/empty-state";
+import { Skeleton } from "@/components/ds/skeleton";
+import { Text } from "@/components/ds/text";
 import { WebsiteDialog } from "@/components/website-dialog";
 import type { Organization } from "@/hooks/use-organizations";
 import { orpc } from "@/lib/orpc";
+import { CaretRight, Globe, Plus } from "@phosphor-icons/react/dist/ssr";
+import { useQuery } from "@tanstack/react-query";
+import Link from "next/link";
+import { useState } from "react";
 
 interface WebsiteRowData {
 	domain: string;
@@ -22,7 +23,7 @@ interface WebsiteRowData {
 function WebsiteRow({ website }: { website: WebsiteRowData }) {
 	return (
 		<Link
-			className="group grid cursor-pointer grid-cols-[auto_1fr_auto] items-center gap-3 px-4 py-3 hover:bg-muted/50"
+			className="group grid cursor-pointer grid-cols-[auto_1fr_auto] items-center gap-3 px-5 py-3 hover:bg-interactive-hover"
 			href={`/websites/${website.id}`}
 		>
 			<FaviconImage
@@ -30,23 +31,23 @@ function WebsiteRow({ website }: { website: WebsiteRowData }) {
 				className="size-8"
 				domain={website.domain}
 				fallbackIcon={
-					<div className="flex size-8 items-center justify-center rounded border bg-background">
-						<GlobeIcon
-							className="text-muted-foreground"
-							size={16}
-							weight="duotone"
-						/>
-					</div>
+					<Globe
+						className="absolute inset-0 m-auto text-muted-foreground"
+						size={20}
+						weight="duotone"
+					/>
 				}
 				size={32}
 			/>
 			<div className="min-w-0">
-				<p className="truncate font-medium text-sm">{website.name}</p>
-				<p className="truncate text-muted-foreground text-xs">
+				<Text className="truncate" variant="label">
+					{website.name}
+				</Text>
+				<Text className="truncate" tone="muted" variant="caption">
 					{website.domain}
-				</p>
+				</Text>
 			</div>
-			<CaretRightIcon
+			<CaretRight
 				className="text-muted-foreground/40 transition-all group-hover:translate-x-0.5 group-hover:text-foreground"
 				size={14}
 				weight="bold"
@@ -60,8 +61,8 @@ function WebsitesSkeleton() {
 		<div className="divide-y">
 			{[1, 2, 3].map((num) => (
 				<div
-					className="grid grid-cols-[auto_1fr_auto] items-center gap-3 px-4 py-3"
-					key={`websites-skeleton-${num}`}
+					className="grid grid-cols-[auto_1fr_auto] items-center gap-3 px-5 py-3"
+					key={num}
 				>
 					<Skeleton className="size-8 rounded" />
 					<div className="space-y-1.5">
@@ -93,44 +94,54 @@ export function WorkspaceWebsitesSection({
 	const websites = data ?? [];
 
 	return (
-		<section className="border-b px-5 py-6">
-			<div className="mb-4 flex items-start justify-between gap-4">
+		<Card>
+			<Card.Header className="flex-row items-start justify-between gap-4">
 				<div>
-					<h3 className="font-semibold text-sm">Websites in this workspace</h3>
-					<p className="text-muted-foreground text-xs">
+					<Card.Title>Websites</Card.Title>
+					<Card.Description>
 						{websites.length === 0
-							? "Add your first website to start tracking analytics"
-							: `${websites.length} website${websites.length === 1 ? "" : "s"} tracked by this workspace`}
-					</p>
+							? "Add a website to start tracking analytics"
+							: `${websites.length} website${websites.length === 1 ? "" : "s"} tracked`}
+					</Card.Description>
 				</div>
 				<Button
 					onClick={() => setShowCreateDialog(true)}
 					size="sm"
-					variant="outline"
+					variant="secondary"
 				>
-					<PlusIcon size={14} />
+					<Plus size={14} />
 					New Website
 				</Button>
-			</div>
-
-			{isLoading ? (
-				<WebsitesSkeleton />
-			) : websites.length === 0 ? (
-				<div className="rounded border border-dashed px-4 py-8 text-center">
-					<GlobeIcon
-						className="mx-auto mb-2 text-muted-foreground/60"
-						size={24}
-						weight="duotone"
-					/>
-					<p className="text-muted-foreground text-sm">No websites yet</p>
-				</div>
-			) : (
-				<div className="divide-y rounded border">
-					{websites.map((website) => (
-						<WebsiteRow key={website.id} website={website} />
-					))}
-				</div>
-			)}
+			</Card.Header>
+			<Card.Content className="p-0">
+				{isLoading ? (
+					<WebsitesSkeleton />
+				) : websites.length === 0 ? (
+					<div className="px-5 py-8">
+						<EmptyState
+							action={
+								<Button
+									onClick={() => setShowCreateDialog(true)}
+									size="sm"
+									variant="secondary"
+								>
+									<Plus size={14} />
+									Add Website
+								</Button>
+							}
+							description="Add your first website to start tracking analytics."
+							icon={<Globe weight="duotone" />}
+							title="No websites yet"
+						/>
+					</div>
+				) : (
+					<div className="divide-y">
+						{websites.map((website) => (
+							<WebsiteRow key={website.id} website={website} />
+						))}
+					</div>
+				)}
+			</Card.Content>
 
 			<WebsiteDialog
 				onOpenChange={setShowCreateDialog}
@@ -139,6 +150,6 @@ export function WorkspaceWebsitesSection({
 				}}
 				open={showCreateDialog}
 			/>
-		</section>
+		</Card>
 	);
 }

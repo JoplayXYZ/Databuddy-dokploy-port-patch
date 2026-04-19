@@ -1,5 +1,6 @@
 "use client";
 
+import { Accordion } from "@/components/ds/accordion";
 import { Avatar } from "@/components/ds/avatar";
 import { Badge } from "@/components/ds/badge";
 import { Button } from "@/components/ds/button";
@@ -22,20 +23,34 @@ import { Text } from "@/components/ds/text";
 import { Textarea } from "@/components/ds/textarea";
 import { Tooltip } from "@/components/ds/tooltip";
 import {
+	ArrowRight,
+	ArrowUp,
 	Bell,
+	CaretRight,
+	Check,
+	CheckCircle,
+	Clock,
+	Copy,
+	CreditCard,
+	DotsThree,
+	EnvelopeSimple,
 	Gear,
 	Globe,
 	Key,
+	Lightning,
 	Lock,
 	MagnifyingGlass,
 	Moon,
 	Palette,
+	PaperPlaneTilt,
 	Plus,
+	Rocket,
 	ShieldCheck,
 	Sun,
 	Trash,
 	TrendUp,
 	User,
+	UsersThree,
 } from "@phosphor-icons/react/dist/ssr";
 import { useState } from "react";
 import { ShowcaseRow, ShowcaseSection } from "./showcase-section";
@@ -391,6 +406,61 @@ export function DesignShowcase() {
 						<Checkbox label="Subscribe to changelog" />
 					</div>
 				</ShowcaseRow>
+			</ShowcaseSection>
+
+			<ShowcaseSection
+				description="Collapsible sections built on Base UI Collapsible. Accordion.Trigger for the header, Accordion.Content for bordered content."
+				id="accordion"
+				title="Accordion"
+			>
+				<div className="space-y-2">
+					<div className="rounded-md border">
+						<Accordion defaultOpen>
+							<Accordion.Trigger>
+								<Text variant="label">Permissions</Text>
+								<Badge className="ml-auto" size="sm" variant="muted">
+									3 selected
+								</Badge>
+							</Accordion.Trigger>
+							<Accordion.Content>
+								<div className="space-y-2">
+									<Checkbox defaultChecked label="Read data" />
+									<Checkbox defaultChecked label="Write data" />
+									<Checkbox defaultChecked label="Admin" />
+								</div>
+							</Accordion.Content>
+						</Accordion>
+					</div>
+					<div className="rounded-md border">
+						<Accordion>
+							<Accordion.Trigger>
+								<Text variant="label">Advanced settings</Text>
+							</Accordion.Trigger>
+							<Accordion.Content>
+								<Text tone="muted" variant="caption">
+									Configure rate limits, IP allowlists, and other advanced
+									options.
+								</Text>
+							</Accordion.Content>
+						</Accordion>
+					</div>
+					<div className="rounded-md border">
+						<Accordion>
+							<Accordion.Trigger>
+								<Text variant="label">Webhook destination</Text>
+								<Badge className="ml-auto" size="sm" variant="success">
+									Active
+								</Badge>
+							</Accordion.Trigger>
+							<Accordion.Content>
+								<Field>
+									<Field.Label>Endpoint URL</Field.Label>
+									<Input placeholder="https://api.example.com/webhooks/..." />
+								</Field>
+							</Accordion.Content>
+						</Accordion>
+					</div>
+				</div>
 			</ShowcaseSection>
 
 			<ShowcaseSection
@@ -776,6 +846,38 @@ export function DesignShowcase() {
 				title="Mockup — Settings"
 			>
 				<SettingsMockup />
+			</ShowcaseSection>
+
+			<ShowcaseSection
+				description="Stat cards, sparkline placeholders, and a metric grid — the shape of a real analytics overview."
+				id="analytics-mockup"
+				title="Mockup — Analytics dashboard"
+			>
+				<AnalyticsMockup />
+			</ShowcaseSection>
+
+			<ShowcaseSection
+				description="Member list with roles, invite dialog, and bulk actions."
+				id="team-mockup"
+				title="Mockup — Team members"
+			>
+				<TeamMockup />
+			</ShowcaseSection>
+
+			<ShowcaseSection
+				description="Plan cards with feature comparison, usage meter, and payment form."
+				id="billing-mockup"
+				title="Mockup — Billing"
+			>
+				<BillingMockup />
+			</ShowcaseSection>
+
+			<ShowcaseSection
+				description="Multi-step guided flow with progress indicator and conditional navigation."
+				id="onboarding-mockup"
+				title="Mockup — Onboarding"
+			>
+				<OnboardingMockup />
 			</ShowcaseSection>
 		</div>
 	);
@@ -1165,6 +1267,769 @@ function SettingsMockup() {
 					<Button>Save changes</Button>
 				</div>
 			</div>
+		</div>
+	);
+}
+
+const STATS = [
+	{ label: "Visitors", value: "12,493", change: "+14.2%", up: true },
+	{ label: "Pageviews", value: "48,271", change: "+8.7%", up: true },
+	{ label: "Bounce rate", value: "34.1%", change: "-2.3%", up: false },
+	{ label: "Avg. duration", value: "2m 41s", change: "+11.5%", up: true },
+];
+
+const TOP_PAGES = [
+	{ path: "/", views: "8,421", pct: 100 },
+	{ path: "/pricing", views: "3,102", pct: 37 },
+	{ path: "/docs/getting-started", views: "2,847", pct: 34 },
+	{ path: "/blog/launch-week", views: "1,923", pct: 23 },
+	{ path: "/changelog", views: "1,204", pct: 14 },
+];
+
+function AnalyticsMockup() {
+	return (
+		<div className="flex flex-col gap-6">
+			<div className="flex items-center justify-between">
+				<div className="flex flex-col gap-1">
+					<Text variant="heading">Analytics</Text>
+					<Text tone="muted" variant="caption">
+						Last 7 days vs previous period
+					</Text>
+				</div>
+				<div className="flex gap-2">
+					<Select defaultValue="7d">
+						<Select.Trigger />
+						<Select.Content>
+							<Select.Item value="24h">Last 24 hours</Select.Item>
+							<Select.Item value="7d">Last 7 days</Select.Item>
+							<Select.Item value="30d">Last 30 days</Select.Item>
+							<Select.Item value="90d">Last 90 days</Select.Item>
+						</Select.Content>
+					</Select>
+					<Button size="sm" variant="secondary">
+						<ArrowUp className="size-3.5" />
+						Export
+					</Button>
+				</div>
+			</div>
+
+			<div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+				{STATS.map((s) => (
+					<Card key={s.label}>
+						<Card.Content className="flex flex-col gap-2 p-4">
+							<Text tone="muted" variant="caption">
+								{s.label}
+							</Text>
+							<div className="flex items-end justify-between">
+								<Text variant="title">{s.value}</Text>
+								<Badge size="sm" variant={s.up ? "success" : "destructive"}>
+									{s.change}
+								</Badge>
+							</div>
+							<Skeleton className="h-8 w-full rounded" />
+						</Card.Content>
+					</Card>
+				))}
+			</div>
+
+			<div className="grid gap-4 lg:grid-cols-3">
+				<Card className="lg:col-span-2">
+					<Card.Header>
+						<Card.Title>Traffic</Card.Title>
+						<Card.Description>Unique visitors over time</Card.Description>
+					</Card.Header>
+					<Card.Content>
+						<Skeleton className="h-48 w-full rounded" />
+					</Card.Content>
+				</Card>
+				<Card>
+					<Card.Header>
+						<Card.Title>Top pages</Card.Title>
+						<Card.Description>By pageviews</Card.Description>
+					</Card.Header>
+					<Card.Content className="flex flex-col gap-3">
+						{TOP_PAGES.map((p) => (
+							<div className="flex items-center gap-3" key={p.path}>
+								<div className="flex min-w-0 flex-1 flex-col gap-1">
+									<Text className="truncate" mono variant="caption">
+										{p.path}
+									</Text>
+									<div className="h-1.5 w-full rounded-full bg-secondary">
+										<div
+											className="h-full rounded-full bg-primary"
+											style={{ width: `${p.pct}%` }}
+										/>
+									</div>
+								</div>
+								<Text
+									className="shrink-0 tabular-nums"
+									mono
+									tone="muted"
+									variant="caption"
+								>
+									{p.views}
+								</Text>
+							</div>
+						))}
+					</Card.Content>
+				</Card>
+			</div>
+
+			<div className="grid gap-4 lg:grid-cols-2">
+				<Card>
+					<Card.Header>
+						<Card.Title>Referrers</Card.Title>
+					</Card.Header>
+					<Card.Content className="flex flex-col gap-2">
+						{[
+							{ source: "google.com", count: "4,218" },
+							{ source: "twitter.com", count: "1,847" },
+							{ source: "github.com", count: "1,203" },
+							{ source: "Direct", count: "3,891" },
+						].map((r) => (
+							<div
+								className="flex items-center justify-between rounded-md bg-muted/50 px-3 py-2"
+								key={r.source}
+							>
+								<div className="flex items-center gap-2">
+									<Globe className="size-3.5 text-muted-foreground" />
+									<Text variant="caption">{r.source}</Text>
+								</div>
+								<Text mono tone="muted" variant="caption">
+									{r.count}
+								</Text>
+							</div>
+						))}
+					</Card.Content>
+				</Card>
+				<Card>
+					<Card.Header>
+						<Card.Title>Devices</Card.Title>
+					</Card.Header>
+					<Card.Content className="flex flex-col gap-3">
+						{[
+							{ device: "Desktop", pct: 62 },
+							{ device: "Mobile", pct: 31 },
+							{ device: "Tablet", pct: 7 },
+						].map((d) => (
+							<div className="flex items-center gap-3" key={d.device}>
+								<Text className="w-16 shrink-0" variant="caption">
+									{d.device}
+								</Text>
+								<div className="h-2 flex-1 rounded-full bg-secondary">
+									<div
+										className="h-full rounded-full bg-primary"
+										style={{ width: `${d.pct}%` }}
+									/>
+								</div>
+								<Text
+									className="w-8 shrink-0 text-right tabular-nums"
+									mono
+									tone="muted"
+									variant="caption"
+								>
+									{d.pct}%
+								</Text>
+							</div>
+						))}
+					</Card.Content>
+				</Card>
+			</div>
+		</div>
+	);
+}
+
+const MEMBERS = [
+	{
+		name: "Iza Nassiri",
+		email: "iza@databuddy.cc",
+		role: "Owner",
+		status: "active" as const,
+	},
+	{
+		name: "Sarah Chen",
+		email: "sarah@databuddy.cc",
+		role: "Admin",
+		status: "active" as const,
+	},
+	{
+		name: "Alex Rivera",
+		email: "alex@databuddy.cc",
+		role: "Member",
+		status: "active" as const,
+	},
+	{
+		name: "Jordan Park",
+		email: "jordan@databuddy.cc",
+		role: "Member",
+		status: "active" as const,
+	},
+	{
+		name: "Morgan Liu",
+		email: "morgan@company.com",
+		role: "Viewer",
+		status: "pending" as const,
+	},
+];
+
+function TeamMockup() {
+	return (
+		<div className="flex flex-col gap-6">
+			<div className="flex items-center justify-between">
+				<div className="flex flex-col gap-1">
+					<Text variant="heading">Team</Text>
+					<Text tone="muted" variant="caption">
+						{MEMBERS.length} members in this workspace
+					</Text>
+				</div>
+				<Dialog>
+					<Dialog.Trigger>
+						<Button size="sm">
+							<Plus className="size-3.5" />
+							Invite
+						</Button>
+					</Dialog.Trigger>
+					<Dialog.Content>
+						<Dialog.Close />
+						<Dialog.Header>
+							<Dialog.Title>Invite teammate</Dialog.Title>
+							<Dialog.Description>
+								They'll receive an email with a link to join.
+							</Dialog.Description>
+						</Dialog.Header>
+						<Dialog.Body className="flex flex-col gap-4">
+							<Field>
+								<Field.Label>Email</Field.Label>
+								<Input
+									placeholder="name@company.com"
+									prefix={<EnvelopeSimple className="size-3.5" />}
+								/>
+							</Field>
+							<Field>
+								<Field.Label>Role</Field.Label>
+								<Select defaultValue="member">
+									<Select.Trigger />
+									<Select.Content>
+										<Select.Item value="admin">Admin</Select.Item>
+										<Select.Item value="member">Member</Select.Item>
+										<Select.Item value="viewer">Viewer</Select.Item>
+									</Select.Content>
+								</Select>
+							</Field>
+							<Field>
+								<Field.Label>Message (optional)</Field.Label>
+								<Textarea placeholder="Hey, join our analytics workspace!" />
+							</Field>
+						</Dialog.Body>
+						<Dialog.Footer>
+							<Dialog.Close>
+								<Button variant="secondary">Cancel</Button>
+							</Dialog.Close>
+							<Button>
+								<PaperPlaneTilt className="size-3.5" />
+								Send invite
+							</Button>
+						</Dialog.Footer>
+					</Dialog.Content>
+				</Dialog>
+			</div>
+
+			<div className="flex gap-2">
+				<Input
+					className="max-w-xs"
+					placeholder="Search members..."
+					prefix={<MagnifyingGlass className="size-3.5" />}
+				/>
+				<Select defaultValue="all">
+					<Select.Trigger />
+					<Select.Content>
+						<Select.Item value="all">All roles</Select.Item>
+						<Select.Item value="owner">Owner</Select.Item>
+						<Select.Item value="admin">Admin</Select.Item>
+						<Select.Item value="member">Member</Select.Item>
+						<Select.Item value="viewer">Viewer</Select.Item>
+					</Select.Content>
+				</Select>
+			</div>
+
+			<div className="overflow-hidden rounded-xl border border-border/60">
+				<div className="grid grid-cols-[1fr_auto_auto_auto] items-center gap-4 border-border/60 border-b bg-muted/30 px-4 py-2.5">
+					<Text mono tone="muted" variant="caption">
+						Member
+					</Text>
+					<Text
+						className="w-20 text-center"
+						mono
+						tone="muted"
+						variant="caption"
+					>
+						Role
+					</Text>
+					<Text
+						className="w-20 text-center"
+						mono
+						tone="muted"
+						variant="caption"
+					>
+						Status
+					</Text>
+					<Text className="w-10" mono tone="muted" variant="caption" />
+				</div>
+				{MEMBERS.map((m) => (
+					<div
+						className="grid grid-cols-[1fr_auto_auto_auto] items-center gap-4 border-border/60 border-b px-4 py-3 last:border-b-0"
+						key={m.email}
+					>
+						<div className="flex items-center gap-3">
+							<Avatar alt={m.name} size="sm" />
+							<div className="flex flex-col">
+								<Text variant="caption">{m.name}</Text>
+								<Text tone="muted" variant="caption">
+									{m.email}
+								</Text>
+							</div>
+						</div>
+						<Badge
+							className="w-20 justify-center"
+							size="sm"
+							variant={m.role === "Owner" ? "primary" : "default"}
+						>
+							{m.role}
+						</Badge>
+						<Badge
+							className="w-20 justify-center"
+							size="sm"
+							variant={m.status === "active" ? "success" : "warning"}
+						>
+							{m.status === "active" ? "Active" : "Pending"}
+						</Badge>
+						<div className="flex w-10 justify-end">
+							{m.role !== "Owner" && (
+								<DropdownMenu>
+									<DropdownMenu.Trigger>
+										<Button size="sm" variant="ghost">
+											<DotsThree className="size-3.5" />
+										</Button>
+									</DropdownMenu.Trigger>
+									<DropdownMenu.Content align="end">
+										<DropdownMenu.Item>
+											<Gear className="size-3.5" />
+											Change role
+										</DropdownMenu.Item>
+										{m.status === "pending" && (
+											<DropdownMenu.Item>
+												<PaperPlaneTilt className="size-3.5" />
+												Resend invite
+											</DropdownMenu.Item>
+										)}
+										<DropdownMenu.Separator />
+										<DropdownMenu.Item variant="destructive">
+											<Trash className="size-3.5" />
+											Remove
+										</DropdownMenu.Item>
+									</DropdownMenu.Content>
+								</DropdownMenu>
+							)}
+						</div>
+					</div>
+				))}
+			</div>
+		</div>
+	);
+}
+
+const PLANS = [
+	{
+		name: "Free",
+		price: "$0",
+		description: "For hobby projects",
+		features: [
+			"1 website",
+			"10K events/mo",
+			"30-day retention",
+			"Community support",
+		],
+		current: false,
+		cta: "Downgrade",
+	},
+	{
+		name: "Pro",
+		price: "$29",
+		description: "For growing teams",
+		features: [
+			"10 websites",
+			"1M events/mo",
+			"1-year retention",
+			"Priority support",
+			"Custom events",
+			"API access",
+		],
+		current: true,
+		cta: "Current plan",
+	},
+	{
+		name: "Enterprise",
+		price: "$99",
+		description: "For large organizations",
+		features: [
+			"Unlimited websites",
+			"10M events/mo",
+			"Unlimited retention",
+			"Dedicated support",
+			"SSO & SAML",
+			"SLA guarantee",
+		],
+		current: false,
+		cta: "Upgrade",
+	},
+];
+
+function BillingMockup() {
+	return (
+		<div className="flex flex-col gap-6">
+			<div className="flex items-center justify-between">
+				<div className="flex flex-col gap-1">
+					<Text variant="heading">Billing</Text>
+					<Text tone="muted" variant="caption">
+						Manage your plan and payment method.
+					</Text>
+				</div>
+				<Badge size="sm" variant="primary">
+					Pro plan
+				</Badge>
+			</div>
+
+			<Card>
+				<Card.Header>
+					<Card.Title>Usage this period</Card.Title>
+					<Card.Description>Apr 1 — Apr 19, 2026</Card.Description>
+				</Card.Header>
+				<Card.Content className="flex flex-col gap-4">
+					{[
+						{ label: "Events", used: 284_000, limit: 1_000_000 },
+						{ label: "Websites", used: 4, limit: 10 },
+						{ label: "Team members", used: 5, limit: 20 },
+					].map((u) => (
+						<div className="flex flex-col gap-1.5" key={u.label}>
+							<div className="flex items-center justify-between">
+								<Text variant="caption">{u.label}</Text>
+								<Text mono tone="muted" variant="caption">
+									{u.used.toLocaleString()} / {u.limit.toLocaleString()}
+								</Text>
+							</div>
+							<div className="h-2 w-full rounded-full bg-secondary">
+								<div
+									className={`h-full rounded-full ${(u.used / u.limit) > 0.8 ? "bg-destructive" : "bg-primary"}`}
+									style={{
+										width: `${Math.min((u.used / u.limit) * 100, 100)}%`,
+									}}
+								/>
+							</div>
+						</div>
+					))}
+				</Card.Content>
+			</Card>
+
+			<div className="grid gap-4 lg:grid-cols-3">
+				{PLANS.map((plan) => (
+					<Card
+						className={plan.current ? "ring-2 ring-primary" : ""}
+						key={plan.name}
+					>
+						<Card.Content className="flex flex-col gap-4 p-5">
+							<div className="flex items-center justify-between">
+								<Text variant="label">{plan.name}</Text>
+								{plan.current && (
+									<Badge size="sm" variant="primary">
+										Current
+									</Badge>
+								)}
+							</div>
+							<div className="flex items-baseline gap-1">
+								<Text variant="display">{plan.price}</Text>
+								<Text tone="muted" variant="caption">
+									/month
+								</Text>
+							</div>
+							<Text tone="muted" variant="caption">
+								{plan.description}
+							</Text>
+							<Divider />
+							<div className="flex flex-col gap-2">
+								{plan.features.map((f) => (
+									<div className="flex items-center gap-2" key={f}>
+										<Check className="size-3.5 shrink-0 text-primary" />
+										<Text variant="caption">{f}</Text>
+									</div>
+								))}
+							</div>
+							<Button
+								className="mt-2"
+								disabled={plan.current}
+								variant={plan.current ? "secondary" : "primary"}
+							>
+								{plan.cta}
+							</Button>
+						</Card.Content>
+					</Card>
+				))}
+			</div>
+
+			<Card>
+				<Card.Header>
+					<Card.Title>Payment method</Card.Title>
+					<Card.Description>
+						Your card will be charged on the 1st of each month.
+					</Card.Description>
+				</Card.Header>
+				<Card.Content className="flex items-center justify-between">
+					<div className="flex items-center gap-3">
+						<div className="flex size-10 items-center justify-center rounded-lg bg-secondary">
+							<CreditCard className="size-5 text-muted-foreground" />
+						</div>
+						<div className="flex flex-col gap-0.5">
+							<Text variant="caption">Visa ending in 4242</Text>
+							<Text tone="muted" variant="caption">
+								Expires 12/2027
+							</Text>
+						</div>
+					</div>
+					<Button size="sm" variant="secondary">
+						Update
+					</Button>
+				</Card.Content>
+				<Card.Footer>
+					<div className="flex flex-col gap-0.5">
+						<Text tone="muted" variant="caption">
+							Next invoice: May 1, 2026
+						</Text>
+						<Text tone="muted" variant="caption">
+							Estimated amount: $29.00
+						</Text>
+					</div>
+				</Card.Footer>
+			</Card>
+		</div>
+	);
+}
+
+const ONBOARDING_STEPS = [
+	{ id: 1, label: "Create workspace", icon: Rocket },
+	{ id: 2, label: "Add website", icon: Globe },
+	{ id: 3, label: "Install tracking", icon: Lightning },
+	{ id: 4, label: "Invite team", icon: UsersThree },
+];
+
+function OnboardingMockup() {
+	const [step, setStep] = useState(2);
+
+	return (
+		<div className="mx-auto flex w-full max-w-2xl flex-col gap-8">
+			<div className="flex flex-col items-center gap-2 text-center">
+				<Text variant="display">Welcome to Databuddy</Text>
+				<Text className="max-w-md" tone="muted" variant="body">
+					Let's get your analytics up and running. This takes about 5 minutes.
+				</Text>
+			</div>
+
+			<div className="flex items-center justify-center gap-2">
+				{ONBOARDING_STEPS.map((s, i) => (
+					<div className="flex items-center gap-2" key={s.id}>
+						<button
+							className={`flex cursor-pointer items-center gap-1.5 rounded-full px-3 py-1.5 font-medium text-xs transition-colors ${
+								s.id < step
+									? "bg-primary/10 text-primary"
+									: s.id === step
+										? "bg-primary text-primary-foreground"
+										: "bg-secondary text-muted-foreground"
+							}`}
+							onClick={() => setStep(s.id)}
+							type="button"
+						>
+							{s.id < step ? (
+								<CheckCircle className="size-3.5" />
+							) : (
+								<s.icon className="size-3.5" />
+							)}
+							{s.label}
+						</button>
+						{i < ONBOARDING_STEPS.length - 1 && (
+							<CaretRight className="size-3 text-muted-foreground/50" />
+						)}
+					</div>
+				))}
+			</div>
+
+			<Card>
+				{step === 1 && (
+					<Card.Content className="flex flex-col gap-6 p-6">
+						<div className="flex flex-col gap-1">
+							<Text variant="heading">Create your workspace</Text>
+							<Text tone="muted" variant="caption">
+								This is where your team's analytics live.
+							</Text>
+						</div>
+						<div className="grid gap-6 sm:grid-cols-2">
+							<Field>
+								<Field.Label>Workspace name</Field.Label>
+								<Input defaultValue="Acme Inc" />
+							</Field>
+							<Field>
+								<Field.Label>Workspace URL</Field.Label>
+								<Input defaultValue="acme-inc" prefix="dby.cc/" />
+							</Field>
+						</div>
+					</Card.Content>
+				)}
+
+				{step === 2 && (
+					<Card.Content className="flex flex-col gap-6 p-6">
+						<div className="flex flex-col gap-1">
+							<Text variant="heading">Add your first website</Text>
+							<Text tone="muted" variant="caption">
+								Enter the domain you want to track.
+							</Text>
+						</div>
+						<div className="grid gap-6 sm:grid-cols-2">
+							<Field>
+								<Field.Label>Website name</Field.Label>
+								<Input defaultValue="Marketing site" />
+							</Field>
+							<Field>
+								<Field.Label>Domain</Field.Label>
+								<Input
+									defaultValue="acme.com"
+									prefix={<Globe className="size-3.5" />}
+								/>
+							</Field>
+						</div>
+						<Field>
+							<Field.Label>Category</Field.Label>
+							<Select defaultValue="saas">
+								<Select.Trigger />
+								<Select.Content>
+									<Select.Item value="saas">SaaS</Select.Item>
+									<Select.Item value="ecommerce">E-commerce</Select.Item>
+									<Select.Item value="blog">Blog</Select.Item>
+									<Select.Item value="docs">Documentation</Select.Item>
+									<Select.Item value="other">Other</Select.Item>
+								</Select.Content>
+							</Select>
+						</Field>
+					</Card.Content>
+				)}
+
+				{step === 3 && (
+					<Card.Content className="flex flex-col gap-6 p-6">
+						<div className="flex flex-col gap-1">
+							<Text variant="heading">Install the tracking script</Text>
+							<Text tone="muted" variant="caption">
+								Add this snippet to your site's &lt;head&gt; tag.
+							</Text>
+						</div>
+						<div className="relative rounded-lg bg-muted/50 p-4">
+							<Text className="break-all" mono variant="caption">
+								{
+									'<script defer src="https://cdn.databuddy.cc/tracker.js" data-client-id="ck_live_abc123"></script>'
+								}
+							</Text>
+							<Button
+								className="absolute top-2 right-2"
+								size="sm"
+								variant="ghost"
+							>
+								<Copy className="size-3.5" />
+							</Button>
+						</div>
+						<Divider />
+						<div className="flex flex-col gap-1">
+							<Text variant="label">Or install via npm</Text>
+							<Text tone="muted" variant="caption">
+								For React, Next.js, and other frameworks.
+							</Text>
+						</div>
+						<div className="relative rounded-lg bg-muted/50 p-4">
+							<Text mono variant="caption">
+								npm install @databuddy/sdk
+							</Text>
+							<Button
+								className="absolute top-2 right-2"
+								size="sm"
+								variant="ghost"
+							>
+								<Copy className="size-3.5" />
+							</Button>
+						</div>
+						<div className="flex items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 p-3">
+							<Clock className="size-4 shrink-0 text-primary" />
+							<Text variant="caption">
+								Waiting for first event... this usually takes under a minute.
+							</Text>
+							<Spinner className="ml-auto" size="sm" />
+						</div>
+					</Card.Content>
+				)}
+
+				{step === 4 && (
+					<Card.Content className="flex flex-col gap-6 p-6">
+						<div className="flex flex-col gap-1">
+							<Text variant="heading">Invite your team</Text>
+							<Text tone="muted" variant="caption">
+								Analytics is better together. You can always do this later.
+							</Text>
+						</div>
+						<div className="flex flex-col gap-3">
+							{[0, 1, 2].map((i) => (
+								<div className="flex gap-3" key={i}>
+									<Input
+										className="flex-1"
+										placeholder="name@company.com"
+										prefix={<EnvelopeSimple className="size-3.5" />}
+									/>
+									<Select defaultValue="member">
+										<Select.Trigger />
+										<Select.Content>
+											<Select.Item value="admin">Admin</Select.Item>
+											<Select.Item value="member">Member</Select.Item>
+											<Select.Item value="viewer">Viewer</Select.Item>
+										</Select.Content>
+									</Select>
+								</div>
+							))}
+						</div>
+						<Button className="self-start" size="sm" variant="ghost">
+							<Plus className="size-3.5" />
+							Add another
+						</Button>
+					</Card.Content>
+				)}
+
+				<Card.Footer>
+					<Button
+						disabled={step === 1}
+						onClick={() => setStep(Math.max(1, step - 1))}
+						variant="secondary"
+					>
+						Back
+					</Button>
+					{step < 4 ? (
+						<Button onClick={() => setStep(Math.min(4, step + 1))}>
+							Continue
+							<ArrowRight className="size-3.5" />
+						</Button>
+					) : (
+						<Button>
+							<CheckCircle className="size-3.5" />
+							Finish setup
+						</Button>
+					)}
+					{step === 4 && (
+						<Button className="ml-auto" variant="ghost">
+							Skip for now
+						</Button>
+					)}
+				</Card.Footer>
+			</Card>
 		</div>
 	);
 }

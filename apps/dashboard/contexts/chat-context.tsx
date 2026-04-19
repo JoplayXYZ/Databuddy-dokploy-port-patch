@@ -24,8 +24,8 @@ interface PendingQueueValue {
 }
 
 interface ChatLoadingValue {
-	isRestoring: boolean;
 	isEmpty: boolean;
+	isRestoring: boolean;
 }
 
 const ChatContext = createContext<ChatApi | null>(null);
@@ -161,7 +161,8 @@ export function ChatProvider({
 		(): ChatLoadingValue => ({
 			isRestoring: !hasRestored,
 			isEmpty:
-				isFetched && (!storedChat?.messages || storedChat.messages.length === 0),
+				isFetched &&
+				(!storedChat?.messages || storedChat.messages.length === 0),
 		}),
 		[hasRestored, isFetched, storedChat]
 	);

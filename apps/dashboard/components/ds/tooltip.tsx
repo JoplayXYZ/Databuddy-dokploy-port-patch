@@ -2,13 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import { Tooltip as BaseTooltip } from "@base-ui-components/react/tooltip";
-import {
-	cloneElement,
-	isValidElement,
-	type ComponentPropsWithoutRef,
-	type ReactElement,
-	type ReactNode,
-} from "react";
+import type { ComponentPropsWithoutRef, ReactNode } from "react";
 
 type TooltipProps = ComponentPropsWithoutRef<typeof BaseTooltip.Root> & {
 	content: ReactNode;
@@ -26,15 +20,7 @@ export function Tooltip({
 		<BaseTooltip.Provider>
 			<BaseTooltip.Root {...rest}>
 				<BaseTooltip.Trigger
-					render={(props) => {
-						if (isValidElement(children)) {
-							return cloneElement(
-								children as ReactElement<Record<string, unknown>>,
-								{ ...props }
-							);
-						}
-						return <span {...props}>{children}</span>;
-					}}
+					render={children as React.ReactElement<Record<string, unknown>>}
 				/>
 				<BaseTooltip.Portal>
 					<BaseTooltip.Positioner side={side} sideOffset={6}>

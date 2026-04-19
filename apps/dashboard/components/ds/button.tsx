@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils";
 import { cva, type VariantProps } from "class-variance-authority";
 import type { ButtonHTMLAttributes } from "react";
+import { Spinner } from "@/components/ds/spinner";
 
 const button = cva(
 	[
@@ -16,10 +17,11 @@ const button = cva(
 		variants: {
 			variant: {
 				primary:
-					"bg-primary text-primary-foreground shadow-xs hover:brightness-[1.15] dark:hover:brightness-[0.85]",
-				secondary: "bg-secondary text-foreground hover:bg-interactive-hover",
+					"bg-primary text-primary-foreground shadow-xs hover:brightness-[1.15] active:brightness-[0.9] dark:active:brightness-[0.75] dark:hover:brightness-[0.85]",
+				secondary:
+					"bg-secondary text-foreground hover:bg-interactive-hover active:bg-interactive-active",
 				ghost:
-					"bg-transparent text-muted-foreground hover:bg-interactive-hover hover:text-foreground active:bg-interactive-active",
+					"bg-transparent text-muted-foreground hover:bg-interactive-hover hover:text-foreground active:bg-interactive-active active:text-foreground",
 			},
 			tone: {
 				neutral: "",
@@ -59,7 +61,9 @@ const button = cva(
 );
 
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> &
-	VariantProps<typeof button>;
+	VariantProps<typeof button> & {
+		loading?: boolean;
+	};
 
 export function Button({
 	className,
@@ -67,13 +71,26 @@ export function Button({
 	tone,
 	size,
 	type = "button",
+	loading,
+	disabled,
+	children,
 	...rest
 }: ButtonProps) {
 	return (
 		<button
 			className={cn(button({ variant, tone, size }), className)}
+			disabled={disabled || loading}
 			type={type}
 			{...rest}
-		/>
+		>
+			{loading ? (
+				<>
+					<Spinner size="sm" />
+					{children}
+				</>
+			) : (
+				children
+			)}
+		</button>
 	);
 }

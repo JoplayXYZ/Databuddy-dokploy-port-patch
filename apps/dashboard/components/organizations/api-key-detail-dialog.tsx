@@ -2,35 +2,32 @@
 
 import { API_SCOPES, type ApiScope } from "@databuddy/api-keys/scopes";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowsClockwiseIcon } from "@phosphor-icons/react";
-import { CheckCircleIcon } from "@phosphor-icons/react";
-import { CheckIcon } from "@phosphor-icons/react";
-import { CopyIcon } from "@phosphor-icons/react";
-import { KeyIcon } from "@phosphor-icons/react";
-import { ProhibitIcon } from "@phosphor-icons/react";
-import { TrashIcon } from "@phosphor-icons/react";
+import {
+	ArrowsClockwise,
+	CheckCircle,
+	Copy,
+	Key,
+	Prohibit,
+	Trash,
+} from "@phosphor-icons/react/dist/ssr";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
+import { Accordion } from "@/components/ds/accordion";
+import { Badge } from "@/components/ds/badge";
+import { Button } from "@/components/ds/button";
+import { Checkbox } from "@/components/ds/checkbox";
+import { Dialog } from "@/components/ds/dialog";
+import { Divider } from "@/components/ds/divider";
+import { Field } from "@/components/ds/field";
+import { Input } from "@/components/ds/input";
+import { Sheet } from "@/components/ds/sheet";
+import { Switch } from "@/components/ds/switch";
+import { Text } from "@/components/ds/text";
 import dayjs from "@/lib/dayjs";
 import { orpc } from "@/lib/orpc";
-import { Badge } from "../ui/badge";
-import { Button } from "../ui/button";
-import { DeleteDialog } from "../ui/delete-dialog";
-import { Input } from "../ui/input";
-import { Label } from "../ui/label";
-import {
-	Sheet,
-	SheetBody,
-	SheetContent,
-	SheetDescription,
-	SheetFooter,
-	SheetHeader,
-	SheetTitle,
-} from "../ui/sheet";
-import { Switch } from "../ui/switch";
 import { type ApiKeyListItem, SCOPE_OPTIONS } from "./api-key-types";
 
 interface ApiKeyDetailDialogProps {
@@ -163,10 +160,15 @@ export function ApiKeyDetailDialog({
 	});
 
 	const handleCopy = async () => {
-		if (newSecret) {
+		if (!newSecret) {
+			return;
+		}
+		try {
 			await navigator.clipboard.writeText(newSecret);
 			setCopied(true);
 			setTimeout(() => setCopied(false), 2000);
+		} catch {
+			// fallback
 		}
 	};
 
@@ -209,199 +211,248 @@ export function ApiKeyDetailDialog({
 	return (
 		<>
 			<Sheet onOpenChange={handleClose} open={open}>
-				<SheetContent className="rounded sm:max-w-md" side="right">
-					<SheetHeader className="shrink-0 pr-5">
-						<div className="flex items-start gap-4">
-							<div className="flex size-11 items-center justify-center rounded border bg-secondary-brighter">
-								<KeyIcon className="text-foreground" size={22} weight="fill" />
+				<Sheet.Content className="sm:max-w-md" side="right">
+					<Sheet.Header>
+						<div className="flex items-start gap-3">
+							<div className="flex size-8 items-center justify-center rounded-md bg-primary/10">
+								<Key className="text-primary" size={14} weight="fill" />
 							</div>
 							<div className="min-w-0 flex-1">
-								<SheetTitle className="truncate text-lg">
-									{apiKey.name}
-								</SheetTitle>
-								<SheetDescription className="font-mono text-xs">
-									{apiKey.prefix}_{apiKey.start}…
-								</SheetDescription>
+								<div className="flex items-center gap-2">
+									<Sheet.Title className="truncate">{apiKey.name}</Sheet.Title>
+									<Badge size="sm" variant={isActive ? "success" : "muted"}>
+										{isActive ? "Active" : "Inactive"}
+									</Badge>
+								</div>
+								<Sheet.Description className="font-mono">
+									{apiKey.prefix}_{apiKey.start}••••
+								</Sheet.Description>
 							</div>
-							<Badge variant={isActive ? "green" : "secondary"}>
-								{isActive ? "Active" : "Inactive"}
-							</Badge>
 						</div>
-					</SheetHeader>
+					</Sheet.Header>
 
 					<form
 						className="flex flex-1 flex-col overflow-hidden"
 						onSubmit={onSubmit}
 					>
-						<SheetBody className="space-y-5">
+						<Sheet.Body className="space-y-0 px-0">
 							{newSecret && (
-								<div className="rounded border border-green-200 bg-green-50 p-3 dark:border-green-900/50 dark:bg-green-900/20">
-									<p className="mb-2 font-medium text-green-800 text-sm dark:text-green-300">
-										New secret generated
-									</p>
-									<div className="relative rounded border border-green-200 bg-background dark:border-green-900/50">
-										<code className="block break-all p-3 pr-12 font-mono text-xs">
-											{newSecret}
-										</code>
-										<Button
-											className="absolute top-1.5 right-1.5 size-7 text-muted-foreground hover:text-foreground"
-											onClick={handleCopy}
-											size="icon"
-											type="button"
-											variant="ghost"
-										>
-											{copied ? (
-												<CheckCircleIcon
-													className="text-green-600"
-													size={14}
-													weight="fill"
-												/>
-											) : (
-												<CopyIcon size={14} />
-											)}
-										</Button>
+								<div className="mx-5 mb-4 rounded-md border border-success/30 bg-success/5 p-3">
+									<div className="mb-2 flex items-center gap-1.5">
+										<CheckCircle
+											className="text-success"
+											size={13}
+											weight="fill"
+										/>
+										<Text className="text-success" variant="label">
+											New secret generated
+										</Text>
 									</div>
+									<div className="group relative overflow-hidden rounded-md border border-success/20 bg-background">
+										<div className="relative px-3 py-2.5">
+											<code className="block break-all pr-8 font-mono text-[11px] text-foreground leading-relaxed">
+												{newSecret}
+											</code>
+											<button
+												className="absolute top-2 right-2 inline-flex size-6 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-interactive-hover hover:text-foreground"
+												onClick={handleCopy}
+												type="button"
+											>
+												{copied ? (
+													<CheckCircle
+														className="text-success"
+														size={13}
+														weight="fill"
+													/>
+												) : (
+													<Copy size={13} />
+												)}
+											</button>
+										</div>
+									</div>
+									<Text className="mt-2" tone="muted" variant="caption">
+										Copy this now — it won't be shown again.
+									</Text>
 								</div>
 							)}
 
-							<div className="grid gap-4 sm:grid-cols-2">
-								<div className="space-y-2">
-									<Label htmlFor="name">Name</Label>
-									<Input id="name" {...form.register("name")} />
-								</div>
-								<div className="space-y-2">
-									<Label htmlFor="expiresAt">Expires</Label>
-									<Input
-										id="expiresAt"
-										type="date"
-										{...form.register("expiresAt")}
-									/>
-								</div>
-							</div>
-
-							<div className="flex items-center justify-between">
-								<div>
-									<p className="font-medium text-sm">Enabled</p>
-									<p className="text-muted-foreground text-xs">
-										Disable to block all requests
-									</p>
-								</div>
-								<Switch
-									checked={form.watch("enabled")}
-									onCheckedChange={(v) => form.setValue("enabled", v)}
-								/>
-							</div>
-
-							<section className="space-y-2">
-								<Label className="font-medium text-muted-foreground text-xs uppercase">
-									Permissions
-								</Label>
-								<div className="rounded border bg-card p-1">
-									<div className="grid grid-cols-2 gap-1">
-										{SCOPE_OPTIONS.map((scope) => {
-											const selectedScopes = form.watch("scopes");
-											const hasScope = selectedScopes.includes(scope.value);
-											const isDefault = scope.value === "read:data";
-											return (
-												<button
-													className="flex items-center gap-2 rounded px-3 py-2.5 text-left text-sm hover:bg-muted/50"
-													key={scope.value}
-													onClick={() => toggleScope(scope.value)}
-													type="button"
-												>
-													<div
-														className={`flex size-4 shrink-0 items-center justify-center rounded-sm border ${
-															hasScope
-																? "border-primary bg-primary text-primary-foreground"
-																: "border-muted-foreground/30"
-														}`}
-													>
-														{hasScope && <CheckIcon size={12} weight="bold" />}
-													</div>
-													<span className="truncate">{scope.label}</span>
-													{isDefault && (
-														<span className="text-[10px] text-muted-foreground">
-															default
-														</span>
-													)}
-												</button>
-											);
-										})}
-									</div>
+							<section className="px-5 py-4">
+								<div className="grid gap-4 sm:grid-cols-2">
+									<Field>
+										<Field.Label>Name</Field.Label>
+										<Input {...form.register("name")} />
+									</Field>
+									<Field>
+										<Field.Label>Expires</Field.Label>
+										<Input type="date" {...form.register("expiresAt")} />
+									</Field>
 								</div>
 							</section>
 
-							<div className="flex flex-wrap gap-x-4 gap-y-1 text-muted-foreground text-xs">
-								<span>
-									Created {dayjs(apiKey.createdAt).format("MMM D, YYYY")}
-								</span>
-								{apiKey.expiresAt && (
-									<span>
-										Expires {dayjs(apiKey.expiresAt).format("MMM D, YYYY")}
-									</span>
-								)}
-								{apiKey.revokedAt && (
-									<span className="text-destructive">
-										Revoked {dayjs(apiKey.revokedAt).format("MMM D, YYYY")}
-									</span>
-								)}
-							</div>
+							<Divider />
 
-							<div className="flex items-center gap-2 border-t pt-4">
-								<Button
-									disabled={rotateMutation.isPending}
-									onClick={() => rotateMutation.mutate({ id: apiKey.id })}
-									size="sm"
-									type="button"
-									variant="outline"
-								>
-									<ArrowsClockwiseIcon size={14} />
-									{rotateMutation.isPending ? "Rotating…" : "Rotate"}
-								</Button>
-								<Button
-									disabled={revokeMutation.isPending || !isActive}
-									onClick={() => revokeMutation.mutate({ id: apiKey.id })}
-									size="sm"
-									type="button"
-									variant="outline"
-								>
-									<ProhibitIcon size={14} />
-									{revokeMutation.isPending ? "Revoking…" : "Revoke"}
-								</Button>
-								<Button
-									className="ml-auto text-destructive hover:text-destructive"
-									onClick={() => setShowDeleteConfirm(true)}
-									size="sm"
-									type="button"
-									variant="ghost"
-								>
-									<TrashIcon size={14} />
-									Delete
-								</Button>
-							</div>
-						</SheetBody>
+							<section className="px-5 py-4">
+								<Switch
+									checked={form.watch("enabled")}
+									description="Disable to temporarily block all requests using this key"
+									label="Enabled"
+									onCheckedChange={(v) =>
+										form.setValue("enabled", v as boolean)
+									}
+								/>
+							</section>
 
-						<SheetFooter>
-							<Button onClick={handleClose} type="button" variant="outline">
+							<Divider />
+
+							<Accordion defaultOpen>
+								<Accordion.Trigger>
+									<Text variant="label">Permissions</Text>
+									<Badge className="ml-auto" size="sm" variant="muted">
+										{form.watch("scopes").length} selected
+									</Badge>
+								</Accordion.Trigger>
+								<Accordion.Content className="px-5">
+									<div className="rounded-md border">
+										{SCOPE_OPTIONS.map((scope, i) => {
+											const selectedScopes = form.watch("scopes");
+											const hasScope = selectedScopes.includes(scope.value);
+											return (
+												<div key={scope.value}>
+													{i > 0 && <Divider />}
+													<div className="px-3 py-2">
+														<Checkbox
+															checked={hasScope}
+															label={
+																<span className="flex items-center gap-2">
+																	{scope.label}
+																	{scope.value === "read:data" && (
+																		<Badge size="sm" variant="muted">
+																			default
+																		</Badge>
+																	)}
+																</span>
+															}
+															onCheckedChange={() => toggleScope(scope.value)}
+														/>
+													</div>
+												</div>
+											);
+										})}
+									</div>
+								</Accordion.Content>
+							</Accordion>
+
+							<Divider />
+
+							<Accordion>
+								<Accordion.Trigger>
+									<Text variant="label">Info</Text>
+								</Accordion.Trigger>
+								<Accordion.Content className="px-5">
+									<div className="flex flex-wrap gap-x-4 gap-y-1">
+										<Text as="span" tone="muted" variant="caption">
+											Created {dayjs(apiKey.createdAt).format("MMM D, YYYY")}
+										</Text>
+										{apiKey.expiresAt && (
+											<Text as="span" tone="muted" variant="caption">
+												Expires {dayjs(apiKey.expiresAt).format("MMM D, YYYY")}
+											</Text>
+										)}
+										{apiKey.revokedAt && (
+											<Text
+												as="span"
+												className="text-destructive"
+												variant="caption"
+											>
+												Revoked {dayjs(apiKey.revokedAt).format("MMM D, YYYY")}
+											</Text>
+										)}
+									</div>
+								</Accordion.Content>
+							</Accordion>
+
+							<Divider />
+
+							<Accordion>
+								<Accordion.Trigger>
+									<Text variant="label">Actions</Text>
+								</Accordion.Trigger>
+								<Accordion.Content className="px-5">
+									<div className="flex items-center gap-2">
+										<Button
+											loading={rotateMutation.isPending}
+											onClick={() => rotateMutation.mutate({ id: apiKey.id })}
+											size="sm"
+											variant="secondary"
+										>
+											<ArrowsClockwise size={14} />
+											Rotate
+										</Button>
+										<Button
+											disabled={!isActive}
+											loading={revokeMutation.isPending}
+											onClick={() => revokeMutation.mutate({ id: apiKey.id })}
+											size="sm"
+											variant="secondary"
+										>
+											<Prohibit size={14} />
+											Revoke
+										</Button>
+										<Button
+											className="ml-auto"
+											onClick={() => setShowDeleteConfirm(true)}
+											size="sm"
+											tone="danger"
+											variant="ghost"
+										>
+											<Trash size={14} />
+											Delete
+										</Button>
+									</div>
+								</Accordion.Content>
+							</Accordion>
+						</Sheet.Body>
+
+						<Sheet.Footer>
+							<Button onClick={handleClose} variant="secondary">
 								Cancel
 							</Button>
-							<Button disabled={updateMutation.isPending} type="submit">
-								{updateMutation.isPending ? "Saving…" : "Save Changes"}
+							<Button loading={updateMutation.isPending} type="submit">
+								Save Changes
 							</Button>
-						</SheetFooter>
+						</Sheet.Footer>
 					</form>
-				</SheetContent>
+					<Sheet.Close />
+				</Sheet.Content>
 			</Sheet>
 
-			<DeleteDialog
-				confirmLabel="Delete"
-				description="This action cannot be undone. Any applications using this key will immediately lose access."
-				isDeleting={deleteMutation.isPending}
-				isOpen={showDeleteConfirm}
-				onClose={() => setShowDeleteConfirm(false)}
-				onConfirm={() => deleteMutation.mutate({ id: apiKey.id })}
-				title="Delete API Key?"
-			/>
+			<Dialog onOpenChange={setShowDeleteConfirm} open={showDeleteConfirm}>
+				<Dialog.Content>
+					<Dialog.Header>
+						<Dialog.Title>Delete API Key?</Dialog.Title>
+						<Dialog.Description>
+							This action cannot be undone. Any applications using this key will
+							immediately lose access.
+						</Dialog.Description>
+					</Dialog.Header>
+					<Dialog.Footer>
+						<Button
+							onClick={() => setShowDeleteConfirm(false)}
+							variant="secondary"
+						>
+							Cancel
+						</Button>
+						<Button
+							loading={deleteMutation.isPending}
+							onClick={() => deleteMutation.mutate({ id: apiKey.id })}
+							tone="danger"
+						>
+							Delete
+						</Button>
+					</Dialog.Footer>
+					<Dialog.Close />
+				</Dialog.Content>
+			</Dialog>
 		</>
 	);
 }

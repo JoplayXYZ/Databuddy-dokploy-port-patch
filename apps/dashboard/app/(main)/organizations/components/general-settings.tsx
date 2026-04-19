@@ -1,16 +1,17 @@
 "use client";
 
-import { BuildingsIcon } from "@phosphor-icons/react";
-import { CheckIcon } from "@phosphor-icons/react";
-import { CopyIcon } from "@phosphor-icons/react";
-import { FloppyDiskIcon } from "@phosphor-icons/react";
+import { Check, Copy, FloppyDisk } from "@phosphor-icons/react/dist/ssr";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { RightSidebar } from "@/components/right-sidebar";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ds/button";
+import { Card } from "@/components/ds/card";
+import { Divider } from "@/components/ds/divider";
+import { Field } from "@/components/ds/field";
+import { Input } from "@/components/ds/input";
+import { Text } from "@/components/ds/text";
 import { type Organization, useOrganizations } from "@/hooks/use-organizations";
+import { ApiKeysSection } from "./api-keys-section";
+import { DangerZoneSection } from "./danger-zone-section";
 import { OrganizationAvatarEditor } from "./organization-avatar-editor";
 import { WorkspaceWebsitesSection } from "./workspace-websites-section";
 
@@ -27,10 +28,14 @@ export function GeneralSettings({
 	const { updateOrganization } = useOrganizations();
 
 	const handleCopyOrgId = useCallback(async () => {
-		await navigator.clipboard.writeText(organization.id);
-		setCopiedOrgId(true);
-		toast.success("Organization ID copied to clipboard");
-		setTimeout(() => setCopiedOrgId(false), 2000);
+		try {
+			await navigator.clipboard.writeText(organization.id);
+			setCopiedOrgId(true);
+			toast.success("Copied to clipboard");
+			setTimeout(() => setCopiedOrgId(false), 2000);
+		} catch {
+			toast.error("Failed to copy");
+		}
 	}, [organization.id]);
 
 	useEffect(() => {
@@ -79,120 +84,102 @@ export function GeneralSettings({
 	};
 
 	return (
-		<div className="h-full lg:grid lg:grid-cols-[1fr_18rem]">
-			<div className="flex flex-col border-b lg:border-b-0">
-				<div className="flex-1 overflow-y-auto">
-					<section className="border-b px-5 py-6">
-						<div className="mb-4">
-							<h3 className="font-semibold text-sm">Organization Avatar</h3>
-							<p className="text-muted-foreground text-xs">
-								Customize your organization's avatar
-							</p>
-						</div>
-						<OrganizationAvatarEditor organization={organization} />
-					</section>
+		<div className="flex h-full flex-col">
+			<div className="flex-1 overflow-y-auto">
+				<div className="mx-auto max-w-2xl space-y-6 p-5">
+					<Card>
+						<Card.Header>
+							<Card.Title>Avatar</Card.Title>
+							<Card.Description>
+								Customize your workspace avatar
+							</Card.Description>
+						</Card.Header>
+						<Card.Content>
+							<OrganizationAvatarEditor organization={organization} />
+						</Card.Content>
+					</Card>
 
-					<section className="border-b px-5 py-6">
-						<div className="mb-4">
-							<h3 className="font-semibold text-sm">Organization Details</h3>
-							<p className="text-muted-foreground text-xs">
-								Manage your organization's basic information and identifier
-							</p>
-						</div>
-						<div className="mb-4 flex items-center justify-between gap-3">
-							<div className="min-w-0 flex-1">
-								<Label className="block font-medium text-sm">
-									Organization ID
-								</Label>
-								<p className="mt-1 truncate font-mono text-muted-foreground text-sm">
-									{organization.id}
-								</p>
+					<Card>
+						<Card.Header>
+							<Card.Title>Details</Card.Title>
+							<Card.Description>
+								Name, slug, and workspace identifier
+							</Card.Description>
+						</Card.Header>
+						<Card.Content className="space-y-4">
+							<div className="flex items-center justify-between gap-3">
+								<div className="min-w-0 flex-1 space-y-1">
+									<Text variant="label">Workspace ID</Text>
+									<Text mono tone="muted" variant="caption">
+										{organization.id}
+									</Text>
+								</div>
+								<Button
+									onClick={handleCopyOrgId}
+									size="sm"
+									variant={copiedOrgId ? "primary" : "secondary"}
+								>
+									{copiedOrgId ? (
+										<Check className="size-3.5" weight="bold" />
+									) : (
+										<Copy className="size-3.5" />
+									)}
+									{copiedOrgId ? "Copied" : "Copy"}
+								</Button>
 							</div>
-							<Button
-								aria-label="Copy organization ID"
-								onClick={handleCopyOrgId}
-								size="sm"
-								type="button"
-								variant="outline"
-							>
-								{copiedOrgId ? (
-									<>
-										<CheckIcon className="size-3.5" weight="bold" />
-										Copied
-									</>
-								) : (
-									<>
-										<CopyIcon className="size-3.5" weight="duotone" />
-										Copy
-									</>
-								)}
-							</Button>
-						</div>
-						<div className="grid gap-4 sm:grid-cols-2">
-							<div className="space-y-2">
-								<Label htmlFor="name">Organization Name</Label>
-								<Input
-									id="name"
-									onChange={(e) => setName(e.target.value)}
-									placeholder="e.g., Acme Corporation"
-									value={name}
-								/>
-								<p className="text-muted-foreground text-xs">
-									The display name for your organization
-								</p>
+
+							<Divider />
+
+							<div className="grid gap-4 sm:grid-cols-2">
+								<Field>
+									<Field.Label>Name</Field.Label>
+									<Input
+										onChange={(e) => setName(e.target.value)}
+										placeholder="e.g., Acme Corporation"
+										value={name}
+									/>
+									<Field.Description>
+										Display name for your workspace
+									</Field.Description>
+								</Field>
+
+								<Field>
+									<Field.Label>Slug</Field.Label>
+									<Input
+										onChange={(e) => handleSlugChange(e.target.value)}
+										placeholder="e.g., acme-corp"
+										value={slug}
+									/>
+									<Field.Description>
+										Used in URLs:{" "}
+										<code className="rounded bg-secondary px-1.5 py-0.5 font-mono text-foreground text-xs">
+											/{slug}
+										</code>
+									</Field.Description>
+								</Field>
 							</div>
-							<div className="space-y-2">
-								<Label htmlFor="slug">Organization Slug</Label>
-								<Input
-									id="slug"
-									onChange={(e) => handleSlugChange(e.target.value)}
-									placeholder="e.g., acme-corp"
-									value={slug}
-								/>
-								<p className="text-muted-foreground text-xs">
-									Used in URLs:{" "}
-									<code className="rounded bg-secondary px-1.5 py-0.5 font-mono text-foreground text-xs">
-										/{slug}
-									</code>
-								</p>
-							</div>
-						</div>
-					</section>
+						</Card.Content>
+					</Card>
 
 					<WorkspaceWebsitesSection organization={organization} />
-				</div>
 
-				{hasChanges && (
-					<div className="angled-rectangle-gradient flex shrink-0 items-center justify-between border-t bg-secondary px-5 py-4">
-						<p className="text-muted-foreground text-sm">
-							You have unsaved changes
-						</p>
-						<Button disabled={isSaving} onClick={handleSave} size="sm">
-							{isSaving ? (
-								<>
-									<div className="mr-2 size-3 animate-spin rounded-full border-2 border-primary-foreground/30 border-t-primary-foreground" />
-									Saving…
-								</>
-							) : (
-								<>
-									<FloppyDiskIcon className="mr-2" size={14} />
-									Save Changes
-								</>
-							)}
-						</Button>
-					</div>
-				)}
+					<ApiKeysSection organization={organization} />
+
+					<DangerZoneSection organization={organization} />
+				</div>
 			</div>
 
-			<RightSidebar className="gap-4 p-5">
-				<RightSidebar.InfoCard
-					description={`/${organization.slug}`}
-					icon={BuildingsIcon}
-					title={organization.name}
-				/>
-				<RightSidebar.DocsLink />
-				<RightSidebar.Tip description="The slug is used in URLs and API requests. Keep it short and memorable." />
-			</RightSidebar>
+			{hasChanges && (
+				<div className="angled-rectangle-gradient flex shrink-0 items-center justify-between border-t bg-muted px-5 py-3">
+					<Text tone="muted" variant="caption">
+						You have unsaved changes
+					</Text>
+					<Button loading={isSaving} onClick={handleSave} size="sm">
+						<FloppyDisk className="size-3.5" />
+						{isSaving ? "Saving…" : "Save Changes"}
+					</Button>
+				</div>
+			)}
 		</div>
 	);
 }

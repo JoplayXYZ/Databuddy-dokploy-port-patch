@@ -19,6 +19,7 @@ export interface BalanceLike {
 	nextResetAt?: number | null;
 	remaining: number;
 	unlimited: boolean;
+	usage?: number;
 }
 
 export interface FeatureUsage {
@@ -82,7 +83,12 @@ export function calculateFeatureUsage(
 
 	const hasExtraCredits = !unlimited && remaining > limit;
 
-	const overageAmount = remaining < 0 ? Math.abs(remaining) : 0;
+	const overageAmount =
+		bal.usage != null && bal.granted > 0
+			? Math.max(0, bal.usage - bal.granted)
+			: remaining < 0
+				? Math.abs(remaining)
+				: 0;
 	const hasPricedOverage = pricingTiers?.length
 		? pricingTiers.length > 0
 		: (bal.breakdown?.some((b) => b.price?.tiers?.length) ?? false);

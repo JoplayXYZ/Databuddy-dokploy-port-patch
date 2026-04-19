@@ -1,34 +1,37 @@
 "use client";
 
-import { EmptyState } from "@/components/empty-state";
+import { EmptyState } from "@/components/ds/empty-state";
 import { useBillingContext } from "@/components/providers/billing-provider";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ds/badge";
+import { Button } from "@/components/ds/button";
+import { Card } from "@/components/ds/card";
+import { Divider } from "@/components/ds/divider";
+import { Skeleton } from "@/components/ds/skeleton";
+import { Text } from "@/components/ds/text";
 import dayjs from "@/lib/dayjs";
 import { orpc } from "@/lib/orpc";
 import type { UsageResponse } from "@databuddy/shared/types/billing";
 import {
 	ArrowSquareOutIcon,
 	CalendarIcon,
+	CreditCardIcon,
 	CrownIcon,
 	PlusIcon,
 	PuzzlePieceIcon,
 	TrendUpIcon,
 	XIcon,
-} from "@phosphor-icons/react";
+} from "@phosphor-icons/react/dist/ssr";
 import { useQuery } from "@tanstack/react-query";
 import { useCustomer } from "autumn-js/react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Suspense, useMemo, useState } from "react";
 import { CancelSubscriptionDialog } from "./components/cancel-subscription-dialog";
 import { ConsumptionChart } from "./components/consumption-chart";
-import { CreditCardDisplay } from "./components/credit-card-display";
 import { ErrorState } from "./components/empty-states";
-import { OverviewSkeleton } from "./components/overview-skeleton";
 import { UsageBreakdownTable } from "./components/usage-breakdown-table";
 import { UsageRow } from "./components/usage-row";
 import { useBilling, useBillingData } from "./hooks/use-billing";
+import type { CustomerWithPaymentMethod } from "./types/billing";
 import type { OverageInfo } from "./utils/billing-utils";
 
 interface OrgUsageData {
@@ -98,6 +101,7 @@ function getAddOnStatus(
 }
 
 export default function BillingPage() {
+	const router = useRouter();
 	const { canUserUpgrade } = useBillingContext();
 	const { plans, usage, customer, isLoading, error, refetch } =
 		useBillingData();
@@ -179,7 +183,7 @@ export default function BillingPage() {
 
 	if (isLoading) {
 		return (
-			<main className="min-h-0 flex-1 overflow-hidden">
+			<main className="min-h-0 flex-1 overflow-y-auto">
 				<OverviewSkeleton />
 			</main>
 		);
@@ -187,8 +191,10 @@ export default function BillingPage() {
 
 	if (error) {
 		return (
-			<main className="min-h-0 flex-1 overflow-hidden">
-				<ErrorState error={error} onRetry={refetch} />
+			<main className="min-h-0 flex-1 overflow-y-auto">
+				<div className="mx-auto max-w-2xl p-5">
+					<ErrorState error={error} onRetry={refetch} />
+				</div>
 			</main>
 		);
 	}
@@ -199,122 +205,101 @@ export default function BillingPage() {
 	const showAddOns = addOns.length > 0 && !isFree;
 
 	return (
-		<main className="min-h-0 flex-1 overflow-hidden">
-			<div className="flex h-full flex-col overflow-y-auto lg:grid lg:h-full lg:grid-cols-[1fr_20rem] lg:overflow-hidden">
-				<CancelSubscriptionDialog
-					currentPeriodEnd={cancelTarget?.currentPeriodEnd}
-					isLoading={isLoading}
-					onCancel={onCancelConfirm}
-					onOpenChange={(open) => !open && onCancelDialogClose()}
-					open={showCancelDialog}
-					planName={cancelTarget?.name ?? ""}
-				/>
+		<main className="min-h-0 flex-1 overflow-y-auto">
+			<CancelSubscriptionDialog
+				currentPeriodEnd={cancelTarget?.currentPeriodEnd}
+				isLoading={isLoading}
+				onCancel={onCancelConfirm}
+				onOpenChange={(open) => !open && onCancelDialogClose()}
+				open={showCancelDialog}
+				planName={cancelTarget?.name ?? ""}
+			/>
 
-				{/* Main Content - Usage Stats + Breakdown */}
-				<div className="shrink-0 lg:h-full lg:min-h-0 lg:overflow-y-auto">
-					{usageStats.length === 0 ? (
-						<EmptyState
-							className="h-full"
-							description="Start using features to see your consumption stats here"
-							icon={<TrendUpIcon />}
-							title="No usage data yet"
-							variant="minimal"
-						/>
-					) : (
-						<>
-							<div className="divide-y">
-								{usageStats.map((feature) => (
-									<UsageRow
-										feature={feature}
-										isMaxPlan={isMaxPlan}
-										key={feature.id}
+			<div className="mx-auto max-w-2xl space-y-6 p-5">
+				<Card>
+					<Card.Header className="flex-row items-start justify-between gap-4">
+						<div>
+							<Card.Title>Current Plan</Card.Title>
+							<Card.Description>
+								Subscription and billing management
+							</Card.Description>
+						</div>
+						<Badge
+							variant={
+								currentSubscription?.status === "scheduled"
+									? "muted"
+									: "success"
+							}
+						>
+							{currentSubscription?.status === "scheduled"
+								? "Scheduled"
+								: "Active"}
+						</Badge>
+					</Card.Header>
+					<Card.Content className="space-y-4">
+						<div className="flex items-center justify-between gap-3">
+							<div className="flex items-center gap-3">
+								<div className="flex size-9 shrink-0 items-center justify-center rounded-lg border bg-secondary">
+									<CrownIcon
+										className="text-accent-foreground"
+										size={16}
+										weight="duotone"
 									/>
-								))}
+								</div>
+								<div>
+									<Text variant="label">{currentPlan?.name || "Free"}</Text>
+									{!isFree && currentPlan?.price?.display?.primaryText && (
+										<Text tone="muted" variant="caption">
+											{currentPlan.price.display.primaryText}
+										</Text>
+									)}
+								</div>
 							</div>
-							<Suspense fallback={<Skeleton className="h-64 w-full" />}>
-								<ConsumptionChart
-									isLoading={isBreakdownLoading}
-									onDateRangeChange={(start, end) =>
-										setDateRange({ startDate: start, endDate: end })
-									}
-									overageInfo={overageInfo}
-									usageData={breakdownUsageData}
-								/>
-							</Suspense>
-							<Suspense fallback={<Skeleton className="h-64 w-full" />}>
-								<UsageBreakdownTable
-									isLoading={isBreakdownLoading}
-									overageInfo={overageInfo}
-									usageData={breakdownUsageData}
-								/>
-							</Suspense>
-						</>
-					)}
-				</div>
-
-				<div className="flex w-full shrink-0 flex-col border-t bg-card lg:h-full lg:w-auto lg:overflow-y-auto lg:border-t-0 lg:border-l">
-					<div className="border-b p-5">
-						<div className="mb-3 flex items-center justify-between">
-							<h3 className="font-semibold">Current Plan</h3>
-							<Badge
-								variant={
-									currentSubscription?.status === "scheduled"
-										? "outline"
-										: "green"
-								}
-							>
-								{currentSubscription?.status === "scheduled"
-									? "Scheduled"
-									: "Active"}
-							</Badge>
-						</div>
-						<div className="flex items-center gap-3">
-							<div className="flex size-9 shrink-0 items-center justify-center rounded-lg border bg-secondary">
-								<CrownIcon
-									className="text-accent-foreground"
-									size={16}
-									weight="duotone"
-								/>
-							</div>
-							<div>
-								<div className="font-medium">{currentPlan?.name || "Free"}</div>
-								{!isFree && currentPlan?.price?.display?.primaryText && (
-									<div className="text-muted-foreground text-sm">
-										{currentPlan.price.display.primaryText}
-									</div>
-								)}
-							</div>
-						</div>
-						{statusDetails && (
-							<div className="mt-3 flex items-center gap-2 text-muted-foreground text-sm">
-								<CalendarIcon size={14} weight="duotone" />
-								{statusDetails}
-							</div>
-						)}
-					</div>
-
-					{/* Payment Method + Actions */}
-					<div className="grid gap-5 p-5 sm:grid-cols-2 lg:grid-cols-1 lg:gap-0 lg:p-0">
-						<div className="w-full lg:w-auto lg:border-b lg:p-5">
-							<h3 className="mb-3 font-semibold">Payment Method</h3>
-							<CreditCardDisplay customer={customer ?? null} />
+							{statusDetails && (
+								<div className="flex items-center gap-1.5">
+									<CalendarIcon className="text-muted-foreground" size={12} />
+									<Text tone="muted" variant="caption">
+										{statusDetails}
+									</Text>
+								</div>
+							)}
 						</div>
 
-						<div className="flex w-full flex-col gap-2 lg:w-auto lg:p-5">
+						<Divider />
+
+						<PaymentMethodRow customer={customer ?? null} />
+
+						<Divider />
+
+						<div className="flex flex-wrap gap-2">
 							{canUserUpgrade ? (
 								<>
 									{isCanceled ? (
-										<Button asChild className="w-full" variant="outline">
-											<Link href="/billing/plans">Reactivate Plan</Link>
+										<Button
+											onClick={() => router.push("/billing/plans")}
+											size="sm"
+											variant="secondary"
+										>
+											Reactivate Plan
 										</Button>
 									) : isFree ? (
-										<Button asChild className="w-full" variant="outline">
-											<Link href="/billing/plans">Upgrade Plan</Link>
+										<Button
+											onClick={() => router.push("/billing/plans")}
+											size="sm"
+											variant="secondary"
+										>
+											Upgrade Plan
 										</Button>
 									) : (
 										<>
 											<Button
-												className="w-full"
+												onClick={() => router.push("/billing/plans")}
+												size="sm"
+												variant="secondary"
+											>
+												Change Plan
+											</Button>
+											<Button
 												onClick={() =>
 													currentPlan &&
 													onCancelClick(
@@ -323,46 +308,55 @@ export default function BillingPage() {
 														currentSubscription?.currentPeriodEnd ?? undefined
 													)
 												}
-												variant="outline"
+												size="sm"
+												variant="ghost"
 											>
 												Cancel Plan
 											</Button>
-											<Button asChild className="w-full" variant="outline">
-												<Link href="/billing/plans">Change Plan</Link>
-											</Button>
 										</>
 									)}
-									<Button className="w-full" onClick={onManageBilling}>
+									<Button
+										onClick={onManageBilling}
+										size="sm"
+										variant="secondary"
+									>
 										Billing Portal
 										<ArrowSquareOutIcon size={14} />
 									</Button>
 								</>
 							) : (
-								<p className="text-pretty text-muted-foreground text-sm">
+								<Text tone="muted" variant="caption">
 									Billing is managed by your{" "}
-									<Link
+									<a
 										className="font-medium text-foreground underline underline-offset-2"
 										href="/organizations/members"
 									>
 										org admin
-									</Link>
+									</a>
 									.
-								</p>
+								</Text>
 							)}
 						</div>
-					</div>
+					</Card.Content>
+				</Card>
 
-					{showAddOns && (
-						<div className="border-t p-5">
-							<div className="mb-3 flex items-center gap-2">
+				{showAddOns && (
+					<Card>
+						<Card.Header>
+							<Card.Title className="flex items-center gap-2">
 								<PuzzlePieceIcon
 									className="text-muted-foreground"
-									size={16}
+									size={14}
 									weight="duotone"
 								/>
-								<h3 className="font-semibold">Enterprise Add-ons</h3>
-							</div>
-							<div className="space-y-2">
+								Enterprise Add-ons
+							</Card.Title>
+							<Card.Description>
+								Additional features for your plan
+							</Card.Description>
+						</Card.Header>
+						<Card.Content className="p-0">
+							<div className="divide-y">
 								{addOns.map((addOn) => {
 									const sub = customer?.subscriptions?.find(
 										(s) => s.planId === addOn.id
@@ -372,27 +366,28 @@ export default function BillingPage() {
 
 									return (
 										<div
-											className="flex items-center justify-between gap-3 rounded border bg-secondary/50 p-3"
+											className="flex items-center justify-between gap-3 px-5 py-3"
 											key={addOn.id}
 										>
 											<div className="min-w-0 flex-1">
-												<div className="truncate font-medium text-sm">
+												<Text className="truncate" variant="label">
 													{addOn.name}
-												</div>
-												<div className="text-muted-foreground text-xs">
+												</Text>
+												<Text tone="muted" variant="caption">
 													{isCancelled && sub?.currentPeriodEnd
 														? `Access until ${dayjs(sub.currentPeriodEnd).format("MMM D, YYYY")}`
 														: priceDisplay?.primaryText &&
 															`${priceDisplay.primaryText}${priceDisplay.secondaryText ? ` ${priceDisplay.secondaryText}` : ""}`}
-												</div>
+												</Text>
 											</div>
 											{isCancelled ? (
-												<Badge variant="outline">Cancelled</Badge>
+												<Badge variant="muted">Cancelled</Badge>
 											) : isActive ? (
 												<div className="flex items-center gap-2">
-													<Badge variant="green">Active</Badge>
+													<Badge variant="success">Active</Badge>
 													{canUserUpgrade && (
 														<Button
+															aria-label={`Cancel ${addOn.name}`}
 															onClick={() =>
 																onCancelClick(
 																	addOn.id,
@@ -415,7 +410,7 @@ export default function BillingPage() {
 														})
 													}
 													size="sm"
-													variant="outline"
+													variant="secondary"
 												>
 													<PlusIcon size={14} />
 													Add
@@ -425,10 +420,180 @@ export default function BillingPage() {
 									);
 								})}
 							</div>
-						</div>
-					)}
-				</div>
+						</Card.Content>
+					</Card>
+				)}
+
+				{usageStats.length === 0 ? (
+					<Card>
+						<Card.Content className="py-8">
+							<EmptyState
+								description="Start using features to see your consumption stats here"
+								icon={<TrendUpIcon weight="duotone" />}
+								title="No usage data yet"
+							/>
+						</Card.Content>
+					</Card>
+				) : (
+					<>
+						<Card>
+							<Card.Header>
+								<Card.Title>Usage</Card.Title>
+								<Card.Description>
+									Feature consumption for this billing period
+								</Card.Description>
+							</Card.Header>
+							<Card.Content className="p-0">
+								{usageStats.map((feature) => (
+									<UsageRow
+										feature={feature}
+										isMaxPlan={isMaxPlan}
+										key={feature.id}
+									/>
+								))}
+							</Card.Content>
+						</Card>
+
+						<Suspense
+							fallback={<Skeleton className="h-64 w-full rounded-lg" />}
+						>
+							<ConsumptionChart
+								isLoading={isBreakdownLoading}
+								onDateRangeChange={(start, end) =>
+									setDateRange({ startDate: start, endDate: end })
+								}
+								overageInfo={overageInfo}
+								usageData={breakdownUsageData}
+							/>
+						</Suspense>
+						<Suspense
+							fallback={<Skeleton className="h-64 w-full rounded-lg" />}
+						>
+							<UsageBreakdownTable
+								isLoading={isBreakdownLoading}
+								overageInfo={overageInfo}
+								usageData={breakdownUsageData}
+							/>
+						</Suspense>
+					</>
+				)}
 			</div>
 		</main>
+	);
+}
+
+function PaymentMethodRow({
+	customer,
+}: {
+	customer: CustomerWithPaymentMethod | null;
+}) {
+	const card = customer?.paymentMethod?.card;
+
+	if (!card) {
+		return (
+			<div className="flex items-center gap-3">
+				<div className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-dashed bg-secondary">
+					<CreditCardIcon
+						className="text-muted-foreground"
+						size={16}
+						weight="duotone"
+					/>
+				</div>
+				<Text tone="muted" variant="caption">
+					No payment method on file
+				</Text>
+			</div>
+		);
+	}
+
+	const last4 = card.last4 || "****";
+	const expMonth = card.expMonth?.toString().padStart(2, "0") || "00";
+	const expYear = card.expYear?.toString().slice(-2) || "00";
+	const brand =
+		(card.brand || "card").charAt(0).toUpperCase() +
+		(card.brand || "card").slice(1);
+
+	return (
+		<div className="flex items-center justify-between gap-3">
+			<div className="flex items-center gap-3">
+				<div className="flex size-9 shrink-0 items-center justify-center rounded-lg border bg-secondary">
+					<CreditCardIcon
+						className="text-accent-foreground"
+						size={16}
+						weight="duotone"
+					/>
+				</div>
+				<div>
+					<Text variant="label">
+						{brand} ending in {last4}
+					</Text>
+					<Text tone="muted" variant="caption">
+						Expires {expMonth}/{expYear}
+					</Text>
+				</div>
+			</div>
+		</div>
+	);
+}
+
+function OverviewSkeleton() {
+	return (
+		<div className="mx-auto max-w-2xl space-y-6 p-5">
+			<Card>
+				<Card.Header className="flex-row items-start justify-between gap-4">
+					<div className="space-y-1">
+						<Skeleton className="h-3.5 w-24" />
+						<Skeleton className="h-3 w-48" />
+					</div>
+					<Skeleton className="h-5 w-14 rounded-full" />
+				</Card.Header>
+				<Card.Content className="space-y-4">
+					<div className="flex items-center gap-3">
+						<Skeleton className="size-9 rounded-lg" />
+						<div className="space-y-1">
+							<Skeleton className="h-3.5 w-20" />
+							<Skeleton className="h-3 w-28" />
+						</div>
+					</div>
+					<Skeleton className="h-px w-full" />
+					<div className="flex items-center gap-3">
+						<Skeleton className="size-9 rounded-lg" />
+						<div className="space-y-1">
+							<Skeleton className="h-3.5 w-36" />
+							<Skeleton className="h-3 w-20" />
+						</div>
+					</div>
+					<Skeleton className="h-px w-full" />
+					<div className="flex gap-2">
+						<Skeleton className="h-7 w-24 rounded" />
+						<Skeleton className="h-7 w-28 rounded" />
+					</div>
+				</Card.Content>
+			</Card>
+
+			<Card>
+				<Card.Header>
+					<Skeleton className="h-3.5 w-14" />
+					<Skeleton className="h-3 w-52" />
+				</Card.Header>
+				<Card.Content className="p-0">
+					{[1, 2, 3].map((i) => (
+						<div className="border-b p-5 last:border-b-0" key={i}>
+							<div className="mb-3 flex items-center justify-between">
+								<div className="flex items-center gap-3">
+									<Skeleton className="size-10 rounded" />
+									<div className="space-y-1">
+										<Skeleton className="h-3.5 w-24" />
+										<Skeleton className="h-3 w-32" />
+									</div>
+								</div>
+								<Skeleton className="h-3.5 w-20" />
+							</div>
+							<Skeleton className="h-2 w-full rounded-full" />
+						</div>
+					))}
+				</Card.Content>
+			</Card>
+		</div>
 	);
 }

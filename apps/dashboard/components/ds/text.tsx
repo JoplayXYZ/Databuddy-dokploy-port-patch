@@ -46,8 +46,8 @@ const variantElement: Record<
 	title: "h2",
 	heading: "h3",
 	body: "p",
-	label: "span",
-	caption: "span",
+	label: "div",
+	caption: "div",
 };
 
 export function Text<T extends ElementType = "p">({

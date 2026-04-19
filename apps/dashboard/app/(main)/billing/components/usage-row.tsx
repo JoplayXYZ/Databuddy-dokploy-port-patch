@@ -1,16 +1,13 @@
 "use client";
 
-import { ChartBarIcon } from "@phosphor-icons/react";
-import { ClockIcon } from "@phosphor-icons/react";
-import { DatabaseIcon } from "@phosphor-icons/react";
-import { GiftIcon } from "@phosphor-icons/react";
-import { LightningIcon } from "@phosphor-icons/react";
-import { UsersIcon } from "@phosphor-icons/react";
-import { WarningIcon } from "@phosphor-icons/react";
+import { ChartBarIcon } from "@phosphor-icons/react/dist/ssr";
+import { DatabaseIcon } from "@phosphor-icons/react/dist/ssr";
+import { UsersIcon } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
 import { memo } from "react";
-import { Badge } from "@/components/ui/badge";
-import { formatLocaleNumber } from "@/lib/format-locale-number";
+import { Badge } from "@/components/ds/badge";
+import { Progress } from "@/components/ds/progress";
+import { Text } from "@/components/ds/text";
 import { cn } from "@/lib/utils";
 import {
 	type FeatureUsage,
@@ -62,19 +59,10 @@ export const UsageRow = memo(function UsageRowComponent({
 	const isBilledOverage = hasOverage && feature.hasPricedOverage;
 
 	const Icon = getFeatureIcon(feature.name);
-	const intervalLabel = feature.interval
-		? ({ day: "Daily", month: "Monthly", year: "Yearly", lifetime: "Lifetime" }[
-				feature.interval
-			] ?? null)
-		: null;
 
 	if (isBilledOverage && feature.overage) {
 		return (
-			<BilledOverageRow
-				feature={feature}
-				Icon={Icon}
-				intervalLabel={intervalLabel}
-			/>
+			<BilledOverageRow feature={feature} Icon={Icon} isMaxPlan={isMaxPlan} />
 		);
 	}
 
@@ -84,110 +72,68 @@ export const UsageRow = memo(function UsageRowComponent({
 	const isLow = hasNormalLimit && usedPercent > 80;
 
 	return (
-		<div className="border-b p-5">
-			<div className="mb-3 flex items-center justify-between">
-				<div className="flex items-center gap-3">
-					<div className="flex size-10 shrink-0 items-center justify-center rounded border bg-background">
+		<div className="px-5 py-4">
+			<div className="flex items-start justify-between gap-4">
+				<div>
+					<div className="flex items-center gap-2">
 						<Icon
-							className="text-muted-foreground"
-							size={18}
+							className="size-4 shrink-0 text-muted-foreground"
 							weight="duotone"
 						/>
+						<Text variant="label">{feature.name}</Text>
+						{feature.hasExtraCredits && (
+							<Badge size="sm" variant="default">
+								Bonus
+							</Badge>
+						)}
+						{hasOverage && !isBilledOverage && (
+							<Badge size="sm" variant="destructive">
+								Limit reached
+							</Badge>
+						)}
 					</div>
-					<div>
-						<div className="flex items-center gap-2">
-							<span className="font-medium">{feature.name}</span>
-							{feature.hasExtraCredits && (
-								<Badge variant="secondary">
-									<GiftIcon className="mr-1" size={10} weight="fill" />
-									Bonus
-								</Badge>
-							)}
-							{hasOverage && !isBilledOverage && (
-								<Badge
-									className="bg-destructive/10 text-destructive"
-									variant="secondary"
-								>
-									<WarningIcon className="mr-1" size={10} weight="fill" />
-									Limit reached
-								</Badge>
-							)}
-						</div>
-						<div className="flex items-center gap-1 text-muted-foreground text-sm">
-							<ClockIcon size={12} />
-							{getResetText(feature)}
-						</div>
-					</div>
+					<Text className="mt-0.5 pl-6" tone="muted" variant="caption">
+						{getResetText(feature)}
+					</Text>
 				</div>
 
 				{feature.unlimited ? (
-					<Badge variant="secondary">
-						<LightningIcon className="mr-1" size={12} />
-						Unlimited
-					</Badge>
-				) : feature.hasExtraCredits ? (
-					<div className="text-balance text-right">
-						<span className="font-mono text-base tabular-nums">
-							{formatCompactNumber(0)} /{" "}
-							{formatCompactNumber(feature.includedLimit)} used
-						</span>
-						<div className="text-muted-foreground text-xs">
-							{formatCompactNumber(feature.balance - feature.includedLimit)}{" "}
-							bonus remaining
-						</div>
-					</div>
-				) : feature.overage ? (
-					<div className="text-right">
-						<span className="font-mono text-base text-destructive tabular-nums">
-							+{formatCompactNumber(feature.overage.amount)} over
-						</span>
-						<div className="text-destructive text-xs">
-							~{formatCurrency(feature.overage.cost)} overage
-						</div>
-					</div>
+					<Badge variant="default">Unlimited</Badge>
 				) : (
-					<div className="text-balance text-right">
-						<span
-							className={cn(
-								"font-mono text-base tabular-nums",
-								isLow ? "text-warning" : "text-foreground"
-							)}
+					<div className="shrink-0 text-right">
+						<Text
+							className={cn("font-mono tabular-nums", isLow && "text-warning")}
+							variant="label"
 						>
 							{formatCompactNumber(usedClamped)} /{" "}
 							{formatCompactNumber(feature.includedLimit)}
-						</span>
-						<div className="text-muted-foreground text-xs">
-							{usedClamped === 0
-								? `${formatCompactNumber(feature.includedLimit)} available`
-								: "used"}
-						</div>
+						</Text>
+						<Text tone="muted" variant="caption">
+							{feature.hasExtraCredits
+								? `${formatCompactNumber(feature.balance - feature.includedLimit)} bonus`
+								: usedClamped === 0
+									? `${formatCompactNumber(feature.includedLimit)} available`
+									: `${Math.round(usedPercent)}% used`}
+						</Text>
 					</div>
 				)}
 			</div>
 
 			{!feature.unlimited && (
-				<div className="flex items-center gap-3">
-					<div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
-						<div
-							className={cn(
-								"h-full transition-all",
-								hasOverage
-									? "bg-destructive"
-									: isLow
-										? "bg-warning"
-										: "bg-primary"
-							)}
-							style={{ width: hasOverage ? "100%" : `${usedPercent}%` }}
-						/>
-					</div>
-					{(isLow || hasOverage) && !isMaxPlan ? (
+				<div className="mt-3 flex items-center gap-3">
+					<Progress
+						className="flex-1"
+						tone={hasOverage ? "danger" : isLow ? "warning" : "primary"}
+						value={hasOverage ? 100 : usedPercent}
+					/>
+					{(isLow || hasOverage) && !isMaxPlan && (
 						<Link
-							className="shrink-0 font-medium text-primary text-sm hover:underline"
+							className="shrink-0 font-medium text-primary text-xs hover:underline"
 							href="/billing/plans"
 						>
 							Upgrade
 						</Link>
-					) : null}
+					)}
 				</div>
 			)}
 		</div>
@@ -197,11 +143,11 @@ export const UsageRow = memo(function UsageRowComponent({
 function BilledOverageRow({
 	feature,
 	Icon,
-	intervalLabel,
+	isMaxPlan,
 }: {
 	feature: FeatureUsage;
 	Icon: typeof ChartBarIcon;
-	intervalLabel: string | null;
+	isMaxPlan: boolean;
 }) {
 	const overage = feature.overage;
 	if (!overage) {
@@ -209,87 +155,87 @@ function BilledOverageRow({
 	}
 
 	const totalUsed = feature.limit + overage.amount;
-	const includedPercent = Math.max(
-		(feature.limit / (feature.limit + overage.amount)) * 100,
-		5
-	);
+	const includedPercent = Math.max((feature.limit / totalUsed) * 100, 5);
 
 	return (
-		<div className="border-b p-5">
-			<div className="mb-4 flex items-center justify-between">
-				<div className="flex items-center gap-3">
-					<div className="flex size-10 shrink-0 items-center justify-center rounded border bg-background">
+		<div className="px-5 py-4">
+			<div className="flex items-start justify-between gap-4">
+				<div>
+					<div className="flex items-center gap-2">
 						<Icon
-							className="text-muted-foreground"
-							size={18}
+							className="size-4 shrink-0 text-muted-foreground"
 							weight="duotone"
 						/>
+						<Text variant="label">{feature.name}</Text>
+						<Badge size="sm" variant="destructive">
+							Overage
+						</Badge>
 					</div>
-					<div>
-						<span className="font-medium">{feature.name}</span>
-						<div className="flex items-center gap-1 text-muted-foreground text-sm">
-							<ClockIcon size={12} />
-							{getResetText(feature)}
-						</div>
-					</div>
+					<Text className="mt-0.5 pl-6" tone="muted" variant="caption">
+						{getResetText(feature)}
+					</Text>
 				</div>
-				{intervalLabel && (
-					<span className="text-muted-foreground text-sm">
-						{intervalLabel} usage
-					</span>
-				)}
+				<div className="shrink-0 text-right">
+					<Text className="font-mono tabular-nums" variant="label">
+						{formatCompactNumber(totalUsed)} total
+					</Text>
+					<Text className="text-destructive tabular-nums" variant="caption">
+						+{formatCompactNumber(overage.amount)} over limit
+					</Text>
+				</div>
 			</div>
 
-			<div className="mb-3">
-				<div className="flex h-2.5 w-full overflow-hidden rounded-full bg-muted">
+			<div className="mt-3">
+				<div className="flex h-2 w-full overflow-hidden rounded-full bg-secondary p-[1.5px]">
 					<div
-						className="h-full bg-primary"
+						className="h-full rounded-l-full bg-primary"
 						style={{ width: `${includedPercent}%` }}
 					/>
 					<div
-						className="h-full bg-primary/30"
+						className="h-full rounded-r-full bg-primary/30"
 						style={{ width: `${100 - includedPercent}%` }}
 					/>
 				</div>
-				<div className="mt-1.5 flex items-center justify-between text-xs">
+				<div className="mt-1.5 flex items-center justify-between">
 					<div className="flex items-center gap-3">
 						<span className="flex items-center gap-1.5">
-							<span className="inline-block size-2 rounded-full bg-primary" />
-							<span className="text-muted-foreground">
+							<span className="inline-block size-1.5 rounded-full bg-primary" />
+							<Text tone="muted" variant="caption">
 								{formatCompactNumber(feature.limit)} included
-							</span>
+							</Text>
 						</span>
 						<span className="flex items-center gap-1.5">
-							<span className="inline-block size-2 rounded-full bg-primary/30" />
-							<span className="text-muted-foreground">
+							<span className="inline-block size-1.5 rounded-full bg-primary/30" />
+							<Text tone="muted" variant="caption">
 								{formatCompactNumber(overage.amount)} overage
-							</span>
+							</Text>
 						</span>
 					</div>
-					<span className="font-medium font-mono tabular-nums">
-						{formatLocaleNumber(totalUsed)} total
-					</span>
-				</div>
-			</div>
-
-			{/* Cost + pricing tiers */}
-			<div className="flex items-center justify-between rounded border bg-secondary/50 px-3 py-2">
-				<div className="flex items-center gap-2 text-sm">
-					<span className="text-muted-foreground">Estimated overage cost</span>
-					<span className="font-medium font-mono tabular-nums">
-						~{formatCurrency(overage.cost)}
-					</span>
-				</div>
-				<div className="flex items-center gap-3">
 					{feature.pricingTiers.length > 0 && (
 						<PricingTiersTooltip tiers={feature.pricingTiers} />
 					)}
-					<Link
-						className="font-medium text-primary text-xs hover:underline"
-						href="#breakdown"
+				</div>
+			</div>
+
+			<div className="mt-3 flex items-center justify-between rounded-md bg-destructive/5 px-3 py-2">
+				<Text tone="muted" variant="caption">
+					Estimated overage
+				</Text>
+				<div className="flex items-center gap-3">
+					<Text
+						className="font-mono text-destructive tabular-nums"
+						variant="label"
 					>
-						View breakdown
-					</Link>
+						~{formatCurrency(overage.cost)}
+					</Text>
+					{!isMaxPlan && (
+						<Link
+							className="font-medium text-primary text-xs hover:underline"
+							href="/billing/plans"
+						>
+							Upgrade
+						</Link>
+					)}
 				</div>
 			</div>
 		</div>

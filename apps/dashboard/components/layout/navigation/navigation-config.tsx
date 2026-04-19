@@ -20,7 +20,6 @@ import {
 	HeartbeatIcon,
 	HouseIcon,
 	IdentificationCardIcon,
-	KeyIcon,
 	LightningIcon,
 	LinkIcon,
 	LockIcon,
@@ -123,8 +122,6 @@ export const settingsNavigation: NavigationSection[] = [
 	createNavSection("Workspace", BuildingsIcon, [
 		createNavItem("General", GearIcon, "/organizations/settings"),
 		createNavItem("Members", UserIcon, "/organizations/members"),
-		createNavItem("API Keys", KeyIcon, "/organizations/settings/api-keys"),
-		createNavItem("Danger Zone", WarningIcon, "/organizations/settings/danger"),
 	]),
 	createNavSection("Billing", CreditCardIcon, [
 		createNavItem("Overview", ActivityIcon, "/billing"),

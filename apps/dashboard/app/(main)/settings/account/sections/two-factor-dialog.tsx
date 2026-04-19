@@ -1,35 +1,30 @@
 "use client";
 
 import { authClient } from "@databuddy/auth/client";
-import { CaretDownIcon } from "@phosphor-icons/react";
-import { CheckCircleIcon } from "@phosphor-icons/react";
-import { CircleNotchIcon } from "@phosphor-icons/react";
-import { CopyIcon } from "@phosphor-icons/react";
-import { DeviceMobileIcon } from "@phosphor-icons/react";
-import { KeyIcon } from "@phosphor-icons/react";
-import { ShieldCheckIcon } from "@phosphor-icons/react";
-import { WarningCircleIcon } from "@phosphor-icons/react";
+import {
+	CaretDown,
+	CheckCircle,
+	Copy,
+	DeviceMobile,
+	Key,
+	ShieldCheck,
+	WarningCircle,
+} from "@phosphor-icons/react/dist/ssr";
 import { useMutation } from "@tanstack/react-query";
 import { QRCodeSVG } from "qrcode.react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { setPasswordForOAuthUser } from "@/app/actions/users";
-import { Button } from "@/components/ui/button";
-import {
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogFooter,
-	DialogHeader,
-	DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ds/button";
+import { Dialog } from "@/components/ds/dialog";
+import { Field } from "@/components/ds/field";
+import { Input } from "@/components/ds/input";
+import { Text } from "@/components/ds/text";
 import {
 	InputOTP,
 	InputOTPGroup,
 	InputOTPSlot,
 } from "@/components/ui/input-otp";
-import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 
 type TwoFactorStep =
@@ -224,17 +219,17 @@ export function TwoFactorDialog({
 
 	return (
 		<Dialog onOpenChange={onOpenChange} open={open}>
-			<DialogContent className="sm:max-w-md">
-				<DialogHeader>
-					<DialogTitle>
+			<Dialog.Content className="max-w-md">
+				<Dialog.Header>
+					<Dialog.Title>
 						{step === "set-password" && "Set Up a Password"}
 						{step === "password" && "Enable Two-Factor Authentication"}
 						{step === "setup" && "Set Up Authenticator"}
 						{step === "verify" && "Verify Your Setup"}
 						{step === "backup" && "Save Your Backup Codes"}
 						{step === "manage" && "Manage Two-Factor Authentication"}
-					</DialogTitle>
-					<DialogDescription>
+					</Dialog.Title>
+					<Dialog.Description>
 						{step === "set-password" &&
 							"You signed up with a social account. Create a password to enable 2FA."}
 						{step === "password" &&
@@ -247,99 +242,88 @@ export function TwoFactorDialog({
 							"Store these codes safely. Each can only be used once."}
 						{step === "manage" &&
 							"Manage your two-factor authentication settings."}
-					</DialogDescription>
-				</DialogHeader>
+					</Dialog.Description>
+				</Dialog.Header>
 
-				<div className="py-4">
+				<Dialog.Body>
 					{step === "set-password" && (
 						<div className="space-y-4">
-							<div className="flex items-center gap-3 rounded border bg-blue-500/10 p-4">
+							<div className="flex items-center gap-3 rounded-md border border-border/60 bg-blue-500/10 p-4">
 								<div className="flex size-10 items-center justify-center rounded-full bg-blue-500/20">
-									<KeyIcon
+									<Key
 										className="size-5 text-blue-600 dark:text-blue-400"
 										weight="duotone"
 									/>
 								</div>
 								<div>
-									<p className="font-medium text-sm">Password required</p>
-									<p className="text-muted-foreground text-xs">
+									<Text variant="label">Password required</Text>
+									<Text tone="muted" variant="caption">
 										2FA requires a password for verification
-									</p>
+									</Text>
 								</div>
 							</div>
 
-							<div className="space-y-2">
-								<Label htmlFor="new-password">New Password</Label>
+							<Field>
+								<Field.Label>New Password</Field.Label>
 								<Input
 									autoComplete="new-password"
-									id="new-password"
 									onChange={(e) => setNewPassword(e.target.value)}
 									placeholder="Min. 8 characters"
 									type="password"
 									value={newPassword}
 								/>
-							</div>
+							</Field>
 
-							<div className="space-y-2">
-								<Label htmlFor="confirm-password">Confirm Password</Label>
+							<Field>
+								<Field.Label>Confirm Password</Field.Label>
 								<Input
 									autoComplete="new-password"
-									id="confirm-password"
 									onChange={(e) => setConfirmPassword(e.target.value)}
 									placeholder="Confirm your password"
 									type="password"
 									value={confirmPassword}
 								/>
-							</div>
+							</Field>
 						</div>
 					)}
 
-					{/* Step: Password */}
 					{step === "password" && (
-						<div className="space-y-4">
-							<div className="space-y-2">
-								<Label htmlFor="2fa-password">Password</Label>
-								<Input
-									autoComplete="current-password"
-									id="2fa-password"
-									onChange={(e) => setPassword(e.target.value)}
-									placeholder="••••••••"
-									type="password"
-									value={password}
-								/>
-							</div>
-						</div>
+						<Field>
+							<Field.Label>Password</Field.Label>
+							<Input
+								autoComplete="current-password"
+								onChange={(e) => setPassword(e.target.value)}
+								placeholder="••••••••"
+								type="password"
+								value={password}
+							/>
+						</Field>
 					)}
 
-					{/* Step: Setup with QR Code */}
 					{step === "setup" && (
 						<div className="space-y-5">
-							{/* Step 1: Install app */}
 							<div className="flex items-start gap-3">
 								<div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary font-medium text-primary-foreground text-xs">
 									1
 								</div>
 								<div className="flex-1 space-y-1">
-									<p className="font-medium text-sm">
-										Install an authenticator app
-									</p>
-									<p className="text-muted-foreground text-xs">
+									<Text variant="label">Install an authenticator app</Text>
+									<Text tone="muted" variant="caption">
 										Google Authenticator, Authy, 1Password, or any TOTP app
-									</p>
+									</Text>
 								</div>
 							</div>
 
-							{/* Step 2: Scan QR */}
 							<div className="flex items-start gap-3">
 								<div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary font-medium text-primary-foreground text-xs">
 									2
 								</div>
 								<div className="flex-1 space-y-3">
 									<div>
-										<p className="font-medium text-sm">Scan this QR code</p>
-										<p className="text-muted-foreground text-xs">
+										<Text variant="label">Scan this QR code</Text>
+										<Text tone="muted" variant="caption">
 											Open your app and scan to add your account
-										</p>
+										</Text>
 									</div>
 
 									<div className="flex justify-center">
@@ -360,14 +344,14 @@ export function TwoFactorDialog({
 											onClick={() => setShowSecret(!showSecret)}
 											type="button"
 										>
-											<DeviceMobileIcon
+											<DeviceMobile
 												className="size-4 text-muted-foreground"
 												weight="duotone"
 											/>
 											<span className="flex-1 text-muted-foreground">
 												Can't scan? Enter code manually
 											</span>
-											<CaretDownIcon
+											<CaretDown
 												className={cn(
 													"size-3 text-muted-foreground transition-transform",
 													showSecret && "rotate-180"
@@ -376,10 +360,10 @@ export function TwoFactorDialog({
 										</button>
 
 										{showSecret && (
-											<div className="rounded border bg-accent/50 p-3">
-												<p className="mb-1.5 text-muted-foreground text-xs">
+											<div className="rounded-md border border-border/60 bg-secondary/50 p-3">
+												<Text className="mb-1.5" tone="muted" variant="caption">
 													Secret key
-												</p>
+												</Text>
 												<div className="flex items-center justify-between gap-2">
 													<code className="flex-1 select-all break-all font-mono text-xs">
 														{secret}
@@ -389,7 +373,7 @@ export function TwoFactorDialog({
 														size="sm"
 														variant="ghost"
 													>
-														<CopyIcon className="size-4" />
+														<Copy className="size-3.5" />
 													</Button>
 												</div>
 											</div>
@@ -400,22 +384,18 @@ export function TwoFactorDialog({
 						</div>
 					)}
 
-					{/* Step: Verify */}
 					{step === "verify" && (
 						<div className="flex flex-col items-center space-y-6">
 							<div className="flex size-14 items-center justify-center rounded-full bg-primary/10">
-								<ShieldCheckIcon
-									className="size-7 text-primary"
-									weight="duotone"
-								/>
+								<ShieldCheck className="size-7 text-primary" weight="duotone" />
 							</div>
 
 							<div className="space-y-4 text-center">
 								<div className="space-y-1">
-									<p className="font-medium">Enter verification code</p>
-									<p className="text-muted-foreground text-sm">
+									<Text variant="label">Enter verification code</Text>
+									<Text tone="muted" variant="caption">
 										Open your authenticator app and enter the 6-digit code
-									</p>
+									</Text>
 								</div>
 
 								<div className="flex justify-center">
@@ -439,14 +419,13 @@ export function TwoFactorDialog({
 						</div>
 					)}
 
-					{/* Step: Backup Codes */}
 					{step === "backup" && (
 						<div className="space-y-4">
-							<div className="rounded border bg-accent/30 p-4">
+							<div className="rounded-md border border-border/60 bg-secondary/30 p-4">
 								<div className="grid grid-cols-2 gap-2">
 									{backupCodes.map((code, i) => (
 										<code
-											className="rounded bg-background px-2 py-1 text-center font-mono text-sm"
+											className="rounded-md bg-card px-2 py-1 text-center font-mono text-sm"
 											key={i}
 										>
 											{code}
@@ -455,69 +434,65 @@ export function TwoFactorDialog({
 								</div>
 							</div>
 
-							<div className="flex items-center gap-2 rounded border border-amber-500/30 bg-amber-500/10 p-3 text-amber-700 dark:text-amber-400">
-								<WarningCircleIcon className="size-5 shrink-0" />
-								<p className="text-xs">
+							<div className="flex items-center gap-2 rounded-md border border-warning/30 bg-warning/10 p-3 text-warning">
+								<WarningCircle className="size-5 shrink-0" />
+								<Text variant="caption">
 									Store these codes in a safe place. Each code can only be used
 									once to recover your account if you lose access to your
 									authenticator app.
-								</p>
+								</Text>
 							</div>
 						</div>
 					)}
 
-					{/* Step: Manage */}
 					{step === "manage" && (
 						<div className="space-y-4">
-							<div className="flex items-center gap-3 rounded border bg-green-500/10 p-4">
-								<div className="flex size-10 items-center justify-center rounded-full bg-green-500/20">
-									<ShieldCheckIcon
-										className="size-5 text-green-600 dark:text-green-400"
+							<div className="flex items-center gap-3 rounded-md border border-border/60 bg-success/10 p-4">
+								<div className="flex size-10 items-center justify-center rounded-full bg-success/20">
+									<ShieldCheck
+										className="size-5 text-success"
 										weight="duotone"
 									/>
 								</div>
 								<div>
-									<p className="font-medium text-sm">2FA is enabled</p>
-									<p className="text-muted-foreground text-xs">
+									<Text variant="label">2FA is enabled</Text>
+									<Text tone="muted" variant="caption">
 										Your account has an extra layer of security
-									</p>
+									</Text>
 								</div>
 							</div>
 
-							<div className="space-y-2">
-								<Label htmlFor="manage-password">
-									Password (required for changes)
-								</Label>
+							<Field>
+								<Field.Label>Password (required for changes)</Field.Label>
 								<Input
 									autoComplete="current-password"
-									id="manage-password"
 									onChange={(e) => setPassword(e.target.value)}
 									placeholder="••••••••"
 									type="password"
 									value={password}
 								/>
-							</div>
+							</Field>
 
 							{backupCodes.length > 0 && (
-								<div className="rounded border bg-accent/30 p-4">
+								<div className="rounded-md border border-border/60 bg-secondary/30 p-4">
 									<div className="mb-2 flex items-center justify-between">
-										<p className="font-medium text-sm">Backup Codes</p>
+										<Text variant="label">Backup Codes</Text>
 										<Button
 											onClick={handleCopyBackupCodes}
 											size="sm"
 											variant="ghost"
 										>
 											{copiedBackup ? (
-												<CheckCircleIcon className="size-4 text-green-500" />
+												<CheckCircle className="size-3.5 text-success" />
 											) : (
-												<CopyIcon className="size-4" />
+												<Copy className="size-3.5" />
 											)}
 										</Button>
 									</div>
 									<div className="grid grid-cols-2 gap-2">
 										{backupCodes.map((code, i) => (
 											<code
-												className="rounded bg-background px-2 py-1 text-center font-mono text-sm"
+												className="rounded-md bg-card px-2 py-1 text-center font-mono text-sm"
 												key={i}
 											>
 												{code}
@@ -528,21 +503,19 @@ export function TwoFactorDialog({
 							)}
 						</div>
 					)}
-				</div>
+				</Dialog.Body>
 
-				<DialogFooter className="gap-2 sm:gap-2">
+				<Dialog.Footer>
 					{step === "set-password" && (
 						<>
-							<Button onClick={() => onOpenChange(false)} variant="outline">
-								Cancel
-							</Button>
+							<Dialog.Close>
+								<Button variant="secondary">Cancel</Button>
+							</Dialog.Close>
 							<Button
 								disabled={!isNewPasswordValid || isPending}
+								loading={setPasswordMutation.isPending}
 								onClick={() => setPasswordMutation.mutate()}
 							>
-								{setPasswordMutation.isPending && (
-									<CircleNotchIcon className="mr-2 size-4 animate-spin" />
-								)}
 								Set Password & Continue
 							</Button>
 						</>
@@ -550,16 +523,14 @@ export function TwoFactorDialog({
 
 					{step === "password" && (
 						<>
-							<Button onClick={() => onOpenChange(false)} variant="outline">
-								Cancel
-							</Button>
+							<Dialog.Close>
+								<Button variant="secondary">Cancel</Button>
+							</Dialog.Close>
 							<Button
 								disabled={!password || isPending}
+								loading={enableMutation.isPending}
 								onClick={() => enableMutation.mutate()}
 							>
-								{enableMutation.isPending && (
-									<CircleNotchIcon className="mr-2 size-4 animate-spin" />
-								)}
 								Continue
 							</Button>
 						</>
@@ -567,7 +538,7 @@ export function TwoFactorDialog({
 
 					{step === "setup" && (
 						<>
-							<Button onClick={() => setStep("password")} variant="outline">
+							<Button onClick={() => setStep("password")} variant="secondary">
 								Back
 							</Button>
 							<Button onClick={() => setStep("verify")}>
@@ -578,16 +549,14 @@ export function TwoFactorDialog({
 
 					{step === "verify" && (
 						<>
-							<Button onClick={() => setStep("setup")} variant="outline">
+							<Button onClick={() => setStep("setup")} variant="secondary">
 								Back
 							</Button>
 							<Button
 								disabled={verifyCode.length !== 6 || isPending}
+								loading={verifyMutation.isPending}
 								onClick={() => verifyMutation.mutate()}
 							>
-								{verifyMutation.isPending && (
-									<CircleNotchIcon className="mr-2 size-4 animate-spin" />
-								)}
 								Verify & Enable
 							</Button>
 						</>
@@ -598,16 +567,16 @@ export function TwoFactorDialog({
 							<Button
 								className="flex-1"
 								onClick={handleCopyBackupCodes}
-								variant="outline"
+								variant="secondary"
 							>
 								{copiedBackup ? (
 									<>
-										<CheckCircleIcon className="mr-2 size-4 text-green-500" />
+										<CheckCircle className="size-3.5 text-success" />
 										Copied!
 									</>
 								) : (
 									<>
-										<CopyIcon className="mr-2 size-4" />
+										<Copy className="size-3.5" />
 										Copy Codes
 									</>
 								)}
@@ -622,28 +591,24 @@ export function TwoFactorDialog({
 						<>
 							<Button
 								disabled={!password || isPending}
+								loading={regenerateBackupMutation.isPending}
 								onClick={() => regenerateBackupMutation.mutate()}
-								variant="outline"
+								variant="secondary"
 							>
-								{regenerateBackupMutation.isPending && (
-									<CircleNotchIcon className="mr-2 size-4 animate-spin" />
-								)}
 								New Backup Codes
 							</Button>
 							<Button
 								disabled={!password || isPending}
+								loading={disableMutation.isPending}
 								onClick={() => disableMutation.mutate()}
-								variant="destructive"
+								tone="danger"
 							>
-								{disableMutation.isPending && (
-									<CircleNotchIcon className="mr-2 size-4 animate-spin" />
-								)}
 								Disable 2FA
 							</Button>
 						</>
 					)}
-				</DialogFooter>
-			</DialogContent>
+				</Dialog.Footer>
+			</Dialog.Content>
 		</Dialog>
 	);
 }

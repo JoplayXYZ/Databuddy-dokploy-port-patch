@@ -2,7 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import { Dialog as BaseDialog } from "@base-ui-components/react/dialog";
-import { X } from "@phosphor-icons/react/dist/ssr";
+import { XIcon } from "@phosphor-icons/react/dist/ssr";
 import type { ComponentPropsWithoutRef } from "react";
 
 type Side = "left" | "right";
@@ -17,8 +17,8 @@ function Trigger(props: ComponentPropsWithoutRef<typeof BaseDialog.Trigger>) {
 
 const sideStyles: Record<Side, string> = {
 	right:
-		"right-0 data-starting-style:translate-x-full data-ending-style:translate-x-full",
-	left: "left-0 data-starting-style:-translate-x-full data-ending-style:-translate-x-full",
+		"right-2 data-starting-style:translate-x-[calc(100%+0.5rem)] data-ending-style:translate-x-[calc(100%+0.5rem)]",
+	left: "left-2 data-starting-style:-translate-x-[calc(100%+0.5rem)] data-ending-style:-translate-x-[calc(100%+0.5rem)]",
 };
 
 function Content({
@@ -39,9 +39,8 @@ function Content({
 			/>
 			<BaseDialog.Popup
 				className={cn(
-					"fixed top-0 z-50 flex h-full w-full max-w-sm flex-col border-border/60 bg-card shadow-lg",
+					"fixed top-2 bottom-2 z-50 flex w-full max-w-sm flex-col overflow-hidden rounded-lg border border-border/60 bg-card shadow-lg",
 					"transition-transform duration-(--duration-base) ease-(--ease-smooth)",
-					side === "right" ? "border-l" : "border-r",
 					sideStyles[side],
 					className
 				)}
@@ -78,7 +77,7 @@ function Footer({ className, ...rest }: React.HTMLAttributes<HTMLDivElement>) {
 	return (
 		<div
 			className={cn(
-				"angled-rectangle-gradient flex shrink-0 items-center justify-end gap-2 bg-muted px-5 py-3",
+				"flex shrink-0 items-center justify-end gap-2 border-border/60 border-t bg-muted px-5 py-3",
 				className
 			)}
 			{...rest}
@@ -104,7 +103,7 @@ function Description({
 }: ComponentPropsWithoutRef<typeof BaseDialog.Description>) {
 	return (
 		<BaseDialog.Description
-			className={cn("text-[11px] text-muted-foreground", className)}
+			className={cn("text-muted-foreground text-xs", className)}
 			{...rest}
 		/>
 	);
@@ -133,7 +132,7 @@ function Close({
 			)}
 			{...rest}
 		>
-			<X className="size-3.5" />
+			<XIcon className="size-3.5" />
 		</BaseDialog.Close>
 	);
 }

@@ -1,36 +1,27 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { EnvelopeSimple } from "@phosphor-icons/react";
-import { GlobeSimple } from "@phosphor-icons/react";
-import { SlackLogo } from "@phosphor-icons/react";
-import { X } from "@phosphor-icons/react";
+import {
+	EnvelopeSimple,
+	GlobeSimple,
+	Plus,
+	SlackLogo,
+	X,
+} from "@phosphor-icons/react/dist/ssr";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useEffect } from "react";
-import { useFieldArray, useForm } from "react-hook-form";
+import { useEffect, useState } from "react";
+import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { useOrganizationsContext } from "@/components/providers/organizations-provider";
-import { Button } from "@/components/ui/button";
-import {
-	Form,
-	FormControl,
-	FormField,
-	FormItem,
-	FormLabel,
-	FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import {
-	Sheet,
-	SheetBody,
-	SheetContent,
-	SheetDescription,
-	SheetFooter,
-	SheetHeader,
-	SheetTitle,
-} from "@/components/ui/sheet";
-import { Switch } from "@/components/ui/switch";
+import { Accordion } from "@/components/ds/accordion";
+import { Button } from "@/components/ds/button";
+import { Divider } from "@/components/ds/divider";
+import { Field } from "@/components/ds/field";
+import { Input } from "@/components/ds/input";
+import { Sheet } from "@/components/ds/sheet";
+import { Switch } from "@/components/ds/switch";
+import { Text } from "@/components/ds/text";
 import { orpc } from "@/lib/orpc";
 
 type DestType = "slack" | "email" | "webhook";
@@ -119,6 +110,87 @@ function buildDefaults(alarm: AlarmData | null | undefined): AlarmFormData {
 	};
 }
 
+function toHeaderPairs(config: Record<string, unknown> | undefined) {
+	const raw = (config?.headers ?? {}) as Record<string, string>;
+	return Object.entries(raw).map(([name, value]) => ({ name, value }));
+}
+
+function fromHeaderPairs(pairs: { name: string; value: string }[]) {
+	const out: Record<string, string> = {};
+	for (const { name, value } of pairs) {
+		if (name) {
+			out[name] = value;
+		}
+	}
+	return out;
+}
+
+function WebhookHeaders({
+	config,
+	onChange,
+}: {
+	config: Record<string, unknown> | undefined;
+	onChange: (headers: Record<string, string>) => void;
+}) {
+	const [pairs, setPairs] = useState(() => toHeaderPairs(config));
+
+	const update = (next: { name: string; value: string }[]) => {
+		setPairs(next);
+		onChange(fromHeaderPairs(next));
+	};
+
+	return (
+		<div className="mt-3 space-y-2">
+			<div className="flex items-center justify-between">
+				<Text variant="label">
+					Headers{" "}
+					<span className="font-normal text-muted-foreground">(optional)</span>
+				</Text>
+				<button
+					className="flex items-center gap-1 rounded px-1.5 py-0.5 text-muted-foreground text-xs transition-colors hover:bg-interactive-hover hover:text-foreground"
+					onClick={() => update([...pairs, { name: "", value: "" }])}
+					type="button"
+				>
+					<Plus className="size-3" />
+					Add
+				</button>
+			</div>
+			{pairs.map((pair, i) => (
+				<div className="flex items-center gap-1.5" key={i}>
+					<Input
+						className="flex-1 font-mono text-xs"
+						onChange={(e) => {
+							const next = [...pairs];
+							next[i] = { ...pair, name: e.target.value };
+							update(next);
+						}}
+						placeholder="Header name"
+						value={pair.name}
+					/>
+					<Input
+						className="flex-[2] font-mono text-xs"
+						onChange={(e) => {
+							const next = [...pairs];
+							next[i] = { ...pair, value: e.target.value };
+							update(next);
+						}}
+						placeholder="Value"
+						value={pair.value}
+					/>
+					<button
+						aria-label="Remove header"
+						className="shrink-0 rounded p-1 text-muted-foreground transition-colors hover:text-destructive"
+						onClick={() => update(pairs.filter((_, j) => j !== i))}
+						type="button"
+					>
+						<X className="size-3" />
+					</button>
+				</div>
+			))}
+		</div>
+	);
+}
+
 export function AlarmSheet({
 	open,
 	onCloseAction,
@@ -197,9 +269,7 @@ export function AlarmSheet({
 			});
 			onSaveAction?.();
 			onCloseAction(false);
-		} catch {
-			// error toast handled by global handler
-		}
+		} catch {}
 	};
 
 	const addDestination = (type: DestType) => {
@@ -208,118 +278,124 @@ export function AlarmSheet({
 
 	return (
 		<Sheet onOpenChange={onCloseAction} open={open}>
-			<SheetContent className="w-full sm:max-w-lg">
-				<SheetHeader>
-					<SheetTitle>{isEditing ? "Edit Alert" : "New Alert"}</SheetTitle>
-					<SheetDescription>
+			<Sheet.Content className="w-full sm:max-w-lg">
+				<Sheet.Header>
+					<Sheet.Title>{isEditing ? "Edit Alert" : "New Alert"}</Sheet.Title>
+					<Sheet.Description>
 						{isEditing
 							? "Update this alert's destinations and settings."
 							: "Configure where notifications are sent. Attach this alert to monitors and rules later."}
-					</SheetDescription>
-				</SheetHeader>
+					</Sheet.Description>
+				</Sheet.Header>
 
-				<Form {...form}>
-					<form
-						className="flex flex-1 flex-col overflow-hidden"
-						onSubmit={form.handleSubmit(handleSubmit)}
-					>
-						<SheetBody className="space-y-6">
-							<FormField
-								control={form.control}
-								name="name"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>Name</FormLabel>
-										<FormControl>
-											<Input
-												placeholder="e.g. Production Slack, Oncall webhook"
-												{...field}
-											/>
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-
-							<FormField
-								control={form.control}
-								name="description"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>
-											Description{" "}
-											<span className="text-muted-foreground">(optional)</span>
-										</FormLabel>
-										<FormControl>
-											<Input
-												placeholder="Team notes about this alert"
-												{...field}
-											/>
-										</FormControl>
-									</FormItem>
-								)}
-							/>
-
-							{isEditing && (
-								<FormField
-									control={form.control}
-									name="enabled"
-									render={({ field }) => (
-										<FormItem className="flex items-center justify-between gap-4 space-y-0 rounded-lg border p-3">
-											<div>
-												<FormLabel className="font-normal text-sm">
-													Enabled
-												</FormLabel>
-												<p className="text-muted-foreground text-xs">
-													Paused alerts won't fire even when triggered
-												</p>
-											</div>
-											<FormControl>
-												<Switch
-													checked={field.value}
-													onCheckedChange={field.onChange}
-												/>
-											</FormControl>
-										</FormItem>
+				<form
+					className="flex flex-1 flex-col overflow-hidden"
+					onSubmit={form.handleSubmit(handleSubmit)}
+				>
+					<Sheet.Body className="space-y-6">
+						<Controller
+							control={form.control}
+							name="name"
+							render={({ field, fieldState }) => (
+								<Field error={!!fieldState.error}>
+									<Field.Label>Name</Field.Label>
+									<Input
+										placeholder="e.g. Production Slack, Oncall webhook"
+										{...field}
+									/>
+									{fieldState.error && (
+										<Field.Error>{fieldState.error.message}</Field.Error>
 									)}
-								/>
+								</Field>
+							)}
+						/>
+
+						<Controller
+							control={form.control}
+							name="description"
+							render={({ field }) => (
+								<Field>
+									<Field.Label>
+										Description{" "}
+										<span className="text-muted-foreground">(optional)</span>
+									</Field.Label>
+									<Input placeholder="Team notes about this alert" {...field} />
+								</Field>
+							)}
+						/>
+
+						{isEditing && (
+							<Controller
+								control={form.control}
+								name="enabled"
+								render={({ field }) => (
+									<div className="flex items-center justify-between gap-4 rounded-md border border-border/60 p-3">
+										<div>
+											<Text variant="label">Enabled</Text>
+											<Text tone="muted" variant="caption">
+												Paused alerts won't fire even when triggered
+											</Text>
+										</div>
+										<Switch
+											checked={field.value}
+											onCheckedChange={field.onChange}
+										/>
+									</div>
+								)}
+							/>
+						)}
+
+						<Divider />
+
+						<div className="space-y-3">
+							<Text variant="label">Destinations</Text>
+
+							{form.formState.errors.destinations?.root && (
+								<Text tone="destructive" variant="caption">
+									{form.formState.errors.destinations.root.message}
+								</Text>
 							)}
 
-							<div className="h-px bg-border" />
+							<div className="space-y-2">
+								{fields.map((field, index) => {
+									const destType = form.watch(
+										`destinations.${index}.type`
+									) as DestType;
+									const channel = CHANNELS[destType];
+									const Icon = channel?.icon ?? GlobeSimple;
+									const identifier = form.watch(
+										`destinations.${index}.identifier`
+									);
 
-							<div className="space-y-3">
-								<p className="font-medium text-sm">Destinations</p>
-
-								{form.formState.errors.destinations?.root && (
-									<p className="text-destructive text-xs">
-										{form.formState.errors.destinations.root.message}
-									</p>
-								)}
-
-								<div className="space-y-2">
-									{fields.map((field, index) => {
-										const destType = form.watch(
-											`destinations.${index}.type`
-										) as DestType;
-										const channel = CHANNELS[destType];
-										const Icon = channel?.icon ?? GlobeSimple;
-
-										return (
-											<div className="rounded-lg border" key={field.id}>
-												<div className="flex items-center justify-between border-b px-3 py-2">
-													<div className="flex items-center gap-2">
+									return (
+										<div
+											className="rounded-md border border-border/60"
+											key={field.id}
+										>
+											<Accordion defaultOpen={!identifier}>
+												<div className="flex items-center">
+													<Accordion.Trigger className="flex-1">
 														<Icon
-															className="size-4 text-muted-foreground"
+															className="size-4 shrink-0 text-muted-foreground"
 															weight="duotone"
 														/>
-														<span className="font-medium text-sm">
+														<Text variant="label">
 															{channel?.label ?? destType}
-														</span>
-													</div>
+														</Text>
+														{identifier && (
+															<Text
+																className="ml-auto max-w-[140px] truncate"
+																tone="muted"
+																variant="caption"
+															>
+																{identifier}
+															</Text>
+														)}
+													</Accordion.Trigger>
 													{fields.length > 1 && (
 														<button
 															aria-label="Remove destination"
-															className="rounded p-0.5 text-muted-foreground transition-colors hover:text-destructive"
+															className="shrink-0 rounded p-2 text-muted-foreground transition-colors hover:text-destructive"
 															onClick={() => remove(index)}
 															type="button"
 														>
@@ -327,123 +403,93 @@ export function AlarmSheet({
 														</button>
 													)}
 												</div>
-
-												<div className="space-y-3 p-3">
-													<FormField
+												<Accordion.Content>
+													<Controller
 														control={form.control}
 														name={`destinations.${index}.identifier`}
-														render={({ field: idField }) => (
-															<FormItem className="space-y-1.5">
-																<FormLabel className="text-xs">
+														render={({ field: idField, fieldState }) => (
+															<Field error={!!fieldState.error}>
+																<Field.Label>
 																	{channel?.fieldLabel ?? "Identifier"}
-																</FormLabel>
-																<FormControl>
-																	<Input
-																		className="h-9"
-																		placeholder={channel?.placeholder ?? ""}
-																		{...idField}
-																	/>
-																</FormControl>
-																<FormMessage />
-															</FormItem>
+																</Field.Label>
+																<Input
+																	placeholder={channel?.placeholder ?? ""}
+																	{...idField}
+																/>
+																{fieldState.error && (
+																	<Field.Error>
+																		{fieldState.error.message}
+																	</Field.Error>
+																)}
+															</Field>
 														)}
 													/>
 
 													{destType === "webhook" && (
-														<FormItem className="space-y-1.5">
-															<FormLabel className="text-xs">
-																Custom headers{" "}
-																<span className="text-muted-foreground">
-																	(optional)
-																</span>
-															</FormLabel>
-															<Input
-																className="h-9 font-mono text-xs"
-																onChange={(e) => {
-																	try {
-																		const parsed = JSON.parse(e.target.value);
-																		form.setValue(
-																			`destinations.${index}.config`,
-																			{
-																				...form.getValues(
-																					`destinations.${index}.config`
-																				),
-																				headers: parsed,
-																			}
-																		);
-																	} catch {
-																		// allow typing
-																	}
-																}}
-																placeholder='{"Authorization": "Bearer ..."}'
-																value={
-																	form.watch(`destinations.${index}.config`)
-																		?.headers
-																		? JSON.stringify(
-																				form.watch(
-																					`destinations.${index}.config`
-																				)?.headers
-																			)
-																		: ""
-																}
-															/>
-														</FormItem>
+														<WebhookHeaders
+															config={form.watch(
+																`destinations.${index}.config`
+															)}
+															onChange={(headers) =>
+																form.setValue(`destinations.${index}.config`, {
+																	...form.getValues(
+																		`destinations.${index}.config`
+																	),
+																	headers,
+																})
+															}
+														/>
 													)}
-												</div>
-											</div>
-										);
-									})}
-								</div>
-
-								<div className="flex gap-2">
-									{(
-										Object.entries(CHANNELS) as [
-											DestType,
-											(typeof CHANNELS)[DestType],
-										][]
-									).map(([type, config]) => {
-										const Icon = config.icon;
-										return (
-											<Button
-												className="gap-1.5"
-												key={type}
-												onClick={() => addDestination(type)}
-												size="sm"
-												type="button"
-												variant="outline"
-											>
-												<Icon className="size-3.5" weight="duotone" />
-												{config.label}
-											</Button>
-										);
-									})}
-								</div>
+												</Accordion.Content>
+											</Accordion>
+										</div>
+									);
+								})}
 							</div>
-						</SheetBody>
 
-						<SheetFooter>
-							<Button
-								onClick={() => onCloseAction(false)}
-								type="button"
-								variant="outline"
-							>
-								Cancel
-							</Button>
-							<Button
-								className="min-w-28"
-								disabled={isPending || !form.formState.isValid}
-								type="submit"
-							>
-								{isPending
-									? "Saving..."
-									: isEditing
-										? "Save Changes"
-										: "Create Alert"}
-							</Button>
-						</SheetFooter>
-					</form>
-				</Form>
-			</SheetContent>
+							<div className="flex gap-2">
+								{(
+									Object.entries(CHANNELS) as [
+										DestType,
+										(typeof CHANNELS)[DestType],
+									][]
+								).map(([type, config]) => {
+									const Icon = config.icon;
+									return (
+										<Button
+											key={type}
+											onClick={() => addDestination(type)}
+											size="sm"
+											type="button"
+											variant="secondary"
+										>
+											<Icon className="size-3.5" weight="duotone" />
+											{config.label}
+										</Button>
+									);
+								})}
+							</div>
+						</div>
+					</Sheet.Body>
+
+					<Sheet.Footer>
+						<Button
+							onClick={() => onCloseAction(false)}
+							type="button"
+							variant="secondary"
+						>
+							Cancel
+						</Button>
+						<Button
+							disabled={isPending || !form.formState.isValid}
+							loading={isPending}
+							type="submit"
+						>
+							{isEditing ? "Save Changes" : "Create Alert"}
+						</Button>
+					</Sheet.Footer>
+				</form>
+			</Sheet.Content>
 		</Sheet>
 	);
 }

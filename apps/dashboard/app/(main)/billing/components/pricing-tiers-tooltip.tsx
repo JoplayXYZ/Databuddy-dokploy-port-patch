@@ -1,11 +1,7 @@
 "use client";
 
-import { Info } from "@phosphor-icons/react";
-import {
-	HoverCard,
-	HoverCardContent,
-	HoverCardTrigger,
-} from "@/components/ui/hover-card";
+import { InfoIcon } from "@phosphor-icons/react/dist/ssr";
+import { Tooltip } from "@/components/ds/tooltip";
 import { formatLocaleNumber } from "@/lib/format-locale-number";
 import { cn } from "@/lib/utils";
 
@@ -56,25 +52,12 @@ export function PricingTiersTooltip({
 	};
 
 	return (
-		<HoverCard>
-			<HoverCardTrigger asChild>
-				<button
-					className={cn(
-						"inline-flex cursor-help items-center gap-1 text-muted-foreground text-xs hover:text-foreground",
-						!showText && "rounded-full p-1 hover:bg-muted/50",
-						className
-					)}
-					type="button"
-				>
-					<Info size={12} />
-					{showText && <span>View pricing tiers</span>}
-				</button>
-			</HoverCardTrigger>
-			<HoverCardContent align="start" className="w-80" side="top">
-				<div className="space-y-3">
+		<Tooltip
+			content={
+				<div className="w-64 space-y-3 p-1">
 					<div>
 						<h4 className="font-semibold text-sm">Tiered Pricing Structure</h4>
-						<p className="text-muted-foreground text-xs">
+						<p className="text-xs opacity-70">
 							Lower rates for higher usage volumes
 						</p>
 					</div>
@@ -84,7 +67,7 @@ export function PricingTiersTooltip({
 								className="flex items-center justify-between text-xs"
 								key={tier.to}
 							>
-								<span className="text-muted-foreground">
+								<span className="opacity-70">
 									{formatTierRange(tier, tiers.indexOf(tier))} events
 								</span>
 								<span className="font-medium font-mono">
@@ -93,11 +76,24 @@ export function PricingTiersTooltip({
 							</div>
 						))}
 					</div>
-					<div className="border-t pt-2 text-muted-foreground text-xs">
+					<div className="border-current/10 border-t pt-2 text-xs opacity-70">
 						You only pay the tier rate for usage within that range
 					</div>
 				</div>
-			</HoverCardContent>
-		</HoverCard>
+			}
+			side="top"
+		>
+			<button
+				className={cn(
+					"inline-flex cursor-help items-center gap-1 text-muted-foreground text-xs hover:text-foreground",
+					!showText && "rounded-full p-1 hover:bg-muted/50",
+					className
+				)}
+				type="button"
+			>
+				<InfoIcon size={12} />
+				{showText && <span>View pricing tiers</span>}
+			</button>
+		</Tooltip>
 	);
 }

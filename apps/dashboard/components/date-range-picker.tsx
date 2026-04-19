@@ -1,17 +1,15 @@
 "use client";
 
-import { CalendarDotsIcon } from "@phosphor-icons/react";
-import { CaretRightIcon } from "@phosphor-icons/react";
-import { CheckIcon } from "@phosphor-icons/react";
+import {
+	CalendarDotsIcon,
+	CaretRightIcon,
+	CheckIcon,
+} from "@phosphor-icons/react/dist/ssr";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { DateRange } from "react-day-picker";
-import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import {
-	Popover,
-	PopoverContent,
-	PopoverTrigger,
-} from "@/components/ui/popover";
+import { Button } from "@/components/ds/button";
+import { Calendar } from "@/components/ds/calendar";
+import { Popover } from "@/components/ds/popover";
 import { useIsMobile } from "@/hooks/use-mobile";
 import dayjs from "@/lib/dayjs";
 import { formatLocalTime } from "@/lib/time";
@@ -76,7 +74,7 @@ const PRESET_RANGES: PresetRange[] = [
 		label: "Last 90 days",
 		getValue: () => ({
 			from: dayjs().subtract(89, "day").startOf("day").toDate(),
-			to: dayjs().endOf("day").toDate(),
+			to: dayjs().subtract(1, "month").endOf("month").toDate(),
 		}),
 	},
 ];
@@ -193,29 +191,29 @@ export function DateRangePicker({
 	return (
 		<div className={cn("grid gap-2", className)}>
 			<Popover onOpenChange={handleOpenChange} open={isOpen}>
-				<PopoverTrigger asChild>
-					<Button
-						className={cn(
-							"h-8 justify-start gap-2 whitespace-nowrap px-3 text-left font-medium text-xs",
-							!value?.from && "text-muted-foreground"
-						)}
-						disabled={disabled}
-						variant="outline"
-					>
-						<CalendarDotsIcon className="size-4" weight="duotone" />
-						<span className="truncate">{formatDisplayRange(value)}</span>
-					</Button>
-				</PopoverTrigger>
-
-				<PopoverContent
-					align="end"
-					className="w-auto overflow-hidden p-0"
-					sideOffset={4}
+				<Popover.Trigger
+					className={cn(
+						"inline-flex h-8 cursor-pointer items-center justify-start gap-2 whitespace-nowrap rounded-md bg-secondary px-3 text-left font-medium text-foreground text-xs",
+						"transition-colors duration-(--duration-quick) ease-(--ease-smooth)",
+						"hover:bg-interactive-hover",
+						"focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
+						"disabled:pointer-events-none disabled:opacity-50",
+						!value?.from && "text-muted-foreground"
+					)}
+					disabled={disabled}
 				>
+					<CalendarDotsIcon
+						className="size-3.5 text-muted-foreground"
+						weight="duotone"
+					/>
+					<span className="truncate">{formatDisplayRange(value)}</span>
+				</Popover.Trigger>
+
+				<Popover.Content className="w-auto overflow-hidden p-0" side="bottom">
 					<div className="flex">
-						<div className="hidden w-40 shrink-0 border-r bg-background sm:block">
-							<div className="p-2">
-								<p className="px-2 py-1.5 font-medium text-[11px] text-muted-foreground uppercase">
+						<div className="hidden w-36 shrink-0 border-border/60 border-r sm:block">
+							<div className="p-1.5">
+								<p className="px-2 py-1.5 font-medium text-muted-foreground text-xs uppercase">
 									Quick select
 								</p>
 								<div className="space-y-0.5">
@@ -224,17 +222,18 @@ export function DateRangePicker({
 										return (
 											<button
 												className={cn(
-													"flex w-full items-center justify-between rounded px-2 py-1.5 text-left text-sm",
+													"flex w-full cursor-pointer items-center justify-between rounded-md px-2 py-1.5 text-left text-xs",
+													"transition-colors duration-(--duration-quick) ease-(--ease-smooth)",
 													isActive
-														? "bg-brand-purple text-white"
-														: "text-muted-foreground hover:bg-secondary hover:text-foreground"
+														? "bg-primary text-primary-foreground"
+														: "text-muted-foreground hover:bg-interactive-hover hover:text-foreground"
 												)}
 												key={preset.label}
 												onClick={() => handlePresetSelect(preset)}
 												type="button"
 											>
 												<span>{preset.label}</span>
-												{isActive && <CheckIcon className="size-3.5" />}
+												{isActive && <CheckIcon className="size-3" />}
 											</button>
 										);
 									})}
@@ -243,30 +242,30 @@ export function DateRangePicker({
 						</div>
 
 						<div className="flex flex-col">
-							<div className="flex items-center justify-between border-b bg-secondary px-4 py-3">
+							<div className="flex items-center justify-between border-border/60 border-b px-4 py-2.5">
 								<div className="flex items-center gap-2">
 									{tempRange?.from ? (
 										<>
-											<div className="rounded bg-background px-2.5 py-1 shadow-sm">
-												<span className="font-semibold text-foreground text-sm tabular-nums">
+											<div className="rounded-md bg-secondary px-2 py-1">
+												<span className="font-medium text-foreground text-xs tabular-nums">
 													{formatLocalTime(tempRange.from, "MMM D")}
 												</span>
 											</div>
 											<CaretRightIcon
-												className="size-3.5 text-muted-foreground"
+												className="size-3 text-muted-foreground"
 												weight="bold"
 											/>
 											<div
 												className={cn(
-													"rounded px-2.5 py-1",
+													"rounded-md px-2 py-1",
 													tempRange?.to
-														? "bg-background shadow-sm"
-														: "border border-muted-foreground/40 border-dashed"
+														? "bg-secondary"
+														: "border border-border border-dashed"
 												)}
 											>
 												<span
 													className={cn(
-														"font-semibold text-sm tabular-nums",
+														"font-medium text-xs tabular-nums",
 														tempRange?.to
 															? "text-foreground"
 															: "text-muted-foreground"
@@ -279,27 +278,28 @@ export function DateRangePicker({
 											</div>
 										</>
 									) : (
-										<span className="text-muted-foreground text-sm">
+										<span className="text-muted-foreground text-xs">
 											Select a date range
 										</span>
 									)}
 								</div>
 								{daysDiff > 0 && (
-									<span className="rounded-full bg-brand-purple/15 px-2 py-0.5 font-semibold text-brand-purple text-xs tabular-nums">
+									<span className="ml-3 rounded-md bg-primary/10 px-2 py-0.5 font-medium text-primary text-xs tabular-nums">
 										{daysDiff} day{daysDiff === 1 ? "" : "s"}
 									</span>
 								)}
 							</div>
 
-							<div className="flex gap-1.5 overflow-x-auto border-b bg-background p-2 sm:hidden">
+							<div className="flex gap-1 overflow-x-auto border-border/60 border-b p-1.5 sm:hidden">
 								{PRESET_RANGES.slice(0, 5).map((preset) => {
 									const isActive = activePreset?.label === preset.label;
 									return (
 										<button
 											className={cn(
-												"shrink-0 rounded px-2.5 py-1.5 font-medium text-xs",
+												"shrink-0 cursor-pointer rounded-md px-2.5 py-1.5 font-medium text-xs",
+												"transition-colors duration-(--duration-quick) ease-(--ease-smooth)",
 												isActive
-													? "bg-brand-purple text-white"
+													? "bg-primary text-primary-foreground"
 													: "bg-secondary text-muted-foreground"
 											)}
 											key={preset.label}
@@ -312,7 +312,7 @@ export function DateRangePicker({
 								})}
 							</div>
 
-							<div className="p-3">
+							<div className="p-2">
 								<Calendar
 									defaultMonth={tempRange?.from || value?.from || new Date()}
 									disabled={(date) => {
@@ -331,7 +331,7 @@ export function DateRangePicker({
 								/>
 							</div>
 
-							<div className="angled-rectangle-gradient flex items-center justify-end gap-2 border-t bg-secondary px-4 py-3">
+							<div className="flex items-center justify-end gap-2 border-border/60 border-t px-3 py-2.5">
 								<Button
 									onClick={() => handleOpenChange(false)}
 									size="sm"
@@ -349,7 +349,7 @@ export function DateRangePicker({
 							</div>
 						</div>
 					</div>
-				</PopoverContent>
+				</Popover.Content>
 			</Popover>
 		</div>
 	);

@@ -70,10 +70,7 @@ export const Tool = ({
 export type ToolDetailProps = ComponentProps<"div">;
 
 export const ToolDetail = ({ className, ...props }: ToolDetailProps) => (
-	<div
-		className={cn("space-y-1 pt-1 pb-1 pl-3.5", className)}
-		{...props}
-	/>
+	<div className={cn("space-y-1 pt-1 pb-1 pl-3.5", className)} {...props} />
 );
 
 export interface ToolInputProps {

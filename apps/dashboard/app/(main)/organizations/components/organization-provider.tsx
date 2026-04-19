@@ -5,9 +5,7 @@ import { BuildingsIcon } from "@phosphor-icons/react";
 import { EnvelopeIcon } from "@phosphor-icons/react";
 import { GearIcon } from "@phosphor-icons/react";
 import { GlobeIcon } from "@phosphor-icons/react";
-import { KeyIcon } from "@phosphor-icons/react";
 import { UsersIcon } from "@phosphor-icons/react";
-import { WarningIcon } from "@phosphor-icons/react";
 import { useAtomValue } from "jotai";
 import { usePathname } from "next/navigation";
 import { useMemo, useState } from "react";
@@ -65,18 +63,6 @@ const PAGE_INFO_MAP: Record<string, PageInfo> = {
 		title: "Website Management",
 		description: "Manage websites associated with this organization",
 		icon: GlobeIcon,
-		requiresOrg: true,
-	},
-	"/organizations/settings/api-keys": {
-		title: "API Keys",
-		description: "Create and manage API keys for this organization",
-		icon: KeyIcon,
-		requiresOrg: true,
-	},
-	"/organizations/settings/danger": {
-		title: "Danger Zone",
-		description: "Irreversible and destructive actions",
-		icon: WarningIcon,
 		requiresOrg: true,
 	},
 };
@@ -204,7 +190,7 @@ export function OrganizationProvider({
 
 			{activeOrganization && (
 				<InviteMemberDialog
-					onOpenChange={setShowInviteMemberDialog}
+					onOpenChangeAction={setShowInviteMemberDialog}
 					open={showInviteMemberDialog}
 					organizationId={activeOrganization.id}
 				/>

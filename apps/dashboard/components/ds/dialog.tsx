@@ -2,7 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import { Dialog as BaseDialog } from "@base-ui-components/react/dialog";
-import { X } from "@phosphor-icons/react/dist/ssr";
+import { XIcon } from "@phosphor-icons/react/dist/ssr";
 import type { ComponentPropsWithoutRef } from "react";
 
 function Root(props: ComponentPropsWithoutRef<typeof BaseDialog.Root>) {
@@ -88,7 +88,7 @@ function Description({
 }: ComponentPropsWithoutRef<typeof BaseDialog.Description>) {
 	return (
 		<BaseDialog.Description
-			className={cn("text-[11px] text-muted-foreground", className)}
+			className={cn("text-muted-foreground text-xs", className)}
 			{...rest}
 		/>
 	);
@@ -117,7 +117,7 @@ function Close({
 			)}
 			{...rest}
 		>
-			<X className="size-3.5" />
+			<XIcon className="size-3.5" />
 		</BaseDialog.Close>
 	);
 }

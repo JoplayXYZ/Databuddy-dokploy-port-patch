@@ -1,31 +1,45 @@
 "use client";
 
-import { ArrowSquareOutIcon } from "@phosphor-icons/react";
-import { CheckCircleIcon } from "@phosphor-icons/react";
-import { ClockIcon } from "@phosphor-icons/react";
-import { FileTextIcon } from "@phosphor-icons/react";
-import { ReceiptIcon } from "@phosphor-icons/react";
-import { XCircleIcon } from "@phosphor-icons/react";
+import {
+	ArrowSquareOutIcon,
+	CaretLeftIcon,
+	CaretRightIcon,
+	CheckCircleIcon,
+	ClockIcon,
+	FileTextIcon,
+	ReceiptIcon,
+	XCircleIcon,
+} from "@phosphor-icons/react/dist/ssr";
 import type { Invoice } from "autumn-js";
-import { memo, useMemo } from "react";
-import { EmptyState } from "@/components/empty-state";
-import { RightSidebar } from "@/components/right-sidebar";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+import { memo, useMemo, useState } from "react";
+import { Badge } from "@/components/ds/badge";
+import { Button } from "@/components/ds/button";
+import { Card } from "@/components/ds/card";
+import { EmptyState } from "@/components/ds/empty-state";
+import { Skeleton } from "@/components/ds/skeleton";
+import { Text } from "@/components/ds/text";
 import dayjs from "@/lib/dayjs";
 import { cn } from "@/lib/utils";
 import { ErrorState } from "../components/empty-states";
 import { useBilling, useBillingData } from "../hooks/use-billing";
 
+const PAGE_SIZE = 10;
+
 export default function HistoryPage() {
 	const { customerData, isLoading, error, refetch } = useBillingData();
 	const { onManageBilling } = useBilling();
+	const [page, setPage] = useState(0);
 
 	const invoices = customerData?.invoices ?? [];
 	const sortedInvoices = useMemo(
 		() => [...invoices].sort((a, b) => b.createdAt - a.createdAt),
 		[invoices]
+	);
+
+	const totalPages = Math.ceil(sortedInvoices.length / PAGE_SIZE);
+	const paginatedInvoices = sortedInvoices.slice(
+		page * PAGE_SIZE,
+		(page + 1) * PAGE_SIZE
 	);
 
 	const subscriptionHistory = useMemo(() => {
@@ -37,7 +51,7 @@ export default function HistoryPage() {
 
 	if (isLoading) {
 		return (
-			<main className="min-h-0 flex-1 overflow-hidden">
+			<main className="min-h-0 flex-1 overflow-y-auto">
 				<HistorySkeleton />
 			</main>
 		);
@@ -45,64 +59,99 @@ export default function HistoryPage() {
 
 	if (error) {
 		return (
-			<main className="min-h-0 flex-1 overflow-hidden">
-				<ErrorState error={error} onRetry={refetch} />
+			<main className="min-h-0 flex-1 overflow-y-auto">
+				<div className="mx-auto max-w-2xl p-5">
+					<ErrorState error={error} onRetry={refetch} />
+				</div>
 			</main>
 		);
 	}
 
 	return (
-		<main className="min-h-0 flex-1 overflow-hidden">
-			<div className="flex h-full flex-col overflow-y-auto lg:grid lg:h-full lg:grid-cols-[1fr_20rem] lg:overflow-hidden">
-				<div className="shrink-0 lg:h-full lg:min-h-0 lg:overflow-y-auto">
-					{sortedInvoices.length === 0 ? (
-						<EmptyState
-							className="h-full"
-							description="Invoices will appear here after your first payment"
-							icon={<ReceiptIcon />}
-							title="No invoices yet"
-							variant="minimal"
-						/>
-					) : (
-						<div className="divide-y">
-							{sortedInvoices.map((invoice) => (
-								<InvoiceRow invoice={invoice} key={invoice.stripeId} />
-							))}
+		<main className="min-h-0 flex-1 overflow-y-auto">
+			<div className="mx-auto max-w-2xl space-y-6 p-5">
+				<Card>
+					<Card.Header className="flex-row items-start justify-between gap-4">
+						<div>
+							<Card.Title>Invoices</Card.Title>
+							<Card.Description>
+								{sortedInvoices.length === 0
+									? "Invoices will appear here after your first payment"
+									: `${sortedInvoices.length} invoice${sortedInvoices.length === 1 ? "" : "s"}`}
+							</Card.Description>
 						</div>
-					)}
-				</div>
-
-				{/* Sidebar - Subscription History + Actions */}
-				<RightSidebar>
-					<div className="border-b p-5">
-						<h3 className="font-semibold">Subscription History</h3>
-						{subscriptionHistory.length === 0 ? (
-							<p className="text-muted-foreground text-sm">
-								No subscription history yet
-							</p>
+						<Button onClick={onManageBilling} size="sm" variant="secondary">
+							<ArrowSquareOutIcon size={14} />
+							Billing Portal
+						</Button>
+					</Card.Header>
+					<Card.Content className="p-0">
+						{sortedInvoices.length === 0 ? (
+							<div className="px-5 py-8">
+								<EmptyState
+									icon={<ReceiptIcon weight="duotone" />}
+									title="No invoices yet"
+								/>
+							</div>
 						) : (
-							<div className="space-y-3">
+							<>
+								<div className="divide-y">
+									{paginatedInvoices.map((invoice) => (
+										<InvoiceRow invoice={invoice} key={invoice.stripeId} />
+									))}
+								</div>
+								{totalPages > 1 && (
+									<div className="flex items-center justify-between border-t px-5 py-3">
+										<Text tone="muted" variant="caption">
+											{page * PAGE_SIZE + 1}–
+											{Math.min((page + 1) * PAGE_SIZE, sortedInvoices.length)}{" "}
+											of {sortedInvoices.length}
+										</Text>
+										<div className="flex items-center gap-1">
+											<Button
+												aria-label="Previous page"
+												disabled={page === 0}
+												onClick={() => setPage((p) => p - 1)}
+												size="sm"
+												variant="ghost"
+											>
+												<CaretLeftIcon size={14} />
+											</Button>
+											<Button
+												aria-label="Next page"
+												disabled={page >= totalPages - 1}
+												onClick={() => setPage((p) => p + 1)}
+												size="sm"
+												variant="ghost"
+											>
+												<CaretRightIcon size={14} />
+											</Button>
+										</div>
+									</div>
+								)}
+							</>
+						)}
+					</Card.Content>
+				</Card>
+
+				{subscriptionHistory.length > 0 && (
+					<Card>
+						<Card.Header>
+							<Card.Title>Subscription History</Card.Title>
+							<Card.Description>
+								{subscriptionHistory.length} subscription
+								{subscriptionHistory.length === 1 ? "" : "s"}
+							</Card.Description>
+						</Card.Header>
+						<Card.Content className="p-0">
+							<div className="divide-y">
 								{subscriptionHistory.map((sub) => (
 									<SubscriptionItem key={sub.id} sub={sub} />
 								))}
 							</div>
-						)}
-					</div>
-
-					<div className="grid gap-5 p-5 sm:grid-cols-2 lg:grid-cols-1 lg:gap-0 lg:p-0">
-						<div className="w-full lg:w-auto lg:border-b lg:p-5">
-							<h3 className="mb-3 font-semibold">Billing Summary</h3>
-							<BillingSummary invoices={sortedInvoices} />
-						</div>
-
-						<div className="flex w-full flex-col gap-2 lg:w-auto lg:p-5">
-							<Button className="w-full" onClick={onManageBilling}>
-								Billing Portal
-								<ArrowSquareOutIcon size={14} />
-							</Button>
-						</div>
-					</div>
-				</RightSidebar>
+						</Card.Content>
+					</Card>
+				)}
 			</div>
 		</main>
 	);
@@ -118,65 +167,59 @@ const InvoiceRow = memo(function InvoiceRowComponent({
 	const amount = formatCurrency(invoice.total, invoice.currency);
 
 	return (
-		<div className="px-5 py-4">
-			<div className="flex items-center justify-between">
-				<div className="flex items-center gap-3">
-					<div
+		<div className="flex items-center justify-between gap-3 px-5 py-3">
+			<div className="flex min-w-0 items-center gap-3">
+				<div
+					className={cn(
+						"flex size-8 shrink-0 items-center justify-center rounded border",
+						status.variant === "success"
+							? "border-green-600/30 bg-green-500/10 dark:border-green-800 dark:bg-green-900/30"
+							: status.variant === "warning"
+								? "border-amber-600/30 bg-amber-500/10 dark:border-amber-800 dark:bg-amber-900/30"
+								: status.variant === "destructive"
+									? "border-red-600/30 bg-red-500/10 dark:border-red-800 dark:bg-red-900/30"
+									: "border-border bg-secondary"
+					)}
+				>
+					<status.icon
 						className={cn(
-							"flex size-10 shrink-0 items-center justify-center rounded border",
-							status.variant === "green"
-								? "border-green-600 bg-green-100 dark:border-green-800 dark:bg-green-900/30"
-								: status.variant === "amber"
-									? "border-amber-600 bg-amber-100 dark:border-amber-800 dark:bg-amber-900/30"
+							"size-3.5",
+							status.variant === "success"
+								? "text-green-600 dark:text-green-400"
+								: status.variant === "warning"
+									? "text-amber-600 dark:text-amber-400"
 									: status.variant === "destructive"
-										? "border-destructive bg-destructive-100 dark:border-destructive-800 dark:bg-destructive-900/30"
-										: "border-muted-foreground bg-muted dark:border-muted-foreground dark:bg-muted/30"
+										? "text-red-600 dark:text-red-400"
+										: "text-muted-foreground"
 						)}
-					>
-						<status.icon
-							className={cn(
-								status.variant === "green"
-									? "text-green-600 dark:text-green-600"
-									: status.variant === "amber"
-										? "text-amber-600 dark:text-amber-400"
-										: status.variant === "destructive"
-											? "text-destructive dark:text-destructive-400"
-											: "text-muted-foreground dark:text-muted-foreground/80"
-							)}
-							size={18}
-							weight="duotone"
-						/>
-					</div>
-					<div>
-						<div className="flex items-center gap-2">
-							<span className="font-medium">
-								Invoice #{invoice.stripeId.slice(-8)}
-							</span>
-							<Badge variant={status.variant}>{status.label}</Badge>
-						</div>
-						<div className="flex items-center gap-2 text-muted-foreground text-sm">
-							<span>{formattedDate}</span>
-							<span>·</span>
-							<span className="font-medium text-foreground">{amount}</span>
-						</div>
-					</div>
+						weight="duotone"
+					/>
 				</div>
-
-				{invoice.hostedInvoiceUrl && (
-					<Button
-						aria-label="View invoice"
-						className="shrink-0"
-						onClick={() =>
-							window.open(invoice.hostedInvoiceUrl ?? "", "_blank")
-						}
-						size="sm"
-						variant="outline"
-					>
-						<FileTextIcon size={14} weight="duotone" />
-						View
-					</Button>
-				)}
+				<div className="min-w-0">
+					<div className="flex items-center gap-2">
+						<Text className="truncate" variant="label">
+							{formattedDate}
+						</Text>
+						<Badge variant={status.variant}>{status.label}</Badge>
+					</div>
+					<Text className="truncate" tone="muted" variant="caption">
+						#{invoice.stripeId.slice(-8)} · {amount}
+					</Text>
+				</div>
 			</div>
+
+			{invoice.hostedInvoiceUrl && (
+				<Button
+					aria-label="View invoice"
+					className="shrink-0"
+					onClick={() => window.open(invoice.hostedInvoiceUrl ?? "", "_blank")}
+					size="sm"
+					variant="ghost"
+				>
+					<FileTextIcon size={14} weight="duotone" />
+					View
+				</Button>
+			)}
 		</div>
 	);
 });
@@ -199,89 +242,41 @@ function SubscriptionItem({
 	const isActive = sub.status === "active";
 
 	return (
-		<div className="flex items-start gap-3">
+		<div className="flex items-center gap-3 px-5 py-3">
 			<div
 				className={cn(
-					"mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full",
-					isActive ? "bg-primary/10" : "bg-muted"
+					"flex size-8 shrink-0 items-center justify-center rounded border",
+					isActive
+						? "border-green-600/30 bg-green-500/10 dark:border-green-800 dark:bg-green-900/30"
+						: "border-border bg-secondary"
 				)}
 			>
 				{isActive ? (
-					<CheckCircleIcon className="text-primary" size={14} weight="fill" />
+					<CheckCircleIcon
+						className="size-3.5 text-green-600 dark:text-green-400"
+						weight="fill"
+					/>
 				) : (
-					<ClockIcon className="text-muted-foreground" size={14} />
+					<ClockIcon className="size-3.5 text-muted-foreground" />
 				)}
 			</div>
 			<div className="min-w-0 flex-1">
 				<div className="flex items-center gap-2">
-					<span className="truncate font-medium text-sm">
+					<Text className="truncate" variant="label">
 						{sub.plan?.name ?? sub.planId}
-					</span>
-					{isActive && (
-						<Badge className="bg-primary/10 text-primary" variant="secondary">
-							Active
-						</Badge>
-					)}
+					</Text>
+					{isActive && <Badge variant="success">Active</Badge>}
+					{isCanceled && <Badge variant="muted">Cancelled</Badge>}
 				</div>
-				<div className="text-muted-foreground text-xs">
-					<span>Started {dayjs(sub.startedAt).fromNow()}</span>
+				<Text tone="muted" variant="caption">
+					Started {dayjs(sub.startedAt).fromNow()}
 					{renewalDate && (
-						<span className="ml-2">
+						<span>
+							{" "}
 							· {isCanceled ? "Ends" : "Renews"} {renewalDate.fromNow()}
 						</span>
 					)}
-				</div>
-			</div>
-		</div>
-	);
-}
-
-function BillingSummary({ invoices }: { invoices: Invoice[] }) {
-	const stats = useMemo(() => {
-		const paid = invoices.filter((i) => i.status === "paid");
-		const totalPaid = paid.reduce((sum, i) => sum + i.total, 0);
-		const currency = invoices[0]?.currency || "usd";
-
-		return {
-			totalInvoices: invoices.length,
-			paidInvoices: paid.length,
-			totalSpent: formatCurrency(totalPaid, currency),
-			lastPayment: paid[0]
-				? dayjs(paid[0].createdAt).format("MMM D, YYYY")
-				: "N/A",
-		};
-	}, [invoices]);
-
-	if (invoices.length === 0) {
-		return (
-			<div className="flex aspect-[1.586/1] w-full flex-col items-center justify-center rounded-xl border border-dashed bg-background">
-				<ReceiptIcon
-					className="mb-2 text-muted-foreground"
-					size={28}
-					weight="duotone"
-				/>
-				<span className="text-muted-foreground text-sm">
-					No billing history
-				</span>
-			</div>
-		);
-	}
-
-	return (
-		<div className="space-y-3">
-			<div className="flex items-center justify-between rounded border bg-background px-3 py-2">
-				<span className="text-muted-foreground text-sm">Total Spent</span>
-				<span className="font-semibold">{stats.totalSpent}</span>
-			</div>
-			<div className="flex items-center justify-between rounded border bg-background px-3 py-2">
-				<span className="text-muted-foreground text-sm">Invoices</span>
-				<span className="font-medium">
-					{stats.paidInvoices} / {stats.totalInvoices}
-				</span>
-			</div>
-			<div className="flex items-center justify-between rounded border bg-background px-3 py-2">
-				<span className="text-muted-foreground text-sm">Last Payment</span>
-				<span className="font-medium">{stats.lastPayment}</span>
+				</Text>
 			</div>
 		</div>
 	);
@@ -289,43 +284,55 @@ function BillingSummary({ invoices }: { invoices: Invoice[] }) {
 
 function HistorySkeleton() {
 	return (
-		<div className="flex h-full flex-col overflow-y-auto lg:grid lg:grid-cols-[1fr_20rem] lg:overflow-hidden">
-			<div className="shrink-0 lg:h-full lg:min-h-0 lg:overflow-y-auto">
-				<div className="border-b px-5 py-4">
-					<Skeleton className="mb-1 h-5 w-20" />
-					<Skeleton className="h-4 w-48" />
-				</div>
-				<div className="divide-y">
-					{[1, 2, 3].map((i) => (
-						<div className="px-5 py-4" key={i}>
-							<div className="flex items-center gap-3">
-								<Skeleton className="size-10 rounded" />
-								<div>
-									<Skeleton className="mb-1 h-4 w-32" />
-									<Skeleton className="h-3 w-24" />
+		<div className="mx-auto max-w-2xl space-y-6 p-5">
+			<Card>
+				<Card.Header className="flex-row items-start justify-between gap-4">
+					<div className="space-y-1">
+						<Skeleton className="h-3.5 w-16" />
+						<Skeleton className="h-3 w-24" />
+					</div>
+					<Skeleton className="h-7 w-28 rounded" />
+				</Card.Header>
+				<Card.Content className="p-0">
+					<div className="divide-y">
+						{[1, 2, 3, 4, 5].map((i) => (
+							<div
+								className="flex items-center justify-between gap-3 px-5 py-3"
+								key={i}
+							>
+								<div className="flex items-center gap-3">
+									<Skeleton className="size-8 rounded" />
+									<div className="space-y-1">
+										<Skeleton className="h-3.5 w-28" />
+										<Skeleton className="h-3 w-20" />
+									</div>
+								</div>
+								<Skeleton className="h-7 w-14 rounded" />
+							</div>
+						))}
+					</div>
+				</Card.Content>
+			</Card>
+
+			<Card>
+				<Card.Header>
+					<Skeleton className="h-3.5 w-36" />
+					<Skeleton className="h-3 w-28" />
+				</Card.Header>
+				<Card.Content className="p-0">
+					<div className="divide-y">
+						{[1, 2].map((i) => (
+							<div className="flex items-center gap-3 px-5 py-3" key={i}>
+								<Skeleton className="size-8 rounded" />
+								<div className="flex-1 space-y-1">
+									<Skeleton className="h-3.5 w-28" />
+									<Skeleton className="h-3 w-36" />
 								</div>
 							</div>
-						</div>
-					))}
-				</div>
-			</div>
-			<div className="flex w-full shrink-0 flex-col border-t bg-card lg:h-full lg:w-auto lg:overflow-y-auto lg:border-t-0 lg:border-l">
-				<div className="border-b p-5">
-					<Skeleton className="mb-3 h-5 w-36" />
-					<div className="space-y-3">
-						<Skeleton className="h-12 w-full" />
-						<Skeleton className="h-12 w-full" />
+						))}
 					</div>
-				</div>
-				<div className="p-5">
-					<Skeleton className="mb-3 h-5 w-28" />
-					<div className="space-y-2">
-						<Skeleton className="h-10 w-full" />
-						<Skeleton className="h-10 w-full" />
-						<Skeleton className="h-10 w-full" />
-					</div>
-				</div>
-			</div>
+				</Card.Content>
+			</Card>
 		</div>
 	);
 }
@@ -336,11 +343,11 @@ function getInvoiceStatus(status: string) {
 			return {
 				label: "Paid",
 				icon: CheckCircleIcon,
-				variant: "green" as const,
+				variant: "success" as const,
 			};
 		case "open":
 		case "pending":
-			return { label: "Pending", icon: ClockIcon, variant: "amber" as const };
+			return { label: "Pending", icon: ClockIcon, variant: "warning" as const };
 		case "failed":
 			return {
 				label: "Failed",
@@ -351,7 +358,7 @@ function getInvoiceStatus(status: string) {
 			return {
 				label: status,
 				icon: FileTextIcon,
-				variant: "secondary" as const,
+				variant: "default" as const,
 			};
 	}
 }
