@@ -1,12 +1,13 @@
-import { and, db, eq, member } from "@databuddy/db";
+import { and, db, eq } from "@databuddy/db";
+import { member } from "@databuddy/db/schema";
 import { cacheable } from "@databuddy/redis";
 import { getAutumn } from "../lib/autumn-client";
 import { logger } from "../lib/logger";
 
 export interface BillingOwner {
+	canUserUpgrade: boolean;
 	customerId: string;
 	isOrganization: boolean;
-	canUserUpgrade: boolean;
 	planId: string;
 }
 

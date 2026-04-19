@@ -1,12 +1,12 @@
-import { alarms, and, db, eq } from "@databuddy/db";
+import { and, db, eq } from "@databuddy/db";
+import { alarms } from "@databuddy/db/schema";
 import {
 	buildAnomalyNotificationPayload,
-	type NotificationChannel,
 	NotificationClient,
 } from "@databuddy/notifications";
 import { z } from "zod";
+import { toNotificationConfig } from "../lib/alarm-notifications";
 import {
-	type AnomalyDetectionConfig,
 	detectAnomalies,
 	fetchAnomalyTimeSeries,
 } from "../lib/anomaly-detection";
@@ -64,26 +64,7 @@ export const anomaliesRouter = {
 				permissions: ["read"],
 			});
 
-			const clientId = workspace.website.id;
-			const config: Partial<AnomalyDetectionConfig> = {};
-
-			if (input.config?.warningThreshold !== undefined) {
-				config.warningThreshold = input.config.warningThreshold;
-			}
-			if (input.config?.criticalThreshold !== undefined) {
-				config.criticalThreshold = input.config.criticalThreshold;
-			}
-			if (input.config?.baselineDays !== undefined) {
-				config.baselineDays = input.config.baselineDays;
-			}
-			if (input.config?.minimumBaselineCount !== undefined) {
-				config.minimumBaselineCount = input.config.minimumBaselineCount;
-			}
-			if (input.config?.percentChangeFallback !== undefined) {
-				config.percentChangeFallback = input.config.percentChangeFallback;
-			}
-
-			return detectAnomalies(clientId, config);
+			return detectAnomalies(workspace.website.id, input.config ?? {});
 		}),
 
 	timeSeries: protectedProcedure
@@ -156,17 +137,9 @@ export const anomaliesRouter = {
 				with: { destinations: true },
 			});
 
-			const relevantAlarms = matchingAlarms.filter((alarm) => {
-				if (alarm.triggerType === "traffic_spike") {
-					return detected.some(
-						(a) => a.metric === "pageviews" || a.metric === "custom_events"
-					);
-				}
-				if (alarm.triggerType === "error_rate") {
-					return detected.some((a) => a.metric === "errors");
-				}
-				return false;
-			});
+			const relevantAlarms = matchingAlarms.filter((alarm) =>
+				detected.some((a) => matchesTrigger(alarm.triggerType, a.metric))
+			);
 
 			let notificationsSent = 0;
 
@@ -178,15 +151,9 @@ export const anomaliesRouter = {
 					continue;
 				}
 
-				const relevantAnomalies = detected.filter((a) => {
-					if (alarm.triggerType === "traffic_spike") {
-						return a.metric === "pageviews" || a.metric === "custom_events";
-					}
-					if (alarm.triggerType === "error_rate") {
-						return a.metric === "errors";
-					}
-					return false;
-				});
+				const relevantAnomalies = detected.filter((a) =>
+					matchesTrigger(alarm.triggerType, a.metric)
+				);
 
 				for (const anomaly of relevantAnomalies) {
 					const payload = buildAnomalyNotificationPayload({
@@ -203,9 +170,9 @@ export const anomaliesRouter = {
 						eventName: anomaly.eventName,
 					});
 
-					const clientConfig = buildClientConfig(alarm.destinations);
-					const channels = getChannels(alarm.destinations);
-
+					const { clientConfig, channels } = toNotificationConfig(
+						alarm.destinations
+					);
 					if (channels.length === 0) {
 						continue;
 					}
@@ -223,60 +190,9 @@ export const anomaliesRouter = {
 		}),
 };
 
-interface AlarmDest {
-	type: string;
-	identifier: string;
-	config: unknown;
-}
-
-function buildClientConfig(
-	destinations: AlarmDest[]
-): Record<string, Record<string, unknown>> {
-	const config: Record<string, Record<string, unknown>> = {};
-
-	for (const dest of destinations) {
-		const cfg = (dest.config ?? {}) as Record<string, unknown>;
-
-		if (dest.type === "slack") {
-			config.slack = { webhookUrl: dest.identifier };
-		} else if (dest.type === "discord") {
-			config.discord = { webhookUrl: dest.identifier };
-		} else if (dest.type === "teams") {
-			config.teams = { webhookUrl: dest.identifier };
-		} else if (dest.type === "google_chat") {
-			config.googleChat = { webhookUrl: dest.identifier };
-		} else if (dest.type === "telegram") {
-			config.telegram = {
-				botToken: cfg.botToken as string,
-				chatId: dest.identifier || (cfg.chatId as string),
-			};
-		} else if (dest.type === "webhook") {
-			config.webhook = {
-				url: dest.identifier,
-				headers: cfg.headers as Record<string, string> | undefined,
-			};
-		}
+function matchesTrigger(triggerType: string, metric: string): boolean {
+	if (triggerType === "traffic_spike") {
+		return metric === "pageviews" || metric === "custom_events";
 	}
-
-	return config;
-}
-
-function getChannels(destinations: AlarmDest[]): NotificationChannel[] {
-	const channels: NotificationChannel[] = [];
-	for (const dest of destinations) {
-		if (dest.type === "slack") {
-			channels.push("slack");
-		} else if (dest.type === "discord") {
-			channels.push("discord");
-		} else if (dest.type === "teams") {
-			channels.push("teams");
-		} else if (dest.type === "google_chat") {
-			channels.push("google-chat");
-		} else if (dest.type === "telegram") {
-			channels.push("telegram");
-		} else if (dest.type === "webhook") {
-			channels.push("webhook");
-		}
-	}
-	return channels;
+	return triggerType === "error_rate" && metric === "errors";
 }

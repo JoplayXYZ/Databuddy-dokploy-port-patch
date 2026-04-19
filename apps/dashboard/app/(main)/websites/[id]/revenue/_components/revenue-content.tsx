@@ -1,23 +1,23 @@
 "use client";
 
-import { ArrowClockwiseIcon } from "@phosphor-icons/react/dist/ssr/ArrowClockwise";
-import { ArrowSquareOutIcon } from "@phosphor-icons/react/dist/ssr/ArrowSquareOut";
-import { ArrowsCounterClockwiseIcon } from "@phosphor-icons/react/dist/ssr/ArrowsCounterClockwise";
-import { CaretDownIcon } from "@phosphor-icons/react/dist/ssr/CaretDown";
-import { CheckIcon } from "@phosphor-icons/react/dist/ssr/Check";
-import { CheckCircleIcon } from "@phosphor-icons/react/dist/ssr/CheckCircle";
-import { ClipboardIcon } from "@phosphor-icons/react/dist/ssr/Clipboard";
-import { CreditCardIcon } from "@phosphor-icons/react/dist/ssr/CreditCard";
-import { CurrencyDollarIcon } from "@phosphor-icons/react/dist/ssr/CurrencyDollar";
-import { EyeIcon } from "@phosphor-icons/react/dist/ssr/Eye";
-import { EyeSlashIcon } from "@phosphor-icons/react/dist/ssr/EyeSlash";
-import { GearIcon } from "@phosphor-icons/react/dist/ssr/Gear";
-import { LinkIcon } from "@phosphor-icons/react/dist/ssr/Link";
-import { ReceiptIcon } from "@phosphor-icons/react/dist/ssr/Receipt";
-import { SpinnerIcon } from "@phosphor-icons/react/dist/ssr/Spinner";
-import { StripeLogoIcon } from "@phosphor-icons/react/dist/ssr/StripeLogo";
-import { TrendUpIcon } from "@phosphor-icons/react/dist/ssr/TrendUp";
-import { UsersIcon } from "@phosphor-icons/react/dist/ssr/Users";
+import { ArrowClockwiseIcon } from "@phosphor-icons/react";
+import { ArrowSquareOutIcon } from "@phosphor-icons/react";
+import { ArrowsCounterClockwiseIcon } from "@phosphor-icons/react";
+import { CaretDownIcon } from "@phosphor-icons/react";
+import { CheckIcon } from "@phosphor-icons/react";
+import { CheckCircleIcon } from "@phosphor-icons/react";
+import { ClipboardIcon } from "@phosphor-icons/react";
+import { CreditCardIcon } from "@phosphor-icons/react";
+import { CurrencyDollarIcon } from "@phosphor-icons/react";
+import { EyeIcon } from "@phosphor-icons/react";
+import { EyeSlashIcon } from "@phosphor-icons/react";
+import { GearIcon } from "@phosphor-icons/react";
+import { LinkIcon } from "@phosphor-icons/react";
+import { ReceiptIcon } from "@phosphor-icons/react";
+import { SpinnerIcon } from "@phosphor-icons/react";
+import { StripeLogoIcon } from "@phosphor-icons/react";
+import { TrendUpIcon } from "@phosphor-icons/react";
+import { UsersIcon } from "@phosphor-icons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAtom } from "jotai";
 import { AnimatePresence, motion } from "motion/react";
@@ -55,26 +55,26 @@ interface RevenueContentProps {
 }
 
 interface RevenueOverview {
-	total_revenue: number;
-	total_transactions: number;
+	attributed_revenue: number;
+	attributed_transactions: number;
 	refund_amount: number;
 	refund_count: number;
-	subscription_revenue: number;
-	subscription_count: number;
-	sale_revenue: number;
 	sale_count: number;
+	sale_revenue: number;
+	subscription_count: number;
+	subscription_revenue: number;
+	total_revenue: number;
+	total_transactions: number;
 	unique_customers: number;
-	attributed_transactions: number;
-	attributed_revenue: number;
 }
 
 interface RevenueTimeSeries {
-	date: string;
-	revenue: number;
-	transactions: number;
 	customers: number;
+	date: string;
 	refund_amount: number;
 	refund_count: number;
+	revenue: number;
+	transactions: number;
 }
 
 const BASKET_URL =
@@ -301,7 +301,7 @@ function RevenueSettingsSheet({
 						<div>
 							<SheetTitle>Revenue Tracking</SheetTitle>
 							<SheetDescription>
-								Connect your payment providers via webhooks
+								Connect payment providers via webhooks
 							</SheetDescription>
 						</div>
 					</div>
@@ -314,7 +314,6 @@ function RevenueSettingsSheet({
 						</div>
 					) : (
 						<div className="space-y-1">
-							{/* Webhook URLs Section */}
 							<CollapsibleSection
 								badge={
 									webhookHash ? (
@@ -331,7 +330,6 @@ function RevenueSettingsSheet({
 							>
 								{webhookHash ? (
 									<div className="space-y-4">
-										{/* Stripe URL */}
 										<div className="space-y-1.5">
 											<div className="flex items-center justify-between">
 												<p className="font-medium text-foreground text-xs">
@@ -370,7 +368,6 @@ function RevenueSettingsSheet({
 											</div>
 										</div>
 
-										{/* Paddle URL */}
 										<div className="space-y-1.5">
 											<div className="flex items-center justify-between">
 												<p className="font-medium text-foreground text-xs">
@@ -426,7 +423,7 @@ function RevenueSettingsSheet({
 								) : (
 									<div>
 										<p className="mb-3 text-muted-foreground text-xs">
-											Generate webhook URLs to start receiving payment events.
+											Generate URLs to receive payment events.
 										</p>
 										<Button
 											className="w-full"
@@ -444,7 +441,6 @@ function RevenueSettingsSheet({
 								)}
 							</CollapsibleSection>
 
-							{/* Stripe Section */}
 							<CollapsibleSection
 								badge={
 									config?.stripeConfigured ? (
@@ -522,7 +518,6 @@ function RevenueSettingsSheet({
 								</div>
 							</CollapsibleSection>
 
-							{/* Paddle Section */}
 							<CollapsibleSection
 								badge={
 									config?.paddleConfigured ? (
@@ -804,7 +799,7 @@ export function RevenueContent({ websiteId }: RevenueContentProps) {
 									Revenue Trends
 								</h2>
 								<p className="text-sidebar-foreground/70 text-xs sm:text-sm">
-									Daily revenue, transactions, customers, and refunds
+									Revenue, transactions, customers, and refunds over time
 								</p>
 							</div>
 						</div>
@@ -828,13 +823,13 @@ export function RevenueContent({ websiteId }: RevenueContentProps) {
 			) : (
 				<EmptyState
 					action={{
-						label: "Configure Webhooks",
+						label: "Configure webhooks",
 						onClick: () => setSettingsOpen(true),
 					}}
 					description={
 						isConfigured
-							? "Revenue data will appear here once transactions are processed through your payment provider webhooks."
-							: "Connect Stripe or Paddle to start tracking revenue from your payment providers."
+							? "Revenue appears here once webhooks process transactions."
+							: "Connect Stripe or Paddle to track revenue."
 					}
 					icon={<CurrencyDollarIcon />}
 					showPlusBadge={false}

@@ -1,14 +1,14 @@
-import { Heading, Link, Section, Text } from "@react-email/components";
+import { Heading, Link, Section, Text } from "react-email";
 import { emailBrand } from "./email-brand";
 import { EmailButton } from "./email-button";
 import { EmailLayout } from "./email-layout";
 
 interface UsageLimitEmailProps {
 	featureName?: string;
-	usageAmount?: number;
 	limitAmount?: number;
-	userName?: string;
 	thresholdType?: "limit_reached" | "allowance_used";
+	usageAmount?: number;
+	userName?: string;
 }
 
 function formatNumber(num: number): string {
@@ -116,5 +116,13 @@ export const UsageLimitEmail = ({
 		</EmailLayout>
 	);
 };
+
+UsageLimitEmail.PreviewProps = {
+	featureName: "Events",
+	limitAmount: 10_000,
+	thresholdType: "limit_reached",
+	usageAmount: 10_000,
+	userName: "Ada",
+} satisfies UsageLimitEmailProps;
 
 export default UsageLimitEmail;

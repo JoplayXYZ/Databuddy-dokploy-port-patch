@@ -1,6 +1,6 @@
 "use client";
 
-import { LayoutIcon } from "@phosphor-icons/react/dist/ssr/Layout";
+import { LayoutIcon } from "@phosphor-icons/react";
 import { EmptyState } from "@/components/empty-state";
 import type { TemplatesListProps } from "../../_components/types";
 import { TemplateItem } from "./template-item";
@@ -18,7 +18,7 @@ export function TemplatesList({
 		return (
 			<div className="flex flex-1 items-center justify-center py-16">
 				<EmptyState
-					description="Pre-configured templates for common feature flag patterns will appear here."
+					description="Ready-made flag setups will appear here."
 					icon={<LayoutIcon weight="duotone" />}
 					title="No templates available"
 					variant="minimal"

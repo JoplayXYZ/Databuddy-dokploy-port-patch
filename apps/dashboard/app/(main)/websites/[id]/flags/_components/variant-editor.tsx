@@ -1,8 +1,8 @@
 "use client";
 
 import type { Variant } from "@databuddy/shared/flags";
-import { PlusIcon } from "@phosphor-icons/react/dist/ssr/Plus";
-import { TrashIcon } from "@phosphor-icons/react/dist/ssr/Trash";
+import { PlusIcon } from "@phosphor-icons/react";
+import { TrashIcon } from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -150,7 +150,7 @@ export function VariantEditor({
 							}}
 							type="checkbox"
 						/>
-						<span className="text-xs">Use Weights</span>
+						<span className="text-xs">Custom weights</span>
 					</label>
 					<Select
 						onValueChange={(v: "string" | "number" | "json") => {
@@ -292,16 +292,14 @@ export function VariantEditor({
 				/>
 				{totalWeight === 0 ? (
 					<>
-						<span className="font-medium">Even Distribution</span>
+						<span className="font-medium">Even split</span>
 						<span className="text-muted-foreground">
-							(Each variant covers ~{Math.round(100 / variants.length)}% of
-							traffic)
+							(~{Math.round(100 / variants.length)}% each)
 						</span>
 					</>
 				) : (
 					<>
-						Total Weight: {totalWeight}%{" "}
-						{isValidTotal ? "(Valid)" : "(Must sum to 100%)"}
+						Total: {totalWeight}% {isValidTotal ? "" : "— must add up to 100%"}
 					</>
 				)}
 			</div>

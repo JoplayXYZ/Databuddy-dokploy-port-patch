@@ -1,14 +1,12 @@
 "use client";
 
-import {
-	BellIcon,
-	CircleNotchIcon,
-	DotsThreeIcon,
-	PencilIcon,
-	PlusIcon,
-	TestTubeIcon,
-	TrashIcon,
-} from "@phosphor-icons/react";
+import { BellIcon } from "@phosphor-icons/react";
+import { CircleNotchIcon } from "@phosphor-icons/react";
+import { DotsThreeIcon } from "@phosphor-icons/react";
+import { PencilIcon } from "@phosphor-icons/react";
+import { PlusIcon } from "@phosphor-icons/react";
+import { TestTubeIcon } from "@phosphor-icons/react";
+import { TrashIcon } from "@phosphor-icons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -29,30 +27,26 @@ import { orpc } from "@/lib/orpc";
 import { AlarmSheet } from "./_components/alarm-sheet";
 
 interface AlarmDestination {
-	id: string;
-	type: string;
-	identifier: string;
 	config: Record<string, string | boolean | number | null>;
+	id: string;
+	identifier: string;
+	type: string;
 }
 
 interface Alarm {
+	description?: string | null;
+	destinations?: AlarmDestination[];
+	enabled: boolean;
 	id: string;
 	name: string;
-	description?: string | null;
-	enabled: boolean;
 	triggerType: string;
 	websiteId?: string | null;
-	destinations?: AlarmDestination[];
 }
 
 const DEST_LABELS: Record<string, string> = {
 	slack: "Slack",
-	discord: "Discord",
 	email: "Email",
 	webhook: "Webhook",
-	teams: "Teams",
-	telegram: "Telegram",
-	google_chat: "Google Chat",
 };
 
 function parseAlarms(rows: readonly Record<string, unknown>[]): Alarm[] {
@@ -174,7 +168,7 @@ export default function NotificationsSettingsPage() {
 
 	const alarmList = parseAlarms(
 		(alarms ?? []) as readonly Record<string, unknown>[]
-	).filter((a) => a.triggerType === "uptime");
+	);
 
 	const enabledCount = alarmList.filter((a) => a.enabled).length;
 	const channelSet = new Set(
@@ -184,7 +178,6 @@ export default function NotificationsSettingsPage() {
 	return (
 		<div className="h-full lg:grid lg:grid-cols-[1fr_18rem]">
 			<div className="flex flex-col overflow-y-auto">
-				{/* Header */}
 				<div className="flex shrink-0 flex-col justify-between gap-3 border-b p-4 sm:flex-row sm:items-center sm:p-5">
 					<div className="flex items-center gap-3">
 						<div className="rounded-lg border bg-secondary p-2.5">
@@ -195,9 +188,7 @@ export default function NotificationsSettingsPage() {
 						</div>
 						<div className="min-w-0">
 							<div className="flex items-center gap-2">
-								<h1 className="font-medium text-foreground text-xl">
-									Uptime Alerts
-								</h1>
+								<h1 className="font-medium text-foreground text-xl">Alerts</h1>
 								{!isLoading && alarmList.length > 0 && (
 									<span className="text-accent-foreground/60 text-sm">
 										{alarmList.length}
@@ -205,17 +196,16 @@ export default function NotificationsSettingsPage() {
 								)}
 							</div>
 							<p className="text-muted-foreground text-xs">
-								Get notified when a monitor goes down or recovers
+								Configure where and how you get notified
 							</p>
 						</div>
 					</div>
 					<Button onClick={handleNew}>
 						<PlusIcon className="mr-2 size-4" />
-						Create Alert
+						New Alert
 					</Button>
 				</div>
 
-				{/* Loading */}
 				{isLoading && (
 					<div>
 						{Array.from({ length: 3 }).map((_, i) => (
@@ -239,12 +229,11 @@ export default function NotificationsSettingsPage() {
 					</div>
 				)}
 
-				{/* Empty */}
 				{!isLoading && alarmList.length === 0 && (
 					<div className="flex flex-1 items-center justify-center py-16">
 						<EmptyState
-							action={{ label: "Create Your First Alert", onClick: handleNew }}
-							description="Create an uptime alert with Slack, email, or webhook destinations. Attach it to a monitor to start receiving notifications."
+							action={{ label: "New Alert", onClick: handleNew }}
+							description="Create alerts with Slack, email, or webhook destinations. Attach them to monitors and anomaly rules from their settings."
 							icon={<BellIcon weight="duotone" />}
 							title="No alerts yet"
 							variant="minimal"
@@ -252,16 +241,16 @@ export default function NotificationsSettingsPage() {
 					</div>
 				)}
 
-				{/* List */}
 				{!isLoading && alarmList.length > 0 && (
 					<div>
 						{alarmList.map((alarm) => {
 							const isTesting = testingAlarmId === alarm.id;
+							const destCount = alarm.destinations?.length ?? 0;
 							return (
 								<div className="border-b" key={alarm.id}>
 									<div className="group flex items-center hover:bg-accent/50">
 										<div className="flex flex-1 items-center gap-4 px-4 py-3 sm:px-6 sm:py-4">
-											<div className="flex size-10 shrink-0 items-center justify-center rounded border bg-secondary">
+											<div className="flex size-10 shrink-0 items-center justify-center rounded-lg border bg-secondary">
 												<BellIcon
 													className="text-accent-foreground"
 													size={20}
@@ -271,7 +260,7 @@ export default function NotificationsSettingsPage() {
 											<div className="min-w-0 flex-1">
 												<div className="flex items-center gap-2">
 													<button
-														className="truncate font-medium text-foreground"
+														className="truncate font-medium text-foreground text-sm"
 														onClick={() => handleEdit(alarm)}
 														type="button"
 													>
@@ -284,27 +273,35 @@ export default function NotificationsSettingsPage() {
 														<span
 															className={`size-1.5 rounded-full ${alarm.enabled ? "bg-green-500" : "bg-amber-500"}`}
 														/>
-														{alarm.enabled ? "Active" : "Disabled"}
+														{alarm.enabled ? "Active" : "Paused"}
 													</Badge>
 												</div>
-												<div className="mt-0.5 flex flex-wrap items-center gap-2">
-													{alarm.description ? (
+												<div className="mt-0.5 flex flex-wrap items-center gap-1.5">
+													{destCount > 0 ? (
+														(alarm.destinations ?? []).map((d) => (
+															<Badge
+																className="text-[11px]"
+																key={d.id}
+																variant="outline"
+															>
+																{DEST_LABELS[d.type] ?? d.type}
+															</Badge>
+														))
+													) : (
+														<span className="text-muted-foreground text-xs">
+															No destinations
+														</span>
+													)}
+													{alarm.description && (
 														<>
-															<span className="line-clamp-1 text-muted-foreground text-xs">
-																{alarm.description}
-															</span>
 															<span className="text-muted-foreground text-xs">
 																·
 															</span>
+															<span className="line-clamp-1 text-muted-foreground text-xs">
+																{alarm.description}
+															</span>
 														</>
-													) : null}
-													<div className="flex items-center gap-1.5">
-														{(alarm.destinations ?? []).map((d) => (
-															<Badge key={d.id} variant="outline">
-																{DEST_LABELS[d.type] ?? d.type}
-															</Badge>
-														))}
-													</div>
+													)}
 												</div>
 											</div>
 										</div>
@@ -368,20 +365,13 @@ export default function NotificationsSettingsPage() {
 						<div className="space-y-2.5">
 							<Skeleton className="h-5 w-full" />
 							<Skeleton className="h-5 w-full" />
-							<Skeleton className="h-5 w-full" />
 						</div>
 					) : (
 						<div className="space-y-2.5">
 							<div className="flex items-center justify-between">
 								<span className="text-muted-foreground text-sm">Active</span>
 								<span className="font-medium text-sm tabular-nums">
-									{enabledCount}
-								</span>
-							</div>
-							<div className="flex items-center justify-between">
-								<span className="text-muted-foreground text-sm">Total</span>
-								<span className="font-medium text-sm tabular-nums">
-									{alarmList.length}
+									{enabledCount} / {alarmList.length}
 								</span>
 							</div>
 							<div className="flex items-center justify-between">
@@ -394,11 +384,9 @@ export default function NotificationsSettingsPage() {
 					)}
 				</RightSidebar.Section>
 
-				<RightSidebar.Section border title="Configured Channels">
+				<RightSidebar.Section border title="Channels in Use">
 					{isLoading ? (
-						<div className="space-y-2">
-							<Skeleton className="h-5 w-full" />
-						</div>
+						<Skeleton className="h-5 w-full" />
 					) : channelSet.size > 0 ? (
 						<div className="flex flex-wrap gap-1.5">
 							{[...channelSet].map((ch) => (
@@ -408,14 +396,12 @@ export default function NotificationsSettingsPage() {
 							))}
 						</div>
 					) : (
-						<p className="text-muted-foreground text-xs">
-							No channels configured yet
-						</p>
+						<p className="text-muted-foreground text-xs">None yet</p>
 					)}
 				</RightSidebar.Section>
 
 				<RightSidebar.Section>
-					<RightSidebar.Tip description="Create alerts here, then attach them to monitors from the Monitors page or a site's Pulse tab." />
+					<RightSidebar.Tip description="Alerts define where notifications go. Attach them to monitors or anomaly rules from their respective settings." />
 				</RightSidebar.Section>
 			</RightSidebar>
 

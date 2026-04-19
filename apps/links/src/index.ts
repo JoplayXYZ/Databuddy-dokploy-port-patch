@@ -1,29 +1,21 @@
 import { Elysia, redirect } from "elysia";
 import { initLogger, log } from "evlog";
 import { evlog } from "evlog/elysia";
-import {
-	enrichLinksWideEvent,
-	flushBatchedLinksDrain,
-	linksLoggerDrain,
-} from "./lib/evlog-links";
+import { drain, enrich, flushDrain } from "./lib/logging";
 import { disconnectProducer } from "./lib/producer";
-import { expiredRoute } from "./routes/expired";
 import { redirectRoute } from "./routes/redirect";
 
 initLogger({
 	env: { service: "links" },
-	drain: linksLoggerDrain,
-	sampling: {
-		rates: { info: 20, warn: 50, debug: 5 },
-	},
+	drain,
+	sampling: { rates: { info: 20, warn: 50, debug: 5 } },
 });
 
 const app = new Elysia()
-	.use(evlog({ enrich: enrichLinksWideEvent }))
-	.get("/", function rootRedirect() {
-		return redirect("https://databuddy.cc", 302);
-	})
-	.get("/health/status", async function linksHealthStatus() {
+	.use(evlog({ enrich }))
+	.get("/", () => redirect("https://databuddy.cc", 302))
+	.get("/health", () => Response.json({ status: "ok" }))
+	.get("/health/status", async () => {
 		const { db, sql } = await import("@databuddy/db");
 		const { redis } = await import("@databuddy/redis");
 
@@ -50,34 +42,41 @@ const app = new Elysia()
 		]);
 
 		const services = { postgres, redis: cache };
-		const status = Object.values(services).every((s) => s.status === "ok")
-			? "ok"
-			: "degraded";
+		const ok = Object.values(services).every((s) => s.status === "ok");
 		return Response.json(
-			{ status, services },
-			{ status: status === "ok" ? 200 : 503 }
+			{ status: ok ? "ok" : "degraded", services },
+			{ status: ok ? 200 : 503 }
 		);
 	})
-	.get("/health", () => Response.json({ status: "ok" }, { status: 200 }))
-	.use(expiredRoute)
 	.use(redirectRoute);
 
-async function gracefulShutdown(signal: string) {
-	log.info("lifecycle", `${signal} received, shutting down gracefully`);
-	await flushBatchedLinksDrain().catch((error) =>
-		log.error({
-			lifecycle: "drainFlush",
-			error_message: error instanceof Error ? error.message : String(error),
-		})
-	);
-	await disconnectProducer();
+async function shutdown(signal: string) {
+	log.info("lifecycle", `${signal} received, shutting down`);
+	const { shutdownRedis } = await import("@databuddy/redis");
+	await Promise.all([
+		shutdownRedis().catch((error) =>
+			log.error({
+				lifecycle: "redisShutdown",
+				error_message: error instanceof Error ? error.message : String(error),
+			})
+		),
+		flushDrain().catch((error) =>
+			log.error({
+				lifecycle: "drainFlush",
+				error_message: error instanceof Error ? error.message : String(error),
+			})
+		),
+		disconnectProducer().catch((error) =>
+			log.error({
+				lifecycle: "producerDisconnect",
+				error_message: error instanceof Error ? error.message : String(error),
+			})
+		),
+	]);
 	process.exit(0);
 }
 
-process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
-process.on("SIGINT", () => gracefulShutdown("SIGINT"));
+process.on("SIGTERM", () => shutdown("SIGTERM"));
+process.on("SIGINT", () => shutdown("SIGINT"));
 
-export default {
-	port: 2500,
-	fetch: app.fetch,
-};
+export default { port: 2500, fetch: app.fetch };

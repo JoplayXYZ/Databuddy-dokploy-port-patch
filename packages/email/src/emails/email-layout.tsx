@@ -6,15 +6,16 @@ import {
 	Preview,
 	Section,
 	Tailwind,
-} from "@react-email/components";
+} from "react-email";
 import { emailBrand } from "./email-brand";
 import { EmailFooter } from "./email-footer";
 import { EmailHeader } from "./email-header";
+import { emailTailwindConfig } from "./tailwind.config";
 
 interface EmailLayoutProps {
+	children: React.ReactNode;
 	preview: string;
 	tagline?: string;
-	children: React.ReactNode;
 }
 
 export const EmailLayout = ({
@@ -22,36 +23,29 @@ export const EmailLayout = ({
 	tagline,
 	children,
 }: EmailLayoutProps) => (
-	<Html>
-		<Head>
-			<meta content="width=device-width, initial-scale=1.0" name="viewport" />
-		</Head>
-		<Preview>{preview}</Preview>
-		<Tailwind
-			config={{
-				theme: {
-					extend: {
-						colors: {
-							brand: emailBrand.amber,
-							"brand-foreground": emailBrand.onAmber,
-							background: emailBrand.background,
-							card: emailBrand.card,
-							foreground: emailBrand.foreground,
-							"card-foreground": emailBrand.foreground,
-							border: emailBrand.border,
-							muted: emailBrand.muted,
-							"muted-foreground": emailBrand.muted,
-						},
-					},
-				},
-			}}
-		>
-			<Body className="m-0 bg-background font-sans">
-				<Container className="mx-auto my-10 max-w-[520px] px-4">
+	<Html lang="en">
+		<Tailwind config={emailTailwindConfig}>
+			<Head>
+				<meta content="width=device-width, initial-scale=1.0" name="viewport" />
+				<meta content="dark" name="color-scheme" />
+				<meta content="dark" name="supported-color-schemes" />
+			</Head>
+			<Body
+				className="m-0 bg-background font-sans"
+				style={{ backgroundColor: emailBrand.background }}
+			>
+				<Preview>{preview}</Preview>
+				<Container
+					className="mx-auto my-10 max-w-[520px] px-4"
+					style={{ backgroundColor: emailBrand.background }}
+				>
 					<EmailHeader tagline={tagline} />
 					<Section
-						className="rounded bg-card px-8 py-6"
-						style={{ border: `1px solid ${emailBrand.border}` }}
+						className="rounded border border-border border-solid bg-card px-8 py-6"
+						style={{
+							backgroundColor: emailBrand.card,
+							borderColor: emailBrand.border,
+						}}
 					>
 						{children}
 					</Section>

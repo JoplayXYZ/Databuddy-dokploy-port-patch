@@ -1,3 +1,8 @@
 export { createFlagsPlugin, useFlags } from "./flags-plugin";
-export * from "./types";
+export type {
+	FlagResult,
+	FlagState,
+	FlagsConfig,
+	FlagsContext,
+} from "@/core/flags/types";
 export { useFlag } from "./use-flag";

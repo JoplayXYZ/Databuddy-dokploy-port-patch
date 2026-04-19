@@ -1,4 +1,5 @@
-import { chQuery, db } from "@databuddy/db";
+import { db } from "@databuddy/db";
+import { chQuery } from "@databuddy/db/clickhouse";
 import {
 	DuplicateDomainError,
 	ValidationError,
@@ -44,8 +45,8 @@ function handleServiceError(error: unknown): never {
 }
 
 interface EventsCheckResult {
-	hasEvents: boolean;
 	error: string | null;
+	hasEvents: boolean;
 }
 
 async function getTrackingEventsStatus(
@@ -87,10 +88,10 @@ const buildStatusMessage = (hasEvents: boolean, eventsError: string | null) => {
 };
 
 interface ChartDataPoint {
-	websiteId: string;
 	date: string;
-	value: number;
 	hasAnyData: number;
+	value: number;
+	websiteId: string;
 }
 
 const calculateAverage = (values: { value: number }[]) =>
@@ -106,6 +107,13 @@ const websiteStatusOutputSchema = z.enum([
 	"PENDING",
 ]);
 
+const websiteSettingsSchema = z
+	.object({
+		allowedOrigins: z.array(z.string()).optional(),
+		allowedIps: z.array(z.string()).optional(),
+	})
+	.nullable();
+
 const websiteOutputSchema = z.object({
 	id: z.string(),
 	domain: z.string(),
@@ -114,10 +122,10 @@ const websiteOutputSchema = z.object({
 	isPublic: z.boolean(),
 	createdAt: z.coerce.date(),
 	updatedAt: z.coerce.date(),
-	organizationId: z.string().optional(),
+	organizationId: z.string(),
 	deletedAt: z.coerce.date().nullable(),
-	integrations: z.unknown().nullable().optional(),
-	settings: z.unknown().nullable().optional(),
+	integrations: z.record(z.string(), z.unknown()).nullable(),
+	settings: websiteSettingsSchema,
 });
 
 const processedMiniChartDataSchema = z.object({
@@ -178,8 +186,8 @@ const calculateTrend = (dataPoints: { date: string; value: number }[]) => {
 };
 
 interface ActiveUsersRow {
-	websiteId: string;
 	activeUsers: number;
+	websiteId: string;
 }
 
 const fetchActiveUsers = async (

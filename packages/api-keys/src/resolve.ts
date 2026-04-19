@@ -1,5 +1,5 @@
-import type { InferSelectModel } from "@databuddy/db";
-import { apikey, db, eq } from "@databuddy/db";
+import { db, eq, type InferSelectModel } from "@databuddy/db";
+import { apikey } from "@databuddy/db/schema";
 import { cacheable } from "@databuddy/redis";
 import {
 	createKeys,
@@ -71,7 +71,11 @@ export async function getApiKeyFromHeader(
 	const keyHash = keys.hashKey(secret);
 	const key = await getCachedApiKeyByHash(keyHash);
 
-	if (!key?.enabled || key.revokedAt || isExpired(key.expiresAt)) {
+	if (
+		!key?.enabled ||
+		key.revokedAt ||
+		isExpired(key.expiresAt?.toISOString() ?? null)
+	) {
 		return null;
 	}
 

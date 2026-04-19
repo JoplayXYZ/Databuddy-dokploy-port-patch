@@ -1,5 +1,17 @@
 "use client";
 
+import { ArrowSquareOutIcon } from "@phosphor-icons/react";
+import { DotsThreeIcon } from "@phosphor-icons/react";
+import { HeartbeatIcon } from "@phosphor-icons/react";
+import { LightningIcon } from "@phosphor-icons/react";
+import { PauseIcon } from "@phosphor-icons/react";
+import { PencilSimpleIcon } from "@phosphor-icons/react";
+import { PlayIcon } from "@phosphor-icons/react";
+import { TrashIcon } from "@phosphor-icons/react";
+import { useMutation } from "@tanstack/react-query";
+import Link from "next/link";
+import { useMemo, useState } from "react";
+import { toast } from "sonner";
 import { FaviconImage } from "@/components/analytics/favicon-image";
 import { TransferToOrgDialog } from "@/components/transfer-to-org-dialog";
 import { Badge } from "@/components/ui/badge";
@@ -20,19 +32,6 @@ import { formatDateOnly } from "@/lib/time";
 import { buildUptimeHeatmapDays } from "@/lib/uptime/heatmap-days";
 import { UptimeHeatmapStrip } from "@/lib/uptime/heatmap-strip";
 import { cn } from "@/lib/utils";
-import {
-	ArrowSquareOutIcon,
-	DotsThreeIcon,
-	HeartbeatIcon,
-	PauseIcon,
-	PencilSimpleIcon,
-	PlayIcon,
-	TrashIcon,
-} from "@phosphor-icons/react";
-import { useMutation } from "@tanstack/react-query";
-import Link from "next/link";
-import { useMemo, useState } from "react";
-import { toast } from "sonner";
 
 const GRANULARITY_LABELS: Record<string, string> = {
 	minute: "1 min",
@@ -48,6 +47,9 @@ const GRANULARITY_LABELS: Record<string, string> = {
 const HEATMAP_DAYS = 30;
 
 interface MonitorRowProps {
+	onDeleteAction: () => void;
+	onEditAction: () => void;
+	onRefetchAction: () => void;
 	schedule: {
 		id: string;
 		organizationId?: string;
@@ -65,9 +67,6 @@ interface MonitorRowProps {
 			domain: string;
 		} | null;
 	};
-	onEditAction: () => void;
-	onDeleteAction: () => void;
-	onRefetchAction: () => void;
 }
 
 function MonitorActions({
@@ -91,6 +90,23 @@ function MonitorActions({
 	const transferMutation = useMutation({
 		...orpc.uptime.transfer.mutationOptions(),
 	});
+	const manualCheckMutation = useMutation({
+		...orpc.uptime.manualCheck.mutationOptions(),
+	});
+
+	const handleManualCheck = async () => {
+		try {
+			await manualCheckMutation.mutateAsync({ scheduleId: schedule.id });
+			toast.success("Check triggered");
+			setTimeout(() => {
+				onRefetchAction();
+			}, 3000);
+		} catch (error) {
+			const errorMessage =
+				error instanceof Error ? error.message : "Failed to trigger check";
+			toast.error(errorMessage);
+		}
+	};
 
 	const handleTogglePause = async () => {
 		setIsPausing(true);
@@ -158,6 +174,14 @@ function MonitorActions({
 					<DropdownMenuItem className="gap-2" onClick={onEditAction}>
 						<PencilSimpleIcon className="size-4" weight="duotone" />
 						Edit Monitor
+					</DropdownMenuItem>
+					<DropdownMenuItem
+						className="gap-2"
+						disabled={manualCheckMutation.isPending || schedule.isPaused}
+						onClick={handleManualCheck}
+					>
+						<LightningIcon className="size-4" weight="duotone" />
+						Check Now
 					</DropdownMenuItem>
 					<DropdownMenuItem
 						className="gap-2"

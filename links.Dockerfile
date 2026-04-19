@@ -1,18 +1,20 @@
-FROM oven/bun:1.3.6 AS build
+FROM oven/bun:1.3.11-slim AS pruner
 
 WORKDIR /app
 
-COPY package.json package.json
-COPY bun.lock bun.lock
-COPY apps/links/package.json ./apps/links/package.json
-COPY packages/*/package.json ./packages/
+COPY . .
 
-COPY packages/ ./packages/
+RUN bunx turbo prune @databuddy/links --docker
 
+FROM oven/bun:1.3.11-slim AS builder
+
+WORKDIR /app
+
+COPY --from=pruner /app/out/json/ .
 RUN bun install --ignore-scripts
 
-COPY apps/links/src ./apps/links/src
-COPY apps/links/tsconfig.json ./apps/links/tsconfig.json
+COPY --from=pruner /app/out/full/ .
+COPY turbo.json turbo.json
 
 ENV NODE_ENV=production
 
@@ -20,22 +22,21 @@ WORKDIR /app/apps/links
 
 RUN bun build \
 	--compile \
-	--minify-whitespace \
-	--minify-syntax \
-	--target bun \
-	--outfile /app/server \
+	--minify \
 	--sourcemap \
 	--bytecode \
+	--outfile /app/server \
 	./src/index.ts
 
-FROM gcr.io/distroless/base
+FROM oven/bun:1.3.11-distroless
 
 WORKDIR /app
 
-COPY --from=build /app/server server
+COPY --from=builder /app/server server
 
 ENV NODE_ENV=production
 
-CMD ["./server"]
-
 EXPOSE 2500
+
+ENTRYPOINT []
+CMD ["./server"]

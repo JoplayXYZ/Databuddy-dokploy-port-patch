@@ -1,142 +1,61 @@
-export type NotificationChannel =
-	| "slack"
-	| "discord"
-	| "email"
-	| "webhook"
-	| "teams"
-	| "telegram"
-	| "google-chat";
+export type NotificationChannel = "slack" | "email" | "webhook";
 
 export type NotificationPriority = "low" | "normal" | "high" | "urgent";
 
 export interface NotificationPayload {
-	title: string;
 	message: string;
-	priority?: NotificationPriority;
 	metadata?: Record<string, unknown>;
+	priority?: NotificationPriority;
+	title: string;
 }
 
 export interface NotificationResult {
-	success: boolean;
 	channel: NotificationChannel;
 	error?: string;
 	response?: unknown;
+	success: boolean;
 }
 
 export interface NotificationOptions {
 	channels?: NotificationChannel[];
-	timeout?: number;
 	retries?: number;
 	retryDelay?: number;
+	timeout?: number;
 }
 
 export interface SlackTextElement {
-	type: "plain_text" | "mrkdwn";
 	text: string;
+	type: "plain_text" | "mrkdwn";
 }
 
 export interface SlackBlock {
-	type: "header" | "section" | "context" | "divider" | "actions";
-	text?: SlackTextElement;
-	fields?: SlackTextElement[];
 	elements?: SlackTextElement[];
+	fields?: SlackTextElement[];
+	text?: SlackTextElement;
+	type: "header" | "section" | "context" | "divider" | "actions";
 }
 
 export interface SlackPayload {
-	text?: string;
 	blocks?: SlackBlock[];
 	channel?: string;
-	username?: string;
 	icon_emoji?: string;
 	icon_url?: string;
-}
-
-export interface DiscordEmbed {
-	title?: string;
-	description?: string;
-	color?: number;
-	fields?: Array<{
-		name: string;
-		value: string;
-		inline?: boolean;
-	}>;
-	timestamp?: string;
-	footer?: { text: string; icon_url?: string };
-	thumbnail?: { url: string };
-	image?: { url: string };
-}
-
-export interface DiscordPayload {
-	content?: string;
-	embeds?: DiscordEmbed[];
+	text?: string;
 	username?: string;
-	avatar_url?: string;
 }
 
 export interface EmailPayload {
-	to: string | string[];
-	subject: string;
-	html?: string;
-	text?: string;
 	from?: string;
+	html?: string;
+	subject: string;
+	text?: string;
+	to: string | string[];
 }
 
 export interface WebhookPayload {
-	url: string;
-	method?: "GET" | "POST" | "PUT" | "PATCH";
-	headers?: Record<string, string>;
 	body?: unknown;
+	headers?: Record<string, string>;
+	method?: "GET" | "POST" | "PUT" | "PATCH";
 	timeout?: number;
-}
-
-export interface TeamsCard {
-	type: "AdaptiveCard";
-	version: string;
-	body: TeamsCardElement[];
-}
-
-export interface TeamsCardElement {
-	type: "TextBlock" | "FactSet" | "Container" | "ColumnSet";
-	text?: string;
-	size?: string;
-	weight?: string;
-	color?: string;
-	wrap?: boolean;
-	spacing?: string;
-	facts?: Array<{ title: string; value: string }>;
-	items?: TeamsCardElement[];
-}
-
-export interface TeamsPayload {
-	type: "message";
-	attachments: Array<{
-		contentType: "application/vnd.microsoft.card.adaptive";
-		content: TeamsCard;
-	}>;
-}
-
-export interface TelegramPayload {
-	chat_id: string;
-	text: string;
-	parse_mode: "HTML" | "Markdown";
-	disable_web_page_preview?: boolean;
-}
-
-export interface GoogleChatCard {
-	header?: {
-		title: string;
-		subtitle?: string;
-		imageUrl?: string;
-	};
-	sections?: Array<{
-		widgets: Array<{
-			keyValue?: { topLabel: string; content: string };
-			textParagraph?: { text: string };
-		}>;
-	}>;
-}
-
-export interface GoogleChatPayload {
-	text?: string;
-	cards?: GoogleChatCard[];
+	url: string;
 }

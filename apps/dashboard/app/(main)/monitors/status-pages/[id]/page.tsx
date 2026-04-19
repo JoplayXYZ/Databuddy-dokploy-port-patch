@@ -1,5 +1,16 @@
 "use client";
 
+import { ArrowClockwiseIcon } from "@phosphor-icons/react";
+import { ArrowSquareOutIcon } from "@phosphor-icons/react";
+import { BrowserIcon } from "@phosphor-icons/react";
+import { HeartbeatIcon } from "@phosphor-icons/react";
+import { PlusIcon } from "@phosphor-icons/react";
+import { SirenIcon } from "@phosphor-icons/react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import Link from "next/link";
+import { useParams, useRouter } from "next/navigation";
+import { type ReactNode, useState } from "react";
+import { toast } from "sonner";
 import { PageHeader } from "@/app/(main)/websites/_components/page-header";
 import { EmptyState } from "@/components/empty-state";
 import { ErrorBoundary } from "@/components/error-boundary";
@@ -18,19 +29,6 @@ import { useFeatureAccess } from "@/hooks/use-feature-access";
 import { getStatusPageUrl } from "@/lib/app-url";
 import { orpc } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
-import {
-	ArrowClockwiseIcon,
-	ArrowSquareOutIcon,
-	BrowserIcon,
-	HeartbeatIcon,
-	PlusIcon,
-	SirenIcon,
-} from "@phosphor-icons/react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
-import { type ReactNode, useState } from "react";
-import { toast } from "sonner";
 import { AddMonitorDialog } from "./_components/add-monitor-dialog";
 import {
 	type StatusPageMonitor,

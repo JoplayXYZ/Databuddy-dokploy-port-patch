@@ -1,16 +1,8 @@
 import type { NotificationProvider } from "./providers/base";
-import type { DiscordProviderConfig } from "./providers/discord";
-import { DiscordProvider } from "./providers/discord";
 import type { EmailProviderConfig } from "./providers/email";
 import { EmailProvider } from "./providers/email";
-import type { GoogleChatProviderConfig } from "./providers/google-chat";
-import { GoogleChatProvider } from "./providers/google-chat";
 import type { SlackProviderConfig } from "./providers/slack";
 import { SlackProvider } from "./providers/slack";
-import type { TeamsProviderConfig } from "./providers/teams";
-import { TeamsProvider } from "./providers/teams";
-import type { TelegramProviderConfig } from "./providers/telegram";
-import { TelegramProvider } from "./providers/telegram";
 import type { WebhookProviderConfig } from "./providers/webhook";
 import { WebhookProvider } from "./providers/webhook";
 import type {
@@ -21,17 +13,13 @@ import type {
 } from "./types";
 
 export interface NotificationClientConfig {
-	slack?: SlackProviderConfig;
-	discord?: DiscordProviderConfig;
-	email?: EmailProviderConfig;
-	webhook?: WebhookProviderConfig;
-	teams?: TeamsProviderConfig;
-	telegram?: TelegramProviderConfig;
-	googleChat?: GoogleChatProviderConfig;
 	defaultChannels?: NotificationChannel[];
-	defaultTimeout?: number;
 	defaultRetries?: number;
 	defaultRetryDelay?: number;
+	defaultTimeout?: number;
+	email?: EmailProviderConfig;
+	slack?: SlackProviderConfig;
+	webhook?: WebhookProviderConfig;
 }
 
 export class NotificationClient {
@@ -48,87 +36,33 @@ export class NotificationClient {
 			retryDelay: config.defaultRetryDelay ?? 1000,
 		};
 
+		const withDefaults = <
+			T extends { timeout?: number; retries?: number; retryDelay?: number },
+		>(
+			c: T
+		) => ({
+			...c,
+			timeout: c.timeout ?? defaults.timeout,
+			retries: c.retries ?? defaults.retries,
+			retryDelay: c.retryDelay ?? defaults.retryDelay,
+		});
+
 		if (config.slack) {
 			this.providers.set(
 				"slack",
-				new SlackProvider({
-					...config.slack,
-					timeout: config.slack.timeout ?? defaults.timeout,
-					retries: config.slack.retries ?? defaults.retries,
-					retryDelay: config.slack.retryDelay ?? defaults.retryDelay,
-				})
+				new SlackProvider(withDefaults(config.slack))
 			);
 		}
-
-		if (config.discord) {
-			this.providers.set(
-				"discord",
-				new DiscordProvider({
-					...config.discord,
-					timeout: config.discord.timeout ?? defaults.timeout,
-					retries: config.discord.retries ?? defaults.retries,
-					retryDelay: config.discord.retryDelay ?? defaults.retryDelay,
-				})
-			);
-		}
-
 		if (config.email) {
 			this.providers.set(
 				"email",
-				new EmailProvider({
-					...config.email,
-					timeout: config.email.timeout ?? defaults.timeout,
-					retries: config.email.retries ?? defaults.retries,
-					retryDelay: config.email.retryDelay ?? defaults.retryDelay,
-				})
+				new EmailProvider(withDefaults(config.email))
 			);
 		}
-
 		if (config.webhook) {
 			this.providers.set(
 				"webhook",
-				new WebhookProvider({
-					...config.webhook,
-					timeout: config.webhook.timeout ?? defaults.timeout,
-					retries: config.webhook.retries ?? defaults.retries,
-					retryDelay: config.webhook.retryDelay ?? defaults.retryDelay,
-				})
-			);
-		}
-
-		if (config.teams) {
-			this.providers.set(
-				"teams",
-				new TeamsProvider({
-					...config.teams,
-					timeout: config.teams.timeout ?? defaults.timeout,
-					retries: config.teams.retries ?? defaults.retries,
-					retryDelay: config.teams.retryDelay ?? defaults.retryDelay,
-				})
-			);
-		}
-
-		if (config.telegram) {
-			this.providers.set(
-				"telegram",
-				new TelegramProvider({
-					...config.telegram,
-					timeout: config.telegram.timeout ?? defaults.timeout,
-					retries: config.telegram.retries ?? defaults.retries,
-					retryDelay: config.telegram.retryDelay ?? defaults.retryDelay,
-				})
-			);
-		}
-
-		if (config.googleChat) {
-			this.providers.set(
-				"google-chat",
-				new GoogleChatProvider({
-					...config.googleChat,
-					timeout: config.googleChat.timeout ?? defaults.timeout,
-					retries: config.googleChat.retries ?? defaults.retries,
-					retryDelay: config.googleChat.retryDelay ?? defaults.retryDelay,
-				})
+				new WebhookProvider(withDefaults(config.webhook))
 			);
 		}
 	}

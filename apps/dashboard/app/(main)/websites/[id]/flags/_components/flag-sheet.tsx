@@ -3,19 +3,17 @@
 import type { FlagWithScheduleForm } from "@databuddy/shared/flags";
 import { flagWithScheduleSchema } from "@databuddy/shared/flags";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-	BuildingsIcon,
-	CaretDownIcon,
-	CodeIcon,
-	FlagIcon,
-	GitBranchIcon,
-	SpinnerGapIcon,
-	UserIcon,
-	UsersIcon,
-	UsersThreeIcon,
-} from "@phosphor-icons/react";
+import { BuildingsIcon } from "@phosphor-icons/react";
+import { CaretDownIcon } from "@phosphor-icons/react";
+import { CodeIcon } from "@phosphor-icons/react";
+import { FlagIcon } from "@phosphor-icons/react";
+import { GitBranchIcon } from "@phosphor-icons/react";
+import { SpinnerGapIcon } from "@phosphor-icons/react";
+import { UserIcon } from "@phosphor-icons/react";
+import { UsersIcon } from "@phosphor-icons/react";
+import { UsersThreeIcon } from "@phosphor-icons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion } from "motion/react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -215,17 +213,19 @@ export function FlagSheet({
 	const [expandedSection, setExpandedSection] = useState<ExpandedSection>(null);
 	const queryClient = useQueryClient();
 
-	const { data: flagsList } = useQuery({
+	const { data: flagsListRaw } = useQuery({
 		...orpc.flags.list.queryOptions({
 			input: { websiteId },
 		}),
 	});
+	const flagsList = flagsListRaw as Flag[] | undefined;
 
-	const { data: targetGroups } = useQuery({
+	const { data: targetGroupsRaw } = useQuery({
 		...orpc.targetGroups.list.queryOptions({
 			input: { websiteId },
 		}),
 	});
+	const targetGroups = targetGroupsRaw as TargetGroup[] | undefined;
 
 	const isEditing = Boolean(flag);
 
@@ -478,7 +478,6 @@ export function FlagSheet({
 						})}
 					>
 						<SheetBody className="space-y-6">
-							{/* Basic Info */}
 							<div className="space-y-4">
 								<div className="grid place-items-start gap-4 sm:grid-cols-2">
 									<FormField
@@ -549,18 +548,16 @@ export function FlagSheet({
 								/>
 							</div>
 
-							{/* Separator */}
 							<div className="h-px bg-border" />
 
-							{/* Type & Value */}
 							<div className="space-y-4">
 								<div className="space-y-2">
 									<div className="space-y-0.5">
 										<span className="font-medium text-foreground text-sm">
-											Flag Type
+											Type
 										</span>
 										<p className="text-muted-foreground text-xs">
-											How the flag value is determined for each user
+											What this flag returns
 										</p>
 									</div>
 									<div className="flex gap-2">
@@ -615,10 +612,10 @@ export function FlagSheet({
 														<div className="flex items-center justify-between">
 															<div className="space-y-0.5">
 																<span className="font-medium text-foreground text-sm">
-																	Rollout Percentage
+																	Rollout
 																</span>
 																<p className="text-muted-foreground text-xs">
-																	% of users who get true (when active)
+																	Share of users who see it enabled
 																</p>
 															</div>
 															<span className="font-mono text-foreground text-lg tabular-nums">
@@ -661,19 +658,19 @@ export function FlagSheet({
 														{
 															value: "user",
 															label: "User",
-															description: "Each user individually",
+															description: "Each user",
 															icon: UserIcon,
 														},
 														{
 															value: "organization",
 															label: "Organization",
-															description: "All org members together",
+															description: "Whole org",
 															icon: BuildingsIcon,
 														},
 														{
 															value: "team",
 															label: "Team",
-															description: "All team members together",
+															description: "Whole team",
 															icon: UsersThreeIcon,
 														},
 													] as const;
@@ -682,10 +679,10 @@ export function FlagSheet({
 														<div className="space-y-2">
 															<div className="space-y-0.5">
 																<span className="font-medium text-foreground text-sm">
-																	Rollout Unit
+																	Bucket by
 																</span>
 																<p className="text-muted-foreground text-xs">
-																	Group users for consistent rollout results
+																	Same user always gets the same result
 																</p>
 															</div>
 															<div className="flex gap-2">
@@ -763,10 +760,10 @@ export function FlagSheet({
 											<div className="flex items-center justify-between">
 												<div className="space-y-0.5">
 													<span className="font-medium text-foreground text-sm">
-														Return Value
+														Default
 													</span>
 													<p className="text-muted-foreground text-xs">
-														What users get when flag is active
+														Value returned when on
 													</p>
 												</div>
 												<FormField
@@ -807,7 +804,6 @@ export function FlagSheet({
 								</AnimatePresence>
 							</div>
 
-							{/* Status */}
 							<FormField
 								control={form.control}
 								name="flag.status"
@@ -820,9 +816,9 @@ export function FlagSheet({
 									const canBeActive = inactiveDeps.length === 0;
 
 									const statusDescriptions = {
-										active: "Live, evaluates rules",
-										inactive: "Off, always returns false",
-										archived: "Retired, hidden from list",
+										active: "Live",
+										inactive: "Returns false",
+										archived: "Hidden",
 									};
 
 									return (
@@ -830,11 +826,10 @@ export function FlagSheet({
 											<div className="flex items-center justify-between">
 												<div className="space-y-0.5">
 													<span className="font-medium text-foreground text-sm">
-														Flag Status
+														Status
 													</span>
 													<p className="text-muted-foreground text-xs">
-														Active = uses settings below. Inactive = completely
-														off.
+														Turn this flag on or off for everyone
 													</p>
 												</div>
 												{!canBeActive && (
@@ -890,10 +885,8 @@ export function FlagSheet({
 								}}
 							/>
 
-							{/* Divider */}
 							<div className="h-px bg-border" />
 
-							{/* Advanced Options */}
 							<div className="space-y-1">
 								<CollapsibleSection
 									badge={form.watch("flag.targetGroupIds")?.length ?? 0}
@@ -907,7 +900,7 @@ export function FlagSheet({
 										name="flag.targetGroupIds"
 										render={({ field }) => (
 											<GroupSelector
-												availableGroups={(targetGroups as TargetGroup[]) ?? []}
+												availableGroups={targetGroups ?? []}
 												onChangeAction={(ids) => field.onChange(ids)}
 												selectedGroups={field.value ?? []}
 											/>
@@ -946,7 +939,7 @@ export function FlagSheet({
 										name="flag.dependencies"
 										render={({ field }) => (
 											<DependencySelector
-												availableFlags={(flagsList as Flag[]) || []}
+												availableFlags={flagsList ?? []}
 												currentFlagKey={flag?.key}
 												onChange={field.onChange}
 												value={field.value || []}
@@ -959,7 +952,7 @@ export function FlagSheet({
 									icon={CodeIcon}
 									isExpanded={expandedSection === "implementation"}
 									onToggleAction={() => toggleSection("implementation")}
-									title="How to Implement"
+									title="Code"
 								>
 									<ImplementationExamples
 										flagKey={form.watch("flag.key") || "my-feature"}

@@ -1,13 +1,11 @@
 "use client";
 
-import {
-	EnvelopeIcon,
-	PlusIcon,
-	TrashIcon,
-	UserIcon,
-	WrenchIcon,
-	XIcon,
-} from "@phosphor-icons/react";
+import { EnvelopeIcon } from "@phosphor-icons/react";
+import { PlusIcon } from "@phosphor-icons/react";
+import { TrashIcon } from "@phosphor-icons/react";
+import { UserIcon } from "@phosphor-icons/react";
+import { WrenchIcon } from "@phosphor-icons/react";
+import { XIcon } from "@phosphor-icons/react";
 import { useState } from "react";
 import { z } from "zod/mini";
 import { Button } from "@/components/ui/button";
@@ -346,7 +344,7 @@ export function UserRulesBuilder({ rules, onChange }: UserRulesBuilderProps) {
 		return (
 			<div className="py-4 text-center">
 				<p className="mb-3 text-muted-foreground text-sm">
-					Target specific users, emails, or properties
+					Match users by ID, email, or property
 				</p>
 				<Button onClick={addRule} size="sm" type="button" variant="outline">
 					<PlusIcon size={14} />

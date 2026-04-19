@@ -1,5 +1,4 @@
-import { Heading, Link, Section, Text } from "@react-email/components";
-import { sanitizeEmailText } from "../utils/sanitize";
+import { Heading, Link, Section, Text } from "react-email";
 import { emailBrand } from "./email-brand";
 import { EmailButton } from "./email-button";
 import { EmailLayout } from "./email-layout";
@@ -16,18 +15,18 @@ const utcFormatter = new Intl.DateTimeFormat("en-US", {
 });
 
 export interface UptimeAlertEmailProps {
-	kind?: "down" | "recovered";
-	siteLabel?: string;
-	url?: string;
 	checkedAt?: number;
-	httpCode?: number;
+	dashboardUrl?: string;
 	error?: string;
+	httpCode?: number;
+	kind?: "down" | "recovered";
 	probeRegion?: string;
+	siteLabel?: string;
+	sslExpiryMs?: number;
+	sslValid?: boolean;
 	totalMs?: number;
 	ttfbMs?: number;
-	sslValid?: boolean;
-	sslExpiryMs?: number;
-	dashboardUrl?: string;
+	url?: string;
 }
 
 function fmtMs(ms: number | undefined): string | undefined {
@@ -100,7 +99,7 @@ export const UptimeAlertEmail = ({
 	sslExpiryMs,
 	dashboardUrl,
 }: UptimeAlertEmailProps) => {
-	const safe = sanitizeEmailText(siteLabel) || "your site";
+	const safe = siteLabel || "your site";
 	const isDown = kind === "down";
 	const accentBorder = isDown ? "#dc2626" : "#22c55e";
 	const href = safeHref(url);
@@ -117,8 +116,7 @@ export const UptimeAlertEmail = ({
 	const responseLine = responseParts.join(" · ");
 	const ssl = sslSummary(sslValid, sslExpiryMs);
 	const trimmedErr = error.trim();
-	const safeErr =
-		isDown && trimmedErr.length > 0 ? sanitizeEmailText(trimmedErr) : "";
+	const safeErr = isDown && trimmedErr.length > 0 ? trimmedErr : "";
 
 	return (
 		<EmailLayout
@@ -143,11 +141,10 @@ export const UptimeAlertEmail = ({
 			</Section>
 
 			<Section
-				className="my-4 rounded p-4"
+				className="my-4 rounded border border-border border-l-4 border-solid p-4"
 				style={{
 					backgroundColor: emailBrand.inset,
-					border: `1px solid ${emailBrand.border}`,
-					borderLeft: `4px solid ${accentBorder}`,
+					borderLeftColor: accentBorder,
 				}}
 			>
 				<DetailRow label="URL">
@@ -156,7 +153,7 @@ export const UptimeAlertEmail = ({
 						href={href}
 						style={{ color: emailBrand.coral, wordBreak: "break-all" }}
 					>
-						{sanitizeEmailText(url) || href}
+						{url || href}
 					</Link>
 				</DetailRow>
 				<DetailRow label="Checked at">{fmtDate(checkedAt)}</DetailRow>
@@ -165,7 +162,7 @@ export const UptimeAlertEmail = ({
 					<DetailRow label="Response">{responseLine}</DetailRow>
 				) : null}
 				{probeRegion ? (
-					<DetailRow label="Region">{sanitizeEmailText(probeRegion)}</DetailRow>
+					<DetailRow label="Region">{probeRegion}</DetailRow>
 				) : null}
 				{ssl ? <DetailRow label="SSL">{ssl}</DetailRow> : null}
 				{safeErr.length > 0 ? (
@@ -203,5 +200,20 @@ export const UptimeAlertEmail = ({
 		</EmailLayout>
 	);
 };
+
+UptimeAlertEmail.PreviewProps = {
+	checkedAt: Date.now(),
+	dashboardUrl: "https://app.databuddy.cc/uptime",
+	error: "connect ETIMEDOUT 10.0.0.1:443",
+	httpCode: 0,
+	kind: "down",
+	probeRegion: "us-east-1",
+	siteLabel: "example.com",
+	sslExpiryMs: Date.now() + 30 * 24 * 60 * 60 * 1000,
+	sslValid: true,
+	totalMs: 1842,
+	ttfbMs: 1520,
+	url: "https://example.com",
+} satisfies UptimeAlertEmailProps;
 
 export default UptimeAlertEmail;

@@ -51,7 +51,7 @@ export const Navbar = ({ stars }: NavbarProps) => {
 									</li>
 									<li className="ml-2">
 										<a
-											className="inline-flex items-center rounded bg-primary px-4 py-2 font-medium text-primary-foreground text-sm transition-opacity hover:opacity-90"
+											className="inline-flex items-center bg-primary px-4 py-2 font-medium text-primary-foreground text-sm transition-opacity hover:opacity-90"
 											href="https://app.databuddy.cc/login"
 										>
 											Start free
@@ -84,7 +84,7 @@ export const Navbar = ({ stars }: NavbarProps) => {
 							/>
 							{navMenu.map((menu, index) => (
 								<Link
-									className={`block transform rounded px-4 py-3 font-medium text-base transition-all duration-200 hover:translate-x-1 hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/20 active:bg-muted/70 ${
+									className={`block transform px-4 py-3 font-medium text-base transition-all duration-200 hover:translate-x-1 hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/20 active:bg-muted/70 ${
 										isMobileMenuOpen
 											? "translate-x-0 opacity-100"
 											: "-translate-x-4 opacity-0"
@@ -113,7 +113,7 @@ export const Navbar = ({ stars }: NavbarProps) => {
 							/>
 							<div className="px-4 pt-2">
 								<a
-									className="block w-full rounded bg-primary px-4 py-3 text-center font-medium text-base text-primary-foreground"
+									className="block w-full bg-primary px-4 py-3 text-center font-medium text-base text-primary-foreground"
 									href="https://app.databuddy.cc/login"
 									onClick={() => setIsMobileMenuOpen(false)}
 								>
@@ -133,9 +133,9 @@ export const Navbar = ({ stars }: NavbarProps) => {
 };
 
 export interface NavMenuItem {
+	external?: boolean;
 	name: string;
 	path: string;
-	external?: boolean;
 }
 
 export const navMenu: NavMenuItem[] = [

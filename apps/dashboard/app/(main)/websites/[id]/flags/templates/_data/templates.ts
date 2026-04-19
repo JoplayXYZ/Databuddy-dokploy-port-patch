@@ -4,8 +4,7 @@ export const HARDCODED_TEMPLATES: FlagTemplate[] = [
 	{
 		id: "gradual-rollout",
 		name: "Gradual Rollout",
-		description:
-			"Start with 10% of users and gradually increase. Perfect for safely releasing new features to production.",
+		description: "Start at 10% and ramp up over time.",
 		category: "rollout",
 		icon: "rocket",
 		type: "rollout",
@@ -16,8 +15,7 @@ export const HARDCODED_TEMPLATES: FlagTemplate[] = [
 	{
 		id: "ab-test",
 		name: "A/B Test (50/50)",
-		description:
-			"Split users evenly with 50% rollout. Use rollout percentage as your A/B split mechanism.",
+		description: "Even 50/50 split between control and variant.",
 		category: "experiment",
 		icon: "test",
 		type: "rollout",
@@ -28,8 +26,7 @@ export const HARDCODED_TEMPLATES: FlagTemplate[] = [
 	{
 		id: "beta-program",
 		name: "Beta Program",
-		description:
-			"Target specific users for early access. Great for getting feedback before wider release.",
+		description: "Early access for users tagged as beta testers.",
 		category: "targeting",
 		icon: "users",
 		type: "boolean",
@@ -49,8 +46,7 @@ export const HARDCODED_TEMPLATES: FlagTemplate[] = [
 	{
 		id: "internal-only",
 		name: "Internal Team Only",
-		description:
-			"Enable only for your team using email domain. Perfect for testing internally before release.",
+		description: "Enable only for your team's email domain.",
 		category: "targeting",
 		icon: "users",
 		type: "boolean",
@@ -69,8 +65,7 @@ export const HARDCODED_TEMPLATES: FlagTemplate[] = [
 	{
 		id: "kill-switch",
 		name: "Emergency Kill Switch",
-		description:
-			"Disable a feature instantly in production. Essential for handling incidents and rolling back quickly.",
+		description: "Flip a feature off instantly during incidents.",
 		category: "killswitch",
 		icon: "warning",
 		type: "boolean",
@@ -81,8 +76,7 @@ export const HARDCODED_TEMPLATES: FlagTemplate[] = [
 	{
 		id: "premium-only",
 		name: "Premium Users Only",
-		description:
-			"Restrict feature to premium tier. Monetize features and drive conversions to paid plans.",
+		description: "Limit a feature to users on the premium plan.",
 		category: "targeting",
 		icon: "users",
 		type: "boolean",
@@ -102,8 +96,7 @@ export const HARDCODED_TEMPLATES: FlagTemplate[] = [
 	{
 		id: "canary-release",
 		name: "Canary Release (5%)",
-		description:
-			"Test with a small subset first. Minimize risk by validating with 5% before wider rollout.",
+		description: "Test with 5% of users before going wider.",
 		category: "rollout",
 		icon: "rocket",
 		type: "rollout",
@@ -114,8 +107,7 @@ export const HARDCODED_TEMPLATES: FlagTemplate[] = [
 	{
 		id: "abc-test",
 		name: "A/B/C Test (33%)",
-		description:
-			"Use 33% rollout for testing. Enable for 1/3 of users to test alternative approaches.",
+		description: "Enable for one third of users.",
 		category: "experiment",
 		icon: "test",
 		type: "rollout",
@@ -126,8 +118,7 @@ export const HARDCODED_TEMPLATES: FlagTemplate[] = [
 	{
 		id: "vip-users",
 		name: "VIP Users",
-		description:
-			"Target power users or key accounts. Give special access to valuable users for retention.",
+		description: "Target users tagged as VIP accounts.",
 		category: "targeting",
 		icon: "users",
 		type: "boolean",
@@ -147,8 +138,7 @@ export const HARDCODED_TEMPLATES: FlagTemplate[] = [
 	{
 		id: "regional-release",
 		name: "Regional Release",
-		description:
-			"Enable for specific geographic regions. Roll out features market by market or handle regulations.",
+		description: "Enable in specific countries (default: US, CA, GB).",
 		category: "targeting",
 		icon: "users",
 		type: "boolean",
@@ -168,8 +158,7 @@ export const HARDCODED_TEMPLATES: FlagTemplate[] = [
 	{
 		id: "multivariant-ab-test",
 		name: "A/B Test Variants",
-		description:
-			"Split users between control and variant groups with custom values. Measure the impact of different experiences.",
+		description: "Two variants split 50/50 with custom return values.",
 		category: "experiment",
 		icon: "test",
 		type: "multivariant",
@@ -195,8 +184,7 @@ export const HARDCODED_TEMPLATES: FlagTemplate[] = [
 	{
 		id: "pricing-tiers",
 		name: "Pricing Tier Test",
-		description:
-			"Test different pricing tiers with numeric values. Perfect for optimizing conversion rates.",
+		description: "Test three numeric price points ($9, $19, $29).",
 		category: "experiment",
 		icon: "test",
 		type: "multivariant",
@@ -229,8 +217,7 @@ export const HARDCODED_TEMPLATES: FlagTemplate[] = [
 	{
 		id: "theme-test",
 		name: "UI Theme Test",
-		description:
-			"Test different UI themes or color schemes. Great for design experiments and personalization.",
+		description: "Test default, dark, and high-contrast themes.",
 		category: "experiment",
 		icon: "test",
 		type: "multivariant",

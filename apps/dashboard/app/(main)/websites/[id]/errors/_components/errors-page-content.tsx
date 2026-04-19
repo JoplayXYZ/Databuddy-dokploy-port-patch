@@ -1,13 +1,13 @@
 "use client";
 
 import { GATED_FEATURES } from "@databuddy/shared/types/features";
-import { BugIcon } from "@phosphor-icons/react/dist/ssr/Bug";
+import { BugIcon } from "@phosphor-icons/react";
 import { useAtom, useAtomValue } from "jotai";
 import { use, useCallback } from "react";
 import { FeatureGate } from "@/components/feature-gate";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useDateFilters } from "@/hooks/use-date-filters";
-import { formatDateOnly } from "@/lib/formatters";
+import { formatDateOnly } from "@/lib/time";
 import {
 	type DynamicQueryFilter,
 	dynamicQueryFiltersAtom,
@@ -98,11 +98,10 @@ export const ErrorsPageContent = ({ params }: ErrorsPageContentProps) => {
 							<BugIcon className="size-6 text-destructive" weight="duotone" />
 						</div>
 						<h4 className="mb-2 font-semibold text-destructive">
-							Error loading data
+							Failed to load errors
 						</h4>
 						<p className="max-w-md text-destructive/80 text-sm">
-							There was an issue loading your error analytics. Please try
-							refreshing using the toolbar above.
+							Try refreshing from the toolbar above.
 						</p>
 					</div>
 				</div>

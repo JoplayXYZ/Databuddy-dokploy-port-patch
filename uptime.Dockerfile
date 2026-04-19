@@ -1,36 +1,42 @@
-FROM oven/bun:1.3.4-slim AS build
+FROM oven/bun:1.3.11-slim AS pruner
 
 WORKDIR /app
 
-COPY package.json package.json
-COPY apps/uptime/package.json ./apps/uptime/package.json
-COPY packages/*/package.json ./packages/
+COPY . .
 
-COPY packages/ ./packages/
+RUN bunx turbo prune @databuddy/uptime --docker
 
+FROM oven/bun:1.3.11-slim AS builder
+
+WORKDIR /app
+
+COPY --from=pruner /app/out/json/ .
 RUN bun install --ignore-scripts
 
-COPY apps/uptime/src ./apps/uptime/src
+COPY --from=pruner /app/out/full/ .
+COPY turbo.json turbo.json
 
 ENV NODE_ENV=production
 
-RUN bun build \
-    --compile \
-    --minify \
-    --target bun \
-    --outfile server \
-    --sourcemap \
-    --bytecode \
-    ./apps/uptime/src/index.ts
+WORKDIR /app/apps/uptime
 
-FROM gcr.io/distroless/base
+RUN bun build \
+	--compile \
+	--minify \
+	--sourcemap \
+	--bytecode \
+	--outfile /app/server \
+	./src/index.ts
+
+FROM oven/bun:1.3.11-distroless
 
 WORKDIR /app
 
-COPY --from=build /app/server server
+COPY --from=builder /app/server server
 
 ENV NODE_ENV=production
 
-CMD ["./server"]
-
 EXPOSE 4000
+
+ENTRYPOINT []
+CMD ["./server"]

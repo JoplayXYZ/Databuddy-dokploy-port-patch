@@ -1,12 +1,10 @@
 "use client";
 
-import {
-	CheckIcon,
-	PlusIcon,
-	UsersThreeIcon,
-	XIcon,
-} from "@phosphor-icons/react";
-import { AnimatePresence, motion } from "framer-motion";
+import { CheckIcon } from "@phosphor-icons/react";
+import { PlusIcon } from "@phosphor-icons/react";
+import { UsersThreeIcon } from "@phosphor-icons/react";
+import { XIcon } from "@phosphor-icons/react";
+import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -140,8 +138,7 @@ export function GroupSelector({
 					weight="duotone"
 				/>
 				<p className="text-balance text-muted-foreground text-sm">
-					No groups created yet. Create groups to quickly target the same users
-					across multiple flags.
+					No groups yet. Create one to reuse user targeting across flags.
 				</p>
 			</div>
 		);
@@ -149,7 +146,6 @@ export function GroupSelector({
 
 	return (
 		<div className="space-y-3">
-			{/* Selected groups pills */}
 			{selectedGroupObjects.length > 0 && (
 				<div className="flex flex-wrap gap-2">
 					<AnimatePresence mode="popLayout">
@@ -164,7 +160,6 @@ export function GroupSelector({
 				</div>
 			)}
 
-			{/* Add group button */}
 			<Popover onOpenChange={setIsOpen} open={isOpen}>
 				<PopoverTrigger asChild>
 					<Button
@@ -174,7 +169,7 @@ export function GroupSelector({
 						variant="outline"
 					>
 						<PlusIcon size={14} />
-						{selectedGroups.length > 0 ? "Add More Groups" : "Add Groups"}
+						{selectedGroups.length > 0 ? "Add more groups" : "Add groups"}
 					</Button>
 				</PopoverTrigger>
 				<PopoverContent align="start" className="w-72 p-2" side="bottom">

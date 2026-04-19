@@ -1,4 +1,4 @@
-import { Heading, Section, Text } from "@react-email/components";
+import { Heading, Section, Text } from "react-email";
 import { emailBrand } from "./email-brand";
 import { EmailLayout } from "./email-layout";
 import { EmailNote } from "./email-note";
@@ -44,5 +44,9 @@ export const OtpEmail = ({ otp }: OtpEmailProps) => (
 		</EmailNote>
 	</EmailLayout>
 );
+
+OtpEmail.PreviewProps = {
+	otp: "482913",
+} satisfies OtpEmailProps;
 
 export default OtpEmail;

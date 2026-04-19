@@ -226,7 +226,7 @@ const openApiHandler = new OpenAPIHandler(docsRouter, {
 
 **Scope requirements:** Session auth uses organization membership and roles; no scopes. API key auth may require scopes. The Links router enforces scopes: \`read:links\` for list/get, \`write:links\` for create/update/delete. Operations that require scopes include \`x-required-scopes\` in their schema.
 
-**Available scopes:** read:data | write:llm | track:events | read:links | write:links
+**Available scopes:** read:data | track:events | track:llm | read:links | write:links | manage:websites | manage:flags | manage:config
 
 **Creating keys:** Keys are created in the dashboard (Organization → API Keys) and must be scoped to an organization. Store the secret securely; it is shown only once.`,
 						},
@@ -382,9 +382,16 @@ export default {
 	idleTimeout: BUN_IDLE_TIMEOUT_SECONDS,
 };
 
-process.on("SIGINT", async () => {
-	log.info("lifecycle", "SIGINT received, shutting down gracefully");
+async function shutdown(signal: string) {
+	log.info("lifecycle", `${signal} received, shutting down gracefully`);
+	const { shutdownRedis } = await import("@databuddy/redis");
 	await Promise.all([
+		shutdownRedis().catch((error) =>
+			log.error({
+				lifecycle: "redisShutdown",
+				error_message: error instanceof Error ? error.message : String(error),
+			})
+		),
 		flushBatchedApiDrain().catch((error) =>
 			log.error({
 				lifecycle: "drainFlush",
@@ -399,23 +406,7 @@ process.on("SIGINT", async () => {
 		),
 	]);
 	process.exit(0);
-});
+}
 
-process.on("SIGTERM", async () => {
-	log.info("lifecycle", "SIGTERM received, shutting down gracefully");
-	await Promise.all([
-		flushBatchedApiDrain().catch((error) =>
-			log.error({
-				lifecycle: "drainFlush",
-				error_message: error instanceof Error ? error.message : String(error),
-			})
-		),
-		shutdownTccTracing().catch((error) =>
-			log.error({
-				lifecycle: "tccOtelShutdown",
-				error_message: error instanceof Error ? error.message : String(error),
-			})
-		),
-	]);
-	process.exit(0);
-});
+process.on("SIGINT", () => shutdown("SIGINT"));
+process.on("SIGTERM", () => shutdown("SIGTERM"));

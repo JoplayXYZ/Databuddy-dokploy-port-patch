@@ -2,8 +2,8 @@
 
 import { useCallback, useState } from "react";
 import { ChartErrorBoundary } from "@/components/chart-error-boundary";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Chart } from "@/components/ui/composables/chart";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
 	chartLegendPillClassName,
 	chartLegendPillDotClassName,
@@ -13,7 +13,7 @@ import {
 	chartSurfaceClassName,
 	chartTooltipSingleShellClassName,
 } from "@/lib/chart-presentation";
-import { formatMetricNumber } from "@/lib/formatters";
+import { formatNumber } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
 import type { ChartComponentProps } from "../../types";
 
@@ -21,8 +21,8 @@ const { Cell, Pie, PieChart, ResponsiveContainer, Sector, Tooltip } =
 	Chart.Recharts;
 
 export interface DistributionProps extends ChartComponentProps {
-	variant: "pie" | "donut";
 	data: Array<{ name: string; value: number }>;
+	variant: "pie" | "donut";
 }
 
 const PLOT_HEIGHT = 220;
@@ -40,11 +40,11 @@ const renderActiveShape = (props: {
 		<Sector
 			cx={props.cx}
 			cy={props.cy}
+			endAngle={props.endAngle}
+			fill={props.fill}
 			innerRadius={props.innerRadius}
 			outerRadius={props.outerRadius + 4}
 			startAngle={props.startAngle}
-			endAngle={props.endAngle}
-			fill={props.fill}
 		/>
 	</g>
 );
@@ -86,17 +86,17 @@ export function DistributionRenderer({
 									data={data}
 									dataKey="value"
 									innerRadius={variant === "donut" ? 50 : 0}
+									isAnimationActive={!streaming}
 									nameKey="name"
 									onMouseEnter={onPieEnter}
 									onMouseLeave={onPieLeave}
 									outerRadius={80}
 									paddingAngle={1}
-									isAnimationActive={!streaming}
 								>
-									{data.map((_, index) => (
+									{data.map((entry, index) => (
 										<Cell
-											key={`cell-${index}`}
 											fill={chartSeriesColorAtIndex(index)}
+											key={entry.name}
 											stroke="var(--background)"
 											strokeWidth={2}
 										/>
@@ -104,15 +104,21 @@ export function DistributionRenderer({
 								</Pie>
 								<Tooltip
 									content={({ active, payload }) => {
-										if (!(active && payload?.length)) return null;
+										if (!(active && payload?.length)) {
+											return null;
+										}
 										const item = payload[0];
-										if (!item || typeof item.value !== "number") return null;
+										if (!item || typeof item.value !== "number") {
+											return null;
+										}
 										const pct = total > 0 ? (item.value / total) * 100 : 0;
 										return (
 											<div className={chartTooltipSingleShellClassName}>
-												<p className="font-medium text-foreground text-xs">{item.name}</p>
+												<p className="font-medium text-foreground text-xs">
+													{item.name}
+												</p>
 												<p className="text-muted-foreground text-xs tabular-nums">
-													{formatMetricNumber(item.value)} ({pct.toFixed(1)}%)
+													{formatNumber(item.value)} ({pct.toFixed(1)}%)
 												</p>
 											</div>
 										);
@@ -132,7 +138,7 @@ export function DistributionRenderer({
 				)}
 				<div className={chartLegendPillRowClassName}>
 					{data.map((item, idx) => (
-						<div key={item.name} className={chartLegendPillClassName}>
+						<div className={chartLegendPillClassName} key={item.name}>
 							<div
 								className={chartLegendPillDotClassName}
 								style={{ backgroundColor: chartSeriesColorAtIndex(idx) }}

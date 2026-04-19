@@ -2,13 +2,11 @@
 
 import { useFlag } from "@databuddy/sdk/react";
 import { GATED_FEATURES } from "@databuddy/shared/types/features";
-import {
-	ArchiveIcon,
-	FlagIcon,
-	InfoIcon,
-	LayoutIcon,
-	UsersThreeIcon,
-} from "@phosphor-icons/react";
+import { ArchiveIcon } from "@phosphor-icons/react";
+import { FlagIcon } from "@phosphor-icons/react";
+import { InfoIcon } from "@phosphor-icons/react";
+import { LayoutIcon } from "@phosphor-icons/react";
+import { UsersThreeIcon } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
 import { useAtom } from "jotai";
 import { useParams, usePathname } from "next/navigation";
@@ -130,12 +128,12 @@ export default function FlagsLayout({
 				}
 				description={
 					isTemplatesPage
-						? "Pre-configured flag templates for common use cases"
+						? "Starting points for common flag setups"
 						: isGroupsPage
-							? "Reusable targeting rules for your flags"
+							? "Reusable targeting rules"
 							: isArchivePage
-								? "Flags that have been archived"
-								: "Control feature rollouts and A/B testing"
+								? "Flags you've retired"
+								: "Control rollouts and A/B tests"
 				}
 				docsUrl="https://www.databuddy.cc/docs/sdk/feature-flags"
 				feature={
@@ -192,7 +190,6 @@ export default function FlagsLayout({
 				websiteName={website?.name ?? undefined}
 			/>
 
-			{/* Navigation Tabs */}
 			<PageNavigation
 				tabs={[
 					{
@@ -257,10 +254,7 @@ export default function FlagsLayout({
 								<div className="space-y-2">
 									<p className="font-medium">A/B Test Experiment</p>
 									<p className="text-xs leading-relaxed">
-										This is a proof-of-concept feature flag demonstrating A/B
-										testing capabilities. Approximately 50% of users are
-										randomly assigned to the "Red Team" experience, while the
-										other 50% see the "Blue Team" experience.
+										Live demo: ~50% of users see Red Team, ~50% see Blue Team.
 									</p>
 								</div>
 							</TooltipContent>
@@ -277,7 +271,6 @@ export default function FlagsLayout({
 				)}
 			</div>
 
-			{/* Page Content */}
 			<div className="min-h-0 flex-1 overflow-hidden">{children}</div>
 		</div>
 	);

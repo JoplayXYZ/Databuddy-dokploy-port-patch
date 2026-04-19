@@ -57,15 +57,15 @@ import type {
 	TimeSeriesInput,
 } from "./types";
 
-// ============================================
-// Chart Validators
-// ============================================
-
 function isTimeSeriesInput(
 	input: RawComponentInput
 ): input is RawComponentInput & TimeSeriesInput {
-	if (!Array.isArray(input.series) || !Array.isArray(input.rows)) return false;
-	if (input.series.length === 0) return false;
+	if (!(Array.isArray(input.series) && Array.isArray(input.rows))) {
+		return false;
+	}
+	if (input.series.length === 0) {
+		return false;
+	}
 	return (input.series as unknown[]).every(
 		(s: unknown) => typeof s === "string"
 	);
@@ -74,13 +74,11 @@ function isTimeSeriesInput(
 function isDistributionInput(
 	input: RawComponentInput
 ): input is RawComponentInput & DistributionInput {
-	if (!Array.isArray(input.rows)) return false;
+	if (!Array.isArray(input.rows)) {
+		return false;
+	}
 	return input.rows.length > 0;
 }
-
-// ============================================
-// Links Validators
-// ============================================
 
 function isLinksListInput(
 	input: RawComponentInput
@@ -119,10 +117,6 @@ function isLinkPreviewInput(
 	return typeof link.name === "string" && typeof link.targetUrl === "string";
 }
 
-// ============================================
-// Funnels Validators
-// ============================================
-
 function isFunnelsListInput(
 	input: RawComponentInput
 ): input is RawComponentInput & FunnelsListInput {
@@ -159,10 +153,6 @@ function isFunnelPreviewInput(
 	return typeof funnel.name === "string" && Array.isArray(funnel.steps);
 }
 
-// ============================================
-// Goals Validators
-// ============================================
-
 function isGoalsListInput(
 	input: RawComponentInput
 ): input is RawComponentInput & GoalsListInput {
@@ -198,10 +188,6 @@ function isGoalPreviewInput(
 	}
 	return typeof goal.name === "string" && typeof goal.target === "string";
 }
-
-// ============================================
-// Annotations Validators
-// ============================================
 
 function isAnnotationsListInput(
 	input: RawComponentInput
@@ -241,20 +227,14 @@ function isAnnotationPreviewInput(
 	);
 }
 
-// ============================================
-// Data Table Validators
-// ============================================
-
 function isDataTableInput(
 	input: RawComponentInput
 ): input is RawComponentInput & DataTableInput {
-	if (input.type !== "data-table") return false;
+	if (input.type !== "data-table") {
+		return false;
+	}
 	return Array.isArray(input.columns) && Array.isArray(input.rows);
 }
-
-// ============================================
-// Referrers List Validators
-// ============================================
 
 function isReferrersListInput(
 	input: RawComponentInput
@@ -274,10 +254,6 @@ function isReferrersListInput(
 	);
 }
 
-// ============================================
-// Mini Map Validators
-// ============================================
-
 function isMiniMapInput(
 	input: RawComponentInput
 ): input is RawComponentInput & MiniMapInput {
@@ -296,10 +272,6 @@ function isMiniMapInput(
 	);
 }
 
-// ============================================
-// Chart Transformers
-// ============================================
-
 function toTimeSeriesProps(input: TimeSeriesInput): TimeSeriesProps {
 	const series = input.series;
 	const data = input.rows
@@ -313,7 +285,10 @@ function toTimeSeriesProps(input: TimeSeriesInput): TimeSeriesProps {
 				series.map((key, i) => [key, Number(values[i]) || 0])
 			),
 		}));
-	const variant = input.type.replace("-chart", "") as TimeSeriesProps["variant"];
+	const variant = input.type.replace(
+		"-chart",
+		""
+	) as TimeSeriesProps["variant"];
 	return {
 		variant: variant === "stacked-bar" ? "stacked-bar" : variant,
 		title: input.title,
@@ -335,10 +310,6 @@ function toDistributionProps(input: DistributionInput): DistributionProps {
 	};
 }
 
-// ============================================
-// Links Transformers
-// ============================================
-
 function toLinksListProps(input: LinksListInput): LinksListProps {
 	return {
 		title: input.title,
@@ -352,10 +323,6 @@ function toLinkPreviewProps(input: LinkPreviewInput): LinkPreviewProps {
 		link: input.link,
 	};
 }
-
-// ============================================
-// Funnels Transformers
-// ============================================
 
 function toFunnelsListProps(input: FunnelsListInput): FunnelsListProps {
 	return {
@@ -371,10 +338,6 @@ function toFunnelPreviewProps(input: FunnelPreviewInput): FunnelPreviewProps {
 	};
 }
 
-// ============================================
-// Goals Transformers
-// ============================================
-
 function toGoalsListProps(input: GoalsListInput): GoalsListProps {
 	return {
 		title: input.title,
@@ -388,10 +351,6 @@ function toGoalPreviewProps(input: GoalPreviewInput): GoalPreviewProps {
 		goal: input.goal,
 	};
 }
-
-// ============================================
-// Annotations Transformers
-// ============================================
 
 function toAnnotationsListProps(
 	input: AnnotationsListInput
@@ -410,10 +369,6 @@ function toAnnotationPreviewProps(
 		annotation: input.annotation,
 	};
 }
-
-// ============================================
-// Data Table Transformers
-// ============================================
 
 function toDataTableProps(input: DataTableInput): DataTableProps {
 	const alignArr = input.align ?? [];
@@ -439,20 +394,12 @@ function toDataTableProps(input: DataTableInput): DataTableProps {
 	};
 }
 
-// ============================================
-// Referrers List Transformers
-// ============================================
-
 function toReferrersListProps(input: ReferrersListInput): ReferrersListProps {
 	return {
 		title: input.title,
 		referrers: input.referrers,
 	};
 }
-
-// ============================================
-// Mini Map Transformers
-// ============================================
 
 function toMiniMapProps(input: MiniMapInput): MiniMapProps {
 	return {
@@ -461,12 +408,7 @@ function toMiniMapProps(input: MiniMapInput): MiniMapProps {
 	};
 }
 
-// ============================================
-// Component Registry
-// ============================================
-
 export const componentRegistry: ComponentRegistry = {
-	// Charts
 	"line-chart": {
 		validate: isTimeSeriesInput,
 		transform: toTimeSeriesProps,
@@ -503,7 +445,6 @@ export const componentRegistry: ComponentRegistry = {
 		component: DistributionRenderer,
 	} as ComponentDefinition<DistributionInput, DistributionProps>,
 
-	// Links
 	"links-list": {
 		validate: isLinksListInput,
 		transform: toLinksListProps,
@@ -516,7 +457,6 @@ export const componentRegistry: ComponentRegistry = {
 		component: LinkPreviewRenderer,
 	} as ComponentDefinition<LinkPreviewInput, LinkPreviewProps>,
 
-	// Funnels
 	"funnels-list": {
 		validate: isFunnelsListInput,
 		transform: toFunnelsListProps,
@@ -529,7 +469,6 @@ export const componentRegistry: ComponentRegistry = {
 		component: FunnelPreviewRenderer,
 	} as ComponentDefinition<FunnelPreviewInput, FunnelPreviewProps>,
 
-	// Goals
 	"goals-list": {
 		validate: isGoalsListInput,
 		transform: toGoalsListProps,
@@ -542,7 +481,6 @@ export const componentRegistry: ComponentRegistry = {
 		component: GoalPreviewRenderer,
 	} as ComponentDefinition<GoalPreviewInput, GoalPreviewProps>,
 
-	// Annotations
 	"annotations-list": {
 		validate: isAnnotationsListInput,
 		transform: toAnnotationsListProps,
@@ -555,21 +493,18 @@ export const componentRegistry: ComponentRegistry = {
 		component: AnnotationPreviewRenderer,
 	} as ComponentDefinition<AnnotationPreviewInput, AnnotationPreviewProps>,
 
-	// Data Table
 	"data-table": {
 		validate: isDataTableInput,
 		transform: toDataTableProps,
 		component: DataTableRenderer,
 	} as ComponentDefinition<DataTableInput, DataTableProps>,
 
-	// Referrers List
 	"referrers-list": {
 		validate: isReferrersListInput,
 		transform: toReferrersListProps,
 		component: ReferrersListRenderer,
 	} as ComponentDefinition<ReferrersListInput, ReferrersListProps>,
 
-	// Mini Map
 	"mini-map": {
 		validate: isMiniMapInput,
 		transform: toMiniMapProps,

@@ -1,20 +1,12 @@
-import {
-	and,
-	db,
-	desc,
-	eq,
-	featureInvite,
-	flags,
-	ne,
-	withTransaction,
-} from "@databuddy/db";
+import { and, db, desc, eq, ne, withTransaction } from "@databuddy/db";
+import { featureInvite, flags } from "@databuddy/db/schema";
 import type { userRuleSchema } from "@databuddy/shared/flags";
 import { invalidateFlagCache } from "@databuddy/shared/flags/utils";
 import { randomUUIDv7 } from "bun";
 import { z } from "zod";
 import { rpcError } from "../errors";
 import { logger } from "../lib/logger";
-import { type Context, protectedProcedure, sessionProcedure } from "../orpc";
+import { type Context, sessionProcedure } from "../orpc";
 import { resolveFeatureAccess } from "../procedures/with-feature-access";
 
 const MAX_LINKS_PER_FLAG = 5;
@@ -145,7 +137,7 @@ export const featureInviteRouter = {
 			return { flagKey: invite.flagKey, status: invite.status };
 		}),
 
-	generateLinks: protectedProcedure
+	generateLinks: sessionProcedure
 		.route({
 			description:
 				"Auto-generates invite links for a feature flag, up to 5 per user.",
@@ -157,7 +149,7 @@ export const featureInviteRouter = {
 		.input(z.object(flagKeyInput))
 		.output(z.array(linkOutputSchema))
 		.handler(async ({ context, input }) => {
-			const userId = context.user?.id ?? "";
+			const userId = context.user.id;
 			await requireAccess(context as Context, input.flagKey);
 
 			return withTransaction(async (tx) => {
@@ -190,7 +182,7 @@ export const featureInviteRouter = {
 			});
 		}),
 
-	listLinks: protectedProcedure
+	listLinks: sessionProcedure
 		.route({
 			description:
 				"Lists all invite links created by the current user for a feature flag.",
@@ -202,7 +194,7 @@ export const featureInviteRouter = {
 		.input(z.object(flagKeyInput))
 		.output(z.array(linkOutputSchema))
 		.handler(async ({ context, input }) => {
-			const userId = context.user?.id ?? "";
+			const userId = context.user.id;
 			await requireAccess(context as Context, input.flagKey);
 
 			return db.query.featureInvite.findMany({
@@ -212,7 +204,7 @@ export const featureInviteRouter = {
 			});
 		}),
 
-	revokeLink: protectedProcedure
+	revokeLink: sessionProcedure
 		.route({
 			description:
 				"Revokes an invite link. Only the creator can revoke their own links.",
@@ -232,7 +224,7 @@ export const featureInviteRouter = {
 				throw rpcError.notFound("Invite link", input.inviteId);
 			}
 
-			if (invite.invitedById !== (context.user?.id ?? "")) {
+			if (invite.invitedById !== context.user.id) {
 				throw rpcError.forbidden("You can only revoke your own invite links");
 			}
 
@@ -305,7 +297,7 @@ export const featureInviteRouter = {
 			return { flagKey: result.flagKey };
 		}),
 
-	getInviteCount: protectedProcedure
+	getInviteCount: sessionProcedure
 		.route({
 			description:
 				"Returns the number of active/redeemed invite links the current user has for a flag.",
@@ -323,7 +315,7 @@ export const featureInviteRouter = {
 			})
 		)
 		.handler(async ({ context, input }) => {
-			const userId = context.user?.id ?? "";
+			const userId = context.user.id;
 
 			const links = await db.query.featureInvite.findMany({
 				where: userLinksWhere(input.flagKey, userId),

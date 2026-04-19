@@ -1,7 +1,6 @@
 /** biome-ignore-all lint/performance/noBarrelFile: im a big fan of barrels */
 
 import { createLogger, createNoopLogger, type Logger } from "./logger";
-import { EventQueue } from "./queue";
 import type {
 	BatchEventInput,
 	BatchEventResponse,
@@ -39,7 +38,8 @@ export class Databuddy {
 	private readonly enableBatching: boolean;
 	private readonly batchSize: number;
 	private readonly batchTimeout: number;
-	private readonly queue: EventQueue;
+	private readonly maxQueueSize: number;
+	private queue: BatchEventInput[] = [];
 	private flushTimer: ReturnType<typeof setTimeout> | null = null;
 	private globalProperties: GlobalProperties = {};
 	private middleware: Middleware[] = [];
@@ -60,13 +60,12 @@ export class Databuddy {
 		this.enableBatching = config.enableBatching !== false;
 		this.batchSize = Math.min(config.batchSize || DEFAULT_BATCH_SIZE, 100);
 		this.batchTimeout = config.batchTimeout || DEFAULT_BATCH_TIMEOUT;
-		this.queue = new EventQueue(config.maxQueueSize || DEFAULT_MAX_QUEUE_SIZE);
+		this.maxQueueSize = config.maxQueueSize || DEFAULT_MAX_QUEUE_SIZE;
 		this.middleware = config.middleware || [];
 		this.enableDeduplication = config.enableDeduplication !== false;
 		this.maxDeduplicationCacheSize =
 			config.maxDeduplicationCacheSize || DEFAULT_MAX_DEDUPLICATION_CACHE_SIZE;
 
-		// Initialize logger: use provided logger, or create one based on debug flag
 		if (config.logger) {
 			this.logger = config.logger;
 		} else if (config.debug) {
@@ -89,25 +88,6 @@ export class Databuddy {
 		});
 	}
 
-	/**
-	 * Track a custom event
-	 * @param event - Event data to track
-	 * @returns Promise with success/error response
-	 * @example
-	 * ```typescript
-	 * await client.track({
-	 *   name: 'user_signup',
-	 *   properties: { plan: 'pro', source: 'web' }
-	 * });
-	 *
-	 * // With website scope (use your public client id from the dashboard)
-	 * await client.track({
-	 *   name: 'page_view',
-	 *   websiteId: 'your-public-client-id',
-	 *   properties: { path: '/pricing' }
-	 * });
-	 * ```
-	 */
 	async track(event: CustomEventInput): Promise<EventResponse> {
 		if (!event.name || typeof event.name !== "string") {
 			return {
@@ -152,21 +132,21 @@ export class Databuddy {
 			return this.send(processedEvent);
 		}
 
-		const shouldFlush = this.queue.add(processedEvent);
-		this.logger.debug("Event queued", { queueSize: this.queue.size() });
+		this.queue.push(processedEvent);
+		this.logger.debug("Event queued", { queueSize: this.queue.length });
 
 		this.scheduleFlush();
 
-		if (shouldFlush || this.queue.size() >= this.batchSize) {
+		if (
+			this.queue.length >= this.maxQueueSize ||
+			this.queue.length >= this.batchSize
+		) {
 			await this.flush();
 		}
 
 		return { success: true };
 	}
 
-	/**
-	 * Convert BatchEventInput to format expected by /track endpoint
-	 */
 	private toTrackPayload(event: BatchEventInput) {
 		const timestamp = event.timestamp
 			? Math.floor(event.timestamp)
@@ -189,11 +169,10 @@ export class Databuddy {
 			const url = `${this.apiUrl}/track`;
 			const payload = this.toTrackPayload(event);
 
-			this.logger.info("📤 SENDING SINGLE EVENT:", {
+			this.logger.info("Sending event", {
 				name: payload.name,
 				websiteId: payload.websiteId,
 				source: payload.source,
-				properties: JSON.stringify(payload.properties, null, 2),
 			});
 
 			const response = await fetch(url, {
@@ -219,14 +198,10 @@ export class Databuddy {
 			}
 
 			const data = await response.json();
-
 			this.logger.info("Response received", data);
 
 			if (data.status === "success") {
-				return {
-					success: true,
-					eventId: data.eventId,
-				};
+				return { success: true, eventId: data.eventId };
 			}
 
 			return {
@@ -259,63 +234,31 @@ export class Databuddy {
 		}, this.batchTimeout);
 	}
 
-	/**
-	 * Manually flush all queued events
-	 * Useful in serverless environments to ensure events are sent before process exits
-	 * @returns Promise with batch results
-	 * @example
-	 * ```typescript
-	 * await client.track({ name: 'api_call' });
-	 * await client.flush(); // Ensure events are sent
-	 * ```
-	 */
 	async flush(): Promise<BatchEventResponse> {
 		if (this.flushTimer) {
 			clearTimeout(this.flushTimer);
 			this.flushTimer = null;
 		}
 
-		if (this.queue.isEmpty()) {
-			return {
-				success: true,
-				processed: 0,
-				results: [],
-			};
+		if (this.queue.length === 0) {
+			return { success: true, processed: 0, results: [] };
 		}
 
-		const events = this.queue.getAll();
-		this.queue.clear();
+		const events = [...this.queue];
+		this.queue = [];
 
 		this.logger.info("Flushing events", { count: events.length });
 
 		return await this.batch(events);
 	}
 
-	/**
-	 * Send multiple events in a single batch request
-	 * @param events - Array of events to batch (max 100)
-	 * @returns Promise with batch results
-	 * @example
-	 * ```typescript
-	 * await client.batch([
-	 *   { type: 'custom', name: 'event1', properties: { foo: 'bar' } },
-	 *   { type: 'custom', name: 'event2', properties: { baz: 'qux' } }
-	 * ]);
-	 * ```
-	 */
 	async batch(events: BatchEventInput[]): Promise<BatchEventResponse> {
 		if (!Array.isArray(events)) {
-			return {
-				success: false,
-				error: "Events must be an array",
-			};
+			return { success: false, error: "Events must be an array" };
 		}
 
 		if (events.length === 0) {
-			return {
-				success: false,
-				error: "Events array cannot be empty",
-			};
+			return { success: false, error: "Events array cannot be empty" };
 		}
 
 		if (events.length > 100) {
@@ -366,11 +309,7 @@ export class Databuddy {
 		}
 
 		if (processedEvents.length === 0) {
-			return {
-				success: true,
-				processed: 0,
-				results: [],
-			};
+			return { success: true, processed: 0, results: [] };
 		}
 
 		try {
@@ -379,7 +318,7 @@ export class Databuddy {
 				this.toTrackPayload(event)
 			);
 
-			this.logger.info("📦 SENDING BATCH EVENTS:", {
+			this.logger.info("Sending batch", {
 				count: payloads.length,
 				firstEventName: payloads[0]?.name,
 				firstWebsiteId: payloads[0]?.websiteId,
@@ -409,7 +348,6 @@ export class Databuddy {
 			}
 
 			const data = await response.json();
-
 			this.logger.info("Batch response received", data);
 
 			if (data.status === "success") {
@@ -436,67 +374,20 @@ export class Databuddy {
 		}
 	}
 
-	/**
-	 * Set global properties attached to all events
-	 * Properties are merged with existing globals; event properties override globals
-	 * @param properties - Properties to merge with existing globals
-	 * @example
-	 * ```typescript
-	 * client.setGlobalProperties({ environment: 'production', version: '1.0.0' });
-	 * // All subsequent events will include these properties
-	 * ```
-	 */
 	setGlobalProperties(properties: GlobalProperties): void {
 		this.globalProperties = { ...this.globalProperties, ...properties };
 		this.logger.debug("Global properties updated", { properties });
 	}
 
-	/**
-	 * Get current global properties
-	 * @returns Copy of current global properties
-	 * @example
-	 * ```typescript
-	 * const globals = client.getGlobalProperties();
-	 * console.log(globals); // { environment: 'production', version: '1.0.0' }
-	 * ```
-	 */
 	getGlobalProperties(): GlobalProperties {
 		return { ...this.globalProperties };
 	}
 
-	/**
-	 * Clear all global properties
-	 * @example
-	 * ```typescript
-	 * client.clearGlobalProperties();
-	 * // No more global properties will be attached to events
-	 * ```
-	 */
 	clearGlobalProperties(): void {
 		this.globalProperties = {};
 		this.logger.debug("Global properties cleared");
 	}
 
-	/**
-	 * Add middleware to transform events
-	 * Middleware runs before deduplication and is executed in order
-	 * Return null to drop the event, or return a modified event
-	 * @param middleware - Middleware function
-	 * @example
-	 * ```typescript
-	 * client.addMiddleware((event) => {
-	 *   // Add custom field
-	 *   event.properties = { ...event.properties, processed: true };
-	 *   return event;
-	 * });
-	 *
-	 * // Drop events matching a condition
-	 * client.addMiddleware((event) => {
-	 *   if (event.name === 'unwanted_event') return null;
-	 *   return event;
-	 * });
-	 * ```
-	 */
 	addMiddleware(middleware: Middleware): void {
 		this.middleware.push(middleware);
 		this.logger.debug("Middleware added", {
@@ -504,41 +395,15 @@ export class Databuddy {
 		});
 	}
 
-	/**
-	 * Remove all middleware functions
-	 * @example
-	 * ```typescript
-	 * client.clearMiddleware();
-	 * // All middleware transformations removed
-	 * ```
-	 */
 	clearMiddleware(): void {
 		this.middleware = [];
 		this.logger.debug("Middleware cleared");
 	}
 
-	/**
-	 * Get current deduplication cache size
-	 * @returns Number of event IDs in cache
-	 * @example
-	 * ```typescript
-	 * const size = client.getDeduplicationCacheSize();
-	 * console.log(`Cache size: ${size}`);
-	 * ```
-	 */
 	getDeduplicationCacheSize(): number {
 		return this.deduplicationCache.size;
 	}
 
-	/**
-	 * Clear the deduplication cache
-	 * Useful for testing or resetting duplicate detection
-	 * @example
-	 * ```typescript
-	 * client.clearDeduplicationCache();
-	 * // All cached event IDs cleared
-	 * ```
-	 */
 	clearDeduplicationCache(): void {
 		this.deduplicationCache.clear();
 		this.logger.debug("Deduplication cache cleared");
@@ -577,7 +442,5 @@ export class Databuddy {
 }
 
 export * from "./flags";
-/**
- * Shorthand alias for Databuddy
- */
+
 export { Databuddy as db };

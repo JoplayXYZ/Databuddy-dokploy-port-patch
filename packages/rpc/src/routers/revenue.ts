@@ -1,8 +1,9 @@
-import { and, eq, isNull, revenueConfig } from "@databuddy/db";
+import { and, eq, isNull } from "@databuddy/db";
+import { revenueConfig } from "@databuddy/db/schema";
 import { createId } from "@databuddy/shared/utils/ids";
 import { z } from "zod";
 import { rpcError } from "../errors";
-import { protectedProcedure } from "../orpc";
+import { sessionProcedure } from "../orpc";
 import { withWorkspace } from "../procedures/with-workspace";
 
 function generateHash(): string {
@@ -15,7 +16,7 @@ function generateHash(): string {
 const revenueOutputSchema = z.record(z.string(), z.unknown());
 
 export const revenueRouter = {
-	get: protectedProcedure
+	get: sessionProcedure
 		.route({
 			description:
 				"Returns revenue config for website or org. Requires configure permission.",
@@ -67,7 +68,7 @@ export const revenueRouter = {
 			};
 		}),
 
-	upsert: protectedProcedure
+	upsert: sessionProcedure
 		.route({
 			description:
 				"Creates or updates revenue config. Requires configure permission.",
@@ -154,7 +155,7 @@ export const revenueRouter = {
 			};
 		}),
 
-	regenerateHash: protectedProcedure
+	regenerateHash: sessionProcedure
 		.route({
 			description: "Regenerates webhook hash. Requires configure permission.",
 			method: "POST",
@@ -200,7 +201,7 @@ export const revenueRouter = {
 			return { webhookHash: newHash };
 		}),
 
-	delete: protectedProcedure
+	delete: sessionProcedure
 		.route({
 			description: "Deletes revenue config. Requires configure permission.",
 			method: "POST",

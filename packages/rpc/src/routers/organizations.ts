@@ -1,10 +1,11 @@
-import { and, db, desc, eq, gt, invitation, organization } from "@databuddy/db";
+import { and, db, desc, eq, gt } from "@databuddy/db";
+import { invitation, organization } from "@databuddy/db/schema";
 import { getPendingInvitationsSchema } from "@databuddy/validation";
 import { z } from "zod";
 import { rpcError } from "../errors";
 import { getAutumn } from "../lib/autumn-client";
 import { logger } from "../lib/logger";
-import { protectedProcedure, publicProcedure } from "../orpc";
+import { protectedProcedure, publicProcedure, sessionProcedure } from "../orpc";
 import { withWorkspace } from "../procedures/with-workspace";
 import { getBillingOwner } from "../utils/billing";
 
@@ -108,7 +109,7 @@ export const organizationsRouter = {
 			}
 		}),
 
-	getUserPendingInvitations: protectedProcedure
+	getUserPendingInvitations: sessionProcedure
 		.route({
 			description: "Returns pending invitations for the current user.",
 			method: "POST",
@@ -160,7 +161,7 @@ export const organizationsRouter = {
 			return pendingInvitations;
 		}),
 
-	getUsage: protectedProcedure
+	getUsage: sessionProcedure
 		.route({
 			description: "Returns Autumn usage for current user/workspace.",
 			method: "POST",

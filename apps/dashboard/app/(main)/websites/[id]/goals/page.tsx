@@ -1,8 +1,8 @@
 "use client";
 
 import { GATED_FEATURES } from "@databuddy/shared/types/features";
-import { TargetIcon } from "@phosphor-icons/react/dist/ssr/Target";
-import { TrendDownIcon } from "@phosphor-icons/react/dist/ssr/TrendDown";
+import { TargetIcon } from "@phosphor-icons/react";
+import { TrendDownIcon } from "@phosphor-icons/react";
 import { useAtomValue } from "jotai";
 import { useParams } from "next/navigation";
 import { useMemo, useState } from "react";

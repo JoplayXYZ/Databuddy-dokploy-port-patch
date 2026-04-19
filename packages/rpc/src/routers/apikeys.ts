@@ -5,7 +5,8 @@ import {
 } from "@databuddy/api-keys/resolve";
 import { API_SCOPES } from "@databuddy/api-keys/scopes";
 import { websitesApi } from "@databuddy/auth";
-import { apikey, desc, eq } from "@databuddy/db";
+import { desc, eq } from "@databuddy/db";
+import { apikey } from "@databuddy/db/schema";
 import { invalidateCacheableKey } from "@databuddy/redis";
 import {
 	ApiKeyErrorCode,
@@ -21,10 +22,10 @@ import { protectedProcedure, publicProcedure } from "../orpc";
 
 type ApiKey = ApiKeyRow;
 interface Metadata {
-	resources?: Record<string, string[]>;
-	tags?: string[];
 	description?: string;
 	lastUsedAt?: string;
+	resources?: Record<string, string[]>;
+	tags?: string[];
 }
 
 const scopeEnum = z.enum(API_SCOPES);
@@ -44,7 +45,7 @@ const apiKeyOutputSchema = z.object({
 	enabled: z.boolean(),
 	scopes: z.array(z.string()),
 	tags: z.array(z.string()),
-	expiresAt: z.string().nullable(),
+	expiresAt: z.nullable(z.coerce.date()),
 	revokedAt: z.nullable(z.coerce.date()),
 	lastUsedAt: z.string().nullable(),
 	createdAt: z.coerce.date(),
@@ -250,7 +251,7 @@ export const apikeysRouter = {
 					rateLimitEnabled: input.rateLimit?.enabled ?? true,
 					rateLimitMax: input.rateLimit?.max,
 					rateLimitTimeWindow: input.rateLimit?.window,
-					expiresAt: input.expiresAt ?? null,
+					expiresAt: input.expiresAt ? new Date(input.expiresAt) : null,
 					metadata: {
 						resources: input.resources,
 						tags: input.tags,
@@ -300,7 +301,9 @@ export const apikeysRouter = {
 					...(input.name !== undefined && { name: input.name }),
 					...(input.enabled !== undefined && { enabled: input.enabled }),
 					...(input.scopes !== undefined && { scopes: input.scopes }),
-					...(input.expiresAt !== undefined && { expiresAt: input.expiresAt }),
+					...(input.expiresAt !== undefined && {
+						expiresAt: input.expiresAt ? new Date(input.expiresAt) : null,
+					}),
 					...(input.rateLimit?.enabled !== undefined && {
 						rateLimitEnabled: input.rateLimit.enabled,
 					}),
@@ -380,7 +383,7 @@ export const apikeysRouter = {
 				scopes: key.scopes,
 				resources: meta.resources,
 				tags: meta.tags,
-				expiresAt: key.expiresAt ?? null,
+				expiresAt: key.expiresAt?.toISOString() ?? null,
 			});
 
 			const [updated] = await context.db
@@ -483,7 +486,7 @@ export const apikeysRouter = {
 					errorCode: ApiKeyErrorCode.REVOKED,
 				};
 			}
-			if (isExpired(key.expiresAt)) {
+			if (isExpired(key.expiresAt?.toISOString() ?? null)) {
 				return {
 					valid: false,
 					error: "Expired",

@@ -11,7 +11,7 @@
     "@types/node": "^20.0.0",
     "ai": "^6.0.0",
     "openai": "^4.77.0",
-    "tokenlens": "^2.0.0-alpha.3",
+    "tokenlens": "catalog:",
     "typescript": "catalog:",
     "unbuild": "^3.6.1"
   },

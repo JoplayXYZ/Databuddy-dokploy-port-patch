@@ -1,12 +1,10 @@
 "use client";
 
-import {
-	HeartbeatIcon,
-	PauseIcon,
-	PencilIcon,
-	PlayIcon,
-	TrashIcon,
-} from "@phosphor-icons/react";
+import { HeartbeatIcon } from "@phosphor-icons/react";
+import { PauseIcon } from "@phosphor-icons/react";
+import { PencilIcon } from "@phosphor-icons/react";
+import { PlayIcon } from "@phosphor-icons/react";
+import { TrashIcon } from "@phosphor-icons/react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
 import { useMemo, useState } from "react";
@@ -48,15 +46,15 @@ const granularityLabels: Record<string, string> = {
 };
 
 interface Schedule {
-	id: string;
-	url: string;
-	name?: string | null;
 	granularity: string;
+	id: string;
 	isPaused: boolean;
 	isPublic: boolean;
 	jsonParsingConfig?: {
 		enabled: boolean;
 	} | null;
+	name?: string | null;
+	url: string;
 }
 
 export default function PulsePage() {
@@ -339,7 +337,7 @@ export default function PulsePage() {
 		<div className="relative flex h-full flex-col">
 			<WebsitePageHeader
 				additionalActions={headerActions}
-				description="Monitor your website's uptime and availability"
+				description="Track uptime and availability"
 				icon={
 					<HeartbeatIcon
 						className="size-6 text-accent-foreground"
@@ -391,13 +389,13 @@ export default function PulsePage() {
 						<div className="flex h-full items-center justify-center p-4">
 							<EmptyState
 								action={{
-									label: "Create Monitor",
+									label: "Create a monitor",
 									onClick: handleCreateMonitor,
 								}}
 								className="h-full py-0"
-								description="Set up uptime monitoring to track your website's availability and receive alerts when it goes down."
+								description="Track availability and get alerts when the site goes down."
 								icon={<HeartbeatIcon weight="duotone" />}
-								title="No monitor configured"
+								title="No monitor yet"
 								variant="minimal"
 							/>
 						</div>

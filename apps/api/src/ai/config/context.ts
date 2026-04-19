@@ -3,35 +3,18 @@
  * Contains website and user information needed for queries.
  */
 export interface AppContext {
-	userId: string;
-	websiteId: string;
-	websiteDomain: string;
-	timezone: string;
-	currentDateTime: string;
-	chatId: string;
-	requestHeaders?: Headers;
 	/** Available query builder types */
 	availableQueryTypes?: string[];
+	billingCustomerId?: string | null;
+	chatId: string;
+	currentDateTime: string;
+	organizationId?: string | null;
+	requestHeaders?: Headers;
+	timezone: string;
+	userId: string;
+	websiteDomain: string;
+	websiteId: string;
 	[key: string]: unknown;
-}
-
-/**
- * Builds the application context for agent execution.
- */
-export function buildAppContext(
-	userId: string,
-	websiteId: string,
-	websiteDomain: string,
-	timezone: string
-): AppContext {
-	return {
-		userId,
-		websiteId,
-		websiteDomain,
-		chatId: crypto.randomUUID(),
-		timezone,
-		currentDateTime: new Date().toISOString(),
-	};
 }
 
 /**

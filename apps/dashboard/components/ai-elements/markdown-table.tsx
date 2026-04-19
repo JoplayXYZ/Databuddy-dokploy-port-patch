@@ -11,9 +11,11 @@ export const MdTable = ({
 	node: _,
 	...props
 }: ElementProps) => (
-	<table className={cn("w-full text-xs", className)} {...props}>
-		{children}
-	</table>
+	<div className="overflow-x-auto">
+		<table className={cn("w-full text-xs", className)} {...props}>
+			{children}
+		</table>
+	</div>
 );
 
 export const MdThead = ({
@@ -63,7 +65,7 @@ export const MdTd = ({
 }: ElementProps) => (
 	<td
 		className={cn(
-			"max-w-[260px] truncate px-3 py-1.5 text-muted-foreground first:font-medium first:text-foreground",
+			"max-w-[260px] px-3 py-1.5 text-muted-foreground first:font-medium first:text-foreground",
 			className
 		)}
 		{...props}

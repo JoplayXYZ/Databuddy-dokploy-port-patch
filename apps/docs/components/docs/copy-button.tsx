@@ -31,7 +31,7 @@ export function CopyButton({ value, className, ...props }: CopyButtonProps) {
 	return (
 		<button
 			className={cn(
-				"relative z-10 inline-flex size-8 items-center justify-center rounded-md border border-border bg-muted/50 text-muted-foreground transition-all hover:bg-muted hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+				"relative z-10 inline-flex size-8 items-center justify-center border border-border bg-muted/50 text-muted-foreground transition-all hover:bg-muted hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
 				className
 			)}
 			onClick={handleCopyAction}

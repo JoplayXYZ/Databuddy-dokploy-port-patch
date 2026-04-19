@@ -1,4 +1,6 @@
-import { and, chQuery, db, eq, member, user } from "@databuddy/db";
+import { and, db, eq, withTransaction } from "@databuddy/db";
+import { member, uptimeSchedules, user } from "@databuddy/db/schema";
+import { chQuery } from "@databuddy/db/clickhouse";
 import { UptimeAlertEmail } from "@databuddy/email";
 import { Resend } from "resend";
 import type { ScheduleData } from "./actions";
@@ -25,7 +27,7 @@ function buildSiteLabel(schedule: ScheduleData): string {
 	}
 }
 
-function resolveTransitionKind(
+export function resolveTransitionKind(
 	previous: number | undefined,
 	current: number
 ): "down" | "recovered" | null {
@@ -44,9 +46,7 @@ function resolveTransitionKind(
 	return null;
 }
 
-async function getVerifiedOrgMemberEmails(
-	organizationId: string
-): Promise<string[]> {
+async function getOrgOwnerEmails(organizationId: string): Promise<string[]> {
 	const rows = await db
 		.select({ email: user.email })
 		.from(member)
@@ -54,6 +54,7 @@ async function getVerifiedOrgMemberEmails(
 		.where(
 			and(
 				eq(member.organizationId, organizationId),
+				eq(member.role, "owner"),
 				eq(user.emailVerified, true)
 			)
 		);
@@ -64,6 +65,40 @@ async function getVerifiedOrgMemberEmails(
 		}
 	}
 	return [...set];
+}
+
+async function claimTransition(
+	scheduleId: string,
+	currentStatus: number
+): Promise<"down" | "recovered" | null> {
+	try {
+		return await withTransaction(async (tx) => {
+			const [row] = await tx
+				.select({ last: uptimeSchedules.lastNotifiedStatus })
+				.from(uptimeSchedules)
+				.where(eq(uptimeSchedules.id, scheduleId))
+				.for("update");
+
+			if (!row) {
+				return null;
+			}
+
+			const kind = resolveTransitionKind(row.last ?? undefined, currentStatus);
+			if (kind === null) {
+				return null;
+			}
+
+			await tx
+				.update(uptimeSchedules)
+				.set({ lastNotifiedStatus: currentStatus })
+				.where(eq(uptimeSchedules.id, scheduleId));
+
+			return kind;
+		});
+	} catch (error) {
+		captureError(error, { error_step: "transition_claim" });
+		return null;
+	}
 }
 
 export async function getPreviousMonitorStatus(
@@ -95,24 +130,18 @@ export async function getPreviousMonitorStatus(
 export async function sendUptimeTransitionEmailsIfNeeded(options: {
 	schedule: ScheduleData;
 	data: UptimeData;
-	previousStatus: number | undefined;
 }): Promise<void> {
 	const apiKey = process.env.RESEND_API_KEY;
 	if (!apiKey) {
 		return;
 	}
 
-	const kind = resolveTransitionKind(
-		options.previousStatus,
-		options.data.status
-	);
+	const kind = await claimTransition(options.schedule.id, options.data.status);
 	if (kind === null) {
 		return;
 	}
 
-	const emails = await getVerifiedOrgMemberEmails(
-		options.schedule.organizationId
-	);
+	const emails = await getOrgOwnerEmails(options.schedule.organizationId);
 	if (emails.length === 0) {
 		return;
 	}

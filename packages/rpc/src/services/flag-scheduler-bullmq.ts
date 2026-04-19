@@ -2,12 +2,11 @@ import { Queue } from "bullmq";
 import { logger } from "../lib/logger";
 
 interface RolloutStep {
-	scheduledAt: string;
 	executedAt?: string;
+	scheduledAt: string;
 	value: number | "enable" | "disable";
 }
 
-// Convert ioredis to BullMQ connection format
 const getConnection = () => {
 	const redisUrl = process.env.REDIS_URL;
 	if (!redisUrl) {
@@ -20,12 +19,12 @@ const getConnection = () => {
 		port: Number(url.port) || 6379,
 		password: url.password || undefined,
 		db: url.pathname ? Number(url.pathname.slice(1)) : undefined,
+		maxRetriesPerRequest: null as null,
 	};
 };
 
 const connection = getConnection();
 
-// Create BullMQ queue for flag schedules
 const flagScheduleQueue = new Queue("flag-schedules", {
 	connection,
 	defaultJobOptions: {
@@ -45,11 +44,11 @@ const flagScheduleQueue = new Queue("flag-schedules", {
 });
 
 export interface FlagScheduleJobData {
-	scheduleId: string;
-	type: "enable" | "disable" | "update_rollout";
 	flagId: string;
+	scheduleId: string;
 	stepScheduledAt?: string;
 	stepValue?: number | "enable" | "disable";
+	type: "enable" | "disable" | "update_rollout";
 }
 
 /**

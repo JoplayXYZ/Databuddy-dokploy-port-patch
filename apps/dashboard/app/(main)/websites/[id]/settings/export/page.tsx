@@ -1,13 +1,11 @@
 "use client";
 
 import type { ExportFormat } from "@databuddy/rpc";
-import {
-	CheckIcon,
-	DownloadIcon,
-	FileCodeIcon,
-	FileTextIcon,
-	TableIcon,
-} from "@phosphor-icons/react";
+import { CheckIcon } from "@phosphor-icons/react";
+import { DownloadIcon } from "@phosphor-icons/react";
+import { FileCodeIcon } from "@phosphor-icons/react";
+import { FileTextIcon } from "@phosphor-icons/react";
+import { TableIcon } from "@phosphor-icons/react";
 import { useMutation } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
 import { useCallback, useMemo, useState } from "react";
@@ -132,12 +130,11 @@ export default function ExportPage() {
 		<div className="flex h-full flex-col">
 			<PageHeader
 				badgeContent="Tools"
-				description="Download your analytics data for backup and analysis"
+				description="Download analytics as CSV, JSON, or TXT"
 				icon={<DownloadIcon />}
 				title="Data Export"
 			/>
 			<div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-none">
-				{/* Format selection */}
 				<section className="border-b px-4 py-5 sm:px-6">
 					<div className="mb-3">
 						<Label className="font-medium text-sm">Export format</Label>
@@ -178,7 +175,6 @@ export default function ExportPage() {
 					</div>
 				</section>
 
-				{/* Date range */}
 				<section className="border-b px-4 py-5 sm:px-6">
 					<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 						<div>
@@ -214,12 +210,11 @@ export default function ExportPage() {
 					)}
 				</section>
 
-				{/* Export action */}
 				<section className="px-4 py-5 sm:px-6">
 					<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 						<div>
 							<h3 className="font-medium text-sm">
-								Ready to export {websiteData.name || "your website"} data
+								Export {websiteData.name || "data"}
 							</h3>
 							<p className="mt-2 text-muted-foreground text-xs">
 								Format:{" "}

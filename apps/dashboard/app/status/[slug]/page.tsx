@@ -1,10 +1,10 @@
-import { getStatusPageUrl } from "@/lib/app-url";
-import { publicRPCClient } from "@/lib/orpc-public";
 import type { Metadata } from "next";
-import { ThemeProvider } from "next-themes";
 import { unstable_cache } from "next/cache";
 import { notFound } from "next/navigation";
+import { ThemeProvider } from "next-themes";
 import { Suspense } from "react";
+import { getStatusPageUrl } from "@/lib/app-url";
+import { publicRPCClient } from "@/lib/orpc-public";
 import { LastUpdated } from "./_components/last-updated";
 import { StatusNavbar } from "./_components/status-navbar";
 import { Status } from "./_components/status-page";
@@ -170,7 +170,11 @@ export default async function StatusPage({
 						/>
 
 						{page.customCss ? (
-							<style dangerouslySetInnerHTML={{ __html: page.customCss }} />
+							<style
+								dangerouslySetInnerHTML={{
+									__html: page.customCss.replaceAll(/<\/style/gi, "<\\/style"),
+								}}
+							/>
 						) : null}
 
 						<Status>

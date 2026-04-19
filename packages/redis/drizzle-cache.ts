@@ -1,18 +1,18 @@
 import type { redis as redisClient } from "./redis";
 
 export interface CacheConfig {
-	redis: typeof redisClient;
 	namespace?: string;
+	redis: typeof redisClient;
 }
 
 export interface WithCacheArgs<T> {
-	key: string;
-	ttl?: number;
-	tables?: string[];
-	tag?: string;
 	autoInvalidate?: boolean;
 	disabled?: boolean;
+	key: string;
 	queryFn: () => Promise<T>;
+	tables?: string[];
+	tag?: string;
+	ttl?: number;
 }
 
 function debugLog(
@@ -37,14 +37,21 @@ export function createDrizzleCache({
 	const formatTagKey = (tag: string) => `${namespace}:tag:${tag}`;
 	const formatByKeyIndex = (key: string) => `${namespace}:by-key:${key}`;
 
-	function collectEmptyKeys(keys: string[], counts: number[]): string[] {
-		const empties: string[] = [];
-		for (let i = 0; i < keys.length; i++) {
-			if (counts[i] === 0) {
-				empties.push(keys[i]);
-			}
-		}
-		return empties;
+	async function scanKeys(pattern: string): Promise<string[]> {
+		const keys: string[] = [];
+		let cursor = "0";
+		do {
+			const [next, batch] = await redis.scan(
+				cursor,
+				"MATCH",
+				pattern,
+				"COUNT",
+				200
+			);
+			cursor = next;
+			keys.push(...batch);
+		} while (cursor !== "0");
+		return keys;
 	}
 
 	async function setCacheWithTtl(
@@ -223,23 +230,16 @@ export function createDrizzleCache({
 		},
 
 		async cleanupEmptySets() {
-			const [dependencyKeys, tagKeys, byKeyIndexKeys] = await Promise.all([
-				redis.keys(`${namespace}:dep:*`),
-				redis.keys(`${namespace}:tag:*`),
-				redis.keys(`${namespace}:by-key:*`),
-			]);
+			const allKeys = (
+				await Promise.all([
+					scanKeys(`${namespace}:dep:*`),
+					scanKeys(`${namespace}:tag:*`),
+					scanKeys(`${namespace}:by-key:*`),
+				])
+			).flat();
 
-			const [dependencyCounts, tagCounts, byKeyCounts] = await Promise.all([
-				Promise.all(dependencyKeys.map((depKey) => redis.scard(depKey))),
-				Promise.all(tagKeys.map((tagKey) => redis.scard(tagKey))),
-				Promise.all(byKeyIndexKeys.map((idxKey) => redis.scard(idxKey))),
-			]);
-
-			const emptyKeys: string[] = [
-				...collectEmptyKeys(dependencyKeys, dependencyCounts),
-				...collectEmptyKeys(tagKeys, tagCounts),
-				...collectEmptyKeys(byKeyIndexKeys, byKeyCounts),
-			];
+			const counts = await Promise.all(allKeys.map((k) => redis.scard(k)));
+			const emptyKeys = allKeys.filter((_, i) => counts[i] === 0);
 
 			if (emptyKeys.length > 0) {
 				await redis.unlink(...emptyKeys);

@@ -1,11 +1,9 @@
 "use client";
 
-import {
-	CheckIcon,
-	ClipboardIcon,
-	InfoIcon,
-	ShareIcon,
-} from "@phosphor-icons/react";
+import { CheckIcon } from "@phosphor-icons/react";
+import { ClipboardIcon } from "@phosphor-icons/react";
+import { InfoIcon } from "@phosphor-icons/react";
+import { ShareIcon } from "@phosphor-icons/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
 import { useCallback } from "react";
@@ -76,7 +74,7 @@ export default function PrivacyPage() {
 			<PageHeader
 				badgeContent={isPublic ? "Public" : "Private"}
 				badgeVariant={isPublic ? "blue" : "secondary"}
-				description="Share a read-only public overview of your traffic (same metrics as the main dashboard overview)"
+				description="Share a read-only public overview"
 				icon={<ShareIcon />}
 				title="Privacy"
 			/>
@@ -86,8 +84,8 @@ export default function PrivacyPage() {
 						<div className="space-y-1">
 							<p className="font-medium text-sm">Enable public sharing</p>
 							<p className="text-muted-foreground text-xs">
-								Anyone with the link sees your overview in read-only mode — no
-								settings, no other tabs.
+								Anyone with the link sees the overview only — no settings or
+								other tabs.
 							</p>
 							{isPublic && (
 								<Badge className="mt-3" variant="blue">

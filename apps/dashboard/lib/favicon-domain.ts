@@ -1,6 +1,6 @@
 /**
- * Resolves a hostname to a canonical host for DuckDuckGo favicon URLs
- * (`https://icons.duckduckgo.com/ip3/{host}.ico`). Use when several CDN /
+ * Resolves a hostname to a canonical host for Google S2 favicon URLs
+ * (`https://www.google.com/s2/favicons?domain={host}`). Use when several CDN /
  * product domains should show the same brand icon as the public marketing site.
  *
  * Rules are ordered longest-`pattern` first so more specific hosts win (e.g.

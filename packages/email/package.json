@@ -14,15 +14,14 @@
   },
   "main": "./src/emails/index.ts",
   "dependencies": {
-    "@react-email/components": "0.3.2",
     "@types/node": "^24.10.4",
     "react": "catalog:",
-    "react-dom": "catalog:"
+    "react-dom": "catalog:",
+    "react-email": "^6.0.0"
   },
   "devDependencies": {
-    "@react-email/preview-server": "5.2.10",
+    "@react-email/ui": "^6.0.0",
     "@types/react": "catalog:",
-    "@types/react-dom": "catalog:",
-    "react-email": "^5.2.1"
+    "@types/react-dom": "catalog:"
   }
 }

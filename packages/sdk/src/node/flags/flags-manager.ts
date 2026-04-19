@@ -1,5 +1,5 @@
 import { BaseFlagsManager } from "@/core/flags/flags-manager";
-import type { FlagsManagerOptions } from "@/core/flags/types";
+import type { FlagsConfig, FlagsManagerOptions } from "@/core/flags/types";
 
 export class ServerFlagsManager extends BaseFlagsManager {
 	private readonly initPromise: Promise<void>;
@@ -18,4 +18,10 @@ export class ServerFlagsManager extends BaseFlagsManager {
 	async waitForInit(): Promise<void> {
 		await this.initPromise;
 	}
+}
+
+export function createServerFlagsManager(
+	config: FlagsConfig
+): ServerFlagsManager {
+	return new ServerFlagsManager({ config });
 }

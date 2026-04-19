@@ -1,4 +1,4 @@
-import { Img, Section, Text } from "@react-email/components";
+import { Img, Section, Text } from "react-email";
 import { emailBrand } from "./email-brand";
 
 interface EmailHeaderProps {
@@ -6,10 +6,25 @@ interface EmailHeaderProps {
 }
 
 export const EmailHeader = ({ tagline }: EmailHeaderProps) => (
-	<Section className="pt-8 pb-6 text-center">
-		<table align="center" cellPadding={0} cellSpacing={0}>
+	<Section
+		className="pt-8 pb-6 text-center"
+		style={{ backgroundColor: emailBrand.background }}
+	>
+		<table
+			align="center"
+			bgcolor={emailBrand.background}
+			cellPadding={0}
+			cellSpacing={0}
+			style={{ backgroundColor: emailBrand.background }}
+		>
 			<tr>
-				<td align="center">
+				<td
+					align="center"
+					style={{
+						backgroundColor: emailBrand.background,
+						padding: "8px 16px",
+					}}
+				>
 					<Img
 						alt="Databuddy"
 						height={emailBrand.primaryLogoHeightPx}

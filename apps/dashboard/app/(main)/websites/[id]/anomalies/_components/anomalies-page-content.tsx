@@ -1,6 +1,7 @@
 "use client";
 
-import { CheckCircleIcon, WarningIcon } from "@phosphor-icons/react";
+import { CheckCircleIcon } from "@phosphor-icons/react";
+import { WarningIcon } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
 import { use, useMemo } from "react";
 import { List } from "@/components/ui/composables/list";
@@ -80,7 +81,7 @@ export function AnomaliesPageContent({ params }: AnomaliesPageContentProps) {
 	return (
 		<div className="relative flex h-full flex-col">
 			<WebsitePageHeader
-				description="Automatic detection of unusual patterns in your event data"
+				description="Detects unusual patterns in event data"
 				hasError={isError}
 				icon={
 					<WarningIcon
@@ -100,7 +101,7 @@ export function AnomaliesPageContent({ params }: AnomaliesPageContentProps) {
 				<List.Content
 					emptyProps={{
 						description:
-							"No unusual patterns detected in the last hour compared to your 7-day baseline. We check pageviews, errors, and custom events automatically.",
+							"No unusual patterns in the last hour compared to your 7-day baseline. Pageviews, errors, and custom events are checked automatically.",
 						icon: <CheckCircleIcon weight="duotone" />,
 						title: "All clear",
 					}}

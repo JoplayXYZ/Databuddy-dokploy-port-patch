@@ -1,5 +1,14 @@
 "use client";
 
+import { CheckIcon } from "@phosphor-icons/react";
+import { HeartbeatIcon } from "@phosphor-icons/react";
+import { PencilSimpleIcon } from "@phosphor-icons/react";
+import { TrashIcon } from "@phosphor-icons/react";
+import { XIcon } from "@phosphor-icons/react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import Link from "next/link";
+import { useRef, useState } from "react";
+import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { List } from "@/components/ui/composables/list";
@@ -7,40 +16,29 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { orpc } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
-import {
-	CheckIcon,
-	HeartbeatIcon,
-	PencilSimpleIcon,
-	TrashIcon,
-	XIcon,
-} from "@phosphor-icons/react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import Link from "next/link";
-import { useRef, useState } from "react";
-import { toast } from "sonner";
 
 type ToggleKey = "hideUrl" | "hideUptimePercentage" | "hideLatency";
 
 export interface StatusPageMonitor {
+	displayName: string | null;
+	hideLatency: boolean;
+	hideUptimePercentage: boolean;
+	hideUrl: boolean;
 	id: string;
 	statusPageId: string;
-	uptimeScheduleId: string;
-	displayName: string | null;
-	hideUrl: boolean;
-	hideUptimePercentage: boolean;
-	hideLatency: boolean;
 	uptimeSchedule: {
 		id: string;
 		name: string | null;
 		url: string | null;
 		isPaused: boolean;
 	};
+	uptimeScheduleId: string;
 }
 
 interface StatusPageMonitorRowProps {
 	monitor: StatusPageMonitor;
-	statusPageId: string;
 	onRemoveRequestAction: (monitorId: string) => void;
+	statusPageId: string;
 }
 
 export function StatusPageMonitorRow({

@@ -1,13 +1,13 @@
-import { Heading, Link, Section, Text } from "@react-email/components";
+import { Heading, Link, Section, Text } from "react-email";
 import { emailBrand } from "./email-brand";
 import { EmailButton } from "./email-button";
 import { EmailLayout } from "./email-layout";
 
 interface UsageAlertEmailProps {
+	alertName?: string;
 	featureName?: string;
 	threshold?: number;
 	thresholdType?: "usage" | "usage_percentage_threshold";
-	alertName?: string;
 	userName?: string;
 }
 
@@ -101,5 +101,12 @@ export const UsageAlertEmail = ({
 		</EmailLayout>
 	);
 };
+
+UsageAlertEmail.PreviewProps = {
+	featureName: "Events",
+	threshold: 80,
+	thresholdType: "usage_percentage_threshold",
+	userName: "Ada",
+} satisfies UsageAlertEmailProps;
 
 export default UsageAlertEmail;

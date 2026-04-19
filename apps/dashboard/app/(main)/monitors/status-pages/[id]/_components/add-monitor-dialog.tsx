@@ -1,5 +1,14 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
+import { HeartbeatIcon } from "@phosphor-icons/react";
+import { ListIcon } from "@phosphor-icons/react";
+import { PlusIcon } from "@phosphor-icons/react";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { z } from "zod";
 import { useOrganizationsContext } from "@/components/providers/organizations-provider";
 import { Button } from "@/components/ui/button";
 import {
@@ -28,13 +37,6 @@ import {
 } from "@/components/ui/select";
 import { orpc } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { HeartbeatIcon, ListIcon, PlusIcon } from "@phosphor-icons/react";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { toast } from "sonner";
-import { z } from "zod";
 
 type Mode = "existing" | "create";
 
@@ -63,11 +65,11 @@ const createSchema = z.object({
 type CreateFormData = z.infer<typeof createSchema>;
 
 interface AddMonitorDialogProps {
-	statusPageId: string;
 	existingMonitorIds: string[];
-	open: boolean;
-	onOpenChangeAction: (open: boolean) => void;
 	onCompleteAction: () => void;
+	onOpenChangeAction: (open: boolean) => void;
+	open: boolean;
+	statusPageId: string;
 }
 
 export function AddMonitorDialog({

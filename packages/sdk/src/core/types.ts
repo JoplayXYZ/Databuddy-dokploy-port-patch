@@ -1,237 +1,104 @@
-/**
- * Configuration for the `<Databuddy />` component and tracker script.
- *
- * @example
- * ```tsx
- * <Databuddy
- *   clientId="your-client-id"
- *   apiUrl="https://basket.databuddy.cc"
- *   trackWebVitals
- *   trackErrors
- *   samplingRate={0.5}
- * />
- * ```
- */
 export interface DatabuddyConfig {
-	/**
-	 * Your Databuddy project client ID.
-	 * If not provided, will automatically detect from NEXT_PUBLIC_DATABUDDY_CLIENT_ID environment variable.
-	 * Get this from your Databuddy dashboard.
-	 * Example: UUID-style or short public id (dashboard client ID).
-	 */
-	clientId?: string;
-
-	/**
-	 * (Advanced) Your Databuddy client secret for server-side operations.
-	 * Not required for browser usage.
-	 */
-	clientSecret?: string;
-
-	/**
-	 * Custom API endpoint for event ingestion.
-	 * Default: 'https://basket.databuddy.cc'
-	 */
+	/** Event ingestion endpoint. Default: `'https://basket.databuddy.cc'` */
 	apiUrl?: string;
-
-	/**
-	 * Custom script URL for the Databuddy browser bundle.
-	 * Default: 'https://cdn.databuddy.cc/databuddy.js'
-	 */
-	scriptUrl?: string;
-
-	/**
-	 * SDK name for analytics (default: 'web').
-	 * Only override if you are building a custom integration.
-	 */
-	sdk?: string;
-
-	/**
-	 * SDK version (defaults to package.json version).
-	 * Only override for custom builds.
-	 */
-	sdkVersion?: string;
-
-	/**
-	 * Disable all tracking (default: false).
-	 * If true, no events will be sent.
-	 */
-	disabled?: boolean;
-
-	/**
-	 * Enable debug logging (default: false).
-	 */
-	debug?: boolean;
-
-	// --- Core Tracking Features ---
-
-	/**
-	 * Track hash changes in the URL (default: false).
-	 */
-	trackHashChanges?: boolean;
-
-	// --- Interaction Tracking ---
-
-	/**
-	 * Track data-* attributes on elements (default: false).
-	 */
-	trackAttributes?: boolean;
-
-	/**
-	 * Track clicks on outgoing links (default: false).
-	 */
-	trackOutgoingLinks?: boolean;
-
-	/**
-	 * Track user interactions (default: false).
-	 */
-	trackInteractions?: boolean;
-
-	// --- Performance Tracking ---
-
-	/**
-	 * Track page performance metrics (default: true).
-	 */
-	trackPerformance?: boolean;
-
-	/**
-	 * Track Web Vitals metrics (default: false).
-	 */
-	trackWebVitals?: boolean;
-
-	/**
-	 * Track JavaScript errors (default: false).
-	 */
-	trackErrors?: boolean;
-
-	// --- Optimization ---
-
-	/**
-	 * Sampling rate for events (0.0 to 1.0, default: 1.0).
-	 * Example: 0.5 = 50% of events sent.
-	 */
-	samplingRate?: number;
-
-	/**
-	 * Enable retries for failed requests (default: true).
-	 */
-	enableRetries?: boolean;
-
-	/**
-	 * Maximum number of retries for failed requests (default: 3).
-	 * Only used if enableRetries is true.
-	 */
-	maxRetries?: number;
-
-	/**
-	 * Initial retry delay in milliseconds (default: 500).
-	 * Only used if enableRetries is true.
-	 */
-	initialRetryDelay?: number;
-
-	// --- Batching ---
-
-	/**
-	 * Enable event batching (default: true).
-	 */
-	enableBatching?: boolean;
-
-	/**
-	 * Number of events to batch before sending (default: 10).
-	 * Only used if enableBatching is true.
-	 * Min: 1, Max: 50
-	 */
+	/** Events per batch before sending (default: 10, max: 50). Only used when `enableBatching` is true. */
 	batchSize?: number;
-
-	/**
-	 * Batch timeout in milliseconds (default: 2000).
-	 * Only used if enableBatching is true.
-	 * Min: 100, Max: 30000
-	 */
+	/** Batch flush interval in ms (default: 2000). Only used when `enableBatching` is true. */
 	batchTimeout?: number;
-
-	/**
-	 * Ignore bot detection (default: false).
-	 * If true, bot detection will be disabled and bots will be tracked.
-	 */
-	ignoreBotDetection?: boolean;
-
-	/**
-	 * Use pixel tracking instead of script (default: false).
-	 * When enabled, uses a 1x1 pixel image for tracking.
-	 */
-	usePixel?: boolean;
-
-	/**
-	 * Filter function to conditionally skip events.
-	 * Return false to skip the event, true to send it.
-	 *
-	 * @example
-	 * ```ts
-	 * filter: (event) => {
-	 *   // Skip events from admin pages
-	 *   return !event.path?.includes('/admin');
-	 * }
-	 * ```
-	 */
+	/** Project client ID. Auto-detected from `NEXT_PUBLIC_DATABUDDY_CLIENT_ID` env var if omitted. */
+	clientId?: string;
+	/** Server-side only. Not required for browser usage. */
+	clientSecret?: string;
+	/** Enable debug logging (default: false) */
+	debug?: boolean;
+	/** Disable all tracking (default: false) */
+	disabled?: boolean;
+	/** Enable event batching (default: true) */
+	enableBatching?: boolean;
+	/** Enable retries for failed requests (default: true) */
+	enableRetries?: boolean;
+	/** Return `false` to skip the event, `true` to send it. */
 	filter?: (event: any) => boolean;
-
-	/** Array of glob patterns to skip tracking on matching paths (e.g., ['/admin/**']) */
-	skipPatterns?: string[];
-
-	/** Array of glob patterns to mask sensitive paths (e.g., ['/users/*']) */
+	/** Track bots when true (default: false) */
+	ignoreBotDetection?: boolean;
+	/** Initial retry delay in ms (default: 500). Only used when `enableRetries` is true. */
+	initialRetryDelay?: number;
+	/** Glob patterns to mask sensitive paths (e.g. `['/users/*']`) */
 	maskPatterns?: string[];
+	/** Max retries for failed requests (default: 3). Only used when `enableRetries` is true. */
+	maxRetries?: number;
+	/** Sampling rate 0.0–1.0 (default: 1.0). Example: `0.5` = 50% of events sent. */
+	samplingRate?: number;
+	/** Custom browser bundle URL. Default: `'https://cdn.databuddy.cc/databuddy.js'` */
+	scriptUrl?: string;
+	/** SDK name for analytics (default: `'web'`). Override for custom integrations only. */
+	sdk?: string;
+	/** SDK version. Defaults to package.json version. */
+	sdkVersion?: string;
+	/** Glob patterns to skip tracking on matching paths (e.g. `['/admin/**']`) */
+	skipPatterns?: string[];
+	trackAttributes?: boolean;
+	trackErrors?: boolean;
+	trackHashChanges?: boolean;
+	trackInteractions?: boolean;
+	trackOutgoingLinks?: boolean;
+	/** Track page performance metrics (default: true) */
+	trackPerformance?: boolean;
+	trackWebVitals?: boolean;
+	/** Use 1x1 pixel image for tracking instead of script (default: false) */
+	usePixel?: boolean;
 }
 
-/**
- * Base event properties that can be attached to any event
- */
 export interface BaseEventProperties {
-	/** Page URL */
 	__path?: string;
-	/** Page title */
-	__title?: string;
-	/** Referrer URL */
 	__referrer?: string;
-	/** Event timestamp in milliseconds */
 	__timestamp_ms?: number;
-	/** Session ID */
-	sessionId?: string;
-	/** Session start time */
-	sessionStartTime?: number;
-	/** Page count in session */
-	page_count?: number;
-	/** Viewport size */
-	viewport_size?: string;
-	/** User timezone */
-	timezone?: string;
-	/** User language */
+	__title?: string;
 	language?: string;
-	/** UTM parameters */
-	utm_source?: string;
-	utm_medium?: string;
+	page_count?: number;
+	sessionId?: string;
+	sessionStartTime?: number;
+	timezone?: string;
 	utm_campaign?: string;
-	utm_term?: string;
 	utm_content?: string;
+	utm_medium?: string;
+	utm_source?: string;
+	utm_term?: string;
+	viewport_size?: string;
 }
 
-/**
- * Custom event properties that can be attached to any event
- */
 export interface EventProperties extends BaseEventProperties {
-	/** Custom properties for the event */
 	[key: string]: string | number | boolean | null | undefined;
 }
 
-/**
- * Pre-defined event types with their specific properties
- */
 export interface EventTypeMap {
-	// Core events
-	screen_view: {
-		page_count?: number;
-		time_on_page?: number;
-		scroll_depth?: number;
-		interaction_count?: number;
+	button_click: {
+		button_text?: string;
+		button_type?: string;
+		button_id?: string;
+		element_class?: string;
+	};
+
+	error: {
+		message: string;
+		filename?: string;
+		lineno?: number;
+		colno?: number;
+		stack?: string;
+		error_type?: string;
+	};
+
+	form_submit: {
+		form_id?: string;
+		form_name?: string;
+		form_type?: string;
+		success?: boolean;
+	};
+
+	link_out: {
+		href: string;
+		text?: string;
+		target_domain?: string;
 	};
 
 	page_exit: {
@@ -243,129 +110,50 @@ export interface EventTypeMap {
 		page_count: number;
 	};
 
-	// Interaction events
-	button_click: {
-		button_text?: string;
-		button_type?: string;
-		button_id?: string;
-		element_class?: string;
+	screen_view: {
+		page_count?: number;
+		time_on_page?: number;
+		scroll_depth?: number;
+		interaction_count?: number;
 	};
 
-	link_out: {
-		href: string;
-		text?: string;
-		target_domain?: string;
-	};
-
-	form_submit: {
-		form_id?: string;
-		form_name?: string;
-		form_type?: string;
-		success?: boolean;
-	};
-
-	// Performance events
 	web_vitals: {
-		fcp?: number; // First Contentful Paint
-		lcp?: number; // Largest Contentful Paint
-		cls?: string; // Cumulative Layout Shift
-		fid?: number; // First Input Delay
-		ttfb?: number; // Time to First Byte
+		fcp?: number;
+		lcp?: number;
+		cls?: string;
+		fid?: number;
+		ttfb?: number;
 		load_time?: number;
 		dom_ready_time?: number;
 		render_time?: number;
 		request_time?: number;
 	};
 
-	// Error events
-	error: {
-		message: string;
-		filename?: string;
-		lineno?: number;
-		colno?: number;
-		stack?: string;
-		error_type?: string;
-	};
-
-	// Custom events (catch-all)
 	[eventName: string]: EventProperties;
 }
 
-/**
- * Available event names
- */
 export type EventName = keyof EventTypeMap;
 
-/**
- * Properties for a specific event type
- */
 export type PropertiesForEvent<T extends EventName> =
 	T extends keyof EventTypeMap
 		? EventTypeMap[T] & EventProperties
 		: EventProperties;
 
-/**
- * The global tracker instance available at `window.databuddy` or `window.db`.
- *
- * @example
- * ```ts
- * // Direct access (prefer SDK functions instead)
- * window.databuddy.track("signup", { plan: "pro" });
- * window.databuddy.flush();
- *
- * // Access tracker options
- * const options = window.databuddy.options;
- * ```
- */
+/** The global tracker instance at `window.databuddy` or `window.db`. */
 export interface DatabuddyTracker {
-	/**
-	 * Track a custom event.
-	 * @param eventName - Name of the event (e.g., "purchase", "signup")
-	 * @param properties - Additional data to attach
-	 */
-	track(eventName: string, properties?: Record<string, unknown>): void;
-
-	/**
-	 * Manually track a page view. Called automatically on route changes.
-	 * @param properties - Additional properties to attach to the screen view event
-	 */
-	screenView(properties?: Record<string, unknown>): void;
-
-	/**
-	 * Set properties that will be attached to ALL future events.
-	 * Useful for user traits like plan, role, or A/B test variants.
-	 *
-	 * @example
-	 * ```ts
-	 * window.databuddy.setGlobalProperties({
-	 *   plan: "enterprise",
-	 *   abVariant: "checkout-v2"
-	 * });
-	 * ```
-	 */
-	setGlobalProperties(properties: Record<string, unknown>): void;
-
-	/**
-	 * Reset the user session. Generates new anonymous and session IDs.
-	 * Call after logout to ensure clean slate for next user.
-	 */
+	/** Reset user session — generates new anonymous and session IDs. */
 	clear(): void;
-
-	/**
-	 * Force send all queued events immediately.
-	 * Call before navigation to external sites.
-	 */
+	/** Force send all queued events immediately. */
 	flush(): void;
-
-	/**
-	 * Current tracker configuration options.
-	 */
 	options: DatabuddyConfig;
+	/** Manually track a page view. Called automatically on route changes. */
+	screenView(properties?: Record<string, unknown>): void;
+	/** Set properties attached to ALL future events (plan, role, A/B variant, etc.). */
+	setGlobalProperties(properties: Record<string, unknown>): void;
+	/** Track a custom event. */
+	track(eventName: string, properties?: Record<string, unknown>): void;
 }
 
-/**
- * Global window interface extensions
- */
 declare global {
 	interface Window {
 		databuddy?: DatabuddyTracker;
@@ -379,43 +167,12 @@ declare global {
 	}
 }
 
-/**
- * HTML data attributes for declarative click tracking.
- * Add these to any clickable element to track without JavaScript.
- *
- * @example
- * ```tsx
- * // Track button clicks with properties
- * <button
- *   data-track="cta_clicked"
- *   data-button-text="Get Started"
- *   data-location="hero"
- * >
- *   Get Started
- * </button>
- *
- * // Properties are auto-converted to camelCase:
- * // { buttonText: "Get Started", location: "hero" }
- * ```
- *
- * @example
- * ```tsx
- * // Track navigation
- * <a href="/pricing" data-track="nav_link_clicked" data-destination="pricing">
- *   Pricing
- * </a>
- * ```
- */
+/** HTML data attributes for declarative click tracking. Add `data-track="event_name"` to any element. */
 export interface DataAttributes {
-	/** Event name to track when element is clicked */
 	"data-track": string;
-	/** Additional data attributes (auto-converted from kebab-case to camelCase) */
 	[key: `data-${string}`]: string;
 }
 
-/**
- * Utility types for creating typed event tracking functions
- */
 export type TrackFunction = <T extends EventName>(
 	eventName: T,
 	properties?: PropertiesForEvent<T>

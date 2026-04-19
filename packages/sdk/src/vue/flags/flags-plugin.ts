@@ -6,9 +6,7 @@ import type { FlagResult, FlagState, FlagsConfig } from "@/core/flags/types";
 let manager: BrowserFlagsManager | null = null;
 let state: { flags: Record<string, FlagResult> } | null = null;
 
-export interface FlagsPluginOptions extends FlagsConfig {}
-
-export function createFlagsPlugin(options: FlagsPluginOptions) {
+export function createFlagsPlugin(options: FlagsConfig) {
 	return {
 		install(_app: App) {
 			const storage = options.skipStorage

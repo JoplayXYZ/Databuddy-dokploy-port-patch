@@ -5,9 +5,9 @@ import {
 	getCountryName,
 } from "@databuddy/shared/country-codes";
 import type { ProfileData } from "@databuddy/shared/types/analytics";
-import { GlobeIcon } from "@phosphor-icons/react/dist/ssr/Globe";
-import { UsersIcon } from "@phosphor-icons/react/dist/ssr/Users";
-import { UsersThreeIcon } from "@phosphor-icons/react/dist/ssr/UsersThree";
+import { GlobeIcon } from "@phosphor-icons/react";
+import { UsersIcon } from "@phosphor-icons/react";
+import { UsersThreeIcon } from "@phosphor-icons/react";
 import {
 	type ColumnDef,
 	flexRender,
@@ -334,7 +334,7 @@ export default function UsersPage() {
 		return (
 			<div className="flex h-full flex-col">
 				<PageHeader
-					description="View detailed visitor profiles and activity"
+					description="Visitor profiles and activity"
 					icon={<UsersThreeIcon />}
 					title="Users"
 				/>
@@ -370,9 +370,8 @@ export default function UsersPage() {
 	if (isError) {
 		return (
 			<div className="flex h-full flex-col">
-				{/* Header */}
 				<PageHeader
-					description="View detailed visitor profiles and activity"
+					description="Visitor profiles and activity"
 					icon={<UsersThreeIcon />}
 					title="Users"
 				/>
@@ -391,17 +390,16 @@ export default function UsersPage() {
 	if (!allUsers || allUsers.length === 0) {
 		return (
 			<div className="flex h-full flex-col">
-				{/* Header */}
 				<PageHeader
-					description="View detailed visitor profiles and activity"
+					description="Visitor profiles and activity"
 					icon={<UsersThreeIcon />}
 					title="Users"
 				/>
 
 				<EmptyState
-					description="Users will appear here once visitors browse your website"
+					description="Users appear here once visitors arrive."
 					icon={<UsersIcon />}
-					title="No users found"
+					title="No users yet"
 					variant="minimal"
 				/>
 			</div>
@@ -410,7 +408,6 @@ export default function UsersPage() {
 
 	return (
 		<div className="flex h-full flex-col">
-			{/* Header */}
 			<PageHeader
 				count={allUsers.length}
 				description="View detailed visitor profiles and activity"
@@ -418,7 +415,6 @@ export default function UsersPage() {
 				title="Users"
 			/>
 
-			{/* Content */}
 			<div className="flex min-h-0 flex-1 flex-col overflow-hidden">
 				<div className="h-full overflow-auto" ref={setScrollContainerRef}>
 					<Table>
@@ -475,7 +471,6 @@ export default function UsersPage() {
 								</TableRow>
 							))}
 
-							{/* Load more trigger */}
 							{pagination.hasNext && (
 								<>
 									<TableRow>

@@ -1,5 +1,4 @@
-import { Heading, Section, Text } from "@react-email/components";
-import { sanitizeEmailText } from "../utils/sanitize";
+import { Heading, Section, Text } from "react-email";
 import { emailBrand } from "./email-brand";
 import { EmailButton } from "./email-button";
 import { EmailLayout } from "./email-layout";
@@ -7,9 +6,9 @@ import { EmailLinkFallback } from "./email-link-fallback";
 import { EmailNote } from "./email-note";
 
 interface InvitationEmailProps {
+	invitationLink: string;
 	inviterName: string;
 	organizationName: string;
-	invitationLink: string;
 }
 
 export const InvitationEmail = ({
@@ -17,14 +16,11 @@ export const InvitationEmail = ({
 	organizationName,
 	invitationLink,
 }: InvitationEmailProps) => {
-	const safeOrg = sanitizeEmailText(organizationName) || "a team";
-	const safeName = sanitizeEmailText(inviterName) || "A team member";
+	const org = organizationName || "a team";
+	const name = inviterName || "A team member";
 
 	return (
-		<EmailLayout
-			preview={`Join ${safeOrg} on Databuddy`}
-			tagline="Team Invitation"
-		>
+		<EmailLayout preview={`Join ${org} on Databuddy`} tagline="Team Invitation">
 			<Section className="text-center">
 				<Heading
 					className="m-0 mb-3 font-semibold text-xl tracking-tight"
@@ -37,11 +33,11 @@ export const InvitationEmail = ({
 					style={{ color: emailBrand.muted }}
 				>
 					<span style={{ color: emailBrand.foreground, fontWeight: 500 }}>
-						{safeName}
+						{name}
 					</span>{" "}
 					has invited you to join{" "}
 					<span style={{ color: emailBrand.foreground, fontWeight: 500 }}>
-						{safeOrg}
+						{org}
 					</span>{" "}
 					on Databuddy.
 				</Text>
@@ -57,5 +53,11 @@ export const InvitationEmail = ({
 		</EmailLayout>
 	);
 };
+
+InvitationEmail.PreviewProps = {
+	invitationLink: "https://app.databuddy.cc/invite/abc123",
+	inviterName: "Ada Lovelace",
+	organizationName: "Acme Inc",
+} satisfies InvitationEmailProps;
 
 export default InvitationEmail;

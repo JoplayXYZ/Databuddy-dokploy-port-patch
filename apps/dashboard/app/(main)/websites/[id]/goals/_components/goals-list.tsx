@@ -1,6 +1,6 @@
 "use client";
 
-import { TargetIcon } from "@phosphor-icons/react/dist/ssr/Target";
+import { TargetIcon } from "@phosphor-icons/react";
 import { EmptyState } from "@/components/empty-state";
 import { List } from "@/components/ui/composables/list";
 import type { Goal } from "@/hooks/use-goals";
@@ -17,13 +17,13 @@ type GoalAnalyticsRecord = Record<
 >;
 
 interface GoalsListProps {
+	analyticsLoading?: boolean;
+	goalAnalytics?: GoalAnalyticsRecord;
 	goals: Goal[];
 	isLoading: boolean;
-	onEditGoal: (goal: Goal) => void;
-	onDeleteGoal: (goalId: string) => void;
 	onCreateGoal: () => void;
-	goalAnalytics?: GoalAnalyticsRecord;
-	analyticsLoading?: boolean;
+	onDeleteGoal: (goalId: string) => void;
+	onEditGoal: (goal: Goal) => void;
 }
 
 const EMPTY_GOAL_ANALYTICS: GoalAnalyticsRecord = {};
@@ -46,10 +46,10 @@ export function GoalsList({
 			<div className="flex flex-1 items-center justify-center py-16">
 				<EmptyState
 					action={{
-						label: "Create Your First Goal",
+						label: "Create a goal",
 						onClick: onCreateGoal,
 					}}
-					description="Track conversions like sign-ups, purchases, or button clicks to measure key user actions and optimize your conversion rates."
+					description="Track conversions like signups, purchases, or button clicks."
 					icon={<TargetIcon weight="duotone" />}
 					title="No goals yet"
 					variant="minimal"

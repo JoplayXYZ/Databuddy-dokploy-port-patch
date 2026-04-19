@@ -1,8 +1,10 @@
-import { getAutumn } from "@databuddy/rpc";
+import { getAutumn } from "@databuddy/rpc/autumn";
 import { captureError, record } from "@lib/tracing";
 import { useLogger } from "evlog/elysia";
 
-type BillingResult = { allowed: true } | { exceeded: true; response: Response };
+interface BillingResult {
+	allowed: true;
+}
 
 export function checkAutumnUsage(
 	customerId: string,
@@ -21,45 +23,17 @@ export function checkAutumnUsage(
 					properties,
 				})
 			);
+
 			const b = response.balance;
+			log.set({
+				billing: {
+					allowed: response.allowed,
+					usage: b?.usage,
+					granted: b?.granted,
+					unlimited: b?.unlimited,
+				},
+			});
 
-			if (b) {
-				log.set({
-					billing: {
-						allowed: true,
-						usage: b.usage,
-						usageLimit: b.granted,
-						includedUsage: b.granted,
-						unlimited: b.unlimited,
-					},
-				});
-				const usage = b.usage ?? 0;
-				const usageLimit = b.granted ?? 0;
-				const isUnlimited = b.unlimited ?? false;
-				const usageExceeds150Percent =
-					!isUnlimited && usageLimit > 0 && usage >= usageLimit * 1.5;
-
-				if (usageExceeds150Percent) {
-					log.set({
-						billing: { allowed: false, usage, usageLimit, exceeded: true },
-					});
-					return {
-						exceeded: true,
-						response: new Response(
-							JSON.stringify({
-								status: "error",
-								message: "Exceeded event limit",
-							}),
-							{
-								status: 429,
-								headers: { "Content-Type": "application/json" },
-							}
-						),
-					};
-				}
-			}
-
-			log.set({ billing: { allowed: true } });
 			return { allowed: true };
 		} catch (error) {
 			log.set({ billing: { allowed: true, checkFailed: true } });

@@ -1,16 +1,13 @@
 import { randomUUID } from "node:crypto";
-import type { Website } from "@databuddy/db";
+import { and, db, eq, isUniqueViolationFor } from "@databuddy/db";
 import {
-	and,
-	db,
-	eq,
-	isUniqueViolationFor,
 	type WebsiteInsert,
+	type Website,
 	websites,
-} from "@databuddy/db";
+} from "@databuddy/db/schema";
 import { WebsiteCache } from "./website-cache";
 
-export type { Website } from "@databuddy/db";
+export type { Website } from "@databuddy/db/schema";
 
 export type CreateWebsiteInput = Omit<
 	WebsiteInsert,

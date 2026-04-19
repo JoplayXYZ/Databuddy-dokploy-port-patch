@@ -2,24 +2,18 @@ import { describe, expect, it, mock } from "bun:test";
 
 let capturedUrl: string | undefined;
 let capturedOptions: Record<string, unknown> | undefined;
-let registeredErrorHandler: ((...args: unknown[]) => void) | undefined;
 
 class MockRedis {
-	url: string;
-	options: Record<string, unknown>;
-
 	constructor(url: string, options: Record<string, unknown>) {
 		capturedUrl = url;
 		capturedOptions = options;
 	}
 
-	on(event: string, handler: (...args: unknown[]) => void) {
-		if (event === "error") {
-			registeredErrorHandler = handler;
-		}
+	on() {
 		return this;
 	}
 
+	async quit() {}
 	disconnect() {}
 }
 
@@ -29,7 +23,8 @@ mock.module("ioredis", () => ({
 
 process.env.REDIS_URL = "redis://test-host:6379";
 
-const { getRedisCache, redis } = await import("./redis");
+const { getRedisCache } = await import("./redis");
+getRedisCache();
 
 describe("redis", () => {
 	describe("constructor options", () => {
@@ -52,8 +47,8 @@ describe("redis", () => {
 
 	describe("retry strategy", () => {
 		const strategy = capturedOptions?.retryStrategy as (
-			times: number,
-		) => number;
+			times: number
+		) => number | null;
 
 		it("returns 100ms on first retry", () => {
 			expect(strategy(1)).toBe(100);
@@ -65,51 +60,22 @@ describe("redis", () => {
 			expect(strategy(20)).toBe(2000);
 		});
 
-		it("caps at 3000ms", () => {
-			expect(strategy(30)).toBe(3000);
-			expect(strategy(50)).toBe(3000);
-			expect(strategy(100)).toBe(3000);
-		});
-
-		it("returns 0ms for zeroth attempt (ioredis starts at 1)", () => {
-			expect(strategy(0)).toBe(0);
+		it("returns null after 20 attempts", () => {
+			expect(strategy(21)).toBeNull();
+			expect(strategy(50)).toBeNull();
 		});
 	});
 
 	describe("singleton behavior", () => {
 		it("returns the same instance on repeated calls", () => {
-			const a = getRedisCache();
-			const b = getRedisCache();
-			expect(a).toBe(b);
-		});
-
-		it("module-level redis export equals getRedisCache result", () => {
-			expect(redis).toBe(getRedisCache());
-		});
-	});
-
-	describe("error handling", () => {
-		it("registers an error event handler", () => {
-			expect(registeredErrorHandler).toBeDefined();
-		});
-
-		it("error handler calls console.error", () => {
-			const originalError = console.error;
-			let errorLogged = false;
-			console.error = (..._args: unknown[]) => {
-				errorLogged = true;
-			};
-
-			registeredErrorHandler?.(new Error("test error"));
-			expect(errorLogged).toBe(true);
-
-			console.error = originalError;
+			expect(getRedisCache()).toBe(getRedisCache());
 		});
 	});
 
 	describe("shutdown behavior", () => {
-		it("registers a SIGTERM handler", () => {
+		it("registers SIGTERM and SIGINT handlers", () => {
 			expect(process.listenerCount("SIGTERM")).toBeGreaterThanOrEqual(1);
+			expect(process.listenerCount("SIGINT")).toBeGreaterThanOrEqual(1);
 		});
 	});
 });

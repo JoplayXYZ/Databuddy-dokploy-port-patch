@@ -1,29 +1,44 @@
-FROM oven/bun:1.3.9-slim AS builder
+FROM oven/bun:1.3.11-slim AS pruner
 
 WORKDIR /app
 
-COPY package.json bun.lock turbo.json ./
+COPY . .
 
-COPY apps/ ./apps/
-COPY packages/ ./packages/
+RUN bunx turbo prune @databuddy/api --docker
 
+FROM oven/bun:1.3.11-slim AS builder
+
+WORKDIR /app
+
+COPY --from=pruner /app/out/json/ .
 RUN bun install --ignore-scripts
 
-RUN bunx turbo build --filter=@databuddy/api...
+COPY --from=pruner /app/out/full/ .
+COPY turbo.json turbo.json
 
-FROM oven/bun:1.3.4-slim
+ENV NODE_ENV=production
+
+RUN bunx turbo run build --filter=@databuddy/api...
+
+WORKDIR /app/apps/api
+
+RUN bun build \
+	--compile \
+	--minify \
+	--sourcemap \
+	--bytecode \
+	--outfile /app/server \
+	./src/index.ts
+
+FROM oven/bun:1.3.11-distroless
 
 WORKDIR /app
 
-COPY --from=builder /app/package.json ./
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/apps/api ./apps/api
-COPY --from=builder /app/packages ./packages
+COPY --from=builder /app/server server
 
 ENV NODE_ENV=production
 
 EXPOSE 3001
 
-WORKDIR /app/apps/api
-
-CMD ["bun", "run", "src/index.ts"]
+ENTRYPOINT []
+CMD ["./server"]

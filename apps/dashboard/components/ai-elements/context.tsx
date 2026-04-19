@@ -1,8 +1,5 @@
 "use client";
 
-import type { LanguageModelUsage } from "ai";
-import { type ComponentProps, createContext, useContext } from "react";
-import { getUsage } from "tokenlens";
 import { Button } from "@/components/ui/button";
 import {
 	HoverCard,
@@ -11,6 +8,20 @@ import {
 } from "@/components/ui/hover-card";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
+import type { LanguageModelUsage } from "ai";
+import { type ComponentProps, createContext, useContext } from "react";
+import type { SourceModel } from "tokenlens";
+import { computeTokenCostsForModel } from "tokenlens/helpers";
+import { vercelModels } from "tokenlens/providers/vercel";
+
+type VercelModelId = keyof typeof vercelModels.models;
+
+const lookupModel = (modelId: string): SourceModel | undefined => {
+	const model = vercelModels.models[modelId as VercelModelId];
+	return model
+		? ({ canonical_id: model.id, ...model } as unknown as SourceModel)
+		: undefined;
+};
 
 const PERCENT_MAX = 100;
 const ICON_RADIUS = 10;
@@ -21,10 +32,10 @@ const ICON_STROKE_WIDTH = 2;
 type ModelId = string;
 
 interface ContextSchema {
-	usedTokens: number;
 	maxTokens: number;
-	usage?: LanguageModelUsage;
 	modelId?: ModelId;
+	usage?: LanguageModelUsage;
+	usedTokens: number;
 }
 
 const ContextContext = createContext<ContextSchema | null>(null);
@@ -196,14 +207,15 @@ export const ContextContentFooter = ({
 	...props
 }: ContextContentFooterProps) => {
 	const { modelId, usage } = useContextValue();
-	const costUSD = modelId
-		? getUsage({
-				modelId,
+	const model = modelId ? lookupModel(modelId) : undefined;
+	const costUSD = model
+		? computeTokenCostsForModel({
+				model,
 				usage: {
-					input: usage?.inputTokens ?? 0,
-					output: usage?.outputTokens ?? 0,
+					input_tokens: usage?.inputTokens ?? 0,
+					output_tokens: usage?.outputTokens ?? 0,
 				},
-			}).costUSD?.totalUSD
+			}).totalTokenCostUSD
 		: undefined;
 	const totalCost = new Intl.NumberFormat("en-US", {
 		style: "currency",
@@ -246,11 +258,12 @@ export const ContextInputUsage = ({
 		return null;
 	}
 
-	const inputCost = modelId
-		? getUsage({
-				modelId,
-				usage: { input: inputTokens, output: 0 },
-			}).costUSD?.totalUSD
+	const inputModel = modelId ? lookupModel(modelId) : undefined;
+	const inputCost = inputModel
+		? computeTokenCostsForModel({
+				model: inputModel,
+				usage: { input_tokens: inputTokens, output_tokens: 0 },
+			}).totalTokenCostUSD
 		: undefined;
 	const inputCostText = new Intl.NumberFormat("en-US", {
 		style: "currency",
@@ -286,11 +299,12 @@ export const ContextOutputUsage = ({
 		return null;
 	}
 
-	const outputCost = modelId
-		? getUsage({
-				modelId,
-				usage: { input: 0, output: outputTokens },
-			}).costUSD?.totalUSD
+	const outputModel = modelId ? lookupModel(modelId) : undefined;
+	const outputCost = outputModel
+		? computeTokenCostsForModel({
+				model: outputModel,
+				usage: { input_tokens: 0, output_tokens: outputTokens },
+			}).totalTokenCostUSD
 		: undefined;
 	const outputCostText = new Intl.NumberFormat("en-US", {
 		style: "currency",
@@ -326,11 +340,12 @@ export const ContextReasoningUsage = ({
 		return null;
 	}
 
-	const reasoningCost = modelId
-		? getUsage({
-				modelId,
-				usage: { reasoningTokens },
-			}).costUSD?.totalUSD
+	const reasoningModel = modelId ? lookupModel(modelId) : undefined;
+	const reasoningCost = reasoningModel
+		? computeTokenCostsForModel({
+				model: reasoningModel,
+				usage: { reasoning_tokens: reasoningTokens },
+			}).totalTokenCostUSD
 		: undefined;
 	const reasoningCostText = new Intl.NumberFormat("en-US", {
 		style: "currency",
@@ -366,11 +381,12 @@ export const ContextCacheUsage = ({
 		return null;
 	}
 
-	const cacheCost = modelId
-		? getUsage({
-				modelId,
-				usage: { cacheReads: cacheTokens, input: 0, output: 0 },
-			}).costUSD?.totalUSD
+	const cacheModel = modelId ? lookupModel(modelId) : undefined;
+	const cacheCost = cacheModel
+		? computeTokenCostsForModel({
+				model: cacheModel,
+				usage: { cache_read_tokens: cacheTokens },
+			}).totalTokenCostUSD
 		: undefined;
 	const cacheCostText = new Intl.NumberFormat("en-US", {
 		style: "currency",

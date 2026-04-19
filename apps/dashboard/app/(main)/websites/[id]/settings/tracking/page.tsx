@@ -1,6 +1,6 @@
 "use client";
 
-import { CodeIcon } from "@phosphor-icons/react/dist/ssr/Code";
+import { CodeIcon } from "@phosphor-icons/react";
 import { useParams } from "next/navigation";
 import { PageHeader } from "../../../_components/page-header";
 import { WebsiteTrackingSetupTab } from "../../_components/tabs/tracking-setup-tab";
@@ -12,7 +12,7 @@ export default function TrackingSetupPage() {
 	return (
 		<div className="flex h-full flex-col">
 			<PageHeader
-				description="Installation code, setup instructions, and troubleshooting"
+				description="Install and configure tracking"
 				icon={<CodeIcon />}
 				title="Tracking Setup"
 			/>

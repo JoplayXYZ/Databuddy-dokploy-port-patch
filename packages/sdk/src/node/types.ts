@@ -2,111 +2,82 @@ import type { Logger } from "./logger";
 
 export type { Logger } from "./logger";
 
-/**
- * Middleware function that can transform or filter events
- * Return null to drop the event, or return a modified event
- */
+/** Return `null` to drop the event, or return a modified event. */
 export type Middleware = (
 	event: BatchEventInput
 ) => BatchEventInput | null | Promise<BatchEventInput | null>;
 
 export interface DatabuddyConfig {
-	/** API key for authentication (dbdy_xxx) */
+	/** API key for authentication (`dbdy_xxx`) */
 	apiKey: string;
-	/** Optional default website ID to scope events to */
-	websiteId?: string;
-	/** Optional default namespace for logical grouping (e.g., 'billing', 'auth', 'api') */
-	namespace?: string;
-	/** Optional default source identifier for events (e.g., 'backend', 'webhook', 'cli') */
-	source?: string;
-	/** Custom API endpoint (default: https://basket.databuddy.cc) */
+	/** Event ingestion endpoint (default: `'https://basket.databuddy.cc'`) */
 	apiUrl?: string;
-	/** Enable debug logging */
+	/** Events per batch before flushing (default: 10, max: 100) */
+	batchSize?: number;
+	/** Auto-flush interval in ms (default: 2000) */
+	batchTimeout?: number;
 	debug?: boolean;
-	/** Custom logger instance */
-	logger?: Logger;
 	/** Enable automatic batching (default: true) */
 	enableBatching?: boolean;
-	/** Number of events to batch before flushing (default: 10, max: 100) */
-	batchSize?: number;
-	/** Time in ms before auto-flushing batched events (default: 2000) */
-	batchTimeout?: number;
-	/** Maximum number of events to queue (default: 1000) */
-	maxQueueSize?: number;
-	/** Middleware functions to transform events */
-	middleware?: Middleware[];
-	/** Enable event deduplication based on eventId (default: true) */
+	/** Deduplicate events by `eventId` (default: true) */
 	enableDeduplication?: boolean;
-	/** Maximum deduplication cache size (default: 10000) */
+	logger?: Logger;
+	/** Max deduplication cache entries (default: 10000) */
 	maxDeduplicationCacheSize?: number;
+	/** Max queued events before forced flush (default: 1000) */
+	maxQueueSize?: number;
+	middleware?: Middleware[];
+	/** Logical grouping for events (e.g. `'billing'`, `'auth'`) */
+	namespace?: string;
+	/** Origin identifier (e.g. `'backend'`, `'webhook'`, `'cli'`) */
+	source?: string;
+	/** Default website ID to scope events to */
+	websiteId?: string;
 }
 
 export interface CustomEventInput {
-	/** Event name (required) */
-	name: string;
-	/** Unique event ID for deduplication */
-	eventId?: string;
-	/** Anonymous user ID */
 	anonymousId?: string | null;
-	/** Session ID */
-	sessionId?: string | null;
-	/** Event timestamp in milliseconds */
-	timestamp?: number | null;
-	/** Event properties/metadata */
-	properties?: Record<string, unknown> | null;
-	/** Website ID to scope the event to (overrides default) */
-	websiteId?: string | null;
-	/** Namespace for logical grouping (overrides default) */
+	/** Unique ID for deduplication */
+	eventId?: string;
+	name: string;
+	/** Overrides config default */
 	namespace?: string | null;
-	/** Source identifier (overrides default) */
+	properties?: Record<string, unknown> | null;
+	sessionId?: string | null;
+	/** Overrides config default */
 	source?: string | null;
+	/** Timestamp in ms */
+	timestamp?: number | null;
+	/** Overrides config default */
+	websiteId?: string | null;
 }
 
 export interface EventResponse {
-	/** Whether the event was successfully sent */
-	success: boolean;
-	/** Server-assigned event ID */
-	eventId?: string;
-	/** Error message if failed */
 	error?: string;
+	eventId?: string;
+	success: boolean;
 }
 
 export interface BatchEventInput {
-	/** Event type */
-	type: "custom";
-	/** Event name */
-	name: string;
-	/** Unique event ID for deduplication */
-	eventId?: string;
-	/** Anonymous user ID */
 	anonymousId?: string | null;
-	/** Session ID */
-	sessionId?: string | null;
-	/** Event timestamp in milliseconds */
-	timestamp?: number | null;
-	/** Event properties/metadata */
-	properties?: Record<string, unknown> | null;
-	/** Website ID to scope the event to */
-	websiteId?: string | null;
-	/** Namespace for logical grouping */
+	eventId?: string;
+	name: string;
 	namespace?: string | null;
-	/** Source identifier */
+	properties?: Record<string, unknown> | null;
+	sessionId?: string | null;
 	source?: string | null;
+	timestamp?: number | null;
+	type: "custom";
+	websiteId?: string | null;
 }
 
-/**
- * Global properties that will be attached to all events
- */
 export interface GlobalProperties {
 	[key: string]: unknown;
 }
 
 export interface BatchEventResponse {
-	/** Whether the batch was successfully sent */
-	success: boolean;
-	/** Number of events processed */
+	error?: string;
 	processed?: number;
-	/** Results for each event in the batch */
 	results?: Array<{
 		status: string;
 		type?: string;
@@ -114,6 +85,5 @@ export interface BatchEventResponse {
 		message?: string;
 		error?: string;
 	}>;
-	/** Error message if batch failed */
-	error?: string;
+	success: boolean;
 }

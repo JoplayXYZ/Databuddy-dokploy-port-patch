@@ -12,22 +12,86 @@ on:
       - ".github/workflows/docker-publish.yml"
   workflow_dispatch:
 
+concurrency:
+  group: docker-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name != 'release' }}
+
 env:
   REGISTRY: ghcr.io
   IMAGE_PREFIX: ghcr.io/databuddy-analytics/databuddy
 
 jobs:
+  detect:
+    name: Detect affected services
+    runs-on: blacksmith-2vcpu-ubuntu-2404
+    timeout-minutes: 5
+    outputs:
+      services: ${{ steps.detect.outputs.services }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.3.11"
+      - uses: actions/cache@v5
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
+          restore-keys: ${{ runner.os }}-bun-
+      - run: bun install --frozen-lockfile
+      - id: detect
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BEFORE_SHA: ${{ github.event.before }}
+        run: |
+          ALL='["api","basket","links","uptime"]'
+          if [[ "$EVENT_NAME" != "push" ]]; then
+            echo "services=$ALL" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [[ -z "$BEFORE_SHA" || "$BEFORE_SHA" == "0000000000000000000000000000000000000000" ]]; then
+            echo "services=$ALL" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          export TURBO_SCM_BASE="$BEFORE_SHA"
+          export TURBO_SCM_HEAD="HEAD"
+          affected=()
+          for svc in api basket links uptime; do
+            count=$(bunx turbo ls --affected --filter="@databuddy/$svc" --output=json | jq -r '.packages.count')
+            if [[ "$count" != "0" ]]; then
+              affected+=("\"$svc\"")
+            fi
+          done
+          if [[ ${#affected[@]} -eq 0 ]]; then
+            echo "services=[]" >> "$GITHUB_OUTPUT"
+          else
+            IFS=,
+            echo "services=[${affected[*]}]" >> "$GITHUB_OUTPUT"
+          fi
+
   build:
-    name: Build ${{ matrix.service }} (${{ matrix.platform }})
-    runs-on: blacksmith-4vcpu-ubuntu-2404
+    name: Build ${{ matrix.service }} (${{ matrix.platform.arch }})
+    needs: detect
+    if: needs.detect.outputs.services != '[]'
+    runs-on: ${{ matrix.platform.runner }}
+    timeout-minutes: 30
     permissions:
       contents: read
       packages: write
+      id-token: write
+      security-events: write
     strategy:
       fail-fast: false
       matrix:
-        service: [api, basket, links, uptime]
-        platform: [linux/amd64, linux/arm64]
+        service: ${{ fromJson(needs.detect.outputs.services) }}
+        platform:
+          - arch: amd64
+            os: linux/amd64
+            runner: blacksmith-4vcpu-ubuntu-2404
+          - arch: arm64
+            os: linux/arm64
+            runner: blacksmith-4vcpu-ubuntu-2404-arm
         include:
           - service: api
             description: "Databuddy API service - analytics backend"
@@ -39,24 +103,22 @@ jobs:
             description: "Databuddy Uptime service - availability monitoring"
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: docker/setup-qemu-action@v3
-        if: matrix.platform != 'linux/amd64'
+      - name: Mount Docker build cache
+        uses: useblacksmith/stickydisk@v1
+        with:
+          key: ${{ github.repository }}-${{ matrix.service }}-${{ matrix.platform.arch }}
+          path: /tmp/docker-build-cache
 
-      - uses: docker/setup-buildx-action@v3
+      - name: Set up Docker Builder
+        uses: useblacksmith/setup-docker-builder@v1
 
-      - uses: docker/login-action@v3
+      - uses: docker/login-action@v4
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Extract arch slug
-        id: platform
-        run: echo "arch=${PLATFORM##*/}" >> "$GITHUB_OUTPUT"
-        env:
-          PLATFORM: ${{ matrix.platform }}
 
       - name: Determine version tag
         id: version
@@ -76,7 +138,7 @@ jobs:
 
       - name: Extract metadata (labels)
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: ${{ env.IMAGE_PREFIX }}-${{ matrix.service }}
           labels: |
@@ -85,34 +147,62 @@ jobs:
             org.opencontainers.image.vendor=Databuddy Analytics
             org.opencontainers.image.licenses=AGPL-3.0
 
-      - uses: docker/build-push-action@v6
+      - name: Build and push
+        id: build
+        uses: useblacksmith/build-push-action@v2
         with:
           context: .
           file: ${{ matrix.service }}.Dockerfile
           push: true
-          platforms: ${{ matrix.platform }}
-          provenance: false
+          platforms: ${{ matrix.platform.os }}
+          provenance: mode=max
+          sbom: true
           labels: ${{ steps.meta.outputs.labels }}
-          tags: ${{ env.IMAGE_PREFIX }}-${{ matrix.service }}:${{ steps.version.outputs.tag }}-${{ steps.platform.outputs.arch }}
+          tags: ${{ env.IMAGE_PREFIX }}-${{ matrix.service }}:${{ steps.version.outputs.tag }}-${{ matrix.platform.arch }}
           build-args: |
             VERSION=${{ steps.version.outputs.tag }}
             BUILD_DATE=${{ steps.builddate.outputs.timestamp }}
             GIT_SHA=${{ github.sha }}
-          cache-from: type=gha,scope=${{ matrix.service }}-${{ steps.platform.outputs.arch }}
-          cache-to: type=gha,mode=max,scope=${{ matrix.service }}-${{ steps.platform.outputs.arch }}
+          cache-from: type=gha,scope=${{ matrix.service }}-${{ matrix.platform.arch }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.service }}-${{ matrix.platform.arch }}
+
+      - name: Scan image for vulnerabilities
+        uses: aquasecurity/trivy-action@0.35.0
+        with:
+          image-ref: ${{ env.IMAGE_PREFIX }}-${{ matrix.service }}:${{ steps.version.outputs.tag }}-${{ matrix.platform.arch }}
+          format: sarif
+          output: trivy-results.sarif
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+
+      - name: Upload scan results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v4
+        if: always()
+        with:
+          sarif_file: trivy-results.sarif
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v4
+
+      - name: Sign image
+        run: cosign sign --yes ${{ env.IMAGE_PREFIX }}-${{ matrix.service }}:${{ steps.version.outputs.tag }}-${{ matrix.platform.arch }}
 
   manifest:
     name: Publish ${{ matrix.service }} manifest
-    needs: build
-    runs-on: blacksmith-4vcpu-ubuntu-2404
+    needs: [detect, build]
+    if: needs.detect.outputs.services != '[]'
+    runs-on: blacksmith-2vcpu-ubuntu-2404
+    timeout-minutes: 10
     permissions:
+      contents: read
       packages: write
+      id-token: write
     strategy:
       matrix:
-        service: [api, basket, links, uptime]
+        service: ${{ fromJson(needs.detect.outputs.services) }}
 
     steps:
-      - uses: docker/login-action@v3
+      - uses: docker/login-action@v4
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
@@ -139,14 +229,12 @@ jobs:
           SHA_SHORT="${{ github.sha }}"
           SHA_SHORT="${SHA_SHORT:0:7}"
 
-          # Create manifest with version tag
           docker buildx imagetools create \
             --tag "$IMAGE:$TAG" \
             --tag "$IMAGE:sha-$SHA_SHORT" \
             "$IMAGE:$TAG-amd64" \
             "$IMAGE:$TAG-arm64"
 
-          # Add latest tag only for releases
           if [[ "${{ steps.version.outputs.is_release }}" == "true" ]]; then
             docker buildx imagetools create \
               --tag "$IMAGE:latest" \
@@ -160,3 +248,12 @@ jobs:
           TAG="${{ steps.version.outputs.tag }}"
           echo "Inspecting $IMAGE:$TAG"
           docker buildx imagetools inspect "$IMAGE:$TAG"
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v4
+
+      - name: Sign manifest
+        run: |
+          IMAGE="${{ env.IMAGE_PREFIX }}-${{ matrix.service }}"
+          TAG="${{ steps.version.outputs.tag }}"
+          cosign sign --yes "$IMAGE:$TAG"

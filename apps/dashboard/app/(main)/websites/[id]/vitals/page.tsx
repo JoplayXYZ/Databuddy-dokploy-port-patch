@@ -1,6 +1,6 @@
 "use client";
 
-import { HeartbeatIcon } from "@phosphor-icons/react/dist/ssr/Heartbeat";
+import { HeartbeatIcon } from "@phosphor-icons/react";
 import { useAtom } from "jotai";
 import { useParams } from "next/navigation";
 import { useCallback, useMemo } from "react";
@@ -30,13 +30,13 @@ import {
 } from "./columns";
 
 interface VitalMetric {
+	avg_value: number;
 	metric_name: string;
 	p50: number;
 	p75: number;
 	p90: number;
 	p95: number;
 	p99: number;
-	avg_value: number;
 	samples: number;
 }
 
@@ -52,13 +52,13 @@ interface VitalTimeSeriesRow {
 }
 
 interface VitalByPageRow {
-	page: string;
 	metric_name: string;
 	p50: number;
 	p75: number;
 	p90: number;
 	p95: number;
 	p99: number;
+	page: string;
 	samples: number;
 }
 
@@ -540,7 +540,7 @@ export default function VitalsPage() {
 				{chartMetrics.length > 0 ? (
 					<SimpleMetricsChart
 						data={chartData}
-						description={`${selectedPercentileLabel} values over time`}
+						description={`${selectedPercentileLabel} over time`}
 						height={300}
 						isLoading={isLoading}
 						metrics={chartMetrics}
@@ -550,15 +550,15 @@ export default function VitalsPage() {
 				) : (
 					<div className="rounded border bg-card p-8 text-center">
 						<p className="mx-auto text-muted-foreground text-sm">
-							Click on a metric above to add it to the chart
+							Click a metric above to chart it
 						</p>
 					</div>
 				)}
 
 				{vitalsTabs.length > 0 ? (
 					<DataTable
-						description={`Breakdown showing ${selectedPercentile} values`}
-						emptyMessage="No vitals breakdown data available"
+						description={`${selectedPercentile} values per page`}
+						emptyMessage="No breakdown data yet"
 						isLoading={isLoading}
 						minHeight={500}
 						onAddFilter={handleAddFilter}
@@ -569,8 +569,7 @@ export default function VitalsPage() {
 					!isLoading && (
 						<div className="rounded border bg-card p-8 text-center">
 							<p className="mx-auto text-muted-foreground text-sm">
-								No breakdown data available. Vitals breakdowns will appear here
-								once data is collected.
+								No breakdown data yet.
 							</p>
 						</div>
 					)
@@ -583,15 +582,14 @@ export default function VitalsPage() {
 							weight="duotone"
 						/>
 						<h3 className="mt-4 font-medium text-foreground">
-							No Web Vitals data yet
+							No Web Vitals yet
 						</h3>
 						<p className="mx-auto mt-1 max-w-md text-balance text-muted-foreground text-sm">
-							Web Vitals will appear here once your tracker starts collecting
-							performance data from real users. Make sure{" "}
+							Enable{" "}
 							<code className="rounded bg-muted px-1 py-0.5 text-xs">
 								trackWebVitals
 							</code>{" "}
-							is enabled in your tracker configuration.
+							in your tracker to collect performance data from real users.
 						</p>
 					</div>
 				)}

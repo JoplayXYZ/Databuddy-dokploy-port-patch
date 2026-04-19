@@ -37,7 +37,7 @@ export function AddWithAiButton() {
 			<button
 				aria-label="Copy prompt to add Databuddy with your AI coding assistant"
 				className={cn(
-					"inline-flex items-center gap-2 rounded border border-border bg-muted/40 px-4 py-2 font-medium text-foreground text-sm transition-colors hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+					"inline-flex items-center gap-2 border border-border bg-muted/40 px-4 py-2 font-medium text-foreground text-sm transition-colors hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
 					copied && "border-primary/50 bg-primary/5"
 				)}
 				onClick={handleCopyAction}
