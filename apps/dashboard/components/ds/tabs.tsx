@@ -17,7 +17,10 @@ function List({
 }: ComponentPropsWithoutRef<typeof BaseTabs.List>) {
 	return (
 		<BaseTabs.List
-			className={cn("relative flex gap-0.5", className)}
+			className={cn(
+				"relative flex gap-0.5 rounded-lg border bg-secondary/50 p-1",
+				className
+			)}
 			{...rest}
 		/>
 	);
@@ -30,10 +33,10 @@ function Tab({
 	return (
 		<BaseTabs.Tab
 			className={cn(
-				"inline-flex h-7 cursor-pointer select-none items-center rounded-md px-2.5 font-medium text-muted-foreground text-xs",
+				"inline-flex h-7 cursor-pointer select-none items-center gap-1.5 rounded-md px-2.5 font-medium text-muted-foreground text-xs",
 				"transition-colors duration-(--duration-quick) ease-(--ease-smooth)",
 				"hover:bg-interactive-hover hover:text-foreground",
-				"data-active:bg-secondary data-active:text-foreground",
+				"data-active:bg-background data-active:text-foreground data-active:shadow-sm",
 				"focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
 				"disabled:pointer-events-none disabled:opacity-50",
 				className

@@ -8,8 +8,10 @@ export default function TrackingSetupPage() {
 	const websiteId = params.id as string;
 
 	return (
-		<div className="flex-1 overflow-y-auto px-4 py-6 sm:px-6">
-			<WebsiteTrackingSetupTab websiteId={websiteId} />
+		<div className="flex-1 overflow-y-auto">
+			<div className="mx-auto max-w-2xl space-y-6 p-5">
+				<WebsiteTrackingSetupTab websiteId={websiteId} />
+			</div>
 		</div>
 	);
 }
