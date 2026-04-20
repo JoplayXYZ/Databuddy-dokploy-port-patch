@@ -43,10 +43,6 @@ export async function resolveFeatureAccess(
 	context: Context,
 	flagKey: string
 ): Promise<boolean> {
-	if (context.user?.role === "ADMIN") {
-		return true;
-	}
-
 	const userId = context.user?.id;
 	if (!userId) {
 		return false;

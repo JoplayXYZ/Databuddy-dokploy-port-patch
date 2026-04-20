@@ -104,21 +104,4 @@ export const sessionProcedure = protectedProcedure.use(
 	}
 );
 
-export const adminProcedure = protectedProcedure.use(
-	({ context, next, errors }) => {
-		setRpcProcedureType("admin");
-		enrichRpcWideEventContext(context);
-
-		if (!context.user || context.user.role !== "ADMIN") {
-			recordORPCError({
-				code: "FORBIDDEN",
-				message: "Admin access required",
-			});
-			throw errors.FORBIDDEN({ message: "Admin access required" });
-		}
-
-		return next({ context });
-	}
-);
-
 export { os };

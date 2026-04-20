@@ -1,11 +1,12 @@
+import { redisStorage } from "@better-auth/redis-storage";
 import { sso } from "@better-auth/sso";
 import { db, eq } from "@databuddy/db";
 import {
 	member as memberTable,
 	organization as organizationTable,
-	user,
 } from "@databuddy/db/schema";
 import {
+	DeleteAccountEmail,
 	InvitationEmail,
 	MagicLinkEmail,
 	OtpEmail,
@@ -17,9 +18,7 @@ import { getRedisCache, rateLimit } from "@databuddy/redis";
 import { createId } from "@databuddy/shared/utils/ids";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { betterAuth } from "better-auth/minimal";
-import { log } from "evlog";
 import {
-	customSession,
 	emailOTP,
 	lastLoginMethod,
 	magicLink,
@@ -27,6 +26,7 @@ import {
 	organization,
 	twoFactor,
 } from "better-auth/plugins";
+import { log } from "evlog";
 import { Resend } from "resend";
 import { ac, admin, member, owner, viewer } from "./permissions";
 
@@ -53,45 +53,60 @@ function isProduction() {
 
 const SLACK_WEBHOOK_URL = process.env.SLACK_WEBHOOK_URL ?? "";
 
+function notifySlack(
+	title: string,
+	message: string,
+	priority: "high" | "normal",
+	metadata: Record<string, string>
+): void {
+	if (!SLACK_WEBHOOK_URL) {
+		return;
+	}
+
+	new SlackProvider({ webhookUrl: SLACK_WEBHOOK_URL })
+		.send({ title, message, priority, metadata })
+		.then((result) => {
+			if (!result.success) {
+				console.error(
+					`Failed to send Slack notification (${title}):`,
+					result.error
+				);
+			}
+		})
+		.catch((error) => {
+			console.error(`Failed to send Slack notification (${title}):`, error);
+		});
+}
+
 function notifySignUpSlackAction(input: {
 	userId: string;
 	email: string;
 	name: string | null;
 	organizationId: string;
 }): void {
-	if (!SLACK_WEBHOOK_URL) {
-		return;
-	}
-
-	new SlackProvider({ webhookUrl: SLACK_WEBHOOK_URL })
-		.send({
-			title: "New sign-up",
-			message: "A new user created an account.",
-			priority: "normal",
-			metadata: {
-				email: input.email,
-				name: input.name ?? "—",
-				userId: input.userId,
-				organizationId: input.organizationId,
-			},
-		})
-		.then((result) => {
-			if (!result.success) {
-				console.error(
-					"Failed to send Slack notification for sign-up:",
-					result.error
-				);
-			}
-		})
-		.catch((error) => {
-			console.error("Failed to send Slack notification for sign-up:", error);
-		});
+	notifySlack("New sign-up", "A new user created an account.", "normal", {
+		email: input.email,
+		name: input.name ?? "—",
+		userId: input.userId,
+		organizationId: input.organizationId,
+	});
 }
 
 export const auth = betterAuth({
 	database: drizzleAdapter(db, {
 		provider: "pg",
 	}),
+	secondaryStorage: redisStorage({
+		client: getRedisCache(),
+		keyPrefix: "ba:",
+	}),
+	session: {
+		storeSessionInDatabase: true,
+		cookieCache: {
+			enabled: true,
+			maxAge: 5 * 60,
+		},
+	},
 	rateLimit: {
 		window: 60,
 		max: 100,
@@ -193,6 +208,27 @@ export const auth = betterAuth({
 	user: {
 		deleteUser: {
 			enabled: true,
+			sendDeleteAccountVerification: async ({ user: targetUser, url }) => {
+				const resend = new Resend(process.env.RESEND_API_KEY as string);
+				await resend.emails.send({
+					from: "no-reply@databuddy.cc",
+					to: targetUser.email,
+					subject: "Confirm account deletion",
+					react: DeleteAccountEmail({ url }),
+				});
+			},
+			beforeDelete: async (userToDelete) => {
+				await notifySlack(
+					"Account deleted",
+					"A user deleted their account.",
+					"high",
+					{
+						email: userToDelete.email,
+						name: userToDelete.name ?? "—",
+						userId: userToDelete.id,
+					}
+				);
+			},
 		},
 	},
 	appName: "databuddy.cc",
@@ -365,22 +401,6 @@ export const auth = betterAuth({
 			},
 		}),
 		twoFactor(),
-		customSession(async ({ user: sessionUser, session }) => {
-			const [dbUser] = await db
-				.select({ role: user.role, twoFactorEnabled: user.twoFactorEnabled })
-				.from(user)
-				.where(eq(user.id, session.userId))
-				.limit(1);
-			return {
-				role: dbUser?.role,
-				user: {
-					...sessionUser,
-					role: dbUser?.role,
-					twoFactorEnabled: dbUser?.twoFactorEnabled ?? false,
-				},
-				session,
-			};
-		}),
 		organization({
 			creatorRole: "owner",
 			teams: {
@@ -435,8 +455,5 @@ export const websitesApi = {
 	hasPermission: auth.api.hasPermission,
 };
 
-export type User = (typeof auth)["$Infer"]["Session"]["user"] & {
-	role?: "OWNER" | "ADMIN" | "MEMBER" | "VIEWER";
-	twoFactorEnabled?: boolean;
-};
+export type User = (typeof auth)["$Infer"]["Session"]["user"];
 export type Session = (typeof auth)["$Infer"]["Session"];

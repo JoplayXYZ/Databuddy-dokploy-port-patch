@@ -123,16 +123,6 @@ async function resolveUserWorkspace(
 		plan: PlanId;
 	}
 ): Promise<Omit<Workspace, "website" | "getCreatedBy">> {
-	if (context.user.role === "ADMIN") {
-		return {
-			organizationId,
-			user: context.user,
-			role: "admin",
-			plan: options.plan,
-			isPublicAccess: false,
-		};
-	}
-
 	const role = await getOrganizationRole(context.user.id, organizationId);
 	if (!role) {
 		throw rpcError.forbidden("You are not a member of this organization");

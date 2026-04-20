@@ -9,10 +9,11 @@
     "./client": "./src/client/auth-client.ts"
   },
   "dependencies": {
+    "@better-auth/redis-storage": "^1.6.5",
     "@better-auth/sso": "^1.4.10",
     "@databuddy/db": "*",
-    "@databuddy/notifications": "workspace:*",
     "@databuddy/email": "*",
+    "@databuddy/notifications": "workspace:*",
     "@databuddy/redis": "*",
     "@databuddy/shared": "*",
     "better-auth": "^1.4.10",
