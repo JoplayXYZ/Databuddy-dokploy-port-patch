@@ -178,6 +178,7 @@ function ForgotPasswordPage() {
 						</Field.Label>
 						<OtpInput
 							autoComplete="one-time-code"
+							className="justify-start"
 							id="otp"
 							name="otp"
 							onChange={setOtp}
