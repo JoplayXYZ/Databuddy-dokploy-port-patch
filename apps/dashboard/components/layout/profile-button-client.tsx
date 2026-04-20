@@ -147,6 +147,7 @@ export function ProfileButtonClient({ user }: ProfileButtonClientProps) {
 					aria-label="Profile menu"
 					className="flex size-8 items-center justify-center rounded-full transition-opacity duration-(--duration-quick) ease-(--ease-smooth) hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
 					disabled={isLoggingOut || Boolean(switchingTo)}
+					render={<button type="button" />}
 				>
 					<Avatar
 						alt={user?.name || "User"}
