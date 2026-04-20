@@ -137,6 +137,14 @@ Dashboard (Next.js) ←→ ORPC (rpc package) ←→ API (Elysia) → PostgreSQL
 - **Linter/Formatter**: Ultracite (Biome-based). Run `bun run lint` / `bun run format`.
 - **TypeScript**: Strict mode. Always use proper types — avoid `any`.
 - **Commit format**: `<type>(<scope>): <description>` (e.g., `feat(dashboard): add export button`, `fix(api): handle null session`)
+- **Commit slicing rule**: Prefer one commit per coherent product or technical slice, not one giant snapshot and not ultra-fragmented file-by-file commits.
+  - Split commits by intent: feature, bug fix, refactor, style/copy pass, or migration slice.
+  - Use the dominant surface as scope: `dashboard`, `api`, `rpc`, `basket`, `docs`, `db`, `sdk`, `tracker`, `deps`, `ci`.
+  - Group closely related UI files into one commit when they ship one visible change.
+  - Keep unrelated surfaces in separate commits even if they were edited in the same session.
+  - For broad migrations, follow the repo’s existing pattern: one commit per meaningful area, e.g. `feat(dashboard): migrate home, events, insights, and links pages to DS primitives`.
+  - Before committing, check `git diff --stat` and `git status --short`; if the diff mixes unrelated intents, split it.
+  - Only make a single snapshot commit for the whole worktree when the user explicitly asks to include everything as-is.
 - **PRs**: Open against `staging` branch (not `main`).
 
 ## AI Policy Note
