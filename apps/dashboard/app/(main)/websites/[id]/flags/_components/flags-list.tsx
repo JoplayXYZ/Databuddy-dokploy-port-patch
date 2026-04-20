@@ -108,6 +108,7 @@ function StatusToggle({ flag }: { flag: Flag }) {
 			data-row-interactive="true"
 			onClick={stopRowInteraction}
 			onKeyDown={stopRowInteraction}
+			role="presentation"
 		>
 			<Switch
 				aria-label={isActive ? "Disable flag" : "Enable flag"}
@@ -166,6 +167,7 @@ function FlagActions({
 			data-row-interactive="true"
 			onClick={stopRowInteraction}
 			onKeyDown={stopRowInteraction}
+			role="presentation"
 		>
 			<DropdownMenu>
 				<DropdownMenu.Trigger
