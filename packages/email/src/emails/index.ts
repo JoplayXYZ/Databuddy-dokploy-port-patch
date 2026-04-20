@@ -1,3 +1,4 @@
+export * from "./delete-account-email";
 export { emailBrand } from "./email-brand";
 export * from "./email-button";
 export * from "./email-footer";

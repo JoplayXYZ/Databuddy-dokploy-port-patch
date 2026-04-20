@@ -9,8 +9,11 @@ import {
 	LinkBreak,
 	Link as LinkIcon,
 	ShieldCheck,
+	Trash,
+	WarningCircle,
 } from "@phosphor-icons/react/dist/ssr";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Avatar } from "@/components/ds/avatar";
@@ -183,6 +186,149 @@ function UnlinkConfirmDialog({
 	);
 }
 
+function DeleteAccountDialog({
+	open,
+	onOpenChange,
+	userEmail,
+	hasPassword,
+}: {
+	open: boolean;
+	onOpenChange: (open: boolean) => void;
+	userEmail: string;
+	hasPassword: boolean;
+}) {
+	const router = useRouter();
+	const [password, setPassword] = useState("");
+	const [confirmEmail, setConfirmEmail] = useState("");
+	const [emailSent, setEmailSent] = useState(false);
+
+	useEffect(() => {
+		if (!open) {
+			setPassword("");
+			setConfirmEmail("");
+			setEmailSent(false);
+		}
+	}, [open]);
+
+	const deleteAccount = useMutation({
+		mutationFn: async () => {
+			const opts: { password?: string; callbackURL?: string } = {
+				callbackURL: "/auth/login",
+			};
+			if (hasPassword) {
+				opts.password = password;
+			}
+			const result = await authClient.deleteUser(opts);
+			if (result.error) {
+				throw new Error(result.error.message);
+			}
+			return result;
+		},
+		onSuccess: () => {
+			if (hasPassword) {
+				toast.success("Your account has been deleted");
+				router.push("/auth/login");
+			} else {
+				setEmailSent(true);
+			}
+		},
+		onError: (error) => {
+			toast.error(error.message || "Failed to delete account");
+		},
+	});
+
+	const emailMatches = confirmEmail.toLowerCase() === userEmail.toLowerCase();
+	const canSubmit = hasPassword ? emailMatches && !!password : emailMatches;
+
+	if (emailSent) {
+		return (
+			<Dialog onOpenChange={onOpenChange} open={open}>
+				<Dialog.Content>
+					<Dialog.Header>
+						<Dialog.Title>Check Your Email</Dialog.Title>
+						<Dialog.Description>
+							We sent a confirmation link to{" "}
+							<span className="font-medium text-foreground">{userEmail}</span>.
+							Click the link to permanently delete your account.
+						</Dialog.Description>
+					</Dialog.Header>
+					<Dialog.Footer>
+						<Button onClick={() => onOpenChange(false)} variant="secondary">
+							Close
+						</Button>
+					</Dialog.Footer>
+				</Dialog.Content>
+			</Dialog>
+		);
+	}
+
+	return (
+		<Dialog onOpenChange={onOpenChange} open={open}>
+			<Dialog.Content>
+				<Dialog.Header>
+					<Dialog.Title>Delete Account</Dialog.Title>
+					<Dialog.Description>
+						This action is permanent and cannot be undone. All your data,
+						sessions, and connected accounts will be removed.
+					</Dialog.Description>
+				</Dialog.Header>
+				<Dialog.Body className="space-y-4">
+					<div className="flex items-start gap-3 rounded-lg border border-danger/20 bg-danger/5 p-3">
+						<WarningCircle
+							className="mt-0.5 size-5 shrink-0 text-danger"
+							weight="duotone"
+						/>
+						<Text tone="muted" variant="caption">
+							You will lose access to all organizations you own. Transfer
+							ownership before deleting your account if needed.
+						</Text>
+					</div>
+					<Field>
+						<Field.Label>
+							Type <span className="font-mono text-xs">{userEmail}</span> to
+							confirm
+						</Field.Label>
+						<Input
+							onChange={(e) => setConfirmEmail(e.target.value)}
+							placeholder={userEmail}
+							value={confirmEmail}
+						/>
+					</Field>
+					{hasPassword ? (
+						<Field>
+							<Field.Label>Password</Field.Label>
+							<Input
+								autoComplete="current-password"
+								onChange={(e) => setPassword(e.target.value)}
+								placeholder="••••••••"
+								type="password"
+								value={password}
+							/>
+						</Field>
+					) : (
+						<Text tone="muted" variant="caption">
+							We'll send a confirmation email to verify this is you.
+						</Text>
+					)}
+				</Dialog.Body>
+				<Dialog.Footer>
+					<Dialog.Close>
+						<Button variant="secondary">Cancel</Button>
+					</Dialog.Close>
+					<Button
+						disabled={!canSubmit || deleteAccount.isPending}
+						loading={deleteAccount.isPending}
+						onClick={() => deleteAccount.mutate()}
+						tone="danger"
+					>
+						{hasPassword ? "Delete My Account" : "Send Confirmation Email"}
+					</Button>
+				</Dialog.Footer>
+			</Dialog.Content>
+		</Dialog>
+	);
+}
+
 export default function AccountSettingsPage() {
 	const queryClient = useQueryClient();
 	const { data: session, isPending: isSessionLoading } =
@@ -196,6 +342,7 @@ export default function AccountSettingsPage() {
 	const [unlinkProvider, setUnlinkProvider] = useState<SocialProvider | null>(
 		null
 	);
+	const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
 	useEffect(() => {
 		if (user) {
@@ -457,15 +604,16 @@ export default function AccountSettingsPage() {
 								Link your accounts for easier sign-in
 							</Card.Description>
 						</Card.Header>
-						<Card.Content className="space-y-2">
+						<Card.Content>
 							{isAccountsLoading ? (
-								<div className="space-y-2">
-									<Skeleton className="h-10 w-full" />
-									<Skeleton className="h-10 w-full" />
+								<div className="space-y-3">
+									<Skeleton className="h-5 w-full" />
+									<Skeleton className="h-5 w-full" />
+									<Skeleton className="h-5 w-full" />
 								</div>
 							) : (
-								<>
-									{SOCIAL_PROVIDERS.map((provider) => {
+								<div className="space-y-3">
+									{SOCIAL_PROVIDERS.map((provider, index) => {
 										const config = PROVIDER_CONFIG[provider];
 										const ProviderIcon = config.icon;
 										const connectedAccount = accounts.find(
@@ -475,58 +623,104 @@ export default function AccountSettingsPage() {
 											accounts.length === 1 && !!connectedAccount;
 
 										return (
-											<div
-												className="flex items-center justify-between py-2"
-												key={provider}
-											>
-												<div className="flex items-center gap-3">
-													<ProviderIcon className="size-5" weight="duotone" />
-													<Text variant="label">{config.name}</Text>
-												</div>
-												{connectedAccount ? (
-													<div className="flex items-center gap-2">
-														<Button
-															aria-label={
-																isOnlyAccount
-																	? "Cannot unlink your only login method"
-																	: `Unlink ${config.name}`
-															}
-															disabled={isOnlyAccount}
-															onClick={() => setUnlinkProvider(provider)}
-															size="sm"
-															variant="ghost"
-														>
-															<LinkBreak className="size-3.5" />
-														</Button>
-														<Badge variant="success">Connected</Badge>
+											<div key={provider}>
+												{index > 0 && <Divider className="mb-3" />}
+												<div className="flex items-center justify-between">
+													<div className="flex items-center gap-3">
+														<ProviderIcon
+															className="size-4 text-muted-foreground"
+															weight="duotone"
+														/>
+														<div>
+															<Text variant="label">{config.name}</Text>
+															<Text tone="muted" variant="caption">
+																{connectedAccount
+																	? "Linked to your account"
+																	: `Sign in with ${config.name}`}
+															</Text>
+														</div>
 													</div>
-												) : (
-													<Button
-														disabled={linkSocial.isPending}
-														loading={linkSocial.isPending}
-														onClick={() => linkSocial.mutate(provider)}
-														size="sm"
-														variant="secondary"
-													>
-														<LinkIcon className="size-3.5" />
-														Connect
-													</Button>
-												)}
+													{connectedAccount ? (
+														<div className="flex items-center gap-2">
+															{!isOnlyAccount && (
+																<Button
+																	aria-label={`Unlink ${config.name}`}
+																	onClick={() => setUnlinkProvider(provider)}
+																	size="sm"
+																	variant="ghost"
+																>
+																	<LinkBreak className="size-3.5" />
+																	Unlink
+																</Button>
+															)}
+															<Badge variant="success">Connected</Badge>
+														</div>
+													) : (
+														<Button
+															disabled={linkSocial.isPending}
+															loading={linkSocial.isPending}
+															onClick={() => linkSocial.mutate(provider)}
+															size="sm"
+															variant="secondary"
+														>
+															<LinkIcon className="size-3.5" />
+															Connect
+														</Button>
+													)}
+												</div>
 											</div>
 										);
 									})}
-
 									{hasCredentialAccount && (
-										<div className="flex items-center justify-between py-2">
-											<div className="flex items-center gap-3">
-												<Key className="size-5" weight="duotone" />
-												<Text variant="label">Password</Text>
+										<>
+											<Divider />
+											<div className="flex items-center justify-between">
+												<div className="flex items-center gap-3">
+													<Key
+														className="size-4 text-muted-foreground"
+														weight="duotone"
+													/>
+													<div>
+														<Text variant="label">Password</Text>
+														<Text tone="muted" variant="caption">
+															Email and password login
+														</Text>
+													</div>
+												</div>
+												<Badge variant="success">Connected</Badge>
 											</div>
-											<Badge variant="success">Connected</Badge>
-										</div>
+										</>
 									)}
-								</>
+								</div>
 							)}
+						</Card.Content>
+					</Card>
+
+					<Card>
+						<Card.Header>
+							<Card.Title>Danger Zone</Card.Title>
+							<Card.Description>
+								Irreversible actions that permanently affect your account
+							</Card.Description>
+						</Card.Header>
+						<Card.Content>
+							<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+								<div className="min-w-0 flex-1">
+									<Text variant="label">Delete Account</Text>
+									<Text tone="muted" variant="caption">
+										Permanently delete your account and all associated data
+									</Text>
+								</div>
+								<Button
+									onClick={() => setShowDeleteDialog(true)}
+									size="sm"
+									tone="danger"
+									variant="secondary"
+								>
+									<Trash className="size-3.5" weight="duotone" />
+									Delete Account
+								</Button>
+							</div>
 						</Card.Content>
 					</Card>
 				</div>
@@ -586,6 +780,14 @@ export default function AccountSettingsPage() {
 				}}
 				provider={unlinkProvider}
 			/>
+			{user?.email && (
+				<DeleteAccountDialog
+					hasPassword={hasCredentialAccount}
+					onOpenChange={setShowDeleteDialog}
+					open={showDeleteDialog}
+					userEmail={user.email}
+				/>
+			)}
 		</div>
 	);
 }
