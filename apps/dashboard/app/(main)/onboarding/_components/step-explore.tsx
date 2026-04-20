@@ -6,9 +6,11 @@ import {
 	CursorClickIcon,
 	LightningIcon,
 	RocketLaunchIcon,
+	SparkleIcon,
 	UsersIcon,
 } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
+import { Badge } from "@/components/ds/badge";
 import { Button } from "@/components/ds/button";
 
 const FEATURES = [
@@ -48,15 +50,25 @@ export function StepExplore({ onComplete, websiteId }: StepExploreProps) {
 	return (
 		<div className="space-y-6">
 			<div className="flex items-center gap-3">
-				<div className="flex size-10 items-center justify-center rounded bg-primary/10">
+				<div className="flex size-10 items-center justify-center rounded-lg bg-primary/10">
 					<RocketLaunchIcon className="size-5 text-primary" weight="duotone" />
 				</div>
 				<div>
 					<h2 className="text-balance font-semibold text-lg">You're all set</h2>
 					<p className="text-pretty text-muted-foreground text-sm">
-						Here's what you can do with your dashboard.
+						Your workspace is ready. Start with one of the core views below.
 					</p>
 				</div>
+			</div>
+
+			<div className="flex items-center gap-2">
+				<Badge size="sm" variant="success">
+					<SparkleIcon className="size-3" weight="duotone" />
+					Setup complete
+				</Badge>
+				<p className="text-muted-foreground text-xs">
+					These links drop you into the places new teams usually check first.
+				</p>
 			</div>
 
 			<div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -78,12 +90,12 @@ export function StepExplore({ onComplete, websiteId }: StepExploreProps) {
 								{feature.description}
 							</p>
 						</div>
-						<ArrowRightIcon className="mt-0.5 size-3.5 shrink-0 text-muted-foreground opacity-0 group-hover:opacity-100" />
+						<ArrowRightIcon className="mt-0.5 size-3.5 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
 					</Link>
 				))}
 			</div>
 
-			<Button className="w-full" onClick={onComplete} size="lg">
+			<Button className="w-full sm:w-auto" onClick={onComplete} size="lg">
 				Go to Dashboard
 			</Button>
 		</div>

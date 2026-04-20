@@ -11,15 +11,14 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { type ReactNode, useState } from "react";
 import { toast } from "sonner";
-import { PageHeader } from "@/app/(main)/websites/_components/page-header";
 import { EmptyState } from "@/components/ds/empty-state";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { FeatureLockedPanel } from "@/components/feature-access-gate";
 import { PageNavigation } from "@/components/layout/page-navigation";
 import { TransferToOrgDialog } from "@/components/transfer-to-org-dialog";
 import { Badge } from "@/components/ds/badge";
-import { Button } from "@/components/ui/button";
-import { List } from "@/components/ui/composables/list";
+import { Button, buttonVariants } from "@/components/ds/button";
+import { Card } from "@/components/ds/card";
 import { DeleteDialog } from "@/components/ds/delete-dialog";
 import { Field } from "@/components/ds/field";
 import { Skeleton } from "@/components/ds/skeleton";
@@ -96,26 +95,41 @@ export default function StatusPageDetailsPage() {
 		}
 	};
 
-	const handleConfirmRemove = () => {
+	const handleConfirmRemove = async () => {
 		if (!monitorToRemoveData) {
 			return;
 		}
-		removeMutation.mutate({
+		await removeMutation.mutateAsync({
 			statusPageId: monitorToRemoveData.statusPageId,
 			uptimeScheduleId: monitorToRemoveData.uptimeScheduleId,
 		});
 	};
 
-	let monitorsBody: ReactNode;
-	if (isFeatureAccessLoading) {
-		monitorsBody = <List.DefaultLoading />;
-	} else if (!hasAccess) {
-		monitorsBody = <FeatureLockedPanel flagKey="monitors" />;
-	} else if (statusPageQuery.isLoading) {
-		monitorsBody = <List.DefaultLoading />;
+	const isLoading = isFeatureAccessLoading || statusPageQuery.isLoading;
+
+	let monitorsContent: ReactNode;
+	if (!(hasAccess || isFeatureAccessLoading)) {
+		monitorsContent = <FeatureLockedPanel flagKey="monitors" />;
+	} else if (isLoading) {
+		monitorsContent = (
+			<div className="divide-y">
+				{Array.from({ length: 3 }).map((_, i) => (
+					<div
+						className="flex items-center gap-4 px-5 py-3"
+						key={`skel-${i + 1}`}
+					>
+						<Skeleton className="size-8 shrink-0 rounded-lg" />
+						<div className="min-w-0 flex-1 space-y-1.5">
+							<Skeleton className="h-4 w-40" />
+							<Skeleton className="h-3 w-56" />
+						</div>
+					</div>
+				))}
+			</div>
+		);
 	} else if (statusPageQuery.isError) {
-		monitorsBody = (
-			<div className="flex flex-1 items-center justify-center py-16">
+		monitorsContent = (
+			<div className="px-5 py-12">
 				<EmptyState
 					action={{
 						label: "Retry",
@@ -129,23 +143,28 @@ export default function StatusPageDetailsPage() {
 			</div>
 		);
 	} else if (statusPage?.monitors.length === 0) {
-		monitorsBody = (
-			<div className="flex flex-1 items-center justify-center py-16">
+		monitorsContent = (
+			<div className="px-5 py-12">
 				<EmptyState
-					action={{
-						label: "Add Monitor",
-						onClick: () => setIsDialogOpen(true),
-					}}
+					action={
+						<Button
+							onClick={() => setIsDialogOpen(true)}
+							size="sm"
+							variant="secondary"
+						>
+							<PlusIcon className="size-3.5" />
+							Add Monitor
+						</Button>
+					}
 					description="Add an existing monitor or create a new one to display on this status page."
 					icon={<HeartbeatIcon weight="duotone" />}
 					title="No monitors added"
-					variant="minimal"
 				/>
 			</div>
 		);
 	} else {
-		monitorsBody = (
-			<List className="rounded bg-card">
+		monitorsContent = (
+			<div className="divide-y">
 				{statusPage?.monitors.map((monitor: StatusPageMonitor) => (
 					<StatusPageMonitorRow
 						key={monitor.id}
@@ -154,105 +173,128 @@ export default function StatusPageDetailsPage() {
 						statusPageId={statusPageId}
 					/>
 				))}
-			</List>
+			</div>
 		);
 	}
 
 	return (
 		<ErrorBoundary>
 			<div className="flex h-full min-h-0 flex-col">
-				<PageHeader
-					description="Manage monitors and what appears on your public status page."
-					icon={<BrowserIcon />}
-					right={
-						statusPage ? (
-							<>
-								<Button asChild size="sm" variant="outline">
-									<Link
-										href={getStatusPageUrl(statusPage.slug)}
-										rel="noopener noreferrer"
-										target="_blank"
-									>
-										View Page
-									</Link>
-								</Button>
-								<Button
-									aria-label="Refresh data"
-									disabled={
-										statusPageQuery.isLoading || statusPageQuery.isFetching
-									}
-									onClick={() => statusPageQuery.refetch()}
-									size="icon"
-									variant="outline"
-								>
-									<ArrowClockwiseIcon
-										className={cn(
-											(statusPageQuery.isLoading ||
-												statusPageQuery.isFetching) &&
-												"animate-spin"
-										)}
-									/>
-								</Button>
-								<Button
-									onClick={() => setIsTransferOpen(true)}
-									size="sm"
-									variant="outline"
-								>
-									<ArrowSquareOutIcon weight="duotone" />
-									<span className="hidden sm:inline">Transfer</span>
-								</Button>
-								<Button onClick={() => setIsDialogOpen(true)} size="sm">
-									<PlusIcon />
-									Add Monitor
-								</Button>
-							</>
-						) : (
-							<div
-								aria-hidden="true"
-								className="flex max-w-full shrink-0 flex-wrap items-center justify-end gap-2"
-							>
-								<Skeleton className="h-9 w-22 rounded sm:w-24" />
-								<Skeleton className="size-9 rounded" />
-								<Skeleton className="h-9 w-28 rounded" />
-							</div>
-						)
-					}
-					title={statusPage?.name ?? "Status page"}
-				/>
-
 				<PageNavigation
-					breadcrumb={{ label: "Status Pages", href: "/monitors/status-pages" }}
+					breadcrumb={{
+						label: "Status Pages",
+						href: "/monitors/status-pages",
+					}}
 					currentPage={statusPage?.name ?? "Status page"}
 					variant="breadcrumb"
 				/>
 
-				<div className="flex h-10 shrink-0 border-border border-b bg-accent/30">
-					<button
-						className="relative flex cursor-pointer items-center gap-2 px-3 py-2.5 font-medium text-foreground text-sm"
-						type="button"
-					>
-						<span className="inline-flex">
-							<HeartbeatIcon className="size-4 text-primary" weight="fill" />
-						</span>
-						Monitors
-						<div className="absolute inset-x-0 bottom-0 h-0.5 bg-brand-purple" />
-					</button>
-					<button
-						className="flex cursor-not-allowed items-center gap-2 px-3 py-2.5 font-medium text-muted-foreground/50 text-sm"
-						disabled
-						type="button"
-					>
-						<span className="inline-flex">
-							<SirenIcon className="size-4" weight="duotone" />
-						</span>
-						Incidents
-						<Badge className="px-1.5 py-0" variant="muted">
-							Soon
-						</Badge>
-					</button>
-				</div>
+				<div className="flex-1 overflow-y-auto">
+					<div className="mx-auto max-w-2xl space-y-6 p-5">
+						<Card>
+							<Card.Header className="flex-row items-start justify-between gap-4">
+								<div>
+									<Card.Title>
+										{statusPage?.name ?? <Skeleton className="h-5 w-40" />}
+									</Card.Title>
+									<Card.Description>
+										{isLoading
+											? "Loading…"
+											: `${statusPage?.monitors.length ?? 0} monitor${statusPage?.monitors.length === 1 ? "" : "s"} on this page`}
+									</Card.Description>
+								</div>
+								<div className="flex items-center gap-2">
+									{statusPage ? (
+										<>
+											<Link
+												className={buttonVariants({
+													size: "sm",
+													variant: "secondary",
+												})}
+												href={getStatusPageUrl(statusPage.slug)}
+												rel="noopener noreferrer"
+												target="_blank"
+											>
+												View Page
+											</Link>
+											<Button
+												aria-label="Refresh data"
+												disabled={
+													statusPageQuery.isLoading ||
+													statusPageQuery.isFetching
+												}
+												onClick={() => statusPageQuery.refetch()}
+												size="sm"
+												variant="ghost"
+											>
+												<ArrowClockwiseIcon
+													className={cn(
+														"size-3.5",
+														(statusPageQuery.isLoading ||
+															statusPageQuery.isFetching) &&
+															"animate-spin"
+													)}
+												/>
+											</Button>
+											<Button
+												onClick={() => setIsTransferOpen(true)}
+												size="sm"
+												variant="secondary"
+											>
+												<ArrowSquareOutIcon
+													className="size-3.5"
+													weight="duotone"
+												/>
+												<span className="hidden sm:inline">Transfer</span>
+											</Button>
+											<Button onClick={() => setIsDialogOpen(true)} size="sm">
+												<PlusIcon className="size-3.5" />
+												Add Monitor
+											</Button>
+										</>
+									) : (
+										<>
+											<Skeleton className="h-8 w-22 rounded" />
+											<Skeleton className="size-8 rounded" />
+											<Skeleton className="h-8 w-24 rounded" />
+										</>
+									)}
+								</div>
+							</Card.Header>
 
-				<div className="min-h-0 flex-1 overflow-y-auto">{monitorsBody}</div>
+							<div className="flex h-10 shrink-0 border-border border-t bg-accent/30">
+								<button
+									className="relative flex cursor-pointer items-center gap-2 px-3 py-2.5 font-medium text-foreground text-sm"
+									type="button"
+								>
+									<span className="inline-flex">
+										<HeartbeatIcon
+											className="size-4 text-primary"
+											weight="fill"
+										/>
+									</span>
+									Monitors
+									<div className="absolute inset-x-0 bottom-0 h-0.5 bg-brand-purple" />
+								</button>
+								<button
+									className="flex cursor-not-allowed items-center gap-2 px-3 py-2.5 font-medium text-muted-foreground/50 text-sm"
+									disabled
+									type="button"
+								>
+									<span className="inline-flex">
+										<SirenIcon className="size-4" weight="duotone" />
+									</span>
+									Incidents
+									<Badge className="px-1.5 py-0" variant="muted">
+										Soon
+									</Badge>
+								</button>
+							</div>
+
+							<Card.Content className="p-0">{monitorsContent}</Card.Content>
+						</Card>
+					</div>
+				</div>
 
 				<AddMonitorDialog
 					existingMonitorIds={

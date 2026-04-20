@@ -3,13 +3,13 @@
 import { ChevronDownIcon } from "lucide-react";
 import type { ComponentProps, ReactNode } from "react";
 import { createContext, useCallback, useContext, useState } from "react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ds/button";
 import {
 	Collapsible,
 	CollapsibleContent,
 	CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { Input } from "@/components/ui/input";
+import { Input } from "@/components/ds/input";
 import { Tooltip } from "@/components/ds/tooltip";
 import { cn } from "@/lib/utils";
 

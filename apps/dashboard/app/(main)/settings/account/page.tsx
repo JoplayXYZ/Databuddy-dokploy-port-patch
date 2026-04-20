@@ -20,7 +20,7 @@ import { Card } from "@/components/ds/card";
 import { Dialog } from "@/components/ds/dialog";
 import { Divider } from "@/components/ds/divider";
 import { Field } from "@/components/ds/field";
-import { Input } from "@/components/ui/input";
+import { Input } from "@/components/ds/input";
 import { Skeleton } from "@/components/ds/skeleton";
 import { Text } from "@/components/ds/text";
 import dayjs from "@/lib/dayjs";

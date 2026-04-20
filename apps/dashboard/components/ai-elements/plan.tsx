@@ -3,7 +3,7 @@
 import { ChevronsUpDownIcon } from "lucide-react";
 import type { ComponentProps } from "react";
 import { createContext, useContext } from "react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ds/button";
 import { Card } from "@/components/ds/card";
 import {
 	Collapsible,

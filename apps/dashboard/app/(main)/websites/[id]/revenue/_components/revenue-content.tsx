@@ -27,7 +27,7 @@ import { StatCard } from "@/components/analytics/stat-card";
 import { EmptyState } from "@/components/ds/empty-state";
 import { Button } from "@/components/ds/button";
 import { Sheet } from "@/components/ds/sheet";
-import { Input } from "@/components/ui/input";
+import { Input } from "@/components/ds/input";
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
 import { useDateFilters } from "@/hooks/use-date-filters";
 import { useBatchDynamicQuery } from "@/hooks/use-dynamic-query";

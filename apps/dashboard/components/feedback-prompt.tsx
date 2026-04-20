@@ -5,7 +5,7 @@ import { XIcon } from "@phosphor-icons/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ds/button";
 
 const STORAGE_KEY = "databuddy-feedback-prompt";
 

@@ -141,6 +141,7 @@ function RadioGroup(
 
 function RadioItem({
 	className,
+	closeOnClick = true,
 	...rest
 }: ComponentPropsWithoutRef<typeof BaseMenu.RadioItem>) {
 	return (
@@ -151,6 +152,7 @@ function RadioItem({
 				"data-disabled:pointer-events-none data-disabled:opacity-50",
 				className
 			)}
+			closeOnClick={closeOnClick}
 			{...rest}
 		/>
 	);

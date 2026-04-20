@@ -9,9 +9,9 @@ import { useHotkeys } from "react-hotkeys-hook";
 import { Badge } from "@/components/ds/badge";
 import { Button } from "@/components/ds/button";
 import { Dialog } from "@/components/ds/dialog";
-import { Input } from "@/components/ui/input";
+import { Input } from "@/components/ds/input";
 import { Switch } from "@/components/ds/switch";
-import { Textarea } from "@/components/ui/textarea";
+import { Textarea } from "@/components/ds/textarea";
 import {
 	ANNOTATION_COLORS,
 	COMMON_ANNOTATION_TAGS,

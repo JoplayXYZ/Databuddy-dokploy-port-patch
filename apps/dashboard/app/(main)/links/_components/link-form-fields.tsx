@@ -15,7 +15,7 @@ import {
 	FormLabel,
 	FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+import { Input } from "@/components/ds/input";
 import { Field } from "@/components/ds/field";
 import { cn } from "@/lib/utils";
 import { CollapsibleSection } from "./collapsible-section";

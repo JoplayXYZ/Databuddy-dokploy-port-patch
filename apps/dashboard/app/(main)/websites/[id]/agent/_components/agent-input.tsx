@@ -13,8 +13,8 @@ import {
 	UnicodeSpinner,
 	useRandomThinkingVariant,
 } from "@/components/ai-elements/unicode-spinner";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ds/button";
+import { Textarea } from "@/components/ds/textarea";
 import { Tooltip } from "@/components/ds/tooltip";
 import { useChat, usePendingQueue } from "@/contexts/chat-context";
 import { cn } from "@/lib/utils";

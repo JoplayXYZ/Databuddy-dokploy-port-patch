@@ -31,7 +31,7 @@ import {
 	CommandList,
 } from "@/components/ui/command";
 import { DeleteDialog } from "@/components/ds/delete-dialog";
-import { Input } from "@/components/ui/input";
+import { Input } from "@/components/ds/input";
 import { Field } from "@/components/ds/field";
 import {
 	Popover,

@@ -10,7 +10,7 @@ import { PencilSimpleIcon } from "@phosphor-icons/react";
 import { ShareNetworkIcon } from "@phosphor-icons/react";
 import { TrashIcon } from "@phosphor-icons/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useMemo } from "react";
+import { type SyntheticEvent, useMemo } from "react";
 import { Badge } from "@/components/ds/badge";
 import { List } from "@/components/ui/composables/list";
 import { DropdownMenu } from "@/components/ds/dropdown-menu";
@@ -40,6 +40,19 @@ const TYPE_CONFIG = {
 		color: "text-pink-500",
 	},
 } as const;
+
+const ROW_INTERACTIVE_SELECTOR = '[data-row-interactive="true"]';
+
+function stopRowInteraction(event: SyntheticEvent) {
+	event.stopPropagation();
+}
+
+function shouldIgnoreRowClick(target: EventTarget | null) {
+	return (
+		target instanceof Element &&
+		target.closest(ROW_INTERACTIVE_SELECTOR) !== null
+	);
+}
 
 function GroupsDisplay({ groups }: { groups: TargetGroup[] }) {
 	if (groups.length === 0) {
@@ -90,7 +103,12 @@ function StatusToggle({ flag }: { flag: Flag }) {
 	};
 
 	return (
-		<div className="flex items-center gap-2">
+		<div
+			className="flex items-center gap-2"
+			data-row-interactive="true"
+			onClick={stopRowInteraction}
+			onKeyDown={stopRowInteraction}
+		>
 			<Switch
 				aria-label={isActive ? "Disable flag" : "Enable flag"}
 				checked={isActive}
@@ -144,38 +162,44 @@ function FlagActions({
 	};
 
 	return (
-		<DropdownMenu>
-			<DropdownMenu.Trigger
-				aria-label="Flag actions"
-				className={cn(
-					"inline-flex items-center justify-center gap-1.5 rounded-md font-medium transition-all duration-(--duration-quick) ease-(--ease-smooth) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 disabled:pointer-events-none disabled:opacity-50",
-					"bg-transparent text-muted-foreground hover:bg-interactive-hover hover:text-foreground",
-					"size-8 p-0",
-					"opacity-50 hover:opacity-100 data-[state=open]:opacity-100"
-				)}
-			>
-				<DotsThreeIcon className="size-5" weight="bold" />
-			</DropdownMenu.Trigger>
-			<DropdownMenu.Content align="end" className="w-44">
-				<DropdownMenu.Item className="gap-2" onClick={() => onEdit(flag)}>
-					<PencilSimpleIcon className="size-4" weight="duotone" />
-					Edit Flag
-				</DropdownMenu.Item>
-				<DropdownMenu.Item className="gap-2" onClick={handleArchive}>
-					<ArchiveIcon className="size-4" weight="duotone" />
-					{flag.status === "archived" ? "Restore" : "Archive"}
-				</DropdownMenu.Item>
-				<DropdownMenu.Separator />
-				<DropdownMenu.Item
-					className="gap-2 text-destructive focus:text-destructive"
-					onClick={() => onDelete(flag.id)}
-					variant="destructive"
+		<div
+			data-row-interactive="true"
+			onClick={stopRowInteraction}
+			onKeyDown={stopRowInteraction}
+		>
+			<DropdownMenu>
+				<DropdownMenu.Trigger
+					aria-label="Flag actions"
+					className={cn(
+						"inline-flex items-center justify-center gap-1.5 rounded-md font-medium transition-all duration-(--duration-quick) ease-(--ease-smooth) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 disabled:pointer-events-none disabled:opacity-50",
+						"bg-transparent text-muted-foreground hover:bg-interactive-hover hover:text-foreground",
+						"size-8 p-0",
+						"opacity-50 hover:opacity-100 data-[state=open]:opacity-100"
+					)}
 				>
-					<TrashIcon className="size-4 fill-destructive" weight="duotone" />
-					Delete Flag
-				</DropdownMenu.Item>
-			</DropdownMenu.Content>
-		</DropdownMenu>
+					<DotsThreeIcon className="size-5" weight="bold" />
+				</DropdownMenu.Trigger>
+				<DropdownMenu.Content align="end" className="w-44">
+					<DropdownMenu.Item className="gap-2" onClick={() => onEdit(flag)}>
+						<PencilSimpleIcon className="size-4" weight="duotone" />
+						Edit Flag
+					</DropdownMenu.Item>
+					<DropdownMenu.Item className="gap-2" onClick={handleArchive}>
+						<ArchiveIcon className="size-4" weight="duotone" />
+						{flag.status === "archived" ? "Restore" : "Archive"}
+					</DropdownMenu.Item>
+					<DropdownMenu.Separator />
+					<DropdownMenu.Item
+						className="gap-2 text-destructive focus:text-destructive"
+						onClick={() => onDelete(flag.id)}
+						variant="destructive"
+					>
+						<TrashIcon className="size-4 fill-destructive" weight="duotone" />
+						Delete Flag
+					</DropdownMenu.Item>
+				</DropdownMenu.Content>
+			</DropdownMenu>
+		</div>
 	);
 }
 
@@ -294,8 +318,16 @@ function FlagRow({
 		>
 			{/* biome-ignore lint/a11y/useSemanticElements: List.Row asChild replaces this element; a real <button> would nest inside the action-cell buttons */}
 			<div
-				onClick={() => onEdit(flag)}
+				onClick={(event) => {
+					if (shouldIgnoreRowClick(event.target)) {
+						return;
+					}
+					onEdit(flag);
+				}}
 				onKeyDown={(e) => {
+					if (e.target !== e.currentTarget) {
+						return;
+					}
 					if (e.key === "Enter" || e.key === " ") {
 						e.preventDefault();
 						onEdit(flag);
@@ -304,11 +336,7 @@ function FlagRow({
 				role="button"
 				tabIndex={0}
 			>
-				<List.Cell
-					className="min-w-0 max-w-[min(320px,100%)] shrink-0"
-					onClick={(e) => e.stopPropagation()}
-					onKeyDown={(e) => e.stopPropagation()}
-				>
+				<List.Cell className="min-w-0 max-w-[min(320px,100%)] shrink-0">
 					<div className="flex min-w-0 items-center gap-3">
 						<div
 							className={cn(
@@ -373,11 +401,7 @@ function FlagRow({
 					<GroupsDisplay groups={groups} />
 				</List.Cell>
 
-				<List.Cell
-					className="flex w-[120px] shrink-0 justify-center"
-					onClick={(e) => e.stopPropagation()}
-					onKeyDown={(e) => e.stopPropagation()}
-				>
+				<List.Cell className="flex w-[120px] shrink-0 justify-center">
 					{flag.status === "archived" ? (
 						<Badge className="gap-1" variant="warning">
 							<ArchiveIcon className="size-3" weight="duotone" />

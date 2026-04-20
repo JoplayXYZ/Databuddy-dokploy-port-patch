@@ -3,20 +3,13 @@
 import { track } from "@databuddy/sdk";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { GlobeIcon } from "@phosphor-icons/react/dist/ssr";
-import { useForm } from "react-hook-form";
+import { useController, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { useOrganizationsContext } from "@/components/providers/organizations-provider";
 import { Button } from "@/components/ds/button";
-import {
-	Form,
-	FormControl,
-	FormField,
-	FormItem,
-	FormLabel,
-	FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+import { Field } from "@/components/ds/field";
+import { Input } from "@/components/ds/input";
 import { useCreateWebsite } from "@/hooks/use-websites";
 
 const domainRegex =
@@ -54,6 +47,15 @@ export function StepCreateWebsite({ onComplete }: StepCreateWebsiteProps) {
 		},
 	});
 
+	const nameField = useController({
+		control: form.control,
+		name: "name",
+	});
+	const domainField = useController({
+		control: form.control,
+		name: "domain",
+	});
+
 	const handleSubmit = async (formData: FormData) => {
 		try {
 			const result = await createWebsiteMutation.mutateAsync({
@@ -82,82 +84,74 @@ export function StepCreateWebsite({ onComplete }: StepCreateWebsiteProps) {
 	const { isValid, isDirty } = form.formState;
 
 	return (
-		<div className="space-y-6">
+		<div className="mx-auto max-w-2xl space-y-6">
 			<div className="flex items-center gap-3">
-				<div className="flex size-10 items-center justify-center rounded bg-primary/10">
+				<div className="flex size-10 items-center justify-center rounded-lg bg-primary/10">
 					<GlobeIcon className="size-5 text-primary" weight="duotone" />
 				</div>
 				<div>
-					<h2 className="text-balance font-semibold text-lg">
-						Add your website
-					</h2>
+					<h2 className="text-balance font-semibold text-lg">Add your website</h2>
 					<p className="text-pretty text-muted-foreground text-sm">
-						Enter your website details to start collecting analytics data.
+						Use the production domain you want Databuddy to associate with this
+						workspace.
 					</p>
 				</div>
 			</div>
 
-			<Form {...form}>
-				<form className="space-y-4" onSubmit={form.handleSubmit(handleSubmit)}>
-					<FormField
-						control={form.control}
-						name="name"
-						render={({ field }) => (
-							<FormItem>
-								<FormLabel>Website name</FormLabel>
-								<FormControl>
-									<Input placeholder="My Project" {...field} />
-								</FormControl>
-								<FormMessage />
-							</FormItem>
-						)}
+			<form className="space-y-4" onSubmit={form.handleSubmit(handleSubmit)}>
+				<Field error={!!nameField.fieldState.error}>
+					<Field.Label>Website name</Field.Label>
+					<Input placeholder="My Project" {...nameField.field} />
+					<Field.Description>
+						This is the label your team will see throughout the dashboard.
+					</Field.Description>
+					{nameField.fieldState.error ? (
+						<Field.Error>{nameField.fieldState.error.message}</Field.Error>
+					) : null}
+				</Field>
+
+				<Field error={!!domainField.fieldState.error}>
+					<Field.Label>Domain</Field.Label>
+					<Input
+						autoCapitalize="none"
+						autoCorrect="off"
+						inputMode="url"
+						placeholder="your-company.com"
+						prefix="https://"
+						{...domainField.field}
+						onChange={(event) => {
+							let domain = event.target.value.trim();
+							if (
+								domain.startsWith("http://") ||
+								domain.startsWith("https://")
+							) {
+								try {
+									domain = new URL(domain).hostname;
+								} catch {
+									// Keep the raw value so the user can fix it.
+								}
+							}
+							domainField.field.onChange(domain.replace(wwwRegex, ""));
+						}}
 					/>
-					<FormField
-						control={form.control}
-						name="domain"
-						render={({ field }) => (
-							<FormItem>
-								<FormLabel>Domain</FormLabel>
-								<FormControl>
-									<div className="flex items-center">
-										<span className="inline-flex h-9 items-center rounded-r-none border border-r-0 bg-accent px-3 text-muted-foreground text-sm">
-											https://
-										</span>
-										<Input
-											className="rounded-l-none border-l-0"
-											placeholder="your-company.com"
-											{...field}
-											onChange={(e) => {
-												let domain = e.target.value.trim();
-												if (
-													domain.startsWith("http://") ||
-													domain.startsWith("https://")
-												) {
-													try {
-														domain = new URL(domain).hostname;
-													} catch {
-														// keep as-is
-													}
-												}
-												field.onChange(domain.replace(wwwRegex, ""));
-											}}
-										/>
-									</div>
-								</FormControl>
-								<FormMessage />
-							</FormItem>
-						)}
-					/>
-					<Button
-						className="w-full"
-						disabled={!(isValid && isDirty)}
-						loading={createWebsiteMutation.isPending}
-						type="submit"
-					>
-						{createWebsiteMutation.isPending ? "Creating..." : "Create website"}
-					</Button>
-				</form>
-			</Form>
+					<Field.Description>
+						We use this to validate installs and route you into the right
+						workspace.
+					</Field.Description>
+					{domainField.fieldState.error ? (
+						<Field.Error>{domainField.fieldState.error.message}</Field.Error>
+					) : null}
+				</Field>
+
+				<Button
+					className="w-full sm:w-auto"
+					disabled={!(isValid && isDirty)}
+					loading={createWebsiteMutation.isPending}
+					type="submit"
+				>
+					{createWebsiteMutation.isPending ? "Creating..." : "Create website"}
+				</Button>
+			</form>
 		</div>
 	);
 }

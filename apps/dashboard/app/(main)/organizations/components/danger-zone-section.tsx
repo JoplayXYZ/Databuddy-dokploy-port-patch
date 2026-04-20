@@ -5,7 +5,7 @@ import { Button } from "@/components/ds/button";
 import { Card } from "@/components/ds/card";
 import { Dialog } from "@/components/ds/dialog";
 import { Field } from "@/components/ds/field";
-import { Input } from "@/components/ui/input";
+import { Input } from "@/components/ds/input";
 import { Text } from "@/components/ds/text";
 import { type Organization, useOrganizations } from "@/hooks/use-organizations";
 import { SignOut, Trash, Warning } from "@phosphor-icons/react/dist/ssr";

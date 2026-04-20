@@ -204,7 +204,11 @@ export default function GoalsPage() {
 						description="Are you sure you want to delete this goal? This action cannot be undone and will permanently remove all associated analytics data."
 						isOpen={!!deletingGoalId}
 						onClose={() => setDeletingGoalId(null)}
-						onConfirm={() => deletingGoalId && handleDeleteGoal(deletingGoalId)}
+						onConfirm={() => {
+							if (deletingGoalId) {
+								return handleDeleteGoal(deletingGoalId);
+							}
+						}}
 						title="Delete Goal"
 					/>
 				)}

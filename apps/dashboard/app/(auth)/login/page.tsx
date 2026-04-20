@@ -13,8 +13,8 @@ import { parseAsString, useQueryState } from "nuqs";
 import { Suspense, useState } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ds/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ds/button";
+import { Input } from "@/components/ds/input";
 import { Field } from "@/components/ds/field";
 import { Divider } from "@/components/ds/divider";
 

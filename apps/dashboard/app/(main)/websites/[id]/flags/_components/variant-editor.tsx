@@ -4,17 +4,13 @@ import type { Variant } from "@databuddy/shared/flags";
 import { PlusIcon } from "@phosphor-icons/react";
 import { TrashIcon } from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ds/button";
+import { Checkbox } from "@/components/ds/checkbox";
 import { Field } from "@/components/ds/field";
-import { LineSlider } from "@/components/ui/line-slider";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "@/components/ui/select";
+import { Input } from "@/components/ds/input";
+import { Select } from "@/components/ds/select";
+import { LineSlider } from "@/components/ds/line-slider";
+import { cn } from "@/lib/utils";
 import type { VariantEditorProps } from "./types";
 
 export function VariantEditor({
@@ -54,14 +50,11 @@ export function VariantEditor({
 			description: "",
 			type: defaultValueType,
 		};
-
-		const newVariants = [...variants, newVariant];
-		onChangeAction(newVariants);
+		onChangeAction([...variants, newVariant]);
 	};
 
 	const handleRemoveVariant = (index: number) => {
-		const newVariants = variants.filter((_, i) => i !== index);
-		onChangeAction(newVariants);
+		onChangeAction(variants.filter((_, i) => i !== index));
 	};
 
 	const handleUpdateVariant = (
@@ -103,7 +96,6 @@ export function VariantEditor({
 					coercedValue = "";
 					break;
 			}
-
 			newVariants[index] = {
 				...newVariants[index],
 				type: newType,
@@ -116,6 +108,8 @@ export function VariantEditor({
 		onChangeAction(newVariants);
 	};
 
+	const useWeights =
+		variants.length > 0 && typeof variants[0]?.weight === "number";
 	const weightedVariants = variants.filter((v) => typeof v.weight === "number");
 	const totalWeight = weightedVariants.reduce(
 		(sum, v) => sum + (v.weight || 0),
@@ -125,40 +119,30 @@ export function VariantEditor({
 		weightedVariants.length === 0 ? true : totalWeight === 100;
 
 	return (
-		<div className="space-y-4">
+		<div className="space-y-3">
 			<div className="flex items-center justify-between">
 				<Field.Label>Variants</Field.Label>
 				<div className="flex items-center gap-2">
-					<label
-						className="flex items-center gap-2 text-sm"
-						htmlFor="use-weights-toggle"
-					>
-						<input
-							checked={Boolean(
-								variants.length > 0 && typeof variants[0]?.weight === "number"
-							)}
-							id="use-weights-toggle"
-							onChange={(e) => {
-								const useWeights = e.target.checked;
-								const updatedVariants = variants.map((variant) => ({
-									...variant,
-									weight: useWeights
-										? (variant.weight ?? 0)
-										: (undefined as number | undefined),
-								}));
-								onChangeAction(updatedVariants);
-							}}
-							type="checkbox"
-						/>
-						<span className="text-xs">Custom weights</span>
-					</label>
+					<Checkbox
+						checked={useWeights}
+						label="Weights"
+						onCheckedChange={(checked) => {
+							const updatedVariants = variants.map((variant) => ({
+								...variant,
+								weight: checked
+									? (variant.weight ?? 0)
+									: (undefined as number | undefined),
+							}));
+							onChangeAction(updatedVariants);
+						}}
+					/>
 					<Select
-						onValueChange={(v: "string" | "number" | "json") => {
-							setDefaultValueType(v);
-
+						onValueChange={(v) => {
+							const newType = String(v) as "string" | "number" | "json";
+							setDefaultValueType(newType);
 							const updatedVariants = variants.map((variant) => {
 								let coercedValue: any = variant.value;
-								switch (v) {
+								switch (newType) {
 									case "number":
 										coercedValue = Number(coercedValue) || 0;
 										break;
@@ -173,96 +157,72 @@ export function VariantEditor({
 										coercedValue = "";
 										break;
 								}
-								return {
-									...variant,
-									type: v,
-									value: coercedValue,
-								};
+								return { ...variant, type: newType, value: coercedValue };
 							});
 							onChangeAction(updatedVariants);
 						}}
 						value={defaultValueType}
 					>
-						<SelectTrigger className="h-8 w-[120px] text-xs">
-							<SelectValue placeholder="Value Type" />
-						</SelectTrigger>
-						<SelectContent>
-							<SelectItem value="string">String</SelectItem>
-							<SelectItem value="number">Number</SelectItem>
-							<SelectItem value="json">JSON</SelectItem>
-						</SelectContent>
+						<Select.Trigger className="w-20" />
+						<Select.Content>
+							<Select.Item value="string">String</Select.Item>
+							<Select.Item value="number">Number</Select.Item>
+							<Select.Item value="json">JSON</Select.Item>
+						</Select.Content>
 					</Select>
-					<Button
-						className="h-8"
-						onClick={handleAddVariant}
-						size="sm"
-						type="button"
-						variant="outline"
-					>
-						<PlusIcon className="mr-2 size-3" />
-						Add Variant
-					</Button>
 				</div>
 			</div>
 
-			<div className="space-y-3">
+			<div className="space-y-2">
 				{variants.map((variant, index) => (
 					<div
-						className="space-y-3 rounded-lg border bg-card p-3 shadow-sm"
+						className="space-y-2 rounded-lg border border-border/60 bg-card p-3"
 						key={index}
 					>
-						<div className="flex items-start gap-3">
-							<div className="grid flex-1 gap-3 sm:grid-cols-2">
-								<div className="space-y-1">
-									<Field.Label className="text-muted-foreground text-xs">
-										Key
-									</Field.Label>
-									<Input
-										className="h-8"
-										onChange={(e) =>
-											handleUpdateVariant(index, "key", e.target.value)
-										}
-										placeholder="e.g., control"
-										value={variant.key}
-									/>
-								</div>
-								<div className="space-y-1">
-									<Field.Label className="text-muted-foreground text-xs">
-										Value
-									</Field.Label>
-									<Input
-										className="h-8"
-										onChange={(e) =>
-											handleUpdateVariant(index, "value", e.target.value)
-										}
-										placeholder="Value"
-										value={
-											typeof variant.value === "object"
-												? JSON.stringify(variant.value)
-												: variant.value
-										}
-									/>
-								</div>
+						<div className="flex items-start gap-2">
+							<div className="grid flex-1 gap-2 sm:grid-cols-2">
+								<Input
+									onChange={(e) =>
+										handleUpdateVariant(index, "key", e.target.value)
+									}
+									placeholder="e.g., control"
+									value={variant.key}
+								/>
+								<Input
+									onChange={(e) =>
+										handleUpdateVariant(index, "value", e.target.value)
+									}
+									placeholder="Value"
+									value={
+										typeof variant.value === "object"
+											? JSON.stringify(variant.value)
+											: variant.value
+									}
+								/>
 							</div>
 							<Button
 								aria-label="Remove variant"
-								className="size-8 text-muted-foreground hover:text-destructive"
+								className="text-muted-foreground hover:text-destructive"
 								disabled={variants.length <= 1}
 								onClick={() => handleRemoveVariant(index)}
-								size="icon"
+								size="sm"
 								type="button"
 								variant="ghost"
 							>
-								<TrashIcon className="size-4" />
+								<TrashIcon className="size-3.5" />
 							</Button>
 						</div>
 
 						{typeof variant.weight === "number" && (
 							<div className="space-y-1">
-								<Field.Label className="text-xs">
-									Traffic Weight: {variant.weight}%
-								</Field.Label>
+								<div className="flex items-center justify-between">
+									<span className="text-muted-foreground text-xs">Weight</span>
+									<span className="font-mono text-foreground text-xs tabular-nums">
+										{variant.weight}%
+									</span>
+								</div>
 								<LineSlider
+									aria-label={`Weight for ${variant.key}`}
 									max={100}
 									min={0}
 									onValueChange={(val: number) =>
@@ -276,36 +236,47 @@ export function VariantEditor({
 				))}
 			</div>
 
-			<div
-				className={`flex items-center gap-2 text-sm ${
-					totalWeight === 0
-						? "text-blue-600"
-						: isValidTotal
-							? "text-green-600"
-							: "text-amber-600"
-				}`}
-			>
+			<div className="flex items-center justify-between">
 				<div
-					className={`size-2 rounded-full ${
+					className={cn(
+						"flex items-center gap-1.5 text-xs",
 						totalWeight === 0
-							? "bg-blue-600"
+							? "text-muted-foreground"
 							: isValidTotal
-								? "bg-green-600"
-								: "bg-amber-600"
-					}`}
-				/>
-				{totalWeight === 0 ? (
-					<>
-						<span className="font-medium">Even split</span>
-						<span className="text-muted-foreground">
-							(~{Math.round(100 / variants.length)}% each)
+								? "text-success"
+								: "text-warning"
+					)}
+				>
+					<div
+						className={cn(
+							"size-1.5 rounded-full",
+							totalWeight === 0
+								? "bg-muted-foreground"
+								: isValidTotal
+									? "bg-success"
+									: "bg-warning"
+						)}
+					/>
+					{totalWeight === 0 ? (
+						<span>
+							Even split (~{Math.round(100 / Math.max(variants.length, 1))}%
+							each)
 						</span>
-					</>
-				) : (
-					<>
-						Total: {totalWeight}% {isValidTotal ? "" : "— must add up to 100%"}
-					</>
-				)}
+					) : (
+						<span>
+							{totalWeight}% {isValidTotal ? "total" : "— must add up to 100%"}
+						</span>
+					)}
+				</div>
+				<Button
+					onClick={handleAddVariant}
+					size="sm"
+					type="button"
+					variant="ghost"
+				>
+					<PlusIcon className="size-3.5" />
+					Add
+				</Button>
 			</div>
 		</div>
 	);

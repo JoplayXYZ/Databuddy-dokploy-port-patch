@@ -5,17 +5,12 @@ import type { DynamicQueryFilter } from "@databuddy/shared/types/api";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FloppyDiskIcon } from "@phosphor-icons/react";
 import { useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
-import {
-	Form,
-	FormControl,
-	FormField,
-	FormItem,
-	FormMessage,
-} from "@/components/ui/form";
-import { FormDialog } from "@/components/ui/form-dialog";
-import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ds/button";
+import { Dialog } from "@/components/ds/dialog";
+import { Field } from "@/components/ds/field";
+import { Input } from "@/components/ds/input";
 import { getOperatorLabel } from "@/hooks/use-filters";
 
 const formSchema = z.object({
@@ -92,79 +87,104 @@ export function SaveFilterDialog({
 	const isEditing = Boolean(editingFilter);
 
 	return (
-		<FormDialog
-			description={
-				isEditing
-					? `Update the name for "${editingFilter?.name}"`
-					: `Save ${filters.length} filter${filters.length === 1 ? "" : "s"} for later`
-			}
-			icon={
-				<FloppyDiskIcon
-					className="size-5 text-accent-foreground"
-					weight="duotone"
-				/>
-			}
-			isSubmitting={isLoading}
-			onOpenChange={handleClose}
-			onSubmit={form.handleSubmit(onSubmit)}
-			open={isOpen}
-			size="sm"
-			submitDisabled={
-				isLoading || filters.length === 0 || !form.formState.isValid
-			}
-			submitLabel={isLoading ? "Saving…" : isEditing ? "Update" : "Save"}
-			title={isEditing ? "Rename Filter" : "Save Filter"}
-		>
-			{filters.length === 0 ? (
-				<div className="rounded border border-amber-200/50 bg-amber-50/50 px-3 py-2 text-amber-900 text-xs dark:border-amber-900/50 dark:bg-amber-900/20 dark:text-amber-200">
-					No filters applied
+		<Dialog onOpenChange={handleClose} open={isOpen}>
+			<Dialog.Content className="w-[95vw] max-w-sm sm:w-full">
+				<Dialog.Close />
+				<div className="mb-4 flex items-center gap-3">
+					<div className="flex size-10 shrink-0 items-center justify-center rounded border bg-secondary">
+						<FloppyDiskIcon
+							className="size-5 text-accent-foreground"
+							weight="duotone"
+						/>
+					</div>
+					<div className="flex-1">
+						<Dialog.Title className="font-semibold text-base text-foreground leading-none">
+							{isEditing ? "Rename Filter" : "Save Filter"}
+						</Dialog.Title>
+						<Dialog.Description className="mt-1.5 text-muted-foreground text-sm">
+							{isEditing
+								? `Update the name for "${editingFilter?.name}"`
+								: `Save ${filters.length} filter${filters.length === 1 ? "" : "s"} for later`}
+						</Dialog.Description>
+					</div>
 				</div>
-			) : (
-				<div className="space-y-1.5 rounded border bg-secondary/30 p-2">
-					{filters.slice(0, 4).map((filter, i) => (
-						<div
-							className="flex items-center gap-1.5 text-xs"
-							key={`${filter.field}-${i.toString()}`}
-						>
-							<span className="font-medium">{getFieldLabel(filter.field)}</span>
-							<span className="text-muted-foreground">
-								{getOperatorLabel(filter.operator)}
-							</span>
-							<span className="truncate font-mono">
-								{Array.isArray(filter.value)
-									? filter.value.join(", ")
-									: filter.value}
-							</span>
-						</div>
-					))}
-					{filters.length > 4 && (
-						<p className="text-muted-foreground text-xs">
-							+{filters.length - 4} more
-						</p>
-					)}
-				</div>
-			)}
 
-			<Form {...form}>
-				<FormField
-					control={form.control}
-					name="name"
-					render={({ field }) => (
-						<FormItem>
-							<FormControl>
-								<Input
-									autoFocus
-									className="text-sm"
-									disabled={isLoading || filters.length === 0}
-									placeholder="Filter name…"
-									{...field}
-								/>
-							</FormControl>
-							<FormMessage className="text-xs" />
-						</FormItem>
-					)}
-				/>
-			</Form>
-		</FormDialog>
+				<Dialog.Body>
+					<fieldset className="space-y-4" disabled={isLoading}>
+						{filters.length === 0 ? (
+							<div className="rounded border border-amber-200/50 bg-amber-50/50 px-3 py-2 text-amber-900 text-xs dark:border-amber-900/50 dark:bg-amber-900/20 dark:text-amber-200">
+								No filters applied
+							</div>
+						) : (
+							<div className="space-y-1.5 rounded border bg-secondary/30 p-2">
+								{filters.slice(0, 4).map((filter, i) => (
+									<div
+										className="flex items-center gap-1.5 text-xs"
+										key={`${filter.field}-${i.toString()}`}
+									>
+										<span className="font-medium">
+											{getFieldLabel(filter.field)}
+										</span>
+										<span className="text-muted-foreground">
+											{getOperatorLabel(filter.operator)}
+										</span>
+										<span className="truncate font-mono">
+											{Array.isArray(filter.value)
+												? filter.value.join(", ")
+												: filter.value}
+										</span>
+									</div>
+								))}
+								{filters.length > 4 && (
+									<p className="text-muted-foreground text-xs">
+										+{filters.length - 4} more
+									</p>
+								)}
+							</div>
+						)}
+
+						<Controller
+							control={form.control}
+							name="name"
+							render={({ field, fieldState }) => (
+								<Field error={!!fieldState.error}>
+									<Input
+										autoFocus
+										className="text-sm"
+										disabled={isLoading || filters.length === 0}
+										placeholder="Filter name…"
+										{...field}
+									/>
+									{fieldState.error && (
+										<Field.Error>{fieldState.error.message}</Field.Error>
+									)}
+								</Field>
+							)}
+						/>
+					</fieldset>
+				</Dialog.Body>
+
+				<Dialog.Footer className="gap-2">
+					<Button
+						className="flex-1"
+						disabled={isLoading}
+						onClick={() => handleClose()}
+						variant="secondary"
+					>
+						Cancel
+					</Button>
+					<Button
+						className="flex-1"
+						disabled={
+							isLoading || filters.length === 0 || !form.formState.isValid
+						}
+						loading={isLoading}
+						onClick={form.handleSubmit(onSubmit)}
+					>
+						{isLoading ? "Saving…" : isEditing ? "Update" : "Save"}
+					</Button>
+				</Dialog.Footer>
+			</Dialog.Content>
+		</Dialog>
 	);
 }

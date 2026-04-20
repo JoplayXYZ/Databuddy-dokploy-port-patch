@@ -2,7 +2,7 @@
 
 import { type LucideIcon, XIcon } from "lucide-react";
 import type { ComponentProps, HTMLAttributes } from "react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ds/button";
 import { Tooltip } from "@/components/ds/tooltip";
 import { cn } from "@/lib/utils";
 

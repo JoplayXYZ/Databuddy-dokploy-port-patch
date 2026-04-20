@@ -1,6 +1,6 @@
 import { ArrowsOutSimpleIcon } from "@phosphor-icons/react";
 import { SectionBrandOverlay } from "@/components/logo/section-brand-overlay";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ds/button";
 import { cn } from "@/lib/utils";
 
 interface TableToolbarProps {

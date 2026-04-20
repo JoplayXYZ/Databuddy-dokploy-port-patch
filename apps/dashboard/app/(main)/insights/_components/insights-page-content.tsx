@@ -32,7 +32,7 @@ import {
 	type ReferrerEntry,
 } from "@/components/table/rows";
 import { DeleteDialog } from "@/components/ds/delete-dialog";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ds/button";
 import { DropdownMenu } from "@/components/ds/dropdown-menu";
 import { useBatchDynamicQuery } from "@/hooks/use-dynamic-query";
 import { useWebsites } from "@/hooks/use-websites";
@@ -482,9 +482,9 @@ export function InsightsPageContent() {
 				isDeleting={clearInsightsMutation.isPending}
 				isOpen={clearDialogOpen}
 				onClose={() => setClearDialogOpen(false)}
-				onConfirm={() => {
+				onConfirm={async () => {
 					if (orgId) {
-						clearInsightsMutation.mutate();
+						await clearInsightsMutation.mutateAsync();
 					}
 				}}
 				title="Clear all insights?"

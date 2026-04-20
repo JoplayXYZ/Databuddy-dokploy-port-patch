@@ -20,7 +20,7 @@ import {
 import { RangeSelectionPopup } from "@/components/charts/range-selection-popup";
 import { useDynamicDasharray } from "@/components/charts/use-dynamic-dasharray";
 import { SectionBrandOverlay } from "@/components/logo/section-brand-overlay";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ds/button";
 import {
 	Chart,
 	type ChartInteractiveFeatures,

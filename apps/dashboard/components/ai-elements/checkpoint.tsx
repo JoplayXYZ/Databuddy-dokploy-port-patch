@@ -2,7 +2,7 @@
 
 import { BookmarkIcon, type LucideProps } from "lucide-react";
 import type { ComponentProps, HTMLAttributes } from "react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ds/button";
 import { Divider } from "@/components/ds/divider";
 import { Tooltip } from "@/components/ds/tooltip";
 import { cn } from "@/lib/utils";

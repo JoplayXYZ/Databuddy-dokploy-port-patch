@@ -15,7 +15,7 @@ import Link from "next/link";
 import { cloneElement, type ReactNode } from "react";
 import { useBillingContext } from "@/components/providers/billing-provider";
 import { Badge } from "@/components/ds/badge";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ds/button";
 import { Card } from "@/components/ds/card";
 import { Skeleton } from "@/components/ds/skeleton";
 import { Tooltip } from "@/components/ds/tooltip";

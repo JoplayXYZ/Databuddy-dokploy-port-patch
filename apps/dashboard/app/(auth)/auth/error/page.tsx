@@ -6,7 +6,7 @@ import { SpinnerIcon } from "@phosphor-icons/react";
 import Link from "next/link";
 import { parseAsString, useQueryState } from "nuqs";
 import { Suspense } from "react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ds/button";
 
 const ERROR_MESSAGES: Record<string, { title: string; description: string }> = {
 	account_already_linked_to_different_user: {

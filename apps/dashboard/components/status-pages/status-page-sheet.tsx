@@ -13,7 +13,7 @@ import { Input } from "@/components/ds/input";
 import { SegmentedControl } from "@/components/ds/segmented-control";
 import { Sheet } from "@/components/ds/sheet";
 import { Switch } from "@/components/ds/switch";
-import { Textarea } from "@/components/ui/textarea";
+import { Textarea } from "@/components/ds/textarea";
 import { orpc } from "@/lib/orpc";
 
 const URL_REGEX = /^https?:\/\/.+/;

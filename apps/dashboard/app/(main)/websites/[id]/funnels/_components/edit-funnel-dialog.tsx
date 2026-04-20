@@ -16,7 +16,7 @@ import { AutocompleteInput } from "@/components/ui/autocomplete-input";
 import { Button } from "@/components/ds/button";
 import { Field } from "@/components/ds/field";
 import { Sheet } from "@/components/ds/sheet";
-import { Input } from "@/components/ui/input";
+import { Input } from "@/components/ds/input";
 import {
 	Select,
 	SelectContent,

@@ -246,7 +246,11 @@ export default function FunnelsPage() {
 						isOpen={!!deletingId}
 						itemName="this funnel"
 						onClose={() => setDeletingId(null)}
-						onConfirm={() => deletingId && handleDelete(deletingId)}
+						onConfirm={() => {
+							if (deletingId) {
+								return handleDelete(deletingId);
+							}
+						}}
 						title="Delete Funnel"
 					/>
 				)}

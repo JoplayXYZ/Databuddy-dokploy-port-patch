@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
 import type { ButtonHTMLAttributes } from "react";
 import { Spinner } from "@/components/ds/spinner";
@@ -62,14 +63,78 @@ const button = cva(
 	}
 );
 
+type CompatVariant =
+	| NonNullable<VariantProps<typeof button>["variant"]>
+	| "default"
+	| "destructive"
+	| "outline";
+type CompatSize =
+	| NonNullable<VariantProps<typeof button>["size"]>
+	| "default"
+	| "icon"
+	| "icon-sm";
+
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> &
-	VariantProps<typeof button> & {
+	Omit<VariantProps<typeof button>, "variant" | "size"> & {
+		asChild?: boolean;
 		loading?: boolean;
+		size?: CompatSize;
+		variant?: CompatVariant;
 	};
 
-export const buttonVariants = button;
+function resolveButtonVariant(variant?: CompatVariant) {
+	switch (variant) {
+		case "default":
+			return { variant: "primary" as const };
+		case "destructive":
+			return { tone: "danger" as const, variant: "primary" as const };
+		case "outline":
+			return { variant: "secondary" as const };
+		default:
+			return { variant };
+	}
+}
+
+function resolveButtonSize(size?: CompatSize) {
+	switch (size) {
+		case "default":
+			return { size: "md" as const };
+		case "icon":
+			return { className: "aspect-square px-0", size: "md" as const };
+		case "icon-sm":
+			return { className: "aspect-square px-0", size: "sm" as const };
+		default:
+			return { size };
+	}
+}
+
+export function buttonVariants({
+	className,
+	size,
+	tone,
+	variant,
+}: {
+	className?: string;
+	size?: CompatSize;
+	tone?: VariantProps<typeof button>["tone"];
+	variant?: CompatVariant;
+} = {}) {
+	const resolvedVariant = resolveButtonVariant(variant);
+	const resolvedSize = resolveButtonSize(size);
+
+	return cn(
+		button({
+			size: resolvedSize.size,
+			tone: resolvedVariant.tone ?? tone,
+			variant: resolvedVariant.variant,
+		}),
+		resolvedSize.className,
+		className
+	);
+}
 
 export function Button({
+	asChild = false,
 	className,
 	variant,
 	tone,
@@ -80,9 +145,11 @@ export function Button({
 	children,
 	...rest
 }: ButtonProps) {
+	const Comp = asChild ? Slot : "button";
+
 	return (
-		<button
-			className={cn(button({ variant, tone, size }), className)}
+		<Comp
+			className={buttonVariants({ className, size, tone, variant })}
 			disabled={disabled || loading}
 			type={type}
 			{...rest}
@@ -95,6 +162,6 @@ export function Button({
 			) : (
 				children
 			)}
-		</button>
+		</Comp>
 	);
 }

@@ -6,8 +6,8 @@ import { ClockIcon } from "@phosphor-icons/react";
 import { InfinityIcon } from "@phosphor-icons/react";
 import { XIcon } from "@phosphor-icons/react";
 import { useCallback, useMemo, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
+import { Button } from "@/components/ds/button";
+import { Calendar } from "@/components/ds/calendar";
 import {
 	Popover,
 	PopoverContent,

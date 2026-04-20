@@ -2,22 +2,38 @@
 
 import { useFieldContext } from "@/components/ds/field";
 import { cn } from "@/lib/utils";
-import { Input as BaseInput } from "@base-ui-components/react/input";
-import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import { forwardRef, type InputHTMLAttributes, type ReactNode } from "react";
 
-type InputProps = Omit<ComponentPropsWithoutRef<typeof BaseInput>, "prefix"> & {
+type InputProps = Omit<InputHTMLAttributes<HTMLInputElement>, "prefix"> & {
 	prefix?: ReactNode;
 	suffix?: ReactNode;
+	showFocusIndicator?: boolean;
+	variant?: "default" | "ghost";
+	wrapperClassName?: string;
 };
 
-export function Input({ className, id, prefix, suffix, ...rest }: InputProps) {
+export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
+	{
+		className,
+		id,
+		prefix,
+		showFocusIndicator: _showFocusIndicator = true,
+		suffix,
+		variant = "default",
+		wrapperClassName,
+		...rest
+	},
+	ref
+) {
 	const field = useFieldContext();
 
-	const ariaDescribedBy = field
-		? [field.error && field.errorId, field.descriptionId]
-				.filter(Boolean)
-				.join(" ") || undefined
-		: undefined;
+	const ariaDescribedBy =
+		rest["aria-describedby"] ??
+		(field
+			? [field.error && field.errorId, field.descriptionId]
+					.filter(Boolean)
+					.join(" ") || undefined
+			: undefined);
 
 	const errorRing =
 		field?.error &&
@@ -31,7 +47,9 @@ export function Input({ className, id, prefix, suffix, ...rest }: InputProps) {
 					"transition-colors duration-(--duration-quick) ease-(--ease-smooth)",
 					"focus-within:ring-2 focus-within:ring-ring/60",
 					"has-[input:disabled]:cursor-not-allowed has-[input:disabled]:opacity-50",
+					variant === "ghost" && "bg-transparent hover:bg-interactive-hover/60",
 					errorRing,
+					wrapperClassName,
 					className
 				)}
 			>
@@ -40,11 +58,12 @@ export function Input({ className, id, prefix, suffix, ...rest }: InputProps) {
 						{prefix}
 					</span>
 				)}
-				<BaseInput
+				<input
 					aria-describedby={ariaDescribedBy}
-					aria-invalid={field?.error || undefined}
+					aria-invalid={(rest["aria-invalid"] ?? field?.error) || undefined}
 					className="h-full min-w-0 flex-1 bg-transparent px-3 text-foreground text-xs placeholder:text-muted-foreground focus-visible:outline-none disabled:cursor-not-allowed"
 					id={id ?? field?.id}
+					ref={ref}
 					{...rest}
 				/>
 				{suffix && (
@@ -57,20 +76,23 @@ export function Input({ className, id, prefix, suffix, ...rest }: InputProps) {
 	}
 
 	return (
-		<BaseInput
+		<input
 			aria-describedby={ariaDescribedBy}
-			aria-invalid={field?.error || undefined}
+			aria-invalid={(rest["aria-invalid"] ?? field?.error) || undefined}
 			className={cn(
 				"flex h-8 w-full rounded-md bg-secondary px-3 text-foreground text-xs",
 				"placeholder:text-muted-foreground",
 				"transition-colors duration-(--duration-quick) ease-(--ease-smooth)",
 				"focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
 				"disabled:cursor-not-allowed disabled:opacity-50",
+				variant === "ghost" && "bg-transparent hover:bg-interactive-hover/60",
 				errorRing,
+				wrapperClassName,
 				className
 			)}
 			id={id ?? field?.id}
+			ref={ref}
 			{...rest}
 		/>
 	);
-}
+});

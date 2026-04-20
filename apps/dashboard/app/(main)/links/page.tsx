@@ -11,7 +11,7 @@ import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { PageHeader } from "@/app/(main)/websites/_components/page-header";
 import { ErrorBoundary } from "@/components/error-boundary";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ds/button";
 import { Card } from "@/components/ds/card";
 import { DeleteDialog } from "@/components/ds/delete-dialog";
 import { type Link, useDeleteLink, useLinks } from "@/hooks/use-links";

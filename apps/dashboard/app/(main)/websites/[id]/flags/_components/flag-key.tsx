@@ -24,6 +24,7 @@ export function FlagKey({
 					"h-4.5 font-mono text-xs has-[>svg]:px-1.5 dark:text-foreground/70",
 					className
 				)}
+				data-row-interactive="true"
 				onClick={() => copyToClipboard(flag.key)}
 				size="sm"
 				variant="ghost"

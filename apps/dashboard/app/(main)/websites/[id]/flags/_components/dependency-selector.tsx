@@ -6,13 +6,9 @@ import { PlusIcon } from "@phosphor-icons/react";
 import { XIcon } from "@phosphor-icons/react";
 import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-	Popover,
-	PopoverContent,
-	PopoverTrigger,
-} from "@/components/ui/popover";
+import { Button } from "@/components/ds/button";
+import { Input } from "@/components/ds/input";
+import { Popover } from "@/components/ds/popover";
 import { cn } from "@/lib/utils";
 import type { DependencySelectorProps, Flag } from "./types";
 
@@ -69,7 +65,7 @@ export function DependencySelector({
 							return (
 								<motion.div
 									animate={{ opacity: 1, scale: 1 }}
-									className="group flex items-center gap-1.5 rounded bg-secondary px-2 py-1"
+									className="group inline-flex items-center gap-1.5 rounded-md bg-secondary px-2 py-1 text-foreground text-xs"
 									exit={{ opacity: 0, scale: 0.9 }}
 									initial={{ opacity: 0, scale: 0.9 }}
 									key={flag.key}
@@ -78,17 +74,17 @@ export function DependencySelector({
 									<div
 										className={cn(
 											"size-1.5 rounded-full",
-											isActive ? "bg-green-500" : "bg-amber-500"
+											isActive ? "bg-success" : "bg-warning"
 										)}
 									/>
-									<span className="text-sm">{flag.name || flag.key}</span>
+									<span>{flag.name || flag.key}</span>
 									<button
 										aria-label={`Remove ${flag.name || flag.key}`}
-										className="text-muted-foreground opacity-0 transition-opacity hover:text-destructive group-hover:opacity-100"
+										className="cursor-pointer text-muted-foreground opacity-0 transition-opacity hover:text-foreground group-hover:opacity-100"
 										onClick={() => handleRemove(flag.key)}
 										type="button"
 									>
-										<XIcon size={12} />
+										<XIcon className="size-3" />
 									</button>
 								</motion.div>
 							);
@@ -99,27 +95,29 @@ export function DependencySelector({
 
 			{selectableFlags.length > 0 && (
 				<Popover onOpenChange={setIsOpen} open={isOpen}>
-					<PopoverTrigger asChild>
-						<Button
-							className="h-8 gap-1.5 text-muted-foreground"
-							size="sm"
-							type="button"
-							variant="ghost"
-						>
-							<PlusIcon size={14} />
-							Add dependency
-						</Button>
-					</PopoverTrigger>
-					<PopoverContent align="start" className="w-64 p-2">
-						<Input
-							className="mb-2 h-8"
-							onChange={(e) => setSearch(e.target.value)}
-							placeholder="Search…"
-							value={search}
-						/>
+					<Popover.Trigger
+						render={
+							<Button
+								className="text-muted-foreground"
+								size="sm"
+								type="button"
+								variant="ghost"
+							/>
+						}
+					>
+						<PlusIcon className="size-3.5" />
+						Add dependency
+					</Popover.Trigger>
+					<Popover.Content className="w-64 p-2" side="bottom">
+						<div className="mb-2">
+							<Input
+								onChange={(e) => setSearch(e.target.value)}
+								placeholder="Search flags…"
+								value={search}
+							/>
+						</div>
 						<div
 							className="max-h-40 space-y-0.5 overflow-y-auto"
-							// Fixes Radix UI Popover content scrolling issue: https://github.com/radix-ui/primitives/issues/1159
 							onTouchMove={(e) => e.stopPropagation()}
 							onWheel={(e) => e.stopPropagation()}
 						>
@@ -128,7 +126,7 @@ export function DependencySelector({
 									const isActive = flag.status === "active";
 									return (
 										<button
-											className="flex w-full items-center gap-2 rounded p-2 text-left text-sm transition-colors hover:bg-accent"
+											className="flex w-full cursor-pointer items-center gap-2 rounded-md p-2 text-left text-foreground text-xs transition-colors hover:bg-interactive-hover"
 											key={flag.key}
 											onClick={() => {
 												handleSelect(flag.key);
@@ -138,13 +136,13 @@ export function DependencySelector({
 										>
 											{isActive ? (
 												<CheckCircleIcon
-													className="shrink-0 text-green-500"
+													className="shrink-0 text-success"
 													size={14}
 													weight="fill"
 												/>
 											) : (
 												<CircleIcon
-													className="shrink-0 text-amber-500"
+													className="shrink-0 text-warning"
 													size={14}
 												/>
 											)}
@@ -158,7 +156,7 @@ export function DependencySelector({
 								</p>
 							)}
 						</div>
-					</PopoverContent>
+					</Popover.Content>
 				</Popover>
 			)}
 

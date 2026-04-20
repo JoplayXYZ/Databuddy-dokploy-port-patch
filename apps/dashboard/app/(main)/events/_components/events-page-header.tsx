@@ -4,7 +4,7 @@ import { ArrowClockwiseIcon } from "@phosphor-icons/react";
 import { CaretDownIcon } from "@phosphor-icons/react";
 import { LightningIcon } from "@phosphor-icons/react";
 import { PageHeader } from "@/app/(main)/websites/_components/page-header";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ds/button";
 import { DropdownMenu } from "@/components/ds/dropdown-menu";
 import { Skeleton } from "@/components/ds/skeleton";
 import { cn } from "@/lib/utils";

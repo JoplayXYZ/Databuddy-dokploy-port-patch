@@ -218,7 +218,14 @@ function GroupLabel({
 	);
 }
 
-export const Select = Object.assign(Root, {
+export const Select: typeof Root & {
+	Content: typeof Content;
+	Group: typeof Group;
+	GroupLabel: typeof GroupLabel;
+	Item: typeof Item;
+	Trigger: typeof Trigger;
+	Value: typeof Value;
+} = Object.assign(Root, {
 	Trigger,
 	Value,
 	Content,
@@ -226,3 +233,10 @@ export const Select = Object.assign(Root, {
 	Group,
 	GroupLabel,
 });
+
+export const SelectTrigger = Trigger;
+export const SelectValue = Value;
+export const SelectContent = Content;
+export const SelectItem = Item;
+export const SelectGroup = Group;
+export const SelectLabel = GroupLabel;

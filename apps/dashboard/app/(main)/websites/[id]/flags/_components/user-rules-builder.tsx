@@ -5,19 +5,12 @@ import { PlusIcon } from "@phosphor-icons/react/dist/ssr";
 import { TrashIcon } from "@phosphor-icons/react/dist/ssr";
 import { UserIcon } from "@phosphor-icons/react/dist/ssr";
 import { WrenchIcon } from "@phosphor-icons/react/dist/ssr";
-import { XIcon } from "@phosphor-icons/react/dist/ssr";
-import { useState } from "react";
 import { z } from "zod/mini";
 import { Button } from "@/components/ds/button";
-import { Input } from "@/components/ui/input";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "@/components/ui/select";
-import { cn } from "@/lib/utils";
+import { Input } from "@/components/ds/input";
+import { Select } from "@/components/ds/select";
+import { Switch } from "@/components/ds/switch";
+import { TagsInput } from "@/components/ds/tags-input";
 import type { UserRule, UserRulesBuilderProps } from "./types";
 
 const TARGET_TYPES = [
@@ -58,117 +51,14 @@ function getCurrentValues(rule: UserRule): string[] {
 	return [];
 }
 
-function InlineTagsInput({
-	values,
-	onChange,
-	placeholder,
-	validate,
-}: {
-	values: string[];
-	onChange: (values: string[]) => void;
-	placeholder: string;
-	validate?: (value: string) => { success: boolean; error?: string };
-}) {
-	const [draft, setDraft] = useState("");
-	const [error, setError] = useState<string | null>(null);
-
-	const addValue = (val: string) => {
-		const trimmed = val.trim();
-		if (!trimmed || values.includes(trimmed)) {
-			setDraft("");
-			setError(null);
-			return;
-		}
-
-		if (validate) {
-			const result = validate(trimmed);
-			if (!result.success) {
-				setError(result.error ?? "Invalid value");
-				return;
-			}
-		}
-
-		onChange([...values, trimmed]);
-		setDraft("");
-		setError(null);
-	};
-
-	const removeValue = (index: number) => {
-		onChange(values.filter((_, i) => i !== index));
-	};
-
-	const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-		if (e.key === "Enter" || e.key === ",") {
-			e.preventDefault();
-			addValue(draft);
-		} else if (e.key === "Backspace" && !draft && values.length > 0) {
-			e.preventDefault();
-			removeValue(values.length - 1);
-			setError(null);
-		}
-	};
-
-	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		setDraft(e.target.value);
-		if (error) {
-			setError(null);
-		}
-	};
-
-	const handleBlur = () => {
-		if (draft.trim()) {
-			addValue(draft);
-		}
-	};
-
-	return (
-		<div className="space-y-1">
-			<div
-				className={cn(
-					"flex min-h-[38px] flex-wrap items-center gap-1.5 rounded border bg-background px-2 py-1.5 focus-within:ring-1",
-					error
-						? "border-destructive focus-within:ring-destructive"
-						: "focus-within:ring-ring"
-				)}
-			>
-				{values.map((val, i) => (
-					<span
-						className="inline-flex items-center gap-1 rounded bg-secondary px-2 py-0.5 text-sm"
-						key={`${val}-${i}`}
-					>
-						{val}
-						<button
-							className="cursor-pointer text-muted-foreground transition-colors hover:text-foreground"
-							onClick={() => removeValue(i)}
-							type="button"
-						>
-							<XIcon size={12} />
-						</button>
-					</span>
-				))}
-				<input
-					className="min-w-[120px] flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-					onBlur={handleBlur}
-					onChange={handleChange}
-					onKeyDown={handleKeyDown}
-					placeholder={values.length === 0 ? placeholder : "Add more…"}
-					type="text"
-					value={draft}
-				/>
-			</div>
-			{error && <p className="text-destructive text-xs">{error}</p>}
-		</div>
-	);
-}
-
 function RuleRow({
 	rule,
 	onUpdate,
 	onRemove,
 }: {
-	rule: UserRule;
-	onUpdate: (updates: Partial<UserRule>) => void;
 	onRemove: () => void;
+	onUpdate: (updates: Partial<UserRule>) => void;
+	rule: UserRule;
 }) {
 	const conditions = getConditionsForType(rule.type);
 	const needsValue =
@@ -219,34 +109,32 @@ function RuleRow({
 		return { success: true };
 	};
 
+	const TypeIcon =
+		TARGET_TYPES.find((t) => t.value === rule.type)?.icon ?? UserIcon;
+
 	return (
-		<div className="space-y-2 rounded border p-3">
+		<div className="space-y-2 rounded-lg border border-border/60 bg-card p-3">
 			<div className="flex items-center gap-2">
 				<Select
 					onValueChange={(v) => handleTypeChange(v as UserRule["type"])}
 					value={rule.type}
 				>
-					<SelectTrigger className="h-8 w-auto gap-1.5 border-0 bg-secondary px-2 text-sm">
-						<SelectValue />
-					</SelectTrigger>
-					<SelectContent>
-						{TARGET_TYPES.map((t) => {
-							const TypeIcon = t.icon;
-							return (
-								<SelectItem key={t.value} value={t.value}>
-									<div className="flex items-center gap-1.5">
-										<TypeIcon size={14} weight="duotone" />
-										{t.label}
-									</div>
-								</SelectItem>
-							);
-						})}
-					</SelectContent>
+					<Select.Trigger className="w-auto gap-1.5">
+						<TypeIcon className="size-3.5" weight="duotone" />
+						<Select.Value />
+					</Select.Trigger>
+					<Select.Content>
+						{TARGET_TYPES.map((t) => (
+							<Select.Item key={t.value} value={t.value}>
+								{t.label}
+							</Select.Item>
+						))}
+					</Select.Content>
 				</Select>
 
 				{rule.type === "property" && (
 					<Input
-						className="h-8 w-24 text-sm"
+						className="w-24"
 						onChange={(e) => onUpdate({ field: e.target.value })}
 						placeholder="field…"
 						value={rule.field || ""}
@@ -263,44 +151,36 @@ function RuleRow({
 					}
 					value={rule.operator}
 				>
-					<SelectTrigger className="h-8 w-auto border-0 bg-transparent px-1.5 text-muted-foreground text-sm">
-						<SelectValue />
-					</SelectTrigger>
-					<SelectContent>
+					<Select.Trigger className="w-auto bg-transparent">
+						<Select.Value />
+					</Select.Trigger>
+					<Select.Content>
 						{conditions.map((c) => (
-							<SelectItem key={c.value} value={c.value}>
+							<Select.Item key={c.value} value={c.value}>
 								{c.label}
-							</SelectItem>
+							</Select.Item>
 						))}
-					</SelectContent>
+					</Select.Content>
 				</Select>
 
 				<div className="flex-1" />
 
-				<button
-					className={cn(
-						"cursor-pointer rounded px-2 py-1 font-medium text-xs transition-colors",
-						rule.enabled
-							? "bg-green-500/10 text-green-600 hover:bg-green-500/20"
-							: "bg-muted text-muted-foreground hover:bg-muted/80"
-					)}
-					onClick={() => onUpdate({ enabled: !rule.enabled })}
-					type="button"
-				>
-					{rule.enabled ? "On" : "Off"}
-				</button>
+				<Switch
+					checked={rule.enabled}
+					onCheckedChange={(checked) => onUpdate({ enabled: !!checked })}
+				/>
 
 				<button
 					className="cursor-pointer rounded p-1 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
 					onClick={onRemove}
 					type="button"
 				>
-					<TrashIcon size={14} />
+					<TrashIcon className="size-3.5" />
 				</button>
 			</div>
 
 			{needsValue && (
-				<InlineTagsInput
+				<TagsInput
 					onChange={(values) => onUpdate({ batchValues: values, batch: true })}
 					placeholder={getPlaceholder()}
 					validate={rule.type === "email" ? validateEmail : undefined}
@@ -347,7 +227,7 @@ export function UserRulesBuilder({ rules, onChange }: UserRulesBuilderProps) {
 					Match users by ID, email, or property
 				</p>
 				<Button onClick={addRule} size="sm" type="button" variant="secondary">
-					<PlusIcon size={14} />
+					<PlusIcon className="size-3.5" />
 					Add Rule
 				</Button>
 			</div>
@@ -372,7 +252,7 @@ export function UserRulesBuilder({ rules, onChange }: UserRulesBuilderProps) {
 				type="button"
 				variant="ghost"
 			>
-				<PlusIcon size={14} />
+				<PlusIcon className="size-3.5" />
 				Add Rule
 			</Button>
 		</div>

@@ -1,7 +1,6 @@
 "use client";
 
 import { TrashIcon } from "@phosphor-icons/react/dist/ssr";
-import { useEffect, useRef } from "react";
 import { Button } from "@/components/ds/button";
 import { Dialog } from "@/components/ds/dialog";
 
@@ -15,7 +14,7 @@ interface DeleteDialogProps {
 	isOpen: boolean;
 	itemName?: string;
 	onClose: () => void;
-	onConfirm: () => void;
+	onConfirm: () => Promise<void> | void;
 	title?: string;
 }
 
@@ -28,25 +27,25 @@ export function DeleteDialog({
 	itemName,
 	confirmLabel = "Delete",
 	cancelLabel = "Cancel",
-	isDeleting = false,
+	isDeleting,
 	confirmDisabled = false,
 	children,
 }: DeleteDialogProps) {
-	const wasDeletingRef = useRef(false);
-
-	useEffect(() => {
-		if (wasDeletingRef.current && !isDeleting) {
-			onClose();
-		}
-		wasDeletingRef.current = isDeleting;
-	}, [isDeleting, onClose]);
-
 	const defaultDescription = itemName
 		? `Are you sure you want to delete ${itemName}? This action cannot be undone and will permanently remove it.`
 		: "Are you sure you want to delete this item? This action cannot be undone and will permanently remove it.";
 
-	const handleConfirm = () => {
-		onConfirm();
+	const handleConfirm = async () => {
+		const result = onConfirm();
+		if (result && typeof result === "object" && "then" in result) {
+			await result;
+			onClose();
+			return;
+		}
+
+		if (isDeleting === undefined) {
+			onClose();
+		}
 	};
 
 	return (
@@ -89,12 +88,16 @@ export function DeleteDialog({
 					)}
 				</Dialog.Body>
 				<Dialog.Footer>
-					<Button disabled={isDeleting} onClick={onClose} variant="secondary">
+					<Button
+						disabled={Boolean(isDeleting)}
+						onClick={onClose}
+						variant="secondary"
+					>
 						{cancelLabel}
 					</Button>
 					<Button
 						disabled={confirmDisabled}
-						loading={isDeleting}
+						loading={Boolean(isDeleting)}
 						onClick={handleConfirm}
 						tone="danger"
 					>

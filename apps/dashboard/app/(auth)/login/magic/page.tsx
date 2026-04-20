@@ -10,7 +10,7 @@ import { parseAsString, useQueryState } from "nuqs";
 import { Suspense, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ds/button";
-import { Input } from "@/components/ui/input";
+import { Input } from "@/components/ds/input";
 import { Field } from "@/components/ds/field";
 
 function MagicLinkPage() {

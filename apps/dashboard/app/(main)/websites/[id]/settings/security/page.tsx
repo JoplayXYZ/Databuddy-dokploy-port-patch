@@ -9,7 +9,7 @@ import { NoticeBanner } from "@/app/(main)/websites/_components/notice-banner";
 import { Badge } from "@/components/ds/badge";
 import { Button } from "@/components/ds/button";
 import { Card } from "@/components/ds/card";
-import { Input } from "@/components/ui/input";
+import { Input } from "@/components/ds/input";
 import {
 	updateWebsiteCache,
 	useWebsite,

@@ -7,7 +7,7 @@ import { Button } from "@/components/ds/button";
 import { Card } from "@/components/ds/card";
 import { Divider } from "@/components/ds/divider";
 import { Field } from "@/components/ds/field";
-import { Input } from "@/components/ui/input";
+import { Input } from "@/components/ds/input";
 import { Text } from "@/components/ds/text";
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
 import { type Organization, useOrganizations } from "@/hooks/use-organizations";

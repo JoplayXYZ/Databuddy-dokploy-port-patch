@@ -7,7 +7,7 @@ import { TrendUpIcon } from "@phosphor-icons/react";
 import dynamic from "next/dynamic";
 import { useState } from "react";
 import { EmptyState } from "@/components/ds/empty-state";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ds/button";
 import { Card } from "@/components/ds/card";
 import { Skeleton } from "@/components/ds/skeleton";
 import { useWebsites } from "@/hooks/use-websites";

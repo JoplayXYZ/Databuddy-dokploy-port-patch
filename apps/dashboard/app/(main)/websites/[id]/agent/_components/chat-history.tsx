@@ -12,8 +12,8 @@ import {
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { DeleteDialog } from "@/components/ds/delete-dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ds/button";
+import { Input } from "@/components/ds/input";
 import {
 	Popover,
 	PopoverContent,

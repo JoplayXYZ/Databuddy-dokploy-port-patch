@@ -9,7 +9,7 @@ import { z } from "zod";
 import { Button } from "@/components/ds/button";
 import { Dialog } from "@/components/ds/dialog";
 import { Field } from "@/components/ds/field";
-import { Input } from "@/components/ui/input";
+import { Input } from "@/components/ds/input";
 import { useOrganizationsContext } from "@/components/providers/organizations-provider";
 import {
 	useCreateWebsite,

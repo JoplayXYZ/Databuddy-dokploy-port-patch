@@ -7,7 +7,7 @@ import { PlusIcon } from "@phosphor-icons/react";
 import Link from "next/link";
 import { useState } from "react";
 import { EmptyState } from "@/components/ds/empty-state";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ds/button";
 import { Card } from "@/components/ds/card";
 import { Skeleton } from "@/components/ds/skeleton";
 import { WebsiteDialog } from "@/components/website-dialog";

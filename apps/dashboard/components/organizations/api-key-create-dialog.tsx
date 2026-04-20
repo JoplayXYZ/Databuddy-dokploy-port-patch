@@ -19,7 +19,7 @@ import { Button } from "@/components/ds/button";
 import { Checkbox } from "@/components/ds/checkbox";
 import { Divider } from "@/components/ds/divider";
 import { Field } from "@/components/ds/field";
-import { Input } from "@/components/ui/input";
+import { Input } from "@/components/ds/input";
 import { Select } from "@/components/ds/select";
 import { Sheet } from "@/components/ds/sheet";
 import { Text } from "@/components/ds/text";

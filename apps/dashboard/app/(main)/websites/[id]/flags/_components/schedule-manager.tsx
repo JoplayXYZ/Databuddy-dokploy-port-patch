@@ -9,10 +9,10 @@ import { PowerIcon } from "@phosphor-icons/react";
 import { TrashIcon } from "@phosphor-icons/react";
 import { XIcon } from "@phosphor-icons/react";
 import { AnimatePresence, motion } from "motion/react";
-import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
+import { Button } from "@/components/ds/button";
+import { Calendar } from "@/components/ds/calendar";
 import { FormField, FormItem } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+import { Input } from "@/components/ds/input";
 import {
 	Popover,
 	PopoverContent,

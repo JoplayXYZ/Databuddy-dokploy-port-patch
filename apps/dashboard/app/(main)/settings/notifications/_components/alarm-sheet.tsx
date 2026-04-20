@@ -18,7 +18,7 @@ import { Accordion } from "@/components/ds/accordion";
 import { Button } from "@/components/ds/button";
 import { Divider } from "@/components/ds/divider";
 import { Field } from "@/components/ds/field";
-import { Input } from "@/components/ui/input";
+import { Input } from "@/components/ds/input";
 import { Sheet } from "@/components/ds/sheet";
 import { Switch } from "@/components/ds/switch";
 import { Text } from "@/components/ds/text";

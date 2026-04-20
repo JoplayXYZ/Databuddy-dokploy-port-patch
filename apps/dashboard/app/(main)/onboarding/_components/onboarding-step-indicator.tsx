@@ -1,7 +1,7 @@
 "use client";
 
-import { cn } from "@/lib/utils";
 import { CheckIcon } from "@phosphor-icons/react";
+import { cn } from "@/lib/utils";
 
 interface Step {
 	id: string;
@@ -22,52 +22,52 @@ export function OnboardingStepIndicator({
 	return (
 		<nav
 			aria-label="Onboarding progress"
-			className="flex h-10 items-center gap-2"
+			className="grid grid-cols-2 gap-2 sm:grid-cols-4"
 		>
 			{steps.map((step, index) => {
 				const isCompleted = completedSteps.has(step.id);
 				const isCurrent = index === currentStep;
 
 				return (
-					<div className="flex items-center" key={step.id}>
-						<div className="flex items-center gap-2">
+					<div
+						className={cn(
+							"min-w-0 rounded-xl border px-3 py-2.5 transition-colors",
+							isCurrent
+								? "border-foreground/15 bg-background text-foreground shadow-sm"
+								: isCompleted
+									? "border-emerald-200/80 bg-emerald-50/80 text-foreground dark:border-emerald-900/60 dark:bg-emerald-950/20"
+									: "border-border/60 bg-background/55 text-muted-foreground"
+						)}
+						key={step.id}
+					>
+						<div className="flex items-start gap-2.5">
 							<div
 								className={cn(
-									"flex size-7 items-center justify-center rounded-full border font-semibold text-xs tabular-nums",
+									"mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold tabular-nums",
 									isCompleted
-										? "border-primary bg-primary text-primary-foreground"
+										? "bg-emerald-600 text-white"
 										: isCurrent
-											? "border-primary bg-primary/10 text-primary"
-											: "border-border bg-card text-muted-foreground"
+											? "bg-foreground text-background"
+											: "bg-muted text-muted-foreground"
 								)}
 							>
 								{isCompleted ? (
-									<CheckIcon className="size-3.5" weight="bold" />
+									<CheckIcon className="size-3" weight="bold" />
 								) : (
 									<span>{index + 1}</span>
 								)}
 							</div>
-							<span
-								className={cn(
-									"hidden text-sm sm:inline",
-									isCurrent
-										? "font-medium text-foreground"
-										: isCompleted
-											? "text-muted-foreground"
-											: "text-muted-foreground/60"
-								)}
-							>
-								{step.title}
-							</span>
+							<div className="min-w-0">
+								<p className="truncate font-medium text-[13px]">{step.title}</p>
+								<p className="mt-0.5 text-[11px] leading-4 text-muted-foreground">
+									{isCompleted
+										? "Completed"
+										: isCurrent
+											? "In progress"
+											: "Up next"}
+								</p>
+							</div>
 						</div>
-						{index < steps.length - 1 && (
-							<div
-								className={cn(
-									"ml-2 h-px w-6 sm:w-10",
-									isCompleted ? "bg-primary" : "bg-border"
-								)}
-							/>
-						)}
 					</div>
 				);
 			})}

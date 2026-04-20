@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { Input } from "@/components/ui/input";
+import { Input } from "@/components/ds/input";
 import { Field } from "@/components/ds/field";
 
 const PROTOCOL_REGEX = /^https?:\/\//;

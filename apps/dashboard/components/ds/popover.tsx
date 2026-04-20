@@ -86,10 +86,19 @@ function Close(props: ComponentPropsWithoutRef<typeof BasePopover.Close>) {
 	return <BasePopover.Close {...props} />;
 }
 
-export const Popover = Object.assign(Root, {
+export const Popover: typeof Root & {
+	Close: typeof Close;
+	Content: typeof Content;
+	Description: typeof Description;
+	Title: typeof Title;
+	Trigger: typeof Trigger;
+} = Object.assign(Root, {
 	Trigger,
 	Content,
 	Title,
 	Description,
 	Close,
 });
+
+export const PopoverTrigger = Trigger;
+export const PopoverContent = Content;

@@ -26,8 +26,8 @@ import {
 } from "react";
 import { EmptyState } from "@/components/ds/empty-state";
 import { Badge } from "@/components/ds/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ds/button";
+import { Input } from "@/components/ds/input";
 import {
 	Select,
 	SelectContent,

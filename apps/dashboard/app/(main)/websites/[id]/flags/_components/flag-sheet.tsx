@@ -24,10 +24,10 @@ import { Button } from "@/components/ds/button";
 import { Divider } from "@/components/ds/divider";
 import { Field } from "@/components/ds/field";
 import { Input } from "@/components/ds/input";
-import { LineSlider } from "@/components/ui/line-slider";
+import { LineSlider } from "@/components/ds/line-slider";
 import { Sheet } from "@/components/ds/sheet";
 import { Switch } from "@/components/ds/switch";
-import { Textarea } from "@/components/ui/textarea";
+import { Textarea } from "@/components/ds/textarea";
 import { orpc } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
 import { GroupSelector } from "../groups/_components/group-selector";
@@ -62,31 +62,35 @@ function CollapsibleSection({
 	title: string;
 }) {
 	return (
-		<div className="space-y-2">
-			<div className="-mx-3">
-				<button
-					className="group flex w-full cursor-pointer items-center justify-between rounded px-3 py-3 text-left transition-colors hover:bg-accent/50"
-					onClick={onToggleAction}
-					type="button"
-				>
-					<div className="flex items-center gap-2.5">
-						<Icon className="size-4" weight="duotone" />
-						<span className="font-medium text-sm">{title}</span>
-						{badge !== undefined && badge > 0 && (
-							<span className="flex size-5 items-center justify-center rounded-full bg-primary font-medium text-primary-foreground text-xs">
-								{badge}
-							</span>
-						)}
-					</div>
-					<CaretDownIcon
+		<div>
+			<button
+				className="group flex w-full cursor-pointer items-center justify-between rounded-md px-2 py-2 text-left transition-colors hover:bg-interactive-hover"
+				onClick={onToggleAction}
+				type="button"
+			>
+				<div className="flex items-center gap-2">
+					<Icon
 						className={cn(
-							"size-4 text-muted-foreground transition-transform duration-200",
-							isExpanded && "rotate-180"
+							"size-4 transition-colors",
+							isExpanded ? "text-primary" : "text-muted-foreground"
 						)}
-						weight="fill"
+						weight={isExpanded ? "fill" : "duotone"}
 					/>
-				</button>
-			</div>
+					<span className="font-medium text-foreground text-xs">{title}</span>
+					{badge !== undefined && badge > 0 && (
+						<span className="flex size-4 items-center justify-center rounded-full bg-primary font-medium text-[10px] text-primary-foreground tabular-nums">
+							{badge}
+						</span>
+					)}
+				</div>
+				<CaretDownIcon
+					className={cn(
+						"size-3.5 text-muted-foreground transition-transform duration-200",
+						isExpanded && "rotate-180"
+					)}
+					weight="fill"
+				/>
+			</button>
 
 			<AnimatePresence initial={false}>
 				{isExpanded && (
@@ -97,7 +101,7 @@ function CollapsibleSection({
 						initial={{ height: 0, opacity: 0 }}
 						transition={{ duration: 0.2, ease: "easeInOut" }}
 					>
-						<div className="pb-4">{children}</div>
+						<div className="px-1 pt-1 pb-2">{children}</div>
 					</motion.div>
 				)}
 			</AnimatePresence>
@@ -164,13 +168,15 @@ function MyComponent() {
 	}, [flagKey, flagType]);
 
 	return (
-		<div className="space-y-4">
+		<div className="space-y-3">
 			<p className="text-muted-foreground text-xs">
-				Use the Databuddy SDK to check this flag in your React/Next.js app.
+				Use the Databuddy SDK to check this flag in your app.
 			</p>
 			{codeExamples.map((example) => (
-				<div className="space-y-2" key={example.title}>
-					<p className="font-medium text-foreground text-xs">{example.title}</p>
+				<div className="space-y-1.5" key={example.title}>
+					<span className="font-medium text-foreground text-xs">
+						{example.title}
+					</span>
 					<CodeBlock
 						className="text-xs [&>div>div>pre]:p-3 [&_code]:text-xs"
 						code={example.code}
@@ -187,6 +193,50 @@ function MyComponent() {
 				</code>
 			</p>
 		</div>
+	);
+}
+
+function OptionCard({
+	selected,
+	onClick,
+	label,
+	description,
+	disabled,
+	className,
+}: {
+	className?: string;
+	description?: string;
+	disabled?: boolean;
+	label: string;
+	onClick: () => void;
+	selected: boolean;
+}) {
+	return (
+		<button
+			className={cn(
+				"flex-1 cursor-pointer rounded-md border py-2 text-center transition-all",
+				selected
+					? "border-primary/40 bg-primary/5 text-foreground ring-1 ring-primary/20"
+					: "border-border/60 bg-secondary text-muted-foreground hover:bg-secondary/80 hover:text-foreground",
+				disabled && "cursor-not-allowed opacity-40",
+				className
+			)}
+			disabled={disabled}
+			onClick={onClick}
+			type="button"
+		>
+			<span className="block font-medium text-xs capitalize">{label}</span>
+			{description && (
+				<span
+					className={cn(
+						"block text-[10px]",
+						selected ? "text-primary/70" : "text-muted-foreground"
+					)}
+				>
+					{description}
+				</span>
+			)}
+		</button>
 	);
 }
 
@@ -368,7 +418,7 @@ export function FlagSheet({
 			const data = formData.flag;
 
 			if (isEditing && flag) {
-				const updateData = {
+				await updateMutation.mutateAsync({
 					id: flag.id,
 					name: data.name,
 					description: data.description,
@@ -382,10 +432,9 @@ export function FlagSheet({
 					rolloutPercentage: data.rolloutPercentage ?? 0,
 					rolloutBy: data.rolloutBy || undefined,
 					targetGroupIds: data.targetGroupIds || [],
-				};
-				await updateMutation.mutateAsync(updateData);
+				});
 			} else {
-				const createData = {
+				await createMutation.mutateAsync({
 					websiteId,
 					key: data.key,
 					name: data.name,
@@ -400,8 +449,7 @@ export function FlagSheet({
 					rolloutPercentage: data.rolloutPercentage ?? 0,
 					rolloutBy: data.rolloutBy || undefined,
 					targetGroupIds: data.targetGroupIds || [],
-				};
-				await createMutation.mutateAsync(createData);
+				});
 			}
 
 			toast.success(`Flag ${isEditing ? "updated" : "created"} successfully`);
@@ -459,68 +507,47 @@ export function FlagSheet({
 						}
 					})}
 				>
-					<Sheet.Body className="space-y-6">
-						<div className="space-y-4">
-							<div className="grid place-items-start gap-4 sm:grid-cols-2">
-								<Controller
-									control={form.control}
-									name="flag.name"
-									render={({ field, fieldState }) => (
-										<Field error={!!fieldState.error}>
-											<Field.Label>Name</Field.Label>
-											<Input
-												placeholder="New Feature…"
-												{...field}
-												onChange={(e) => handleNameChange(e.target.value)}
-											/>
-											{fieldState.error && (
-												<Field.Error>{fieldState.error.message}</Field.Error>
-											)}
-										</Field>
-									)}
-								/>
-
-								<Controller
-									control={form.control}
-									name="flag.key"
-									render={({ field, fieldState }) => (
-										<Field error={!!fieldState.error}>
-											<Field.Label>
-												Key
-												{!isEditing && (
-													<span className="ml-1 text-destructive">*</span>
-												)}
-											</Field.Label>
-											<Input
-												className={cn(isEditing && "bg-muted")}
-												disabled={isEditing}
-												placeholder="new-feature"
-												{...field}
-												onChange={(e) => {
-													setKeyManuallyEdited(true);
-													field.onChange(e);
-												}}
-											/>
-											{fieldState.error && (
-												<Field.Error>{fieldState.error.message}</Field.Error>
-											)}
-										</Field>
-									)}
-								/>
-							</div>
+					<Sheet.Body className="space-y-5">
+						{/* Identity */}
+						<div className="grid gap-3 sm:grid-cols-2">
+							<Controller
+								control={form.control}
+								name="flag.name"
+								render={({ field, fieldState }) => (
+									<Field error={!!fieldState.error}>
+										<Field.Label>Name</Field.Label>
+										<Input
+											placeholder="New Feature…"
+											{...field}
+											onChange={(e) => handleNameChange(e.target.value)}
+										/>
+										{fieldState.error && (
+											<Field.Error>{fieldState.error.message}</Field.Error>
+										)}
+									</Field>
+								)}
+							/>
 
 							<Controller
 								control={form.control}
-								name="flag.description"
+								name="flag.key"
 								render={({ field, fieldState }) => (
 									<Field error={!!fieldState.error}>
-										<Field.Label className="text-muted-foreground">
-											Description (optional)
+										<Field.Label>
+											Key
+											{!isEditing && (
+												<span className="ml-1 text-destructive">*</span>
+											)}
 										</Field.Label>
-										<Textarea
-											className="min-h-16 resize-none"
-											placeholder="What does this flag control?…"
+										<Input
+											className={cn(isEditing && "bg-muted")}
+											disabled={isEditing}
+											placeholder="new-feature"
 											{...field}
+											onChange={(e) => {
+												setKeyManuallyEdited(true);
+												field.onChange(e);
+											}}
 										/>
 										{fieldState.error && (
 											<Field.Error>{fieldState.error.message}</Field.Error>
@@ -530,260 +557,233 @@ export function FlagSheet({
 							/>
 						</div>
 
+						<Controller
+							control={form.control}
+							name="flag.description"
+							render={({ field, fieldState }) => (
+								<Field error={!!fieldState.error}>
+									<Field.Label className="text-muted-foreground">
+										Description
+									</Field.Label>
+									<Textarea
+										className="min-h-16 resize-none"
+										placeholder="What does this flag control?…"
+										{...field}
+									/>
+									{fieldState.error && (
+										<Field.Error>{fieldState.error.message}</Field.Error>
+									)}
+								</Field>
+							)}
+						/>
+
 						<Divider />
 
-						<div className="space-y-4">
-							<div className="space-y-2">
-								<div className="space-y-0.5">
-									<span className="font-medium text-foreground text-sm">
-										Type
-									</span>
-									<p className="text-muted-foreground text-xs">
-										What this flag returns
-									</p>
-								</div>
-								<div className="flex gap-2">
-									{(["boolean", "rollout", "multivariant"] as const).map(
-										(type) => {
-											const isSelected = watchedType === type;
-											const typeDescriptions = {
-												boolean: "On or Off",
-												rollout: "% of users",
-												multivariant: "A/B variants",
-											};
-											return (
-												<button
-													className={cn(
-														"flex-1 cursor-pointer rounded border py-2 text-center transition-all",
-														isSelected
-															? "border-primary bg-primary/5 text-foreground"
-															: "border-transparent bg-secondary text-muted-foreground hover:border-border hover:bg-secondary/80 hover:text-foreground"
-													)}
-													key={type}
-													onClick={() => form.setValue("flag.type", type)}
-													type="button"
-												>
-													<span className="block font-medium text-sm capitalize">
-														{type}
-													</span>
-													<span className="block text-muted-foreground text-xs">
-														{typeDescriptions[type]}
-													</span>
-												</button>
-											);
-										}
-									)}
-								</div>
+						{/* Type */}
+						<div className="space-y-2">
+							<Field.Label>Type</Field.Label>
+							<div className="flex gap-2">
+								{(["boolean", "rollout", "multivariant"] as const).map(
+									(type) => (
+										<OptionCard
+											description={
+												{
+													boolean: "On or Off",
+													rollout: "% of users",
+													multivariant: "A/B variants",
+												}[type]
+											}
+											key={type}
+											label={type}
+											onClick={() => form.setValue("flag.type", type)}
+											selected={watchedType === type}
+										/>
+									)
+								)}
 							</div>
+						</div>
 
-							<AnimatePresence mode="wait">
-								{isRollout ? (
-									<motion.div
-										animate={{ opacity: 1, y: 0 }}
-										className="space-y-3"
-										exit={{ opacity: 0, y: -10 }}
-										initial={{ opacity: 0, y: 10 }}
-										key="rollout"
-										transition={{ duration: 0.15 }}
-									>
+						{/* Type-specific config */}
+						<AnimatePresence mode="wait">
+							{isRollout ? (
+								<motion.div
+									animate={{ opacity: 1, y: 0 }}
+									className="space-y-3"
+									exit={{ opacity: 0, y: -8 }}
+									initial={{ opacity: 0, y: 8 }}
+									key="rollout"
+									transition={{ duration: 0.15 }}
+								>
+									<Controller
+										control={form.control}
+										name="flag.rolloutPercentage"
+										render={({ field }) => (
+											<div className="space-y-2">
+												<div className="flex items-baseline justify-between">
+													<Field.Label>Rollout</Field.Label>
+													<span className="font-mono text-foreground text-sm tabular-nums">
+														{field.value}%
+													</span>
+												</div>
+												<LineSlider
+													aria-label="Rollout percentage"
+													max={100}
+													min={0}
+													onValueChange={field.onChange}
+													value={Number(field.value) || 0}
+												/>
+												<div className="flex gap-1">
+													{[0, 25, 50, 75, 100].map((preset) => (
+														<button
+															className={cn(
+																"flex-1 cursor-pointer rounded-md border py-1 font-medium text-[10px] tabular-nums transition-all",
+																Number(field.value) === preset
+																	? "border-primary/40 bg-primary text-primary-foreground"
+																	: "border-border/60 bg-secondary text-muted-foreground hover:bg-secondary/80 hover:text-foreground"
+															)}
+															key={preset}
+															onClick={() => field.onChange(preset)}
+															type="button"
+														>
+															{preset}%
+														</button>
+													))}
+												</div>
+											</div>
+										)}
+									/>
+
+									<Controller
+										control={form.control}
+										name="flag.rolloutBy"
+										render={({ field }) => {
+											const rolloutByValue = field.value || "user";
+											const options = [
+												{
+													value: "user",
+													label: "User",
+													icon: UserIcon,
+												},
+												{
+													value: "organization",
+													label: "Org",
+													icon: BuildingsIcon,
+												},
+												{
+													value: "team",
+													label: "Team",
+													icon: UsersThreeIcon,
+												},
+											] as const;
+
+											return (
+												<div className="space-y-2">
+													<Field.Label>Bucket by</Field.Label>
+													<div className="flex gap-2">
+														{options.map((option) => {
+															const isSelected =
+																rolloutByValue === option.value;
+															const Icon = option.icon;
+															return (
+																<button
+																	className={cn(
+																		"flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-md border px-2 py-2 transition-all",
+																		isSelected
+																			? "border-primary/40 bg-primary/5 text-foreground ring-1 ring-primary/20"
+																			: "border-border/60 bg-secondary text-muted-foreground hover:bg-secondary/80 hover:text-foreground"
+																	)}
+																	key={option.value}
+																	onClick={() => field.onChange(option.value)}
+																	type="button"
+																>
+																	<Icon
+																		className={cn(
+																			"size-3.5",
+																			isSelected
+																				? "text-primary"
+																				: "text-muted-foreground"
+																		)}
+																		weight="duotone"
+																	/>
+																	<span className="font-medium text-xs">
+																		{option.label}
+																	</span>
+																</button>
+															);
+														})}
+													</div>
+												</div>
+											);
+										}}
+									/>
+								</motion.div>
+							) : isMultivariant ? (
+								<motion.div
+									animate={{ opacity: 1, y: 0 }}
+									exit={{ opacity: 0, y: -8 }}
+									initial={{ opacity: 0, y: 8 }}
+									key="multivariant"
+									transition={{ duration: 0.15 }}
+								>
+									<Controller
+										control={form.control}
+										name="flag.variants"
+										render={({ field }) => (
+											<VariantEditor
+												onChangeAction={field.onChange}
+												variants={field.value || []}
+											/>
+										)}
+									/>
+								</motion.div>
+							) : (
+								<motion.div
+									animate={{ opacity: 1, y: 0 }}
+									exit={{ opacity: 0, y: -8 }}
+									initial={{ opacity: 0, y: 8 }}
+									key="boolean"
+									transition={{ duration: 0.15 }}
+								>
+									<div className="flex items-center justify-between rounded-md border border-border/60 bg-secondary px-3 py-2.5">
+										<Field.Label>Default value</Field.Label>
 										<Controller
 											control={form.control}
-											name="flag.rolloutPercentage"
+											name="flag.defaultValue"
 											render={({ field }) => (
-												<div className="space-y-3">
-													<div className="flex items-center justify-between">
-														<div className="space-y-0.5">
-															<span className="font-medium text-foreground text-sm">
-																Rollout
-															</span>
-															<p className="text-muted-foreground text-xs">
-																Share of users who see it enabled
-															</p>
-														</div>
-														<span className="font-mono text-foreground text-lg tabular-nums">
-															{field.value}%
-														</span>
-													</div>
-													<LineSlider
-														max={100}
-														min={0}
-														onValueChange={field.onChange}
-														value={Number(field.value) || 0}
+												<div className="flex items-center gap-2">
+													<span
+														className={cn(
+															"text-xs transition-colors",
+															field.value
+																? "text-muted-foreground/50"
+																: "font-medium text-foreground"
+														)}
+													>
+														Off
+													</span>
+													<Switch
+														checked={field.value}
+														onCheckedChange={field.onChange}
 													/>
-													<div className="flex gap-1">
-														{[0, 25, 50, 75, 100].map((preset) => (
-															<button
-																className={cn(
-																	"flex-1 cursor-pointer rounded border py-1.5 font-medium text-xs transition-all",
-																	Number(field.value) === preset
-																		? "border-primary bg-primary text-primary-foreground"
-																		: "border-transparent bg-secondary text-muted-foreground hover:border-border hover:bg-secondary/80 hover:text-foreground"
-																)}
-																key={preset}
-																onClick={() => field.onChange(preset)}
-																type="button"
-															>
-																{preset}%
-															</button>
-														))}
-													</div>
+													<span
+														className={cn(
+															"text-xs transition-colors",
+															field.value
+																? "font-medium text-foreground"
+																: "text-muted-foreground/50"
+														)}
+													>
+														On
+													</span>
 												</div>
 											)}
 										/>
+									</div>
+								</motion.div>
+							)}
+						</AnimatePresence>
 
-										<Controller
-											control={form.control}
-											name="flag.rolloutBy"
-											render={({ field }) => {
-												const rolloutByValue = field.value || "user";
-												const options = [
-													{
-														value: "user",
-														label: "User",
-														description: "Each user",
-														icon: UserIcon,
-													},
-													{
-														value: "organization",
-														label: "Organization",
-														description: "Whole org",
-														icon: BuildingsIcon,
-													},
-													{
-														value: "team",
-														label: "Team",
-														description: "Whole team",
-														icon: UsersThreeIcon,
-													},
-												] as const;
-
-												return (
-													<div className="space-y-2">
-														<div className="space-y-0.5">
-															<span className="font-medium text-foreground text-sm">
-																Bucket by
-															</span>
-															<p className="text-muted-foreground text-xs">
-																Same user always gets the same result
-															</p>
-														</div>
-														<div className="flex gap-2">
-															{options.map((option) => {
-																const isSelected =
-																	rolloutByValue === option.value;
-																const Icon = option.icon;
-																return (
-																	<button
-																		className={cn(
-																			"flex flex-1 cursor-pointer flex-col items-center gap-1 rounded border px-2 py-2.5 text-center transition-all",
-																			isSelected
-																				? "border-primary bg-primary/5 text-foreground"
-																				: "border-transparent bg-secondary text-muted-foreground hover:border-border hover:bg-secondary/80 hover:text-foreground"
-																		)}
-																		key={option.value}
-																		onClick={() => field.onChange(option.value)}
-																		type="button"
-																	>
-																		<Icon
-																			className={cn(
-																				"size-4",
-																				isSelected
-																					? "text-primary"
-																					: "text-muted-foreground"
-																			)}
-																			weight="duotone"
-																		/>
-																		<span className="block font-medium text-xs">
-																			{option.label}
-																		</span>
-																		<span className="block text-[10px] text-muted-foreground leading-tight">
-																			{option.description}
-																		</span>
-																	</button>
-																);
-															})}
-														</div>
-													</div>
-												);
-											}}
-										/>
-									</motion.div>
-								) : isMultivariant ? (
-									<motion.div
-										animate={{ opacity: 1, y: 0 }}
-										className="space-y-3"
-										exit={{ opacity: 0, y: -10 }}
-										initial={{ opacity: 0, y: 10 }}
-										key="multivariant"
-										transition={{ duration: 0.15 }}
-									>
-										<Controller
-											control={form.control}
-											name="flag.variants"
-											render={({ field }) => (
-												<VariantEditor
-													onChangeAction={field.onChange}
-													variants={field.value || []}
-												/>
-											)}
-										/>
-									</motion.div>
-								) : (
-									<motion.div
-										animate={{ opacity: 1, y: 0 }}
-										className="space-y-2"
-										exit={{ opacity: 0, y: -10 }}
-										initial={{ opacity: 0, y: 10 }}
-										key="boolean"
-										transition={{ duration: 0.15 }}
-									>
-										<div className="flex items-center justify-between">
-											<div className="space-y-0.5">
-												<span className="font-medium text-foreground text-sm">
-													Default
-												</span>
-												<p className="text-muted-foreground text-xs">
-													Value returned when on
-												</p>
-											</div>
-											<Controller
-												control={form.control}
-												name="flag.defaultValue"
-												render={({ field }) => (
-													<div className="flex items-center gap-3">
-														<span
-															className={cn(
-																"text-sm transition-colors",
-																field.value
-																	? "text-muted-foreground/60"
-																	: "text-foreground"
-															)}
-														>
-															Off
-														</span>
-														<Switch
-															checked={field.value}
-															onCheckedChange={field.onChange}
-														/>
-														<span
-															className={cn(
-																"text-sm transition-colors",
-																field.value
-																	? "text-foreground"
-																	: "text-muted-foreground/60"
-															)}
-														>
-															On
-														</span>
-													</div>
-												)}
-											/>
-										</div>
-									</motion.div>
-								)}
-							</AnimatePresence>
-						</div>
-
+						{/* Status */}
 						<Controller
 							control={form.control}
 							name="flag.status"
@@ -794,25 +794,12 @@ export function FlagSheet({
 								);
 								const canBeActive = inactiveDeps.length === 0;
 
-								const statusDescriptions = {
-									active: "Live",
-									inactive: "Returns false",
-									archived: "Hidden",
-								};
-
 								return (
 									<div className="space-y-2">
 										<div className="flex items-center justify-between">
-											<div className="space-y-0.5">
-												<span className="font-medium text-foreground text-sm">
-													Status
-												</span>
-												<p className="text-muted-foreground text-xs">
-													Turn this flag on or off for everyone
-												</p>
-											</div>
+											<Field.Label>Status</Field.Label>
 											{!canBeActive && (
-												<span className="text-warning text-xs">
+												<span className="text-[10px] text-warning">
 													Dependencies must be active first
 												</span>
 											)}
@@ -823,38 +810,30 @@ export function FlagSheet({
 													const isDisabled =
 														status === "active" && !canBeActive;
 													const isSelected = field.value === status;
+													const colorClass = isSelected
+														? status === "active"
+															? "border-success/40 bg-success/5 text-success ring-1 ring-success/20"
+															: status === "inactive"
+																? "border-destructive/40 bg-destructive/5 text-destructive ring-1 ring-destructive/20"
+																: "border-warning/40 bg-warning/5 text-warning ring-1 ring-warning/20"
+														: "border-border/60 bg-secondary text-muted-foreground hover:bg-secondary/80 hover:text-foreground";
+
 													return (
-														<button
-															className={cn(
-																"flex-1 cursor-pointer rounded border py-2 transition-all",
-																isSelected
-																	? status === "active"
-																		? "green-angled-rectangle-gradient border-success/50 bg-success/10 text-success"
-																		: status === "inactive"
-																			? "red-angled-rectangle-gradient border-destructive/50 bg-destructive/10 text-destructive"
-																			: "amber-angled-rectangle-gradient border-warning/50 bg-warning/10 text-warning"
-																	: "border-transparent bg-secondary text-muted-foreground hover:border-border hover:bg-secondary/80 hover:text-foreground",
-																isDisabled && "cursor-not-allowed opacity-50"
-															)}
+														<OptionCard
+															className={isSelected ? colorClass : undefined}
+															description={
+																{
+																	active: "Live",
+																	inactive: "Returns false",
+																	archived: "Hidden",
+																}[status]
+															}
 															disabled={isDisabled}
 															key={status}
+															label={status}
 															onClick={() => field.onChange(status)}
-															type="button"
-														>
-															<span className="block font-medium text-sm capitalize">
-																{status}
-															</span>
-															<span
-																className={cn(
-																	"block text-xs",
-																	isSelected
-																		? "opacity-80"
-																		: "text-muted-foreground"
-																)}
-															>
-																{statusDescriptions[status]}
-															</span>
-														</button>
+															selected={isSelected}
+														/>
 													);
 												}
 											)}
@@ -866,7 +845,8 @@ export function FlagSheet({
 
 						<Divider />
 
-						<div className="space-y-1">
+						{/* Advanced sections */}
+						<div className="-mx-1 space-y-0.5">
 							<CollapsibleSection
 								badge={form.watch("flag.targetGroupIds")?.length ?? 0}
 								icon={UsersThreeIcon}

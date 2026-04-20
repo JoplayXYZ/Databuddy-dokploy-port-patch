@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ds/button";
 import { Field } from "@/components/ds/field";
 import { Sheet } from "@/components/ds/sheet";
-import { Input } from "@/components/ui/input";
+import { Input } from "@/components/ds/input";
 import { useOrganizations } from "@/hooks/use-organizations";
 
 const SLUG_ALLOWED_REGEX = /^[a-z0-9-]+$/;

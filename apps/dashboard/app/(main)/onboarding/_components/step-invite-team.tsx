@@ -2,29 +2,21 @@
 
 import { track } from "@databuddy/sdk";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { EnvelopeSimpleIcon, UsersIcon } from "@phosphor-icons/react/dist/ssr";
+import {
+	CaretUpDown,
+	EnvelopeSimpleIcon,
+	UsersIcon,
+} from "@phosphor-icons/react/dist/ssr";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useController, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { useOrganizationsContext } from "@/components/providers/organizations-provider";
 import { Badge } from "@/components/ds/badge";
 import { Button } from "@/components/ds/button";
-import {
-	Form,
-	FormControl,
-	FormField,
-	FormItem,
-	FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "@/components/ui/select";
+import { DropdownMenu } from "@/components/ds/dropdown-menu";
+import { Field } from "@/components/ds/field";
+import { Input } from "@/components/ds/input";
 import { useOrganizationInvitations } from "@/hooks/use-organization-invitations";
 
 const formSchema = z.object({
@@ -39,6 +31,10 @@ interface SentInvite {
 	role: string;
 }
 
+function roleLabel(role: FormData["role"]) {
+	return role === "admin" ? "Admin" : "Member";
+}
+
 export function StepInviteTeam() {
 	const { activeOrganization } = useOrganizationsContext();
 	const organizationId = activeOrganization?.id ?? "";
@@ -48,10 +44,19 @@ export function StepInviteTeam() {
 
 	const form = useForm<FormData>({
 		resolver: zodResolver(formSchema),
+		mode: "onChange",
 		defaultValues: {
 			email: "",
 			role: "member",
 		},
+	});
+	const emailField = useController({
+		control: form.control,
+		name: "email",
+	});
+	const roleField = useController({
+		control: form.control,
+		name: "role",
 	});
 
 	const handleSubmit = async (values: FormData) => {
@@ -83,71 +88,79 @@ export function StepInviteTeam() {
 	};
 
 	return (
-		<div className="space-y-6">
+		<div className="mx-auto max-w-2xl space-y-6">
 			<div className="flex items-center gap-3">
-				<div className="flex size-10 items-center justify-center rounded bg-primary/10">
+				<div className="flex size-10 items-center justify-center rounded-lg bg-primary/10">
 					<UsersIcon className="size-5 text-primary" weight="duotone" />
 				</div>
 				<div>
-					<h2 className="text-balance font-semibold text-lg">
-						Invite your team
-					</h2>
+					<h2 className="text-balance font-semibold text-lg">Invite your team</h2>
 					<p className="text-pretty text-muted-foreground text-sm">
-						Collaborate with your team on analytics insights.
+						Add a teammate now or skip ahead and handle invites later from
+						settings.
 					</p>
 				</div>
 			</div>
 
-			<Form {...form}>
-				<form className="flex gap-2" onSubmit={form.handleSubmit(handleSubmit)}>
-					<FormField
-						control={form.control}
-						name="email"
-						render={({ field }) => (
-							<FormItem className="flex-1">
-								<FormControl>
-									<Input
-										placeholder="teammate@company.com"
-										type="email"
-										{...field}
-									/>
-								</FormControl>
-								<FormMessage className="text-xs" />
-							</FormItem>
-						)}
+			<form
+				className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_140px_auto]"
+				onSubmit={form.handleSubmit(handleSubmit)}
+			>
+				<Field className="sm:col-span-1" error={!!emailField.fieldState.error}>
+					<Field.Label>Email address</Field.Label>
+					<Input
+						placeholder="teammate@company.com"
+						type="email"
+						{...emailField.field}
 					/>
-					<FormField
-						control={form.control}
-						name="role"
-						render={({ field }) => (
-							<FormItem>
-								<Select
-									defaultValue={field.value}
-									onValueChange={field.onChange}
-								>
-									<FormControl>
-										<SelectTrigger className="h-9 w-[100px] text-sm">
-											<SelectValue />
-										</SelectTrigger>
-									</FormControl>
-									<SelectContent>
-										<SelectItem value="member">Member</SelectItem>
-										<SelectItem value="admin">Admin</SelectItem>
-									</SelectContent>
-								</Select>
-							</FormItem>
-						)}
-					/>
+					{emailField.fieldState.error ? (
+						<Field.Error>{emailField.fieldState.error.message}</Field.Error>
+					) : null}
+				</Field>
+
+				<Field error={!!roleField.fieldState.error}>
+					<Field.Label>Role</Field.Label>
+					<DropdownMenu>
+						<DropdownMenu.Trigger
+							className="flex h-8 w-full cursor-pointer items-center justify-between rounded-md bg-secondary px-3 font-medium text-foreground text-xs transition-colors hover:bg-interactive-hover disabled:pointer-events-none disabled:opacity-50"
+							disabled={isInviting}
+							type="button"
+						>
+							{roleLabel(roleField.field.value)}
+							<CaretUpDown className="size-3.5 text-muted-foreground" />
+						</DropdownMenu.Trigger>
+						<DropdownMenu.Content align="start" side="bottom">
+							<DropdownMenu.RadioGroup
+								onValueChange={(newRole) =>
+									roleField.field.onChange(newRole as FormData["role"])
+								}
+								value={roleField.field.value}
+							>
+								<DropdownMenu.RadioItem value="member">
+									Member
+								</DropdownMenu.RadioItem>
+								<DropdownMenu.RadioItem value="admin">
+									Admin
+								</DropdownMenu.RadioItem>
+							</DropdownMenu.RadioGroup>
+						</DropdownMenu.Content>
+					</DropdownMenu>
+					{roleField.fieldState.error ? (
+						<Field.Error>{roleField.fieldState.error.message}</Field.Error>
+					) : null}
+				</Field>
+
+				<div className="self-end">
 					<Button
+						className="w-full"
 						disabled={!form.formState.isValid}
 						loading={isInviting}
-						size="md"
 						type="submit"
 					>
 						Invite
 					</Button>
-				</form>
-			</Form>
+				</div>
+			</form>
 
 			{sentInvites.length > 0 && (
 				<div className="space-y-2">
@@ -156,13 +169,11 @@ export function StepInviteTeam() {
 					</p>
 					<div className="flex flex-wrap gap-2">
 						{sentInvites.map((invite) => (
-							<Badge
-								className="gap-1.5 px-2 py-1"
-								key={invite.email}
-								variant="muted"
-							>
+							<Badge className="gap-1.5 px-2 py-1" key={invite.email} variant="muted">
 								<EnvelopeSimpleIcon className="size-3" weight="duotone" />
-								<span className="text-xs">{invite.email}</span>
+								<span className="text-xs">
+									{invite.email} · {roleLabel(invite.role as FormData["role"])}
+								</span>
 							</Badge>
 						))}
 					</div>
@@ -170,7 +181,7 @@ export function StepInviteTeam() {
 			)}
 
 			<p className="text-muted-foreground text-xs">
-				You can always invite more people later from settings.
+				You can always invite more people later from organization settings.
 			</p>
 		</div>
 	);

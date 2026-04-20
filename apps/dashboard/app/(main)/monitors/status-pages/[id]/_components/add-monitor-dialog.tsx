@@ -6,22 +6,15 @@ import { ListIcon } from "@phosphor-icons/react/dist/ssr";
 import { PlusIcon } from "@phosphor-icons/react/dist/ssr";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { useOrganizationsContext } from "@/components/providers/organizations-provider";
 import { Button } from "@/components/ds/button";
 import { Dialog } from "@/components/ds/dialog";
-import {
-	Form,
-	FormControl,
-	FormField,
-	FormItem,
-	FormLabel,
-	FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import { DropdownMenu } from "@/components/ds/dropdown-menu";
+import { Field } from "@/components/ds/field";
+import { Input } from "@/components/ds/input";
 import { orpc } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
 
@@ -251,78 +244,72 @@ export function AddMonitorDialog({
 							</DropdownMenu>
 						</div>
 					) : (
-						<Form {...form}>
-							<form
-								className="space-y-4"
-								onSubmit={form.handleSubmit(handleCreate)}
-							>
-								<FormField
-									control={form.control}
-									name="url"
-									render={({ field }) => (
-										<FormItem>
-											<FormLabel>URL</FormLabel>
-											<FormControl>
-												<Input
-													placeholder="https://api.example.com/health"
-													{...field}
-												/>
-											</FormControl>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
+						<form
+							className="space-y-4"
+							onSubmit={form.handleSubmit(handleCreate)}
+						>
+							<Controller
+								control={form.control}
+								name="url"
+								render={({ field, fieldState }) => (
+									<Field error={!!fieldState.error}>
+										<Field.Label>URL</Field.Label>
+										<Input
+											placeholder="https://api.example.com/health"
+											{...field}
+										/>
+										{fieldState.error && (
+											<Field.Error>{fieldState.error.message}</Field.Error>
+										)}
+									</Field>
+								)}
+							/>
 
-								<FormField
-									control={form.control}
-									name="name"
-									render={({ field }) => (
-										<FormItem>
-											<FormLabel>Name (optional)</FormLabel>
-											<FormControl>
-												<Input placeholder="e.g. Production API" {...field} />
-											</FormControl>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
+							<Controller
+								control={form.control}
+								name="name"
+								render={({ field }) => (
+									<Field>
+										<Field.Label>Name (optional)</Field.Label>
+										<Input placeholder="e.g. Production API" {...field} />
+									</Field>
+								)}
+							/>
 
-								<FormField
-									control={form.control}
-									name="granularity"
-									render={({ field }) => (
-										<FormItem>
-											<FormLabel>Check Frequency</FormLabel>
-											<div className="flex items-center gap-0 rounded border">
-												{GRANULARITY_OPTIONS.map((opt, i) => {
-													const isActive = field.value === opt.value;
-													return (
-														<Button
-															className={cn(
-																"h-9 flex-1 cursor-pointer whitespace-nowrap rounded-none border-r px-0 font-medium text-sm last:border-r-0",
-																i === 0 && "rounded-l",
-																i === GRANULARITY_OPTIONS.length - 1 &&
-																	"rounded-r",
-																isActive
-																	? "bg-accent text-accent-foreground hover:bg-accent"
-																	: "hover:bg-accent/50"
-															)}
-															key={opt.value}
-															onClick={() => field.onChange(opt.value)}
-															type="button"
-															variant={isActive ? "secondary" : "ghost"}
-														>
-															{opt.label}
-														</Button>
-													);
-												})}
-											</div>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
-							</form>
-						</Form>
+							<Controller
+								control={form.control}
+								name="granularity"
+								render={({ field }) => (
+									<Field>
+										<Field.Label>Check Frequency</Field.Label>
+										<div className="flex items-center gap-0 rounded border">
+											{GRANULARITY_OPTIONS.map((opt, i) => {
+												const isActive = field.value === opt.value;
+												return (
+													<Button
+														className={cn(
+															"h-9 flex-1 cursor-pointer whitespace-nowrap rounded-none border-r px-0 font-medium text-sm last:border-r-0",
+															i === 0 && "rounded-l",
+															i === GRANULARITY_OPTIONS.length - 1 &&
+																"rounded-r",
+															isActive
+																? "bg-accent text-accent-foreground hover:bg-accent"
+																: "hover:bg-accent/50"
+														)}
+														key={opt.value}
+														onClick={() => field.onChange(opt.value)}
+														type="button"
+														variant={isActive ? "secondary" : "ghost"}
+													>
+														{opt.label}
+													</Button>
+												);
+											})}
+										</div>
+									</Field>
+								)}
+							/>
+						</form>
 					)}
 				</Dialog.Body>
 

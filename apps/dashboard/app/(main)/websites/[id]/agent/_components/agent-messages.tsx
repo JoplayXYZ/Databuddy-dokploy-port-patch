@@ -30,7 +30,7 @@ import {
 	UnicodeSpinner,
 	useRandomThinkingVariant,
 } from "@/components/ai-elements/unicode-spinner";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ds/button";
 import { useChat } from "@/contexts/chat-context";
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
 import { parseContentSegments } from "@/lib/ai-components";

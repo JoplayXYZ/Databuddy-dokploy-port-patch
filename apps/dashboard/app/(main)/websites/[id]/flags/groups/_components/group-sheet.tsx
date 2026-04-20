@@ -13,7 +13,7 @@ import { Divider } from "@/components/ds/divider";
 import { Field } from "@/components/ds/field";
 import { Input } from "@/components/ds/input";
 import { Sheet } from "@/components/ds/sheet";
-import { Textarea } from "@/components/ui/textarea";
+import { Textarea } from "@/components/ds/textarea";
 import { orpc } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
 import {

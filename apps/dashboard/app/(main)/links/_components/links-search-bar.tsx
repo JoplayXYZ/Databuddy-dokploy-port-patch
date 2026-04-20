@@ -6,7 +6,7 @@ import { SortAscendingIcon } from "@phosphor-icons/react/dist/ssr";
 import { XIcon } from "@phosphor-icons/react/dist/ssr";
 import { Button } from "@/components/ds/button";
 import { DropdownMenu } from "@/components/ds/dropdown-menu";
-import { Input } from "@/components/ui/input";
+import { Input } from "@/components/ds/input";
 import { cn } from "@/lib/utils";
 import type { SortOption } from "./use-filtered-links";
 

@@ -71,11 +71,11 @@ export default function StatusPagesListPage() {
 		setIsSheetOpen(true);
 	};
 
-	const handleConfirmDelete = () => {
+	const handleConfirmDelete = async () => {
 		if (!statusPageToDelete) {
 			return;
 		}
-		deleteMutation.mutate({ statusPageId: statusPageToDelete.id });
+		await deleteMutation.mutateAsync({ statusPageId: statusPageToDelete.id });
 	};
 
 	const handleSheetClose = () => {

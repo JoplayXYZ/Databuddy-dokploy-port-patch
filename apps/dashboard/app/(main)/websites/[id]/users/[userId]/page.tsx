@@ -16,7 +16,7 @@ import { useCallback, useState } from "react";
 import { BrowserIcon, CountryFlag, OSIcon } from "@/components/icon";
 import { Badge } from "@/components/ds/badge";
 import { StatusDot } from "@/components/ds/status-dot";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ds/button";
 import { useDateFilters } from "@/hooks/use-date-filters";
 import { formatDateOnly, formatLocalTime } from "@/lib/time";
 import { getDeviceIcon } from "@/lib/utils";
