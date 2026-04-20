@@ -2,13 +2,13 @@
 
 import { authClient } from "@databuddy/auth/client";
 import {
-	CaretDown,
-	CheckCircle,
-	Copy,
-	DeviceMobile,
-	Key,
-	ShieldCheck,
-	WarningCircle,
+	CaretDownIcon,
+	CheckCircleIcon,
+	CopyIcon,
+	DeviceMobileIcon,
+	KeyIcon,
+	ShieldCheckIcon,
+	WarningCircleIcon,
 } from "@phosphor-icons/react/dist/ssr";
 import { useMutation } from "@tanstack/react-query";
 import { QRCodeSVG } from "qrcode.react";
@@ -19,12 +19,8 @@ import { Button } from "@/components/ds/button";
 import { Dialog } from "@/components/ds/dialog";
 import { Field } from "@/components/ds/field";
 import { Input } from "@/components/ds/input";
+import { OtpInput } from "@/components/ds/otp-input";
 import { Text } from "@/components/ds/text";
-import {
-	InputOTP,
-	InputOTPGroup,
-	InputOTPSlot,
-} from "@/components/ui/input-otp";
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
 import { cn } from "@/lib/utils";
 
@@ -214,52 +210,34 @@ export function TwoFactorDialog({
 
 	return (
 		<Dialog onOpenChange={onOpenChange} open={open}>
-			<Dialog.Content className="max-w-md">
-				<Dialog.Header>
-					<Dialog.Title>
-						{step === "set-password" && "Set Up a Password"}
-						{step === "password" && "Enable Two-Factor Authentication"}
-						{step === "setup" && "Set Up Authenticator"}
-						{step === "verify" && "Verify Your Setup"}
-						{step === "backup" && "Save Your Backup Codes"}
-						{step === "manage" && "Manage Two-Factor Authentication"}
-					</Dialog.Title>
-					<Dialog.Description>
-						{step === "set-password" &&
-							"You signed up with a social account. Create a password to enable 2FA."}
-						{step === "password" &&
-							"Enter your password to begin setting up 2FA."}
-						{step === "setup" &&
-							"Link your account to an authenticator app for extra security."}
-						{step === "verify" &&
-							"Confirm your authenticator is set up correctly."}
-						{step === "backup" &&
-							"Store these codes safely. Each can only be used once."}
-						{step === "manage" &&
-							"Manage your two-factor authentication settings."}
-					</Dialog.Description>
-				</Dialog.Header>
+			<Dialog.Content className="w-[95vw] max-w-md sm:w-full">
+				{step === "set-password" && (
+					<>
+						<Dialog.Header>
+							<Dialog.Title>Set a password</Dialog.Title>
+							<Dialog.Description>
+								You signed up with a social account. A password is needed for
+								2FA verification.
+							</Dialog.Description>
+						</Dialog.Header>
 
-				<Dialog.Body>
-					{step === "set-password" && (
-						<div className="space-y-4">
-							<div className="flex items-center gap-3 rounded-md border border-border/60 bg-blue-500/10 p-4">
-								<div className="flex size-10 items-center justify-center rounded-full bg-blue-500/20">
-									<Key
-										className="size-5 text-blue-600 dark:text-blue-400"
-										weight="duotone"
-									/>
-								</div>
-								<div>
-									<Text variant="label">Password required</Text>
-									<Text tone="muted" variant="caption">
-										2FA requires a password for verification
-									</Text>
-								</div>
+						<Dialog.Body className="space-y-4">
+							<div className="flex items-start gap-2 rounded-md border border-blue-500/20 bg-blue-500/5 p-3">
+								<KeyIcon
+									className="mt-0.5 size-4 shrink-0 text-blue-600 dark:text-blue-400"
+									weight="duotone"
+								/>
+								<Text
+									className="text-blue-600 dark:text-blue-400"
+									variant="caption"
+								>
+									This password will only be used for security actions like
+									enabling or disabling 2FA.
+								</Text>
 							</div>
 
 							<Field>
-								<Field.Label>New Password</Field.Label>
+								<Field.Label>New password</Field.Label>
 								<Input
 									autoComplete="new-password"
 									onChange={(e) => setNewPassword(e.target.value)}
@@ -270,7 +248,7 @@ export function TwoFactorDialog({
 							</Field>
 
 							<Field>
-								<Field.Label>Confirm Password</Field.Label>
+								<Field.Label>Confirm password</Field.Label>
 								<Input
 									autoComplete="new-password"
 									onChange={(e) => setConfirmPassword(e.target.value)}
@@ -279,230 +257,9 @@ export function TwoFactorDialog({
 									value={confirmPassword}
 								/>
 							</Field>
-						</div>
-					)}
+						</Dialog.Body>
 
-					{step === "password" && (
-						<Field>
-							<Field.Label>Password</Field.Label>
-							<Input
-								autoComplete="current-password"
-								onChange={(e) => setPassword(e.target.value)}
-								placeholder="••••••••"
-								type="password"
-								value={password}
-							/>
-						</Field>
-					)}
-
-					{step === "setup" && (
-						<div className="space-y-5">
-							<div className="flex items-start gap-3">
-								<div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary font-medium text-primary-foreground text-xs">
-									1
-								</div>
-								<div className="flex-1 space-y-1">
-									<Text variant="label">Install an authenticator app</Text>
-									<Text tone="muted" variant="caption">
-										Google Authenticator, Authy, 1Password, or any TOTP app
-									</Text>
-								</div>
-							</div>
-
-							<div className="flex items-start gap-3">
-								<div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary font-medium text-primary-foreground text-xs">
-									2
-								</div>
-								<div className="flex-1 space-y-3">
-									<div>
-										<Text variant="label">Scan this QR code</Text>
-										<Text tone="muted" variant="caption">
-											Open your app and scan to add your account
-										</Text>
-									</div>
-
-									<div className="flex justify-center">
-										<div className="rounded-lg border-2 border-dashed bg-white p-3">
-											<QRCodeSVG
-												bgColor="transparent"
-												fgColor="#000"
-												level="M"
-												size={160}
-												value={totpUri}
-											/>
-										</div>
-									</div>
-
-									<div className="space-y-2">
-										<button
-											className="flex w-full items-center gap-2 text-left text-xs"
-											onClick={() => setShowSecret(!showSecret)}
-											type="button"
-										>
-											<DeviceMobile
-												className="size-4 text-muted-foreground"
-												weight="duotone"
-											/>
-											<span className="flex-1 text-muted-foreground">
-												Can't scan? Enter code manually
-											</span>
-											<CaretDown
-												className={cn(
-													"size-3 text-muted-foreground transition-transform",
-													showSecret && "rotate-180"
-												)}
-											/>
-										</button>
-
-										{showSecret && (
-											<div className="rounded-md border border-border/60 bg-secondary/50 p-3">
-												<Text className="mb-1.5" tone="muted" variant="caption">
-													Secret key
-												</Text>
-												<div className="flex items-center justify-between gap-2">
-													<code className="flex-1 select-all break-all font-mono text-xs">
-														{secret}
-													</code>
-													<Button
-														onClick={() => copySecret(secret)}
-														size="sm"
-														variant="ghost"
-													>
-														<Copy className="size-3.5" />
-													</Button>
-												</div>
-											</div>
-										)}
-									</div>
-								</div>
-							</div>
-						</div>
-					)}
-
-					{step === "verify" && (
-						<div className="flex flex-col items-center space-y-6">
-							<div className="flex size-14 items-center justify-center rounded-full bg-primary/10">
-								<ShieldCheck className="size-7 text-primary" weight="duotone" />
-							</div>
-
-							<div className="space-y-4 text-center">
-								<div className="space-y-1">
-									<Text variant="label">Enter verification code</Text>
-									<Text tone="muted" variant="caption">
-										Open your authenticator app and enter the 6-digit code
-									</Text>
-								</div>
-
-								<div className="flex justify-center">
-									<InputOTP
-										autoFocus
-										maxLength={6}
-										onChange={setVerifyCode}
-										value={verifyCode}
-									>
-										<InputOTPGroup>
-											<InputOTPSlot index={0} />
-											<InputOTPSlot index={1} />
-											<InputOTPSlot index={2} />
-											<InputOTPSlot index={3} />
-											<InputOTPSlot index={4} />
-											<InputOTPSlot index={5} />
-										</InputOTPGroup>
-									</InputOTP>
-								</div>
-							</div>
-						</div>
-					)}
-
-					{step === "backup" && (
-						<div className="space-y-4">
-							<div className="rounded-md border border-border/60 bg-secondary/30 p-4">
-								<div className="grid grid-cols-2 gap-2">
-									{backupCodes.map((code, i) => (
-										<code
-											className="rounded-md bg-card px-2 py-1 text-center font-mono text-sm"
-											key={i}
-										>
-											{code}
-										</code>
-									))}
-								</div>
-							</div>
-
-							<div className="flex items-center gap-2 rounded-md border border-warning/30 bg-warning/10 p-3 text-warning">
-								<WarningCircle className="size-5 shrink-0" />
-								<Text variant="caption">
-									Store these codes in a safe place. Each code can only be used
-									once to recover your account if you lose access to your
-									authenticator app.
-								</Text>
-							</div>
-						</div>
-					)}
-
-					{step === "manage" && (
-						<div className="space-y-4">
-							<div className="flex items-center gap-3 rounded-md border border-border/60 bg-success/10 p-4">
-								<div className="flex size-10 items-center justify-center rounded-full bg-success/20">
-									<ShieldCheck
-										className="size-5 text-success"
-										weight="duotone"
-									/>
-								</div>
-								<div>
-									<Text variant="label">2FA is enabled</Text>
-									<Text tone="muted" variant="caption">
-										Your account has an extra layer of security
-									</Text>
-								</div>
-							</div>
-
-							<Field>
-								<Field.Label>Password (required for changes)</Field.Label>
-								<Input
-									autoComplete="current-password"
-									onChange={(e) => setPassword(e.target.value)}
-									placeholder="••••••••"
-									type="password"
-									value={password}
-								/>
-							</Field>
-
-							{backupCodes.length > 0 && (
-								<div className="rounded-md border border-border/60 bg-secondary/30 p-4">
-									<div className="mb-2 flex items-center justify-between">
-										<Text variant="label">Backup Codes</Text>
-										<Button
-											onClick={() => copyBackupCodes(backupCodes.join("\n"))}
-											size="sm"
-											variant="ghost"
-										>
-											{copiedBackup ? (
-												<CheckCircle className="size-3.5 text-success" />
-											) : (
-												<Copy className="size-3.5" />
-											)}
-										</Button>
-									</div>
-									<div className="grid grid-cols-2 gap-2">
-										{backupCodes.map((code, i) => (
-											<code
-												className="rounded-md bg-card px-2 py-1 text-center font-mono text-sm"
-												key={i}
-											>
-												{code}
-											</code>
-										))}
-									</div>
-								</div>
-							)}
-						</div>
-					)}
-				</Dialog.Body>
-
-				<Dialog.Footer>
-					{step === "set-password" && (
-						<>
+						<Dialog.Footer>
 							<Dialog.Close>
 								<Button variant="secondary">Cancel</Button>
 							</Dialog.Close>
@@ -511,13 +268,35 @@ export function TwoFactorDialog({
 								loading={setPasswordMutation.isPending}
 								onClick={() => setPasswordMutation.mutate()}
 							>
-								Set Password & Continue
+								Set password & continue
 							</Button>
-						</>
-					)}
+						</Dialog.Footer>
+					</>
+				)}
 
-					{step === "password" && (
-						<>
+				{step === "password" && (
+					<>
+						<Dialog.Header>
+							<Dialog.Title>Enable two-factor authentication</Dialog.Title>
+							<Dialog.Description>
+								Enter your password to begin setting up 2FA.
+							</Dialog.Description>
+						</Dialog.Header>
+
+						<Dialog.Body>
+							<Field>
+								<Field.Label>Password</Field.Label>
+								<Input
+									autoComplete="current-password"
+									onChange={(e) => setPassword(e.target.value)}
+									placeholder="••••••••"
+									type="password"
+									value={password}
+								/>
+							</Field>
+						</Dialog.Body>
+
+						<Dialog.Footer>
 							<Dialog.Close>
 								<Button variant="secondary">Cancel</Button>
 							</Dialog.Close>
@@ -528,22 +307,93 @@ export function TwoFactorDialog({
 							>
 								Continue
 							</Button>
-						</>
-					)}
+						</Dialog.Footer>
+					</>
+				)}
 
-					{step === "setup" && (
-						<>
+				{step === "setup" && (
+					<>
+						<Dialog.Header>
+							<Dialog.Title>Set up authenticator</Dialog.Title>
+							<Dialog.Description>
+								Scan the QR code with your authenticator app (Google
+								Authenticator, Authy, 1Password, etc.)
+							</Dialog.Description>
+						</Dialog.Header>
+
+						<Dialog.Body className="space-y-4">
+							<div className="flex justify-center rounded-md border border-border/60 p-4">
+								<QRCodeSVG
+									bgColor="transparent"
+									fgColor="currentColor"
+									level="M"
+									size={160}
+									value={totpUri}
+								/>
+							</div>
+
+							<div className="space-y-2">
+								<button
+									className="flex w-full items-center gap-2 rounded-md p-2 text-left text-xs hover:bg-interactive-hover"
+									onClick={() => setShowSecret(!showSecret)}
+									type="button"
+								>
+									<DeviceMobileIcon
+										className="size-4 text-muted-foreground"
+										weight="duotone"
+									/>
+									<span className="flex-1 text-muted-foreground">
+										Can't scan? Enter code manually
+									</span>
+									<CaretDownIcon
+										className={cn(
+											"size-3 text-muted-foreground transition-transform",
+											showSecret && "rotate-180"
+										)}
+									/>
+								</button>
+
+								{showSecret && (
+									<div className="flex items-center justify-between gap-2 rounded-md border border-border/60 bg-secondary/50 p-3">
+										<code className="flex-1 select-all break-all font-mono text-xs">
+											{secret}
+										</code>
+										<Button
+											onClick={() => copySecret(secret)}
+											size="sm"
+											variant="ghost"
+										>
+											<CopyIcon className="size-3.5" />
+										</Button>
+									</div>
+								)}
+							</div>
+						</Dialog.Body>
+
+						<Dialog.Footer>
 							<Button onClick={() => setStep("password")} variant="secondary">
 								Back
 							</Button>
-							<Button onClick={() => setStep("verify")}>
-								Continue to Verify
-							</Button>
-						</>
-					)}
+							<Button onClick={() => setStep("verify")}>I've scanned it</Button>
+						</Dialog.Footer>
+					</>
+				)}
 
-					{step === "verify" && (
-						<>
+				{step === "verify" && (
+					<>
+						<Dialog.Header>
+							<Dialog.Title>Verify setup</Dialog.Title>
+							<Dialog.Description>
+								Enter the 6-digit code from your authenticator app to confirm
+								it's working.
+							</Dialog.Description>
+						</Dialog.Header>
+
+						<Dialog.Body>
+							<OtpInput autoFocus onChange={setVerifyCode} value={verifyCode} />
+						</Dialog.Body>
+
+						<Dialog.Footer>
 							<Button onClick={() => setStep("setup")} variant="secondary">
 								Back
 							</Button>
@@ -552,13 +402,44 @@ export function TwoFactorDialog({
 								loading={verifyMutation.isPending}
 								onClick={() => verifyMutation.mutate()}
 							>
-								Verify & Enable
+								Verify & enable
 							</Button>
-						</>
-					)}
+						</Dialog.Footer>
+					</>
+				)}
 
-					{step === "backup" && (
-						<>
+				{step === "backup" && (
+					<>
+						<Dialog.Header>
+							<Dialog.Title>Save your backup codes</Dialog.Title>
+							<Dialog.Description>
+								Store these somewhere safe. Each code can only be used once if
+								you lose your authenticator.
+							</Dialog.Description>
+						</Dialog.Header>
+
+						<Dialog.Body className="space-y-3">
+							<div className="grid grid-cols-2 gap-1.5 rounded-md border border-border/60 bg-secondary/30 p-3">
+								{backupCodes.map((code, i) => (
+									<code
+										className="rounded bg-card px-2 py-1 text-center font-mono text-xs"
+										key={i}
+									>
+										{code}
+									</code>
+								))}
+							</div>
+
+							<div className="flex items-start gap-2 rounded-md border border-warning/20 bg-warning/5 p-3">
+								<WarningCircleIcon className="mt-0.5 size-4 shrink-0 text-warning" />
+								<Text className="text-warning" variant="caption">
+									If you lose access to your authenticator, these codes are the
+									only way to recover your account.
+								</Text>
+							</div>
+						</Dialog.Body>
+
+						<Dialog.Footer>
 							<Button
 								className="flex-1"
 								onClick={() => copyBackupCodes(backupCodes.join("\n"))}
@@ -566,31 +447,91 @@ export function TwoFactorDialog({
 							>
 								{copiedBackup ? (
 									<>
-										<CheckCircle className="size-3.5 text-success" />
+										<CheckCircleIcon className="size-3.5 text-success" />
 										Copied!
 									</>
 								) : (
 									<>
-										<Copy className="size-3.5" />
-										Copy Codes
+										<CopyIcon className="size-3.5" />
+										Copy codes
 									</>
 								)}
 							</Button>
 							<Button className="flex-1" onClick={() => onOpenChange(false)}>
 								Done
 							</Button>
-						</>
-					)}
+						</Dialog.Footer>
+					</>
+				)}
 
-					{step === "manage" && (
-						<>
+				{step === "manage" && (
+					<>
+						<Dialog.Header>
+							<Dialog.Title>Two-factor authentication</Dialog.Title>
+							<Dialog.Description>Manage your 2FA settings.</Dialog.Description>
+						</Dialog.Header>
+
+						<Dialog.Body className="space-y-4">
+							<div className="flex items-start gap-2 rounded-md border border-success/20 bg-success/5 p-3">
+								<ShieldCheckIcon
+									className="mt-0.5 size-4 shrink-0 text-success"
+									weight="duotone"
+								/>
+								<Text className="text-success" variant="caption">
+									Two-factor authentication is active. Your account has an extra
+									layer of security.
+								</Text>
+							</div>
+
+							<Field>
+								<Field.Label>Password</Field.Label>
+								<Input
+									autoComplete="current-password"
+									onChange={(e) => setPassword(e.target.value)}
+									placeholder="Required for changes"
+									type="password"
+									value={password}
+								/>
+							</Field>
+
+							{backupCodes.length > 0 && (
+								<div className="space-y-2">
+									<div className="flex items-center justify-between">
+										<Text variant="label">Backup codes</Text>
+										<Button
+											onClick={() => copyBackupCodes(backupCodes.join("\n"))}
+											size="sm"
+											variant="ghost"
+										>
+											{copiedBackup ? (
+												<CheckCircleIcon className="size-3.5 text-success" />
+											) : (
+												<CopyIcon className="size-3.5" />
+											)}
+										</Button>
+									</div>
+									<div className="grid grid-cols-2 gap-1.5 rounded-md border border-border/60 bg-secondary/30 p-3">
+										{backupCodes.map((code, i) => (
+											<code
+												className="rounded bg-card px-2 py-1 text-center font-mono text-xs"
+												key={i}
+											>
+												{code}
+											</code>
+										))}
+									</div>
+								</div>
+							)}
+						</Dialog.Body>
+
+						<Dialog.Footer>
 							<Button
 								disabled={!password || isPending}
 								loading={regenerateBackupMutation.isPending}
 								onClick={() => regenerateBackupMutation.mutate()}
 								variant="secondary"
 							>
-								New Backup Codes
+								New backup codes
 							</Button>
 							<Button
 								disabled={!password || isPending}
@@ -600,9 +541,9 @@ export function TwoFactorDialog({
 							>
 								Disable 2FA
 							</Button>
-						</>
-					)}
-				</Dialog.Footer>
+						</Dialog.Footer>
+					</>
+				)}
 			</Dialog.Content>
 		</Dialog>
 	);
