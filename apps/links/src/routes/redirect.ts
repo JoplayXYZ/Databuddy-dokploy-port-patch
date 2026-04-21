@@ -130,33 +130,6 @@ function isMobile(ua: string | null): boolean {
 	);
 }
 
-function buildInterstitialHtml(deepUri: string, fallbackUrl: string): string {
-	const escaped = (s: string) =>
-		s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
-
-	return `<!DOCTYPE html>
-<html>
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta http-equiv="refresh" content="2;url=${escaped(fallbackUrl)}">
-<title>Redirecting…</title>
-<style>body{display:flex;align-items:center;justify-content:center;height:100dvh;margin:0;font-family:system-ui,sans-serif;color:#666}p{text-align:center;font-size:14px}</style>
-</head>
-<body>
-<p>Opening app…</p>
-<script>
-(function(){
-var d="${escaped(deepUri)}",f="${escaped(fallbackUrl)}",t;
-try{window.location=d}catch(e){}
-t=setTimeout(function(){window.location=f},800);
-document.addEventListener("visibilitychange",function(){if(document.hidden)clearTimeout(t)});
-})();
-</script>
-</body>
-</html>`;
-}
-
 function appendRef(url: string, linkId: string): string {
 	return `${url}${url.includes("?") ? "&" : "?"}ref=${encodeURIComponent(linkId)}`;
 }
@@ -410,14 +383,8 @@ export const redirectRoute = new Elysia().get(
 					captureError(err, { error_step: "record_click", link_id: link.id })
 				);
 				emit("deep_link");
-				const fallback = appendRef(targetUrl, link.id);
-				return new Response(buildInterstitialHtml(deepUri, fallback), {
-					headers: {
-						...headers,
-						"Content-Type": "text/html; charset=utf-8",
-						"Cache-Control": "private, no-store",
-					},
-				});
+				set.headers = { ...headers, "Cache-Control": "private, no-store" };
+				return redirect(deepUri, 302);
 			}
 		}
 
