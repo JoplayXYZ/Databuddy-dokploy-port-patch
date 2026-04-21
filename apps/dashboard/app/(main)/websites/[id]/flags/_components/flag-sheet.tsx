@@ -4,7 +4,6 @@ import type { FlagWithScheduleForm } from "@databuddy/shared/flags";
 import { flagWithScheduleSchema } from "@databuddy/shared/flags";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { BuildingsIcon } from "@phosphor-icons/react/dist/ssr";
-import { CaretDownIcon } from "@phosphor-icons/react/dist/ssr";
 import { CodeIcon } from "@phosphor-icons/react/dist/ssr";
 import { FlagIcon } from "@phosphor-icons/react/dist/ssr";
 import { GitBranchIcon } from "@phosphor-icons/react/dist/ssr";
@@ -20,6 +19,7 @@ import {
 	CodeBlock,
 	CodeBlockCopyButton,
 } from "@/components/ai-elements/code-block";
+import { Accordion } from "@/components/ds/accordion";
 import { Button } from "@/components/ds/button";
 import { Divider } from "@/components/ds/divider";
 import { Field } from "@/components/ds/field";
@@ -27,6 +27,7 @@ import { Input } from "@/components/ds/input";
 import { LineSlider } from "@/components/ds/line-slider";
 import { Sheet } from "@/components/ds/sheet";
 import { Switch } from "@/components/ds/switch";
+import { Text } from "@/components/ds/text";
 import { Textarea } from "@/components/ds/textarea";
 import { orpc } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
@@ -35,79 +36,6 @@ import { DependencySelector } from "./dependency-selector";
 import type { Flag, FlagSheetProps, TargetGroup } from "./types";
 import { UserRulesBuilder } from "./user-rules-builder";
 import { VariantEditor } from "./variant-editor";
-
-type ExpandedSection =
-	| "targeting"
-	| "groups"
-	| "dependencies"
-	| "implementation"
-	| null;
-
-function CollapsibleSection({
-	icon: Icon,
-	title,
-	badge,
-	isExpanded,
-	onToggleAction,
-	children,
-}: {
-	badge?: number;
-	children: React.ReactNode;
-	icon: React.ComponentType<{
-		className?: string;
-		weight?: "duotone" | "fill";
-	}>;
-	isExpanded: boolean;
-	onToggleAction: () => void;
-	title: string;
-}) {
-	return (
-		<div>
-			<button
-				className="group flex w-full cursor-pointer items-center justify-between rounded-md px-2 py-2 text-left transition-colors hover:bg-interactive-hover"
-				onClick={onToggleAction}
-				type="button"
-			>
-				<div className="flex items-center gap-2">
-					<Icon
-						className={cn(
-							"size-4 transition-colors",
-							isExpanded ? "text-primary" : "text-muted-foreground"
-						)}
-						weight={isExpanded ? "fill" : "duotone"}
-					/>
-					<span className="font-medium text-foreground text-xs">{title}</span>
-					{badge !== undefined && badge > 0 && (
-						<span className="flex size-4 items-center justify-center rounded-full bg-primary font-medium text-[10px] text-primary-foreground tabular-nums">
-							{badge}
-						</span>
-					)}
-				</div>
-				<CaretDownIcon
-					className={cn(
-						"size-3.5 text-muted-foreground transition-transform duration-200",
-						isExpanded && "rotate-180"
-					)}
-					weight="fill"
-				/>
-			</button>
-
-			<AnimatePresence initial={false}>
-				{isExpanded && (
-					<motion.div
-						animate={{ height: "auto", opacity: 1 }}
-						className="overflow-hidden"
-						exit={{ height: 0, opacity: 0 }}
-						initial={{ height: 0, opacity: 0 }}
-						transition={{ duration: 0.2, ease: "easeInOut" }}
-					>
-						<div className="px-1 pt-1 pb-2">{children}</div>
-					</motion.div>
-				)}
-			</AnimatePresence>
-		</div>
-	);
-}
 
 function ImplementationExamples({
 	flagKey,
@@ -248,7 +176,6 @@ export function FlagSheet({
 	template,
 }: FlagSheetProps) {
 	const [keyManuallyEdited, setKeyManuallyEdited] = useState(false);
-	const [expandedSection, setExpandedSection] = useState<ExpandedSection>(null);
 	const queryClient = useQueryClient();
 
 	const { data: flagsListRaw } = useQuery({
@@ -349,9 +276,6 @@ export function FlagSheet({
 				},
 				schedule: undefined,
 			});
-			if (template.rules && template.rules.length > 0) {
-				setExpandedSection("targeting");
-			}
 		} else {
 			form.reset({
 				flag: {
@@ -372,9 +296,6 @@ export function FlagSheet({
 			});
 		}
 		setKeyManuallyEdited(false);
-		if (!template) {
-			setExpandedSection(null);
-		}
 	}, [flag, isEditing, form, template]);
 
 	const handleOpenChange = (open: boolean) => {
@@ -407,10 +328,6 @@ export function FlagSheet({
 				.slice(0, 50);
 			form.setValue("flag.key", key);
 		}
-	};
-
-	const toggleSection = (section: ExpandedSection) => {
-		setExpandedSection((prev) => (prev === section ? null : section));
 	};
 
 	const onSubmit = async (formData: FlagWithScheduleForm) => {
@@ -845,79 +762,114 @@ export function FlagSheet({
 
 						<Divider />
 
-						{/* Advanced sections */}
-						<div className="-mx-1 space-y-0.5">
-							<CollapsibleSection
-								badge={form.watch("flag.targetGroupIds")?.length ?? 0}
-								icon={UsersThreeIcon}
-								isExpanded={expandedSection === "groups"}
-								onToggleAction={() => toggleSection("groups")}
-								title="Target Groups"
-							>
-								<Controller
-									control={form.control}
-									name="flag.targetGroupIds"
-									render={({ field }) => (
-										<GroupSelector
-											availableGroups={targetGroups ?? []}
-											onChangeAction={(ids) => field.onChange(ids)}
-											selectedGroups={field.value ?? []}
+						<div className="space-y-2">
+							<div className="overflow-hidden rounded-md border border-border/60">
+								<Accordion>
+									<Accordion.Trigger>
+										<UsersThreeIcon
+											className="size-4 shrink-0 text-muted-foreground"
+											weight="duotone"
 										/>
-									)}
-								/>
-							</CollapsibleSection>
-
-							<CollapsibleSection
-								badge={watchedRules.length}
-								icon={UsersIcon}
-								isExpanded={expandedSection === "targeting"}
-								onToggleAction={() => toggleSection("targeting")}
-								title="User Targeting"
-							>
-								<Controller
-									control={form.control}
-									name="flag.rules"
-									render={({ field }) => (
-										<UserRulesBuilder
-											onChange={field.onChange}
-											rules={field.value || []}
+										<Text variant="label">Target Groups</Text>
+										{(form.watch("flag.targetGroupIds")?.length ?? 0) > 0 && (
+											<span className="ml-auto flex size-5 items-center justify-center rounded-full bg-primary font-medium text-primary-foreground text-xs">
+												{form.watch("flag.targetGroupIds")?.length ?? 0}
+											</span>
+										)}
+									</Accordion.Trigger>
+									<Accordion.Content>
+										<Controller
+											control={form.control}
+											name="flag.targetGroupIds"
+											render={({ field }) => (
+												<GroupSelector
+													availableGroups={targetGroups ?? []}
+													onChangeAction={(ids) => field.onChange(ids)}
+													selectedGroups={field.value ?? []}
+												/>
+											)}
 										/>
-									)}
-								/>
-							</CollapsibleSection>
+									</Accordion.Content>
+								</Accordion>
+							</div>
 
-							<CollapsibleSection
-								badge={watchedDependencies.length}
-								icon={GitBranchIcon}
-								isExpanded={expandedSection === "dependencies"}
-								onToggleAction={() => toggleSection("dependencies")}
-								title="Dependencies"
-							>
-								<Controller
-									control={form.control}
-									name="flag.dependencies"
-									render={({ field }) => (
-										<DependencySelector
-											availableFlags={flagsList ?? []}
-											currentFlagKey={flag?.key}
-											onChange={field.onChange}
-											value={field.value || []}
+							<div className="overflow-hidden rounded-md border border-border/60">
+								<Accordion>
+									<Accordion.Trigger>
+										<UsersIcon
+											className="size-4 shrink-0 text-muted-foreground"
+											weight="duotone"
 										/>
-									)}
-								/>
-							</CollapsibleSection>
+										<Text variant="label">User Targeting</Text>
+										{watchedRules.length > 0 && (
+											<span className="ml-auto flex size-5 items-center justify-center rounded-full bg-primary font-medium text-primary-foreground text-xs">
+												{watchedRules.length}
+											</span>
+										)}
+									</Accordion.Trigger>
+									<Accordion.Content>
+										<Controller
+											control={form.control}
+											name="flag.rules"
+											render={({ field }) => (
+												<UserRulesBuilder
+													onChange={field.onChange}
+													rules={field.value || []}
+												/>
+											)}
+										/>
+									</Accordion.Content>
+								</Accordion>
+							</div>
 
-							<CollapsibleSection
-								icon={CodeIcon}
-								isExpanded={expandedSection === "implementation"}
-								onToggleAction={() => toggleSection("implementation")}
-								title="Code"
-							>
-								<ImplementationExamples
-									flagKey={form.watch("flag.key") || "my-feature"}
-									flagType={watchedType}
-								/>
-							</CollapsibleSection>
+							<div className="overflow-hidden rounded-md border border-border/60">
+								<Accordion>
+									<Accordion.Trigger>
+										<GitBranchIcon
+											className="size-4 shrink-0 text-muted-foreground"
+											weight="duotone"
+										/>
+										<Text variant="label">Dependencies</Text>
+										{watchedDependencies.length > 0 && (
+											<span className="ml-auto flex size-5 items-center justify-center rounded-full bg-primary font-medium text-primary-foreground text-xs">
+												{watchedDependencies.length}
+											</span>
+										)}
+									</Accordion.Trigger>
+									<Accordion.Content>
+										<Controller
+											control={form.control}
+											name="flag.dependencies"
+											render={({ field }) => (
+												<DependencySelector
+													availableFlags={flagsList ?? []}
+													currentFlagKey={flag?.key}
+													onChange={field.onChange}
+													value={field.value || []}
+												/>
+											)}
+										/>
+									</Accordion.Content>
+								</Accordion>
+							</div>
+
+							<div className="overflow-hidden rounded-md border border-border/60">
+								<Accordion>
+									<Accordion.Trigger>
+										<CodeIcon
+											className="size-4 shrink-0 text-muted-foreground"
+											weight="duotone"
+										/>
+										<Text variant="label">Code</Text>
+									</Accordion.Trigger>
+									<Accordion.Content>
+										<ImplementationExamples
+											flagKey={form.watch("flag.key") || "my-feature"}
+											flagType={watchedType}
+										/>
+									</Accordion.Content>
+								</Accordion>
+							</div>
 						</div>
 					</Sheet.Body>
 

@@ -29,6 +29,7 @@ async function getLinkBySlug(slug: string): Promise<CachedLink | null> {
 			ogVideoUrl: true,
 			iosUrl: true,
 			androidUrl: true,
+			deepLinkApp: true,
 		},
 	});
 

@@ -1,27 +1,36 @@
 "use client";
 
-import { FunnelIcon } from "@phosphor-icons/react/dist/ssr";
-import { MagnifyingGlassIcon } from "@phosphor-icons/react/dist/ssr";
-import { SortAscendingIcon } from "@phosphor-icons/react/dist/ssr";
-import { XIcon } from "@phosphor-icons/react/dist/ssr";
-import { Button } from "@/components/ds/button";
 import { DropdownMenu } from "@/components/ds/dropdown-menu";
 import { Input } from "@/components/ds/input";
-import { cn } from "@/lib/utils";
-import type { SortOption } from "./use-filtered-links";
+import {
+	FunnelIcon,
+	MagnifyingGlassIcon,
+	SortAscendingIcon,
+	XIcon,
+} from "@phosphor-icons/react/dist/ssr";
+import type { SortOption, TypeFilter } from "./use-filtered-links";
 
 const SORT_LABELS: Record<SortOption, string> = {
 	newest: "Newest",
 	oldest: "Oldest",
-	"name-asc": "A → Z",
-	"name-desc": "Z → A",
+	"name-asc": "A \u2192 Z",
+	"name-desc": "Z \u2192 A",
+};
+
+const TYPE_LABELS: Record<TypeFilter, string> = {
+	all: "All",
+	short: "Short Links",
+	deep: "Deep Links",
 };
 
 interface LinksSearchBarProps {
+	hasDeepLinks: boolean;
 	onSearchQueryChangeAction: (query: string) => void;
 	onSortByChangeAction: (sort: SortOption) => void;
+	onTypeFilterChangeAction: (type: TypeFilter) => void;
 	searchQuery: string;
 	sortBy: SortOption;
+	typeFilter: TypeFilter;
 }
 
 export function LinksSearchBar({
@@ -29,9 +38,10 @@ export function LinksSearchBar({
 	onSearchQueryChangeAction,
 	sortBy,
 	onSortByChangeAction,
+	typeFilter,
+	onTypeFilterChangeAction,
+	hasDeepLinks,
 }: LinksSearchBarProps) {
-	const hasActiveFilters = searchQuery.trim() !== "" || sortBy !== "newest";
-
 	return (
 		<div className="flex w-full items-center gap-1.5">
 			<div className="relative flex-1">
@@ -40,11 +50,11 @@ export function LinksSearchBar({
 					weight="bold"
 				/>
 				<Input
-					className="h-7 border-transparent bg-transparent pr-7 pl-8 text-sm shadow-none placeholder:text-muted-foreground/50 focus-visible:border-border focus-visible:bg-background"
+					className="h-7 pr-7 pl-8"
 					onChange={(e) => onSearchQueryChangeAction(e.target.value)}
-					placeholder="Search links…"
-					showFocusIndicator={false}
+					placeholder="Search links"
 					value={searchQuery}
+					variant="ghost"
 				/>
 				{searchQuery && (
 					<button
@@ -53,21 +63,47 @@ export function LinksSearchBar({
 						onClick={() => onSearchQueryChangeAction("")}
 						type="button"
 					>
-						<XIcon className="size-3.5" />
+						<XIcon className="size-3" />
 					</button>
 				)}
 			</div>
 
+			{hasDeepLinks && (
+				<DropdownMenu>
+					<DropdownMenu.Trigger
+						className={`inline-flex h-7 cursor-pointer items-center gap-1.5 rounded-md px-2 text-xs transition-colors hover:bg-interactive-hover hover:text-foreground ${typeFilter === "all" ? "text-muted-foreground" : "text-foreground"}`}
+					>
+						<FunnelIcon
+							size={14}
+							weight={typeFilter === "all" ? "bold" : "fill"}
+						/>
+						<span className="hidden sm:inline">{TYPE_LABELS[typeFilter]}</span>
+					</DropdownMenu.Trigger>
+					<DropdownMenu.Content align="end" className="w-36">
+						<DropdownMenu.Group>
+							<DropdownMenu.GroupLabel>Type</DropdownMenu.GroupLabel>
+						</DropdownMenu.Group>
+						<DropdownMenu.Separator />
+						<DropdownMenu.RadioGroup
+							onValueChange={(value) =>
+								onTypeFilterChangeAction(value as TypeFilter)
+							}
+							value={typeFilter}
+						>
+							<DropdownMenu.RadioItem value="all">All</DropdownMenu.RadioItem>
+							<DropdownMenu.RadioItem value="short">
+								Short Links
+							</DropdownMenu.RadioItem>
+							<DropdownMenu.RadioItem value="deep">
+								Deep Links
+							</DropdownMenu.RadioItem>
+						</DropdownMenu.RadioGroup>
+					</DropdownMenu.Content>
+				</DropdownMenu>
+			)}
+
 			<DropdownMenu>
-				<DropdownMenu.Trigger
-					className={cn(
-						"inline-flex items-center justify-center gap-1.5 rounded-md font-medium transition-all duration-(--duration-quick) ease-(--ease-smooth) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 disabled:pointer-events-none disabled:opacity-50",
-						"bg-secondary text-foreground hover:bg-interactive-hover",
-						"h-7 px-2.5 text-xs",
-						"gap-1 border-transparent px-2 shadow-none",
-						sortBy !== "newest" && "border-primary/30 text-primary"
-					)}
-				>
+				<DropdownMenu.Trigger className="inline-flex h-7 cursor-pointer items-center gap-1.5 rounded-md px-2 text-muted-foreground text-xs transition-colors hover:bg-interactive-hover hover:text-foreground">
 					<SortAscendingIcon size={14} weight="bold" />
 					<span className="hidden sm:inline">{SORT_LABELS[sortBy]}</span>
 				</DropdownMenu.Trigger>
@@ -95,21 +131,6 @@ export function LinksSearchBar({
 					</DropdownMenu.RadioGroup>
 				</DropdownMenu.Content>
 			</DropdownMenu>
-
-			{hasActiveFilters && (
-				<Button
-					className="h-7 gap-1 px-2 text-xs"
-					onClick={() => {
-						onSearchQueryChangeAction("");
-						onSortByChangeAction("newest");
-					}}
-					size="sm"
-					variant="ghost"
-				>
-					<FunnelIcon size={14} weight="duotone" />
-					Clear
-				</Button>
-			)}
 		</div>
 	);
 }

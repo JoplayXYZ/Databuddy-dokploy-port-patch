@@ -1,31 +1,48 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CopyIcon } from "@phosphor-icons/react/dist/ssr";
-import { LinkSimpleIcon } from "@phosphor-icons/react/dist/ssr";
-import { QrCodeIcon } from "@phosphor-icons/react/dist/ssr";
+import {
+	AndroidLogoIcon,
+	AppleLogoIcon,
+	CalendarIcon,
+	CopyIcon,
+	DeviceMobileIcon,
+	ImageIcon,
+	LinkSimpleIcon,
+	QrCodeIcon,
+} from "@phosphor-icons/react/dist/ssr";
 import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { type SubmitHandler, useForm } from "react-hook-form";
+import { Controller, type SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { useOrganizationsContext } from "@/components/providers/organizations-provider";
+import { Accordion } from "@/components/ds/accordion";
 import { Button } from "@/components/ds/button";
-import { Form } from "@/components/ui/form";
+import { Divider } from "@/components/ds/divider";
+import { Field } from "@/components/ds/field";
+import { Input } from "@/components/ds/input";
 import { Sheet } from "@/components/ds/sheet";
 import { Tabs } from "@/components/ds/tabs";
+import { Text } from "@/components/ds/text";
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
 import { type Link, useCreateLink, useUpdateLink } from "@/hooks/use-links";
 import dayjs from "@/lib/dayjs";
 import { LINKS_BASE_URL, LINKS_FULL_URL } from "./link-constants";
-import { LinkFormFields } from "./link-form-fields";
-import type { ExpandedSection, LinkFormData } from "./link-form-schema";
+import type { LinkFormData } from "./link-form-schema";
 import { linkFormSchema } from "./link-form-schema";
 import { LinkQrCode } from "./link-qr-code";
-import { buildLinkPayload, mapLinkApiError, stripProtocol } from "./link-utils";
-import type { OgData } from "./og-preview";
 import {
+	buildLinkPayload,
+	mapLinkApiError,
+	normalizeUrlInput,
+	stripProtocol,
+} from "./link-utils";
+import { type OgData, OgPreview } from "./og-preview";
+import { ExpirationPicker } from "./expiration-picker";
+import {
+	type UtmParams,
+	UtmBuilder,
 	parseUtmFromUrl,
 	stripUtmFromUrl,
-	type UtmParams,
 } from "./utm-builder";
 
 const DEFAULT_UTM_PARAMS: UtmParams = {
@@ -61,11 +78,6 @@ function LinkSheetInner({ open, onOpenChange, link, onSave }: LinkSheetProps) {
 	const [utmParams, setUtmParams] = useState<UtmParams>(DEFAULT_UTM_PARAMS);
 	const [ogData, setOgData] = useState<OgData>(DEFAULT_OG_DATA);
 	const [useCustomOg, setUseCustomOg] = useState(false);
-	const [expandedSection, setExpandedSection] = useState<ExpandedSection>(null);
-
-	const toggleSection = (section: ExpandedSection) => {
-		setExpandedSection((prev) => (prev === section ? null : section));
-	};
 
 	const form = useForm<LinkFormData>({
 		resolver: zodResolver(linkFormSchema),
@@ -127,7 +139,6 @@ function LinkSheetInner({ open, onOpenChange, link, onSave }: LinkSheetProps) {
 				setOgData(DEFAULT_OG_DATA);
 				setUseCustomOg(false);
 			}
-			setExpandedSection(null);
 		},
 		[form]
 	);
@@ -149,7 +160,6 @@ function LinkSheetInner({ open, onOpenChange, link, onSave }: LinkSheetProps) {
 		[onOpenChange]
 	);
 
-	const slugValue = form.watch("slug");
 	const targetUrlValue = form.watch("targetUrl");
 
 	const fullTargetUrl = useMemo(() => {
@@ -190,7 +200,7 @@ function LinkSheetInner({ open, onOpenChange, link, onSave }: LinkSheetProps) {
 					externalId: payload.externalId ?? null,
 				});
 				onSave?.(result);
-				toast.success("Link updated successfully!");
+				toast.success("Link updated");
 			} else {
 				const result = await createLinkMutation.mutateAsync({
 					...(resolvedOrganizationId
@@ -210,7 +220,7 @@ function LinkSheetInner({ open, onOpenChange, link, onSave }: LinkSheetProps) {
 					externalId: payload.externalId ?? null,
 				});
 				onSave?.(result);
-				toast.success("Link created successfully!");
+				toast.success("Link created");
 			}
 			onOpenChange(false);
 		} catch (error: unknown) {
@@ -219,13 +229,12 @@ function LinkSheetInner({ open, onOpenChange, link, onSave }: LinkSheetProps) {
 	};
 
 	const { copyToClipboard } = useCopyToClipboard({
-		onCopy: () => toast.success("Link copied to clipboard"),
+		onCopy: () => toast.success("Copied to clipboard"),
 	});
 
 	const isPending =
 		createLinkMutation.isPending || updateLinkMutation.isPending;
 	const { isValid, isDirty } = form.formState;
-	const isSubmitDisabled = !(isValid && isDirty);
 
 	const expiresAtValue = form.watch("expiresAt");
 	const iosUrlValue = form.watch("iosUrl");
@@ -235,155 +244,399 @@ function LinkSheetInner({ open, onOpenChange, link, onSave }: LinkSheetProps) {
 	const deviceTargetingCount = [iosUrlValue, androidUrlValue].filter((v) =>
 		v?.trim()
 	).length;
-	const utmParamsCount = Object.values(utmParams).filter((v) =>
-		v?.trim()
-	).length;
+	const utmCount = Object.values(utmParams).filter((v) => v?.trim()).length;
 
-	const formFieldsProps = {
-		form,
-		expandedSection,
-		onToggleSectionAction: toggleSection,
-		slugValue,
-		fullTargetUrl,
-		utmParams,
-		onUtmParamsChangeAction: setUtmParams,
-		ogData,
-		onOgDataChangeAction: setOgData,
-		useCustomOg,
-		onUseCustomOgChangeAction: setUseCustomOg,
-		hasExpiration,
-		deviceTargetingCount,
-		utmParamsCount,
-		hasCustomSocial: useCustomOg,
-	};
+	const formContent = (
+		<Sheet.Body className="space-y-6">
+			{isEditing && link && (
+				<>
+					<div className="flex items-center justify-between gap-3 rounded-md border border-border/60 px-3 py-2.5">
+						<div className="min-w-0 flex-1">
+							<Text tone="muted" variant="caption">
+								Short URL
+							</Text>
+							<p className="truncate font-mono text-sm tabular-nums">
+								{LINKS_BASE_URL}/{link.slug}
+							</p>
+						</div>
+						<Button
+							className="shrink-0"
+							onClick={() => copyToClipboard(`${LINKS_FULL_URL}/${link.slug}`)}
+							size="sm"
+							type="button"
+							variant="secondary"
+						>
+							<CopyIcon className="size-3.5" />
+							Copy
+						</Button>
+					</div>
+					<Divider />
+				</>
+			)}
 
-	const footer = (
-		<Sheet.Footer>
-			<Button
-				onClick={() => onOpenChange(false)}
-				type="button"
-				variant="secondary"
-			>
-				Cancel
-			</Button>
-			<Button
-				className="min-w-28"
-				disabled={isSubmitDisabled}
-				loading={isPending}
-				type="submit"
-			>
-				{isEditing ? "Save Changes" : "Create Link"}
-			</Button>
-		</Sheet.Footer>
+			<Controller
+				control={form.control}
+				name="targetUrl"
+				render={({ field, fieldState }) => (
+					<Field error={!!fieldState.error}>
+						<Field.Label>Destination URL</Field.Label>
+						<Input
+							placeholder="example.com/landing-page…"
+							prefix="https://"
+							{...field}
+							onChange={(e) => {
+								field.onChange(normalizeUrlInput(e.target.value));
+							}}
+						/>
+						<Field.Description>
+							Where users will be redirected when clicking your link
+						</Field.Description>
+						{fieldState.error && (
+							<Field.Error>{fieldState.error.message}</Field.Error>
+						)}
+					</Field>
+				)}
+			/>
+
+			<div className="grid gap-4 sm:grid-cols-2">
+				<Controller
+					control={form.control}
+					name="name"
+					render={({ field, fieldState }) => (
+						<Field error={!!fieldState.error}>
+							<Field.Label>Name</Field.Label>
+							<Input placeholder="Marketing Campaign…" {...field} />
+							{fieldState.error && (
+								<Field.Error>{fieldState.error.message}</Field.Error>
+							)}
+						</Field>
+					)}
+				/>
+
+				<Controller
+					control={form.control}
+					name="slug"
+					render={({ field, fieldState }) => (
+						<Field error={!!fieldState.error}>
+							<Field.Label>
+								Short Link{" "}
+								{!isEditing && (
+									<span className="text-muted-foreground">(optional)</span>
+								)}
+							</Field.Label>
+							<Input
+								disabled={isEditing}
+								placeholder={isEditing ? "" : "my-campaign"}
+								prefix={`${LINKS_BASE_URL}/`}
+								{...field}
+								onChange={(e) => {
+									field.onChange(e.target.value.replace(/\s/g, "-"));
+								}}
+							/>
+							{fieldState.error && (
+								<Field.Error>{fieldState.error.message}</Field.Error>
+							)}
+						</Field>
+					)}
+				/>
+			</div>
+
+			<Controller
+				control={form.control}
+				name="externalId"
+				render={({ field, fieldState }) => (
+					<Field error={!!fieldState.error}>
+						<Field.Label>
+							External ID{" "}
+							<span className="text-muted-foreground">(optional)</span>
+						</Field.Label>
+						<Input
+							placeholder="company-123"
+							{...field}
+							value={field.value ?? ""}
+						/>
+						<Field.Description>
+							Third-party identifier for querying (e.g. company, campaign, or
+							partner ID)
+						</Field.Description>
+						{fieldState.error && (
+							<Field.Error>{fieldState.error.message}</Field.Error>
+						)}
+					</Field>
+				)}
+			/>
+
+			<Divider />
+
+			<div className="space-y-2">
+				<div className="overflow-hidden rounded-md border border-border/60">
+					<Accordion>
+						<Accordion.Trigger>
+							<CalendarIcon
+								className="size-4 shrink-0 text-muted-foreground"
+								weight="duotone"
+							/>
+							<Text variant="label">Link Expiration</Text>
+							{hasExpiration && (
+								<span className="ml-auto flex size-5 items-center justify-center rounded-full bg-primary font-medium text-primary-foreground text-xs">
+									1
+								</span>
+							)}
+						</Accordion.Trigger>
+						<Accordion.Content>
+							<div className="space-y-4">
+								<Controller
+									control={form.control}
+									name="expiresAt"
+									render={({ field }) => (
+										<ExpirationPicker
+											onChange={field.onChange}
+											value={field.value}
+										/>
+									)}
+								/>
+								<Controller
+									control={form.control}
+									name="expiredRedirectUrl"
+									render={({ field, fieldState }) => (
+										<Field error={!!fieldState.error}>
+											<Field.Label>Redirect URL after expiration</Field.Label>
+											<Input
+												placeholder="example.com/link-expired…"
+												prefix="https://"
+												{...field}
+												onChange={(e) => {
+													field.onChange(stripProtocol(e.target.value.trim()));
+												}}
+											/>
+											<Field.Description>
+												Optional fallback page for expired links
+											</Field.Description>
+											{fieldState.error && (
+												<Field.Error>{fieldState.error.message}</Field.Error>
+											)}
+										</Field>
+									)}
+								/>
+							</div>
+						</Accordion.Content>
+					</Accordion>
+				</div>
+
+				<div className="overflow-hidden rounded-md border border-border/60">
+					<Accordion>
+						<Accordion.Trigger>
+							<DeviceMobileIcon
+								className="size-4 shrink-0 text-muted-foreground"
+								weight="duotone"
+							/>
+							<Text variant="label">Device Targeting</Text>
+							{deviceTargetingCount > 0 && (
+								<span className="ml-auto flex size-5 items-center justify-center rounded-full bg-primary font-medium text-primary-foreground text-xs">
+									{deviceTargetingCount}
+								</span>
+							)}
+						</Accordion.Trigger>
+						<Accordion.Content>
+							<div className="space-y-4">
+								<Text tone="muted" variant="caption">
+									Redirect mobile users to device-specific URLs like app stores
+								</Text>
+								<div className="grid gap-4 sm:grid-cols-2">
+									<Controller
+										control={form.control}
+										name="iosUrl"
+										render={({ field, fieldState }) => (
+											<Field error={!!fieldState.error}>
+												<Field.Label className="flex items-center gap-1.5">
+													<AppleLogoIcon size={14} weight="fill" />
+													iOS URL
+												</Field.Label>
+												<Input
+													placeholder="apps.apple.com/app/…"
+													prefix="https://"
+													{...field}
+													onChange={(e) => {
+														field.onChange(
+															stripProtocol(e.target.value.trim())
+														);
+													}}
+												/>
+												{fieldState.error && (
+													<Field.Error>{fieldState.error.message}</Field.Error>
+												)}
+											</Field>
+										)}
+									/>
+									<Controller
+										control={form.control}
+										name="androidUrl"
+										render={({ field, fieldState }) => (
+											<Field error={!!fieldState.error}>
+												<Field.Label className="flex items-center gap-1.5">
+													<AndroidLogoIcon size={14} weight="fill" />
+													Android URL
+												</Field.Label>
+												<Input
+													placeholder="play.google.com/store/apps/…"
+													prefix="https://"
+													{...field}
+													onChange={(e) => {
+														field.onChange(
+															stripProtocol(e.target.value.trim())
+														);
+													}}
+												/>
+												{fieldState.error && (
+													<Field.Error>{fieldState.error.message}</Field.Error>
+												)}
+											</Field>
+										)}
+									/>
+								</div>
+							</div>
+						</Accordion.Content>
+					</Accordion>
+				</div>
+
+				<div className="overflow-hidden rounded-md border border-border/60">
+					<Accordion>
+						<Accordion.Trigger>
+							<LinkSimpleIcon
+								className="size-4 shrink-0 text-muted-foreground"
+								weight="duotone"
+							/>
+							<Text variant="label">UTM Parameters</Text>
+							{utmCount > 0 && (
+								<span className="ml-auto flex size-5 items-center justify-center rounded-full bg-primary font-medium text-primary-foreground text-xs">
+									{utmCount}
+								</span>
+							)}
+						</Accordion.Trigger>
+						<Accordion.Content>
+							<UtmBuilder
+								baseUrl={fullTargetUrl}
+								onChange={setUtmParams}
+								value={utmParams}
+							/>
+						</Accordion.Content>
+					</Accordion>
+				</div>
+
+				<div className="overflow-hidden rounded-md border border-border/60">
+					<Accordion>
+						<Accordion.Trigger>
+							<ImageIcon
+								className="size-4 shrink-0 text-muted-foreground"
+								weight="duotone"
+							/>
+							<Text variant="label">Social Preview</Text>
+							{useCustomOg && (
+								<span className="ml-auto flex size-5 items-center justify-center rounded-full bg-primary font-medium text-primary-foreground text-xs">
+									1
+								</span>
+							)}
+						</Accordion.Trigger>
+						<Accordion.Content>
+							<OgPreview
+								onChange={setOgData}
+								onUseCustomOgChange={setUseCustomOg}
+								targetUrl={fullTargetUrl}
+								useCustomOg={useCustomOg}
+								value={ogData}
+							/>
+						</Accordion.Content>
+					</Accordion>
+				</div>
+			</div>
+		</Sheet.Body>
 	);
 
 	return (
 		<Sheet onOpenChange={handleOpenChange} open={open}>
-			<Sheet.Content className="sm:max-w-xl" side="right">
-				<Sheet.Close />
+			<Sheet.Content className="w-full sm:max-w-lg" side="right">
 				<Sheet.Header>
-					<div className="flex items-center gap-4">
-						<div className="flex size-11 items-center justify-center rounded border bg-secondary">
-							<LinkSimpleIcon
-								className="size-5 text-primary"
-								weight="duotone"
-							/>
-						</div>
-						<div>
-							<Sheet.Title className="text-balance text-lg">
-								{isEditing ? "Edit Link" : "Create Link"}
-							</Sheet.Title>
-							<Sheet.Description className="text-pretty">
-								{isEditing
-									? `Editing ${link?.name || link?.slug}`
-									: "Create a short link to track clicks and analytics"}
-							</Sheet.Description>
-						</div>
-					</div>
+					<Sheet.Title>{isEditing ? "Edit Link" : "Create Link"}</Sheet.Title>
+					<Sheet.Description>
+						{isEditing
+							? `Editing ${link?.name || link?.slug}`
+							: "Create a short link to track clicks and analytics"}
+					</Sheet.Description>
 				</Sheet.Header>
 
-				<Form {...form}>
-					<form
-						className="flex flex-1 flex-col overflow-hidden"
-						onSubmit={form.handleSubmit(handleSubmit)}
-					>
-						{isEditing && link ? (
-							<Tabs
-								className="flex flex-1 flex-col overflow-hidden"
-								defaultValue="details"
+				<form
+					className="flex flex-1 flex-col overflow-hidden"
+					onSubmit={form.handleSubmit(handleSubmit)}
+				>
+					{isEditing && link ? (
+						<Tabs
+							className="flex flex-1 flex-col overflow-hidden"
+							defaultValue="details"
+						>
+							<Tabs.List className="mx-5 mt-3 shrink-0">
+								<Tabs.Tab value="details">Details</Tabs.Tab>
+								<Tabs.Tab value="qr-code">
+									<QrCodeIcon className="size-3.5" weight="duotone" />
+									QR Code
+								</Tabs.Tab>
+							</Tabs.List>
+
+							<Tabs.Panel
+								className="mt-0 flex-1 overflow-y-auto"
+								value="details"
 							>
-								<Tabs.List className="shrink-0">
-									<Tabs.Tab value="details">
-										<LinkSimpleIcon
-											aria-hidden="true"
-											className="size-4"
-											weight="duotone"
-										/>
-										Details
-									</Tabs.Tab>
-									<Tabs.Tab value="qr-code">
-										<QrCodeIcon
-											aria-hidden="true"
-											className="size-4"
-											weight="duotone"
-										/>
-										QR Code
-									</Tabs.Tab>
-								</Tabs.List>
+								{formContent}
+							</Tabs.Panel>
 
-								<Tabs.Panel
-									className="mt-0 flex-1 overflow-y-auto"
-									value="details"
-								>
-									<Sheet.Body className="space-y-6">
-										<div className="flex items-center justify-between gap-3 rounded border border-primary/20 bg-primary/5 px-3 py-2.5">
-											<div className="min-w-0 flex-1">
-												<p className="text-muted-foreground text-xs">
-													Short URL
-												</p>
-												<p className="truncate font-mono text-sm tabular-nums">
-													https://{LINKS_BASE_URL}/{link.slug}
-												</p>
-											</div>
-											<Button
-												className="shrink-0"
-												onClick={() =>
-													copyToClipboard(`${LINKS_FULL_URL}/${link.slug}`)
-												}
-												size="sm"
-												type="button"
-												variant="secondary"
-											>
-												<CopyIcon className="size-4" />
-												Copy
-											</Button>
-										</div>
-
-										<LinkFormFields {...formFieldsProps} isEditMode={true} />
-									</Sheet.Body>
-								</Tabs.Panel>
-
-								<Tabs.Panel
-									className="mt-0 flex-1 overflow-y-auto"
-									value="qr-code"
-								>
-									<Sheet.Body>
-										<LinkQrCode name={link.name} slug={link.slug} />
-									</Sheet.Body>
-								</Tabs.Panel>
-
-								{footer}
-							</Tabs>
-						) : (
-							<>
-								<Sheet.Body className="space-y-6">
-									<LinkFormFields {...formFieldsProps} isEditMode={false} />
+							<Tabs.Panel
+								className="mt-0 flex-1 overflow-y-auto"
+								value="qr-code"
+							>
+								<Sheet.Body>
+									<LinkQrCode name={link.name} slug={link.slug} />
 								</Sheet.Body>
-								{footer}
-							</>
-						)}
-					</form>
-				</Form>
+							</Tabs.Panel>
+
+							<Sheet.Footer>
+								<Button
+									onClick={() => onOpenChange(false)}
+									type="button"
+									variant="secondary"
+								>
+									Cancel
+								</Button>
+								<Button
+									disabled={!(isValid && isDirty)}
+									loading={isPending}
+									type="submit"
+								>
+									Save Changes
+								</Button>
+							</Sheet.Footer>
+						</Tabs>
+					) : (
+						<>
+							{formContent}
+							<Sheet.Footer>
+								<Button
+									onClick={() => onOpenChange(false)}
+									type="button"
+									variant="secondary"
+								>
+									Cancel
+								</Button>
+								<Button
+									disabled={!(isValid && isDirty)}
+									loading={isPending}
+									type="submit"
+								>
+									Create Link
+								</Button>
+							</Sheet.Footer>
+						</>
+					)}
+				</form>
+				<Sheet.Close />
 			</Sheet.Content>
 		</Sheet>
 	);

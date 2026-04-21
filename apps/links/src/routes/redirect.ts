@@ -1,4 +1,3 @@
-import { createHash } from "node:crypto";
 import { db, eq } from "@databuddy/db";
 import { links } from "@databuddy/db/schema";
 import {
@@ -11,8 +10,10 @@ import {
 	shouldRecordClick,
 } from "@databuddy/redis";
 import { BotCategory, detectBot } from "@databuddy/shared/bot-detection";
+import { resolveDeepLink } from "@databuddy/shared/constants/deep-link-apps";
 import { Elysia, redirect, t } from "elysia";
 import { LRUCache } from "lru-cache";
+import { createHash } from "node:crypto";
 import { UAParser } from "ua-parser-js";
 import { captureError, mergeWideEvent, setAttributes } from "../lib/logging";
 import { sendLinkVisit } from "../lib/producer";
@@ -116,6 +117,46 @@ function getTargetUrl(link: CachedLink, ua: string | null): string {
 	return link.targetUrl;
 }
 
+function isMobile(ua: string | null): boolean {
+	if (!ua) {
+		return false;
+	}
+	const lower = ua.toLowerCase();
+	return (
+		lower.includes("iphone") ||
+		lower.includes("ipad") ||
+		lower.includes("ipod") ||
+		lower.includes("android")
+	);
+}
+
+function buildInterstitialHtml(deepUri: string, fallbackUrl: string): string {
+	const escaped = (s: string) =>
+		s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+
+	return `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="refresh" content="2;url=${escaped(fallbackUrl)}">
+<title>Redirecting…</title>
+<style>body{display:flex;align-items:center;justify-content:center;height:100dvh;margin:0;font-family:system-ui,sans-serif;color:#666}p{text-align:center;font-size:14px}</style>
+</head>
+<body>
+<p>Opening app…</p>
+<script>
+(function(){
+var d="${escaped(deepUri)}",f="${escaped(fallbackUrl)}",t;
+try{window.location=d}catch(e){}
+t=setTimeout(function(){window.location=f},800);
+document.addEventListener("visibilitychange",function(){if(document.hidden)clearTimeout(t)});
+})();
+</script>
+</body>
+</html>`;
+}
+
 function appendRef(url: string, linkId: string): string {
 	return `${url}${url.includes("?") ? "&" : "?"}ref=${encodeURIComponent(linkId)}`;
 }
@@ -176,6 +217,7 @@ async function lookupLink(slug: string) {
 			ogVideoUrl: true,
 			iosUrl: true,
 			androidUrl: true,
+			deepLinkApp: true,
 		},
 	});
 	const db_ms = ms(t1);
@@ -205,6 +247,7 @@ async function lookupLink(slug: string) {
 		ogVideoUrl: row.ogVideoUrl,
 		iosUrl: row.iosUrl,
 		androidUrl: row.androidUrl,
+		deepLinkApp: row.deepLinkApp,
 	};
 
 	linkCache.set(slug, link);
@@ -358,6 +401,24 @@ export const redirectRoute = new Elysia().get(
 			emit("bot");
 			set.headers = { ...headers, "Cache-Control": "private, no-store" };
 			return redirect(targetUrl, 302);
+		}
+
+		if (link.deepLinkApp && isMobile(userAgent)) {
+			const deepUri = resolveDeepLink(link.deepLinkApp, targetUrl);
+			if (deepUri) {
+				recordClick(link, ipHash, ip, request).catch((err) =>
+					captureError(err, { error_step: "record_click", link_id: link.id })
+				);
+				emit("deep_link");
+				const fallback = appendRef(targetUrl, link.id);
+				return new Response(buildInterstitialHtml(deepUri, fallback), {
+					headers: {
+						...headers,
+						"Content-Type": "text/html; charset=utf-8",
+						"Cache-Control": "private, no-store",
+					},
+				});
+			}
 		}
 
 		const attributedUrl = appendRef(targetUrl, link.id);

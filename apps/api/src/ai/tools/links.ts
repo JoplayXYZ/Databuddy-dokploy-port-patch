@@ -93,6 +93,12 @@ export function createLinksTools() {
 			ogDescription: z.string().max(500).optional(),
 			ogImageUrl: z.string().url().optional(),
 			externalId: z.string().max(255).optional(),
+			deepLinkApp: z
+				.string()
+				.optional()
+				.describe(
+					"App ID for deep linking (instagram, tiktok, youtube, x, spotify, linkedin, facebook, whatsapp, telegram). On mobile, opens the native app."
+				),
 			confirmed: z.boolean().describe("false=preview, true=apply"),
 		}),
 		execute: async (
@@ -107,6 +113,7 @@ export function createLinksTools() {
 				ogDescription,
 				ogImageUrl,
 				externalId,
+				deepLinkApp,
 				confirmed,
 			},
 			options
@@ -151,6 +158,7 @@ export function createLinksTools() {
 						ogDescription: ogDescription ?? null,
 						ogImageUrl: ogImageUrl ?? null,
 						externalId: externalId ?? null,
+						deepLinkApp: deepLinkApp ?? null,
 					},
 					context
 				)) as LinkData;
@@ -184,6 +192,7 @@ export function createLinksTools() {
 			ogDescription: z.string().max(500).nullable().optional(),
 			ogImageUrl: z.string().url().nullable().optional(),
 			externalId: z.string().max(255).nullable().optional(),
+			deepLinkApp: z.string().nullable().optional(),
 			confirmed: z.boolean().describe("false=preview, true=apply"),
 		}),
 		execute: async ({ id, websiteId, confirmed, ...updates }, options) => {

@@ -20,7 +20,7 @@ function Trigger({
 	return (
 		<BaseCollapsible.Trigger
 			className={cn(
-				"group/trigger flex w-full cursor-pointer select-none items-center gap-2 px-3 py-2.5 text-left",
+				"group/trigger flex h-9 w-full cursor-pointer select-none items-center gap-2 bg-secondary px-3 text-left text-xs",
 				"transition-colors duration-(--duration-quick) ease-(--ease-smooth)",
 				"hover:bg-interactive-hover",
 				"focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60 focus-visible:ring-inset",
@@ -29,14 +29,14 @@ function Trigger({
 			)}
 			{...rest}
 		>
+			<span className="flex min-w-0 flex-1 items-center gap-2">{children}</span>
 			<CaretDown
 				className={cn(
-					"size-3 shrink-0 text-muted-foreground",
+					"size-3.5 shrink-0 text-muted-foreground",
 					"transition-transform duration-(--duration-quick) ease-(--ease-smooth)",
 					"group-data-panel-open/trigger:-rotate-180"
 				)}
 			/>
-			<span className="flex min-w-0 flex-1 items-center gap-2">{children}</span>
 		</BaseCollapsible.Trigger>
 	);
 }
@@ -50,12 +50,10 @@ function Panel({
 	return (
 		<BaseCollapsible.Panel
 			className={cn(
-				"overflow-hidden",
-				"h-[--collapsible-panel-height]",
+				"h-(--collapsible-panel-height) overflow-hidden",
+				"data-[ending-style]:h-0 data-[starting-style]:h-0",
 				"transition-[height] duration-200 ease-out",
 				"motion-reduce:transition-none",
-				"data-ending-style:h-0",
-				"data-starting-style:h-0",
 				className
 			)}
 			keepMounted={keepMounted}
@@ -73,11 +71,7 @@ function Content({
 }: ComponentPropsWithoutRef<typeof BaseCollapsible.Panel>) {
 	return (
 		<Panel {...rest}>
-			<div
-				className={cn("border-border/60 border-t px-3 pt-3 pb-3", className)}
-			>
-				{children}
-			</div>
+			<div className={cn("p-3", className)}>{children}</div>
 		</Panel>
 	);
 }

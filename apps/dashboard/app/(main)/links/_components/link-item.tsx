@@ -1,88 +1,33 @@
 "use client";
 
-import { ClockCountdownIcon } from "@phosphor-icons/react";
-import { CopyIcon } from "@phosphor-icons/react";
-import { DotsThreeIcon } from "@phosphor-icons/react";
-import { PencilSimpleIcon } from "@phosphor-icons/react";
-import { QrCodeIcon } from "@phosphor-icons/react";
-import { TrashIcon } from "@phosphor-icons/react";
-import { LinkIcon } from "@phosphor-icons/react";
+import {
+	ClockCountdownIcon,
+	CopyIcon,
+	DotsThreeIcon,
+	LinkIcon,
+	PencilSimpleIcon,
+	QrCodeIcon,
+	TrashIcon,
+} from "@phosphor-icons/react";
 import NextLink from "next/link";
 import { toast } from "sonner";
+import { getDeepLinkApp } from "@databuddy/shared/constants/deep-link-apps";
 import { FaviconImage } from "@/components/analytics/favicon-image";
-import { EmptyState } from "@/components/ds/empty-state";
+import { DeepLinkAppIcon } from "./deep-link-icons";
 import { DropdownMenu } from "@/components/ds/dropdown-menu";
+import { EmptyState } from "@/components/ds/empty-state";
 import { Skeleton } from "@/components/ds/skeleton";
 import { Tooltip } from "@/components/ds/tooltip";
 import type { Link } from "@/hooks/use-links";
 import { fromNow, localDayjs } from "@/lib/time";
 import { cn } from "@/lib/utils";
 import { LINKS_BASE_URL, LINKS_FULL_URL } from "./link-constants";
-import { formatTarget } from "./link-utils";
 
 function copyShortUrl(slug: string) {
 	navigator.clipboard
 		.writeText(`${LINKS_FULL_URL}/${slug}`)
 		.then(() => toast.success("Copied to clipboard"))
 		.catch(() => toast.error("Failed to copy"));
-}
-
-function LinkActions({
-	link,
-	onEdit,
-	onDelete,
-	onShowQr,
-}: {
-	link: Link;
-	onEdit: (link: Link) => void;
-	onDelete: (linkId: string) => void;
-	onShowQr: (link: Link) => void;
-}) {
-	return (
-		<DropdownMenu>
-			<DropdownMenu.Trigger
-				aria-label="Link actions"
-				className={cn(
-					"inline-flex items-center justify-center gap-1.5 rounded-md font-medium",
-					"transition-all duration-(--duration-quick) ease-(--ease-smooth)",
-					"focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
-					"disabled:pointer-events-none disabled:opacity-50",
-					"size-8 p-0",
-					"bg-transparent text-muted-foreground hover:bg-interactive-hover hover:text-foreground",
-					"size-7 opacity-0 group-hover:opacity-100 data-[state=open]:opacity-100"
-				)}
-			>
-				<DotsThreeIcon className="size-4" weight="bold" />
-			</DropdownMenu.Trigger>
-			<DropdownMenu.Content align="end" className="w-40">
-				<DropdownMenu.Item
-					className="gap-2"
-					onClick={() => copyShortUrl(link.slug)}
-				>
-					<CopyIcon className="size-4" weight="duotone" />
-					Copy URL
-				</DropdownMenu.Item>
-				<DropdownMenu.Item className="gap-2" onClick={() => onShowQr(link)}>
-					<QrCodeIcon className="size-4" weight="duotone" />
-					QR Code
-				</DropdownMenu.Item>
-				<DropdownMenu.Separator />
-				<DropdownMenu.Item className="gap-2" onClick={() => onEdit(link)}>
-					<PencilSimpleIcon className="size-4" weight="duotone" />
-					Edit
-				</DropdownMenu.Item>
-				<DropdownMenu.Separator />
-				<DropdownMenu.Item
-					className="gap-2 text-destructive focus:text-destructive"
-					onClick={() => onDelete(link.id)}
-					variant="destructive"
-				>
-					<TrashIcon className="size-4" weight="duotone" />
-					Delete
-				</DropdownMenu.Item>
-			</DropdownMenu.Content>
-		</DropdownMenu>
-	);
 }
 
 function ExpiryBadge({ link }: { link: Link }) {
@@ -124,7 +69,23 @@ function ExpiryBadge({ link }: { link: Link }) {
 	);
 }
 
-function LinkRow({
+function LinkRowIcon({ link }: { link: Link }) {
+	return (
+		<div className="flex size-10 shrink-0 items-center justify-center rounded-lg border border-border/60 bg-secondary">
+			{link.deepLinkApp ? (
+				<DeepLinkAppIcon appId={link.deepLinkApp} size={20} />
+			) : (
+				<FaviconImage
+					altText={`${link.name} favicon`}
+					domain={link.targetUrl}
+					size={20}
+				/>
+			)}
+		</div>
+	);
+}
+
+export function LinkRow({
 	link,
 	onEdit,
 	onDelete,
@@ -139,74 +100,76 @@ function LinkRow({
 		link.expiresAt && localDayjs(link.expiresAt).isBefore(localDayjs());
 
 	return (
-		<NextLink
+		<div
 			className={cn(
-				"group flex w-full items-center gap-3 border-b px-3 py-3 transition-colors hover:bg-accent/50 sm:gap-4 sm:px-4",
+				"group flex items-center hover:bg-interactive-hover",
 				isExpired && "opacity-50"
 			)}
-			href={`/links/${link.id}`}
 		>
-			<div className="flex size-9 shrink-0 items-center justify-center rounded border bg-card">
-				<FaviconImage
-					altText={`${link.name} favicon`}
-					domain={link.targetUrl}
-					size={18}
-				/>
-			</div>
-
-			<div className="min-w-0 flex-1">
-				<div className="flex items-center gap-2">
-					<span className="truncate font-medium text-sm">{link.name}</span>
-					<ExpiryBadge link={link} />
-				</div>
-
-				<div className="mt-0.5 flex items-center gap-1.5 text-xs">
-					<span
-						className="truncate font-mono text-foreground/70"
-						title={`${LINKS_FULL_URL}/${link.slug}`}
-					>
-						{LINKS_BASE_URL}/{link.slug}
-					</span>
-					<button
-						aria-label="Copy short URL"
-						className="shrink-0 rounded p-0.5 text-muted-foreground opacity-0 transition-opacity hover:text-foreground group-hover:opacity-100"
-						onClick={(e) => {
-							e.preventDefault();
-							e.stopPropagation();
-							copyShortUrl(link.slug);
-						}}
-						type="button"
-					>
-						<CopyIcon className="size-3" weight="bold" />
-					</button>
-					<span className="text-muted-foreground/30">→</span>
-					<span className="hidden truncate text-muted-foreground sm:inline">
-						{formatTarget(link.targetUrl)}
-					</span>
-				</div>
-			</div>
-
-			<span className="hidden shrink-0 text-muted-foreground text-xs tabular-nums sm:block">
-				{fromNow(link.createdAt)}
-			</span>
-
-			<div
-				className="shrink-0"
-				onClick={(e) => {
-					e.preventDefault();
-					e.stopPropagation();
-				}}
-				onKeyDown={(e) => e.stopPropagation()}
-				role="presentation"
+			<NextLink
+				className="flex flex-1 items-center gap-4 px-5 py-3"
+				href={`/links/${link.id}`}
 			>
-				<LinkActions
-					link={link}
-					onDelete={onDelete}
-					onEdit={onEdit}
-					onShowQr={onShowQr}
-				/>
+				<LinkRowIcon link={link} />
+				<div className="min-w-0 flex-1">
+					<div className="flex items-center gap-2">
+						<span className="truncate font-medium text-foreground text-sm">
+							{link.name}
+						</span>
+						{link.deepLinkApp && (
+							<span className="flex shrink-0 items-center gap-1 rounded bg-primary/10 px-1.5 py-0.5 text-primary text-xs">
+								{getDeepLinkApp(link.deepLinkApp)?.name ?? "Deep Link"}
+							</span>
+						)}
+						<ExpiryBadge link={link} />
+					</div>
+					<div className="mt-0.5 flex items-center gap-1.5">
+						<span className="truncate text-muted-foreground text-xs">
+							{LINKS_BASE_URL}/{link.slug}
+						</span>
+						<span className="text-muted-foreground text-xs">&middot;</span>
+						<span className="shrink-0 text-muted-foreground text-xs tabular-nums">
+							{fromNow(link.createdAt)}
+						</span>
+					</div>
+				</div>
+			</NextLink>
+
+			<div className="flex shrink-0 items-center pr-4">
+				<DropdownMenu>
+					<DropdownMenu.Trigger className="inline-flex size-7 cursor-pointer items-center justify-center rounded-md text-muted-foreground opacity-0 transition-all hover:bg-interactive-hover hover:text-foreground group-hover:opacity-100 data-[state=open]:opacity-100">
+						<DotsThreeIcon className="size-4" weight="bold" />
+					</DropdownMenu.Trigger>
+					<DropdownMenu.Content align="end" className="w-40">
+						<DropdownMenu.Item
+							className="gap-2"
+							onClick={() => copyShortUrl(link.slug)}
+						>
+							<CopyIcon className="size-4" weight="duotone" />
+							Copy URL
+						</DropdownMenu.Item>
+						<DropdownMenu.Item className="gap-2" onClick={() => onShowQr(link)}>
+							<QrCodeIcon className="size-4" weight="duotone" />
+							QR Code
+						</DropdownMenu.Item>
+						<DropdownMenu.Separator />
+						<DropdownMenu.Item className="gap-2" onClick={() => onEdit(link)}>
+							<PencilSimpleIcon className="size-4" weight="duotone" />
+							Edit
+						</DropdownMenu.Item>
+						<DropdownMenu.Separator />
+						<DropdownMenu.Item
+							className="gap-2"
+							onClick={() => onDelete(link.id)}
+							variant="destructive"
+						>
+							<TrashIcon className="size-4" weight="duotone" />
+							Delete
+						</DropdownMenu.Item>
+					</DropdownMenu.Content>
+				</DropdownMenu>
 			</div>
-		</NextLink>
+		</div>
 	);
 }
 
@@ -227,7 +190,7 @@ export function LinksList({
 }: LinksListProps) {
 	if (links.length === 0) {
 		return (
-			<div className="flex flex-1 items-center justify-center py-16">
+			<div className="px-5 py-12">
 				<EmptyState
 					action={{
 						label: "Create Your First Link",
@@ -243,7 +206,7 @@ export function LinksList({
 	}
 
 	return (
-		<div className="w-full">
+		<div className="divide-y">
 			{links.map((link) => (
 				<LinkRow
 					key={link.id}
@@ -259,19 +222,17 @@ export function LinksList({
 
 export function LinksListSkeleton() {
 	return (
-		<div className="w-full">
-			{Array.from({ length: 5 }).map((_, i) => (
+		<div className="divide-y">
+			{Array.from({ length: 3 }).map((_, i) => (
 				<div
-					className="flex items-center gap-3 border-b px-3 py-3 sm:gap-4 sm:px-4"
-					key={`skeleton-${i + 1}`}
+					className="flex items-center gap-4 px-5 py-3"
+					key={`skel-${i + 1}`}
 				>
-					<Skeleton className="size-9 shrink-0 rounded" />
-					<div className="min-w-0 flex-1 space-y-1.5">
-						<Skeleton className="h-4 w-32" />
-						<Skeleton className="h-3 w-44" />
+					<Skeleton className="size-10 shrink-0 rounded-lg" />
+					<div className="min-w-0 flex-1 space-y-2">
+						<Skeleton className="h-4 w-36" />
+						<Skeleton className="h-3 w-48" />
 					</div>
-					<Skeleton className="hidden h-3 w-14 shrink-0 sm:block" />
-					<Skeleton className="size-7 shrink-0 rounded" />
 				</div>
 			))}
 		</div>
@@ -280,26 +241,11 @@ export function LinksListSkeleton() {
 
 export function LinksSearchBarSkeleton() {
 	return (
-		<div className="flex shrink-0 items-center border-b px-2 py-1.5">
-			<div className="flex w-full items-center gap-1.5">
-				<Skeleton className="h-7 flex-1 rounded" />
-				<Skeleton className="h-7 w-16 shrink-0 rounded sm:w-20" />
-			</div>
+		<div className="flex items-center gap-1.5 border-b px-4 py-2">
+			<Skeleton className="h-7 flex-1 rounded" />
+			<Skeleton className="h-7 w-16 shrink-0 rounded sm:w-20" />
 		</div>
 	);
 }
 
 export { LinkRow as LinkItem };
-export function LinkItemSkeleton() {
-	return (
-		<div className="flex items-center gap-3 border-b px-3 py-3 sm:gap-4 sm:px-4">
-			<Skeleton className="size-9 shrink-0 rounded" />
-			<div className="min-w-0 flex-1 space-y-1.5">
-				<Skeleton className="h-4 w-32" />
-				<Skeleton className="h-3 w-44" />
-			</div>
-			<Skeleton className="hidden h-3 w-14 shrink-0 sm:block" />
-			<Skeleton className="size-7 shrink-0 rounded" />
-		</div>
-	);
-}

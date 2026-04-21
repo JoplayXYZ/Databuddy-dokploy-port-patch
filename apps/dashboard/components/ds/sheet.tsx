@@ -28,8 +28,8 @@ function Trigger({
 
 const sideStyles: Record<Side, string> = {
 	right:
-		"right-2 data-starting-style:translate-x-[calc(100%+0.5rem)] data-ending-style:translate-x-[calc(100%+0.5rem)]",
-	left: "left-2 data-starting-style:-translate-x-[calc(100%+0.5rem)] data-ending-style:-translate-x-[calc(100%+0.5rem)]",
+		"right-2 data-open:animate-in data-open:slide-in-from-right not-data-open:animate-out not-data-open:slide-out-to-right",
+	left: "left-2 data-open:animate-in data-open:slide-in-from-left not-data-open:animate-out not-data-open:slide-out-to-left",
 };
 
 function Content({
@@ -43,15 +43,15 @@ function Content({
 			<BaseDialog.Backdrop
 				className={cn(
 					"fixed inset-0 z-50 bg-black/40",
-					"transition-opacity duration-(--duration-quick) ease-(--ease-smooth)",
-					"data-starting-style:opacity-0",
-					"data-ending-style:opacity-0"
+					"data-open:fade-in data-open:animate-in data-open:duration-300",
+					"not-data-open:fade-out not-data-open:animate-out not-data-open:duration-200"
 				)}
 			/>
 			<BaseDialog.Popup
 				className={cn(
 					"fixed top-2 bottom-2 z-50 flex w-full max-w-sm flex-col overflow-hidden rounded-lg border border-border/60 bg-card shadow-lg",
-					"transition-transform duration-(--duration-base) ease-(--ease-smooth)",
+					"data-open:duration-300 data-open:ease-out",
+					"not-data-open:duration-200 not-data-open:ease-in",
 					sideStyles[side],
 					className
 				)}
