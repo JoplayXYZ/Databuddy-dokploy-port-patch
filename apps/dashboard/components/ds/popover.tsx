@@ -42,11 +42,10 @@ function Content({
 				<BasePopover.Popup
 					className={cn(
 						"w-72 max-w-[calc(100vw-1rem)] rounded-lg border border-border/60 bg-popover p-4",
-						"transition-[opacity,transform] duration-(--duration-quick) ease-(--ease-smooth)",
-						"motion-reduce:transition-none",
-						"data-starting-style:scale-95 data-starting-style:opacity-0",
-						"data-ending-style:scale-95 data-ending-style:opacity-0",
 						"origin-(--transform-origin)",
+						"motion-reduce:transition-none",
+						"data-open:fade-in data-open:zoom-in-95 data-open:animate-in data-open:duration-150",
+						"not-data-open:fade-out not-data-open:zoom-out-95 not-data-open:animate-out not-data-open:duration-100",
 						className
 					)}
 					{...rest}

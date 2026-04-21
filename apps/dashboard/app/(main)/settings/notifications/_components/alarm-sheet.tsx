@@ -369,7 +369,7 @@ export function AlarmSheet({
 
 									return (
 										<div
-											className="rounded-md border border-border/60"
+											className="overflow-hidden rounded-md border border-border/60"
 											key={field.id}
 										>
 											<Accordion defaultOpen={!identifier}>

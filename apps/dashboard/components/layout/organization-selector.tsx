@@ -50,7 +50,8 @@ function filterOrganizations<T extends { name: string; slug?: string | null }>(
 	);
 }
 
-interface OrganizationSelectorTriggerProps {
+interface OrganizationSelectorTriggerProps
+	extends React.ComponentPropsWithRef<"div"> {
 	activeOrganization: {
 		id?: string;
 		name: string;
@@ -65,6 +66,9 @@ function OrganizationSelectorTrigger({
 	activeOrganization,
 	isOpen,
 	isSettingActiveOrganization,
+	ref,
+	className,
+	...rest
 }: OrganizationSelectorTriggerProps) {
 	return (
 		<div
@@ -73,8 +77,11 @@ function OrganizationSelectorTrigger({
 				"transition-colors duration-(--duration-quick) ease-(--ease-smooth)",
 				"hover:bg-sidebar-accent/80",
 				isSettingActiveOrganization ? "cursor-not-allowed opacity-70" : "",
-				isOpen ? "bg-sidebar-accent/60" : ""
+				isOpen ? "bg-sidebar-accent/60" : "",
+				className
 			)}
+			ref={ref}
+			{...rest}
 		>
 			<div className="flex w-full min-w-0 items-center gap-2">
 				<Avatar

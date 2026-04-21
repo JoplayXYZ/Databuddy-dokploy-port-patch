@@ -34,19 +34,17 @@ function Content({
 			<BaseDialog.Backdrop
 				className={cn(
 					"fixed inset-0 z-50 bg-black/40",
-					"transition-opacity duration-(--duration-quick) ease-(--ease-smooth)",
-					"data-starting-style:opacity-0",
-					"data-ending-style:opacity-0"
+					"data-open:fade-in data-open:animate-in data-open:duration-200",
+					"not-data-open:fade-out not-data-open:animate-out not-data-open:duration-150"
 				)}
 			/>
 			<BaseDialog.Popup
 				className={cn(
 					"fixed top-1/2 left-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2",
 					"overflow-hidden rounded-lg border border-border/60 bg-card shadow-lg",
-					"transition-[opacity,transform] duration-(--duration-quick) ease-(--ease-smooth)",
 					"motion-reduce:transition-none",
-					"data-starting-style:scale-95 data-starting-style:opacity-0",
-					"data-ending-style:scale-95 data-ending-style:opacity-0",
+					"data-open:fade-in data-open:zoom-in-95 data-open:animate-in data-open:duration-200",
+					"not-data-open:fade-out not-data-open:zoom-out-95 not-data-open:animate-out not-data-open:duration-150",
 					className
 				)}
 				{...rest}

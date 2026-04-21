@@ -431,7 +431,7 @@ export function DesignShowcase() {
 				title="Accordion"
 			>
 				<div className="space-y-2">
-					<div className="rounded-md border">
+					<div className="overflow-hidden rounded-md border">
 						<Accordion defaultOpen>
 							<Accordion.Trigger>
 								<Text variant="label">Permissions</Text>
@@ -448,7 +448,7 @@ export function DesignShowcase() {
 							</Accordion.Content>
 						</Accordion>
 					</div>
-					<div className="rounded-md border">
+					<div className="overflow-hidden rounded-md border">
 						<Accordion>
 							<Accordion.Trigger>
 								<Text variant="label">Advanced settings</Text>
@@ -461,7 +461,7 @@ export function DesignShowcase() {
 							</Accordion.Content>
 						</Accordion>
 					</div>
-					<div className="rounded-md border">
+					<div className="overflow-hidden rounded-md border">
 						<Accordion>
 							<Accordion.Trigger>
 								<Text variant="label">Webhook destination</Text>
