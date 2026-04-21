@@ -52,6 +52,7 @@ const createLinkSchema = z.object({
 	iosUrl: z.url().nullable().optional(),
 	androidUrl: z.url().nullable().optional(),
 	externalId: z.string().max(255).nullable().optional(),
+	deepLinkApp: z.string().nullable().optional(),
 });
 
 const updateLinkSchema = z.object({
@@ -68,6 +69,7 @@ const updateLinkSchema = z.object({
 	iosUrl: z.url().nullable().optional(),
 	androidUrl: z.url().nullable().optional(),
 	externalId: z.string().max(255).nullable().optional(),
+	deepLinkApp: z.string().nullable().optional(),
 });
 
 const deleteLinkSchema = z.object({
@@ -90,6 +92,7 @@ const linkOutputSchema = z.object({
 	iosUrl: z.string().nullable(),
 	androidUrl: z.string().nullable(),
 	externalId: z.string().nullable(),
+	deepLinkApp: z.string().nullable(),
 	deletedAt: z.nullable(z.coerce.date()),
 	createdAt: z.coerce.date(),
 	updatedAt: z.coerce.date(),
@@ -115,6 +118,7 @@ function toCachedLink(link: {
 	ogVideoUrl: string | null;
 	iosUrl: string | null;
 	androidUrl: string | null;
+	deepLinkApp: string | null;
 }): CachedLink {
 	return {
 		id: link.id,
@@ -127,6 +131,7 @@ function toCachedLink(link: {
 		ogVideoUrl: link.ogVideoUrl,
 		iosUrl: link.iosUrl,
 		androidUrl: link.androidUrl,
+		deepLinkApp: link.deepLinkApp,
 	};
 }
 
@@ -249,6 +254,7 @@ export const linksRouter = {
 							iosUrl: input.iosUrl ?? null,
 							androidUrl: input.androidUrl ?? null,
 							externalId: input.externalId ?? null,
+							deepLinkApp: input.deepLinkApp ?? null,
 						})
 						.returning();
 

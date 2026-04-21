@@ -5,6 +5,7 @@ const LINKS_CACHE_TTL = 604_800; // 7 days - long TTL with manual invalidation o
 
 export interface CachedLink {
 	androidUrl: string | null;
+	deepLinkApp: string | null;
 	expiredRedirectUrl: string | null;
 	expiresAt: string | null;
 	id: string;

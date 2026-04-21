@@ -26,6 +26,7 @@ export const links = pgTable(
 		iosUrl: text("ios_url"),
 		androidUrl: text("android_url"),
 		externalId: text("external_id"),
+		deepLinkApp: text("deep_link_app"),
 		deletedAt: timestamp("deleted_at", { precision: 3, withTimezone: true }),
 		createdAt: timestamp("created_at", { precision: 3, withTimezone: true })
 			.defaultNow()
