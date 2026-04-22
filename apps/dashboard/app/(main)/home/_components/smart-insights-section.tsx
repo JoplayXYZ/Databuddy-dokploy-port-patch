@@ -2,7 +2,7 @@
 
 import { ArrowClockwiseIcon } from "@phosphor-icons/react/dist/ssr/ArrowClockwise";
 import { CheckCircleIcon } from "@phosphor-icons/react/dist/ssr/CheckCircle";
-import { SparkleIcon } from "@phosphor-icons/react/dist/ssr/Sparkle";
+import { LightbulbIcon } from "@phosphor-icons/react/dist/ssr/Lightbulb";
 import { WarningCircleIcon } from "@phosphor-icons/react/dist/ssr/WarningCircle";
 import { useState } from "react";
 import { InsightCard } from "@/app/(main)/insights/_components/insight-card";
@@ -46,7 +46,7 @@ function AnalyzingState() {
 		<div className="divide-y">
 			<div className="flex items-center gap-3 px-5 py-4">
 				<div className="flex size-7 shrink-0 items-center justify-center rounded bg-primary/10">
-					<SparkleIcon
+					<LightbulbIcon
 						className="size-4 animate-pulse text-primary"
 						weight="duotone"
 					/>
@@ -135,7 +135,7 @@ export function SmartInsightsSection({
 			<Card className={variant === "full" ? "min-h-0 flex-1" : ""}>
 				<Card.Header className="flex-row items-center justify-between gap-3">
 					<div className="flex items-center gap-2">
-						<SparkleIcon className="size-4 text-primary" weight="duotone" />
+						<LightbulbIcon className="size-4 text-primary" weight="duotone" />
 						<Card.Title className="text-sm">Actionable Insights</Card.Title>
 					</div>
 				</Card.Header>
@@ -149,7 +149,7 @@ export function SmartInsightsSection({
 			<Card className={variant === "full" ? "min-h-0 flex-1" : ""}>
 				<Card.Header className="flex-row items-center justify-between gap-3">
 					<div className="flex items-center gap-2">
-						<SparkleIcon className="size-4 text-primary" weight="duotone" />
+						<LightbulbIcon className="size-4 text-primary" weight="duotone" />
 						<Card.Title className="text-sm">Actionable Insights</Card.Title>
 					</div>
 				</Card.Header>
@@ -166,7 +166,7 @@ export function SmartInsightsSection({
 			<Card.Header className="flex-row items-center justify-between gap-3">
 				<div className="min-w-0 flex-1">
 					<div className="flex items-center gap-2">
-						<SparkleIcon
+						<LightbulbIcon
 							className="size-4 shrink-0 text-primary"
 							weight="duotone"
 						/>

@@ -439,7 +439,7 @@ function InsightsFetchStatusRow({
 					className="size-4 shrink-0 animate-spin text-primary"
 				/>
 			) : (
-				<SparkleIcon
+				<LightbulbIcon
 					aria-hidden
 					className="size-4 shrink-0 animate-pulse text-primary"
 					weight="duotone"
