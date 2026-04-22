@@ -1,12 +1,14 @@
-import { BugIcon } from "@phosphor-icons/react";
-import { CodeIcon } from "@phosphor-icons/react";
-import { FileCodeIcon } from "@phosphor-icons/react";
-import { LaptopIcon } from "@phosphor-icons/react";
-import { MonitorIcon } from "@phosphor-icons/react";
-import { NetworkIcon } from "@phosphor-icons/react";
-import { PhoneIcon } from "@phosphor-icons/react";
-import { TableIcon } from "@phosphor-icons/react";
-import { TerminalIcon } from "@phosphor-icons/react";
+import {
+	BugIcon,
+	CodeIcon,
+	DeviceTabletIcon,
+	FileCodeIcon,
+	LaptopIcon,
+	MonitorIcon,
+	NetworkIcon,
+	PhoneIcon,
+	TerminalIcon,
+} from "@phosphor-icons/react/dist/ssr";
 
 export const getErrorTypeIcon = (type: string) => {
 	if (!type) {
@@ -39,7 +41,9 @@ export const getDeviceIcon = (deviceType: string) => {
 		case "mobile":
 			return <PhoneIcon className="size-3.5 text-chart-2" weight="duotone" />;
 		case "tablet":
-			return <TableIcon className="size-3.5 text-chart-2" weight="duotone" />;
+			return (
+				<DeviceTabletIcon className="size-3.5 text-chart-2" weight="duotone" />
+			);
 		case "desktop":
 			return <LaptopIcon className="size-3.5 text-chart-2" weight="duotone" />;
 		default:

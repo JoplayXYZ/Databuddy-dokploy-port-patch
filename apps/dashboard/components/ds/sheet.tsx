@@ -49,7 +49,7 @@ function Content({
 			/>
 			<BaseDialog.Popup
 				className={cn(
-					"fixed top-2 bottom-2 z-50 flex w-full max-w-sm flex-col overflow-hidden rounded-lg border border-border/60 bg-card shadow-lg",
+					"fixed top-2 bottom-2 z-50 flex w-full max-w-sm flex-col overflow-hidden rounded-lg border border-border/60 bg-card shadow-lg sm:max-w-xl",
 					"data-open:duration-300 data-open:ease-out",
 					"not-data-open:duration-200 not-data-open:ease-in",
 					sideStyles[side],
