@@ -4,7 +4,7 @@ import { authClient } from "@databuddy/auth/client";
 import { InfoIcon, MagnifyingGlassIcon } from "@phosphor-icons/react/dist/ssr";
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ds/button";
 import { Tooltip } from "@/components/ds/tooltip";
 import { Branding } from "@/components/layout/logo";
@@ -29,7 +29,12 @@ export function CategorySidebar() {
 
 	const { categories, activeCategory, setCategory } = useSidebarNavigation();
 	const [helpOpen, setHelpOpen] = useState(false);
+	const [hasMounted, setHasMounted] = useState(false);
 	const openCommandSearchAction = useCommandSearchOpenAction();
+
+	useEffect(() => {
+		setHasMounted(true);
+	}, []);
 
 	return (
 		<div className="fixed inset-y-0 left-0 z-40 w-12 border-r bg-transparent">
@@ -128,14 +133,16 @@ export function CategorySidebar() {
 						</Button>
 					</div>
 
-					{user ? (
+					{hasMounted && user ? (
 						<div className="flex justify-center">
 							<PendingInvitationsButton />
 						</div>
 					) : null}
-					<div className="flex justify-center">
-						<ProfileButtonClient user={user} />
-					</div>
+					{hasMounted ? (
+						<div className="flex justify-center">
+							<ProfileButtonClient user={user} />
+						</div>
+					) : null}
 				</div>
 
 				<HelpDialog onOpenChangeAction={setHelpOpen} open={helpOpen} />
