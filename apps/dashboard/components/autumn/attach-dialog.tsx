@@ -1,13 +1,13 @@
 "use client";
 
-import type { PreviewAttachResponse } from "autumn-js";
-import { useState } from "react";
 import { Badge } from "@/components/ds/badge";
 import { Button } from "@/components/ds/button";
 import { Dialog } from "@/components/ds/dialog";
 import { Divider } from "@/components/ds/divider";
 import { Text } from "@/components/ds/text";
 import dayjs from "@/lib/dayjs";
+import type { PreviewAttachResponse } from "autumn-js";
+import { useState } from "react";
 
 export interface AttachDialogProps {
 	onConfirm: () => Promise<void>;
@@ -21,11 +21,11 @@ type PreviewLineItem = PreviewAttachResponse["lineItems"][number];
 type PreviewDiscount = NonNullable<PreviewLineItem["discounts"]>[number];
 type PreviewNextCycle = NonNullable<PreviewAttachResponse["nextCycle"]>;
 
-type DiscountableLineItem = {
+interface DiscountableLineItem {
+	discounts?: Array<{ amountOff: number; rewardName?: string }> | undefined;
 	subtotal: number;
 	total: number;
-	discounts?: Array<{ amountOff: number; rewardName?: string }> | undefined;
-};
+}
 
 function formatMoney(amount: number, currency: string): string {
 	return new Intl.NumberFormat("en-US", {

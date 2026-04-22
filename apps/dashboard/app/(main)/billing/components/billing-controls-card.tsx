@@ -233,7 +233,6 @@ interface BillingRowProps<TForm extends FormShape> {
 	initial: ({ enabled: boolean } & TForm) | null;
 	limits: FormLimits<TForm>;
 	messages: { error: string; successDisable: string; successEnable: string };
-	// biome-ignore lint/suspicious/noExplicitAny: mutation response types vary per RPC; row only cares about input shape
 	mutationOptions: any;
 	onSaved: () => void;
 	switchLabel: string;

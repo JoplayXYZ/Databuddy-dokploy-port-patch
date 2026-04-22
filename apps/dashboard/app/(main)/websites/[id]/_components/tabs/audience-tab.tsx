@@ -40,8 +40,8 @@ interface BrowserEntry {
 }
 
 interface ViewportEntry {
-	name: string;
 	device_type?: string;
+	name: string;
 	pageviews?: number;
 	percentage?: number;
 	visitors: number;
@@ -311,8 +311,7 @@ export function WebsiteAudienceTab({
 		[addFilter]
 	);
 
-	const resolutions: ViewportEntry[] =
-		deviceData.screen_resolution || [];
+	const resolutions: ViewportEntry[] = deviceData.screen_resolution || [];
 
 	return (
 		<div className="space-y-4">

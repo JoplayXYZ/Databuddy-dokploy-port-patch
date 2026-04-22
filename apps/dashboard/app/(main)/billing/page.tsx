@@ -1,13 +1,14 @@
 "use client";
 
-import { EmptyState } from "@/components/ds/empty-state";
-import { useBillingContext } from "@/components/providers/billing-provider";
+import AttachDialog from "@/components/autumn/attach-dialog";
 import { Badge } from "@/components/ds/badge";
 import { Button } from "@/components/ds/button";
 import { Card } from "@/components/ds/card";
 import { Divider } from "@/components/ds/divider";
+import { EmptyState } from "@/components/ds/empty-state";
 import { Skeleton } from "@/components/ds/skeleton";
 import { Text } from "@/components/ds/text";
+import { useBillingContext } from "@/components/providers/billing-provider";
 import dayjs from "@/lib/dayjs";
 import { orpc } from "@/lib/orpc";
 import { TOPUP_PRODUCT_ID } from "@databuddy/shared/billing/topup-math";
@@ -28,7 +29,6 @@ import { useCustomer } from "autumn-js/react";
 import { useRouter } from "next/navigation";
 import { Suspense, useMemo, useState } from "react";
 import { toast } from "sonner";
-import AttachDialog from "@/components/autumn/attach-dialog";
 import { BillingControlsCard } from "./components/billing-controls-card";
 import { CancelSubscriptionDialog } from "./components/cancel-subscription-dialog";
 import { ConsumptionChart } from "./components/consumption-chart";
@@ -82,10 +82,10 @@ function isSSOPlan(plan: { id: string; name: string }): boolean {
 	return plan.name.toLowerCase().includes("single sign-on");
 }
 
-type AddOnPriceDisplay = {
+interface AddOnPriceDisplay {
 	primaryText?: string;
 	secondaryText?: string;
-};
+}
 
 function formatPriceDisplay(display?: AddOnPriceDisplay | null): string | null {
 	if (!display?.primaryText) {
