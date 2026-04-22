@@ -55,4 +55,13 @@ export interface GoalFilter {
 	value: string | string[];
 }
 
-
+export interface BatchQueryResponse {
+	batch: true;
+	meta: {
+		total_queries: number;
+		successful_queries: number;
+		failed_queries: number;
+	};
+	results: (DynamicQueryResponse & { queryId: string })[];
+	success: boolean;
+}

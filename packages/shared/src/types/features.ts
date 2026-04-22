@@ -111,18 +111,20 @@ export const PLAN_FEATURE_LIMITS: Record<
 	},
 };
 
-const PLAN_FEATURES: Record<PlanId, Record<GatedFeatureId, boolean>> =
-	Object.fromEntries(
-		PLAN_HIERARCHY.map((planId) => [
-			planId,
-			Object.fromEntries(
-				Object.values(GATED_FEATURES).map((f) => [
-					f,
-					PLAN_FEATURE_LIMITS[planId][f] !== false,
-				])
-			),
-		])
-	) as Record<PlanId, Record<GatedFeatureId, boolean>>;
+const PLAN_FEATURES: Record<
+	PlanId,
+	Record<GatedFeatureId, boolean>
+> = Object.fromEntries(
+	PLAN_HIERARCHY.map((planId) => [
+		planId,
+		Object.fromEntries(
+			Object.values(GATED_FEATURES).map((f) => [
+				f,
+				PLAN_FEATURE_LIMITS[planId][f] !== false,
+			])
+		),
+	])
+) as Record<PlanId, Record<GatedFeatureId, boolean>>;
 
 export const AI_CAPABILITIES = {
 	SUMMARIZATION: "summarization",
