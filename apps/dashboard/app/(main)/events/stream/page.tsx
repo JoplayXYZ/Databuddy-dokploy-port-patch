@@ -5,8 +5,8 @@ import {
 	EventsStreamContent,
 	type RecentCustomEvent,
 } from "@/components/events/events-stream-content";
+import { useEventsStream } from "@/hooks/use-events-stream";
 import { useEventsPageContext } from "../_components/events-page-context";
-import { useGlobalEventsStream } from "./use-global-events-stream";
 
 export default function EventsStreamPage() {
 	return (
@@ -27,10 +27,14 @@ function EventsStreamView() {
 		[dateRange, queryOptions, websiteFilters]
 	);
 
-	const { events, pagination, isLoading, isError, error } =
-		useGlobalEventsStream(queryOptions, dateRange, websiteFilters, 50, page, {
-			enabled: hasQueryId,
-		});
+	const { events, pagination, isLoading, isError, error } = useEventsStream(
+		queryOptions,
+		dateRange,
+		websiteFilters,
+		50,
+		page,
+		{ enabled: hasQueryId }
+	);
 
 	const renderEventName = useCallback((event: RecentCustomEvent) => {
 		return (

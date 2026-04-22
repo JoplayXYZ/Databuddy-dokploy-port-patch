@@ -5,16 +5,15 @@ import type {
 } from "@databuddy/shared/types/api";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { useMemo } from "react";
-import { useBatchDynamicQuery } from "@/hooks/use-dynamic-query";
 import type {
 	RawRecentCustomEvent,
 	RecentCustomEvent,
-} from "../_components/types";
+} from "@/app/(main)/events/_components/types";
+import { useBatchDynamicQuery } from "./use-dynamic-query";
 
-interface QueryOptions {
-	organizationId?: string;
-	websiteId?: string;
-}
+export type EventsStreamScope =
+	| string
+	| { organizationId?: string; websiteId?: string };
 
 function parseEventProperties(
 	rawEvent: RawRecentCustomEvent
@@ -35,14 +34,16 @@ function parseEventProperties(
 	};
 }
 
-export function useGlobalEventsStream(
-	queryOptions: QueryOptions,
+export function useEventsStream(
+	scope: EventsStreamScope,
 	dateRange: DateRange,
 	filters: DynamicQueryFilter[] = [],
 	limit = 50,
 	page = 1,
 	options?: Partial<UseQueryOptions<BatchQueryResponse>>
 ) {
+	const queryOptions = typeof scope === "string" ? { websiteId: scope } : scope;
+
 	const queries = useMemo(
 		() => [
 			{
@@ -71,13 +72,6 @@ export function useGlobalEventsStream(
 		return rawEvents.map(parseEventProperties);
 	}, [results]);
 
-	const hasNextPage = useMemo(
-		() => events.length === limit,
-		[events.length, limit]
-	);
-
-	const hasPrevPage = useMemo(() => page > 1, [page]);
-
 	return {
 		events,
 		isLoading,
@@ -88,8 +82,8 @@ export function useGlobalEventsStream(
 		pagination: {
 			page,
 			limit,
-			hasNext: hasNextPage,
-			hasPrev: hasPrevPage,
+			hasNext: events.length === limit,
+			hasPrev: page > 1,
 		},
 	};
 }

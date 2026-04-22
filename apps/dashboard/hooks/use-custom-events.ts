@@ -5,19 +5,24 @@ import type {
 } from "@databuddy/shared/types/api";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { useMemo } from "react";
-import { useBatchDynamicQuery } from "@/hooks/use-dynamic-query";
+import { useBatchDynamicQuery } from "./use-dynamic-query";
 
-interface QueryOptions {
-	organizationId?: string;
-	websiteId?: string;
-}
+export type CustomEventsScope =
+	| string
+	| { organizationId?: string; websiteId?: string };
 
-export function useGlobalCustomEventsData(
-	queryOptions: QueryOptions,
+export function useCustomEventsData(
+	scope: CustomEventsScope,
 	dateRange: DateRange,
-	filters: DynamicQueryFilter[] = [],
-	options?: Partial<UseQueryOptions<BatchQueryResponse>>
+	options?: Partial<UseQueryOptions<BatchQueryResponse>> & {
+		filters?: DynamicQueryFilter[];
+	}
 ) {
+	const queryOptions = typeof scope === "string" ? { websiteId: scope } : scope;
+	const filters = options?.filters ?? [];
+	const { filters: _filters, ...batchOptions } = options ?? {};
+	const isOrgLevel = !queryOptions.websiteId;
+
 	const essentialQueries = useMemo(
 		() => [
 			{
@@ -25,11 +30,7 @@ export function useGlobalCustomEventsData(
 				parameters: ["custom_events_summary"],
 				filters,
 			},
-			{
-				id: "custom_events",
-				parameters: ["custom_events"],
-				filters,
-			},
+			{ id: "custom_events", parameters: ["custom_events"], filters },
 			{
 				id: "custom_events_trends",
 				parameters: ["custom_events_trends"],
@@ -74,25 +75,24 @@ export function useGlobalCustomEventsData(
 		queryOptions,
 		dateRange,
 		essentialQueries,
-		options
+		batchOptions
 	);
 
-	// Skip on org-level: JSONExtractKeys arrayJoin is 30s+ on All-websites view.
-	const isOrgLevel = !queryOptions.websiteId;
+	// JSONExtractKeys arrayJoin is 30s+ on All-websites view, skip when no websiteId.
 	const properties = useBatchDynamicQuery(
 		queryOptions,
 		dateRange,
 		propertyQueries,
-		{ ...options, enabled: (options?.enabled ?? true) && !isOrgLevel }
+		{ ...batchOptions, enabled: (batchOptions.enabled ?? true) && !isOrgLevel }
 	);
 
-	const mergedResults = useMemo(() => {
-		const all = [...(essential.results ?? []), ...(properties.results ?? [])];
-		return all.length > 0 ? all : [];
-	}, [essential.results, properties.results]);
+	const results = useMemo(
+		() => [...(essential.results ?? []), ...(properties.results ?? [])],
+		[essential.results, properties.results]
+	);
 
 	return {
-		results: mergedResults,
+		results,
 		isLoading: essential.isLoading,
 		isFetching: essential.isFetching || properties.isFetching,
 		isPending: essential.isPending,

@@ -11,11 +11,11 @@ import {
 	type RecentCustomEvent,
 } from "@/components/events/events-stream-content";
 import { useDateFilters } from "@/hooks/use-date-filters";
+import { useEventsStream } from "@/hooks/use-events-stream";
 import {
 	addDynamicFilterAtom,
 	dynamicQueryFiltersAtom,
 } from "@/stores/jotai/filterAtoms";
-import { useEventsStream } from "./use-events-stream";
 
 export default function EventsStreamPage() {
 	const params = useParams();
@@ -39,9 +39,9 @@ export default function EventsStreamPage() {
 	const { events, pagination, isLoading, isError, error } = useEventsStream(
 		websiteId,
 		dateRange,
+		filters,
 		50,
-		page,
-		filters
+		page
 	);
 
 	const handleAddFilter = useCallback(
