@@ -38,4 +38,23 @@ const link = new RPCLink({
 const client: RouterClient<AppRouter> =
 	globalThis.$client ?? createORPCClient(link);
 
-export const orpc = createTanstackQueryUtils(client);
+const FIVE_MINUTES = 5 * 60 * 1000;
+
+export const orpc = createTanstackQueryUtils(client, {
+	experimental_defaults: {
+		websites: {
+			list: { queryOptions: { staleTime: FIVE_MINUTES } },
+		},
+		uptime: {
+			listSchedules: { queryOptions: { staleTime: FIVE_MINUTES } },
+		},
+		autocomplete: {
+			get: { queryOptions: { staleTime: FIVE_MINUTES } },
+		},
+		featureInvite: {
+			checkAccess: {
+				queryOptions: { staleTime: FIVE_MINUTES, retry: false },
+			},
+		},
+	},
+});

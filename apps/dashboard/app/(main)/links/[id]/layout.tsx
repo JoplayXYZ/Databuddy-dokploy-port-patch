@@ -13,6 +13,7 @@ import { PageNavigation } from "@/components/layout/page-navigation";
 import { Button } from "@/components/ds/button";
 import { Skeleton } from "@/components/ds/skeleton";
 import { useDateFilters } from "@/hooks/use-date-filters";
+import { batchDynamicQueryKeys } from "@/hooks/use-dynamic-query";
 import { useLink } from "@/hooks/use-links";
 import dayjs from "@/lib/dayjs";
 
@@ -114,10 +115,10 @@ export default function LinkStatsLayout({ children }: LinkStatsLayoutProps) {
 	const handleRefresh = async () => {
 		setIsRefreshing(true);
 		try {
+			const batchRoot = batchDynamicQueryKeys.all()[0];
 			await queryClient.invalidateQueries({
 				predicate: (query) =>
-					query.queryKey[0] === "batch-dynamic-query" &&
-					query.queryKey.includes(linkId),
+					query.queryKey[0] === batchRoot && query.queryKey.includes(linkId),
 			});
 		} catch {
 			toast.error("Failed to refresh data");

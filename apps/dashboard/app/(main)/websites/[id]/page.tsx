@@ -1,68 +1,25 @@
-"use client";
+import { orpcServer } from "@/lib/orpc-server";
+import { HydratedPage } from "@/lib/ssr-hydration";
+import { WebsiteOverviewContent } from "./_components/website-overview-content";
 
-import { WarningIcon } from "@phosphor-icons/react/dist/ssr";
-import { useAtom } from "jotai";
-import Link from "next/link";
-import { useParams } from "next/navigation";
-import { Button } from "@/components/ds/button";
-import { useDateFilters } from "@/hooks/use-date-filters";
-import { useWebsite } from "@/hooks/use-websites";
-import {
-	addDynamicFilterAtom,
-	dynamicQueryFiltersAtom,
-	isAnalyticsRefreshingAtom,
-} from "@/stores/jotai/filterAtoms";
-import { WebsiteOverviewTab } from "./_components/tabs/overview-tab";
-import type { FullTabProps } from "./_components/utils/types";
-import { EmptyState } from "./_components/utils/ui-components";
+interface WebsiteDetailsPageProps {
+	params: Promise<{ id: string }>;
+}
 
-export default function WebsiteDetailsPage() {
-	const { id } = useParams();
-	const websiteId = id as string;
-
-	const [isRefreshing, setIsRefreshing] = useAtom(isAnalyticsRefreshingAtom);
-	const [filters] = useAtom(dynamicQueryFiltersAtom);
-	const [, addFilter] = useAtom(addDynamicFilterAtom);
-
-	const { dateRange } = useDateFilters();
-	const { data: websiteData, isLoading, isError } = useWebsite(websiteId);
-
-	if (isError || !(isLoading || websiteData)) {
-		return (
-			<div className="select-none py-8">
-				<EmptyState
-					action={
-						<Link href="/websites">
-							<Button size="sm">Back to Websites</Button>
-						</Link>
-					}
-					description="The website you are looking for does not exist or you do not have access."
-					icon={
-						<WarningIcon
-							aria-hidden="true"
-							className="size-12"
-							weight="duotone"
-						/>
-					}
-					title="Website not found"
-				/>
-			</div>
-		);
-	}
-
-	const tabProps: FullTabProps = {
-		websiteId,
-		dateRange,
-		websiteData,
-		isRefreshing,
-		setIsRefreshing,
-		filters,
-		addFilter,
-	};
+export default async function WebsiteDetailsPage({
+	params,
+}: WebsiteDetailsPageProps) {
+	const { id } = await params;
 
 	return (
-		<div className="p-4">
-			<WebsiteOverviewTab {...tabProps} />
-		</div>
+		<HydratedPage
+			prefetch={(queryClient) =>
+				queryClient.prefetchQuery(
+					orpcServer.websites.getById.queryOptions({ input: { id } })
+				)
+			}
+		>
+			<WebsiteOverviewContent websiteId={id} />
+		</HydratedPage>
 	);
 }
