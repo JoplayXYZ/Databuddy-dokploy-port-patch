@@ -225,9 +225,9 @@ interface AutoTopupEntry {
 interface UsageAlertEntry {
 	enabled: boolean;
 	featureId: string;
+	name?: string;
 	threshold: number;
 	thresholdType: "usage_percentage";
-	name?: string;
 }
 
 interface SpendLimitEntry {

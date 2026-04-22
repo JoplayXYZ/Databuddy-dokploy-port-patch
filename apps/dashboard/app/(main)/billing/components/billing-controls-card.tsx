@@ -217,7 +217,9 @@ export function BillingControlsCard() {
 }
 
 type FormShape = Record<string, number>;
-type FormLimits<T extends FormShape> = { [K in keyof T]: readonly [number, number] };
+type FormLimits<T extends FormShape> = {
+	[K in keyof T]: readonly [number, number];
+};
 
 interface BillingRowProps<TForm extends FormShape> {
 	actions: { save: string; turnOff: string; turnOn: string };
@@ -295,9 +297,7 @@ function BillingRow<TForm extends FormShape>({
 					onSaved();
 				},
 				onError: (error) => {
-					toast.error(
-						error instanceof Error ? error.message : messages.error
-					);
+					toast.error(error instanceof Error ? error.message : messages.error);
 				},
 			}
 		);
@@ -376,7 +376,7 @@ function Expand({
 			{open && (
 				<motion.div
 					animate={{ height: "auto", opacity: 1 }}
-					className="overflow-x-visible overflow-y-clip"
+					className="overflow-y-clip overflow-x-visible"
 					exit={{ height: 0, opacity: 0 }}
 					initial={{ height: 0, opacity: 0 }}
 					transition={{ duration, ease: EXPAND_EASE }}
@@ -452,16 +452,16 @@ function RefillSummary({ quantity }: { quantity: number }) {
 	);
 }
 
-function stripEnabled<T extends FormShape>(
-	v: { enabled: boolean } & T
-): T {
+function stripEnabled<T extends FormShape>(v: { enabled: boolean } & T): T {
 	const { enabled: _e, ...rest } = v;
 	return rest as unknown as T;
 }
 
 function shallowEqualNumbers<T extends FormShape>(a: T, b: T) {
 	for (const k of Object.keys(a)) {
-		if (a[k] !== b[k]) return false;
+		if (a[k] !== b[k]) {
+			return false;
+		}
 	}
 	return true;
 }
@@ -469,7 +469,9 @@ function shallowEqualNumbers<T extends FormShape>(a: T, b: T) {
 function withinLimits<T extends FormShape>(form: T, limits: FormLimits<T>) {
 	for (const k of Object.keys(limits) as (keyof T)[]) {
 		const [min, max] = limits[k];
-		if (form[k] < min || form[k] > max) return false;
+		if (form[k] < min || form[k] > max) {
+			return false;
+		}
 	}
 	return true;
 }
