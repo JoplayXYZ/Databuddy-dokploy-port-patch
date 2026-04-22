@@ -1,7 +1,7 @@
 "use client";
 
 import { ArrowClockwiseIcon } from "@phosphor-icons/react/dist/ssr/ArrowClockwise";
-import { SparkleIcon } from "@phosphor-icons/react/dist/ssr/Sparkle";
+import { LightbulbIcon } from "@phosphor-icons/react/dist/ssr/Lightbulb";
 import { useAtomValue } from "jotai";
 import { Card } from "@/components/ds/card";
 import { Skeleton } from "@/components/ds/skeleton";
@@ -19,7 +19,7 @@ export function CockpitNarrative() {
 		<Card>
 			<Card.Header className="flex-row items-center justify-between gap-3">
 				<div className="flex items-center gap-2">
-					<SparkleIcon
+					<LightbulbIcon
 						aria-hidden
 						className="size-4 text-primary"
 						weight="duotone"

@@ -5,7 +5,7 @@ import { CaretDownIcon } from "@phosphor-icons/react/dist/ssr/CaretDown";
 import { ChartLineIcon } from "@phosphor-icons/react/dist/ssr/ChartLine";
 import { CursorIcon } from "@phosphor-icons/react/dist/ssr/Cursor";
 import { GlobeIcon } from "@phosphor-icons/react/dist/ssr/Globe";
-import { SparkleIcon } from "@phosphor-icons/react/dist/ssr/Sparkle";
+import { LightbulbIcon } from "@phosphor-icons/react/dist/ssr/Lightbulb";
 import { TimerIcon } from "@phosphor-icons/react/dist/ssr/Timer";
 import { TrashIcon } from "@phosphor-icons/react/dist/ssr/Trash";
 import { UsersIcon } from "@phosphor-icons/react/dist/ssr/Users";
@@ -332,7 +332,7 @@ export function InsightsPageContent() {
 				<PageHeader
 					count={isLoading ? undefined : insights.length}
 					description="Understand your business at a glance"
-					icon={<SparkleIcon weight="duotone" />}
+					icon={<LightbulbIcon weight="duotone" />}
 					right={
 						<div className="flex items-center gap-2">
 							<FocusSitePicker

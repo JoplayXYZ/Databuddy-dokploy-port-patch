@@ -20,7 +20,7 @@ import {
 } from "@databuddy/shared/billing/topup-math";
 import {
 	CaretDownIcon,
-	SparkleIcon,
+	CoinsIcon,
 	TrendDownIcon,
 } from "@phosphor-icons/react/dist/ssr";
 import { useCustomer } from "autumn-js/react";
@@ -82,7 +82,7 @@ export function TopupCard() {
 		<Card className="scroll-mt-6" id="topup">
 			<Card.Header>
 				<Card.Title className="flex items-center gap-2">
-					<SparkleIcon className="text-primary" size={14} weight="duotone" />
+					<CoinsIcon className="text-primary" size={14} weight="duotone" />
 					Top up credits
 				</Card.Title>
 				<Card.Description>

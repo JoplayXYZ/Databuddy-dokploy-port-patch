@@ -14,7 +14,7 @@ import { ArrowsDownUpIcon } from "@phosphor-icons/react/dist/ssr/ArrowsDownUp";
 import { CaretDownIcon } from "@phosphor-icons/react/dist/ssr/CaretDown";
 import { CheckCircleIcon } from "@phosphor-icons/react/dist/ssr/CheckCircle";
 import { FunnelIcon } from "@phosphor-icons/react/dist/ssr/Funnel";
-import { SparkleIcon } from "@phosphor-icons/react/dist/ssr/Sparkle";
+import { LightbulbIcon } from "@phosphor-icons/react/dist/ssr/Lightbulb";
 import { WarningCircleIcon } from "@phosphor-icons/react/dist/ssr/WarningCircle";
 import { XIcon } from "@phosphor-icons/react/dist/ssr/X";
 import {
@@ -204,7 +204,7 @@ export function CockpitSignals(): ReactElement {
 		<Card aria-label="Signals">
 			<Card.Header className="flex-row items-center justify-between gap-3">
 				<div className="flex items-center gap-2">
-					<SparkleIcon
+					<LightbulbIcon
 						aria-hidden
 						className="size-4 text-primary"
 						weight="duotone"
