@@ -5,11 +5,6 @@ import type { RouterClient } from "@orpc/server";
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
 import { isAbortError } from "@/lib/is-abort-error";
 
-declare global {
-	// eslint-disable-next-line no-var
-	var $client: RouterClient<AppRouter> | undefined;
-}
-
 const link = new RPCLink({
 	url: `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/rpc`,
 	fetch: (url, options) =>
@@ -35,8 +30,7 @@ const link = new RPCLink({
 	],
 });
 
-const client: RouterClient<AppRouter> =
-	globalThis.$client ?? createORPCClient(link);
+const client: RouterClient<AppRouter> = createORPCClient(link);
 
 const FIVE_MINUTES = 5 * 60 * 1000;
 
