@@ -8,11 +8,13 @@ import {
 	websites,
 } from "@databuddy/db/schema";
 import { cacheable, getRedisCache } from "@databuddy/redis";
-import { getRateLimitHeaders, rateLimit } from "@databuddy/redis/rate-limit";
+import { getRateLimitHeaders, ratelimit } from "@databuddy/redis/rate-limit";
 import { generateText, Output, stepCountIs, ToolLoopAgent } from "ai";
 import dayjs from "dayjs";
 import { Elysia, t } from "elysia";
 import { useLogger } from "evlog/elysia";
+import type { AppContext } from "../ai/config/context";
+import { models } from "../ai/config/models";
 import {
 	fetchInsightDedupeKeyToIdMap,
 	insightDedupeKey,
@@ -27,13 +29,11 @@ import type {
 	InsightMetricRow,
 	WeekOverWeekPeriod,
 } from "../ai/insights/types";
-import type { AppContext } from "../ai/config/context";
-import { models } from "../ai/config/models";
 import type { ParsedInsight } from "../ai/schemas/smart-insights-output";
 import { insightsOutputSchema } from "../ai/schemas/smart-insights-output";
 import { createInsightsAgentTools } from "../ai/tools/insights-agent-tools";
-import { storeAnalyticsSummary } from "../lib/supermemory";
 import { getAILogger } from "../lib/ai-logger";
+import { storeAnalyticsSummary } from "../lib/supermemory";
 import { captureError, mergeWideEvent } from "../lib/tracing";
 
 const CACHE_TTL = 900;
@@ -974,7 +974,7 @@ export const insights = new Elysia({ prefix: "/v1/insights" })
 				return { success: false, error: "Access denied to this organization" };
 			}
 
-			const rl = await rateLimit(
+			const rl = await ratelimit(
 				`insights:narrative:${organizationId}:${userId}`,
 				NARRATIVE_RATE_LIMIT,
 				NARRATIVE_RATE_WINDOW_SECS

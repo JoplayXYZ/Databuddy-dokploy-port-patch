@@ -15,7 +15,7 @@ import {
 	VerificationEmail,
 } from "@databuddy/email";
 import { SlackProvider } from "@databuddy/notifications";
-import { getRedisCache, rateLimit } from "@databuddy/redis";
+import { getRedisCache, ratelimit } from "@databuddy/redis";
 import { createId } from "@databuddy/shared/utils/ids";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { betterAuth } from "better-auth/minimal";
@@ -270,7 +270,7 @@ export const auth = betterAuth({
 		autoSignIn: false,
 		requireEmailVerification: process.env.NODE_ENV === "production",
 		sendResetPassword: async ({ user, url }: { user: any; url: string }) => {
-			const { success } = await rateLimit(`reset:${user.email}`, 3, 3600);
+			const { success } = await ratelimit(`reset:${user.email}`, 3, 3600);
 			if (!success) {
 				log.warn({
 					service: "auth",
@@ -301,7 +301,7 @@ export const auth = betterAuth({
 			user: any;
 			url: string;
 		}) => {
-			const { success } = await rateLimit(`verify:${user.email}`, 3, 900);
+			const { success } = await ratelimit(`verify:${user.email}`, 3, 900);
 			if (!success) {
 				log.warn({
 					service: "auth",
@@ -338,7 +338,7 @@ export const auth = betterAuth({
 		}),
 		emailOTP({
 			async sendVerificationOTP({ email, otp, type }) {
-				const { success } = await rateLimit(`otp:${email}`, 3, 900);
+				const { success } = await ratelimit(`otp:${email}`, 3, 900);
 				if (!success) {
 					log.warn({
 						service: "auth",
@@ -376,7 +376,7 @@ export const auth = betterAuth({
 		}),
 		magicLink({
 			sendMagicLink: async ({ email, url }) => {
-				const { success } = await rateLimit(`magic:${email}`, 3, 900);
+				const { success } = await ratelimit(`magic:${email}`, 3, 900);
 				if (!success) {
 					log.warn({
 						service: "auth",
@@ -421,7 +421,7 @@ export const auth = betterAuth({
 				organization,
 				invitation,
 			}) => {
-				const { success } = await rateLimit(
+				const { success } = await ratelimit(
 					`invite:${organization.id}`,
 					5,
 					3600
