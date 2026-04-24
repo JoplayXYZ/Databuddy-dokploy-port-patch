@@ -1,12 +1,12 @@
 import {
-	Globe,
-	HelpCircle,
-	Laptop,
-	Monitor,
-	Smartphone,
-	Tablet,
-	Tv,
-} from "lucide-react";
+	DeviceMobileIcon,
+	DeviceTabletIcon,
+	DesktopIcon,
+	GlobeIcon,
+	LaptopIcon,
+	QuestionIcon,
+	TelevisionIcon,
+} from "@phosphor-icons/react/dist/ssr";
 import Image from "next/image";
 import type React from "react";
 import { BrowserIcon, OSIcon } from "@/components/icon";
@@ -52,7 +52,7 @@ export const getDeviceTypeIcon = (
 
 	if (!deviceType) {
 		return (
-			<HelpCircle className={`${sizeClasses[size]} text-muted-foreground`} />
+			<QuestionIcon className={`${sizeClasses[size]} text-muted-foreground`} />
 		);
 	}
 
@@ -61,29 +61,41 @@ export const getDeviceTypeIcon = (
 
 	if (typeLower.includes("mobile") || typeLower.includes("phone")) {
 		return (
-			<Smartphone className={`${className} text-blue-600 dark:text-blue-400`} />
+			<DeviceMobileIcon
+				className={`${className} text-blue-600 dark:text-blue-400`}
+			/>
 		);
 	}
 	if (typeLower.includes("tablet")) {
 		return (
-			<Tablet className={`${className} text-purple-600 dark:text-purple-400`} />
+			<DeviceTabletIcon
+				className={`${className} text-purple-600 dark:text-purple-400`}
+			/>
 		);
 	}
 	if (typeLower.includes("desktop")) {
 		return (
-			<Monitor className={`${className} text-green-600 dark:text-green-400`} />
+			<DesktopIcon
+				className={`${className} text-green-600 dark:text-green-400`}
+			/>
 		);
 	}
 	if (typeLower.includes("laptop")) {
 		return (
-			<Laptop className={`${className} text-amber-600 dark:text-amber-400`} />
+			<LaptopIcon
+				className={`${className} text-amber-600 dark:text-amber-400`}
+			/>
 		);
 	}
 	if (typeLower.includes("tv")) {
-		return <Tv className={`${className} text-red-600 dark:text-red-400`} />;
+		return (
+			<TelevisionIcon
+				className={`${className} text-red-600 dark:text-red-400`}
+			/>
+		);
 	}
 
-	return <HelpCircle className={`${className} text-muted-foreground`} />;
+	return <QuestionIcon className={`${className} text-muted-foreground`} />;
 };
 
 export const processDeviceData = (
@@ -193,7 +205,7 @@ export const TechnologyIcon = ({
 		);
 	}
 
-	return <Globe className="size-4 text-muted-foreground" />;
+	return <GlobeIcon className="size-4 text-muted-foreground" />;
 };
 
 export { PercentageBadge } from "@/components/ds/badge";

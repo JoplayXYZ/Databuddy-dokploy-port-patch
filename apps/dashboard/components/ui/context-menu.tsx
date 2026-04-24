@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckIcon, ChevronRightIcon, CircleIcon } from "lucide-react";
+import { CaretRightIcon, CheckIcon, CircleIcon } from "@phosphor-icons/react/dist/ssr";
 import { ContextMenu as ContextMenuPrimitive } from "radix-ui";
 import type * as React from "react";
 
@@ -72,7 +72,7 @@ function ContextMenuSubTrigger({
 			{...props}
 		>
 			{children}
-			<ChevronRightIcon className="ml-auto" />
+			<CaretRightIcon className="ml-auto" />
 		</ContextMenuPrimitive.SubTrigger>
 	);
 }
