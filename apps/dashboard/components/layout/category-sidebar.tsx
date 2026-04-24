@@ -1,15 +1,15 @@
 "use client";
 
-import { authClient } from "@databuddy/auth/client";
-import { InfoIcon, MagnifyingGlassIcon } from "@phosphor-icons/react/dist/ssr";
-import dynamic from "next/dynamic";
-import Link from "next/link";
-import { useEffect, useState } from "react";
 import { Button } from "@/components/ds/button";
 import { Tooltip } from "@/components/ds/tooltip";
 import { Branding } from "@/components/layout/logo";
 import { useCommandSearchOpenAction } from "@/components/ui/command-search";
 import { cn } from "@/lib/utils";
+import { authClient } from "@databuddy/auth/client";
+import { InfoIcon, MagnifyingGlassIcon } from "@phosphor-icons/react/dist/ssr";
+import dynamic from "next/dynamic";
+import Link from "next/link";
+import { useEffect, useState } from "react";
 import { PendingInvitationsButton } from "./pending-invitations-button";
 import { ProfileButtonClient } from "./profile-button-client";
 import { useSidebarNavigation } from "./sidebar-navigation-provider";
