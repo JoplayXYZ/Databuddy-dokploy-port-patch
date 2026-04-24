@@ -5,7 +5,6 @@ import {
 	KeyIcon,
 	MagnifyingGlassIcon,
 	PlusIcon,
-	TerminalWindowIcon,
 } from "@phosphor-icons/react/dist/ssr";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
@@ -122,9 +121,6 @@ export function ApiKeysSection({
 		});
 	}, [items, query, statusFilter, typeFilter]);
 
-	const hasAnyUsage = items.some((k) => k.lastUsedAt);
-	const showGettingStarted = !(isEmpty || hasAnyUsage);
-
 	const hasActiveFilters =
 		query.trim() !== "" || statusFilter !== "all" || typeFilter !== "all";
 
@@ -201,29 +197,6 @@ export function ApiKeysSection({
 							</DropdownMenu.RadioGroup>
 						</DropdownMenu.Content>
 					</DropdownMenu>
-				</div>
-			)}
-
-			{showGettingStarted && (
-				<div className="mx-5 mb-3 flex items-start gap-3 rounded-md border border-primary/20 bg-primary/5 p-3">
-					<div className="flex size-7 shrink-0 items-center justify-center rounded-md bg-primary/10">
-						<TerminalWindowIcon
-							className="text-primary"
-							size={14}
-							weight="duotone"
-						/>
-					</div>
-					<div className="min-w-0 flex-1">
-						<Text variant="label">Try your first request</Text>
-						<Text className="mt-0.5" tone="muted" variant="caption">
-							Keys appear unused until a request is made. Send one to see
-							last-used timestamps populate below.
-						</Text>
-						<div className="mt-2 rounded bg-background/80 px-2 py-1.5 font-mono text-[11px] text-foreground">
-							curl -H "x-api-key: YOUR_KEY"
-							https://api.databuddy.cc/v1/query/websites
-						</div>
-					</div>
 				</div>
 			)}
 
