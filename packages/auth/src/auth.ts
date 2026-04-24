@@ -118,8 +118,6 @@ export const auth = betterAuth({
 				const value = await getRedisCache().get(key);
 				return value ? JSON.parse(value) : null;
 			},
-			// TTL is 2x the longest window so counters survive the full window
-			// without lingering indefinitely.
 			set: async (key, value) => {
 				await getRedisCache().set(key, JSON.stringify(value), "EX", 120);
 			},
