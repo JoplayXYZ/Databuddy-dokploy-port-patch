@@ -32,12 +32,14 @@ import { Resend } from "resend";
 import { ac, admin, member, owner, viewer } from "./permissions";
 
 function generateOrgSlug(name: string): string {
-	return name
+	const base = name
 		.toLowerCase()
 		.replace(/[^a-z0-9\s-]/g, "")
 		.replace(/\s+/g, "-")
 		.replace(/-+/g, "-")
 		.slice(0, 48);
+	const suffix = createId().slice(0, 6);
+	return `${base}-${suffix}`;
 }
 
 function getOrgNameFromUser(userName: string, email: string): string {
@@ -147,22 +149,33 @@ export const auth = betterAuth({
 						createdUser.email
 					);
 
-					await db.transaction(async (tx) => {
-						await tx.insert(organizationTable).values({
-							id: orgId,
-							name: orgName,
-							slug: generateOrgSlug(orgName),
-							createdAt: new Date(),
-						});
+					try {
+						await db.transaction(async (tx) => {
+							await tx.insert(organizationTable).values({
+								id: orgId,
+								name: orgName,
+								slug: generateOrgSlug(orgName),
+								createdAt: new Date(),
+							});
 
-						await tx.insert(memberTable).values({
-							id: createId(),
-							organizationId: orgId,
-							userId: createdUser.id,
-							role: "owner",
-							createdAt: new Date(),
+							await tx.insert(memberTable).values({
+								id: createId(),
+								organizationId: orgId,
+								userId: createdUser.id,
+								role: "owner",
+								createdAt: new Date(),
+							});
 						});
-					});
+					} catch (error) {
+						log.error({
+							service: "auth",
+							auth_hook: "user.create.after",
+							auth_user_id: createdUser.id,
+							auth_org_id: orgId,
+							error: error instanceof Error ? error.message : String(error),
+						});
+						return;
+					}
 
 					notifySignUpSlackAction({
 						userId: createdUser.id,
@@ -195,10 +208,12 @@ export const auth = betterAuth({
 							};
 						}
 					} catch (error) {
-						console.error(
-							"Failed to set active organization for session:",
-							error
-						);
+						log.error({
+							service: "auth",
+							auth_hook: "session.create.before",
+							auth_user_id: sessionData.userId,
+							error: error instanceof Error ? error.message : String(error),
+						});
 					}
 
 					return { data: sessionData };
