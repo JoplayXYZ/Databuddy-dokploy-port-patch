@@ -329,13 +329,44 @@ export function getDatabuddyDiagnostics(): DiagnosticItem[] {
 	const flags = getDatabuddyFlagsSnapshot();
 	const items: DiagnosticItem[] = [];
 
+	const scriptEl = isBrowser()
+		? document.querySelector<HTMLScriptElement>(
+				"script[data-databuddy-injected]"
+			)
+		: null;
+	const scriptDataClientId = scriptEl?.getAttribute("data-client-id") ?? null;
+
+	items.push({
+		id: "script_injected",
+		label: "Script tag injected",
+		status: scriptEl ? "ok" : "fail",
+		hint: scriptEl
+			? undefined
+			: "No <script data-databuddy-injected> in the DOM. The <Databuddy /> wrapper either never mounted, returned early because clientId could not be resolved, or dropped its props before reaching createScript.",
+	});
+
+	if (scriptEl) {
+		items.push({
+			id: "script_has_client_id",
+			label: "Script has data-client-id",
+			status: scriptDataClientId ? "ok" : "fail",
+			hint: scriptDataClientId
+				? undefined
+				: "Script tag is in the DOM but data-client-id is missing. The wrapper component is not forwarding the clientId prop — check the wrapper's props declaration (e.g. Vue components must declare runtime props, not just TypeScript types).",
+		});
+	}
+
 	items.push({
 		id: "tracker",
 		label: "Tracker loaded",
 		status: snapshot.hasTracker ? "ok" : "fail",
 		hint: snapshot.hasTracker
 			? undefined
-			: "window.databuddy is not defined. Did the SDK script load?",
+			: scriptEl
+				? scriptDataClientId
+					? "Script tag is present with a client ID, but window.databuddy is undefined. The bundle failed to boot — check the Network tab for the script response and the Console for errors."
+					: "Script tag is present but window.databuddy is undefined. The bundle can't boot without data-client-id."
+				: "window.databuddy is not defined and no script tag was injected. Fix 'Script tag injected' above first.",
 	});
 
 	items.push({
