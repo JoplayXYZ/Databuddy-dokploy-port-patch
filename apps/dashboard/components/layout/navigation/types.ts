@@ -1,5 +1,10 @@
 import type { GatedFeatureId } from "@databuddy/shared/types/features";
-import type { Icon } from "@phosphor-icons/react";
+import type React from "react";
+
+export type NavIcon = React.ComponentType<{
+	className?: string;
+	size?: number | string;
+}>;
 
 export interface NavigationItem {
 	alpha?: boolean;
@@ -10,38 +15,32 @@ export interface NavigationItem {
 	disabled?: boolean;
 	domain?: string;
 	external?: boolean;
-	/** Feature flag key - if set, item will only show when the flag is enabled */
 	flag?: string;
-	/** Feature gate - if set, item will show locked state when feature is not enabled */
 	gatedFeature?: GatedFeatureId;
 	hideFromDemo?: boolean;
 	highlight?: boolean;
 	href: string;
-	icon: Icon;
+	icon: NavIcon;
 	name: string;
 	production?: boolean;
 	rootLevel?: boolean;
 	showOnlyOnDemo?: boolean;
-	/** Custom tag text displayed in the same style as ALPHA */
 	tag?: string;
 }
 
 export interface NavigationSection {
-	/** Feature flag key - if set, section will only show when the flag is enabled */
 	flag?: string;
-	icon: Icon;
+	icon: NavIcon;
 	items: NavigationItem[];
 	title: string;
 }
 
-export type NavigationEntry = NavigationSection | NavigationItem;
-
-export interface Category {
-	/** Feature flag key - if set, category will only show when the flag is enabled */
+export interface NavigationGroup {
+	back?: { href: string; label: string };
 	flag?: string;
-	hideFromDemo?: boolean;
-	icon: Icon;
-	id: string;
-	name: string;
-	production?: boolean;
+	items: NavigationItem[];
+	label: string;
+	pinToBottom?: boolean;
 }
+
+export type NavigationEntry = NavigationSection | NavigationItem;
