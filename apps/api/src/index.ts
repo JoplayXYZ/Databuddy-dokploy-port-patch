@@ -1,5 +1,6 @@
 import "./polyfills/compression";
 import { auth } from "@databuddy/auth";
+import { setPgTraceFn } from "@databuddy/db";
 import { setChRecordFn } from "@databuddy/db/clickhouse";
 import { setCacheTraceFn } from "@databuddy/redis";
 import {
@@ -8,6 +9,7 @@ import {
 	createRPCContext,
 	getBillingCustomerId,
 	recordORPCError,
+	setRpcRecordFn,
 } from "@databuddy/rpc";
 import cors from "@elysiajs/cors";
 import { OpenAPIHandler } from "@orpc/openapi/fetch";
@@ -19,7 +21,7 @@ import { autumnHandler } from "autumn-js/fetch";
 import { Elysia } from "elysia";
 import { initLogger, log, parseError } from "evlog";
 import { evlog, useLogger } from "evlog/elysia";
-import { applyAuthWideEvent } from "@/lib/auth-wide-event";
+import { applyAuthWideEvent, getResolvedAuth } from "@/lib/auth-wide-event";
 import { AUTUMN_API_PREFIX, withAutumnApiPath } from "@/lib/autumn-mount";
 import {
 	apiLoggerDrain,
@@ -46,6 +48,28 @@ initLogger({
 });
 
 setChRecordFn(record);
+setRpcRecordFn(record);
+const pgAcc = new WeakMap<
+	object,
+	[count: number, totalMs: number, maxMs: number]
+>();
+setPgTraceFn((ms) => {
+	try {
+		const log = useLogger();
+		const prev = pgAcc.get(log) ?? [0, 0, 0];
+		const next: [number, number, number] = [
+			prev[0] + 1,
+			prev[1] + ms,
+			Math.max(prev[2], ms),
+		];
+		pgAcc.set(log, next);
+		log.set({
+			"pg.query_count": next[0],
+			"pg.total_ms": Math.round(next[1] * 100) / 100,
+			"pg.max_ms": next[2],
+		});
+	} catch {}
+});
 setCacheTraceFn((fields) => {
 	try {
 		useLogger().set(fields);
@@ -92,7 +116,16 @@ async function handleRpcRoute(
 ) {
 	const { request } = ctx;
 	try {
-		const rpcContext = await createRPCContext({ headers: request.headers });
+		const resolved = getResolvedAuth(request.headers);
+		const preResolved = resolved
+			? {
+					session: resolved.session,
+					apiKey: resolved.apiKeyResult?.key ?? null,
+				}
+			: undefined;
+		const rpcContext = await record("rpc.context", () =>
+			createRPCContext({ headers: request.headers }, preResolved)
+		);
 		const run = async () => {
 			const result = await handle(request, rpcContext);
 			return result.response ?? new Response("Not Found", { status: 404 });

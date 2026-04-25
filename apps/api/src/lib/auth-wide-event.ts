@@ -1,21 +1,34 @@
-import { resolveApiKey } from "@databuddy/api-keys/resolve";
+import {
+	type ResolveApiKeyResult,
+	isApiKeyPresent,
+	resolveApiKey,
+} from "@databuddy/api-keys/resolve";
 import { auth } from "@databuddy/auth";
-import { isApiKeyPresent } from "./api-key";
-import { mergeWideEvent } from "./tracing";
+import { mergeWideEvent, record } from "./tracing";
 
-/**
- * Resolves session + API key from request headers and merges identity
- * fields into the active evlog wide event. Runs once globally in
- * onBeforeHandle so every request carries tenant context.
- */
+export interface ResolvedAuth {
+	apiKeyResult: ResolveApiKeyResult | null;
+	session: Awaited<ReturnType<typeof auth.api.getSession>> | null;
+}
+
+const authCache = new WeakMap<Headers, ResolvedAuth>();
+
+export function getResolvedAuth(headers: Headers): ResolvedAuth | undefined {
+	return authCache.get(headers);
+}
+
 export async function applyAuthWideEvent(headers: Headers): Promise<void> {
 	const fields: Record<string, string | number | boolean> = {};
 
 	const hasKey = isApiKeyPresent(headers);
-	const [session, apiKeyResult] = await Promise.all([
-		auth.api.getSession({ headers }).catch(() => null),
-		hasKey ? resolveApiKey(headers) : null,
-	]);
+	const [session, apiKeyResult] = await record("auth", () =>
+		Promise.all([
+			auth.api.getSession({ headers }).catch(() => null),
+			hasKey ? resolveApiKey(headers) : null,
+		])
+	);
+
+	authCache.set(headers, { session, apiKeyResult });
 
 	const user = session?.user as
 		| { id: string; email?: string; name?: string; role?: string }
@@ -25,18 +38,9 @@ export async function applyAuthWideEvent(headers: Headers): Promise<void> {
 	)?.activeOrganizationId;
 
 	const apiKey = apiKeyResult?.key ?? null;
-	const hasUser = Boolean(user);
-	const hasApiKey = Boolean(apiKey);
 
-	if (hasUser && hasApiKey) {
-		fields.auth_method = "both";
-	} else if (hasApiKey) {
-		fields.auth_method = "api_key";
-	} else if (hasUser) {
-		fields.auth_method = "session";
-	} else {
-		fields.auth_method = "none";
-	}
+	fields.auth_method =
+		user && apiKey ? "both" : apiKey ? "api_key" : user ? "session" : "none";
 
 	if (user) {
 		fields.user_id = user.id;

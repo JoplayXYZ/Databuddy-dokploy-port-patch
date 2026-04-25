@@ -1,9 +1,15 @@
 import { log } from "evlog";
-import { useLogger as getRequestLogger } from "evlog/elysia";
 
 const base = { service: "rpc" as const };
 
 type Fields = Record<string, unknown>;
+
+type RecordFn = <T>(name: string, fn: () => Promise<T> | T) => Promise<T>;
+let _recordFn: RecordFn | null = null;
+
+export function setRpcRecordFn(fn: RecordFn) {
+	_recordFn = fn;
+}
 
 function emit(
 	level: "error" | "info" | "warn",
@@ -19,9 +25,6 @@ function emit(
 	}
 }
 
-/**
- * Pino-compatible (obj, msg) or (msg) logging via evlog global `log`.
- */
 export const logger = {
 	error: (fieldsOrMessage: Fields | string, message?: string) =>
 		emit("error", fieldsOrMessage, message),
@@ -31,17 +34,9 @@ export const logger = {
 		emit("warn", fieldsOrMessage, message),
 };
 
-export async function record<T>(
+export function record<T>(
 	name: string,
 	fn: () => Promise<T> | T
-): Promise<T> {
-	const start = performance.now();
-	try {
-		return await fn();
-	} finally {
-		const ms = Math.round((performance.now() - start) * 100) / 100;
-		try {
-			getRequestLogger().set({ [`timing.${name}`]: ms });
-		} catch {}
-	}
+): Promise<T> | T {
+	return _recordFn ? _recordFn(name, fn) : fn();
 }
