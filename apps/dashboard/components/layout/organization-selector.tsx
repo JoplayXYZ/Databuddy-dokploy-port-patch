@@ -30,7 +30,7 @@ const getDicebearUrl = (seed: string | undefined) =>
 	`https://api.dicebear.com/9.x/glass/svg?seed=${encodeURIComponent(seed || "")}`;
 
 const MENU_ITEM_BASE_CLASSES =
-	"flex h-10 cursor-pointer items-center gap-3 rounded-none px-4 text-sm text-sidebar-foreground/70 data-highlighted:bg-sidebar-accent/60 data-highlighted:text-sidebar-accent-foreground";
+	"flex h-9 cursor-pointer items-center gap-2.5 px-4 text-sm text-sidebar-foreground/70 data-highlighted:bg-sidebar-accent/60 data-highlighted:text-sidebar-accent-foreground";
 const MENU_ITEM_ACTIVE_CLASSES =
 	"bg-sidebar-accent font-medium text-sidebar-accent-foreground";
 
@@ -75,18 +75,17 @@ function OrganizationSelectorTrigger({
 	return (
 		<button
 			className={cn(
-				"flex h-12 w-full items-center overflow-hidden px-3 py-3",
-				"transition-colors duration-(--duration-quick) ease-(--ease-smooth)",
+				"flex h-12 w-full items-center px-3",
 				"hover:bg-sidebar-accent/50",
-				isSettingActiveOrganization ? "cursor-not-allowed opacity-70" : "",
-				isOpen ? "bg-sidebar-accent/40" : "",
+				isSettingActiveOrganization && "cursor-not-allowed opacity-70",
+				isOpen && "bg-sidebar-accent/40",
 				className
 			)}
 			ref={ref}
 			type={type}
 			{...rest}
 		>
-			<div className="flex w-full min-w-0 items-center gap-2">
+			<div className="flex w-full min-w-0 items-center gap-2.5">
 				<Avatar
 					alt={activeOrganization?.name ?? "Workspace"}
 					className="size-7 shrink-0 rounded ring-1 ring-black/10 ring-inset"
@@ -94,24 +93,18 @@ function OrganizationSelectorTrigger({
 						activeOrganization?.logo || activeOrganization?.id
 					)}
 				/>
-				<div className="flex min-w-0 flex-1 flex-col gap-1 overflow-hidden">
-					<span className="min-w-0 truncate text-left font-semibold text-sidebar-accent-foreground text-sm">
-						{activeOrganization?.name ?? "Select workspace"}
-					</span>
-					<span className="truncate text-left text-sidebar-accent-foreground/70 text-xs">
-						{activeOrganization?.slug ?? "No workspace selected"}
-					</span>
-				</div>
+				<span className="min-w-0 flex-1 truncate text-left font-semibold text-sidebar-foreground text-sm">
+					{activeOrganization?.name ?? "Select workspace"}
+				</span>
 				{isSettingActiveOrganization ? (
 					<SpinnerGapIcon
 						aria-label="Switching workspace"
-						className="size-4 shrink-0 animate-spin text-sidebar-accent-foreground/60"
-						weight="duotone"
+						className="size-4 shrink-0 animate-spin text-sidebar-foreground/40"
 					/>
 				) : (
 					<CaretDownIcon
 						className={cn(
-							"size-4 shrink-0 text-sidebar-accent-foreground/60 transition-transform duration-(--duration-quick)",
+							"size-4 shrink-0 text-sidebar-foreground/40 transition-transform duration-(--duration-quick)",
 							isOpen ? "rotate-180" : ""
 						)}
 					/>
@@ -246,16 +239,11 @@ export function OrganizationSelector({
 											className="size-5 shrink-0 rounded ring-1 ring-black/10 ring-inset"
 											src={getDicebearUrl(org.logo || org.id)}
 										/>
-										<div className="flex min-w-0 flex-1 flex-col items-start overflow-hidden text-left">
-											<span className="w-full truncate text-left font-medium text-sm">
-												{org.name}
-											</span>
-											<span className="w-full truncate text-left text-sidebar-foreground/70 text-xs">
-												{org.slug}
-											</span>
-										</div>
+										<span className="min-w-0 flex-1 truncate text-left font-medium text-sm">
+											{org.name}
+										</span>
 										{activeOrganization?.id === org.id && (
-											<CheckIcon className="size-4 text-accent-foreground" />
+											<CheckIcon className="size-4 shrink-0 text-accent-foreground" />
 										)}
 									</DropdownMenu.Item>
 								))}
@@ -346,16 +334,11 @@ export function OrganizationSelector({
 										className="size-5 shrink-0 rounded ring-1 ring-black/10 ring-inset"
 										src={getDicebearUrl(org.logo || org.id)}
 									/>
-									<div className="flex min-w-0 flex-1 flex-col items-start overflow-hidden text-left">
-										<span className="w-full truncate text-left font-medium text-sm">
-											{org.name}
-										</span>
-										<span className="w-full truncate text-left text-sidebar-foreground/70 text-xs">
-											{org.slug}
-										</span>
-									</div>
+									<span className="min-w-0 flex-1 truncate text-left font-medium text-sm">
+										{org.name}
+									</span>
 									{activeOrganization?.id === org.id && (
-										<CheckIcon className="size-4 text-accent-foreground" />
+										<CheckIcon className="size-4 shrink-0 text-accent-foreground" />
 									)}
 								</DropdownMenu.Item>
 							))}
