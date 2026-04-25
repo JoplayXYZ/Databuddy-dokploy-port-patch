@@ -265,7 +265,7 @@ export function OrganizationSelector({
 							/>
 						)}
 					</DropdownMenu.Trigger>
-					<DropdownMenu.Content align="start" className="w-56" sideOffset={4}>
+					<DropdownMenu.Content align="start" className="min-w-60" sideOffset={4}>
 						{dropdownItems}
 					</DropdownMenu.Content>
 				</DropdownMenu>
