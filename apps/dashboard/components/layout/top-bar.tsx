@@ -13,7 +13,8 @@ import { Button } from "@/components/ds/button";
 import { useCommandSearchOpenAction } from "@/components/ui/command-search";
 import { PendingInvitationsButton } from "./pending-invitations-button";
 import { SidebarTrigger } from "./sidebar-layout";
-import { MagnifyingGlassIcon } from "@/components/icons/nucleo";
+import { MagnifyingGlassIcon, MsgContentIcon } from "@/components/icons/nucleo";
+import Link from "next/link";
 
 type SlotMap = Map<string, ReactNode>;
 type Listener = () => void;
@@ -155,6 +156,17 @@ export function TopBar() {
 						<kbd className="ml-2 rounded border bg-muted px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">
 							⌘K
 						</kbd>
+					</Button>
+					<Button
+						aria-label="Feedback"
+						asChild
+						className="text-muted-foreground"
+						size="sm"
+						variant="ghost"
+					>
+						<Link href="/feedback">
+							<MsgContentIcon className="size-4 shrink-0" />
+						</Link>
 					</Button>
 					{hasMounted && <PendingInvitationsButton />}
 				</div>
