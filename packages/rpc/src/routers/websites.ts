@@ -1,5 +1,6 @@
 import { db } from "@databuddy/db";
 import { chQuery } from "@databuddy/db/clickhouse";
+import { cacheable } from "@databuddy/redis";
 import {
 	DuplicateDomainError,
 	ValidationError,
@@ -87,7 +88,7 @@ const buildStatusMessage = (hasEvents: boolean, eventsError: string | null) => {
 	return "Tracking not set up. Please install the script tag.";
 };
 
-interface ChartDataPoint {
+interface ChartDataRow {
 	date: string;
 	hasAnyData: number;
 	value: number;
@@ -190,27 +191,26 @@ interface ActiveUsersRow {
 	websiteId: string;
 }
 
-const fetchActiveUsers = async (
+const _fetchActiveUsers = async (
 	websiteIds: string[]
 ): Promise<Record<string, number>> => {
 	if (!websiteIds.length) {
 		return {};
 	}
 
-	const query = `
-    SELECT
-      client_id AS websiteId,
-      uniq(anonymous_id) AS activeUsers
-    FROM analytics.events
-    WHERE
-      client_id IN {websiteIds:Array(String)}
-      AND event_name = 'screen_view'
-      AND session_id != ''
-      AND time >= now() - INTERVAL 5 MINUTE
-    GROUP BY client_id
-  `;
-
-	const results = await chQuery<ActiveUsersRow>(query, { websiteIds });
+	const results = await chQuery<ActiveUsersRow>(
+		`SELECT
+			client_id AS websiteId,
+			uniq(anonymous_id) AS activeUsers
+		FROM analytics.events
+		PREWHERE time >= now() - INTERVAL 5 MINUTE
+		WHERE
+			client_id IN {websiteIds:Array(String)}
+			AND event_name = 'screen_view'
+			AND session_id != ''
+		GROUP BY client_id`,
+		{ websiteIds }
+	);
 
 	const activeUsersMap: Record<string, number> = {};
 	for (const id of websiteIds) {
@@ -223,58 +223,49 @@ const fetchActiveUsers = async (
 	return activeUsersMap;
 };
 
-const fetchChartData = async (
+const fetchActiveUsers = cacheable(_fetchActiveUsers, {
+	expireInSec: 60,
+	prefix: "ch:active_users",
+});
+
+const _fetchChartData = async (
 	websiteIds: string[]
 ): Promise<Record<string, ProcessedMiniChartData>> => {
 	if (!websiteIds.length) {
 		return {};
 	}
 
-	const chartQuery = `
-    WITH
-      date_range AS (
-        SELECT arrayJoin(arrayMap(d -> toDate(today()) - d, range(7))) AS date
-      ),
-      aggregated_pageviews AS (
-        SELECT
-          client_id,
-          date,
-          sum(pageviews) AS pageviews
-        FROM analytics.daily_pageviews
-        WHERE client_id IN {websiteIds:Array(String)}
-          AND date >= (today() - 6)
-        GROUP BY client_id, date
-      ),
-      has_any_data AS (
-        SELECT client_id, 1 AS hasData
-        FROM analytics.daily_pageviews
-        WHERE client_id IN {websiteIds:Array(String)}
-          AND pageviews > 0
-        GROUP BY client_id
-      )
-    SELECT
-      all_websites.website_id AS websiteId,
-      toString(date_range.date) AS date,
-      COALESCE(aggregated_pageviews.pageviews, 0) AS value,
-      COALESCE(has_any_data.hasData, 0) AS hasAnyData
-    FROM
-      (SELECT arrayJoin({websiteIds:Array(String)}) AS website_id) AS all_websites
-    CROSS JOIN
-      date_range
-    LEFT JOIN
-      aggregated_pageviews ON all_websites.website_id = aggregated_pageviews.client_id AND date_range.date = aggregated_pageviews.date
-    LEFT JOIN
-      has_any_data ON all_websites.website_id = has_any_data.client_id
-    WHERE
-      date_range.date >= (today() - 6)
-    ORDER BY
-      websiteId,
-      date ASC
-  `;
-
-	const queryResults = await chQuery<ChartDataPoint>(chartQuery, {
-		websiteIds,
-	});
+	const queryResults = await chQuery<ChartDataRow>(
+		`WITH
+			date_range AS (
+				SELECT arrayJoin(arrayMap(d -> toDate(today()) - d, range(7))) AS date
+			),
+			aggregated AS (
+				SELECT
+					client_id,
+					date,
+					sum(pageviews) AS pageviews,
+					1 AS hasData
+				FROM analytics.daily_pageviews
+				WHERE client_id IN {websiteIds:Array(String)}
+					AND date >= (today() - 6)
+				GROUP BY client_id, date
+			)
+		SELECT
+			all_websites.website_id AS websiteId,
+			toString(date_range.date) AS date,
+			COALESCE(aggregated.pageviews, 0) AS value,
+			COALESCE(aggregated.hasData, 0) AS hasAnyData
+		FROM
+			(SELECT arrayJoin({websiteIds:Array(String)}) AS website_id) AS all_websites
+		CROSS JOIN date_range
+		LEFT JOIN aggregated
+			ON all_websites.website_id = aggregated.client_id
+			AND date_range.date = aggregated.date
+		WHERE date_range.date >= (today() - 6)
+		ORDER BY websiteId, date ASC`,
+		{ websiteIds }
+	);
 
 	const groupedData = websiteIds.reduce(
 		(acc, id) => {
@@ -304,18 +295,24 @@ const fetchChartData = async (
 	for (const websiteId of websiteIds) {
 		const { points, hasAnyData } = groupedData[websiteId];
 		const totalViews = points.reduce((sum, point) => sum + point.value, 0);
-		const trend = calculateTrend(points);
 
 		processedData[websiteId] = {
 			data: points,
 			totalViews,
 			hasAnyData,
-			trend,
+			trend: calculateTrend(points),
 		};
 	}
 
 	return processedData;
 };
+
+const fetchChartData = cacheable(_fetchChartData, {
+	expireInSec: 300,
+	prefix: "ch:chart_data",
+	staleWhileRevalidate: true,
+	staleTime: 60,
+});
 
 export const websitesRouter = {
 	list: protectedProcedure

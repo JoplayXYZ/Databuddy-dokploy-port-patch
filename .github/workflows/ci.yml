@@ -113,6 +113,8 @@ jobs:
           key: ${{ runner.os }}-turbo-${{ github.sha }}
           restore-keys: ${{ runner.os }}-turbo-
       - run: bun install --frozen-lockfile
+      - name: Push test schema
+        run: cd packages/db && bunx drizzle-kit push
       - name: Test
         env:
           NODE_ENV: test

@@ -147,6 +147,41 @@ Dashboard (Next.js) ←→ ORPC (rpc package) ←→ API (Elysia) → PostgreSQL
   - Only make a single snapshot commit for the whole worktree when the user explicitly asks to include everything as-is.
 - **PRs**: Open against `staging` branch (not `main`).
 
+## Integration Tests
+
+Test infra lives in `packages/test`. Integration tests live in `apps/api/src/integration/`.
+
+```bash
+# Run integration tests (requires Docker: postgres + redis)
+cd apps/api && bun test src/integration/
+
+# One-time setup for test DB
+cd packages/db && DATABASE_URL="postgres://databuddy:databuddy_dev_password@localhost:5432/databuddy_test" bunx drizzle-kit push
+```
+
+**Key helpers from `@databuddy/test`:**
+- `signUp()` — creates a real user via better-auth with session cookie
+- `addToOrganization(userId, orgId, role)` — inserts member row
+- `userContext(user, orgId)` / `apiKeyContext(orgId, scopes)` — builds RPC Context
+- `insertOrganization()` / `insertWebsite()` / `insertApiKey()` — DB factories
+- `expectCode(promise, "FORBIDDEN")` — asserts ORPCError code
+- `reset()` / `cleanup()` — truncate tables / close connections
+- `import "@databuddy/test/env"` — sets test env vars (must be first import)
+
+**Rules for integration tests:**
+- Always `import "@databuddy/test/env"` as the first line
+- Use `const iit = hasTestDb ? it : it.skip` for graceful skip when Docker is down
+- Use `userContext` / `apiKeyContext` / `expectCode` from the test package — don't redefine locally
+- Type API key objects against `Context["apiKey"]` to catch schema drift
+- `beforeEach(() => reset())` and `afterAll(() => cleanup())` in every file
+
+## Drift Prevention
+
+- **Type test objects against their source type.** Fake API keys must be typed as `Context["apiKey"]`, fake users as `User`, etc. If the schema adds a required field, the test must fail to compile — not silently pass with a partial object.
+- **Never hand-write dependency versions.** Use `bun add <pkg>` to add dependencies. Hand-written version ranges drift from lockfile reality and cause phantom resolution bugs.
+- **Shared test helpers over local copies.** `expectCode`, `userContext`, `apiKeyContext`, env setup — these live in `@databuddy/test`. If you're about to define a helper that already exists there, import it instead.
+- **Scope maps must match.** If `RESOURCE_SCOPE_OVERRIDES` or `LINKS_SCOPE_MAP` changes in `packages/api-keys/src/scopes.ts`, the integration tests in `links-access.test.ts` and `with-workspace.test.ts` must be updated to match. The link resource currently uses the default scope map (`read:data` for read, `manage:config` for write) — `LINKS_SCOPE_MAP` is only enforced by `withLinksAccess()` as a pre-check layer.
+
 ## AI Policy Note
 
 The project has a formal AI usage policy (`AI_POLICY.md`). For contributions: all AI usage must be disclosed, PRs must reference an accepted issue, and all AI-generated code must be fully human-verified. Maintainers are exempt and may use AI at their discretion.

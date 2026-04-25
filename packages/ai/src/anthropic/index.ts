@@ -7,7 +7,7 @@ import type {
 	RawMessageStreamEvent,
 } from "@anthropic-ai/sdk/resources/messages";
 import type { Stream } from "@anthropic-ai/sdk/streaming";
-import { v7 as uuidv7 } from "uuid";
+import { randomUUIDv7 } from "bun";
 
 import { formatMessages, formatResponse, formatStreamOutput } from "./messages";
 import type {
@@ -28,11 +28,6 @@ export type {
 	AnthropicTrackerOptions,
 	AnthropicTransport,
 } from "./types";
-
-/** Creates a trace ID using UUIDv7 */
-export function createTraceId(): string {
-	return uuidv7();
-}
 
 /** Default HTTP transport */
 export function httpTransport(
@@ -168,7 +163,7 @@ class DatabuddyMessages extends AnthropicOriginal.Messages {
 	): APIPromise<Message | Stream<RawMessageStreamEvent>> {
 		const { databuddy: opts, ...params } = body;
 		const startTime = Date.now();
-		const traceId = opts?.traceId ?? createTraceId();
+		const traceId = opts?.traceId ?? randomUUIDv7();
 		const isPrivate = opts?.privacyMode ?? this.db.privacyMode;
 		const shouldCost = opts?.computeCosts ?? this.db.computeCosts;
 		const onSuccess = opts?.onSuccess ?? this.db.onSuccess;
