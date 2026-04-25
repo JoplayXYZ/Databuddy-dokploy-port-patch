@@ -104,11 +104,7 @@ export function DangerZoneSection({
 					<div className="flex items-center justify-between gap-4">
 						<div className="flex items-start gap-3">
 							<div className="flex size-8 items-center justify-center rounded-md bg-destructive/10">
-								<WarningIcon
-									className="text-destructive"
-									size={14}
-									weight="fill"
-								/>
+								<WarningIcon className="size-4 shrink-0 text-destructive" />
 							</div>
 							<div>
 								<Text variant="label">
@@ -137,7 +133,7 @@ export function DangerZoneSection({
 								size="sm"
 								tone="danger"
 							>
-								<TrashIcon size={14} />
+								<TrashIcon className="size-4 shrink-0" />
 								Delete
 							</Button>
 						) : (

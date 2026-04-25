@@ -34,7 +34,6 @@ function WebsiteRow({ website }: { website: WebsiteRowData }) {
 					<GlobeIcon
 						className="absolute inset-0 m-auto text-muted-foreground"
 						size={20}
-						weight="duotone"
 					/>
 				}
 				size={32}
@@ -47,11 +46,7 @@ function WebsiteRow({ website }: { website: WebsiteRowData }) {
 					{website.domain}
 				</Text>
 			</div>
-			<CaretRightIcon
-				className="text-muted-foreground/40 transition-all group-hover:translate-x-0.5 group-hover:text-foreground"
-				size={14}
-				weight="bold"
-			/>
+			<CaretRightIcon className="size-4 shrink-0 text-muted-foreground/40 group-hover:translate-x-0.5 group-hover:text-foreground" />
 		</Link>
 	);
 }
@@ -109,7 +104,7 @@ export function WorkspaceWebsitesSection({
 					size="sm"
 					variant="secondary"
 				>
-					<PlusIcon size={14} />
+					<PlusIcon className="size-4 shrink-0" />
 					New Website
 				</Button>
 			</Card.Header>
@@ -125,12 +120,12 @@ export function WorkspaceWebsitesSection({
 									size="sm"
 									variant="secondary"
 								>
-									<PlusIcon size={14} />
+									<PlusIcon className="size-4 shrink-0" />
 									Add Website
 								</Button>
 							}
 							description="Add your first website to start tracking analytics."
-							icon={<GlobeIcon weight="duotone" />}
+							icon={<GlobeIcon />}
 							title="No websites yet"
 						/>
 					</div>

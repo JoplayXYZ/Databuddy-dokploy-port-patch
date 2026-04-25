@@ -5,10 +5,9 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ds/button";
 import { Card } from "@/components/ds/card";
-import { Divider } from "@/components/ds/divider";
 import { Field } from "@/components/ds/field";
 import { Input } from "@/components/ds/input";
-import { Text } from "@/components/ds/text";
+import { TopBar } from "@/components/layout/top-bar";
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
 import { type Organization, useOrganizations } from "@/hooks/use-organizations";
 import { ApiKeysSection } from "./api-keys-section";
@@ -78,8 +77,20 @@ export function GeneralSettings({
 
 	return (
 		<div className="flex h-full flex-col">
+			<TopBar.Title>
+				<h1 className="font-semibold text-sm">General</h1>
+			</TopBar.Title>
+			{hasChanges && (
+				<TopBar.Actions>
+					<Button loading={isSaving} onClick={handleSave} size="sm">
+						<FloppyDiskIcon className="size-4 shrink-0" />
+						{isSaving ? "Saving…" : "Save Changes"}
+					</Button>
+				</TopBar.Actions>
+			)}
+
 			<div className="flex-1 overflow-y-auto">
-				<div className="mx-auto max-w-2xl space-y-6 p-5">
+				<div className="mx-auto max-w-2xl space-y-5 p-5">
 					<Card>
 						<Card.Header>
 							<Card.Title>Avatar</Card.Title>
@@ -99,31 +110,31 @@ export function GeneralSettings({
 								Name, slug, and workspace identifier
 							</Card.Description>
 						</Card.Header>
-						<Card.Content className="space-y-4">
-							<div className="flex items-center justify-between gap-3">
-								<div className="min-w-0 flex-1 space-y-1">
-									<Text variant="label">Workspace ID</Text>
-									<Text mono tone="muted" variant="caption">
+						<Card.Content className="space-y-5">
+							<div className="flex items-center gap-3 rounded bg-secondary px-4 py-3">
+								<div className="min-w-0 flex-1">
+									<p className="font-semibold text-foreground text-xs">
+										Workspace ID
+									</p>
+									<p className="truncate font-mono text-muted-foreground text-xs">
 										{organization.id}
-									</Text>
+									</p>
 								</div>
 								<Button
 									onClick={() => copyOrgId(organization.id)}
 									size="sm"
-									variant={copiedOrgId ? "primary" : "secondary"}
+									variant={copiedOrgId ? "primary" : "ghost"}
 								>
 									{copiedOrgId ? (
-										<CheckIcon className="size-3.5" weight="bold" />
+										<CheckIcon className="size-4 shrink-0" />
 									) : (
-										<CopyIcon className="size-3.5" />
+										<CopyIcon className="size-4 shrink-0" />
 									)}
 									{copiedOrgId ? "Copied" : "Copy"}
 								</Button>
 							</div>
 
-							<Divider />
-
-							<div className="grid gap-4 sm:grid-cols-2">
+							<div className="grid gap-5 sm:grid-cols-2">
 								<Field>
 									<Field.Label>Name</Field.Label>
 									<Input
@@ -161,18 +172,6 @@ export function GeneralSettings({
 					<DangerZoneSection organization={organization} />
 				</div>
 			</div>
-
-			{hasChanges && (
-				<div className="angled-rectangle-gradient flex shrink-0 items-center justify-between border-t bg-muted px-5 py-3">
-					<Text tone="muted" variant="caption">
-						You have unsaved changes
-					</Text>
-					<Button loading={isSaving} onClick={handleSave} size="sm">
-						<FloppyDiskIcon className="size-3.5" />
-						{isSaving ? "Saving…" : "Save Changes"}
-					</Button>
-				</div>
-			)}
 		</div>
 	);
 }
