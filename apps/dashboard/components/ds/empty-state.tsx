@@ -1,7 +1,7 @@
-import type { IconProps } from "@phosphor-icons/react";
-import { cloneElement, type ReactElement, type ReactNode } from "react";
 import { Button } from "@/components/ds/button";
 import { cn } from "@/lib/utils";
+import type { IconProps } from "@phosphor-icons/react";
+import { cloneElement, type ReactElement, type ReactNode } from "react";
 
 export interface EmptyStateAction {
 	label: string;
@@ -53,7 +53,7 @@ export function EmptyState({
 					),
 					"aria-hidden": "true",
 					size: 24,
-					weight: "fill",
+					weight: "duotone",
 				})}
 			</div>
 		);
