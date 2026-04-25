@@ -84,7 +84,7 @@ export function SidebarPanel({
 	return (
 		<nav
 			className={cn(
-				"fixed inset-y-0 left-0 z-50 hidden flex-col border-sidebar-border/50 border-r bg-sidebar transition-[width] duration-150 ease-out md:flex",
+				"fixed inset-y-0 left-0 z-50 hidden flex-col border-r border-sidebar-border/50 bg-sidebar md:flex",
 				open ? "w-64" : "w-12",
 				className
 			)}
@@ -106,7 +106,7 @@ export function SidebarInset({
 	return (
 		<div
 			className={cn(
-				"relative flex min-h-0 flex-1 flex-col transition-[padding-left] duration-150 ease-out",
+				"relative flex min-h-0 flex-1 flex-col",
 				open ? "md:pl-64" : "md:pl-12",
 				className
 			)}
