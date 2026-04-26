@@ -31,7 +31,7 @@ export interface RawRecentCustomEvent {
 	anonymous_id: string;
 	event_name: string;
 	path: string;
-	properties: string;
+	properties: string | Record<string, unknown>;
 	session_id: string;
 	timestamp: string;
 }
@@ -43,6 +43,12 @@ export interface CustomEventsTrend {
 	unique_pages?: number;
 	unique_sessions?: number;
 	unique_users: number;
+}
+
+export interface CustomEventsTrendByEvent {
+	date: string;
+	event_name: string;
+	total_events: number;
 }
 
 export interface MiniChartDataPoint {
@@ -61,10 +67,10 @@ export type PropertyInferredType =
 	| "high_cardinality";
 
 export type PropertyRenderStrategy =
-	| "distribution_bar" // Low cardinality (≤5) - show all values as bars
-	| "top_n_chart" // Medium cardinality (≤20) - show all in chart
-	| "top_n_with_other" // Aggregatable high cardinality - top N + "other"
-	| "detail_only"; // Non-aggregatable - only in row view
+	| "distribution_bar"
+	| "top_n_chart"
+	| "top_n_with_other"
+	| "detail_only";
 
 export interface PropertyClassification {
 	avg_length: number;
@@ -114,4 +120,17 @@ export interface ClassifiedEvent {
 	name: string;
 	summaryProperties: ClassifiedProperty[];
 	total_events: number;
+}
+
+export type CustomEventsMetricKey =
+	| "total_events"
+	| "unique_users"
+	| "unique_event_types"
+	| "unique_sessions"
+	| "unique_pages"
+	| "events_today";
+
+export interface CustomEventsPerEventChartData {
+	data: Record<string, string | number>[];
+	eventNames: string[];
 }

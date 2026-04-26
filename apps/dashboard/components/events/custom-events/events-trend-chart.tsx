@@ -4,11 +4,11 @@ import dynamic from "next/dynamic";
 import { useCallback, useMemo, useState } from "react";
 import { METRIC_COLORS } from "@/components/charts/metrics-constants";
 import { useDynamicDasharray } from "@/components/charts/use-dynamic-dasharray";
-import { TableEmptyState } from "@/components/table/table-empty-state";
 import { Badge } from "@/components/ds/badge";
 import { Button } from "@/components/ds/button";
+import { SegmentedControl } from "@/components/ds/segmented-control";
+import { TableEmptyState } from "@/components/table/table-empty-state";
 import { Chart } from "@/components/ui/composables/chart";
-import { InlineToggle } from "@/components/ui/inline-toggle";
 import {
 	chartAxisTickDefault,
 	chartAxisYWidthCompact,
@@ -20,6 +20,7 @@ import {
 	chartRechartsLegendStaticWrapperStyleMerge,
 	chartTooltipHeaderRowClassName,
 	chartTooltipMultiShellClassName,
+	chartSeriesColorAtIndex,
 } from "@/lib/chart-presentation";
 import {
 	ArrowCounterClockwiseIcon,
@@ -49,21 +50,6 @@ const ResponsiveContainer = dynamic(
 		),
 	{ ssr: false }
 );
-
-export const EVENT_COLORS = [
-	"#2E27F5",
-	"#40BCF7",
-	"#8b5cf6",
-	"#f59e0b",
-	"#ef4444",
-	"#10b981",
-	"#ec4899",
-	"#06b6d4",
-	"#f97316",
-	"#22c55e",
-	"#a855f7",
-	"#14b8a6",
-];
 
 const EVENTS_COLOR = METRIC_COLORS.pageviews.primary;
 const USERS_COLOR = METRIC_COLORS.visitors.primary;
@@ -98,13 +84,13 @@ function ChartTooltip({
 }: {
 	active?: boolean;
 	payload?: Array<{
+		color: string;
 		dataKey: string;
 		name: string;
 		value: number;
-		color: string;
 	}>;
 	label?: string;
-	resolveColor?: (entry: { dataKey: string; color: string }) => string;
+	resolveColor?: (entry: { color: string; dataKey: string }) => string;
 }) {
 	if (!(active && payload?.length)) {
 		return null;
@@ -151,8 +137,8 @@ function ChartTooltip({
 
 const TOOLTIP_WRAPPER = {
 	outline: "none",
-	zIndex: 10,
 	pointerEvents: "auto",
+	zIndex: 10,
 } as const;
 
 const MODE_OPTIONS = [
@@ -164,7 +150,6 @@ const MODE_OPTIONS = [
 				<span className="hidden sm:inline">Total</span>
 			</>
 		),
-		ariaLabel: "Show aggregate view",
 	},
 	{
 		value: "by-event" as const,
@@ -174,7 +159,6 @@ const MODE_OPTIONS = [
 				<span className="hidden sm:inline">By Event</span>
 			</>
 		),
-		ariaLabel: "Show per-event breakdown",
 	},
 ];
 
@@ -182,12 +166,10 @@ const CHART_TYPE_OPTIONS = [
 	{
 		value: "area" as const,
 		label: <ChartLineUpIcon className="size-3.5" weight="duotone" />,
-		ariaLabel: "Area chart",
 	},
 	{
 		value: "bar" as const,
 		label: <ChartBarIcon className="size-3.5" weight="duotone" />,
-		ariaLabel: "Bar chart",
 	},
 ];
 
@@ -196,8 +178,8 @@ function aggregateColorResolver(entry: { dataKey: string }) {
 }
 
 function getEventColor(eventNames: string[], dataKey: string) {
-	const idx = eventNames.indexOf(dataKey);
-	return EVENT_COLORS[idx % EVENT_COLORS.length] ?? "#888";
+	const index = eventNames.indexOf(dataKey);
+	return chartSeriesColorAtIndex(index);
 }
 
 export function EventsTrendChart({
@@ -233,19 +215,19 @@ export function EventsTrendChart({
 		setZoomedPerEventData(null);
 	}, []);
 
-	const handleMouseDown = (e: { activeLabel?: string }) => {
-		if (!e?.activeLabel) {
+	const handleMouseDown = (event: { activeLabel?: string }) => {
+		if (!event?.activeLabel) {
 			return;
 		}
-		setRefAreaLeft(e.activeLabel);
+		setRefAreaLeft(event.activeLabel);
 		setRefAreaRight(null);
 	};
 
-	const handleMouseMove = (e: { activeLabel?: string }) => {
-		if (!(refAreaLeft && e?.activeLabel)) {
+	const handleMouseMove = (event: { activeLabel?: string }) => {
+		if (!(refAreaLeft && event?.activeLabel)) {
 			return;
 		}
-		setRefAreaRight(e.activeLabel);
+		setRefAreaRight(event.activeLabel);
 	};
 
 	const handleMouseUp = () => {
@@ -257,8 +239,8 @@ export function EventsTrendChart({
 
 		const rightBoundary = refAreaRight ?? refAreaLeft;
 		const source = isByEvent ? displayPerEventData : displayData;
-		const leftIndex = source.findIndex((d) => d.date === refAreaLeft);
-		const rightIndex = source.findIndex((d) => d.date === rightBoundary);
+		const leftIndex = source.findIndex((data) => data.date === refAreaLeft);
+		const rightIndex = source.findIndex((data) => data.date === rightBoundary);
 
 		if (leftIndex === -1 || rightIndex === -1) {
 			setRefAreaLeft(null);
@@ -296,12 +278,12 @@ export function EventsTrendChart({
 		});
 	}, []);
 
-	const totalEvents = displayData.reduce((sum, d) => sum + d.events, 0);
-	const totalUsers = displayData.reduce((sum, d) => sum + d.users, 0);
+	const totalEvents = displayData.reduce((sum, data) => sum + data.events, 0);
+	const totalUsers = displayData.reduce((sum, data) => sum + data.users, 0);
 
 	const [DasharrayCalculator, lineDasharrays] = useDynamicDasharray({
-		splitIndex: activeData.length - 2,
 		chartType: "monotone",
+		splitIndex: activeData.length - 2,
 	});
 
 	const resolveEventColor = useMemo(
@@ -312,75 +294,43 @@ export function EventsTrendChart({
 
 	if (isLoading) {
 		return (
-			<div className="flex h-full flex-col rounded border bg-card">
-				<div className="flex items-center gap-3 border-b px-3 py-2.5 sm:px-4 sm:py-3">
-					<div className="flex size-8 items-center justify-center rounded bg-accent">
-						<LightningIcon
-							className="size-4 text-muted-foreground"
-							weight="duotone"
-						/>
-					</div>
-					<div className="min-w-0 flex-1">
-						<div className="h-4 w-24 animate-pulse rounded bg-muted" />
-						<div className="mt-1 h-3 w-32 animate-pulse rounded bg-muted" />
-					</div>
-				</div>
-				<div className="flex-1 p-3 sm:p-4">
+			<Chart>
+				<Chart.Header description="Loading event trends" title="Events Trend" />
+				<Chart.Plot className="p-3 sm:p-4">
 					<div className="h-[260px] w-full animate-pulse rounded bg-muted" />
-				</div>
-			</div>
+				</Chart.Plot>
+			</Chart>
 		);
 	}
 
 	if (!chartData.length) {
 		return (
-			<div className="flex h-full flex-col rounded border bg-card">
-				<div className="flex items-center gap-3 border-b px-3 py-2.5 sm:px-4 sm:py-3">
-					<div className="flex size-8 items-center justify-center rounded bg-accent">
-						<LightningIcon
-							className="size-4 text-muted-foreground"
-							weight="duotone"
-						/>
-					</div>
-					<div className="min-w-0 flex-1">
-						<h2 className="font-semibold text-foreground text-sm sm:text-base">
-							Events Trend
-						</h2>
-						<p className="text-muted-foreground text-xs">No data available</p>
-					</div>
-				</div>
-				<div className="flex-1 p-3 sm:p-4">
+			<Chart>
+				<Chart.Header description="No data available" title="Events Trend" />
+				<Chart.Plot className="p-4">
 					<TableEmptyState
 						description="Event trends will appear here when events are tracked."
 						icon={<LightningIcon className="size-6 text-muted-foreground" />}
 						title="No event trend data"
 					/>
-				</div>
-			</div>
+				</Chart.Plot>
+			</Chart>
 		);
 	}
 
 	const useBar = isByEvent && chartType === "bar";
 
 	return (
-		<div className="flex h-full flex-col rounded border bg-card">
-			<div className="flex flex-col items-start justify-between gap-2 border-b px-3 py-2.5 sm:flex-row sm:items-center sm:px-4 sm:py-3">
-				<div className="flex items-center gap-3">
-					<div className="flex size-8 items-center justify-center rounded bg-primary/10">
-						<LightningIcon className="size-4 text-primary" weight="duotone" />
-					</div>
-					<div className="min-w-0">
-						<h2 className="font-semibold text-foreground text-sm sm:text-base">
-							Events Trend
-						</h2>
-						<p className="text-muted-foreground text-xs">
-							{isByEvent
-								? "Events broken down by type"
-								: "Event occurrences over time"}
-						</p>
-					</div>
-				</div>
-				<div className="flex items-center gap-1.5">
+		<Chart>
+			<Chart.Header
+				description={
+					isByEvent
+						? "Events broken down by type"
+						: "Event occurrences over time"
+				}
+				title="Events Trend"
+			>
+				<div className="flex flex-wrap items-center justify-end gap-1.5">
 					{isFetching && !isLoading && (
 						<div className="flex items-center gap-1.5 text-muted-foreground text-xs">
 							<ArrowCounterClockwiseIcon className="size-3 animate-spin" />
@@ -398,31 +348,32 @@ export function EventsTrendChart({
 							Reset
 						</Button>
 					)}
-					{hasPerEventData && (
+					{hasPerEventData ? (
 						<>
-							<InlineToggle
-								onValueChangeAction={setChartMode}
+							<SegmentedControl
+								onChange={setChartMode}
 								options={MODE_OPTIONS}
+								size="sm"
 								value={chartMode}
 							/>
-							<InlineToggle
+							<SegmentedControl
 								disabled={!isByEvent}
-								onValueChangeAction={setChartType}
+								onChange={setChartType}
 								options={CHART_TYPE_OPTIONS}
+								size="sm"
 								value={chartType}
 							/>
 						</>
-					)}
-					{!hasPerEventData && (
-						<Badge variant="muted">
-							<span className="font-mono text-[10px]">Drag to zoom</span>
+					) : (
+						<Badge size="sm" variant="muted">
+							Drag to zoom
 						</Badge>
 					)}
 				</div>
-			</div>
+			</Chart.Header>
 
 			{!isByEvent && (
-				<div className="grid grid-cols-2 gap-3 border-b bg-muted/30 p-3">
+				<div className="grid grid-cols-2 gap-3 border-b bg-muted/40 px-4 py-3">
 					<div className="space-y-0.5">
 						<p className="font-mono text-[10px] text-muted-foreground uppercase">
 							Total Events
@@ -442,16 +393,16 @@ export function EventsTrendChart({
 				</div>
 			)}
 
-			<div className="relative flex-1 overflow-hidden p-2">
+			<Chart.Plot className="relative flex-1 overflow-hidden p-2">
 				<div
 					className="relative select-none"
-					style={{ width: "100%", height: CHART_HEIGHT, minWidth: 300 }}
+					style={{ height: CHART_HEIGHT, minWidth: 300, width: "100%" }}
 				>
 					<ResponsiveContainer height="100%" width="100%">
 						<ComposedChart
 							className={useBar ? "events-bar-chart" : undefined}
 							data={activeData}
-							margin={{ top: 10, right: 10, left: 0, bottom: 35 }}
+							margin={{ bottom: 35, left: 0, right: 10, top: 10 }}
 							onMouseDown={handleMouseDown}
 							onMouseMove={handleMouseMove}
 							onMouseUp={handleMouseUp}
@@ -533,7 +484,9 @@ export function EventsTrendChart({
 									}}
 									iconSize={chartRechartsLegendIconSize}
 									iconType="circle"
-									onClick={(p: { value: string }) => toggleEvent(p.value)}
+									onClick={(payload: { value: string }) =>
+										toggleEvent(payload.value)
+									}
 									verticalAlign="bottom"
 									wrapperStyle={{
 										...chartRechartsLegendInteractiveWrapperStyle,
@@ -557,9 +510,8 @@ export function EventsTrendChart({
 								/>
 							)}
 							{isByEvent &&
-								eventNames.map((name, idx) => {
-									const color =
-										EVENT_COLORS[idx % EVENT_COLORS.length] ?? "#888";
+								eventNames.map((name, index) => {
+									const color = chartSeriesColorAtIndex(index);
 									const hidden = hiddenEvents.has(name);
 
 									if (useBar) {
@@ -585,7 +537,7 @@ export function EventsTrendChart({
 											name={name}
 											stroke={color}
 											strokeDasharray={
-												lineDasharrays.find((l) => l.name === name)
+												lineDasharrays.find((line) => line.name === name)
 													?.strokeDasharray || "0 0"
 											}
 											strokeWidth={1.5}
@@ -601,7 +553,7 @@ export function EventsTrendChart({
 									name="Events"
 									stroke={EVENTS_COLOR}
 									strokeDasharray={
-										lineDasharrays.find((l) => l.name === "events")
+										lineDasharrays.find((line) => line.name === "events")
 											?.strokeDasharray || "0 0"
 									}
 									strokeWidth={2}
@@ -616,7 +568,7 @@ export function EventsTrendChart({
 									name="Users"
 									stroke={USERS_COLOR}
 									strokeDasharray={
-										lineDasharrays.find((l) => l.name === "users")
+										lineDasharrays.find((line) => line.name === "users")
 											?.strokeDasharray || "0 0"
 									}
 									strokeWidth={2}
@@ -627,7 +579,7 @@ export function EventsTrendChart({
 						</ComposedChart>
 					</ResponsiveContainer>
 				</div>
-			</div>
+			</Chart.Plot>
 
 			<style>{`
 				.events-bar-chart .recharts-bar {
@@ -638,6 +590,6 @@ export function EventsTrendChart({
 					opacity: 0.15;
 				}
 			`}</style>
-		</div>
+		</Chart>
 	);
 }

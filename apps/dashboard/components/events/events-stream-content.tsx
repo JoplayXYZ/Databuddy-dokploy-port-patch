@@ -20,6 +20,7 @@ import { EmptyState } from "@/components/ds/empty-state";
 import { Badge } from "@/components/ds/badge";
 import { Button } from "@/components/ds/button";
 import { Input } from "@/components/ds/input";
+import type { RecentCustomEvent as StreamCustomEvent } from "@/components/events/custom-events";
 import {
 	Select,
 	SelectContent,
@@ -50,19 +51,11 @@ import {
 	TagIcon,
 } from "@databuddy/ui/icons";
 
-export interface RecentCustomEvent {
-	anonymous_id: string;
-	event_name: string;
-	name: string;
-	path: string;
-	properties: Record<string, unknown>;
-	session_id: string;
-	timestamp: string;
-}
+export type { RecentCustomEvent } from "@/components/events/custom-events";
 
 export interface EventsStreamData {
 	error: Error | null;
-	events: RecentCustomEvent[] | undefined;
+	events: StreamCustomEvent[] | undefined;
 	isError: boolean;
 	isLoading: boolean;
 	pagination: { hasNext: boolean };
@@ -74,7 +67,7 @@ export interface EventsStreamContentProps {
 	isPageLoading?: boolean;
 	onPageChange: (page: number) => void;
 	page: number;
-	renderEventName: (event: RecentCustomEvent) => ReactNode;
+	renderEventName: (event: StreamCustomEvent) => ReactNode;
 }
 
 type HasPropertiesFilter = "all" | "with" | "without";
@@ -184,7 +177,7 @@ export function EventsStreamContent({
 }: EventsStreamContentProps) {
 	const { events, pagination, isLoading, isError, error } = data;
 
-	const [allEvents, setAllEvents] = useState<RecentCustomEvent[]>([]);
+	const [allEvents, setAllEvents] = useState<StreamCustomEvent[]>([]);
 	const [loadMoreRef, setLoadMoreRef] = useState<HTMLTableCellElement | null>(
 		null
 	);
@@ -460,7 +453,7 @@ export function EventsStreamContent({
 	const { copyToClipboard } = useCopyToClipboard();
 
 	const handleCopyEvent = useCallback(
-		(event: RecentCustomEvent) => {
+		(event: StreamCustomEvent) => {
 			const copyData = {
 				event_name: event.event_name,
 				path: event.path,
@@ -480,7 +473,7 @@ export function EventsStreamContent({
 		[setSelectedPropertyKey, setSelectedPropertyValue]
 	);
 
-	const columns = useMemo<ColumnDef<RecentCustomEvent>[]>(
+	const columns = useMemo<ColumnDef<StreamCustomEvent>[]>(
 		() => [
 			{
 				id: "timestamp",

@@ -26,15 +26,15 @@ function groupDistributionsByEventAndProperty(
 ): Map<string, Map<string, PropertyDistribution[]>> {
 	const grouped = new Map<string, Map<string, PropertyDistribution[]>>();
 
-	for (const dist of distributions) {
-		if (!grouped.has(dist.event_name)) {
-			grouped.set(dist.event_name, new Map());
+	for (const distribution of distributions) {
+		if (!grouped.has(distribution.event_name)) {
+			grouped.set(distribution.event_name, new Map());
 		}
-		const eventMap = grouped.get(dist.event_name);
+		const eventMap = grouped.get(distribution.event_name);
 		if (eventMap) {
-			const existing = eventMap.get(dist.property_key) ?? [];
-			existing.push(dist);
-			eventMap.set(dist.property_key, existing);
+			const existing = eventMap.get(distribution.property_key) ?? [];
+			existing.push(distribution);
+			eventMap.set(distribution.property_key, existing);
 		}
 	}
 
@@ -46,15 +46,15 @@ function groupTopValuesByEventAndProperty(
 ): Map<string, Map<string, PropertyTopValue[]>> {
 	const grouped = new Map<string, Map<string, PropertyTopValue[]>>();
 
-	for (const tv of topValues) {
-		if (!grouped.has(tv.event_name)) {
-			grouped.set(tv.event_name, new Map());
+	for (const topValue of topValues) {
+		if (!grouped.has(topValue.event_name)) {
+			grouped.set(topValue.event_name, new Map());
 		}
-		const eventMap = grouped.get(tv.event_name);
+		const eventMap = grouped.get(topValue.event_name);
 		if (eventMap) {
-			const existing = eventMap.get(tv.property_key) ?? [];
-			existing.push(tv);
-			eventMap.set(tv.property_key, existing);
+			const existing = eventMap.get(topValue.property_key) ?? [];
+			existing.push(topValue);
+			eventMap.set(topValue.property_key, existing);
 		}
 	}
 
@@ -81,28 +81,28 @@ export function classifyEventProperties(
 		const detailProperties: ClassifiedProperty[] = [];
 
 		for (const classification of eventClassifications) {
-			const propKey = classification.property_key;
+			const propertyKey = classification.property_key;
 			let values: PropertyTopValue[] | PropertyDistribution[] = [];
 
 			if (
 				classification.render_strategy === "distribution_bar" ||
 				classification.render_strategy === "top_n_chart"
 			) {
-				values = eventDistributions?.get(propKey) ?? [];
+				values = eventDistributions?.get(propertyKey) ?? [];
 			} else if (classification.render_strategy === "top_n_with_other") {
-				values = eventTopValues?.get(propKey) ?? [];
+				values = eventTopValues?.get(propertyKey) ?? [];
 			}
 
-			const classifiedProp: ClassifiedProperty = {
-				key: propKey,
+			const classifiedProperty: ClassifiedProperty = {
+				key: propertyKey,
 				classification,
 				values,
 			};
 
 			if (classification.render_strategy === "detail_only") {
-				detailProperties.push(classifiedProp);
+				detailProperties.push(classifiedProperty);
 			} else {
-				summaryProperties.push(classifiedProp);
+				summaryProperties.push(classifiedProperty);
 			}
 		}
 

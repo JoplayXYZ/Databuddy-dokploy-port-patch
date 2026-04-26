@@ -1,4 +1,10 @@
+import type { DateRange } from "@databuddy/shared/types/analytics";
 import { dayjs } from "@databuddy/ui";
+import { chartSeriesColorAtIndex } from "@/lib/chart-presentation";
+
+export function eventColorAtIndex(index: number): string {
+	return chartSeriesColorAtIndex(index);
+}
 
 export function formatDateLabel(
 	dateStr: string,
@@ -11,6 +17,10 @@ export function formatDateLabel(
 	return date.format("MMM D");
 }
 
+export function getGranularity(dateRange: DateRange): "hourly" | "daily" {
+	return dateRange.granularity ?? "daily";
+}
+
 export function generateDateRange(
 	startDate: string,
 	endDate: string,
@@ -20,10 +30,11 @@ export function generateDateRange(
 	let current = dayjs(startDate);
 	const end = dayjs(endDate);
 	const unit = granularity === "hourly" ? "hour" : "day";
-	const fmt = granularity === "hourly" ? "YYYY-MM-DD HH:mm:ss" : "YYYY-MM-DD";
+	const format =
+		granularity === "hourly" ? "YYYY-MM-DD HH:mm:ss" : "YYYY-MM-DD";
 
 	while (current.isBefore(end) || current.isSame(end, "day")) {
-		dates.push(current.format(fmt));
+		dates.push(current.format(format));
 		current = current.add(1, unit);
 	}
 
@@ -35,4 +46,8 @@ export function normalizeDateKey(
 	granularity: "hourly" | "daily"
 ): string {
 	return granularity === "hourly" ? date : date.slice(0, 10);
+}
+
+export function safePercentage(value: number | null | undefined): number {
+	return value == null || Number.isNaN(value) ? 0 : value;
 }
