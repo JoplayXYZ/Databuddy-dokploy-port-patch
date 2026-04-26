@@ -1,148 +1,98 @@
 ---
 name: databuddy
-description: Work effectively in the Databuddy monorepo. Use when the user asks to build, debug, review, or refactor anything in Databuddy, including the dashboard, api, basket ingest service, links service, docs app, uptime service, SDK, tracker, auth, RPC, database schema, ClickHouse, or shared packages.
+description: Help external users integrate Databuddy into their own apps. Use for SDK setup, React/Vue/vanilla browser tracking, Node/server event tracking, custom event planning, attribution, feature flag evaluation, experiments, Databuddy DevTools, REST analytics queries, and event ingestion. Do not use for Databuddy monorepo implementation work; use databuddy-internal.
 ---
 
 # Databuddy
 
-Databuddy is a Bun + Turborepo TypeScript monorepo. Start by locating the user request in one product surface, then trace its shared dependencies before editing.
+Use this skill for people adopting Databuddy in their own app or backend. Optimize for a working public integration or instrumentation plan: the right package, credential, endpoint, events, placement, and verification step.
 
-For **external** integrations (SDK, CDN, public APIs), use the **`databuddy-integration`** skill; this skill is for **this repository**.
+Do not expose `DATABUDDY_API_KEY` in browser code. Browser integrations use a public website `clientId`; server/API integrations use an API key.
 
-## Skill maintenance (required)
+## Choose The Surface
 
-When a mistake could have been avoided with better repo context (wrong app, package, port, or pattern), or when the user corrects you or asks you to fix something you got wrong, **update this skill** (`SKILL.md` or `references/codebase-map.md`) in the same turn when practical.
+- React or Next.js browser analytics: `@databuddy/sdk/react`; mount `<Databuddy />` near the app root.
+- Vue or Nuxt browser analytics: `@databuddy/sdk/vue`; mount `<Databuddy />` once near `RouterView`/`NuxtPage` and translate props to kebab-case in templates.
+- Vanilla HTML, CMS, or GTM: CDN script `https://cdn.databuddy.cc/databuddy.js` with `data-client-id`.
+- Browser custom events: `track(...)` from `@databuddy/sdk` after the tracker is installed.
+- Browser helper utilities: use `trackError`, `flush`, `clear`, `getTrackingIds`, `getTrackingParams`, `getAnonymousId`, `getSessionId`, `isTrackerAvailable`, and `getTracker` from `@databuddy/sdk` when users need manual errors, navigation safety, logout reset, attribution handoff, or advanced checks.
+- Server-side events: `@databuddy/sdk/node`; call `flush()` before a serverless/short-lived runtime exits.
+- Feature flags: React/Vue flag helpers or `createServerFlagsManager` from `@databuddy/sdk/node`; use stable user context, handle loading/pending states, and call `waitForInit()` before first server read.
+- DevTools: `@databuddy/devtools`; use for local/preview inspection of tracker status, IDs, queues, event calls, flags, overrides, diagnostics, and flag management.
+- REST analytics: query API under `https://api.databuddy.cc/v1`.
+- Raw event ingestion: `POST https://basket.databuddy.cc/track`; prefer SDKs unless the user explicitly wants HTTP.
 
-Keep additions **minimal**: one bullet, a new `rg` hint, or a routing note—enough that the next session does not repeat it. If the lesson is for SDK/API customers, add it under `.agents/skills/databuddy-integration/` instead.
+If the user says "API", determine whether they mean analytics queries, event ingestion, or feature flags before writing code.
 
-## Quick Map
+Read [public-surfaces.md](./references/public-surfaces.md) when you need exact env vars, routes, scopes, snippets, or framework routing.
+Read [frameworks.md](./references/frameworks.md) for React, Next.js, Vue, Nuxt, and vanilla browser setup.
+Read [server-events.md](./references/server-events.md) for browser helpers, Node/server events, raw `/track`, and attribution handoff.
+Read [feature-flags.md](./references/feature-flags.md) for client flags, server flags, rollouts, experiments, flag metrics, and flag debugging.
+Read [devtools.md](./references/devtools.md) for `@databuddy/devtools` setup, capabilities, flag overrides, diagnostics, and flag management.
+Read [event-design.md](./references/event-design.md) when the user asks what custom events to add, which properties matter, or how to avoid noisy/high-cardinality tracking.
+Read [instrumentation-planning.md](./references/instrumentation-planning.md) when the user asks what to track, how to design metrics, how to wire attribution across client/server, or where to place tracking calls.
+Read [troubleshooting.md](./references/troubleshooting.md) for CSP, blockers, wrong hosts, auth, missing events, and flag/debug failures.
 
-- `apps/dashboard`: Next.js app on port `3000` (per-website **agent** chat: `@ai-sdk/react` `useChat` via `contexts/chat-context.tsx` — not the separate `chat-sdk` package; overlapping sends while streaming are queued client-side to mirror a “queue latest” strategy.)
-- `apps/api`: Elysia API on port `3001`
-- `apps/basket`: ingest and LLM tracking service, Elysia app on port `4000`
-- `apps/docs`: Next.js + Fumadocs docs app on port `3005`
-- `apps/links`: redirect/link service
-- `apps/uptime`: uptime monitoring service
-- `packages/db`: Drizzle Postgres schema, client, and ClickHouse helpers
-- `packages/rpc`: shared oRPC router, procedures, auth-aware server context
-- `packages/auth`: Better Auth setup, permissions, organization access
-- `packages/env`: per-app env schemas
-- `packages/shared`: shared types, flags, analytics schemas, utilities
-- `packages/sdk`: published analytics SDK for React, Vue, and Node
-- `packages/tracker`: internal tracker script build and release package
-- `packages/ai`, `packages/notifications`, `packages/cache`, `packages/redis`, `packages/services`, `packages/validation`, `packages/api-keys`: shared infra and domain packages
+## Credential And Endpoint Rules
 
-Read [codebase-map.md](./references/codebase-map.md) when you need deeper routing guidance.
+| Use | Host/path | Credential | Scope |
+| --- | --- | --- | --- |
+| Browser analytics | `https://basket.databuddy.cc` via SDK/CDN | `clientId` | none |
+| Server events | `POST https://basket.databuddy.cc/track` | `DATABUDDY_API_KEY` | `track:events` |
+| REST analytics | `https://api.databuddy.cc/v1/query...` | `DATABUDDY_API_KEY` | `read:data` |
+| Feature flag evaluation | `https://api.databuddy.cc/public/v1/flags...` | `clientId` | none |
+
+- API auth accepts `x-api-key: dbdy_...` or `Authorization: Bearer dbdy_...`; prefer `x-api-key` for examples unless docs for that endpoint use Bearer.
+- `websiteId` in event tracking means the public website client id, the same kind of value used by `data-client-id`; it is not necessarily an internal UUID.
+- For server-side attribution, collect `{ anonId, sessionId }` in the browser with `getTrackingIds()`, pass them to your backend, then map them to Node SDK fields `anonymousId` and `sessionId`.
+- Do not invent a Databuddy `identify()` helper or endpoint. If an app has an identify route, treat it as the user's own backend code carrying Databuddy tracking IDs.
+- Feature flag evaluation uses the main API host, not basket. It needs a website `clientId`, not API-key-only auth.
+- Feature flag management uses `manage:flags` with `x-api-key`; do not expose that key in browser source. DevTools accepts it at runtime for local/preview flag management.
+- `DATABUDDY_API_URL` is endpoint-specific. Do not reuse a basket root for query API or flags.
+- Strict CSP sites need `script-src` for `https://cdn.databuddy.cc` and `connect-src` for `https://basket.databuddy.cc`; add `https://api.databuddy.cc` when using flags.
 
 ## Workflow
 
-1. Identify the runtime surface first: dashboard UI, API, ingest pipeline, docs site, tracker, or shared package.
-2. Read the owning package's `package.json`, entrypoint, and direct dependencies before changing code.
-3. If the change crosses app boundaries, trace the contract:
-   `dashboard -> apps/dashboard/lib/orpc.ts -> packages/rpc -> apps/api`
-4. If the change touches analytics ingestion or LLM observability, trace:
-   `packages/sdk` or `packages/tracker` -> `apps/basket` -> `packages/db` / ClickHouse
-5. If the change touches auth, org permissions, or session-aware server behavior, inspect `packages/auth` and `packages/rpc` together.
-6. Validate with the smallest relevant command instead of running the whole monorepo by default.
+1. Identify the user's runtime and target surface.
+2. Prefer the highest-level supported SDK over raw HTTP.
+3. Infer the minimum credential, or ask for only the missing one.
+4. Give a short install/env/code path plus one verification step.
+5. For custom instrumentation, define `question -> metric -> event -> properties -> source -> placement -> verification` before adding code.
 
-## Repo Conventions
+## Custom Event Rules
 
-- Package manager: `bun`
-- Task runner: `turbo`
-- Formatting/linting: `bun run format`, `bun run lint`
-- Root dev orchestration: `bun run dev`
-- Dashboard + API together: `bun run dev:dashboard`
-- Tests at root currently target `./apps`: `bun run test`
-- Database scripts are routed from root into `packages/db`
-- Environment schemas live in `packages/env/src/*.ts`; update the matching app schema when adding env vars
-
-## Change Routing
-
-### Dashboard work
-
-- Start in `apps/dashboard`
-- For dashboard navigation audits, check all route surfaces: `components/layout/navigation/navigation-config.tsx`, `components/ui/command-search.tsx`, and local `PageNavigation` layouts under `app/**/layout.tsx` before calling a page orphaned.
-- Insights merged feed (`use-insights-feed`) collapses history + AI by `insightSignalDedupeKey` in `apps/dashboard/lib/insight-signal-key.ts` so the list is one row per signal (latest wins).
-- Theme: `apps/dashboard/app/globals.css`. **`--border` is intentionally subtle**; do not crank it darker for “contrast” unless **iza** asks—prefer text tokens or layout for readability.
-- Flags list rows (`app/(main)/websites/[id]/flags/_components/flags-list.tsx`) are clickable containers with nested controls; mark nested controls with `data-row-interactive="true"` and have the row ignore those targets instead of relying on broad cell-level `stopPropagation`.
-- For data loading and mutations, inspect `apps/dashboard/lib/orpc.ts` and the corresponding hooks/components
-- Many changes require matching edits in `packages/rpc`
-
-### API and RPC work
-
-- Start in `apps/api/src`
-- Shared API contracts and procedure logic live in `packages/rpc`
-- Prefer changing shared router logic in `packages/rpc` rather than duplicating validation in the dashboard
-- Analytics AI insights: `apps/api/src/routes/insights.ts` — dedupe key is `websiteId|type|direction` (direction from **signed** `changePercent`, not sentiment); within the cooldown window, matching rows are **updated** (same `id`) instead of inserting duplicates. **Do not** show `changePercent` in the UI with sentiment-based sign flips; the stored value is already signed.
-
-### Ingestion and analytics pipeline
-
-- Start in `apps/basket/src`
-- Request validation, billing checks, geo/IP parsing, producer logic, and structured errors are important here
-
-## Billing (Autumn)
-
-- `autumn-js` v1.2.2+ — import `autumnHandler` from `autumn-js/fetch` (NOT `autumn-js/elysia`, that export was removed in v1.0)
-- For Elysia, mount with `.mount(autumnHandler(...))` — NOT `.use()`
-- `identify` callback receives `(request: Request)` directly, not `({ request })`
-- Webhook event types: `balances.limit_reached` (replaces old `customer.threshold_reached`), `customer.products.updated`, `balances.usage_alert_triggered`
-- `balances.limit_reached` payload is flat: `{ customer_id, feature_id, entity_id?, limit_type }` — no full customer object
-- SDK `Customer` type uses camelCase (`balances`, `subscriptions`, `overageAllowed`), but **webhook payloads are snake_case** and use old field names (`features`, `products`, `included_usage`, `overage_allowed`) — do NOT use the SDK `Customer` type for webhooks
-- SDK class is `new Autumn()` (reads `AUTUMN_SECRET_KEY` from env); methods use camelCase: `customerId`, `featureId`, `sendEvent`
-- `autumn-js` catalog version is in root `package.json` — update it when bumping
-- Storage and schema concerns usually continue into `packages/db`
-- **evlog → Axiom:** never use top-level `error` as a **string** on `log.error({ ... })` (e.g. process handlers); it overwrites structured `error.message` on the wide event. Use `error_message` instead. Basket/API drains run `normalizeWideEventForAxiom` before ingest; 4xx `EvlogError` rows are emitted as `level: "warn"` with `client_http_error: true` so Axiom “errors” are not inflated by expected client failures.
-
-### Database work
-
-- Postgres schema: `packages/db/src/drizzle/schema.ts`
-- Relations: `packages/db/src/drizzle/relations.ts`
-- Drizzle client: `packages/db/src/client.ts`
-- ClickHouse helpers and schema: `packages/db/src/clickhouse/*`
-- After schema changes, use the repo db scripts rather than ad hoc commands
-
-### Auth and permissions
-
-- Core auth setup: `packages/auth/src/auth.ts`
-- Client auth entrypoint: `packages/auth/src/client/auth-client.ts`
-- Permission helpers often flow through `packages/rpc`
-
-### SDK and tracker work
-
-- Published SDK logic: `packages/sdk/src`
-- Browser tracker bundle: `packages/tracker/src`
-- If the user reports missing analytics events, inspect both the producer side and `apps/basket`
+- Track user intent, product milestones, and operational outcomes, not every click.
+- Use stable `snake_case` names and low-cardinality property keys.
+- Do not track PII, secrets, raw tokens, full exception stacks, or large payloads.
+- Prefer one event with useful properties over many near-duplicate event names.
+- Use backend tracking for authoritative outcomes such as account creation, imports, webhooks, and jobs.
+- Start with the fewest events that answer the user's question; add more only for funnel steps, important variants, or failure states.
+- Do not track the same outcome in both browser and backend. Use browser events for intent and backend events for completed or failed outcomes.
 
 ## Verification
 
-- Use targeted package commands when available, for example:
-  - `bun run dev:dashboard`
-  - `cd apps/api && bun test`
-  - `cd packages/sdk && bun test`
-  - `cd packages/tracker && bun run test:unit`
-- If verification depends on services like Postgres, Redis, ClickHouse, or Redpanda, say so explicitly.
+- Browser SDK:
+  - confirm the script loads and requests reach `basket.databuddy.cc`
+  - confirm the expected `clientId` is configured
+  - check CSP, ad-blockers, and registered/allowed domain settings if requests never leave the browser
+- Node SDK:
+  - send one test event
+  - call `flush()` before exit
+  - confirm no auth or queue errors
+- REST API:
+  - start with `GET /v1/query/websites`
+  - then run the scoped query or event send
+- Feature flags:
+  - wait for initialization
+  - test with a known flag key and user context
+  - use DevTools to inspect readiness, evaluated values, variants, and overrides
+- Custom instrumentation:
+  - verify the event appears under the intended website
+  - confirm attribution IDs are present when a server event belongs to a browser session
+  - confirm the event can power the intended funnel, goal, segment, or reliability metric
 
-## Pitfalls
+## Response Style
 
-- The `:online` model suffix is a **Perplexity-only** convention (e.g. `perplexity/sonar-pro`). Never add `:online` to non-Perplexity models.
-- **Vercel AI Gateway** model IDs in `apps/api/src/ai/config/models.ts` use gateway-style names (e.g. `anthropic/claude-sonnet-4.5`), not OpenRouter catalog strings.
-- **Bun HTTP** default `idleTimeout` is **10 seconds**; agent streams can look idle during slow tools. `apps/api/src/index.ts` exports `idleTimeout` on the server (Bun caps at **255** seconds).
-- **AI SDK UI (`useChat`)** does not document automatic HTTP retries on `DefaultChatTransport`—retry UX is **`regenerate()`** + `error` ([chatbot error state](https://ai-sdk.dev/docs/ai-sdk-ui/chatbot#error-state), [error handling](https://ai-sdk.dev/docs/ai-sdk-ui/error-handling)). `maxRetries` on **`streamText`/`generateText`** is server-side model calls, not the browser chat `fetch`. Mid-stream disconnect: **`resumeStream()`** ([useChat](https://ai-sdk.dev/docs/reference/ai-sdk-ui/use-chat)).
-- **`@elysiajs/cors` with `origin: true`** sets `Vary: *`, killing CDN caching. Override with `set.headers.vary = "Origin"` on cacheable public endpoints.
-- **`applyAuthWideEvent`** in `apps/api/src/index.ts` runs a session DB lookup on every request including anonymous `/public/` routes. Skip it for public endpoints via URL check in `onBeforeHandle`.
-- **Agent SQL security**: Tenant isolation (`client_id`) is enforced programmatically in `validateAgentSQL` + `requiresTenantFilter` from `@databuddy/db`. Never rely solely on system-prompt instructions for data isolation. Every SQL tool entry point (API, RPC, etc.) must use the shared validation from `packages/db/src/clickhouse/sql-validation.ts`.
-- **ClickHouse table allowlist**: Agent SQL is restricted to `analytics.*` tables only. `system.*`, `information_schema.*` are blocked. Add new allowed prefixes in `sql-validation.ts` if new databases are added.
-- **Flags API local dev** requires `dotenv -e .env` from repo root to pick up `REDIS_URL`, `DATABASE_URL`, etc.
-- **Node SDK flags**: The export is `createServerFlagsManager` (not `createFlagsManager`). Call `waitForInit()` before use.
-- **User-scoped flags**: The public flags API loads user-scoped flags (where `flags.userId` is set) via `getCachedFlagsForUser` and merges them with client/org-scoped flags. Client-scoped cache is shared; user-scoped cache is keyed per `userId`.
-- **Detail page stats**: Use compact inline `flex` bars at `min-h-10`/`py-2.5` (40px) — not `<dl>` grids with large padding. Heights must be multiples of 10px to align with sidebar item sizing. Status uses a colored dot + text, not `Badge`.
-- **`apps/docs` marketing copy:** Do not explain pages as “keyword-focused,” “programmatic,” “intent,” or “meta” in UI—users care about tasks (compare tools, replace X, migrate). Keep internal SEO rationale out of hero and body copy.
-
-## Search Hints
-
-- Use `rg "createRPCContext|appRouter|sessionProcedure" packages/rpc apps/api`
-- Use `rg "NEXT_PUBLIC_API_URL|createEnv|shouldSkipValidation" packages/env apps/dashboard`
-- Use `rg "clickHouse|ClickHouse|TABLE_NAMES" packages/db apps/basket apps/api`
-- Use `rg "betterAuth|drizzleAdapter|organization" packages/auth packages/rpc apps/dashboard`
-- Use `rg "trackRoute|basketRouter|llmRouter|structured-errors" apps/basket`
-- Use `rg "insightDedupeKey|collapseInsightsBySignal|insightSignalDedupeKey" apps/api apps/dashboard`
+- Default to practical integration guidance and working examples
+- Avoid internal monorepo details unless the user is debugging Databuddy itself.
+- Keep answers short unless the user asks for a migration or full instrumentation plan.

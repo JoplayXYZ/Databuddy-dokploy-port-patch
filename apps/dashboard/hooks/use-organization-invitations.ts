@@ -133,6 +133,8 @@ export function useOrganizationInvitations(organizationId: string) {
 			invitations.filter(
 				(inv) =>
 					inv.status === "accepted" ||
+					inv.status === "canceled" ||
+					inv.status === "rejected" ||
 					(inv.status === "pending" && dayjs(inv.expiresAt).isBefore(dayjs()))
 			).length,
 		[invitations]

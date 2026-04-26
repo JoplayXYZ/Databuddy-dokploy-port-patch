@@ -9,8 +9,29 @@ import { TopBar, TopBarProvider } from "@/components/layout/top-bar";
 import { BillingProvider } from "@/components/providers/billing-provider";
 import { SessionGuard } from "@/components/providers/session-guard";
 import { CommandSearchProvider } from "@/components/ui/command-search";
+import { Skeleton } from "@databuddy/ui";
 import { AutumnProvider } from "autumn-js/react";
 import { Suspense } from "react";
+
+function SidebarFallback() {
+	return (
+		<nav className="fixed inset-y-0 left-0 z-50 hidden w-64 flex-col border-sidebar-border/50 border-r bg-sidebar md:flex">
+			<div className="flex h-12 items-center gap-2.5 border-sidebar-border/30 border-b px-3">
+				<Skeleton className="size-6 rounded" />
+				<Skeleton className="h-4 w-24 rounded" />
+			</div>
+			<div className="flex flex-1 flex-col gap-1 px-2 pt-3">
+				{Array.from({ length: 6 }, (_, i) => (
+					<Skeleton
+						className="h-8 rounded"
+						key={i}
+						style={{ width: `${70 - i * 5}%` }}
+					/>
+				))}
+			</div>
+		</nav>
+	);
+}
 
 export default function MainLayout({
 	children,
@@ -29,7 +50,7 @@ export default function MainLayout({
 							<SidebarLayout>
 								<TopBarProvider>
 									<div className="flex min-h-0 flex-1 flex-col overflow-hidden text-foreground">
-										<Suspense fallback={null}>
+										<Suspense fallback={<SidebarFallback />}>
 											<Sidebar />
 										</Suspense>
 										<SidebarInset>

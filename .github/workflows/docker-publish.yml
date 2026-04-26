@@ -7,8 +7,12 @@ on:
     branches: [main]
     paths:
       - "*.Dockerfile"
+      - ".dockerignore"
       - "apps/**"
       - "packages/**"
+      - "bun.lock"
+      - "package.json"
+      - "turbo.json"
       - ".github/workflows/docker-publish.yml"
   workflow_dispatch:
 

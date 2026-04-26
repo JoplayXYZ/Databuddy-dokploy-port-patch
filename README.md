@@ -68,28 +68,32 @@ Databuddy can be self-hosted using Docker Compose. The repo includes two compose
 | File | Purpose |
 |---|---|
 | `docker-compose.yaml` | **Development only** — starts infrastructure (Postgres, ClickHouse, Redis) for local dev |
-| `docker-compose.selfhost.yml` | **Production / self-hosting** — full stack with all application services from GHCR images |
+| `docker-compose.selfhost.yml` | **Production / self-hosting** — backend services from GHCR images |
 
 ### Quick Start
 
 ```bash
 # 1. Configure environment
 cp .env.example .env
-# Edit .env — at minimum set BETTER_AUTH_SECRET and BETTER_AUTH_URL
+# Edit .env — set IMAGE_TAG, database/cache passwords, URLs, BETTER_AUTH_SECRET, and BETTER_AUTH_URL
 
-# 2. Start everything
+# 2. Start databases and cache
+docker compose -f docker-compose.selfhost.yml up -d postgres clickhouse redis
+
+# 3. Initialize databases from the repo checkout (first run only)
+bun install --frozen-lockfile
+bun run db:push
+bun run clickhouse:init
+
+# 4. Start backend services
 docker compose -f docker-compose.selfhost.yml up -d
-
-# 3. Initialize databases (first run only)
-docker compose -f docker-compose.selfhost.yml exec api bun run db:push
-docker compose -f docker-compose.selfhost.yml exec api bun run clickhouse:init
 ```
 
 Services started:
 - **API** → `localhost:3001`
 - **Basket** (event ingestion) → `localhost:4000`
 - **Links** (short links) → `localhost:2500`
-- **Uptime** monitoring is optional — uncomment in the compose file and set QStash keys.
+- **Uptime** monitoring is optional — uncomment in the compose file to run the Redis-backed BullMQ worker.
 
 All ports are configurable via env vars (`API_PORT`, `BASKET_PORT`, etc.). See the compose file comments for the full env var reference.
 

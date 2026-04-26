@@ -188,6 +188,8 @@ export const organizationsRouter = {
 						eq(invitation.organizationId, input.organizationId),
 						or(
 							eq(invitation.status, "accepted"),
+							eq(invitation.status, "canceled"),
+							eq(invitation.status, "rejected"),
 							and(
 								eq(invitation.status, "pending"),
 								lt(invitation.expiresAt, new Date())

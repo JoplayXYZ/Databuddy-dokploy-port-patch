@@ -1,8 +1,8 @@
-import { and, db, eq } from "@databuddy/db";
-import { organization, uptimeSchedules } from "@databuddy/db/schema";
+import { db } from "@databuddy/db";
+import { statusPages } from "@databuddy/db/schema";
 import type { MetadataRoute } from "next";
 import { unstable_cache } from "next/cache";
-import { APP_URL } from "@/lib/app-url";
+import { getStatusPageUrl } from "@/lib/app-url";
 import type { StatusSitemapRow } from "@/types/sitemap";
 
 export const revalidate = 86_400;
@@ -11,18 +11,10 @@ const getPublicStatusPages = unstable_cache(
 	async (): Promise<StatusSitemapRow[]> => {
 		const rows = await db
 			.select({
-				slug: organization.slug,
-				updatedAt: uptimeSchedules.updatedAt,
+				slug: statusPages.slug,
+				updatedAt: statusPages.updatedAt,
 			})
-			.from(organization)
-			.innerJoin(
-				uptimeSchedules,
-				and(
-					eq(uptimeSchedules.organizationId, organization.id),
-					eq(uptimeSchedules.isPublic, true),
-					eq(uptimeSchedules.isPaused, false)
-				)
-			);
+			.from(statusPages);
 
 		const statusPagesBySlug = new Map<string, Date>();
 
@@ -54,7 +46,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 		const statusPages = await getPublicStatusPages();
 
 		return statusPages.map((statusPage) => ({
-			url: `${APP_URL}/status/${statusPage.slug}`,
+			url: getStatusPageUrl(statusPage.slug),
 			lastModified: statusPage.updatedAt,
 			changeFrequency: "daily",
 			priority: 0.7,

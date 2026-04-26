@@ -119,6 +119,9 @@ export const websiteNavigation: NavigationGroup[] = [
 	{
 		label: "Product",
 		items: [
+			createNavItem("Events", LightningIcon, "/events", {
+				rootLevel: false,
+			}),
 			createNavItem("Users", IdentificationBadgeIcon, "/users", {
 				rootLevel: false,
 				gatedFeature: GATED_FEATURES.USERS,
