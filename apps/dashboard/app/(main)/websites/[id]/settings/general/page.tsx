@@ -212,7 +212,7 @@ export default function GeneralSettingsPage() {
 					</SettingCard>
 				</SettingCardGroup>
 
-				<SettingsZone title="Danger Zone" variant="danger">
+				<SettingsZone title="Destructive actions" variant="destructive">
 					<SettingsZoneRow
 						action={{
 							label: "Transfer",

@@ -33,7 +33,7 @@ export function LiveUserIndicator({ websiteId }: LiveUserIndicatorProps) {
 	}, [count]);
 
 	return (
-		<div className="flex h-7 shrink-0 items-center gap-1.5 rounded bg-muted/60 px-2.5 text-[12px]">
+		<div className="flex h-8 shrink-0 items-center gap-1.5 rounded-md bg-sidebar-accent/55 px-2.5 text-[12px]">
 			<span className="relative flex size-1.5">
 				<span className="absolute inline-flex size-full animate-ping rounded-full bg-green-500/60" />
 				<span className="relative inline-flex size-1.5 rounded-full bg-green-500" />

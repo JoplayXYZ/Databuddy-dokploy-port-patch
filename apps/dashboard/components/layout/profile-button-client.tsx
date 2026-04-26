@@ -3,7 +3,7 @@
 import { authClient } from "@databuddy/auth/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { type ComponentPropsWithoutRef, useState } from "react";
 import { toast } from "sonner";
 import { Avatar } from "@/components/ds/avatar";
 import { DropdownMenu } from "@/components/ds/dropdown-menu";
@@ -140,6 +140,11 @@ const THEMES = [
 	{ value: "system", icon: MonitorIcon, label: "System" },
 ] as const;
 
+type DropdownContentPlacement = Pick<
+	ComponentPropsWithoutRef<typeof DropdownMenu.Content>,
+	"align" | "side"
+>;
+
 function ThemeSwitcherRow() {
 	const { theme, setTheme } = useTheme();
 
@@ -168,11 +173,13 @@ export function ProfileDropdownContent({
 	user,
 	onClose,
 	isOpen,
+	align = "start",
+	side = "top",
 }: {
 	isOpen?: boolean;
 	onClose: () => void;
 	user: ProfileButtonUser;
-}) {
+} & DropdownContentPlacement) {
 	const {
 		isLoggingOut,
 		switchingTo,
@@ -197,7 +204,7 @@ export function ProfileDropdownContent({
 	const hasMultipleAccounts = otherSessions.length > 0;
 
 	return (
-		<DropdownMenu.Content align="start" className="w-56" side="top">
+		<DropdownMenu.Content align={align} className="w-56" side={side}>
 			{hasMultipleAccounts &&
 				otherSessions.map((session) => (
 					<DropdownMenu.Item

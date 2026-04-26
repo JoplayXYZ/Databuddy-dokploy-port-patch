@@ -118,7 +118,7 @@ function DeleteAlarmDialog({
 					<Button onClick={onClose} variant="secondary">
 						Cancel
 					</Button>
-					<Button loading={isPending} onClick={onConfirm} tone="danger">
+					<Button loading={isPending} onClick={onConfirm} tone="destructive">
 						Delete
 					</Button>
 				</Dialog.Footer>

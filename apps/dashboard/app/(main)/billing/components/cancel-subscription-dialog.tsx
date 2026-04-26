@@ -293,7 +293,7 @@ export function CancelSubscriptionDialog({
 								disabled={!selected || isLoading || confirming}
 								loading={confirming}
 								onClick={handleConfirm}
-								tone={selected === "immediate" ? "danger" : undefined}
+								tone={selected === "immediate" ? "destructive" : undefined}
 							>
 								{selected === "immediate"
 									? "Cancel now"

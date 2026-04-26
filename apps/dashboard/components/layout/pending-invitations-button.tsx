@@ -28,15 +28,12 @@ export function PendingInvitationsButton() {
 					aria-label={`${count} pending invitations`}
 					className={cn(
 						"relative flex size-8 items-center justify-center rounded-md",
-						"transition-colors duration-(--duration-quick) ease-(--ease-smooth)",
-						"hover:bg-interactive-hover",
+						"text-sidebar-foreground/65 transition-colors duration-(--duration-quick) ease-(--ease-smooth)",
+						"hover:bg-sidebar-accent hover:text-sidebar-foreground",
 						"focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
 					)}
 				>
-					<EnvelopeIcon
-						className="size-5 text-sidebar-foreground/75"
-						weight="duotone"
-					/>
+					<EnvelopeIcon className="size-4" weight="duotone" />
 					<Badge
 						className={cn(
 							"absolute -top-1 -right-1 flex size-4 items-center justify-center bg-destructive p-0 text-[10px] text-destructive-foreground",

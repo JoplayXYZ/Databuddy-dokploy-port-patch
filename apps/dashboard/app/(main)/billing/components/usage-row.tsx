@@ -121,7 +121,7 @@ export const UsageRow = memo(function UsageRowComponent({
 				<div className="mt-3 flex items-center gap-3">
 					<Progress
 						className="flex-1"
-						tone={hasOverage ? "danger" : isLow ? "warning" : "primary"}
+						tone={hasOverage ? "destructive" : isLow ? "warning" : "primary"}
 						value={hasOverage ? 100 : usedPercent}
 					/>
 					{(isLow || hasOverage) && !isMaxPlan && (

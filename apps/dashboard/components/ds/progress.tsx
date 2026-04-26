@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 const toneClasses = {
 	primary: "bg-primary",
 	warning: "bg-warning",
-	danger: "bg-destructive",
+	destructive: "bg-destructive",
 	success: "bg-success",
 };
 

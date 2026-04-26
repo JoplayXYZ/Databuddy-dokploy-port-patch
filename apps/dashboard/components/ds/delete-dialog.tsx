@@ -99,7 +99,7 @@ export function DeleteDialog({
 						disabled={confirmDisabled}
 						loading={Boolean(isDeleting)}
 						onClick={handleConfirm}
-						tone="danger"
+						tone="destructive"
 					>
 						{confirmLabel}
 					</Button>

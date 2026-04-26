@@ -34,7 +34,7 @@ interface ProfileWebVital {
 	time: string;
 }
 
-type VitalStatus = "danger" | "muted" | "success" | "warning";
+type VitalStatus = "destructive" | "muted" | "success" | "warning";
 
 function MetricBar({
 	className,
@@ -250,7 +250,7 @@ function upperBoundStatus(
 	if (value <= good) {
 		return "success";
 	}
-	return value <= warning ? "warning" : "danger";
+	return value <= warning ? "warning" : "destructive";
 }
 
 function lowerBoundStatus(
@@ -261,7 +261,7 @@ function lowerBoundStatus(
 	if (value >= good) {
 		return "success";
 	}
-	return value >= warning ? "warning" : "danger";
+	return value >= warning ? "warning" : "destructive";
 }
 
 function getVitalStatus({

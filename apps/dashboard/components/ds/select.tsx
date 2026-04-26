@@ -97,6 +97,7 @@ function Trigger({
 					: cn(
 							"flex h-(--control-h) w-full cursor-pointer select-none items-center justify-between rounded-md bg-secondary px-(--control-px) text-foreground text-xs [--control-h:--spacing(8)] [--control-px:--spacing(3)]",
 							"transition-colors duration-(--duration-quick) ease-(--ease-smooth)",
+							"hover:bg-interactive-hover data-[popup-open]:bg-interactive-hover data-[state=open]:bg-interactive-hover",
 							"focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
 							"disabled:cursor-not-allowed disabled:opacity-50",
 							"data-placeholder:text-muted-foreground",

@@ -11,7 +11,7 @@ export interface EmptyStateAction {
 	label: string;
 	onClick: () => void;
 	size?: "sm" | "md" | "lg";
-	tone?: "danger";
+	tone?: "destructive";
 	variant?: "primary" | "secondary" | "ghost";
 }
 

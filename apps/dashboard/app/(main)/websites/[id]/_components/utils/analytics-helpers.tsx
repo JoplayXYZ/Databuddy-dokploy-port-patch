@@ -129,11 +129,11 @@ export const groupBrowserData = (
 
 export const getColorVariant = (
 	value: number,
-	dangerThreshold: number,
+	destructiveThreshold: number,
 	warningThreshold: number
-): "danger" | "warning" | "success" => {
-	if (value > dangerThreshold) {
-		return "danger";
+): "destructive" | "warning" | "success" => {
+	if (value > destructiveThreshold) {
+		return "destructive";
 	}
 	if (value > warningThreshold) {
 		return "warning";

@@ -531,7 +531,7 @@ export function TwoFactorDialog({
 								disabled={!password || isPending}
 								loading={disableMutation.isPending}
 								onClick={() => disableMutation.mutate()}
-								tone="danger"
+								tone="destructive"
 							>
 								Disable 2FA
 							</Button>

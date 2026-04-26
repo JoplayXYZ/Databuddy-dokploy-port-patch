@@ -184,7 +184,7 @@ function UnlinkConfirmDialog({
 					<Button onClick={onClose} variant="secondary">
 						Cancel
 					</Button>
-					<Button loading={isPending} onClick={onConfirm} tone="danger">
+					<Button loading={isPending} onClick={onConfirm} tone="destructive">
 						Unlink
 					</Button>
 				</Dialog.Footer>
@@ -280,9 +280,9 @@ function DeleteAccountDialog({
 					</Dialog.Description>
 				</Dialog.Header>
 				<Dialog.Body className="space-y-4">
-					<div className="flex items-start gap-3 rounded-lg border border-danger/20 bg-danger/5 p-3">
+					<div className="flex items-start gap-3 rounded-lg border border-destructive/20 bg-destructive/5 p-3">
 						<WarningCircleIcon
-							className="mt-0.5 size-5 shrink-0 text-danger"
+							className="mt-0.5 size-5 shrink-0 text-destructive"
 							weight="duotone"
 						/>
 						<Text tone="muted" variant="caption">
@@ -326,7 +326,7 @@ function DeleteAccountDialog({
 						disabled={!canSubmit || deleteAccount.isPending}
 						loading={deleteAccount.isPending}
 						onClick={() => deleteAccount.mutate()}
-						tone="danger"
+						tone="destructive"
 					>
 						{hasPassword ? "Delete My Account" : "Send Confirmation Email"}
 					</Button>
@@ -684,7 +684,7 @@ export default function AccountSettingsPage() {
 						</Card.Content>
 					</Card>
 
-					<SettingsZone title="Danger Zone" variant="danger">
+					<SettingsZone title="Destructive actions" variant="destructive">
 						<SettingsZoneRow
 							action={{
 								label: "Delete Account",

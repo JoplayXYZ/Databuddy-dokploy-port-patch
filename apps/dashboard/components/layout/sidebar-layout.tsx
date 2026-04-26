@@ -123,7 +123,7 @@ export function SidebarTrigger({ className }: { className?: string }) {
 		<button
 			aria-label="Toggle sidebar"
 			className={cn(
-				"flex size-8 items-center justify-center rounded text-muted-foreground hover:bg-secondary hover:text-foreground",
+				"flex size-8 shrink-0 items-center justify-center rounded-md text-sidebar-foreground/65 transition-colors duration-(--duration-quick) ease-(--ease-smooth) hover:bg-sidebar-accent hover:text-sidebar-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
 				className
 			)}
 			onClick={toggle}

@@ -964,7 +964,7 @@ export function CardSheet({
 					{isEditMode && onDeleteAction ? (
 						<Button
 							onClick={() => setShowDeleteConfirm(true)}
-							tone="danger"
+							tone="destructive"
 							type="button"
 							variant="ghost"
 						>

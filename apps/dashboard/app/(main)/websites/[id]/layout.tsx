@@ -119,13 +119,11 @@ export default function WebsiteLayout({ children }: WebsiteLayoutProps) {
 						<AddFilterForm
 							addFilter={addFilter}
 							buttonText="Filter"
-							className="h-7"
 							disabled={isToolbarDisabled}
 						/>
 						<LiveUserIndicator websiteId={websiteId} />
 						<Button
 							aria-label="Refresh data"
-							className="size-7"
 							disabled={isRefreshing || isToolbarDisabled}
 							onClick={handleRefresh}
 							size="sm"

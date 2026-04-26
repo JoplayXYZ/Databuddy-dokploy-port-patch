@@ -134,7 +134,7 @@ export function AnnotationsPanel({
 													aria-label="Delete annotation"
 													className="size-6 p-0"
 													onClick={() => setDeleteId(annotation.id)}
-													tone="danger"
+													tone="destructive"
 													variant="ghost"
 												>
 													<TrashIcon className="size-3" weight="duotone" />

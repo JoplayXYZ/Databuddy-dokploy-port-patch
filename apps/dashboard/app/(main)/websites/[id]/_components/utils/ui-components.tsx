@@ -210,7 +210,7 @@ export const MetricTooltip = ({
 							</span>
 						</div>
 						<div className="flex items-center">
-							<StatusDot className="mr-1.5" color="danger" size="md" />
+							<StatusDot className="mr-1.5" color="destructive" size="md" />
 							<span>
 								Poor: &gt; {threshold.average}
 								{threshold.unit}

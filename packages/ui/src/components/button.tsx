@@ -30,7 +30,7 @@ const button = cva(
       },
       tone: {
         neutral: "",
-        danger: "",
+        destructive: "",
       },
       size: {
         sm: "h-8 px-3 text-xs",
@@ -41,18 +41,18 @@ const button = cva(
     compoundVariants: [
       {
         variant: "primary",
-        tone: "danger",
+        tone: "destructive",
         class:
           "bg-destructive text-destructive-foreground hover:brightness-[1.15]",
       },
       {
         variant: "secondary",
-        tone: "danger",
+        tone: "destructive",
         class: "bg-destructive/10 text-destructive hover:bg-destructive/15",
       },
       {
         variant: "ghost",
-        tone: "danger",
+        tone: "destructive",
         class:
           "text-destructive hover:bg-destructive/10 hover:text-destructive",
       },
@@ -96,7 +96,7 @@ function resolveButtonVariant(variant?: CompatVariant) {
     case "default":
       return { variant: "primary" as const };
     case "destructive":
-      return { tone: "danger" as const, variant: "primary" as const };
+      return { tone: "destructive" as const, variant: "primary" as const };
     case "outline":
       return { variant: "secondary" as const };
     default:

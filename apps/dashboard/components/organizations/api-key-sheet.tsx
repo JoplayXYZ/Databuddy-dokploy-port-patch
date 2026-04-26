@@ -891,7 +891,7 @@ export function ApiKeySheet({
 													weight="duotone"
 												/>
 												<Text className="text-destructive" variant="label">
-													Danger zone
+													Destructive actions
 												</Text>
 											</Accordion.Trigger>
 											<Accordion.Content className="bg-destructive/5">
@@ -919,7 +919,7 @@ export function ApiKeySheet({
 																loading={revokeMutation.isPending}
 																onClick={() => setShowRevokeConfirm(true)}
 																size="sm"
-																tone="danger"
+																tone="destructive"
 																type="button"
 																variant="secondary"
 															>
@@ -936,7 +936,7 @@ export function ApiKeySheet({
 															<Button
 																onClick={() => setShowDeleteConfirm(true)}
 																size="sm"
-																tone="danger"
+																tone="destructive"
 																type="button"
 																variant="secondary"
 															>
@@ -992,7 +992,7 @@ export function ApiKeySheet({
 								<Button
 									loading={deleteMutation.isPending}
 									onClick={() => deleteMutation.mutate({ id: apiKey.id })}
-									tone="danger"
+									tone="destructive"
 								>
 									Delete
 								</Button>
@@ -1059,7 +1059,7 @@ export function ApiKeySheet({
 											{ onSettled: () => setShowRevokeConfirm(false) }
 										);
 									}}
-									tone="danger"
+									tone="destructive"
 								>
 									Revoke
 								</Button>

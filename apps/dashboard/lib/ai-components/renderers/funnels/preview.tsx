@@ -38,7 +38,7 @@ interface ModeConfig {
 	confirmLabel: string;
 	confirmMessage: string;
 	title: string;
-	tone?: "danger";
+	tone?: "destructive";
 }
 
 const MODE_CONFIG: Record<string, ModeConfig> = {
@@ -61,7 +61,7 @@ const MODE_CONFIG: Record<string, ModeConfig> = {
 		confirmLabel: "Delete",
 		confirmMessage: "Yes, delete it",
 		accent: "border-destructive/30",
-		tone: "danger",
+		tone: "destructive",
 		ButtonIcon: TrashIcon,
 	},
 };

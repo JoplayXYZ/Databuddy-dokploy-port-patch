@@ -64,7 +64,7 @@ import { useState } from "react";
 import { ShowcaseRow, ShowcaseSection } from "./showcase-section";
 
 const BUTTON_VARIANTS = ["primary", "secondary", "ghost"] as const;
-const BUTTON_TONES = ["neutral", "danger"] as const;
+const BUTTON_TONES = ["neutral", "destructive"] as const;
 const BUTTON_SIZES = ["sm", "md", "lg"] as const;
 
 const BADGE_VARIANTS = [
@@ -155,7 +155,7 @@ export function DesignShowcase() {
 			</ShowcaseSection>
 
 			<ShowcaseSection
-				description="Three variants (primary, secondary, ghost) × two tones (neutral, danger) × three sizes."
+				description="Three variants (primary, secondary, ghost) × two tones (neutral, destructive) × three sizes."
 				id="button"
 				title="Button"
 			>
@@ -195,7 +195,7 @@ export function DesignShowcase() {
 						<PlusIcon className="size-3.5" />
 						Create
 					</Button>
-					<Button tone="danger">
+					<Button tone="destructive">
 						<TrashIcon className="size-3.5" />
 						Delete
 					</Button>
@@ -607,7 +607,7 @@ export function DesignShowcase() {
 					<Dialog>
 						<Dialog.Trigger
 							render={
-								<Button tone="danger" variant="secondary">
+								<Button tone="destructive" variant="secondary">
 									Destructive dialog
 								</Button>
 							}
@@ -625,7 +625,7 @@ export function DesignShowcase() {
 								<Dialog.Close>
 									<Button variant="secondary">Cancel</Button>
 								</Dialog.Close>
-								<Button tone="danger">Delete forever</Button>
+								<Button tone="destructive">Delete forever</Button>
 							</Dialog.Footer>
 						</Dialog.Content>
 					</Dialog>
@@ -880,8 +880,8 @@ export function DesignShowcase() {
 						<Text variant="caption">warning</Text>
 					</div>
 					<div className="flex items-center gap-1.5">
-						<StatusDot color="danger" />
-						<Text variant="caption">danger</Text>
+						<StatusDot color="destructive" />
+						<Text variant="caption">destructive</Text>
 					</div>
 					<div className="flex items-center gap-1.5">
 						<StatusDot color="muted" />
@@ -910,7 +910,7 @@ export function DesignShowcase() {
 						<Text variant="caption">3 users online</Text>
 					</div>
 					<div className="flex items-center gap-1.5">
-						<StatusDot color="danger" pulse />
+						<StatusDot color="destructive" pulse />
 						<Text variant="caption">Incident active</Text>
 					</div>
 				</ShowcaseRow>
@@ -977,9 +977,9 @@ export function DesignShowcase() {
 								tone="muted"
 								variant="caption"
 							>
-								danger
+								destructive
 							</Text>
-							<Progress className="flex-1" tone="danger" value={91} />
+							<Progress className="flex-1" tone="destructive" value={91} />
 						</div>
 					</div>
 				</ShowcaseRow>
@@ -1123,7 +1123,7 @@ export function DesignShowcase() {
 				<ShowcaseRow>
 					<Button
 						onClick={() => setDeleteOpen(true)}
-						tone="danger"
+						tone="destructive"
 						variant="secondary"
 					>
 						<TrashIcon className="size-3.5" />
@@ -1138,7 +1138,7 @@ export function DesignShowcase() {
 					/>
 					<Button
 						onClick={() => setDeleteChildrenOpen(true)}
-						tone="danger"
+						tone="destructive"
 						variant="secondary"
 					>
 						<WarningIcon className="size-3.5" />
@@ -1577,7 +1577,7 @@ function SettingsMockup() {
 											</div>
 										</div>
 										{!s.current && (
-											<Button size="sm" tone="danger" variant="ghost">
+											<Button size="sm" tone="destructive" variant="ghost">
 												Revoke
 											</Button>
 										)}
@@ -2049,7 +2049,7 @@ function BillingMockup() {
 								</Text>
 							</div>
 							<Progress
-								tone={u.used / u.limit > 0.8 ? "danger" : "primary"}
+								tone={u.used / u.limit > 0.8 ? "destructive" : "primary"}
 								value={(u.used / u.limit) * 100}
 							/>
 						</div>

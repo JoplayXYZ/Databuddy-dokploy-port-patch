@@ -4,7 +4,7 @@ import { type HTMLAttributes, type ReactNode, createContext, use, useState } fro
 import { cn } from "../lib/utils";
 import { Button } from "./button";
 
-type ZoneVariant = "danger" | "warning";
+type ZoneVariant = "destructive" | "warning";
 
 const ZoneContext = createContext<ZoneVariant | null>(null);
 
@@ -93,17 +93,17 @@ function SettingCard({
 
 const ZONE_STYLES: Record<
 	ZoneVariant,
-	{ border: string; heading: string; button: { tone: "danger"; variant?: "primary" | "secondary" } }
+	{ border: string; heading: string; button: { tone: "destructive"; variant?: "primary" | "secondary" } }
 > = {
-	danger: {
+	destructive: {
 		border: "border-destructive/30 divide-destructive/30",
 		heading: "text-destructive",
-		button: { tone: "danger" },
+		button: { tone: "destructive" },
 	},
 	warning: {
 		border: "border-amber-500/30 divide-amber-500/30",
 		heading: "text-amber-600 dark:text-amber-500",
-		button: { tone: "danger", variant: "secondary" },
+		button: { tone: "destructive", variant: "secondary" },
 	},
 };
 
@@ -147,7 +147,7 @@ interface SettingsZoneRowProps {
 }
 
 function SettingsZoneRow({ title, description, action }: SettingsZoneRowProps) {
-	const variant = use(ZoneContext) ?? "danger";
+	const variant = use(ZoneContext) ?? "destructive";
 	const btnProps = ZONE_STYLES[variant].button;
 
 	return (

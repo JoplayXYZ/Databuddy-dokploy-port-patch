@@ -23,6 +23,7 @@ import {
 	MsgContentIcon,
 } from "@databuddy/ui/icons";
 import { useCommandSearchOpenAction } from "@/components/ui/command-search";
+import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { PendingInvitationsButton } from "./pending-invitations-button";
 import { getInitials, ProfileDropdownContent } from "./profile-button-client";
@@ -79,6 +80,9 @@ function createTopBarStore(): TopBarStore {
 
 const TopBarStoreContext = createContext<TopBarStore | null>(null);
 
+const topBarIconButtonClassName =
+	"flex size-8 shrink-0 items-center justify-center rounded-md text-sidebar-foreground/65 transition-colors duration-(--duration-quick) ease-(--ease-smooth) hover:bg-sidebar-accent hover:text-sidebar-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60";
+
 function useStore() {
 	const store = use(TopBarStoreContext);
 	if (!store) {
@@ -113,12 +117,20 @@ function useTopBarSlot(name: string, content: ReactNode) {
 }
 
 function TopBarTitle({ children }: { children: ReactNode }) {
-	useTopBarSlot("title", children);
+	const content = (
+		<div className="flex min-w-0 items-center gap-2 [&_h1]:truncate [&_h1]:font-semibold [&_h1]:text-sm">
+			{children}
+		</div>
+	);
+	useTopBarSlot("title", content);
 	return null;
 }
 
 function TopBarActions({ children }: { children: ReactNode }) {
-	useTopBarSlot("actions", children);
+	const content = (
+		<div className="flex min-w-0 items-center gap-1.5">{children}</div>
+	);
+	useTopBarSlot("actions", content);
 	return null;
 }
 
@@ -135,25 +147,27 @@ function TopBarBreadcrumbs({
 	items: BreadcrumbItem[];
 }) {
 	const content = (
-		<nav aria-label="breadcrumb" className="flex items-center gap-2">
+		<nav aria-label="breadcrumb" className="flex min-w-0 items-center gap-2">
 			{icon && (
-				<span className="flex size-6 items-center justify-center rounded bg-secondary text-muted-foreground">
+				<span className="flex size-6 shrink-0 items-center justify-center rounded-md bg-sidebar-accent text-sidebar-foreground/60">
 					{icon}
 				</span>
 			)}
-			<ol className="flex items-center gap-1.5">
+			<ol className="flex min-w-0 items-center gap-1.5">
 				{items.map((item, i) => {
 					const isLast = i === items.length - 1;
 					return (
-						<li className="flex items-center gap-1.5" key={item.label}>
-							{i > 0 && <span className="text-muted-foreground/40">/</span>}
+						<li className="flex min-w-0 items-center gap-1.5" key={item.label}>
+							{i > 0 && (
+								<span className="shrink-0 text-sidebar-foreground/30">/</span>
+							)}
 							{isLast || !item.href ? (
-								<span className="font-semibold text-foreground text-sm">
+								<span className="truncate font-semibold text-foreground text-sm">
 									{item.label}
 								</span>
 							) : (
 								<a
-									className="text-muted-foreground text-sm hover:text-foreground"
+									className="truncate text-sidebar-foreground/55 text-sm hover:text-sidebar-foreground"
 									href={item.href}
 								>
 									{item.label}
@@ -185,13 +199,15 @@ function HelpMenu() {
 
 	return (
 		<DropdownMenu>
-			<DropdownMenu.Trigger
-				aria-label="Help & feedback"
-				className="flex size-8 items-center justify-center rounded text-muted-foreground hover:bg-secondary hover:text-foreground"
-				render={<button type="button" />}
-			>
-				<MsgContentIcon className="size-4 shrink-0" />
-			</DropdownMenu.Trigger>
+			<Tooltip content="Help & feedback" side="bottom">
+				<DropdownMenu.Trigger
+					aria-label="Help & feedback"
+					className={topBarIconButtonClassName}
+					render={<button type="button" />}
+				>
+					<MsgContentIcon className="size-5 shrink-0" />
+				</DropdownMenu.Trigger>
+			</Tooltip>
 			<DropdownMenu.Content align="end" className="w-48">
 				<DropdownMenu.Item onClick={() => router.push("/feedback")}>
 					<MsgContentIcon className="size-4 shrink-0" />
@@ -246,7 +262,10 @@ function TopBarUserButton() {
 			<Tooltip content={user.email ?? "Account"} side="bottom">
 				<DropdownMenu.Trigger
 					aria-label="Profile menu"
-					className="flex size-7 items-center justify-center rounded-full hover:opacity-80"
+					className={cn(
+						topBarIconButtonClassName,
+						"rounded-full p-0 hover:bg-transparent hover:opacity-80"
+					)}
 					render={<button type="button" />}
 				>
 					<Avatar
@@ -258,8 +277,10 @@ function TopBarUserButton() {
 				</DropdownMenu.Trigger>
 			</Tooltip>
 			<ProfileDropdownContent
+				align="end"
 				isOpen={isOpen}
 				onClose={() => setIsOpen(false)}
+				side="bottom"
 				user={user}
 			/>
 		</DropdownMenu>
@@ -277,28 +298,33 @@ export function TopBar() {
 	}, []);
 
 	return (
-		<header className="sticky top-0 z-40 hidden h-12 shrink-0 items-center border-sidebar-border/50 border-b bg-sidebar md:flex">
-			<div className="flex h-full w-full items-center gap-3 px-3">
+		<header className="sticky top-0 z-40 hidden h-12 shrink-0 items-center border-sidebar-border/60 border-b bg-sidebar/95 backdrop-blur supports-[backdrop-filter]:bg-sidebar/85 md:flex">
+			<div className="flex h-full w-full min-w-0 items-center gap-2 px-3">
 				<SidebarTrigger />
 
-				<div className="flex min-w-0 flex-1 items-center gap-2">
+				<div className="h-5 w-px shrink-0 bg-sidebar-border/50" />
+
+				<div className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden">
 					{hasMounted ? titleContent : null}
 				</div>
 
-				<div className="flex items-center gap-2">
-					{hasMounted ? actionsContent : null}
-				</div>
+				{hasMounted && actionsContent ? (
+					<div className="flex min-w-0 shrink items-center overflow-hidden">
+						{actionsContent}
+					</div>
+				) : null}
 
-				<div className="flex items-center gap-1.5">
+				<div className="flex shrink-0 items-center gap-1 border-sidebar-border/50 border-l pl-2">
 					<Button
 						aria-label="Search"
-						className="h-8 gap-2 px-3 text-muted-foreground"
+						className="h-8 min-w-9 justify-start gap-2 rounded-md px-2.5 text-sidebar-foreground/65 hover:text-sidebar-foreground lg:min-w-40"
 						onClick={() => openSearch()}
+						size="sm"
 						variant="secondary"
 					>
 						<MagnifyingGlassIcon className="size-4" />
-						<span className="text-xs">Search…</span>
-						<kbd className="ml-2 rounded border bg-muted px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">
+						<span className="hidden text-xs lg:inline">Search…</span>
+						<kbd className="ml-auto hidden rounded border bg-background/80 px-1.5 py-0.5 font-mono text-[10px] text-sidebar-foreground/50 xl:inline">
 							⌘K
 						</kbd>
 					</Button>
