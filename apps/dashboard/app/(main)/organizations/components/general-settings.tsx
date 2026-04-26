@@ -16,7 +16,7 @@ import { TopBar } from "@/components/layout/top-bar";
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
 import { type Organization, useOrganizations } from "@/hooks/use-organizations";
 import { ApiKeysSection } from "./api-keys-section";
-import { DangerZoneSection } from "./danger-zone-section";
+import { DestructiveActionsSection } from "./destructive-actions-section";
 import { OrganizationAvatarEditor } from "./organization-avatar-editor";
 import { WorkspaceWebsitesSection } from "./workspace-websites-section";
 
@@ -189,7 +189,7 @@ export function GeneralSettings({
 
 					<ApiKeysSection organization={organization} />
 
-					<DangerZoneSection organization={organization} />
+					<DestructiveActionsSection organization={organization} />
 				</div>
 			</div>
 		</div>

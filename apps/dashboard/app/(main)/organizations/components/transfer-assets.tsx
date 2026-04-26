@@ -17,7 +17,7 @@ import {
 } from "@databuddy/ui/icons";
 import { useState } from "react";
 import { toast } from "sonner";
-import { useWebsiteTransfer } from "../settings/danger/hooks/use-website-transfer";
+import { useWebsiteTransfer } from "../settings/destructive/hooks/use-website-transfer";
 
 function WebsiteItem({
 	website,

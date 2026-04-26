@@ -162,7 +162,7 @@ function MemberDetailDialog({
 							<Button
 								loading={isRemovingMember}
 								onClick={handleRemove}
-								tone="danger"
+								tone="destructive"
 							>
 								Remove
 							</Button>
@@ -246,7 +246,7 @@ function MemberDetailDialog({
 									<Button
 										className="w-full"
 										onClick={() => setView("confirm-remove")}
-										tone="danger"
+										tone="destructive"
 										variant="secondary"
 									>
 										Remove from workspace

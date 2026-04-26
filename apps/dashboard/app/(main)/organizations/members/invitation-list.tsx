@@ -182,7 +182,7 @@ export function InvitationList({
 						<Button
 							loading={isCancellingInvitation}
 							onClick={handleCancel}
-							tone="danger"
+							tone="destructive"
 						>
 							Cancel Invitation
 						</Button>

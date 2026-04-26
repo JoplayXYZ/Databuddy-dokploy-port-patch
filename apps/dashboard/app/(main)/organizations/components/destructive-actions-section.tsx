@@ -13,7 +13,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { TransferAssets } from "./transfer-assets";
 
-export function DangerZoneSection({
+export function DestructiveActionsSection({
 	organization,
 }: {
 	organization: Organization;
@@ -97,7 +97,7 @@ export function DangerZoneSection({
 				</Card.Content>
 			</Card>
 
-			<SettingsZone title="Danger Zone" variant="danger">
+			<SettingsZone title="Destructive actions" variant="destructive">
 				<SettingsZoneRow
 					action={{
 						label: isOwner === null ? "Loading" : isOwner ? "Delete" : "Leave",
@@ -170,7 +170,7 @@ export function DangerZoneSection({
 							disabled={confirmText !== organization.name}
 							loading={isDeleting}
 							onClick={handleDelete}
-							tone="danger"
+							tone="destructive"
 						>
 							Delete Organization
 						</Button>
@@ -195,7 +195,11 @@ export function DangerZoneSection({
 						>
 							Cancel
 						</Button>
-						<Button loading={isLeaving} onClick={handleLeave} tone="danger">
+						<Button
+							loading={isLeaving}
+							onClick={handleLeave}
+							tone="destructive"
+						>
 							Leave Organization
 						</Button>
 					</Dialog.Footer>
