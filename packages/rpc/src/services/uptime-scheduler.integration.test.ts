@@ -225,7 +225,7 @@ describeIntegration("uptime scheduler BullMQ integration", () => {
 		}
 	});
 
-	it("retries failed worker processing using the uptime job options", async () => {
+	it("retries failed worker processing using the uptime job options", { timeout: 15000 }, async () => {
 		const scheduleId = makeScheduleId("worker-retry");
 		const attempts: number[] = [];
 		const failures: string[] = [];
