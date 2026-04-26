@@ -25,7 +25,14 @@ import { alarmDestinations, alarms, usageAlertLog } from "./billing";
 import { feedback, feedbackRedemptions, insightUserFeedback } from "./feedback";
 import { flags, flagsToTargetGroups, targetGroups } from "./flags";
 import { links } from "./links";
-import { statusPageMonitors, statusPages, uptimeSchedules } from "./uptime";
+import {
+	incidentAffectedMonitors,
+	incidentUpdates,
+	incidents,
+	statusPageMonitors,
+	statusPages,
+	uptimeSchedules,
+} from "./uptime";
 import { websites } from "./websites";
 
 export const userRelations = relations(user, ({ many }) => ({
@@ -224,11 +231,45 @@ export const statusPagesRelations = relations(statusPages, ({ one, many }) => ({
 		references: [organization.id],
 	}),
 	statusPageMonitors: many(statusPageMonitors),
+	incidents: many(incidents),
 }));
+
+export const incidentsRelations = relations(incidents, ({ one, many }) => ({
+	statusPage: one(statusPages, {
+		fields: [incidents.statusPageId],
+		references: [statusPages.id],
+	}),
+	updates: many(incidentUpdates),
+	affectedMonitors: many(incidentAffectedMonitors),
+}));
+
+export const incidentAffectedMonitorsRelations = relations(
+	incidentAffectedMonitors,
+	({ one }) => ({
+		incident: one(incidents, {
+			fields: [incidentAffectedMonitors.incidentId],
+			references: [incidents.id],
+		}),
+		statusPageMonitor: one(statusPageMonitors, {
+			fields: [incidentAffectedMonitors.statusPageMonitorId],
+			references: [statusPageMonitors.id],
+		}),
+	})
+);
+
+export const incidentUpdatesRelations = relations(
+	incidentUpdates,
+	({ one }) => ({
+		incident: one(incidents, {
+			fields: [incidentUpdates.incidentId],
+			references: [incidents.id],
+		}),
+	})
+);
 
 export const statusPageMonitorsRelations = relations(
 	statusPageMonitors,
-	({ one }) => ({
+	({ one, many }) => ({
 		statusPage: one(statusPages, {
 			fields: [statusPageMonitors.statusPageId],
 			references: [statusPages.id],
@@ -237,6 +278,7 @@ export const statusPageMonitorsRelations = relations(
 			fields: [statusPageMonitors.uptimeScheduleId],
 			references: [uptimeSchedules.id],
 		}),
+		incidentAffectedMonitors: many(incidentAffectedMonitors),
 	})
 );
 

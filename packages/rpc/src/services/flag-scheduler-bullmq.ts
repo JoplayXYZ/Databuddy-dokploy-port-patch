@@ -1,3 +1,4 @@
+import { getBullMQConnectionOptions } from "@databuddy/redis";
 import { Queue } from "bullmq";
 import { logger } from "../lib/logger";
 
@@ -7,23 +8,7 @@ interface RolloutStep {
 	value: number | "enable" | "disable";
 }
 
-const getConnection = () => {
-	const redisUrl = process.env.REDIS_URL;
-	if (!redisUrl) {
-		throw new Error("REDIS_URL environment variable is required");
-	}
-
-	const url = new URL(redisUrl);
-	return {
-		host: url.hostname,
-		port: Number(url.port) || 6379,
-		password: url.password || undefined,
-		db: url.pathname ? Number(url.pathname.slice(1)) : undefined,
-		maxRetriesPerRequest: null as null,
-	};
-};
-
-const connection = getConnection();
+const connection = getBullMQConnectionOptions();
 
 const flagScheduleQueue = new Queue("flag-schedules", {
 	connection,

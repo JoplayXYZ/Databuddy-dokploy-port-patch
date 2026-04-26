@@ -12,7 +12,7 @@ services:
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-databuddy}
       POSTGRES_USER: ${POSTGRES_USER:-databuddy}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in your environment}
     ports:
       - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
     volumes:
@@ -33,7 +33,7 @@ services:
     environment:
       CLICKHOUSE_DB: ${CLICKHOUSE_DB:-databuddy_analytics}
       CLICKHOUSE_USER: ${CLICKHOUSE_USER:-default}
-      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD}
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:?Set CLICKHOUSE_PASSWORD in your environment}
       CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
     ports:
       - "127.0.0.1:${CLICKHOUSE_PORT:-8123}:8123"
@@ -61,9 +61,9 @@ services:
     volumes:
       - redis_data:/data
     environment:
-      REDISCLI_AUTH: ${REDIS_PASSWORD}
+      REDISCLI_AUTH: ${REDIS_PASSWORD:?Set REDIS_PASSWORD in your environment}
     command: >
-      redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy noeviction --requirepass ${REDIS_PASSWORD}
+      redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy noeviction --requirepass ${REDIS_PASSWORD:?Set REDIS_PASSWORD in your environment}
     healthcheck:
       test: [ "CMD", "redis-cli", "ping" ]
       interval: 10s
@@ -75,18 +75,19 @@ services:
     <<: *logging
 
   api:
-    image: ghcr.io/databuddy-analytics/databuddy-api:${IMAGE_TAG:-edge}
+    image: ghcr.io/databuddy-analytics/databuddy-api:${IMAGE_TAG:?Set IMAGE_TAG to a release tag, for example v1.0.0}
     container_name: databuddy-api
     ports:
       - "${API_PORT:-3001}:3001"
     environment:
       NODE_ENV: production
       PORT: "3001"
-      DATABASE_URL: ${DATABASE_URL}
-      REDIS_URL: ${REDIS_URL}
-      CLICKHOUSE_URL: ${CLICKHOUSE_URL}
-      BETTER_AUTH_URL: ${BETTER_AUTH_URL}
-      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET}
+      DATABASE_URL: ${DATABASE_URL:?Set DATABASE_URL in your environment}
+      REDIS_URL: ${REDIS_URL:?Set REDIS_URL in your environment}
+      BULLMQ_REDIS_URL: ${BULLMQ_REDIS_URL:?Set BULLMQ_REDIS_URL in your environment}
+      CLICKHOUSE_URL: ${CLICKHOUSE_URL:?Set CLICKHOUSE_URL in your environment}
+      BETTER_AUTH_URL: ${BETTER_AUTH_URL:?Set BETTER_AUTH_URL in your environment}
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?Set BETTER_AUTH_SECRET in your environment}
       DASHBOARD_URL: ${DASHBOARD_URL:-}
       AI_API_KEY: ${AI_API_KEY:-}
       RESEND_API_KEY: ${RESEND_API_KEY:-}
@@ -109,16 +110,16 @@ services:
     <<: *logging
 
   basket:
-    image: ghcr.io/databuddy-analytics/databuddy-basket:${IMAGE_TAG:-edge}
+    image: ghcr.io/databuddy-analytics/databuddy-basket:${IMAGE_TAG:?Set IMAGE_TAG to a release tag, for example v1.0.0}
     container_name: databuddy-basket
     ports:
       - "${BASKET_PORT:-4000}:4000"
     environment:
       NODE_ENV: production
       PORT: "4000"
-      DATABASE_URL: ${DATABASE_URL}
-      REDIS_URL: ${REDIS_URL}
-      CLICKHOUSE_URL: ${CLICKHOUSE_URL}
+      DATABASE_URL: ${DATABASE_URL:?Set DATABASE_URL in your environment}
+      REDIS_URL: ${REDIS_URL:?Set REDIS_URL in your environment}
+      CLICKHOUSE_URL: ${CLICKHOUSE_URL:?Set CLICKHOUSE_URL in your environment}
       SELFHOST: "true"
     healthcheck:
       test: [ "CMD", "bun", "-e", "fetch('http://localhost:4000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))" ]
@@ -139,14 +140,14 @@ services:
     <<: *logging
 
   links:
-    image: ghcr.io/databuddy-analytics/databuddy-links:${IMAGE_TAG:-edge}
+    image: ghcr.io/databuddy-analytics/databuddy-links:${IMAGE_TAG:?Set IMAGE_TAG to a release tag, for example v1.0.0}
     container_name: databuddy-links
     ports:
       - "${LINKS_PORT:-2500}:2500"
     environment:
       NODE_ENV: production
-      DATABASE_URL: ${DATABASE_URL}
-      REDIS_URL: ${REDIS_URL}
+      DATABASE_URL: ${DATABASE_URL:?Set DATABASE_URL in your environment}
+      REDIS_URL: ${REDIS_URL:?Set REDIS_URL in your environment}
       APP_URL: ${APP_URL:-https://app.databuddy.cc}
       LINKS_ROOT_REDIRECT_URL: ${LINKS_ROOT_REDIRECT_URL:-https://databuddy.cc}
       GEOIP_DB_URL: ${GEOIP_DB_URL:-https://cdn.databuddy.cc/mmdb/GeoLite2-City.mmdb}
@@ -165,18 +166,16 @@ services:
     networks:
       - databuddy
     <<: *logging
-  # Uncomment to enable uptime monitoring (requires Upstash QStash keys)
+  # Uncomment to enable uptime monitoring (uses Redis-backed BullMQ schedules)
   # uptime:
-  #   image: ghcr.io/databuddy-analytics/databuddy-uptime:${IMAGE_TAG:-edge}
+  #   image: ghcr.io/databuddy-analytics/databuddy-uptime:${IMAGE_TAG:?Set IMAGE_TAG to a release tag, for example v1.0.0}
   #   container_name: databuddy-uptime
   #   ports:
   #     - "${UPTIME_PORT:-4001}:4000"
   #   environment:
   #     NODE_ENV: production
-  #     DATABASE_URL: ${DATABASE_URL}
-  #     REDIS_URL: ${REDIS_URL}
-  #     QSTASH_CURRENT_SIGNING_KEY: ${QSTASH_CURRENT_SIGNING_KEY}
-  #     QSTASH_NEXT_SIGNING_KEY: ${QSTASH_NEXT_SIGNING_KEY}
+  #     DATABASE_URL: ${DATABASE_URL:?Set DATABASE_URL in your environment}
+  #     BULLMQ_REDIS_URL: ${BULLMQ_REDIS_URL:?Set BULLMQ_REDIS_URL in your environment}
   #     RESEND_API_KEY: ${RESEND_API_KEY:-}
   #   healthcheck:
   #     test: ["CMD", "bun", "-e", "fetch('http://localhost:4000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
