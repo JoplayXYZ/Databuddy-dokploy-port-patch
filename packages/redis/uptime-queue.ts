@@ -4,6 +4,8 @@ import { getBullMQConnectionOptions } from "./bullmq";
 export const UPTIME_QUEUE_NAME = "uptime-checks";
 export const UPTIME_CHECK_JOB_NAME = "uptime-check";
 
+export const UPTIME_JOB_TIMEOUT_MS = 30_000;
+
 export const UPTIME_JOB_OPTIONS = {
 	attempts: 3,
 	backoff: {
