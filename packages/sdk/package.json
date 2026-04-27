@@ -10,7 +10,7 @@
   "type": "module",
   "scripts": {
     "build": "unbuild",
-    "test": "bun run test:unit && bun run test:e2e:chromium",
+    "test": "bun run test:unit",
     "test:all": "bun run test:unit && bun run test:e2e",
     "test:unit": "bun test tests/*.test.ts",
     "test:e2e": "playwright test",

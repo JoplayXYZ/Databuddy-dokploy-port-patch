@@ -73,7 +73,6 @@ jobs:
       TURBO_TEAM: ${{ vars.TURBO_TEAM }}
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/databuddy_test
       REDIS_URL: redis://localhost:6379
-      BULLMQ_REDIS_URL: redis://localhost:6379/2
       REDIS_HOST: localhost
       REDIS_PORT: 6379
       REDPANDA_BROKER: localhost:9092
