@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ThemeProvider } from "next-themes";
-import { getStatusPageUrl } from "@/lib/status-url";
+import { DATABUDDY_UPTIME_URL, getStatusPageUrl } from "@/lib/status-url";
 import { rpcClient } from "@/lib/orpc";
 import { StatusNavbar } from "./_components/status-navbar";
 import { Status } from "./_components/status-page";
@@ -33,15 +33,17 @@ export async function generateMetadata({
 
 	if (!data) {
 		return {
-			title: "Status Page",
-			description: "System status and uptime monitoring",
+			title: "Status page not found",
+			description: "This public status page could not be found.",
+			robots: { index: false, follow: false },
 		};
 	}
 
-	const title = `${data.statusPage.name || data.organization.name} Status`;
+	const displayName = data.statusPage.name || data.organization.name;
+	const title = `${displayName} Status`;
 	const description =
 		data.statusPage.description ||
-		`Real-time system status for ${data.organization.name}`;
+		`Live uptime, incident history, and service health for ${data.organization.name}.`;
 	const url = getStatusPageUrl(slug);
 	const faviconUrl = data.statusPage.faviconUrl;
 
@@ -51,13 +53,39 @@ export async function generateMetadata({
 		...(faviconUrl
 			? { icons: { icon: faviconUrl, shortcut: faviconUrl } }
 			: {}),
-		alternates: { canonical: `/${slug}` },
+		authors: [
+			{
+				name: data.organization.name,
+				url: data.statusPage.websiteUrl ?? url,
+			},
+		],
+		keywords: [
+			displayName,
+			data.organization.name,
+			"status",
+			"uptime",
+			"incidents",
+			"service health",
+		],
+		alternates: { canonical: url },
 		openGraph: {
 			title,
 			description,
 			url,
 			type: "website",
+			locale: "en_US",
 			siteName: data.organization.name,
+		},
+		robots: {
+			index: true,
+			follow: true,
+			googleBot: {
+				index: true,
+				follow: true,
+				"max-image-preview": "large",
+				"max-snippet": -1,
+				"max-video-preview": -1,
+			},
 		},
 		twitter: { card: "summary_large_image", title, description },
 	};
@@ -105,6 +133,12 @@ export default async function StatusPage({ params }: StatusPageProps) {
 			page.description ||
 			`Real-time system status for ${data.organization.name}`,
 		url: getStatusPageUrl(slug),
+		isPartOf: {
+			"@type": "WebSite",
+			name: "Databuddy Status",
+			url: DATABUDDY_UPTIME_URL,
+		},
+		...(latestTimestamp ? { dateModified: latestTimestamp } : {}),
 		publisher: {
 			"@type": "Organization",
 			name: data.organization.name,

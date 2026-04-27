@@ -1,5 +1,4 @@
-import Image from "next/image";
-import { ThemeToggle } from "@databuddy/ui/client";
+import { Avatar, ThemeToggle } from "@databuddy/ui/client";
 import { LifebuoyIcon } from "@databuddy/ui/icons";
 
 interface StatusNavbarProps {
@@ -14,14 +13,7 @@ export function StatusNavbar({
 	supportUrl,
 }: StatusNavbarProps) {
 	const logo = logoUrl ? (
-		<Image
-			alt=""
-			className="shrink-0 rounded object-contain"
-			height={20}
-			src={logoUrl}
-			unoptimized
-			width={20}
-		/>
+		<Avatar alt="" className="rounded" size="sm" src={logoUrl} />
 	) : null;
 
 	return (
@@ -52,7 +44,7 @@ export function StatusNavbar({
 							rel="noopener noreferrer"
 							target="_blank"
 						>
-							<LifebuoyIcon className="size-3.5" weight="duotone" />
+							<LifebuoyIcon className="size-3.5" />
 							<span className="hidden sm:inline">Support</span>
 						</a>
 					) : null}

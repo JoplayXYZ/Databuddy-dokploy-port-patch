@@ -112,7 +112,27 @@ const statusPageOutputSchema = z.object({
 	incidents: z.array(incidentSchema),
 });
 
+const publicStatusPageSitemapEntrySchema = z.object({
+	slug: z.string(),
+	updatedAt: z.string().datetime(),
+});
+
 type StatusPageOutput = z.infer<typeof statusPageOutputSchema>;
+
+async function listPublicStatusPageSitemapEntries() {
+	const rows = await db
+		.select({
+			slug: statusPages.slug,
+			updatedAt: statusPages.updatedAt,
+		})
+		.from(statusPages)
+		.orderBy(desc(statusPages.updatedAt));
+
+	return rows.map((row) => ({
+		slug: row.slug,
+		updatedAt: row.updatedAt.toISOString(),
+	}));
+}
 
 function deriveOverallStatus(
 	monitors: { currentStatus: "up" | "down" | "degraded" | "unknown" }[],
@@ -530,6 +550,16 @@ const fetchStatusPageData = cacheable(_fetchStatusPageData, {
 });
 
 export const statusPageRouter = {
+	listPublic: publicProcedure
+		.route({
+			method: "POST",
+			path: "/statusPage/listPublic",
+			summary: "List public status pages for sitemap generation",
+			tags: ["StatusPage"],
+		})
+		.output(z.array(publicStatusPageSitemapEntrySchema))
+		.handler(async () => listPublicStatusPageSitemapEntries()),
+
 	getBySlug: publicProcedure
 		.route({
 			method: "POST",

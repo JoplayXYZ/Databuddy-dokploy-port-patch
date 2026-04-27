@@ -1,5 +1,11 @@
 "use client";
 
+import { useEffect } from "react";
+import {
+	StatusErrorShell,
+	StatusRetryButton,
+} from "./_components/status-error-shell";
+
 export default function GlobalError({
 	error,
 	reset,
@@ -7,24 +13,20 @@ export default function GlobalError({
 	error: Error & { digest?: string };
 	reset: () => void;
 }) {
+	useEffect(() => {
+		console.error("Status app global error:", error);
+	}, [error]);
+
 	return (
 		<html lang="en">
-			<body className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-background p-6 font-sans text-foreground antialiased">
-				<h1 className="text-balance font-medium text-lg">
-					Something went wrong
-				</h1>
-				{error.digest ? (
-					<p className="text-pretty text-muted-foreground text-sm tabular-nums">
-						{error.digest}
-					</p>
-				) : null}
-				<button
-					className="rounded border border-border bg-card px-4 py-2 text-sm"
-					onClick={() => reset()}
-					type="button"
-				>
-					Try again
-				</button>
+			<body className="bg-background font-sans text-foreground antialiased">
+				<StatusErrorShell
+					action={<StatusRetryButton onClick={reset} />}
+					code="500"
+					description="The status app hit an unexpected error before it could finish rendering."
+					detail={error.digest}
+					title="Status app unavailable"
+				/>
 			</body>
 		</html>
 	);

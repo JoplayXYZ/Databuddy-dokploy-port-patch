@@ -2,7 +2,7 @@ import "./globals.css";
 
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
-import { STATUS_URL } from "@/lib/status-url";
+import { DATABUDDY_UPTIME_URL, STATUS_URL } from "@/lib/status-url";
 
 const ltSuperior = localFont({
 	src: [
@@ -30,12 +30,59 @@ const ltSuperiorMono = localFont({
 
 export const metadata: Metadata = {
 	metadataBase: new URL(STATUS_URL),
+	applicationName: "Databuddy Status",
 	title: {
-		template: "%s | Status",
-		default: "System Status",
+		template: "%s | Databuddy Status",
+		default: "Databuddy Status Pages",
 	},
-	description: "Real-time system status and uptime monitoring",
-	robots: { index: true, follow: true },
+	description:
+		"Live uptime, incident history, and service health for public Databuddy status pages.",
+	keywords: [
+		"status page",
+		"uptime monitoring",
+		"incident history",
+		"service status",
+		"Databuddy uptime",
+	],
+	authors: [{ name: "Databuddy", url: DATABUDDY_UPTIME_URL }],
+	creator: "Databuddy",
+	publisher: "Databuddy",
+	category: "technology",
+	icons: {
+		icon: [
+			{ url: "/icon0.svg", type: "image/svg+xml" },
+			{ url: "/icon1.png", sizes: "96x96", type: "image/png" },
+		],
+		shortcut: [{ url: "/icon0.svg", type: "image/svg+xml" }],
+		apple: [{ url: "/apple-icon.png", sizes: "180x180", type: "image/png" }],
+	},
+	manifest: "/manifest.webmanifest",
+	openGraph: {
+		title: "Databuddy Status Pages",
+		description:
+			"Live uptime, incident history, and service health for public Databuddy status pages.",
+		url: STATUS_URL,
+		siteName: "Databuddy Status",
+		type: "website",
+		locale: "en_US",
+	},
+	robots: {
+		index: true,
+		follow: true,
+		googleBot: {
+			index: true,
+			follow: true,
+			"max-image-preview": "large",
+			"max-snippet": -1,
+			"max-video-preview": -1,
+		},
+	},
+	twitter: {
+		card: "summary",
+		title: "Databuddy Status Pages",
+		description:
+			"Live uptime, incident history, and service health for public Databuddy status pages.",
+	},
 };
 
 export const viewport: Viewport = {

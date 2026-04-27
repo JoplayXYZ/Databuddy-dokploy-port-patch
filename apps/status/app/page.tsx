@@ -1,5 +1,6 @@
-import { redirect } from "next/navigation";
+import { permanentRedirect } from "next/navigation";
+import { DATABUDDY_UPTIME_URL } from "@/lib/status-url";
 
 export default function RootPage() {
-	redirect("https://www.databuddy.cc");
+	permanentRedirect(DATABUDDY_UPTIME_URL);
 }
