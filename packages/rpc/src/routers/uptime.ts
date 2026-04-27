@@ -39,7 +39,7 @@ function parseStoredGranularity(
 ): z.infer<typeof granularityEnum> {
 	const parsed = granularityEnum.safeParse(value);
 	if (!parsed.success) {
-		throw rpcError.internal(`Invalid monitor granularity: ${value}`);
+		throw rpcError.internal("Invalid monitor granularity");
 	}
 	return parsed.data;
 }

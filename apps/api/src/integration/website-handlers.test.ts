@@ -95,15 +95,13 @@ describe("websites.create", () => {
 			input: { name: "First", domain, organizationId: org.id },
 		});
 
-		try {
-			await handler.create({
+		await expectCode(
+			handler.create({
 				context: userContext(user, org.id),
 				input: { name: "Second", domain, organizationId: org.id },
-			});
-			throw new Error("Expected rejection");
-		} catch (e: any) {
-			expect(["CONFLICT", "INTERNAL_SERVER_ERROR"]).toContain(e.code);
-		}
+			}),
+			"CONFLICT",
+		);
 	});
 
 	iit("allows API key with manage:websites scope", async () => {

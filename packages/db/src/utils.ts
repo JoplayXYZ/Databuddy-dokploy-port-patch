@@ -28,5 +28,10 @@ export function isUniqueViolationFor(
 	) {
 		return error.code === "23505" && error.constraint === constraintName;
 	}
+
+	if (error instanceof Error && error.cause) {
+		return isUniqueViolationFor(error.cause, constraintName);
+	}
+
 	return false;
 }

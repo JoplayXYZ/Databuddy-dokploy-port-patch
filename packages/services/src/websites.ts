@@ -188,9 +188,7 @@ export class WebsiteService {
 				throw new DuplicateDomainError(normalizedDomain);
 			}
 			console.error("WebsiteService.create failed:", { error: String(error) });
-			throw new Error(
-				`Failed to create website: ${error instanceof Error ? error.message : String(error)}`
-			);
+			throw new Error("Failed to create website");
 		}
 	}
 
@@ -264,9 +262,7 @@ export class WebsiteService {
 			console.error("WebsiteService.updateById failed:", {
 				error: String(error),
 			});
-			throw new Error(
-				`Failed to update website: ${error instanceof Error ? error.message : String(error)}`
-			);
+			throw new Error("Failed to update website");
 		}
 	}
 
@@ -294,9 +290,7 @@ export class WebsiteService {
 			console.error("WebsiteService.deleteById failed:", {
 				error: String(error),
 			});
-			throw new Error(
-				`Failed to delete website: ${error instanceof Error ? error.message : String(error)}`
-			);
+			throw new Error("Failed to delete website");
 		}
 	}
 }

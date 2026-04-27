@@ -40,9 +40,7 @@ function handleServiceError(error: unknown): never {
 	if (error instanceof WebsiteNotFoundError) {
 		throw rpcError.notFound("website");
 	}
-	throw rpcError.internal(
-		error instanceof Error ? error.message : String(error)
-	);
+	throw rpcError.internal("Website operation failed");
 }
 
 interface EventsCheckResult {
