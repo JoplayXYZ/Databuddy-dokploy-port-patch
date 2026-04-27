@@ -20,6 +20,10 @@ import { getCachedWebsiteDomain, getWebsiteDomain } from "../lib/website-utils";
 import { compileQuery, executeBatch } from "../query";
 import { QueryBuilders } from "../query/builders";
 import { executeCustomQuery } from "../query/custom-query-builder";
+import {
+	isNormalizedQueryDate,
+	normalizeClickHouseDateTime,
+} from "../query/date-utils";
 import type { Filter, QueryRequest } from "../query/types";
 import {
 	CompileRequestSchema,
@@ -31,21 +35,9 @@ import {
 
 const MAX_HOURLY_DAYS = 30;
 const MS_PER_DAY = 86_400_000;
-const DATE_FORMAT_REGEX = /^\d{4}-\d{2}-\d{2}$/;
-const ISO_DATETIME_REGEX = /^\d{4}-\d{2}-\d{2}T/;
 
 function normalizeDate(input: string): string {
-	if (DATE_FORMAT_REGEX.test(input)) {
-		return input;
-	}
-	if (ISO_DATETIME_REGEX.test(input)) {
-		return input.split("T")[0] as string;
-	}
-	const parsed = new Date(input);
-	if (!Number.isNaN(parsed.getTime())) {
-		return parsed.toISOString().split("T")[0] as string;
-	}
-	return input;
+	return normalizeClickHouseDateTime(input);
 }
 
 interface ValidationError {
@@ -156,13 +148,13 @@ function validateQueryRequest(
 		});
 	}
 
-	if (startDate && !DATE_FORMAT_REGEX.test(startDate)) {
+	if (startDate && !isNormalizedQueryDate(startDate)) {
 		errors.push({
 			field: "startDate",
 			message: `Invalid date: ${request.startDate}. Could not parse as a valid date`,
 		});
 	}
-	if (endDate && !DATE_FORMAT_REGEX.test(endDate)) {
+	if (endDate && !isNormalizedQueryDate(endDate)) {
 		errors.push({
 			field: "endDate",
 			message: `Invalid date: ${request.endDate}. Could not parse as a valid date`,
@@ -684,7 +676,7 @@ async function resolveProjectAccess(
 	return {
 		success: false,
 		error:
-			"Missing project identifier (website_id, schedule_id, link_id, or organization_id)",
+			"Missing resource identifier (website_id, schedule_id, link_id, or organization_id)",
 		code: "MISSING_PROJECT_ID",
 		status: 400,
 	};
@@ -792,11 +784,18 @@ async function executeDynamicQuery(
 
 	const prepared: PreparedParameter[] = request.parameters.map((param) => {
 		const { name, id, start, end, granularity } = parseQueryParameter(param);
-		const paramFrom = start || from;
-		const paramTo = end || to;
+		const paramFrom = start ? normalizeDate(start) : from;
+		const paramTo = end ? normalizeDate(end) : to;
 
 		if (!QueryBuilders[name]) {
 			return { id, error: `Unknown query type: ${name}` };
+		}
+
+		if (
+			(paramFrom && !isNormalizedQueryDate(paramFrom)) ||
+			(paramTo && !isNormalizedQueryDate(paramTo))
+		) {
+			return { id, error: "Invalid parameter date range" };
 		}
 
 		const isLlmQuery = name.startsWith("llm_");
@@ -810,7 +809,7 @@ async function executeDynamicQuery(
 				error:
 					isLlmQuery && !ownerId
 						? "Could not resolve owner for LLM query"
-						: "Missing project identifier, start_date, or end_date",
+						: "Missing resource identifier, start_date, or end_date",
 			};
 		}
 

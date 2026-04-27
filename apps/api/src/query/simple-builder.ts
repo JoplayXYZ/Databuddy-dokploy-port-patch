@@ -1,4 +1,5 @@
 import { chQuery } from "@databuddy/db/clickhouse";
+import { normalizeClickHouseDateTime } from "./date-utils";
 import type { Granularity } from "./expressions";
 import {
 	compileConfigField,
@@ -107,6 +108,16 @@ const REFERRER_MAPPINGS: Record<string, string> = {
 	"www.instagram.com": "https://instagram.com",
 	"l.instagram.com": "https://instagram.com",
 };
+
+const DATE_PARAM_NAMES = new Set(["from", "to", "startDate", "endDate"]);
+const DATE_PARAM_PATTERN = "from|to|startDate|endDate";
+
+function parseDateExpression(paramName: string, withTimezone = false): string {
+	const param = `{${paramName}:String}`;
+	return withTimezone
+		? `parseDateTimeBestEffort(${param}, {timezone:String})`
+		: `parseDateTimeBestEffort(${param})`;
+}
 
 function normalizeReferrerValue(value: string, forLikeSearch = false): string {
 	const lower = value.toLowerCase();
@@ -343,7 +354,63 @@ export class SimpleQueryBuilder {
 	}
 
 	private formatDateTime(dateStr: string): string {
-		return (dateStr.split(".")[0] || dateStr).replace("T", " ");
+		return normalizeClickHouseDateTime(dateStr);
+	}
+
+	private finalizeCompiledQuery(
+		sql: string,
+		params: Record<string, Filter["value"]>
+	): CompiledQuery {
+		const finalParams: Record<string, Filter["value"]> = { ...params };
+
+		for (const [key, value] of Object.entries(finalParams)) {
+			if (DATE_PARAM_NAMES.has(key) && typeof value === "string") {
+				finalParams[key] = normalizeClickHouseDateTime(value);
+			}
+		}
+
+		let finalSql = sql.replace(
+			new RegExp(
+				`parseDateTimeBestEffort\\(concat\\(\\{(${DATE_PARAM_PATTERN}):String\\}, ' 23:59:59'\\), \\{timezone:String\\}\\)`,
+				"g"
+			),
+			(_match, paramName: string) => {
+				const value = finalParams[paramName];
+				if (typeof value === "string") {
+					finalParams[paramName] = normalizeClickHouseDateTime(value, {
+						endOfDay: true,
+					});
+				}
+				return parseDateExpression(paramName, true);
+			}
+		);
+
+		finalSql = finalSql.replace(
+			new RegExp(
+				`toDateTime\\(concat\\(\\{(${DATE_PARAM_PATTERN}):String\\}, ' 23:59:59'\\)\\)`,
+				"g"
+			),
+			(_match, paramName: string) => {
+				const value = finalParams[paramName];
+				if (typeof value === "string") {
+					finalParams[paramName] = normalizeClickHouseDateTime(value, {
+						endOfDay: true,
+					});
+				}
+				return parseDateExpression(paramName);
+			}
+		);
+
+		finalSql = finalSql.replace(
+			new RegExp(`toDateTime\\(\\{(${DATE_PARAM_PATTERN}):String\\}\\)`, "g"),
+			(_match, paramName: string) => parseDateExpression(paramName)
+		);
+
+		if (finalSql.includes("{timezone:String}") && !finalParams.timezone) {
+			finalParams.timezone = this.request.timezone || "UTC";
+		}
+
+		return { sql: finalSql, params: finalParams };
 	}
 
 	compile(): CompiledQuery {
@@ -384,9 +451,12 @@ export class SimpleQueryBuilder {
 			);
 
 			if (typeof result === "string") {
-				return { sql: result, params: {} };
+				return this.finalizeCompiledQuery(result, {});
 			}
-			return { sql: result.sql, params: result.params };
+			return this.finalizeCompiledQuery(
+				result.sql,
+				result.params as Record<string, Filter["value"]>
+			);
 		}
 
 		return this.buildStandardQuery();
@@ -437,7 +507,7 @@ export class SimpleQueryBuilder {
 		sql += this.buildLimitClause();
 		sql += this.buildOffsetClause();
 
-		return { sql, params };
+		return this.finalizeCompiledQuery(sql, params);
 	}
 
 	private compileFields(fields?: ConfigField[]): string {
@@ -637,7 +707,7 @@ export class SimpleQueryBuilder {
 		sql += this.buildLimitClause();
 		sql += this.buildOffsetClause();
 
-		return { sql, params };
+		return this.finalizeCompiledQuery(sql, params);
 	}
 
 	private buildWhereClause(params: Record<string, Filter["value"]>): string[] {
