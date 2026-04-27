@@ -1,5 +1,9 @@
 export type RouteLabel = "simple" | "complex";
 
+export interface RouteMessage {
+	parts?: Array<{ type?: string }>;
+}
+
 const EXPLICIT_SIMPLE =
 	/^(?:hi|hey|hello|yo|sup|wassup|what's up|thanks?|thx|ty|ok(?:ay)?|cool|nice|great|awesome|got it|huh|what\??|what the (?:heck|hell|fuck)|wtf|lol|lmao|bye|cheers|nvm|never ?mind|no problem|np|alright|sure|yep|yeah|yup|nope|nah|no)[\s.!?]*$/i;
 
@@ -25,4 +29,20 @@ export function routeMessage(text: string): RouteLabel {
 		return "simple";
 	}
 	return "complex";
+}
+
+export function hasToolHistory(messages: RouteMessage[]): boolean {
+	return messages.some((message) =>
+		message.parts?.some((part) => part.type?.startsWith("tool-"))
+	);
+}
+
+export function selectModelKeyForRoute(
+	routeLabel: RouteLabel,
+	messages: RouteMessage[]
+): "fast" | "analytics" {
+	if (routeLabel === "simple" && !hasToolHistory(messages)) {
+		return "fast";
+	}
+	return "analytics";
 }
