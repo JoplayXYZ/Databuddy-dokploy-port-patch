@@ -44,7 +44,7 @@ import {
 	resolveAgentBillingCustomerId,
 	trackAgentUsageAndBill,
 } from "../ai/agents/execution";
-import { routeMessage } from "../ai/agents/router";
+import { routeMessage, selectModelKeyForRoute } from "../ai/agents/router";
 import { AGENT_THINKING_LEVELS, type AgentConfig } from "../ai/agents/types";
 import {
 	type AgentModelKey,
@@ -394,8 +394,10 @@ export const agent = new Elysia({ prefix: "/v1/agent" })
 					const routeLabel = lastMessage
 						? routeMessage(lastMessage)
 						: "complex";
-					const modelKey: AgentModelKey =
-						routeLabel === "simple" ? "fast" : "analytics";
+					const modelKey: AgentModelKey = selectModelKeyForRoute(
+						routeLabel,
+						body.messages
+					);
 
 					mergeWideEvent({
 						agent_route_label: routeLabel,
