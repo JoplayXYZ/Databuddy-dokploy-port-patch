@@ -29,22 +29,44 @@ function LoginPage() {
 
 	const lastUsed = authClient.getLastUsedLoginMethod();
 
+	const getProviderLabel = (provider: "github" | "google") =>
+		provider === "github" ? "GitHub" : "Google";
+
 	const handleSocialLogin = async (provider: "github" | "google") => {
 		setIsLoading(true);
 
-		await authClient.signIn.social({
-			provider,
-			callbackURL: callback,
-			newUserCallbackURL: "/onboarding",
-			fetchOptions: {
-				onError: () => {
-					setIsLoading(false);
-					toast.error(
-						`${provider === "github" ? "GitHub" : "Google"} login failed. Please try again.`
-					);
-				},
-			},
-		});
+		try {
+			const result = await authClient.signIn.social({
+				provider,
+				callbackURL: callback,
+				newUserCallbackURL: "/onboarding",
+				disableRedirect: true,
+			});
+
+			if (result.error) {
+				toast.error(
+					result.error.message ||
+						`${getProviderLabel(provider)} login failed. Please try again.`
+				);
+				setIsLoading(false);
+				return;
+			}
+
+			if (result.data?.url) {
+				window.location.href = result.data.url;
+				return;
+			}
+
+			toast.error(
+				`${getProviderLabel(provider)} login failed. Please try again.`
+			);
+			setIsLoading(false);
+		} catch {
+			toast.error(
+				`${getProviderLabel(provider)} login failed. Please try again.`
+			);
+			setIsLoading(false);
+		}
 	};
 
 	const handleEmailPasswordLogin = async (e: React.FormEvent) => {

@@ -73,6 +73,9 @@ function RegisterPageContent() {
 		return callback;
 	};
 
+	const getProviderLabel = (provider: "github" | "google") =>
+		provider === "github" ? "GitHub" : "Google";
+
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 
@@ -144,22 +147,33 @@ function RegisterPageContent() {
 		setIsLoading(true);
 
 		try {
-			await authClient.signIn.social({
+			const result = await authClient.signIn.social({
 				provider,
 				callbackURL: getCallbackUrl(),
 				newUserCallbackURL: "/onboarding",
-				fetchOptions: {
-					onSuccess: () => {
-						trackSignUp("social", provider);
-					},
-					onError: () => {
-						toast.error(
-							`${provider === "github" ? "GitHub" : "Google"} login failed. Please try again.`
-						);
-						setIsLoading(false);
-					},
-				},
+				disableRedirect: true,
 			});
+
+			if (result.error) {
+				toast.error(
+					result.error.message ||
+						`${getProviderLabel(provider)} login failed. Please try again.`
+				);
+				setIsLoading(false);
+				return;
+			}
+
+			trackSignUp("social", provider);
+
+			if (result.data?.url) {
+				window.location.href = result.data.url;
+				return;
+			}
+
+			toast.error(
+				`${getProviderLabel(provider)} login failed. Please try again.`
+			);
+			setIsLoading(false);
 		} catch {
 			toast.error("Login failed. Please try again.");
 			setIsLoading(false);
