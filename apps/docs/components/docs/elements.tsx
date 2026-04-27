@@ -63,7 +63,7 @@ function Blockquote({
 	return (
 		<blockquote
 			className={cn(
-				"my-4 rounded-lg border border-border/60 border-l-4 bg-card p-4 text-foreground/80 [&_p]:m-0",
+				"my-4 border-border border-l-2 pl-4 text-muted-foreground [&_p]:m-0 [&_p]:leading-7",
 				className
 			)}
 			{...props}
@@ -77,7 +77,7 @@ function Anchor({ children, className, ...props }: React.ComponentProps<"a">) {
 	return (
 		<a
 			className={cn(
-				"font-medium text-primary underline underline-offset-4",
+				"cursor-pointer font-medium text-primary underline underline-offset-4",
 				className
 			)}
 			{...props}

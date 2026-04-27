@@ -1,22 +1,21 @@
 "use client";
 
-import type { IconProps } from "@phosphor-icons/react";
 import {
 	BugIcon,
 	CaretDownIcon,
 	FlagIcon,
 	GaugeIcon,
 	HeartbeatIcon,
-} from "@phosphor-icons/react";
+} from "@databuddy/ui/icons";
+import { cn } from "@databuddy/ui";
 import Link from "next/link";
 import type { ComponentType } from "react";
 import { useCallback, useRef, useState } from "react";
-import { cn } from "@/lib/utils";
 
 interface FeatureItem {
 	description: string;
 	href: string;
-	icon: ComponentType<IconProps>;
+	icon: ComponentType<{ className?: string }>;
 	title: string;
 }
 
@@ -89,7 +88,7 @@ export function NavbarFeaturesMenu({
 				aria-expanded={open}
 				aria-haspopup="true"
 				className={cn(
-					"flex items-center gap-1 px-4 py-4 font-medium text-sm transition-colors",
+					"flex cursor-pointer items-center gap-1 px-4 py-4 font-medium text-sm transition-colors duration-(--duration-quick) ease-(--ease-smooth)",
 					open
 						? "text-foreground"
 						: "text-muted-foreground hover:text-foreground"
@@ -110,7 +109,6 @@ export function NavbarFeaturesMenu({
 						"size-3 transition-transform duration-200",
 						open && "rotate-180"
 					)}
-					weight="bold"
 				/>
 			</button>
 
@@ -130,19 +128,16 @@ export function NavbarFeaturesMenu({
 				ref={panelRef}
 				role="menu"
 			>
-				<div className="w-80 rounded border border-border bg-background/95 p-1 shadow-lg backdrop-blur-xl">
+				<div className="w-80 rounded-lg border border-border/60 bg-popover p-1 shadow-lg">
 					{FEATURE_ITEMS.map((item) => (
 						<Link
-							className="group flex items-start gap-3 rounded p-3 transition-colors hover:bg-muted/50"
+							className="group flex cursor-pointer items-start gap-3 rounded-md p-3 transition-colors duration-(--duration-quick) ease-(--ease-smooth) hover:bg-interactive-hover"
 							href={item.href}
 							key={item.href}
 							onClick={handleItemClick}
 							role="menuitem"
 						>
-							<item.icon
-								className="mt-0.5 size-5 shrink-0 text-muted-foreground transition-colors group-hover:text-foreground"
-								weight="duotone"
-							/>
+							<item.icon className="mt-0.5 size-4 shrink-0 text-muted-foreground transition-colors group-hover:text-foreground" />
 							<div className="min-w-0">
 								<p className="font-medium text-foreground text-sm">
 									{item.title}
@@ -173,9 +168,10 @@ export function NavbarFeaturesMobileMenu({
 	return (
 		<div>
 			<button
-				className={`flex w-full items-center justify-between rounded px-4 py-3 font-medium text-base transition-all duration-200 hover:translate-x-1 hover:bg-muted/50 active:bg-muted/70 ${
+				className={cn(
+					"flex w-full cursor-pointer items-center justify-between rounded-md px-4 py-3 font-medium text-base transition-all duration-200 hover:translate-x-1 hover:bg-interactive-hover",
 					isMenuOpen ? "translate-x-0 opacity-100" : "-translate-x-4 opacity-0"
-				}`}
+				)}
 				onClick={() => setExpanded((prev) => !prev)}
 				style={{
 					transitionDelay: isMenuOpen ? `${baseDelayIndex * 50}ms` : "0ms",
@@ -188,7 +184,6 @@ export function NavbarFeaturesMobileMenu({
 						"size-3.5 text-muted-foreground transition-transform duration-200",
 						expanded && "rotate-180"
 					)}
-					weight="bold"
 				/>
 			</button>
 
@@ -201,12 +196,12 @@ export function NavbarFeaturesMobileMenu({
 				<div className="space-y-1 py-1 pl-4">
 					{FEATURE_ITEMS.map((item) => (
 						<Link
-							className="flex items-center gap-3 rounded px-4 py-2.5 text-muted-foreground text-sm transition-colors hover:bg-muted/50 hover:text-foreground"
+							className="flex cursor-pointer items-center gap-3 rounded-md px-4 py-2.5 text-muted-foreground text-sm transition-colors duration-(--duration-quick) ease-(--ease-smooth) hover:bg-interactive-hover hover:text-foreground"
 							href={item.href}
 							key={item.href}
 							onClick={onCloseAction}
 						>
-							<item.icon className="size-4 shrink-0" weight="duotone" />
+							<item.icon className="size-4 shrink-0" />
 							{item.title}
 						</Link>
 					))}

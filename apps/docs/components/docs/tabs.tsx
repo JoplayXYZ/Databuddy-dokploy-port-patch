@@ -1,3 +1,5 @@
+"use client";
+
 import { cn } from "@databuddy/ui";
 import { Tabs as UITabs } from "@databuddy/ui/client";
 import React from "react";
@@ -58,21 +60,29 @@ function TabsList({
 	className,
 	...props
 }: React.ComponentProps<typeof UITabs.List>) {
-	return <UITabs.List className={cn("mb-4 w-fit", className)} {...props} />;
+	return <UITabs.List className={cn("mb-3 w-fit", className)} {...props} />;
 }
 
 function TabsTrigger({
 	className,
 	...props
 }: React.ComponentProps<typeof UITabs.Tab>) {
-	return <UITabs.Tab className={className} {...props} />;
+	return <UITabs.Tab className={cn("cursor-pointer", className)} {...props} />;
 }
 
 function TabsContent({
 	className,
 	...props
 }: React.ComponentProps<typeof UITabs.Panel>) {
-	return <UITabs.Panel className={cn("mt-4", className)} {...props} />;
+	return (
+		<UITabs.Panel
+			className={cn(
+				"mt-3 rounded-lg border border-border/60 bg-card p-4 text-sm leading-6 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 [&>*:first-child]:mt-0 [&>*:last-child]:mb-0",
+				className
+			)}
+			{...props}
+		/>
+	);
 }
 
 interface TabProps {

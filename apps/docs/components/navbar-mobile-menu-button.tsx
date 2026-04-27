@@ -1,7 +1,7 @@
 "use client";
 
-import { ListIcon, XIcon } from "@phosphor-icons/react";
-import { cn } from "@/lib/utils";
+import { ListIcon, XMarkIcon } from "@databuddy/ui/icons";
+import { cn } from "@databuddy/ui";
 
 interface NavbarMobileMenuButtonProps {
 	isOpen: boolean;
@@ -17,7 +17,7 @@ export function NavbarMobileMenuButton({
 	return (
 		<button
 			aria-label="Toggle mobile menu"
-			className="group relative rounded border border-transparent p-2.5 transition-all duration-200 hover:border-border/30 hover:bg-muted/50 active:bg-muted/70 md:hidden"
+			className="group relative cursor-pointer rounded-md p-2.5 text-muted-foreground transition-colors duration-(--duration-quick) ease-(--ease-smooth) hover:bg-interactive-hover hover:text-foreground md:hidden"
 			onClick={onToggleAction}
 			type="button"
 		>
@@ -29,9 +29,8 @@ export function NavbarMobileMenuButton({
 							? "rotate-90 scale-90 opacity-0"
 							: "rotate-0 scale-100 opacity-100"
 					)}
-					weight="duotone"
 				/>
-				<XIcon
+				<XMarkIcon
 					className={cn(
 						iconBase,
 						isOpen

@@ -10,16 +10,16 @@ import { cva, type VariantProps } from "class-variance-authority";
 import type * as React from "react";
 
 const calloutVariants = cva(
-	"my-4 flex items-start gap-3 rounded-lg border border-border/60 border-l-4 bg-card p-4 text-card-foreground",
+	"not-prose my-4 flex gap-3 rounded-lg border border-border/60 bg-card p-3.5 text-card-foreground",
 	{
 		variants: {
 			type: {
-				info: "border-l-blue-500",
-				success: "border-l-green-500",
-				warn: "border-l-yellow-500",
-				error: "border-l-red-500",
-				tip: "border-l-purple-500",
-				note: "border-l-border",
+				info: "",
+				success: "",
+				warn: "",
+				error: "border-destructive/30",
+				tip: "",
+				note: "",
 			},
 		},
 		defaultVariants: {
@@ -28,15 +28,34 @@ const calloutVariants = cva(
 	}
 );
 
-const iconVariants = cva("mt-0.5 size-5 shrink-0", {
+const iconShellVariants = cva(
+	"flex size-8 shrink-0 items-center justify-center rounded-md bg-secondary text-muted-foreground",
+	{
+		variants: {
+			type: {
+				info: "",
+				success: "text-success",
+				warn: "text-warning",
+				error: "bg-destructive/10 text-destructive",
+				tip: "text-brand-purple",
+				note: "",
+			},
+		},
+		defaultVariants: {
+			type: "info",
+		},
+	}
+);
+
+const titleVariants = cva("font-medium text-foreground text-sm", {
 	variants: {
 		type: {
-			info: "text-blue-500",
-			success: "text-green-500",
-			warn: "text-yellow-500",
-			error: "text-red-500",
-			tip: "text-purple-500",
-			note: "text-muted-foreground",
+			info: "",
+			success: "",
+			warn: "",
+			error: "text-destructive",
+			tip: "",
+			note: "",
 		},
 	},
 	defaultVariants: {
@@ -67,21 +86,29 @@ function Callout({
 	...props
 }: CalloutProps) {
 	const Icon = iconMap[type as keyof typeof iconMap] || iconMap.info;
+	const hasTitle = !!title;
 
 	return (
 		<div
-			className={cn(calloutVariants({ type }), className)}
+			className={cn(
+				calloutVariants({ type }),
+				hasTitle ? "items-start" : "items-center",
+				className
+			)}
 			role="alert"
 			{...props}
 		>
-			<Icon className={cn(iconVariants({ type }))} weight="duotone" />
+			<div className={cn(iconShellVariants({ type }))}>
+				<Icon className="size-4" />
+			</div>
 			<div className="min-w-0 flex-1">
-				{title && (
-					<div className="mb-1 font-semibold text-foreground text-sm">
-						{title}
-					</div>
-				)}
-				<div className="text-muted-foreground text-sm [&_p]:leading-relaxed">
+				{title && <div className={cn(titleVariants({ type }))}>{title}</div>}
+				<div
+					className={cn(
+						"text-muted-foreground text-sm leading-6 [&_p:not(:first-child)]:mt-2 [&_p]:m-0",
+						!hasTitle && "flex min-h-8 items-center"
+					)}
+				>
 					{children}
 				</div>
 			</div>

@@ -14,11 +14,11 @@ import {
 	KeyIcon,
 	LightbulbIcon,
 	LockIcon,
+	DownloadSimpleIcon,
+	MediaPlayIcon,
 	MonitorIcon,
 	PackageIcon,
 	PlugIcon,
-	RocketIcon,
-	RocketLaunchIcon,
 	ShieldCheckIcon,
 } from "@databuddy/ui/icons";
 
@@ -57,13 +57,13 @@ export const contents: SidebarSection[] = [
 			{
 				title: "Getting Started",
 				href: "/docs/getting-started",
-				icon: RocketLaunchIcon,
+				icon: MediaPlayIcon,
 			},
 		],
 	},
 	{
 		title: "Install",
-		Icon: RocketIcon,
+		Icon: DownloadSimpleIcon,
 		list: [
 			{
 				title: "Frameworks",
