@@ -42,7 +42,6 @@ export function AgentPageContent({ chatId, websiteId }: AgentPageContentProps) {
 				<AgentChatSurface
 					autoSendPromptFromUrl
 					chatId={chatId}
-					variant="page"
 					websiteId={websiteId}
 				/>
 			</div>

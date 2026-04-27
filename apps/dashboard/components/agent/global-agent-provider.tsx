@@ -14,23 +14,18 @@ import {
 import { type Website, useWebsitesLight } from "@/hooks/use-websites";
 import { getLastChatId, setLastChatId } from "./hooks/use-chat-db";
 
-const GLOBAL_AGENT_OPEN_KEY = "databuddy-global-agent-open";
 const GLOBAL_AGENT_WEBSITE_KEY = "databuddy-global-agent-website";
 const WEBSITE_PATH_REGEX = /^\/websites\/([^/]+)/;
 const AGENT_PATH_REGEX = /^\/websites\/[^/]+\/agent(?:\/|$)/;
 
 interface GlobalAgentContextValue {
 	chatId: string | null;
-	closeDock: () => void;
 	isAgentRoute: boolean;
 	isAvailable: boolean;
 	isLoadingWebsites: boolean;
-	isOpen: boolean;
 	loadChat: (chatId: string) => void;
 	newChat: () => void;
-	openDock: () => void;
 	selectWebsite: (websiteId: string) => void;
-	toggleDock: () => void;
 	websiteId: string | null;
 	websites: Website[];
 }
@@ -50,26 +45,12 @@ function getWebsiteIdFromPathname(pathname: string): string | null {
 	}
 }
 
-function getStoredOpenState(): boolean {
-	try {
-		return window.localStorage.getItem(GLOBAL_AGENT_OPEN_KEY) === "true";
-	} catch {
-		return false;
-	}
-}
-
 function getStoredWebsiteId(): string | null {
 	try {
 		return window.localStorage.getItem(GLOBAL_AGENT_WEBSITE_KEY);
 	} catch {
 		return null;
 	}
-}
-
-function storeOpenState(isOpen: boolean) {
-	try {
-		window.localStorage.setItem(GLOBAL_AGENT_OPEN_KEY, String(isOpen));
-	} catch {}
 }
 
 function storeWebsiteId(websiteId: string) {
@@ -87,8 +68,6 @@ export function GlobalAgentProvider({ children }: { children: ReactNode }) {
 		enabled: isAvailable,
 	});
 	const [chatId, setChatId] = useState<string | null>(null);
-	const [isOpen, setIsOpen] = useState(false);
-	const [hasLoadedOpenState, setHasLoadedOpenState] = useState(false);
 	const [storedWebsiteId, setStoredWebsiteId] = useState<string | null>(null);
 
 	const storedWebsiteIsValid = storedWebsiteId
@@ -102,16 +81,8 @@ export function GlobalAgentProvider({ children }: { children: ReactNode }) {
 		null;
 
 	useEffect(() => {
-		setIsOpen(getStoredOpenState());
 		setStoredWebsiteId(getStoredWebsiteId());
-		setHasLoadedOpenState(true);
 	}, []);
-
-	useEffect(() => {
-		if (hasLoadedOpenState) {
-			storeOpenState(isOpen);
-		}
-	}, [hasLoadedOpenState, isOpen]);
 
 	useEffect(() => {
 		if (routeWebsiteId) {
@@ -156,43 +127,7 @@ export function GlobalAgentProvider({ children }: { children: ReactNode }) {
 		const nextChatId = getLastChatId(nextWebsiteId) ?? generateId();
 		setLastChatId(nextWebsiteId, nextChatId);
 		setChatId(nextChatId);
-		setIsOpen(true);
 	}, []);
-
-	const ensureChat = useCallback(() => {
-		if (!websiteId) {
-			return null;
-		}
-
-		const nextChatId = chatId ?? getLastChatId(websiteId) ?? generateId();
-		setLastChatId(websiteId, nextChatId);
-		setChatId(nextChatId);
-		return nextChatId;
-	}, [chatId, websiteId]);
-
-	const openDock = useCallback(() => {
-		if (!isAvailable) {
-			return;
-		}
-		ensureChat();
-		setIsOpen(true);
-	}, [ensureChat, isAvailable]);
-
-	const closeDock = useCallback(() => {
-		setIsOpen(false);
-	}, []);
-
-	const toggleDock = useCallback(() => {
-		if (!isAvailable) {
-			return;
-		}
-		if (isOpen) {
-			setIsOpen(false);
-			return;
-		}
-		ensureChat();
-		setIsOpen(true);
-	}, [ensureChat, isAvailable, isOpen]);
 
 	const loadChat = useCallback(
 		(nextChatId: string) => {
@@ -201,7 +136,6 @@ export function GlobalAgentProvider({ children }: { children: ReactNode }) {
 			}
 			setLastChatId(websiteId, nextChatId);
 			setChatId(nextChatId);
-			setIsOpen(true);
 		},
 		[websiteId]
 	);
@@ -216,31 +150,23 @@ export function GlobalAgentProvider({ children }: { children: ReactNode }) {
 	const value = useMemo(
 		(): GlobalAgentContextValue => ({
 			chatId,
-			closeDock,
 			isAgentRoute,
 			isAvailable,
 			isLoadingWebsites,
-			isOpen,
 			loadChat,
 			newChat,
-			openDock,
 			selectWebsite,
-			toggleDock,
 			websiteId,
 			websites,
 		}),
 		[
 			chatId,
-			closeDock,
 			isAgentRoute,
 			isAvailable,
 			isLoadingWebsites,
-			isOpen,
 			loadChat,
 			newChat,
-			openDock,
 			selectWebsite,
-			toggleDock,
 			websiteId,
 			websites,
 		]

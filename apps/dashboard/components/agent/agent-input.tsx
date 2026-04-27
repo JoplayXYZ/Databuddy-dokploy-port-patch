@@ -7,7 +7,6 @@ import {
 	useRandomDotMatrixLoader,
 } from "@/components/ai-elements/dotmatrix-loader";
 import { Button } from "@/components/ds/button";
-import { Input } from "@/components/ds/input";
 import { Textarea } from "@/components/ds/textarea";
 import { Tooltip } from "@databuddy/ui";
 import { useChat, usePendingQueue } from "@/contexts/chat-context";
@@ -29,11 +28,7 @@ import {
 } from "@phosphor-icons/react/dist/ssr";
 import { ClockCountdownIcon } from "@databuddy/ui/icons";
 
-interface AgentInputProps {
-	variant?: "page" | "dock";
-}
-
-export function AgentInput({ variant = "page" }: AgentInputProps) {
+export function AgentInput() {
 	const { sendMessage, stop, status } = useChat();
 	const { messages: pendingMessages, removeAction } = usePendingQueue();
 	const isLoading = status === "streaming" || status === "submitted";
@@ -126,81 +121,6 @@ export function AgentInput({ variant = "page" }: AgentInputProps) {
 		}
 		setSelectedCommandIndex(0);
 	};
-
-	const isDock = variant === "dock";
-
-	if (isDock) {
-		return (
-			<form
-				className="relative z-10 mt-auto"
-				onSubmit={handleSubmit}
-				ref={formRef}
-			>
-				{pendingMessages.length > 0 ? (
-					<PendingPill
-						messages={pendingMessages}
-						onClear={stop}
-						onRemove={removeAction}
-					/>
-				) : null}
-
-				<AgentCommandMenu
-					anchor={
-						<div
-							className={cn(
-								"rounded border border-border bg-background p-1 shadow-xs transition-colors",
-								"focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/50"
-							)}
-						>
-							<div className="flex items-center gap-1">
-								<Input
-									className={cn(
-										"h-8 min-w-0 flex-1 bg-transparent px-2 text-[13px] hover:bg-transparent",
-										"focus-visible:ring-0"
-									)}
-									disabled={isLoading}
-									onChange={(e) => handleInputChange(e.target.value)}
-									onKeyDown={handleMessageKeyDown}
-									placeholder="Ask anything..."
-									value={input}
-									variant="ghost"
-								/>
-								<ThinkingControl iconOnly />
-								{isLoading ? (
-									<Button
-										aria-label="Stop generation"
-										onClick={stop}
-										size="icon-sm"
-										type="button"
-										variant="secondary"
-									>
-										<StopIcon className="size-3.5" weight="fill" />
-									</Button>
-								) : (
-									<Button
-										aria-label="Send message"
-										disabled={!input.trim()}
-										size="icon-sm"
-										type="submit"
-									>
-										<PaperPlaneRightIcon
-											className="size-3.5"
-											weight={input.trim() ? "fill" : "duotone"}
-										/>
-									</Button>
-								)}
-							</div>
-						</div>
-					}
-					commands={filteredCommands}
-					onHover={setSelectedCommandIndex}
-					onSelect={selectCommand}
-					open={showCommands}
-					selectedIndex={safeCommandIndex}
-				/>
-			</form>
-		);
-	}
 
 	return (
 		<form

@@ -25,7 +25,6 @@ import {
 } from "@databuddy/ui/icons";
 import { AgentInput } from "./agent-input";
 import { AgentMessages } from "./agent-messages";
-import { AgentRecentChats } from "./agent-recent-chats";
 import { setLastChatId } from "./hooks/use-chat-db";
 
 interface AgentChatSurfaceProps {
@@ -33,8 +32,6 @@ interface AgentChatSurfaceProps {
 	chatId: string;
 	className?: string;
 	contentClassName?: string;
-	onSelectChat?: (chatId: string) => void;
-	variant?: "page" | "dock";
 	websiteId: string;
 }
 
@@ -52,8 +49,6 @@ export function AgentChatSurface({
 	chatId,
 	className,
 	contentClassName,
-	onSelectChat,
-	variant = "page",
 	websiteId,
 }: AgentChatSurfaceProps) {
 	useEffect(() => {
@@ -99,49 +94,6 @@ export function AgentChatSurface({
 		sendMessage({ text });
 	};
 
-	if (variant === "dock") {
-		return (
-			<div
-				className={cn(
-					"relative flex min-h-0 flex-1 flex-col overflow-hidden",
-					className
-				)}
-			>
-				<Conversation className="min-h-0 flex-1 overscroll-none">
-					<ConversationContent
-						className={cn(
-							"mx-auto flex min-h-full w-full max-w-none flex-col gap-3 px-3 py-3",
-							contentClassName
-						)}
-						scrollClassName="overscroll-none"
-					>
-						{hasMessages ? <AgentMessages variant="dock" /> : null}
-						{showLoading ? <DelayedLoading /> : null}
-						{showWelcome ? (
-							<div className="flex flex-1 items-center justify-center">
-								<WelcomeState
-									domain={domain}
-									onPromptSelect={launchPrompt}
-									variant={variant}
-									websiteId={websiteId}
-								/>
-							</div>
-						) : null}
-					</ConversationContent>
-					<ConversationScrollButton className="bottom-3" />
-				</Conversation>
-				<AgentRecentChats
-					currentChatId={chatId}
-					onSelectChat={onSelectChat}
-					websiteId={websiteId}
-				/>
-				<div className="shrink-0 px-2 pb-2">
-					<AgentInput variant="dock" />
-				</div>
-			</div>
-		);
-	}
-
 	return (
 		<div
 			className={cn("relative flex min-h-0 flex-1 overflow-hidden", className)}
@@ -161,7 +113,6 @@ export function AgentChatSurface({
 							<WelcomeState
 								domain={domain}
 								onPromptSelect={launchPrompt}
-								variant="page"
 								websiteId={websiteId}
 							/>
 						</div>
@@ -205,11 +156,9 @@ function WelcomeState({
 	onPromptSelect,
 	websiteId,
 	domain,
-	variant,
 }: {
 	domain: string | null;
 	onPromptSelect: (text: string) => void;
-	variant: "page" | "dock";
 	websiteId: string;
 }) {
 	const { data: prompts, isLoading } = useQuery({
@@ -218,52 +167,6 @@ function WelcomeState({
 		}),
 		staleTime: 5 * 60 * 1000,
 	});
-
-	if (variant === "dock") {
-		return (
-			<div className="flex w-full flex-col items-center gap-4 py-6 text-center">
-				<Avatar
-					alt="Databunny avatar"
-					className="size-10 rounded"
-					fallback="DB"
-					src="/databunny.webp"
-				/>
-				<div className="space-y-1">
-					<p className="text-balance font-medium text-foreground text-sm">
-						Ask Databunny
-					</p>
-					<p className="text-balance text-muted-foreground text-xs leading-relaxed">
-						Investigate traffic, summarize changes, and explain what happened.
-					</p>
-				</div>
-				{isLoading || !prompts ? (
-					<div className="flex w-full flex-col gap-1.5">
-						{SKELETON_WIDTHS.slice(0, 3).map((widthClass) => (
-							<Skeleton
-								className={cn("h-8 rounded", widthClass)}
-								key={widthClass}
-							/>
-						))}
-					</div>
-				) : (
-					<div className="flex w-full flex-col gap-1.5">
-						{prompts.slice(0, 3).map((item) => (
-							<Button
-								className="h-auto justify-start whitespace-normal px-2.5 py-1.5 text-left text-muted-foreground text-xs hover:text-foreground"
-								key={`${item.source}-${item.label}`}
-								onClick={() => onPromptSelect(item.prompt)}
-								size="sm"
-								variant="ghost"
-							>
-								<LightbulbIcon className="size-3.5 shrink-0" weight="duotone" />
-								<span className="line-clamp-2 leading-tight">{item.label}</span>
-							</Button>
-						))}
-					</div>
-				)}
-			</div>
-		);
-	}
 
 	return (
 		<div className="w-full space-y-6">
@@ -287,7 +190,7 @@ function WelcomeState({
 				</div>
 			</div>
 
-			<div className={cn("grid gap-2", variant === "page" && "sm:grid-cols-2")}>
+			<div className="grid gap-2 sm:grid-cols-2">
 				{isLoading || !prompts
 					? SKELETON_WIDTHS.map((widthClass) => (
 							<SuggestionSkeleton key={widthClass} widthClass={widthClass} />

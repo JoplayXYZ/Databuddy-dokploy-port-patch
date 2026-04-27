@@ -333,17 +333,12 @@ function AssistantActions({
 	);
 }
 
-interface AgentMessagesProps {
-	variant?: "page" | "dock";
-}
-
-export function AgentMessages({ variant = "page" }: AgentMessagesProps) {
+export function AgentMessages() {
 	const { status, messages, error, regenerate, clearError, sendMessage } =
 		useChat();
 	const hasError = status === "error";
 	const isStreaming = status === "streaming" || status === "submitted";
 	const lastMessage = messages.at(-1);
-	const isDock = variant === "dock";
 
 	if (messages.length === 0) {
 		return null;
@@ -372,21 +367,11 @@ export function AgentMessages({ variant = "page" }: AgentMessagesProps) {
 
 				return (
 					<Message
-						className={cn(
-							"group/message",
-							isDock && "max-w-full gap-1.5",
-							isDock && message.role === "user" && "max-w-[86%]"
-						)}
+						className="group/message"
 						from={message.role}
 						key={messageKey}
 					>
-						<MessageContent
-							className={cn(
-								isAssistant && "w-full",
-								isDock && "gap-1.5 text-[13px] leading-5",
-								isDock && !isAssistant && "px-3 py-2"
-							)}
-						>
+						<MessageContent className={cn(isAssistant && "w-full")}>
 							{groupedParts.map((part, partIndex) =>
 								renderMessagePart(
 									part,
