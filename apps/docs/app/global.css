@@ -3,6 +3,8 @@
 @import "fumadocs-ui/css/preset.css";
 @import "tw-animate-css";
 
+@source "../../../packages/ui/src/**/*.{ts,tsx}";
+
 @custom-variant dark (&:is(.dark *));
 
 *:not(code, code *, pre, pre *, kbd) {
@@ -19,16 +21,24 @@
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
   --color-secondary: var(--secondary);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-secondary-brightest: var(--secondary-brightest);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
   --color-accent: var(--accent);
+  --color-accent-brighter: var(--accent-brighter);
+  --color-accent-disabled: var(--accent-disabled);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
+  --color-destructive-brighter: var(--destructive-brighter);
   --color-destructive-foreground: var(--destructive-foreground);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --color-interactive-hover: var(--interactive-hover);
+  --color-interactive-active: var(--interactive-active);
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);
@@ -86,9 +96,16 @@
   --muted: #f4f4f6;
   --muted-foreground: #71727a;
   --accent: #ecedf3;
+  --accent-brighter: #f3f4f7;
+  --accent-disabled: #f3f4f7;
   --accent-foreground: #27282d;
   --destructive: #dc2626;
+  --destructive-brighter: #ef4444;
   --destructive-foreground: #ffffff;
+  --interactive-hover: #e4e5ea;
+  --interactive-active: #d5d6de;
+  --success: #16a34a;
+  --warning: #ca8a04;
   --border: #e4e5ea;
   --input: #e4e5ea;
   --ring: #453c7c;
@@ -161,9 +178,16 @@
   --muted: #2a2a31;
   --muted-foreground: #9d9ea6;
   --accent: #323239;
+  --accent-brighter: #3a3a42;
+  --accent-disabled: #3a3a42;
   --accent-foreground: #e7e8eb;
   --destructive: #ef4444;
+  --destructive-brighter: #f87171;
   --destructive-foreground: #e7e8eb;
+  --interactive-hover: #3a3a42;
+  --interactive-active: #45454f;
+  --success: #16a34a;
+  --warning: #ca8a04;
   --border: #33333b;
   --input: #3a3a42;
   --ring: #b74677;
@@ -406,6 +430,14 @@
   }
   body {
     @apply bg-background text-foreground font-medium;
+  }
+  button,
+  [role="button"],
+  a,
+  select,
+  summary,
+  [tabindex]:not([tabindex="-1"]) {
+    cursor: pointer;
   }
 }
 

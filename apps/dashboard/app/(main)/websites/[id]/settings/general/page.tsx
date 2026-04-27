@@ -5,16 +5,6 @@ import { useParams, useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { NoticeBanner } from "@/app/(main)/websites/_components/notice-banner";
-import { Badge } from "@/components/ds/badge";
-import { Button } from "@/components/ds/button";
-import { Switch } from "@/components/ds/switch";
-import { DeleteDialog } from "@/components/ds/delete-dialog";
-import {
-	SettingCard,
-	SettingCardGroup,
-	SettingsZone,
-	SettingsZoneRow,
-} from "@databuddy/ui";
 import { WebsiteDialog } from "@/components/website-dialog";
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
 import {
@@ -32,6 +22,15 @@ import {
 	PencilSimpleIcon,
 	WarningCircleIcon,
 } from "@databuddy/ui/icons";
+import { DeleteDialog, Switch } from "@databuddy/ui/client";
+import {
+	Badge,
+	Button,
+	SettingCard,
+	SettingCardGroup,
+	SettingsZone,
+	SettingsZoneRow,
+} from "@databuddy/ui";
 
 export default function GeneralSettingsPage() {
 	const params = useParams();

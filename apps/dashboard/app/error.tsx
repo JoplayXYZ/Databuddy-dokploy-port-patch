@@ -3,12 +3,12 @@
 import Link from "next/link";
 import { useEffect } from "react";
 import { Branding } from "@/components/logo/branding";
-import { Button } from "@/components/ds/button";
 import {
 	ArrowClockwiseIcon,
 	HouseIcon,
 	WarningCircleIcon,
 } from "@databuddy/ui/icons";
+import { Button } from "@databuddy/ui";
 
 const PARTICLES = [
 	{

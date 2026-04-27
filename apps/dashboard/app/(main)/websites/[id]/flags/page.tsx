@@ -5,16 +5,16 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAtom } from "jotai";
 import { useParams } from "next/navigation";
 import { Suspense, useMemo, useState } from "react";
-import { EmptyState } from "@/components/ds/empty-state";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { FeatureGate } from "@/components/feature-gate";
-import { DeleteDialog } from "@/components/ds/delete-dialog";
 import { orpc } from "@/lib/orpc";
 import { isFlagSheetOpenAtom } from "@/stores/jotai/flagsAtoms";
 import { FlagSheet } from "./_components/flag-sheet";
 import { FlagsList, FlagsListSkeleton } from "./_components/flags-list";
 import type { Flag, TargetGroup } from "./_components/types";
 import { FlagIcon } from "@databuddy/ui/icons";
+import { EmptyState } from "@databuddy/ui";
+import { DeleteDialog } from "@databuddy/ui/client";
 
 export default function FlagsPage() {
 	const { id } = useParams();

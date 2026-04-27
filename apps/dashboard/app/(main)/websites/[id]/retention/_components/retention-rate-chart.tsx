@@ -1,8 +1,6 @@
 "use client";
 
 import { useMemo } from "react";
-import { EmptyState } from "@/components/ds/empty-state";
-import { StatusDot } from "@/components/ds/status-dot";
 import { Chart } from "@/components/ui/composables/chart";
 import {
 	chartAxisTickDefault,
@@ -13,9 +11,9 @@ import {
 	chartLegendPillDotClassName,
 	chartLegendPillLabelClassName,
 } from "@/lib/chart-presentation";
-import { dayjs } from "@databuddy/ui";
 import { cn } from "@/lib/utils";
 import { ChartLineIcon, SpinnerIcon } from "@databuddy/ui/icons";
+import { EmptyState, StatusDot, dayjs } from "@databuddy/ui";
 
 const {
 	Area,

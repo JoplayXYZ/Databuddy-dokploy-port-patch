@@ -1,8 +1,6 @@
 "use client";
 
 import type { RefCallback } from "react";
-import { Badge } from "@/components/ds/badge";
-import { Skeleton } from "@databuddy/ui";
 import {
 	Table,
 	TableBody,
@@ -11,7 +9,6 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table";
-import { formatLocalTime } from "@databuddy/ui";
 import { cn } from "@/lib/utils";
 import {
 	CheckCircleIcon,
@@ -19,6 +16,7 @@ import {
 	WarningCircleIcon,
 	XCircleIcon,
 } from "@databuddy/ui/icons";
+import { Badge, Skeleton, formatLocalTime } from "@databuddy/ui";
 
 export interface RecentActivityCheck {
 	error?: string;

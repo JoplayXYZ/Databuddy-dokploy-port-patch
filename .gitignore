@@ -29,6 +29,7 @@ coverage
 .next/
 out/
 build
+*.bun-build
 # generated
 # packages/db/generated
 packages/db/src/drizzle/meta/0000_snapshot.json

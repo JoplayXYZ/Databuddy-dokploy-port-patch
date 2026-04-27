@@ -1,10 +1,10 @@
 "use client";
 
-import { DropdownMenu } from "@/components/ds/dropdown-menu";
-import { useFieldContext } from "@/components/ds/field";
 import type { LinkFolder } from "@/hooks/use-links";
 import { cn } from "@/lib/utils";
 import { ArchiveIcon, CaretDownIcon, CheckIcon } from "@databuddy/ui/icons";
+import { useFieldContext } from "@databuddy/ui";
+import { DropdownMenu } from "@databuddy/ui/client";
 
 interface FolderDropdownProps {
 	folders: LinkFolder[];

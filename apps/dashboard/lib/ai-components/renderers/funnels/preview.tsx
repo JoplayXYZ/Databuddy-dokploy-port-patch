@@ -5,9 +5,6 @@ import { useParams } from "next/navigation";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { EditFunnelDialog } from "@/app/(main)/websites/[id]/funnels/_components/edit-funnel-dialog";
-import { Badge } from "@/components/ds/badge";
-import { Button } from "@/components/ds/button";
-import { Card } from "@/components/ds/card";
 import { useChat } from "@/contexts/chat-context";
 import { useFunnels } from "@/hooks/use-funnels";
 import { cn } from "@/lib/utils";
@@ -19,6 +16,7 @@ import {
 	PencilSimpleIcon,
 	TrashIcon,
 } from "@databuddy/ui/icons";
+import { Badge, Button, Card } from "@databuddy/ui";
 
 interface FunnelPreviewData {
 	description?: string | null;

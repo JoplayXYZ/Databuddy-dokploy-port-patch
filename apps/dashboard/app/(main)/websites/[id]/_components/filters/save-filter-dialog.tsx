@@ -6,12 +6,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
-import { Button } from "@/components/ds/button";
-import { Dialog } from "@/components/ds/dialog";
-import { Field } from "@/components/ds/field";
-import { Input } from "@/components/ds/input";
 import { getOperatorLabel } from "@/hooks/use-filters";
 import { FloppyDiskIcon } from "@databuddy/ui/icons";
+import { Button, Field, Input } from "@databuddy/ui";
+import { Dialog } from "@databuddy/ui/client";
 
 const formSchema = z.object({
 	name: z

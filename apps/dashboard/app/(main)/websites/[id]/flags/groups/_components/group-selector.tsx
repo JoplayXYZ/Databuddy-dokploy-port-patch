@@ -2,12 +2,12 @@
 
 import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
-import { Button } from "@/components/ds/button";
-import { Popover } from "@/components/ds/popover";
 import { cn } from "@/lib/utils";
 import type { GroupSelectorProps, TargetGroup } from "../../_components/types";
 import { XIcon } from "@phosphor-icons/react/dist/ssr";
 import { CheckIcon, PlusIcon, UsersThreeIcon } from "@databuddy/ui/icons";
+import { Button } from "@databuddy/ui";
+import { Popover } from "@databuddy/ui/client";
 
 function GroupPill({
 	group,

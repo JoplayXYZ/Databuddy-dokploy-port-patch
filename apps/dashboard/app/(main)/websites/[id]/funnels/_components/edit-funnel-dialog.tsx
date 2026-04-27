@@ -1,14 +1,5 @@
 "use client";
 
-import { Accordion } from "@/components/ds/accordion";
-import { Button } from "@/components/ds/button";
-import { Divider } from "@/components/ds/divider";
-import { DropdownMenu } from "@/components/ds/dropdown-menu";
-import { Field } from "@/components/ds/field";
-import { Input } from "@/components/ds/input";
-import { Sheet } from "@/components/ds/sheet";
-import { Switch } from "@/components/ds/switch";
-import { Text } from "@/components/ds/text";
 import { AutocompleteInput } from "@/components/ui/autocomplete-input";
 import { FilterRow } from "@/components/ui/filter-row";
 import type { AutocompleteData } from "@/hooks/use-autocomplete";
@@ -34,6 +25,8 @@ import {
 	XIcon,
 } from "@phosphor-icons/react/dist/ssr";
 import { FunnelIcon, GearIcon, PlusIcon } from "@databuddy/ui/icons";
+import { Button, Divider, Field, Input, Text } from "@databuddy/ui";
+import { Accordion, DropdownMenu, Sheet, Switch } from "@databuddy/ui/client";
 
 const defaultFilter: FunnelFilter = {
 	field: "browser_name",

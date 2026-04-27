@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from "react";
 import { StatCard } from "@/components/analytics";
-import { Tabs } from "@/components/ds/tabs";
 import { useChartPreferences } from "@/hooks/use-chart-preferences";
 import { useDateFilters } from "@/hooks/use-date-filters";
 import { formatNumber } from "@/lib/formatters";
@@ -17,6 +16,7 @@ import {
 	UserPlusIcon,
 	UsersIcon,
 } from "@databuddy/ui/icons";
+import { Tabs } from "@databuddy/ui/client";
 
 interface RetentionContentProps {
 	websiteId: string;

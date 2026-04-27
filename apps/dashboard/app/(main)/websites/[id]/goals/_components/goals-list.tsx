@@ -1,10 +1,10 @@
 "use client";
 
-import { EmptyState } from "@/components/ds/empty-state";
 import { List } from "@/components/ui/composables/list";
 import type { Goal } from "@/hooks/use-goals";
 import { GoalItem } from "./goal-item";
 import { TargetIcon } from "@databuddy/ui/icons";
+import { EmptyState } from "@databuddy/ui";
 
 type GoalAnalyticsRecord = Record<
 	string,

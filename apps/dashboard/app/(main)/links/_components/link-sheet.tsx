@@ -5,14 +5,6 @@ import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Controller, type SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { useOrganizationsContext } from "@/components/providers/organizations-provider";
-import { Accordion } from "@/components/ds/accordion";
-import { Button } from "@/components/ds/button";
-import { Divider } from "@/components/ds/divider";
-import { Field } from "@/components/ds/field";
-import { Input } from "@/components/ds/input";
-import { Sheet } from "@/components/ds/sheet";
-import { Tabs } from "@/components/ds/tabs";
-import { Text } from "@/components/ds/text";
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
 import {
 	type Link,
@@ -20,7 +12,6 @@ import {
 	useLinkFolders,
 	useUpdateLink,
 } from "@/hooks/use-links";
-import { dayjs } from "@databuddy/ui";
 import { LINKS_BASE_URL, LINKS_FULL_URL } from "./link-constants";
 import type { LinkFormData } from "./link-form-schema";
 import { linkFormSchema } from "./link-form-schema";
@@ -52,6 +43,8 @@ import {
 	ImageIcon,
 } from "@databuddy/ui/icons";
 import { FolderDropdown } from "./folder-dropdown";
+import { Accordion, Sheet, Tabs } from "@databuddy/ui/client";
+import { Button, Divider, Field, Input, Text, dayjs } from "@databuddy/ui";
 
 const DEFAULT_UTM_PARAMS: UtmParams = {
 	utm_source: "",

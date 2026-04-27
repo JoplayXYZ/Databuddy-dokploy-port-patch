@@ -1,11 +1,9 @@
 "use client";
 
-import { Badge } from "@/components/ds/badge";
-import { Text } from "@/components/ds/text";
 import type { ApiKeyListItem } from "@/components/organizations/api-key-types";
-import { dayjs } from "@databuddy/ui";
 import { cn } from "@/lib/utils";
 import { CaretRightIcon, LockSimpleIcon } from "@databuddy/ui/icons";
+import { Badge, Text, dayjs } from "@databuddy/ui";
 
 interface ApiKeyRowProps {
 	apiKey: ApiKeyListItem;

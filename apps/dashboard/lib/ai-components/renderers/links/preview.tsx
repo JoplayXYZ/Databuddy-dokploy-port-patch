@@ -3,8 +3,6 @@
 import type { Icon } from "@phosphor-icons/react";
 import { useState } from "react";
 import { LinkSheet } from "@/app/(main)/links/_components/link-sheet";
-import { Button } from "@/components/ds/button";
-import { Card } from "@/components/ds/card";
 import { useChat } from "@/contexts/chat-context";
 import type { Link } from "@/hooks/use-links";
 import { cn } from "@/lib/utils";
@@ -17,6 +15,7 @@ import {
 	PencilSimpleIcon,
 	TrashIcon,
 } from "@databuddy/ui/icons";
+import { Button, Card } from "@databuddy/ui";
 
 interface LinkPreviewData {
 	expiredRedirectUrl?: string | null;

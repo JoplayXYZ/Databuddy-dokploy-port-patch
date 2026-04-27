@@ -2,13 +2,13 @@
 
 import { StatCard } from "@/components/analytics/stat-card";
 import { MiniPieChart } from "@/components/charts/pie-chart";
-import { Card } from "@/components/ds/card";
 import {
 	ChartBarIcon,
 	ChartLineIcon,
 	ChartPieIcon,
 	WaveformIcon,
 } from "@databuddy/ui/icons";
+import { Card } from "@databuddy/ui";
 
 function generateChartData(days: number, baseValue: number, variance: number) {
 	const data: { date: string; value: number }[] = [];

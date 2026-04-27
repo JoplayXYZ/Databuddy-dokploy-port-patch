@@ -1,9 +1,6 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Badge } from "@/components/ds/badge";
-import { Button } from "@/components/ds/button";
-import { DropdownMenu } from "@/components/ds/dropdown-menu";
 import { orpc } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
 import type { Flag } from "../../_components/types";
@@ -13,6 +10,8 @@ import {
 	PencilSimpleIcon,
 	TrashIcon,
 } from "@databuddy/ui/icons";
+import { Badge, Button } from "@databuddy/ui";
+import { DropdownMenu } from "@databuddy/ui/client";
 
 interface ArchivedFlagItemProps {
 	className?: string;

@@ -2,15 +2,14 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
-import { Button } from "@/components/ds/button";
 import {
 	useBillingContext,
 	useUsageFeature,
 } from "@/components/providers/billing-provider";
 import { useChatSafe } from "@/contexts/chat-context";
 import { cn } from "@/lib/utils";
-import { Skeleton, Tooltip } from "@databuddy/ui";
 import { CoinsIcon } from "@phosphor-icons/react/dist/ssr";
+import { Button, Skeleton, Tooltip } from "@databuddy/ui";
 
 interface AgentCreditBalanceProps {
 	variant?: "default" | "compact";

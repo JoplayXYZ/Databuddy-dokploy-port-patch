@@ -2,12 +2,16 @@ import {
 	getBullMQWorkerConnectionOptions,
 	type UptimeCheckJobData,
 	UPTIME_CHECK_JOB_NAME,
+	UPTIME_JOB_TIMEOUT_MS,
 	UPTIME_QUEUE_NAME,
 } from "@databuddy/redis";
 import { Worker } from "bullmq";
-import { log } from "evlog";
-import { type CheckOptions, checkUptime, lookupSchedule } from "./actions";
-import type { ScheduleData } from "./actions";
+import {
+	type CheckOptions,
+	type ScheduleData,
+	checkUptime,
+	lookupSchedule,
+} from "./actions";
 import { isHealthExtractionEnabled } from "./json-parser";
 import { sendUptimeEvent } from "./lib/producer";
 import { captureError, mergeWideEvent } from "./lib/tracing";
@@ -26,7 +30,6 @@ export interface UptimeWorkerDeps {
 		siteId: string,
 		url: string,
 		attempt: number,
-		retries: number,
 		options: CheckOptions
 	) => Promise<ActionResult<UptimeData>>;
 	getPreviousMonitorStatus: (monitorId: string) => Promise<number | undefined>;
@@ -61,6 +64,13 @@ export async function processUptimeCheck(
 	trigger: UptimeCheckJobData["trigger"],
 	deps: UptimeWorkerDeps = uptimeWorkerDeps
 ) {
+	const startedAt = performance.now();
+
+	deps.mergeWideEvent({
+		schedule_id: scheduleId,
+		uptime_trigger: trigger,
+	});
+
 	const schedule = await deps.lookupSchedule(scheduleId);
 	if (!schedule.success) {
 		deps.captureError(new Error(schedule.error), {
@@ -72,7 +82,6 @@ export async function processUptimeCheck(
 
 	if (schedule.data.isPaused) {
 		deps.mergeWideEvent({
-			schedule_id: scheduleId,
 			organization_id: schedule.data.organizationId,
 			uptime_skipped_paused: true,
 		});
@@ -82,10 +91,9 @@ export async function processUptimeCheck(
 	const monitorId = schedule.data.websiteId || scheduleId;
 
 	deps.mergeWideEvent({
-		schedule_id: scheduleId,
 		monitor_id: monitorId,
 		organization_id: schedule.data.organizationId,
-		uptime_trigger: trigger,
+		check_url: schedule.data.url,
 		...(schedule.data.websiteId ? { website_id: schedule.data.websiteId } : {}),
 	});
 
@@ -101,7 +109,6 @@ export async function processUptimeCheck(
 		monitorId,
 		schedule.data.url,
 		1,
-		3,
 		options
 	);
 
@@ -118,6 +125,8 @@ export async function processUptimeCheck(
 
 	deps.mergeWideEvent({
 		previous_uptime_status: previousStatus === undefined ? -1 : previousStatus,
+		http_code: result.data.http_code,
+		check_duration_ms: Math.round(performance.now() - startedAt),
 	});
 
 	try {
@@ -151,24 +160,49 @@ export function startUptimeWorker() {
 		(job) => processUptimeJob(job),
 		{
 			connection: getBullMQWorkerConnectionOptions(),
-			concurrency: Number(process.env.UPTIME_WORKER_CONCURRENCY ?? 5),
+			concurrency: Number(process.env.UPTIME_WORKER_CONCURRENCY ?? 200),
+			lockDuration: UPTIME_JOB_TIMEOUT_MS + 5000,
+			stalledInterval: UPTIME_JOB_TIMEOUT_MS + 10_000,
 		}
 	);
 
 	worker.on("completed", (job) => {
-		log.info({
-			job_id: job.id,
-			schedule_id: job.data.scheduleId,
-			trigger: job.data.trigger,
+		mergeWideEvent({
 			worker: "uptime",
 			event: "job_completed",
+			job_id: job.id ?? "",
+			schedule_id: job.data.scheduleId,
+			trigger: job.data.trigger,
+			attempts_used: job.attemptsMade,
 		});
 	});
 
 	worker.on("failed", (job, error) => {
+		const attemptsMade = job?.attemptsMade ?? 0;
+		const maxAttempts = job?.opts?.attempts ?? 3;
+		const isFinalAttempt = attemptsMade >= maxAttempts;
+
 		captureError(error, {
 			error_step: "uptime_worker_job_failed",
 			schedule_id: job?.data.scheduleId ?? "",
+			job_id: job?.id ?? "",
+			trigger: job?.data.trigger ?? "",
+			attempts_used: attemptsMade,
+			attempts_max: maxAttempts,
+			is_final_attempt: isFinalAttempt,
+		});
+	});
+
+	worker.on("stalled", (jobId) => {
+		captureError(new Error("BullMQ job stalled"), {
+			error_step: "uptime_worker_job_stalled",
+			job_id: jobId,
+		});
+	});
+
+	worker.on("error", (error) => {
+		captureError(error, {
+			error_step: "uptime_worker_error",
 		});
 	});
 

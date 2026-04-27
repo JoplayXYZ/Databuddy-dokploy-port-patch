@@ -6,6 +6,7 @@ import {
 	scanURLs,
 	validateFiles,
 } from "next-validate-link";
+import { contents, type SidebarItem } from "../components/sidebar-content";
 
 const DOCS_DIR = path.join(process.cwd(), "content/docs");
 const DOCS_PATTERN = "content/docs/**/*.mdx";
@@ -73,6 +74,51 @@ function getDocsPages(files: FileObject[]): DocsPage[] {
 	});
 }
 
+function getSidebarHrefs(item: SidebarItem): string[] {
+	return [
+		item.href,
+		...(item.children?.flatMap((child) => getSidebarHrefs(child)) ?? []),
+	].filter((href): href is string => Boolean(href));
+}
+
+function isDocsUrl(href: string): boolean {
+	return href === "/docs" || href.startsWith("/docs/");
+}
+
+function checkSidebarCoverage(pages: DocsPage[]) {
+	const docsUrls = new Set(pages.map((page) => getUrlFromSlugs(page.slugs)));
+	const sidebarUrls = new Set(
+		contents.flatMap((section) =>
+			section.list.flatMap((item) => getSidebarHrefs(item)).filter(isDocsUrl)
+		)
+	);
+
+	const missingFromSidebar = [...docsUrls]
+		.filter((url) => !sidebarUrls.has(url))
+		.sort();
+	const brokenSidebarUrls = [...sidebarUrls]
+		.filter((url) => !docsUrls.has(url))
+		.sort();
+
+	if (missingFromSidebar.length === 0 && brokenSidebarUrls.length === 0) {
+		return;
+	}
+
+	throw new Error(
+		[
+			"Sidebar docs coverage failed.",
+			missingFromSidebar.length > 0
+				? `Missing from sidebar:\n${missingFromSidebar.map((url) => `  - ${url}`).join("\n")}`
+				: undefined,
+			brokenSidebarUrls.length > 0
+				? `Sidebar links without docs pages:\n${brokenSidebarUrls.map((url) => `  - ${url}`).join("\n")}`
+				: undefined,
+		]
+			.filter(Boolean)
+			.join("\n\n")
+	);
+}
+
 function pathToUrl(file: string): string | undefined {
 	const absolute = path.resolve(file);
 	if (!(absolute.startsWith(DOCS_DIR) && absolute.endsWith(".mdx"))) {
@@ -87,6 +133,7 @@ const getFiles = (): Promise<FileObject[]> =>
 async function checkLinks() {
 	const files = await getFiles();
 	const pages = getDocsPages(files);
+	checkSidebarCoverage(pages);
 
 	const scanned = await scanURLs({
 		preset: "next",

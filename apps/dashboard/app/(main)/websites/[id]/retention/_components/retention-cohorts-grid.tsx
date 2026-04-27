@@ -1,9 +1,8 @@
 "use client";
 
 import { useMemo } from "react";
-import { EmptyState } from "@/components/ds/empty-state";
-import { dayjs } from "@databuddy/ui";
 import { SpinnerIcon, TableIcon } from "@databuddy/ui/icons";
+import { EmptyState, dayjs } from "@databuddy/ui";
 
 interface RetentionCohort {
 	cohort: string;

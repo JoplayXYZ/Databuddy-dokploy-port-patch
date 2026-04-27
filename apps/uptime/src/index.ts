@@ -2,6 +2,7 @@ import { closeUptimeQueue } from "@databuddy/redis";
 import { Elysia } from "elysia";
 import { initLogger, log } from "evlog";
 import { evlog } from "evlog/elysia";
+import { UPTIME_ENV } from "./lib/env";
 import {
 	enrichUptimeWideEvent,
 	flushBatchedUptimeDrain,
@@ -9,10 +10,16 @@ import {
 } from "./lib/evlog-uptime";
 import { disconnectProducer } from "./lib/producer";
 import { captureError } from "./lib/tracing";
+import { syncSchedulers } from "./sync-schedulers";
 import { startUptimeWorker } from "./worker";
 
 initLogger({
-	env: { service: "uptime" },
+	env: {
+		service: "uptime",
+		environment: UPTIME_ENV.environment,
+		region: process.env.UNKEY_REGION,
+		commitHash: process.env.UNKEY_GIT_COMMIT_SHA,
+	},
 	drain: uptimeLoggerDrain,
 	sampling: {},
 });
@@ -35,23 +42,48 @@ process.on("uncaughtException", (error) => {
 	});
 });
 
+const DRAIN_TIMEOUT_MS = 10_000;
+
 async function shutdown(signal: string) {
 	log.info("lifecycle", `${signal} received, shutting down gracefully`);
-	await Promise.allSettled([
-		uptimeWorker.close(),
+
+	const drainPromise = Promise.allSettled([
+		uptimeWorker?.close(),
 		closeUptimeQueue(),
 		flushBatchedUptimeDrain(),
 		disconnectProducer(),
-	]).catch((error) =>
+	]);
+
+	const timeout = new Promise<"timeout">((resolve) =>
+		setTimeout(() => resolve("timeout"), DRAIN_TIMEOUT_MS)
+	);
+
+	const result = await Promise.race([drainPromise, timeout]);
+
+	if (result === "timeout") {
 		log.error({
 			lifecycle: "shutdown",
-			error_message: error instanceof Error ? error.message : String(error),
-		})
-	);
+			error_step: "drain_timeout",
+			drain_timeout_ms: DRAIN_TIMEOUT_MS,
+		});
+	}
+
 	process.exit(0);
 }
 
-const uptimeWorker = startUptimeWorker();
+let uptimeWorker: ReturnType<typeof startUptimeWorker> | null = null;
+
+(async () => {
+	if (UPTIME_ENV.isDev) {
+		log.info(
+			"lifecycle",
+			"Development mode — worker and scheduler sync disabled"
+		);
+	} else {
+		await syncSchedulers();
+		uptimeWorker = startUptimeWorker();
+	}
+})();
 
 process.on("SIGTERM", () => shutdown("SIGTERM"));
 process.on("SIGINT", () => shutdown("SIGINT"));
@@ -136,6 +168,6 @@ const app = new Elysia()
 	.get("/health", () => ({ status: "ok" }));
 
 export default {
-	port: 4000,
+	port: Number(process.env.PORT ?? 4000),
 	fetch: app.fetch,
 };

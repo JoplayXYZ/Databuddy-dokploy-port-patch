@@ -2,22 +2,24 @@ import React from "react";
 
 type NucleoIconProps = React.SVGProps<SVGSVGElement> & {
 	size?: number | string;
+	title?: string;
 	weight?: string;
 };
 
 const NucleoIcon = React.forwardRef<SVGSVGElement, NucleoIconProps>(
-	({ size = 18, weight: _weight, children, ...props }, ref) => (
+	({ size = 18, weight: _weight, children, title, ...props }, ref) => (
 		<svg
-			aria-hidden
+			aria-hidden={title ? undefined : true}
 			fill="currentColor"
 			height={size}
 			ref={ref}
+			role={title ? "img" : undefined}
 			viewBox="0 0 18 18"
 			width={size}
 			xmlns="http://www.w3.org/2000/svg"
 			{...props}
 		>
-			<title>Nucleo Icon</title>
+			{title ? <title>{title}</title> : null}
 			{children}
 		</svg>
 	)
@@ -1638,6 +1640,19 @@ export const CaretUpIcon = React.forwardRef<SVGSVGElement, NucleoIconProps>(
 	)
 );
 CaretUpIcon.displayName = "CaretUpIcon";
+
+export const CaretUpDownIcon = React.forwardRef<SVGSVGElement, NucleoIconProps>(
+	(props, ref) => (
+		<NucleoIcon ref={ref} {...props}>
+			<path
+				d="M9 2.25c-.322 0-.621.168-.788.443l-3 4.95A.937.937 0 0 0 6 8.625h6a.937.937 0 0 0 .788-1.432l-3-4.5A.937.937 0 0 0 9 2.25ZM9 15.75c.322 0 .621-.168.788-.443l3-4.95A.937.937 0 0 0 12 9.375H6a.937.937 0 0 0-.788 1.432l3 4.5c.167.275.466.443.788.443Z"
+				fill="currentColor"
+				fillOpacity="0.4"
+			/>
+		</NucleoIcon>
+	)
+);
+CaretUpDownIcon.displayName = "CaretUpDownIcon";
 
 export const ChartLineIcon = React.forwardRef<SVGSVGElement, NucleoIconProps>(
 	(props, ref) => (
@@ -4100,6 +4115,36 @@ export const WaveformIcon = React.forwardRef<SVGSVGElement, NucleoIconProps>(
 );
 WaveformIcon.displayName = "WaveformIcon";
 
+export const WandSparkleIcon = React.forwardRef<SVGSVGElement, NucleoIconProps>(
+	(props, ref) => (
+		<NucleoIcon ref={ref} {...props}>
+			<path
+				d="M7.243 3.48999L6.297 3.18006L5.981 2.22998C5.879 1.92008 5.372 1.92008 5.27 2.22998L4.95399 3.18006L4.008 3.48999C3.855 3.53999 3.75101 3.68998 3.75101 3.84998C3.75101 4.00998 3.855 4.14995 4.008 4.19995L4.95399 4.52014L5.27 5.4701C5.321 5.6201 5.464 5.7201 5.625 5.7201C5.786 5.7201 5.93 5.6201 5.98 5.4701L6.29601 4.52014L7.242 4.19995C7.395 4.15005 7.49899 4.01008 7.49899 3.84998C7.49899 3.68988 7.396 3.54009 7.243 3.48999Z"
+				fill="currentColor"
+			/>
+			<path
+				d="M16.658 11.99L15.395 11.57L14.974 10.3101C14.837 9.90005 14.162 9.90005 14.025 10.3101L13.604 11.57L12.341 11.99C12.137 12.0601 11.999 12.25 11.999 12.46C11.999 12.6801 12.137 12.8699 12.341 12.9399L13.604 13.36L14.025 14.62C14.093 14.83 14.285 14.96 14.5 14.96C14.715 14.96 14.906 14.83 14.975 14.62L15.396 13.36L16.659 12.9399C16.863 12.87 17.001 12.6801 17.001 12.46C17.001 12.25 16.862 12.0601 16.658 11.99Z"
+				fill="currentColor"
+			/>
+			<path
+				d="M9.25 2.5C9.664 2.5 10 2.16 10 1.75C10 1.34 9.664 1 9.25 1C8.836 1 8.5 1.34 8.5 1.75C8.5 2.16 8.836 2.5 9.25 2.5Z"
+				fill="currentColor"
+			/>
+			<path
+				d="M10 5.00001L12.3225 2.67633C13.0068 1.99173 14.1168 1.99262 14.7999 2.67825L15.323 3.20524C16.0041 3.88889 16.0032 4.9949 15.3211 5.67747L13 8.00001L10 5.00001Z"
+				data-color="color-2"
+				fill="currentColor"
+				fillOpacity="0.4"
+			/>
+			<path
+				d="M10 5L2.66971 12.334C1.98732 13.0167 1.98677 14.1228 2.66779 14.8063L3.19386 15.3364C3.87759 16.0184 4.98441 16.0184 5.66815 15.3364L13 8L10 5Z"
+				fill="currentColor"
+			/>
+		</NucleoIcon>
+	)
+);
+WandSparkleIcon.displayName = "WandSparkleIcon";
+
 export const WrenchIcon = React.forwardRef<SVGSVGElement, NucleoIconProps>(
 	(props, ref) => (
 		<NucleoIcon ref={ref} {...props}>
@@ -4200,18 +4245,18 @@ export const KeyIcon = React.forwardRef<SVGSVGElement, NucleoIconProps>(
 	(props, ref) => (
 		<NucleoIcon ref={ref} {...props}>
 			<path
-				d="M6.64636 12.3536C6.64636 12.9056 6.19866 13.3536 5.64636 13.3536C5.09406 13.3536 4.64636 12.9056 4.64636 12.3536C4.64636 11.8016 5.09406 11.3536 5.64636 11.3536C6.19866 11.3536 6.64636 11.8016 6.64636 12.3536Z"
+				d="M1.49915 11.7504C1.49915 14.3736 3.62596 16.5004 6.24915 16.5004C8.87233 16.5004 10.9991 14.3736 10.9991 11.7504C10.9991 9.12724 8.87233 7.00043 6.24915 7.00043C3.62596 7.00043 1.49915 9.12724 1.49915 11.7504Z"
 				data-color="color-2"
 				fill="currentColor"
-				opacity="0.4"
+				fillOpacity="0.4"
 			/>
 			<path
-				d="M12.4216 2.75L7.27299 7.8984C6.9446 7.8112 6.6059 7.75 6.25 7.75C4.0408 7.75 2.25 9.5408 2.25 11.75C2.25 13.9592 4.0408 15.75 6.25 15.75C8.4592 15.75 10.25 13.959 10.25 11.75C10.25 11.394 10.1887 11.0554 10.1014 10.7271L12.25 8.5789V6.5074H14.321L15.25 5.5784V2.75H12.4216Z"
-				fill="none"
-				stroke="currentColor"
-				strokeLinecap="round"
-				strokeLinejoin="round"
-				strokeWidth="1.5"
+				d="M6.53039 13.2376C7.01856 12.7494 7.01831 11.9576 6.53039 11.4696C6.04246 10.9817 5.25063 10.9815 4.76246 11.4696C4.27429 11.9578 4.27454 12.7496 4.76246 13.2376C5.25038 13.7255 6.04221 13.7257 6.53039 13.2376Z"
+				fill="currentColor"
+			/>
+			<path
+				d="M15.9827 2.91018C16.0383 2.65582 15.958 2.39083 15.7706 2.21011C15.5832 2.02939 15.3154 1.95879 15.0633 2.02362L12.8133 2.60202C12.6833 2.63544 12.5646 2.70314 12.4697 2.79806L7.95316 7.31442C9.23914 7.80932 10.2569 8.84889 10.7224 10.1491L12.2729 8.60188C12.4136 8.46122 12.4926 8.27044 12.4926 8.0715V6.75H13.8136C14.0125 6.75 14.2033 6.67098 14.3439 6.53033L15.2729 5.60133C15.3744 5.49985 15.4447 5.37138 15.4753 5.23118L15.9827 2.91018Z"
+				fill="currentColor"
 			/>
 		</NucleoIcon>
 	)
@@ -4221,27 +4266,15 @@ KeyIcon.displayName = "KeyIcon";
 export const XMarkIcon = React.forwardRef<SVGSVGElement, NucleoIconProps>(
 	(props, ref) => (
 		<NucleoIcon ref={ref} {...props}>
-			<line
-				fill="none"
-				stroke="currentColor"
-				strokeLinecap="round"
-				strokeLinejoin="round"
-				strokeWidth="1.5"
-				x1="14"
-				x2="4"
-				y1="4"
-				y2="14"
+			<path
+				d="M14.0001 14.75C13.8082 14.75 13.6163 14.6768 13.4698 14.5303L3.46981 4.53026C3.17681 4.23726 3.17681 3.76273 3.46981 3.46983C3.76281 3.17693 4.2374 3.17683 4.5303 3.46983L14.5303 13.4698C14.8233 13.7628 14.8233 14.2374 14.5303 14.5303C14.3838 14.6768 14.192 14.75 14.0001 14.75Z"
+				data-color="color-2"
+				fill="currentColor"
+				opacity="0.4"
 			/>
-			<line
-				fill="none"
-				stroke="currentColor"
-				strokeLinecap="round"
-				strokeLinejoin="round"
-				strokeWidth="1.5"
-				x1="4"
-				x2="14"
-				y1="4"
-				y2="14"
+			<path
+				d="M4.00011 14.75C3.80821 14.75 3.61631 14.6768 3.46981 14.5303C3.17681 14.2373 3.17681 13.7628 3.46981 13.4699L13.4698 3.46987C13.7628 3.17687 14.2374 3.17687 14.5303 3.46987C14.8232 3.76287 14.8233 4.2374 14.5303 4.5303L4.5303 14.5303C4.3838 14.6768 4.19201 14.75 4.00011 14.75Z"
+				fill="currentColor"
 			/>
 		</NucleoIcon>
 	)

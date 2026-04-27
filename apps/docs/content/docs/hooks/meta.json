@@ -1,6 +1,6 @@
 {
-  "title": "Hook Examples",
-  "description": "Example React hooks for tracking custom events",
+  "title": "Tracking Recipes",
+  "description": "Copyable recipes for tracking custom events",
   "icon": "Code",
   "pages": [
     "toast-tracking",

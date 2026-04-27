@@ -1,6 +1,6 @@
-import { Text } from "@/components/ds/text";
 import { cn } from "@/lib/utils";
 import type { ReactNode } from "react";
+import { Text } from "@databuddy/ui";
 
 interface ShowcaseSectionProps {
 	children: ReactNode;

@@ -5,23 +5,15 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { type ComponentPropsWithoutRef, useState } from "react";
 import { toast } from "sonner";
-import { Avatar } from "@/components/ds/avatar";
-import { DropdownMenu } from "@/components/ds/dropdown-menu";
-import { Text } from "@/components/ds/text";
-import { Tooltip } from "@databuddy/ui";
-import { cn } from "@/lib/utils";
 import { SignOutIcon } from "@phosphor-icons/react/dist/ssr";
 import {
 	CaretRightIcon,
-	CreditCardIcon,
 	GearIcon,
-	MonitorIcon,
-	MoonIcon,
 	PlusIcon,
 	SpinnerGapIcon,
-	SunIcon,
 } from "@databuddy/ui/icons";
-import { useTheme } from "next-themes";
+import { Avatar, DropdownMenu } from "@databuddy/ui/client";
+import { Text, Tooltip } from "@databuddy/ui";
 
 export interface ProfileButtonUser {
 	email?: string | null;
@@ -134,40 +126,10 @@ function useProfileActions(_user: ProfileButtonUser | null) {
 	};
 }
 
-const THEMES = [
-	{ value: "light", icon: SunIcon, label: "Light" },
-	{ value: "dark", icon: MoonIcon, label: "Dark" },
-	{ value: "system", icon: MonitorIcon, label: "System" },
-] as const;
-
 type DropdownContentPlacement = Pick<
 	ComponentPropsWithoutRef<typeof DropdownMenu.Content>,
-	"align" | "side"
+	"align" | "side" | "sideOffset"
 >;
-
-function ThemeSwitcherRow() {
-	const { theme, setTheme } = useTheme();
-
-	return (
-		<div className="flex items-center gap-1 px-2 py-1.5">
-			<span className="mr-auto text-muted-foreground text-xs">Theme</span>
-			{THEMES.map(({ value, icon: Icon, label }) => (
-				<button
-					aria-label={label}
-					className={cn(
-						"flex size-7 items-center justify-center rounded text-muted-foreground hover:bg-secondary hover:text-foreground",
-						theme === value && "bg-secondary text-foreground"
-					)}
-					key={value}
-					onClick={() => setTheme(value)}
-					type="button"
-				>
-					<Icon className="size-3.5" />
-				</button>
-			))}
-		</div>
-	);
-}
 
 export function ProfileDropdownContent({
 	user,
@@ -175,6 +137,7 @@ export function ProfileDropdownContent({
 	isOpen,
 	align = "start",
 	side = "top",
+	sideOffset,
 }: {
 	isOpen?: boolean;
 	onClose: () => void;
@@ -204,7 +167,12 @@ export function ProfileDropdownContent({
 	const hasMultipleAccounts = otherSessions.length > 0;
 
 	return (
-		<DropdownMenu.Content align={align} className="w-56" side={side}>
+		<DropdownMenu.Content
+			align={align}
+			className="w-56"
+			side={side}
+			sideOffset={sideOffset}
+		>
 			{hasMultipleAccounts &&
 				otherSessions.map((session) => (
 					<DropdownMenu.Item
@@ -250,19 +218,8 @@ export function ProfileDropdownContent({
 				}}
 			>
 				<GearIcon className="size-4 shrink-0" weight="duotone" />
-				Settings
+				Account settings
 			</DropdownMenu.Item>
-			<DropdownMenu.Item
-				onClick={() => {
-					onClose();
-					navigateTo("/billing");
-				}}
-			>
-				<CreditCardIcon className="size-4 shrink-0" weight="duotone" />
-				Billing
-			</DropdownMenu.Item>
-			<DropdownMenu.Separator />
-			<ThemeSwitcherRow />
 			<DropdownMenu.Separator />
 			<DropdownMenu.Item
 				disabled={isLoggingOut}

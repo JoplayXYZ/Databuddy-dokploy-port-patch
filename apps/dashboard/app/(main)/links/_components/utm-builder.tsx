@@ -1,8 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { Input } from "@/components/ds/input";
-import { Field } from "@/components/ds/field";
+import { Field, Input } from "@databuddy/ui";
 
 const PROTOCOL_REGEX = /^https?:\/\//;
 

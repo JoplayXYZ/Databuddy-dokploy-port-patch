@@ -3,11 +3,10 @@
 import type { LocationData } from "@databuddy/shared/types/website";
 import dynamic from "next/dynamic";
 import { useMemo } from "react";
-import { Card } from "@/components/ds/card";
-import { Skeleton } from "@databuddy/ui";
 import { CountryFlag } from "@/components/icon";
 import { formatNumber } from "@/lib/formatters";
 import { GlobeIcon } from "@databuddy/ui/icons";
+import { Card, Skeleton } from "@databuddy/ui";
 
 const MapComponent = dynamic(
 	() =>

@@ -8,6 +8,13 @@ const password = process.env.REDPANDA_PASSWORD;
 let producer: Producer | null = null;
 let connected = false;
 
+export interface LinkVisitSendResult {
+	kafka_broker_configured: boolean;
+	kafka_connected: boolean;
+	kafka_send_skipped: boolean;
+	kafka_send_success: boolean;
+}
+
 async function connect(): Promise<boolean> {
 	if (connected && producer) {
 		return true;
@@ -49,7 +56,7 @@ async function connect(): Promise<boolean> {
 export async function sendLinkVisit(
 	event: unknown,
 	key?: string
-): Promise<void> {
+): Promise<LinkVisitSendResult> {
 	const eventKey = key ?? (event as { link_id?: string }).link_id;
 	setAttributes({
 		kafka_topic: "analytics-link-visits",
@@ -59,7 +66,12 @@ export async function sendLinkVisit(
 	try {
 		if (!((await connect()) && producer)) {
 			setAttributes({ kafka_send_skipped: true });
-			return;
+			return {
+				kafka_broker_configured: Boolean(broker),
+				kafka_connected: false,
+				kafka_send_skipped: true,
+				kafka_send_success: false,
+			};
 		}
 
 		await producer.send({
@@ -74,12 +86,24 @@ export async function sendLinkVisit(
 		});
 
 		setAttributes({ kafka_send_success: true });
+		return {
+			kafka_broker_configured: true,
+			kafka_connected: true,
+			kafka_send_skipped: false,
+			kafka_send_success: true,
+		};
 	} catch (error) {
 		captureError(error, {
 			operation: "kafka_send",
 			kafka_topic: "analytics-link-visits",
 		});
 		setAttributes({ kafka_send_success: false });
+		return {
+			kafka_broker_configured: Boolean(broker),
+			kafka_connected: connected,
+			kafka_send_skipped: false,
+			kafka_send_success: false,
+		};
 	}
 }
 

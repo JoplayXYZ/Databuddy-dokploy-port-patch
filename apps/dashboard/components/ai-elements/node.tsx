@@ -1,7 +1,7 @@
 import { Handle, Position } from "@xyflow/react";
 import type { ComponentProps } from "react";
-import { Card } from "@/components/ds/card";
 import { cn } from "@/lib/utils";
+import { Card } from "@databuddy/ui";
 
 export type NodeProps = ComponentProps<typeof Card> & {
 	handles: {

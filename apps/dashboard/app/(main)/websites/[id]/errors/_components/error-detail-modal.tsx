@@ -3,16 +3,13 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { BrowserIcon, CountryFlag, OSIcon } from "@/components/icon";
-import { Accordion } from "@/components/ds/accordion";
-import { Badge } from "@/components/ds/badge";
-import { Button } from "@/components/ds/button";
-import { Sheet } from "@/components/ds/sheet";
 import { cn } from "@/lib/utils";
-import { formatDateTime, fromNow } from "@databuddy/ui";
 import { getDeviceIcon } from "./error-icons";
 import type { RecentError } from "./types";
 import { getErrorCategory, getSeverityColor } from "./utils";
 import { BugIcon, CheckIcon, CopyIcon, StackIcon } from "@databuddy/ui/icons";
+import { Accordion, Sheet } from "@databuddy/ui/client";
+import { Badge, Button, formatDateTime, fromNow } from "@databuddy/ui";
 
 interface ErrorDetailModalProps {
 	error: RecentError;

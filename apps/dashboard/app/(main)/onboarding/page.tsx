@@ -3,8 +3,6 @@
 import { track } from "@databuddy/sdk";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Button } from "@/components/ds/button";
-import { Card } from "@/components/ds/card";
 import { useWebsitesLight } from "@/hooks/use-websites";
 import { OnboardingStepIndicator } from "./_components/onboarding-step-indicator";
 import { StepCreateWebsite } from "./_components/step-create-website";
@@ -12,6 +10,7 @@ import { StepExplore } from "./_components/step-explore";
 import { StepInstallTracking } from "./_components/step-install-tracking";
 import { StepInviteTeam } from "./_components/step-invite-team";
 import { ArrowLeftIcon, ArrowRightIcon } from "@databuddy/ui/icons";
+import { Button, Card } from "@databuddy/ui";
 
 const STEPS = [
 	{

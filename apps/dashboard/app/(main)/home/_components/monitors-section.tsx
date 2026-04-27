@@ -3,17 +3,19 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo } from "react";
-import { Badge } from "@/components/ds/badge";
-import { Button } from "@/components/ds/button";
-import { Card } from "@/components/ds/card";
-import { Skeleton } from "@databuddy/ui";
 import { useBatchDynamicQuery } from "@/hooks/use-dynamic-query";
-import { dayjs } from "@databuddy/ui";
-import { formatDateOnly } from "@databuddy/ui";
 import { buildUptimeHeatmapDays } from "@databuddy/ui/uptime";
 import { UptimeHeatmapStrip } from "@databuddy/ui/uptime";
 import { cn } from "@/lib/utils";
 import { HeartbeatIcon, LockIcon, PlusIcon } from "@databuddy/ui/icons";
+import {
+	Badge,
+	Button,
+	Card,
+	Skeleton,
+	dayjs,
+	formatDateOnly,
+} from "@databuddy/ui";
 
 interface MonitorsSectionProps {
 	activeMonitors: number;

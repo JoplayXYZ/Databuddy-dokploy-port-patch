@@ -1,7 +1,6 @@
-import { Button } from "@/components/ds/button";
-import { Card } from "@/components/ds/card";
 import { SectionBrandOverlay } from "@/components/logo/section-brand-overlay";
 import { ArrowsOutSimpleIcon } from "@databuddy/ui/icons";
+import { Button, Card } from "@databuddy/ui";
 
 interface TableToolbarProps {
 	borderBottom?: boolean;

@@ -4,17 +4,12 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { EmptyState } from "@/components/ds/empty-state";
 import { FeatureAccessGate } from "@/components/feature-access-gate";
 import { MonitorSheet } from "@/components/monitors/monitor-sheet";
-import { DeleteDialog } from "@/components/ds/delete-dialog";
-import { Button } from "@/components/ds/button";
-import { Skeleton } from "@databuddy/ui";
 import { useDateFilters } from "@/hooks/use-date-filters";
 import { useBatchDynamicQuery } from "@/hooks/use-dynamic-query";
 import { useFeatureAccess } from "@/hooks/use-feature-access";
 import { orpc } from "@/lib/orpc";
-import { localDayjs } from "@databuddy/ui";
 import { UptimeHeatmap } from "@/lib/uptime/uptime-heatmap";
 import { TopBar } from "@/components/layout/top-bar";
 import { cn } from "@/lib/utils";
@@ -27,6 +22,8 @@ import {
 	PlayIcon,
 	TrashIcon,
 } from "@databuddy/ui/icons";
+import { DeleteDialog } from "@databuddy/ui/client";
+import { Button, EmptyState, Skeleton, localDayjs } from "@databuddy/ui";
 
 interface Schedule {
 	granularity: string;

@@ -1,8 +1,10 @@
-import { Content, List, Root, Trigger } from "@radix-ui/react-tabs";
-import React from "react";
-import { cn } from "@/lib/utils";
+"use client";
 
-interface TabsProps extends React.ComponentProps<typeof Root> {
+import { cn } from "@databuddy/ui";
+import { Tabs as UITabs } from "@databuddy/ui/client";
+import React from "react";
+
+interface TabsProps extends React.ComponentProps<typeof UITabs> {
 	items?: string[];
 }
 
@@ -13,7 +15,7 @@ function Tabs({ className, items, children, ...props }: TabsProps) {
 		const tabsContent = React.Children.toArray(children);
 
 		return (
-			<Root
+			<UITabs
 				className={cn("my-4 w-full", className)}
 				defaultValue={defaultValue}
 				{...props}
@@ -39,56 +41,48 @@ function Tabs({ className, items, children, ...props }: TabsProps) {
 					}
 					return content;
 				})}
-			</Root>
+			</UITabs>
 		);
 	}
 
 	return (
-		<Root
+		<UITabs
 			className={cn("my-4 w-full", className)}
 			defaultValue={defaultValue}
 			{...props}
 		>
 			{children}
-		</Root>
+		</UITabs>
 	);
 }
 
-function TabsList({ className, ...props }: React.ComponentProps<typeof List>) {
-	return (
-		<List
-			className={cn(
-				"flex items-center gap-0 border-border border-b",
-				className
-			)}
-			{...props}
-		/>
-	);
+function TabsList({
+	className,
+	...props
+}: React.ComponentProps<typeof UITabs.List>) {
+	return <UITabs.List className={cn("mb-3 w-fit", className)} {...props} />;
 }
 
 function TabsTrigger({
 	className,
 	...props
-}: React.ComponentProps<typeof Trigger>) {
-	return (
-		<Trigger
-			className={cn(
-				"cursor-pointer border-transparent border-b-2 px-3 py-2 font-medium text-muted-foreground text-sm",
-				"hover:text-foreground",
-				"focus-visible:outline-none",
-				"data-[state=active]:border-b-foreground data-[state=active]:text-foreground",
-				className
-			)}
-			{...props}
-		/>
-	);
+}: React.ComponentProps<typeof UITabs.Tab>) {
+	return <UITabs.Tab className={cn("cursor-pointer", className)} {...props} />;
 }
 
 function TabsContent({
 	className,
 	...props
-}: React.ComponentProps<typeof Content>) {
-	return <Content className={cn("mt-4", className)} {...props} />;
+}: React.ComponentProps<typeof UITabs.Panel>) {
+	return (
+		<UITabs.Panel
+			className={cn(
+				"mt-3 rounded-lg border border-border/60 bg-card p-4 text-sm leading-6 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 [&>*:first-child]:mt-0 [&>*:last-child]:mb-0",
+				className
+			)}
+			{...props}
+		/>
+	);
 }
 
 interface TabProps {

@@ -14,6 +14,7 @@
   --color-primary-foreground: var(--primary-foreground);
   --color-secondary: var(--secondary);
   --color-success: var(--success);
+  --color-warning: var(--warning);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
@@ -221,6 +222,15 @@
 
   body {
     @apply bg-background text-foreground font-sans;
+  }
+
+  button,
+  [role="button"],
+  a,
+  select,
+  summary,
+  [tabindex]:not([tabindex="-1"]) {
+    cursor: pointer;
   }
 
   code {

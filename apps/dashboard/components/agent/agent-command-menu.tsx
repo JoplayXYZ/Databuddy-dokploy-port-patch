@@ -1,6 +1,5 @@
 "use client";
 
-import { Button } from "@/components/ds/button";
 import { cn } from "@/lib/utils";
 import type { AgentCommand } from "./agent-commands";
 import { ClipboardTextIcon } from "@phosphor-icons/react/dist/ssr";
@@ -14,6 +13,7 @@ import {
 	MagnifyingGlassIcon,
 	WarningIcon,
 } from "@databuddy/ui/icons";
+import { Button } from "@databuddy/ui";
 
 const COMMAND_ICONS: Record<string, NavIcon> = {
 	"/analyze": MagnifyingGlassIcon,

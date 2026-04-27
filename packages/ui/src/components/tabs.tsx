@@ -18,7 +18,7 @@ function List({
   return (
     <BaseTabs.List
       className={cn(
-        "relative flex gap-0.5 rounded-lg border bg-secondary/50 p-1",
+        "inline-flex h-9 w-fit items-center justify-center rounded bg-accent-brighter p-[3px] text-muted-foreground",
         className
       )}
       {...rest}
@@ -33,11 +33,11 @@ function Tab({
   return (
     <BaseTabs.Tab
       className={cn(
-        "inline-flex h-7 cursor-pointer select-none items-center gap-1.5 rounded-md px-2.5 font-medium text-muted-foreground text-xs",
-        "transition-colors duration-(--duration-quick) ease-(--ease-smooth)",
-        "hover:bg-interactive-hover hover:text-foreground",
-        "data-active:bg-background data-active:text-foreground data-active:shadow-sm",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
+        "inline-flex h-[calc(100%-1px)] cursor-pointer select-none items-center justify-center gap-1.5 whitespace-nowrap rounded-md border border-transparent px-2 py-1 font-medium text-muted-foreground text-sm",
+        "transition-[background-color,border-color,color,box-shadow] duration-(--duration-quick) ease-(--ease-smooth)",
+        "hover:text-foreground",
+        "data-active:border-accent-foreground/10 data-active:bg-secondary-brightest data-active:text-foreground",
+        "focus-visible:border-ring focus-visible:outline-1 focus-visible:outline-ring focus-visible:ring-2 focus-visible:ring-ring/50",
         "disabled:pointer-events-none disabled:opacity-50",
         className
       )}

@@ -2,13 +2,12 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Button } from "@/components/ds/button";
-import { Dialog } from "@/components/ds/dialog";
-import { Text } from "@/components/ds/text";
 import { KeyboardShortcuts } from "@/components/ui/keyboard-shortcuts";
 import { cn } from "@/lib/utils";
 import { ChatCircleIcon, KeyboardIcon } from "@phosphor-icons/react/dist/ssr";
 import { BookOpenIcon, PlayIcon } from "@databuddy/ui/icons";
+import { Button, Text } from "@databuddy/ui";
+import { Dialog } from "@databuddy/ui/client";
 
 interface HelpDialogProps {
 	onOpenChangeAction: (open: boolean) => void;

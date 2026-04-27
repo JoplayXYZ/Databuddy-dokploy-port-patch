@@ -6,15 +6,10 @@ import { AnimatePresence, motion } from "motion/react";
 import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { StatCard } from "@/components/analytics/stat-card";
-import { EmptyState } from "@/components/ds/empty-state";
-import { Button } from "@/components/ds/button";
-import { Sheet } from "@/components/ds/sheet";
-import { Input } from "@/components/ds/input";
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
 import { useDateFilters } from "@/hooks/use-date-filters";
 import { useBatchDynamicQuery } from "@/hooks/use-dynamic-query";
 import { useMediaQuery } from "@/hooks/use-media-query";
-import { dayjs } from "@databuddy/ui";
 import { orpc } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
 import {
@@ -44,6 +39,8 @@ import {
 	TrendUpIcon,
 	UsersIcon,
 } from "@databuddy/ui/icons";
+import { Sheet } from "@databuddy/ui/client";
+import { Button, EmptyState, Input, dayjs } from "@databuddy/ui";
 
 interface RevenueContentProps {
 	websiteId: string;

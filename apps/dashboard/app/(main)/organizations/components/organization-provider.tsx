@@ -4,11 +4,8 @@ import { useAtomValue } from "jotai";
 import { usePathname } from "next/navigation";
 import { useMemo, useState } from "react";
 import { TopBar } from "@/components/layout/top-bar";
-import { EmptyState } from "@/components/ds/empty-state";
 import { CreateOrganizationDialog } from "@/components/organizations/create-organization-dialog";
 import { InviteMemberDialog } from "@/components/organizations/invite-member-dialog";
-import { Button } from "@/components/ds/button";
-import { Skeleton } from "@databuddy/ui";
 import {
 	activeOrganizationAtom,
 	isLoadingOrganizationsAtom,
@@ -20,6 +17,7 @@ import {
 	GlobeIcon,
 	UsersIcon,
 } from "@databuddy/ui/icons";
+import { Button, EmptyState, Skeleton } from "@databuddy/ui";
 
 type IconComponent = React.ForwardRefExoticComponent<
 	React.SVGProps<SVGSVGElement> & React.RefAttributes<SVGSVGElement>

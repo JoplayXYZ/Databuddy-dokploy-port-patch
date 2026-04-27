@@ -1,10 +1,8 @@
 "use client";
 
 import { type FormEvent, useEffect, useState } from "react";
-import { Button } from "@/components/ds/button";
-import { Field } from "@/components/ds/field";
-import { Input } from "@/components/ds/input";
-import { Sheet } from "@/components/ds/sheet";
+import { Button, Field, Input } from "@databuddy/ui";
+import { Sheet } from "@databuddy/ui/client";
 
 interface LinkFolderSheetProps {
 	isCreating?: boolean;

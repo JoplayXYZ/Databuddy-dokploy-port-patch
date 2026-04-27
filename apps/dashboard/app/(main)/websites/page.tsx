@@ -2,15 +2,12 @@
 
 import dynamic from "next/dynamic";
 import { useState } from "react";
-import { Button } from "@/components/ds/button";
-import { Card } from "@/components/ds/card";
-import { EmptyState } from "@/components/ds/empty-state";
 import { TopBar } from "@/components/layout/top-bar";
-import { Skeleton } from "@databuddy/ui";
 import { useWebsites } from "@/hooks/use-websites";
 import { cn } from "@/lib/utils";
 import { WebsiteCard } from "./_components/website-card";
 import { ArrowClockwiseIcon, GlobeIcon, PlusIcon } from "@databuddy/ui/icons";
+import { Button, Card, EmptyState, Skeleton } from "@databuddy/ui";
 
 const WebsiteDialog = dynamic(
 	() => import("@/components/website-dialog").then((mod) => mod.WebsiteDialog),

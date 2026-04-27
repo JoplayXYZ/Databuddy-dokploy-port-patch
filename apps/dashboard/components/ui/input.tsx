@@ -1,8 +1,8 @@
 "use client";
 
-import { useFieldContext } from "@/components/ds/field";
 import { forwardRef } from "react";
 import { cn } from "@/lib/utils";
+import { useFieldContext } from "@databuddy/ui";
 
 type InputProps = Omit<React.ComponentProps<"input">, "prefix" | "suffix"> & {
 	variant?: "default" | "ghost";

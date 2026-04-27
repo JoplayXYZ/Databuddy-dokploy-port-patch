@@ -3,11 +3,11 @@
 import { useCallback, useRef, useState } from "react";
 import { QRCode } from "react-qrcode-logo";
 import { toast } from "sonner";
-import { Button } from "@/components/ds/button";
 import { cn } from "@/lib/utils";
 import { LINKS_FULL_URL } from "./link-constants";
 import { XIcon } from "@phosphor-icons/react/dist/ssr";
 import { CopyIcon, DownloadSimpleIcon, ImageIcon } from "@databuddy/ui/icons";
+import { Button } from "@databuddy/ui";
 
 type QrStyle = "squares" | "dots";
 

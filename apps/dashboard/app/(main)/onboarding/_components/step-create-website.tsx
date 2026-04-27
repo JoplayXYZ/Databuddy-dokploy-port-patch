@@ -6,11 +6,9 @@ import { useController, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { useOrganizationsContext } from "@/components/providers/organizations-provider";
-import { Button } from "@/components/ds/button";
-import { Field } from "@/components/ds/field";
-import { Input } from "@/components/ds/input";
 import { useCreateWebsite } from "@/hooks/use-websites";
 import { GlobeIcon } from "@databuddy/ui/icons";
+import { Button, Field, Input } from "@databuddy/ui";
 
 const domainRegex =
 	/^(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,63}$/;

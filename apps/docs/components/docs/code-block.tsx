@@ -14,8 +14,7 @@ import svelte from "shiki/langs/svelte.mjs";
 import tsx from "shiki/langs/tsx.mjs";
 import githubLight from "shiki/themes/github-light.mjs";
 import vesper from "shiki/themes/vesper.mjs";
-import { cn } from "@/lib/utils";
-import { CopyButton } from "./copy-button";
+import { CopyButton, cn } from "@databuddy/ui";
 
 const highlighter = createHighlighterCoreSync({
 	themes: [vesper, githubLight],
@@ -172,31 +171,31 @@ function Shell({
 }) {
 	return (
 		<figure
-			className="group/code not-prose relative my-4 w-full overflow-hidden border border-border bg-muted/50 text-sm transition-colors hover:border-primary/20 dark:bg-[#101010]"
+			className="group/code not-prose relative my-4 w-full overflow-hidden rounded-lg border border-border/60 bg-card text-card-foreground text-sm transition-colors"
 			dir="ltr"
 		>
 			{showHeader && (
-				<div className="flex items-center justify-between border-foreground/5 border-b bg-foreground/5 px-4 py-2.5">
-					<div className="flex items-center gap-3">
+				<div className="flex min-h-9 items-center justify-between border-border/60 border-b bg-secondary/50 px-3">
+					<div className="flex min-w-0 items-center gap-2">
 						{filename && (
-							<span className="font-medium text-foreground/80 text-xs tracking-tight">
+							<span className="truncate font-medium text-foreground text-xs">
 								{filename}
 							</span>
 						)}
 						{language && (
-							<span className="bg-primary/10 px-2 py-0.5 font-medium font-mono text-[10px] text-primary uppercase tracking-wider">
+							<span className="rounded bg-background px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground uppercase">
 								{language}
 							</span>
 						)}
 					</div>
-					<CopyButton className="size-6" value={copyValue} />
+					<CopyButton className="size-7 shrink-0" value={copyValue} />
 				</div>
 			)}
 
 			{!showHeader && (
 				<div className="absolute top-3 right-3 z-10 opacity-0 transition-opacity group-hover/code:opacity-100">
 					<CopyButton
-						className="size-7 bg-background/50 backdrop-blur-md"
+						className="size-7 bg-card/90 backdrop-blur-md"
 						value={copyValue}
 					/>
 				</div>
@@ -211,7 +210,7 @@ function InlineCode({ className, ...props }: React.ComponentProps<"code">) {
 	return (
 		<code
 			className={cn(
-				"not-prose rounded-none! border border-border bg-muted px-1.5 py-0.5 font-mono text-[13px] text-foreground/90 dark:bg-[#101010]",
+				"not-prose rounded bg-secondary px-1.5 py-0.5 font-mono text-[13px] text-foreground/90",
 				className
 			)}
 			{...props}

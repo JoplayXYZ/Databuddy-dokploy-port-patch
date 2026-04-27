@@ -1,11 +1,11 @@
 "use client";
 
-import { Button } from "@/components/ds/button";
 import {
 	ArrowClockwiseIcon,
 	TrendUpIcon,
 	WarningCircleIcon,
 } from "@databuddy/ui/icons";
+import { Button } from "@databuddy/ui";
 
 export function EmptyUsageState() {
 	return (

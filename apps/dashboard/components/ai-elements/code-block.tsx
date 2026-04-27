@@ -10,9 +10,9 @@ import {
 	useState,
 } from "react";
 import { type BundledLanguage, codeToHtml, type ShikiTransformer } from "shiki";
-import { Button } from "@/components/ds/button";
 import { cn } from "@/lib/utils";
 import { CheckIcon, CopyIcon } from "@databuddy/ui/icons";
+import { Button } from "@databuddy/ui";
 
 type CodeBlockProps = HTMLAttributes<HTMLDivElement> & {
 	code: string;

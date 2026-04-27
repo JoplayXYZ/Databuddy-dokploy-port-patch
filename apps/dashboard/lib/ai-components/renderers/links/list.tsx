@@ -4,14 +4,8 @@ import { useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { LinkSheet } from "@/app/(main)/links/_components/link-sheet";
-import { Badge } from "@/components/ds/badge";
-import { Button } from "@/components/ds/button";
-import { Card } from "@/components/ds/card";
-import { DeleteDialog } from "@/components/ds/delete-dialog";
-import { DropdownMenu } from "@/components/ds/dropdown-menu";
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
 import { type Link, useDeleteLink } from "@/hooks/use-links";
-import { fromNow, localDayjs } from "@databuddy/ui";
 import { cn } from "@/lib/utils";
 import type { BaseComponentProps } from "../../types";
 import {
@@ -23,6 +17,8 @@ import {
 	PlusIcon,
 	TrashIcon,
 } from "@databuddy/ui/icons";
+import { DeleteDialog, DropdownMenu } from "@databuddy/ui/client";
+import { Badge, Button, Card, fromNow, localDayjs } from "@databuddy/ui";
 
 const BASE_URL = "dby.sh";
 

@@ -3,8 +3,6 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { StatCard } from "@/components/analytics/stat-card";
-import { Button } from "@/components/ds/button";
-import { Skeleton } from "@databuddy/ui";
 import { useChartPreferences } from "@/hooks/use-chart-preferences";
 import type {
 	FunnelAnalyticsByReferrerResult,
@@ -22,6 +20,7 @@ import {
 	UsersIcon,
 	WarningCircleIcon,
 } from "@databuddy/ui/icons";
+import { Button, Skeleton } from "@databuddy/ui";
 
 function createChartData(
 	timeSeries: FunnelTimeSeriesPoint[] | undefined,

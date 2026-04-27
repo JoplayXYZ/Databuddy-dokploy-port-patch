@@ -4,12 +4,10 @@ import { useCallback, useMemo } from "react";
 import type { DateRange as DayPickerRange } from "react-day-picker";
 import { useHotkeys } from "react-hotkeys-hook";
 import { DateRangePicker } from "@/components/date-range-picker";
-import { Button } from "@/components/ds/button";
-import { SegmentedControl } from "@/components/ds/segmented-control";
 import { useDateFilters } from "@/hooks/use-date-filters";
 import { cn } from "@/lib/utils";
-import { dayjs } from "@databuddy/ui";
 import { FiltersSection } from "./filters/filters-section";
+import { Button, SegmentedControl, dayjs } from "@databuddy/ui";
 
 const MAX_HOURLY_DAYS = 7;
 

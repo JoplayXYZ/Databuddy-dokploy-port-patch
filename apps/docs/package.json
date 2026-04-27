@@ -12,6 +12,7 @@
   "dependencies": {
     "@databuddy/sdk": "workspace:*",
     "@databuddy/shared": "workspace:*",
+    "@databuddy/ui": "workspace:*",
     "@hookform/resolvers": "^5.2.2",
     "@icons-pack/react-simple-icons": "^13.13.0",
     "@phosphor-icons/react": "^2.1.10",

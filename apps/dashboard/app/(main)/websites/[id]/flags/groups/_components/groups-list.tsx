@@ -1,9 +1,9 @@
 "use client";
 
-import { EmptyState } from "@/components/ds/empty-state";
 import type { GroupsListProps } from "../../_components/types";
 import { GroupItem } from "./group-item";
 import { UsersThreeIcon } from "@databuddy/ui/icons";
+import { EmptyState } from "@databuddy/ui";
 
 export function GroupsList({
 	groups,

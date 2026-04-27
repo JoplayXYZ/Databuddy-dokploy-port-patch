@@ -10,16 +10,11 @@ import html from "shiki/langs/html.mjs";
 import tsx from "shiki/langs/tsx.mjs";
 import vesper from "shiki/themes/vesper.mjs";
 import { toast } from "sonner";
-import { Badge } from "@/components/ds/badge";
-import { Button } from "@/components/ds/button";
-import { Card } from "@/components/ds/card";
 import {
 	Collapsible,
 	CollapsibleContent,
 	CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { Switch } from "@/components/ds/switch";
-import { Tabs } from "@/components/ds/tabs";
 import { orpc } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
 import {
@@ -47,6 +42,8 @@ import {
 	PulseIcon,
 	WarningCircleIcon,
 } from "@databuddy/ui/icons";
+import { Badge, Button, Card } from "@databuddy/ui";
+import { Switch, Tabs } from "@databuddy/ui/client";
 
 interface TrackingSetupTabProps {
 	websiteId: string;

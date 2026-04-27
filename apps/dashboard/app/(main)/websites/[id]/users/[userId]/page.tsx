@@ -5,12 +5,7 @@ import type { ProfileSession, Session } from "@databuddy/shared/types/sessions";
 import { notFound, useParams, useRouter } from "next/navigation";
 import { type ElementType, type ReactNode, useCallback, useState } from "react";
 import { BrowserIcon, CountryFlag, OSIcon } from "@/components/icon";
-import { Button } from "@/components/ds/button";
-import { EmptyState } from "@/components/ds/empty-state";
-import { Spinner } from "@/components/ds/spinner";
-import { StatusDot } from "@/components/ds/status-dot";
 import { useDateFilters } from "@/hooks/use-date-filters";
-import { formatDateOnly, formatLocalTime } from "@databuddy/ui";
 import { cn, getDeviceIcon } from "@/lib/utils";
 import { generateProfileName } from "./_components/generate-profile-name";
 import { SessionRow } from "./_components/session-row";
@@ -24,6 +19,14 @@ import {
 	GlobeIcon,
 	UserIcon,
 } from "@databuddy/ui/icons";
+import {
+	Button,
+	EmptyState,
+	Spinner,
+	StatusDot,
+	formatDateOnly,
+	formatLocalTime,
+} from "@databuddy/ui";
 
 const VITAL_ORDER = ["LCP", "INP", "CLS", "FCP", "TTFB", "FPS"];
 

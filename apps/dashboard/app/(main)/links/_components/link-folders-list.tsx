@@ -1,12 +1,12 @@
 "use client";
 
 import { type ReactNode, useMemo } from "react";
-import { Accordion } from "@/components/ds/accordion";
-import { EmptyState } from "@/components/ds/empty-state";
 import type { Link, LinkFolder } from "@/hooks/use-links";
 import { ArchiveIcon, LinkIcon } from "@databuddy/ui/icons";
 import { FolderSimpleIcon } from "@phosphor-icons/react/dist/ssr";
 import { LinksList } from "./link-item";
+import { EmptyState } from "@databuddy/ui";
+import { Accordion } from "@databuddy/ui/client";
 
 interface LinkFoldersListProps {
 	folders: LinkFolder[];

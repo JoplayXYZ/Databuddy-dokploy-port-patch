@@ -16,10 +16,6 @@ import {
 	useRef,
 	useState,
 } from "react";
-import { EmptyState } from "@/components/ds/empty-state";
-import { Badge } from "@/components/ds/badge";
-import { Button } from "@/components/ds/button";
-import { Input } from "@/components/ds/input";
 import type { RecentCustomEvent as StreamCustomEvent } from "@/components/events/custom-events";
 import {
 	Select,
@@ -28,7 +24,6 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
-import { Skeleton } from "@databuddy/ui";
 import {
 	Table,
 	TableBody,
@@ -38,7 +33,6 @@ import {
 	TableRow,
 } from "@/components/ui/table";
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
-import { formatTime, fromNow } from "@databuddy/ui";
 import { cn } from "@/lib/utils";
 import { XIcon } from "@phosphor-icons/react/dist/ssr";
 import {
@@ -50,6 +44,15 @@ import {
 	MagnifyingGlassIcon,
 	TagIcon,
 } from "@databuddy/ui/icons";
+import {
+	Badge,
+	Button,
+	EmptyState,
+	Input,
+	Skeleton,
+	formatTime,
+	fromNow,
+} from "@databuddy/ui";
 
 export type { RecentCustomEvent } from "@/components/events/custom-events";
 

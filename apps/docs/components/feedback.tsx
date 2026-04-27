@@ -1,27 +1,9 @@
 "use client";
 
-import { ThumbsDownIcon, ThumbsUpIcon } from "@phosphor-icons/react";
-import { cva } from "class-variance-authority";
-import {
-	Collapsible,
-	CollapsibleContent,
-} from "fumadocs-ui/components/ui/collapsible";
+import { ThumbsDownIcon, ThumbsUpIcon } from "@databuddy/ui/icons";
+import { Button, Textarea, cn } from "@databuddy/ui";
 import { usePathname } from "next/navigation";
 import { type SyntheticEvent, useEffect, useState, useTransition } from "react";
-import { cn } from "@/lib/utils";
-import { buttonVariants } from "./ui/button";
-
-const rateButtonVariants = cva(
-	"inline-flex items-center gap-2 border px-3 py-2 font-medium text-sm disabled:cursor-not-allowed [&_svg]:size-4",
-	{
-		variants: {
-			active: {
-				true: "border-primary/20 bg-primary/10 text-primary [&_svg]:fill-current",
-				false: "text-muted-foreground hover:bg-muted/50",
-			},
-		},
-	}
-);
 
 export interface Feedback {
 	message: string;
@@ -52,7 +34,6 @@ export function Feedback({
 
 	useEffect(() => {
 		const item = localStorage.getItem(`docs-feedback-${url}`);
-
 		if (item === null) {
 			return;
 		}
@@ -61,7 +42,6 @@ export function Feedback({
 
 	useEffect(() => {
 		const key = `docs-feedback-${url}`;
-
 		if (previous) {
 			localStorage.setItem(key, JSON.stringify(previous));
 		} else {
@@ -73,21 +53,13 @@ export function Feedback({
 		if (opinion === null) {
 			return;
 		}
-
 		setError(null);
 
 		startTransition(() => {
-			const feedback: Feedback = {
-				opinion,
-				message,
-			};
-
+			const feedback: Feedback = { opinion, message };
 			onRateAction(url, feedback).then((response) => {
 				if (response.success) {
-					setPrevious({
-						response,
-						...feedback,
-					});
+					setPrevious({ response, ...feedback });
 					setMessage("");
 					setOpinion(null);
 				} else {
@@ -100,114 +72,98 @@ export function Feedback({
 	}
 
 	const activeOpinion = previous?.opinion ?? opinion;
+	const isExpanded = opinion !== null || previous !== null;
 
 	return (
-		<Collapsible
-			className="border-border border-y py-3"
-			onOpenChange={(v) => {
-				if (!v) {
-					setOpinion(null);
-				}
-			}}
-			open={opinion !== null || previous !== null}
-		>
-			<div className="flex flex-row items-center gap-2">
-				<p className="pe-2 font-medium text-sm">How is this guide?</p>
-				<button
+		<div className="border-border/60 border-y py-4">
+			<div className="flex items-center gap-2">
+				<p className="pe-2 font-medium text-foreground text-sm">
+					How is this guide?
+				</p>
+				<Button
 					className={cn(
-						rateButtonVariants({
-							active: activeOpinion === "good",
-						})
+						activeOpinion === "good" &&
+							"bg-primary/10 text-primary hover:bg-primary/15"
 					)}
 					disabled={previous !== null}
-					onClick={() => {
-						setOpinion("good");
-					}}
-					type="button"
+					onClick={() => setOpinion("good")}
+					size="sm"
+					variant="ghost"
 				>
-					<ThumbsUpIcon
-						weight={activeOpinion === "good" ? "fill" : "duotone"}
-					/>
+					<ThumbsUpIcon className="size-3.5" />
 					Good
-				</button>
-				<button
+				</Button>
+				<Button
 					className={cn(
-						rateButtonVariants({
-							active: activeOpinion === "bad",
-						})
+						activeOpinion === "bad" &&
+							"bg-destructive/10 text-destructive hover:bg-destructive/15"
 					)}
 					disabled={previous !== null}
-					onClick={() => {
-						setOpinion("bad");
-					}}
-					type="button"
+					onClick={() => setOpinion("bad")}
+					size="sm"
+					variant="ghost"
 				>
-					<ThumbsDownIcon
-						weight={activeOpinion === "bad" ? "fill" : "duotone"}
-					/>
+					<ThumbsDownIcon className="size-3.5" />
 					Bad
-				</button>
+				</Button>
 			</div>
-			<CollapsibleContent className="mt-3">
-				{previous ? (
-					<div className="flex flex-col items-center gap-3 bg-muted/50 px-3 py-6 text-center text-muted-foreground text-sm">
-						<p>Thank you for your feedback!</p>
-						<button
-							className={cn(
-								buttonVariants({
-									variant: "outline",
-								}),
-								"text-xs"
-							)}
-							onClick={() => {
-								setOpinion(previous.opinion);
-								setPrevious(null);
-								setError(null);
-							}}
-							type="button"
-						>
-							Submit Again
-						</button>
-					</div>
-				) : (
-					<form className="flex flex-col gap-3" onSubmit={submit}>
-						<textarea
-							autoFocus
-							className={cn(
-								"resize-none border bg-muted/30 p-3 text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1",
-								error
-									? "border-red-500 focus-visible:ring-red-500/50"
-									: "border-border focus-visible:ring-primary/50"
-							)}
-							onChange={(e) => {
-								setMessage(e.target.value);
-								if (error) {
+
+			{isExpanded && (
+				<div className="mt-3">
+					{previous ? (
+						<div className="flex flex-col items-center gap-3 rounded-md bg-secondary px-3 py-6 text-center text-muted-foreground text-sm">
+							<p>Thank you for your feedback!</p>
+							<Button
+								onClick={() => {
+									setOpinion(previous.opinion);
+									setPrevious(null);
 									setError(null);
-								}
-							}}
-							onKeyDown={(e) => {
-								if (!e.shiftKey && e.key === "Enter") {
-									submit(e);
-								}
-							}}
-							placeholder="Leave your feedback…"
-							required
-							value={message}
-						/>
-						{error && <p className="text-red-500 text-sm">{error}</p>}
-						<button
-							className={cn(
-								buttonVariants({ variant: "outline" }),
-								"w-fit px-3"
-							)}
-							disabled={isPending}
-							type="submit"
-						>
-							{isPending ? "Submitting…" : "Submit"}
-						</button>
-					</form>
-				)}
-			</CollapsibleContent>
-		</Collapsible>
+								}}
+								size="sm"
+								variant="secondary"
+							>
+								Submit Again
+							</Button>
+						</div>
+					) : (
+						<form className="flex flex-col gap-3" onSubmit={submit}>
+							<Textarea
+								autoFocus
+								className={cn(
+									"resize-none",
+									error &&
+										"ring-2 ring-destructive/60 focus-within:ring-destructive/60"
+								)}
+								onChange={(e) => {
+									setMessage(e.target.value);
+									if (error) {
+										setError(null);
+									}
+								}}
+								onKeyDown={(e) => {
+									if (!e.shiftKey && e.key === "Enter") {
+										submit(e);
+									}
+								}}
+								placeholder="Leave your feedback…"
+								required
+								value={message}
+							/>
+							{error && <p className="text-destructive text-xs">{error}</p>}
+							<Button
+								className="w-fit"
+								disabled={isPending}
+								loading={isPending}
+								size="sm"
+								type="submit"
+								variant="secondary"
+							>
+								Submit
+							</Button>
+						</form>
+					)}
+				</div>
+			)}
+		</div>
 	);
 }

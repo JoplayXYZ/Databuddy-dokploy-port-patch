@@ -2,9 +2,9 @@
 
 import { generateId } from "ai";
 import { useParams, useRouter } from "next/navigation";
-import { Button } from "@/components/ds/button";
 import { cn } from "@/lib/utils";
 import { PlusIcon } from "@databuddy/ui/icons";
+import { Button } from "@databuddy/ui";
 
 interface NewChatButtonProps {
 	className?: string;

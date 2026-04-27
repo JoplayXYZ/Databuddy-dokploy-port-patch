@@ -1,33 +1,5 @@
 "use client";
 
-import { Accordion } from "@/components/ds/accordion";
-import { Avatar } from "@/components/ds/avatar";
-import { Badge, PercentageBadge } from "@/components/ds/badge";
-import { Button } from "@/components/ds/button";
-import { Calendar } from "@/components/ds/calendar";
-import { Card } from "@/components/ds/card";
-import { Checkbox } from "@/components/ds/checkbox";
-import { CopyButton } from "@/components/ds/copy-button";
-import { DeleteDialog } from "@/components/ds/delete-dialog";
-import { Dialog } from "@/components/ds/dialog";
-import { Divider } from "@/components/ds/divider";
-import { DropdownMenu } from "@/components/ds/dropdown-menu";
-import { EmptyState } from "@/components/ds/empty-state";
-import { Field } from "@/components/ds/field";
-import { Input } from "@/components/ds/input";
-import { Popover } from "@/components/ds/popover";
-import { Progress } from "@/components/ds/progress";
-import { SegmentedControl } from "@/components/ds/segmented-control";
-import { Select } from "@/components/ds/select";
-import { Sheet } from "@/components/ds/sheet";
-import { Skeleton } from "@databuddy/ui";
-import { Spinner } from "@/components/ds/spinner";
-import { StatusDot } from "@/components/ds/status-dot";
-import { Switch } from "@/components/ds/switch";
-import { Tabs } from "@/components/ds/tabs";
-import { Text } from "@/components/ds/text";
-import { Textarea } from "@/components/ds/textarea";
-import { Tooltip } from "@databuddy/ui";
 import {
 	Key,
 	Palette,
@@ -62,6 +34,39 @@ import {
 } from "@databuddy/ui/icons";
 import { useState } from "react";
 import { ShowcaseRow, ShowcaseSection } from "./showcase-section";
+import {
+	Accordion,
+	Avatar,
+	Calendar,
+	Checkbox,
+	DeleteDialog,
+	Dialog,
+	DropdownMenu,
+	Popover,
+	Select,
+	Sheet,
+	Switch,
+	Tabs,
+} from "@databuddy/ui/client";
+import {
+	Badge,
+	Button,
+	Card,
+	CopyButton,
+	Divider,
+	EmptyState,
+	Field,
+	Input,
+	PercentageBadge,
+	Progress,
+	SegmentedControl,
+	Skeleton,
+	Spinner,
+	StatusDot,
+	Text,
+	Textarea,
+	Tooltip,
+} from "@databuddy/ui";
 
 const BUTTON_VARIANTS = ["primary", "secondary", "ghost"] as const;
 const BUTTON_TONES = ["neutral", "destructive"] as const;

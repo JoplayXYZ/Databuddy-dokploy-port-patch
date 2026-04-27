@@ -2,12 +2,6 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { Button, buttonVariants } from "@/components/ds/button";
-import { Card } from "@/components/ds/card";
-import { DropdownMenu } from "@/components/ds/dropdown-menu";
-import { EmptyState } from "@/components/ds/empty-state";
-import { Skeleton } from "@databuddy/ui";
-import { Text } from "@/components/ds/text";
 import { ApiKeySheet } from "@/components/organizations/api-key-sheet";
 import type { ApiKeyListItem } from "@/components/organizations/api-key-types";
 import type { Organization } from "@/hooks/use-organizations";
@@ -19,6 +13,15 @@ import {
 	MagnifyingGlassIcon,
 	PlusIcon,
 } from "@databuddy/ui/icons";
+import { DropdownMenu } from "@databuddy/ui/client";
+import {
+	Button,
+	Card,
+	EmptyState,
+	Skeleton,
+	Text,
+	buttonVariants,
+} from "@databuddy/ui";
 
 type StatusFilter = "all" | "active" | "disabled" | "expired" | "revoked";
 type TypeFilter = "all" | "user" | "sdk" | "automation";

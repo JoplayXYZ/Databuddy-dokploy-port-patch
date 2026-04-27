@@ -12,8 +12,8 @@ import {
 	useFormContext,
 	useFormState,
 } from "react-hook-form";
-import { Field } from "@/components/ds/field";
 import { cn } from "@/lib/utils";
+import { Field } from "@databuddy/ui";
 
 const Form = FormProvider;
 

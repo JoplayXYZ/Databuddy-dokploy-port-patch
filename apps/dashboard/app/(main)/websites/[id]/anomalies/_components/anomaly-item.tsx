@@ -1,9 +1,7 @@
 "use client";
 
 import type { ElementType } from "react";
-import { Badge } from "@/components/ds/badge";
 import { List } from "@/components/ui/composables/list";
-import { Skeleton } from "@databuddy/ui";
 import { cn } from "@/lib/utils";
 import {
 	ArrowDownIcon,
@@ -14,6 +12,7 @@ import {
 	WarningCircleIcon,
 	WarningIcon,
 } from "@databuddy/ui/icons";
+import { Badge, Skeleton } from "@databuddy/ui";
 
 export interface AnomalyItemData {
 	baselineMean: number;

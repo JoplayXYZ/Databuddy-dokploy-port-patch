@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Logo } from "@/components/layout/logo";
-import { Button } from "@/components/ds/button";
 import { CheckCircleIcon } from "@databuddy/ui/icons";
+import { Button } from "@databuddy/ui";
 
 export default function PaymentSuccess() {
 	return (

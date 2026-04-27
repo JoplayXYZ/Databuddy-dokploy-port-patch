@@ -7,14 +7,11 @@ import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { useOrganizationsContext } from "@/components/providers/organizations-provider";
-import { Button } from "@/components/ds/button";
-import { Dialog } from "@/components/ds/dialog";
-import { DropdownMenu } from "@/components/ds/dropdown-menu";
-import { Field } from "@/components/ds/field";
-import { Input } from "@/components/ds/input";
 import { orpc } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
 import { HeartbeatIcon, ListIcon, PlusIcon } from "@databuddy/ui/icons";
+import { Button, Field, Input } from "@databuddy/ui";
+import { Dialog, DropdownMenu } from "@databuddy/ui/client";
 
 type Mode = "existing" | "create";
 

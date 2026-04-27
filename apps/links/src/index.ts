@@ -8,7 +8,10 @@ import { redirectRoute } from "./routes/redirect";
 initLogger({
 	env: { service: "links" },
 	drain,
-	sampling: { rates: { info: 20, warn: 50, debug: 5 } },
+	sampling: {
+		rates: { info: 20, warn: 50, debug: 5 },
+		keep: [{ status: 400 }, { duration: 1500 }],
+	},
 });
 
 const app = new Elysia()

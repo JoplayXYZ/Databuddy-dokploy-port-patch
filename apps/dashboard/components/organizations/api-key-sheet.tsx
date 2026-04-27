@@ -8,21 +8,7 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { ExpirationPicker } from "@/app/(main)/links/_components/expiration-picker";
-import { Accordion } from "@/components/ds/accordion";
-import { Badge } from "@/components/ds/badge";
-import { Button } from "@/components/ds/button";
-import { Checkbox } from "@/components/ds/checkbox";
-import { Dialog } from "@/components/ds/dialog";
-import { Divider } from "@/components/ds/divider";
-import { Field } from "@/components/ds/field";
-import { Input } from "@/components/ds/input";
-import { Sheet } from "@/components/ds/sheet";
-import { Switch } from "@/components/ds/switch";
-import { TagsInput } from "@/components/ds/tags-input";
-import { Text } from "@/components/ds/text";
-import { Textarea } from "@/components/ds/textarea";
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
-import { dayjs } from "@databuddy/ui";
 import { orpc } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
 import { type ApiKeyListItem, SCOPE_OPTIONS } from "./api-key-types";
@@ -42,6 +28,24 @@ import {
 	ProhibitIcon,
 	TrashIcon,
 } from "@databuddy/ui/icons";
+import {
+	Accordion,
+	Checkbox,
+	Dialog,
+	Sheet,
+	Switch,
+	TagsInput,
+} from "@databuddy/ui/client";
+import {
+	Badge,
+	Button,
+	Divider,
+	Field,
+	Input,
+	Text,
+	Textarea,
+	dayjs,
+} from "@databuddy/ui";
 
 interface ApiKeySheetProps {
 	apiKey: ApiKeyListItem | null;

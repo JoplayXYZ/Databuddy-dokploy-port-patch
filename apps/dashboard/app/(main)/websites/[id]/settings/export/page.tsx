@@ -7,16 +7,13 @@ import { useCallback, useMemo, useState } from "react";
 import type { DateRange as DayPickerRange } from "react-day-picker";
 import { toast } from "sonner";
 import { DateRangePicker } from "@/components/date-range-picker";
-import { Badge } from "@/components/ds/badge";
-import { Button } from "@/components/ds/button";
-import { Card } from "@/components/ds/card";
-import { Switch } from "@/components/ds/switch";
 import { useWebsite } from "@/hooks/use-websites";
-import { dayjs } from "@databuddy/ui";
 import { orpc } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
 import { DownloadIcon, FileCodeIcon } from "@phosphor-icons/react/dist/ssr";
 import { CheckIcon, FileTextIcon, TableIcon } from "@databuddy/ui/icons";
+import { Switch } from "@databuddy/ui/client";
+import { Badge, Button, Card, dayjs } from "@databuddy/ui";
 
 function downloadFile(blob: Blob, filename: string) {
 	const url = window.URL.createObjectURL(blob);

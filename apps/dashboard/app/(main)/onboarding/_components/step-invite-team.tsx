@@ -7,14 +7,11 @@ import { useController, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { useOrganizationsContext } from "@/components/providers/organizations-provider";
-import { Badge } from "@/components/ds/badge";
-import { Button } from "@/components/ds/button";
-import { DropdownMenu } from "@/components/ds/dropdown-menu";
-import { Field } from "@/components/ds/field";
-import { Input } from "@/components/ds/input";
 import { useOrganizationInvitations } from "@/hooks/use-organization-invitations";
 import { CaretUpDown } from "@phosphor-icons/react/dist/ssr";
 import { EnvelopeSimpleIcon, UsersIcon } from "@databuddy/ui/icons";
+import { Badge, Button, Field, Input } from "@databuddy/ui";
+import { DropdownMenu } from "@databuddy/ui/client";
 
 const formSchema = z.object({
 	email: z.string().email("Enter a valid email address"),

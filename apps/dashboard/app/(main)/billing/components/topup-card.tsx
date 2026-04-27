@@ -1,10 +1,5 @@
 "use client";
 
-import { Badge } from "@/components/ds/badge";
-import { Button } from "@/components/ds/button";
-import { Card } from "@/components/ds/card";
-import { Divider } from "@/components/ds/divider";
-import { Text } from "@/components/ds/text";
 import { CreditArcSlider } from "@/components/ui/credit-arc-slider";
 import { cn } from "@/lib/utils";
 import {
@@ -23,6 +18,7 @@ import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { CoinsIcon } from "@phosphor-icons/react/dist/ssr";
 import { CaretDownIcon, TrendDownIcon } from "@databuddy/ui/icons";
+import { Badge, Button, Card, Divider, Text } from "@databuddy/ui";
 
 const PRESET_QUANTITIES = [100, 500, 2500, 10_000];
 const BASE_RATE = TOPUP_TIERS[0].amount;

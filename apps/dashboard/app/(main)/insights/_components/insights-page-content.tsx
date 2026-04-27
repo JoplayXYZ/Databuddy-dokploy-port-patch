@@ -11,7 +11,6 @@ import { useInsightsLocalState } from "@/app/(main)/insights/hooks/use-insights-
 import { TopBar } from "@/components/layout/top-bar";
 import { FaviconImage } from "@/components/analytics/favicon-image";
 import { StatCard } from "@/components/analytics/stat-card";
-import { EmptyState } from "@/components/ds/empty-state";
 import { useOrganizationsContext } from "@/components/providers/organizations-provider";
 import { DataTable } from "@/components/table/data-table";
 import {
@@ -22,12 +21,8 @@ import {
 	type PageEntry,
 	type ReferrerEntry,
 } from "@/components/table/rows";
-import { DeleteDialog } from "@/components/ds/delete-dialog";
-import { Button } from "@/components/ds/button";
-import { DropdownMenu } from "@/components/ds/dropdown-menu";
 import { useBatchDynamicQuery } from "@/hooks/use-dynamic-query";
 import { useWebsites } from "@/hooks/use-websites";
-import { dayjs } from "@databuddy/ui";
 import { formatNumber } from "@/lib/formatters";
 import {
 	clearInsightsHistory,
@@ -51,6 +46,8 @@ import {
 	TrashIcon,
 	UsersIcon,
 } from "@databuddy/ui/icons";
+import { DeleteDialog, DropdownMenu } from "@databuddy/ui/client";
+import { Button, EmptyState, dayjs } from "@databuddy/ui";
 
 const insightsFocusSiteAtom = atomWithStorage<string | null>(
 	"insights.focus-site",

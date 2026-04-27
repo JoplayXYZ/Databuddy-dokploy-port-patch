@@ -2,12 +2,7 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { type SyntheticEvent, useMemo } from "react";
-import { Badge } from "@/components/ds/badge";
 import { List } from "@/components/ui/composables/list";
-import { DropdownMenu } from "@/components/ds/dropdown-menu";
-import { Skeleton } from "@databuddy/ui";
-import { Switch } from "@/components/ds/switch";
-import { Tooltip } from "@databuddy/ui";
 import { orpc } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
 import { FlagKey } from "./flag-key";
@@ -25,6 +20,8 @@ import {
 	ShareNetworkIcon,
 	TrashIcon,
 } from "@databuddy/ui/icons";
+import { DropdownMenu, Switch } from "@databuddy/ui/client";
+import { Badge, Skeleton, Tooltip } from "@databuddy/ui";
 
 interface FlagsListProps {
 	flags: Flag[];

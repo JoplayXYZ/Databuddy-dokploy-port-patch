@@ -77,7 +77,7 @@ function deps(): UptimeWorkerDeps {
 		captureError: (error, context) => {
 			calls.captureError.push({ error, context: context ?? {} });
 		},
-		checkUptime: async (monitorId, url, _attempt, _retries, options) => {
+		checkUptime: async (monitorId, url, _attempt, options) => {
 			calls.check.push({
 				monitorId,
 				url,
@@ -163,16 +163,20 @@ describe("processUptimeCheck", () => {
 			{ data: uptimeData(), monitorId: "website-1" },
 		]);
 		expect(calls.email).toHaveLength(1);
+		expect(calls.merge).toContainEqual({
+			schedule_id: "schedule-1",
+			uptime_trigger: "scheduled",
+		});
 		expect(calls.merge).toContainEqual(
 			expect.objectContaining({
 				monitor_id: "website-1",
 				organization_id: "org-1",
-				schedule_id: "schedule-1",
-				uptime_trigger: "scheduled",
 				website_id: "website-1",
 			})
 		);
-		expect(calls.merge).toContainEqual({ previous_uptime_status: 0 });
+		expect(calls.merge).toContainEqual(
+			expect.objectContaining({ previous_uptime_status: 0 })
+		);
 	});
 
 	it("records -1 when no previous monitor status exists", async () => {
@@ -180,7 +184,9 @@ describe("processUptimeCheck", () => {
 
 		await processUptimeCheck("schedule-1", "scheduled", deps());
 
-		expect(calls.merge).toContainEqual({ previous_uptime_status: -1 });
+		expect(calls.merge).toContainEqual(
+			expect.objectContaining({ previous_uptime_status: -1 })
+		);
 	});
 
 	it("uses the schedule id as monitor id when no website is attached", async () => {
@@ -200,11 +206,14 @@ describe("processUptimeCheck", () => {
 				extractHealth: true,
 			},
 		]);
+		expect(calls.merge).toContainEqual({
+			schedule_id: "schedule-only",
+			uptime_trigger: "manual",
+		});
 		expect(calls.merge).toContainEqual(
 			expect.objectContaining({
 				monitor_id: "schedule-only",
-				schedule_id: "schedule-only",
-				uptime_trigger: "manual",
+				organization_id: "org-1",
 			})
 		);
 	});
@@ -219,6 +228,9 @@ describe("processUptimeCheck", () => {
 		expect(calls.merge).toEqual([
 			{
 				schedule_id: "schedule-1",
+				uptime_trigger: "scheduled",
+			},
+			{
 				organization_id: "org-1",
 				uptime_skipped_paused: true,
 			},

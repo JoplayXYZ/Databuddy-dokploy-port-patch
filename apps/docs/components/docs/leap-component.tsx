@@ -1,7 +1,7 @@
 "use client";
 
-import { RocketLaunchIcon } from "@phosphor-icons/react";
-import { cn } from "@/lib/utils";
+import { ArrowRightIcon, WandSparkleIcon } from "@databuddy/ui/icons";
+import { Button, Card, Input } from "@databuddy/ui";
 
 const examples = ["saas", "merch store"] as const;
 const prompts = {
@@ -33,52 +33,50 @@ export const LeapComponent = () => {
 	};
 
 	return (
-		<div className="my-4 border border-border bg-muted p-4 dark:bg-[#101010]">
-			<div className="mb-2 flex items-center gap-2">
-				<RocketLaunchIcon className="size-4 text-purple-500" weight="duotone" />
-				<h3 className="font-semibold text-foreground text-sm">
-					Try Databuddy with Leap
-				</h3>
-			</div>
+		<Card className="not-prose my-4 border-border/60 bg-card">
+			<Card.Content className="p-4">
+				<div className="mb-2 flex items-center gap-2.5">
+					<div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-secondary text-muted-foreground">
+						<WandSparkleIcon className="size-4" />
+					</div>
+					<h3 className="font-medium text-foreground text-sm">
+						Try Databuddy with Leap
+					</h3>
+				</div>
 
-			<p className="mb-3 text-muted-foreground text-xs">
-				Let Leap generate a complete application that uses Databuddy for
-				analytics.
-			</p>
+				<p className="mb-3 text-muted-foreground text-xs leading-5">
+					Let Leap generate a complete application that uses Databuddy for
+					analytics.
+				</p>
 
-			<div className="flex w-full flex-col gap-2 sm:flex-row">
-				<input
-					className={cn(
-						"leap-prompt-input flex-1 border border-border bg-background px-3 py-2 text-foreground text-sm",
-						"placeholder:text-muted-foreground focus:border-primary focus:outline-none"
-					)}
-					placeholder="What do you want to build with Databuddy analytics?"
-					type="text"
-				/>
-				<button
-					className="border border-border bg-foreground px-4 py-2 font-medium text-background text-sm"
-					data-track="leap-generate"
-					onClick={handleGenerate}
-					type="button"
-				>
-					Generate
-				</button>
-			</div>
+				<div className="flex w-full flex-col gap-2 sm:flex-row">
+					<Input
+						className="leap-prompt-input h-9 flex-1 text-sm"
+						placeholder="What do you want to build with Databuddy analytics?"
+						type="text"
+					/>
+					<Button data-track="leap-generate" onClick={handleGenerate} size="md">
+						Generate
+						<ArrowRightIcon className="size-3.5" />
+					</Button>
+				</div>
 
-			<div className="mt-2 flex flex-wrap items-center gap-1.5 text-xs">
-				<span className="text-muted-foreground">Examples:</span>
-				{examples.map((example) => (
-					<button
-						className="text-muted-foreground underline underline-offset-2 hover:text-foreground"
-						key={example}
-						onClick={() => handleExample(example)}
-						type="button"
-					>
-						{example}
-					</button>
-				))}
-			</div>
-		</div>
+				<div className="mt-2 flex flex-wrap items-center gap-1.5 text-xs">
+					<span className="text-muted-foreground">Examples:</span>
+					{examples.map((example) => (
+						<Button
+							className="h-6 px-2 font-normal"
+							key={example}
+							onClick={() => handleExample(example)}
+							size="sm"
+							variant="ghost"
+						>
+							{example}
+						</Button>
+					))}
+				</div>
+			</Card.Content>
+		</Card>
 	);
 };
 

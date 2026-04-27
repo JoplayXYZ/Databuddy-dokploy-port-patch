@@ -10,8 +10,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Avatar } from "@/components/ds/avatar";
-import { Button } from "@/components/ds/button";
 import {
 	ArrowSquareOutIcon,
 	ListIcon,
@@ -32,6 +30,8 @@ import { isNavItemActive } from "./navigation/nav-item-active";
 import type { NavigationGroup, NavigationItem } from "./navigation/types";
 import { OrganizationSelector } from "./organization-selector";
 import { useSidebarNavigation } from "./sidebar-navigation-provider";
+import { Button } from "@databuddy/ui";
+import { Avatar } from "@databuddy/ui/client";
 
 function MobileThemeToggle() {
 	const { theme, setTheme } = useTheme();

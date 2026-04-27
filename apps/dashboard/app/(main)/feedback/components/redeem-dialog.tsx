@@ -2,11 +2,10 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Button } from "@/components/ds/button";
-import { Dialog } from "@/components/ds/dialog";
-import { Text } from "@/components/ds/text";
 import { orpc } from "@/lib/orpc";
 import { ArrowDownIcon } from "@databuddy/ui/icons";
+import { Button, Text } from "@databuddy/ui";
+import { Dialog } from "@databuddy/ui/client";
 
 interface RedeemDialogProps {
 	creditsRequired: number;

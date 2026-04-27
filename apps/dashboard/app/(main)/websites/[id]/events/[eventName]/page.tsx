@@ -3,19 +3,16 @@
 import Link from "next/link";
 import { notFound, useParams } from "next/navigation";
 import { useMemo } from "react";
-import { Card } from "@/components/ds/card";
-import { EmptyState } from "@/components/ds/empty-state";
 import {
 	EventsStatsGrid,
 	PropertyValueCard,
 	type CustomEventsMetricKey,
 } from "@/components/events/custom-events";
-import { Skeleton } from "@databuddy/ui";
 import { useChartPreferences } from "@/hooks/use-chart-preferences";
 import { useDateFilters } from "@/hooks/use-date-filters";
-import { formatTime, fromNow } from "@databuddy/ui";
 import { useEventDetailData } from "./use-event-detail";
 import { ClockIcon, LightningIcon, LinkIcon } from "@databuddy/ui/icons";
+import { Card, EmptyState, Skeleton, formatTime, fromNow } from "@databuddy/ui";
 
 const EVENT_DETAIL_METRICS: CustomEventsMetricKey[] = [
 	"total_events",

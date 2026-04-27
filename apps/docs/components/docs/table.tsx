@@ -1,5 +1,5 @@
 import type * as React from "react";
-import { cn } from "@/lib/utils";
+import { cn } from "@databuddy/ui";
 
 function Table({
 	children,
@@ -7,16 +7,18 @@ function Table({
 	...props
 }: React.ComponentProps<"table">) {
 	return (
-		<div className="not-prose my-4 w-full overflow-x-auto">
-			<table
-				className={cn(
-					"w-full border-collapse border border-border bg-muted dark:bg-[#101010]",
-					className
-				)}
-				{...props}
-			>
-				{children}
-			</table>
+		<div className="not-prose my-4 w-full overflow-hidden rounded-lg border border-border/60 bg-card">
+			<div className="w-full overflow-x-auto">
+				<table
+					className={cn(
+						"w-full border-collapse bg-card text-card-foreground text-sm",
+						className
+					)}
+					{...props}
+				>
+					{children}
+				</table>
+			</div>
 		</div>
 	);
 }
@@ -27,7 +29,7 @@ function TableHeader({
 	...props
 }: React.ComponentProps<"thead">) {
 	return (
-		<thead className={cn("bg-foreground/5", className)} {...props}>
+		<thead className={cn("bg-secondary/50", className)} {...props}>
 			{children}
 		</thead>
 	);
@@ -51,7 +53,10 @@ function TableRow({
 	...props
 }: React.ComponentProps<"tr">) {
 	return (
-		<tr className={className} {...props}>
+		<tr
+			className={cn("border-border/60 border-b last:border-b-0", className)}
+			{...props}
+		>
 			{children}
 		</tr>
 	);
@@ -65,7 +70,7 @@ function TableHead({
 	return (
 		<th
 			className={cn(
-				"border border-border px-4 py-2.5 text-left font-medium font-mono text-foreground/70 text-xs",
+				"h-10 px-4 text-left font-medium text-muted-foreground text-xs",
 				className
 			)}
 			{...props}
@@ -82,7 +87,7 @@ function TableCell({
 }: React.ComponentProps<"td">) {
 	return (
 		<td
-			className={cn("border border-border px-4 py-2.5 text-sm", className)}
+			className={cn("px-4 py-3 text-foreground text-sm leading-5", className)}
 			{...props}
 		>
 			{children}

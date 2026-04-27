@@ -1,8 +1,8 @@
 "use client";
 
-import { Card } from "@/components/ds/card";
 import { cn } from "@/lib/utils";
 import type { BaseComponentProps } from "../types";
+import { Card } from "@databuddy/ui";
 
 export interface DataTableColumn {
 	align?: "left" | "center" | "right";

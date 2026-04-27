@@ -9,25 +9,11 @@ import {
 	useRef,
 	useState,
 } from "react";
-import { authClient } from "@databuddy/auth/client";
-import { Avatar } from "@/components/ds/avatar";
-import { Button } from "@/components/ds/button";
-import { DropdownMenu } from "@/components/ds/dropdown-menu";
-import { Skeleton } from "@databuddy/ui";
-import { Tooltip } from "@databuddy/ui";
-import {
-	BugIcon,
-	CalendarIcon,
-	EnvelopeIcon,
-	MagnifyingGlassIcon,
-	MsgContentIcon,
-} from "@databuddy/ui/icons";
+import { MagnifyingGlassIcon } from "@databuddy/ui/icons";
 import { useCommandSearchOpenAction } from "@/components/ui/command-search";
-import { cn } from "@/lib/utils";
-import { useRouter } from "next/navigation";
 import { PendingInvitationsButton } from "./pending-invitations-button";
-import { getInitials, ProfileDropdownContent } from "./profile-button-client";
 import { SidebarTrigger } from "./sidebar-layout";
+import { Button } from "@databuddy/ui";
 
 type SlotMap = Map<string, ReactNode>;
 type Listener = () => void;
@@ -79,9 +65,6 @@ function createTopBarStore(): TopBarStore {
 }
 
 const TopBarStoreContext = createContext<TopBarStore | null>(null);
-
-const topBarIconButtonClassName =
-	"flex size-8 shrink-0 items-center justify-center rounded-md text-sidebar-foreground/65 transition-colors duration-(--duration-quick) ease-(--ease-smooth) hover:bg-sidebar-accent hover:text-sidebar-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60";
 
 function useStore() {
 	const store = use(TopBarStoreContext);
@@ -194,99 +177,6 @@ export function TopBarProvider({ children }: { children: ReactNode }) {
 	);
 }
 
-function HelpMenu() {
-	const router = useRouter();
-
-	return (
-		<DropdownMenu>
-			<Tooltip content="Help & feedback" side="bottom">
-				<DropdownMenu.Trigger
-					aria-label="Help & feedback"
-					className={topBarIconButtonClassName}
-					render={<button type="button" />}
-				>
-					<MsgContentIcon className="size-5 shrink-0" />
-				</DropdownMenu.Trigger>
-			</Tooltip>
-			<DropdownMenu.Content align="end" className="w-48">
-				<DropdownMenu.Item onClick={() => router.push("/feedback")}>
-					<MsgContentIcon className="size-4 shrink-0" />
-					Feedback
-				</DropdownMenu.Item>
-				<DropdownMenu.Item
-					onClick={() => window.open("mailto:support@databuddy.cc", "_self")}
-				>
-					<EnvelopeIcon className="size-4 shrink-0" />
-					Contact Us
-				</DropdownMenu.Item>
-				<DropdownMenu.Item
-					onClick={() =>
-						window.open(
-							"https://github.com/databuddy-analytics/Databuddy/issues",
-							"_blank"
-						)
-					}
-				>
-					<BugIcon className="size-4 shrink-0" />
-					Report a Bug
-				</DropdownMenu.Item>
-				<DropdownMenu.Separator />
-				<DropdownMenu.Item
-					onClick={() =>
-						window.open("https://cal.com/databuddy/demo", "_blank")
-					}
-				>
-					<CalendarIcon className="size-4 shrink-0" />
-					Book a Meeting
-				</DropdownMenu.Item>
-			</DropdownMenu.Content>
-		</DropdownMenu>
-	);
-}
-
-function TopBarUserButton() {
-	const { data: session, isPending } = authClient.useSession();
-	const user = session?.user ?? null;
-	const [isOpen, setIsOpen] = useState(false);
-
-	if (isPending) {
-		return <Skeleton className="size-7 shrink-0 rounded-full" />;
-	}
-
-	if (!user) {
-		return null;
-	}
-
-	return (
-		<DropdownMenu onOpenChange={setIsOpen} open={isOpen}>
-			<Tooltip content={user.email ?? "Account"} side="bottom">
-				<DropdownMenu.Trigger
-					aria-label="Profile menu"
-					className={cn(
-						topBarIconButtonClassName,
-						"rounded-full p-0 hover:bg-transparent hover:opacity-80"
-					)}
-					render={<button type="button" />}
-				>
-					<Avatar
-						alt={user.name || "User"}
-						className="size-7"
-						fallback={getInitials(user.name, user.email)}
-						src={user.image || undefined}
-					/>
-				</DropdownMenu.Trigger>
-			</Tooltip>
-			<ProfileDropdownContent
-				align="end"
-				isOpen={isOpen}
-				onClose={() => setIsOpen(false)}
-				side="bottom"
-				user={user}
-			/>
-		</DropdownMenu>
-	);
-}
-
 export function TopBar() {
 	const titleContent = useStoreSlot("title");
 	const actionsContent = useStoreSlot("actions");
@@ -298,39 +188,41 @@ export function TopBar() {
 	}, []);
 
 	return (
-		<header className="sticky top-0 z-40 hidden h-12 shrink-0 items-center border-sidebar-border/60 border-b bg-sidebar/95 backdrop-blur supports-[backdrop-filter]:bg-sidebar/85 md:flex">
-			<div className="flex h-full w-full min-w-0 items-center gap-2 px-3">
-				<SidebarTrigger />
-
-				<div className="h-5 w-px shrink-0 bg-sidebar-border/50" />
-
-				<div className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden">
-					{hasMounted ? titleContent : null}
+		<header className="sticky top-0 z-40 hidden h-12 shrink-0 border-sidebar-border/60 border-b bg-sidebar/95 backdrop-blur supports-[backdrop-filter]:bg-sidebar/85 md:block">
+			<div className="grid h-full w-full grid-cols-[3rem_minmax(0,1fr)_auto] items-center">
+				<div className="flex h-full items-center justify-center border-sidebar-border/50 border-r">
+					<SidebarTrigger />
 				</div>
 
-				{hasMounted && actionsContent ? (
-					<div className="flex min-w-0 shrink items-center overflow-hidden">
-						{actionsContent}
+				<div className="flex min-w-0 items-center px-3">
+					<div className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden">
+						{hasMounted ? titleContent : null}
 					</div>
-				) : null}
+				</div>
 
-				<div className="flex shrink-0 items-center gap-1 border-sidebar-border/50 border-l pl-2">
-					<Button
-						aria-label="Search"
-						className="h-8 min-w-9 justify-start gap-2 rounded-md px-2.5 text-sidebar-foreground/65 hover:text-sidebar-foreground lg:min-w-40"
-						onClick={() => openSearch()}
-						size="sm"
-						variant="secondary"
-					>
-						<MagnifyingGlassIcon className="size-4" />
-						<span className="hidden text-xs lg:inline">Search…</span>
-						<kbd className="ml-auto hidden rounded border bg-background/80 px-1.5 py-0.5 font-mono text-[10px] text-sidebar-foreground/50 xl:inline">
-							⌘K
-						</kbd>
-					</Button>
-					<HelpMenu />
-					{hasMounted && <PendingInvitationsButton />}
-					{hasMounted && <TopBarUserButton />}
+				<div className="flex h-full min-w-0 items-center">
+					{hasMounted && actionsContent ? (
+						<div className="flex h-full min-w-0 items-center gap-1.5 overflow-hidden border-sidebar-border/50 border-l px-2">
+							{actionsContent}
+						</div>
+					) : null}
+
+					<div className="flex h-full shrink-0 items-center gap-1 border-sidebar-border/50 border-l px-2">
+						<Button
+							aria-label="Search"
+							className="h-8 min-w-9 justify-start gap-2 rounded-md px-2.5 text-sidebar-foreground/65 hover:text-sidebar-foreground lg:min-w-40"
+							onClick={() => openSearch()}
+							size="sm"
+							variant="secondary"
+						>
+							<MagnifyingGlassIcon className="size-4" />
+							<span className="hidden text-xs lg:inline">Search…</span>
+							<kbd className="ml-auto hidden rounded border bg-background/80 px-1.5 py-0.5 font-mono text-[10px] text-sidebar-foreground/50 xl:inline">
+								⌘K
+							</kbd>
+						</Button>
+						{hasMounted && <PendingInvitationsButton />}
+					</div>
 				</div>
 			</div>
 		</header>

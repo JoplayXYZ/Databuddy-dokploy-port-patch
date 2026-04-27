@@ -6,6 +6,7 @@ const withMDX = createMDX();
 
 const config: NextConfig = {
 	reactStrictMode: true,
+	transpilePackages: ["@databuddy/ui"],
 	async headers() {
 		return await [
 			{
@@ -134,6 +135,7 @@ const config: NextConfig = {
 
 	experimental: {
 		optimizePackageImports: [
+			"@databuddy/ui/icons",
 			"fumadocs-ui",
 			"lucide-react",
 			"@phosphor-icons/react",

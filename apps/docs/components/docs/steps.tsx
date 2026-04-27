@@ -1,6 +1,6 @@
-import { CheckIcon } from "@phosphor-icons/react/ssr";
+import { CheckIcon } from "@databuddy/ui/icons";
+import { cn } from "@databuddy/ui";
 import React from "react";
-import { cn } from "@/lib/utils";
 
 interface StepsProps extends React.ComponentProps<"div"> {
 	children: React.ReactNode;
@@ -10,7 +10,7 @@ function Steps({ className, children, ...props }: StepsProps) {
 	const childrenArray = React.Children.toArray(children);
 
 	return (
-		<div className={cn("my-4 space-y-0", className)} {...props}>
+		<div className={cn("not-prose my-4 space-y-0", className)} {...props}>
 			{childrenArray.map((child, index) => {
 				if (React.isValidElement(child) && child.type === Step) {
 					const stepProps = {
@@ -45,23 +45,21 @@ function Step({
 	return (
 		<div
 			className={cn(
-				"relative border-border border-l-2 py-4 pl-8",
+				"relative border-border/60 border-l py-4 pl-8",
 				isLast && "border-l-transparent",
 				className
 			)}
 			{...props}
 		>
-			<div className="absolute top-4 left-[-13px] flex size-6 items-center justify-center border border-border bg-muted font-mono text-foreground text-xs dark:bg-[#101010]">
+			<div className="absolute top-4 left-[-13px] flex size-6 items-center justify-center rounded-md border border-border/60 bg-card font-mono text-foreground text-xs">
 				{stepNumber}
 			</div>
 
 			<div className="min-w-0">
 				{title && (
-					<h3 className="mb-1 font-semibold text-foreground text-sm">
-						{title}
-					</h3>
+					<h3 className="mb-1 font-medium text-foreground text-sm">{title}</h3>
 				)}
-				<div className="text-muted-foreground text-sm [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
+				<div className="text-muted-foreground text-sm leading-6 [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
 					{children}
 				</div>
 			</div>
@@ -86,23 +84,21 @@ function CompletedStep({
 	return (
 		<div
 			className={cn(
-				"relative border-border border-l-2 py-4 pl-8 opacity-60",
+				"relative border-border/60 border-l py-4 pl-8 opacity-60",
 				isLast && "border-l-transparent",
 				className
 			)}
 			{...props}
 		>
-			<div className="absolute top-4 left-[-13px] flex size-6 items-center justify-center border border-border bg-muted dark:bg-[#101010]">
+			<div className="absolute top-4 left-[-13px] flex size-6 items-center justify-center rounded-md border border-border/60 bg-card">
 				<CheckIcon className="size-3 text-muted-foreground" />
 			</div>
 
 			<div className="min-w-0">
 				{title && (
-					<h3 className="mb-1 font-semibold text-foreground text-sm">
-						{title}
-					</h3>
+					<h3 className="mb-1 font-medium text-foreground text-sm">{title}</h3>
 				)}
-				<div className="text-muted-foreground text-sm [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
+				<div className="text-muted-foreground text-sm leading-6 [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
 					{children}
 				</div>
 			</div>

@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Branding } from "@/components/logo/branding";
-import { Button } from "@/components/ds/button";
 import { LinkBreakIcon } from "@databuddy/ui/icons";
+import { Button } from "@databuddy/ui";
 
 export const metadata: Metadata = {
 	title: "Link Not Found - Databuddy",

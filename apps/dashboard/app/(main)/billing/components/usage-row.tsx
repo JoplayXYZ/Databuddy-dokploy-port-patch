@@ -2,9 +2,6 @@
 
 import Link from "next/link";
 import { memo } from "react";
-import { Badge } from "@/components/ds/badge";
-import { Progress } from "@/components/ds/progress";
-import { Text } from "@/components/ds/text";
 import { cn } from "@/lib/utils";
 import {
 	type FeatureUsage,
@@ -13,6 +10,7 @@ import {
 } from "../utils/feature-usage";
 import { PricingTiersTooltip } from "./pricing-tiers-tooltip";
 import { ChartBarIcon, DatabaseIcon, UsersIcon } from "@databuddy/ui/icons";
+import { Badge, Progress, Text } from "@databuddy/ui";
 
 function formatCurrency(amount: number): string {
 	if (amount >= 1000) {

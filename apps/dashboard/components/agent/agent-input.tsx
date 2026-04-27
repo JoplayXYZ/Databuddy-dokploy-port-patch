@@ -6,9 +6,6 @@ import {
 	DotMatrixLoader,
 	useRandomDotMatrixLoader,
 } from "@/components/ai-elements/dotmatrix-loader";
-import { Button } from "@/components/ds/button";
-import { Textarea } from "@/components/ds/textarea";
-import { Tooltip } from "@databuddy/ui";
 import { useChat, usePendingQueue } from "@/contexts/chat-context";
 import { cn } from "@/lib/utils";
 import {
@@ -27,6 +24,7 @@ import {
 	XIcon,
 } from "@phosphor-icons/react/dist/ssr";
 import { ClockCountdownIcon } from "@databuddy/ui/icons";
+import { Button, Textarea, Tooltip } from "@databuddy/ui";
 
 export function AgentInput() {
 	const { sendMessage, stop, status } = useChat();

@@ -12,6 +12,9 @@ import {
 import { createFsDrain } from "evlog/fs";
 import { createDrainPipeline } from "evlog/pipeline";
 
+type LogField = string | number | boolean;
+type LogFields = Record<string, LogField>;
+
 const batchedAxiomDrain = createDrainPipeline<DrainContext>({
 	batch: { size: 50, intervalMs: 5000 },
 	maxBufferSize: 2000,
@@ -86,18 +89,33 @@ export function enrich(ctx: EnrichContext): void {
 	}
 }
 
-export function mergeWideEvent(
-	fields: Record<string, string | number | boolean>
-): void {
+export function mergeWideEvent(fields: LogFields): void {
 	try {
 		getRequestLogger().set(fields as Record<string, unknown>);
 	} catch {}
 }
 
+export async function record<T>(
+	name: string,
+	fn: () => Promise<T> | T
+): Promise<T> {
+	const start = performance.now();
+	try {
+		return await fn();
+	} finally {
+		const durationMs = Math.round((performance.now() - start) * 100) / 100;
+		mergeWideEvent({ [`timing.${name}`]: durationMs });
+	}
+}
+
+export function emitInfoEvent(event: string, fields: LogFields): void {
+	log.info({ service: "links", event, ...fields });
+}
+
 export function setAttributes(
 	attrs: Record<string, string | number | boolean | null | undefined>
 ): void {
-	const filtered: Record<string, string | number | boolean> = {};
+	const filtered: LogFields = {};
 	for (const [k, v] of Object.entries(attrs)) {
 		if (v != null) {
 			filtered[k] = v;

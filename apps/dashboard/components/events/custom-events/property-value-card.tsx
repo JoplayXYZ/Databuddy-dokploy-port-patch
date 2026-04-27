@@ -1,10 +1,10 @@
 "use client";
 
-import { Badge } from "@/components/ds/badge";
 import { formatNumber } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
 import { safePercentage } from "./events-utils";
 import { FunnelIcon, TagIcon } from "@databuddy/ui/icons";
+import { Badge } from "@databuddy/ui";
 
 export interface PropertyValueCardValue {
 	count: number;

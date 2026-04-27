@@ -1,17 +1,11 @@
 "use client";
 
-import { Badge } from "@/components/ds/badge";
-import { Button } from "@/components/ds/button";
-import { Card } from "@/components/ds/card";
-import { Divider } from "@/components/ds/divider";
-import { Input } from "@/components/ds/input";
-import { Switch } from "@/components/ds/switch";
-import { Text } from "@/components/ds/text";
 import { orpc } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
 import {
 	calculateTopupCost,
 	TOPUP_FEATURE_ID,
+	TOPUP_MAX_QUANTITY,
 } from "@databuddy/shared/billing/topup-math";
 import { useMutation } from "@tanstack/react-query";
 import { useCustomer } from "autumn-js/react";
@@ -24,13 +18,15 @@ import {
 	SlidersHorizontalIcon,
 } from "@phosphor-icons/react/dist/ssr";
 import { InfinityIcon } from "@databuddy/ui/icons";
+import { Badge, Button, Card, Divider, Input, Text } from "@databuddy/ui";
+import { Switch } from "@databuddy/ui/client";
 
 const EVENTS_FEATURE_ID = "events";
 
 const TOPUP_DEFAULTS = { threshold: 100, quantity: 1000 };
 const TOPUP_LIMITS = {
 	threshold: [10, 50_000],
-	quantity: [100, 100_000],
+	quantity: [100, TOPUP_MAX_QUANTITY],
 } as const;
 
 const ALERT_DEFAULTS = { threshold: 80 };

@@ -6,12 +6,6 @@ import { QRCodeSVG } from "qrcode.react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { setPasswordForOAuthUser } from "@/app/actions/users";
-import { Button } from "@/components/ds/button";
-import { Dialog } from "@/components/ds/dialog";
-import { Field } from "@/components/ds/field";
-import { Input } from "@/components/ds/input";
-import { OtpInput } from "@/components/ds/otp-input";
-import { Text } from "@/components/ds/text";
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
 import { cn } from "@/lib/utils";
 import {
@@ -23,6 +17,8 @@ import {
 	ShieldCheckIcon,
 	WarningCircleIcon,
 } from "@databuddy/ui/icons";
+import { Button, Field, Input, Text } from "@databuddy/ui";
+import { Dialog, OtpInput } from "@databuddy/ui/client";
 
 type TwoFactorStep =
 	| "set-password"

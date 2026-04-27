@@ -8,16 +8,11 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { MonitorDetailLoading } from "@/app/(main)/monitors/_components/monitor-detail-loading";
 import { TopBar } from "@/components/layout/top-bar";
-import { EmptyState } from "@/components/ds/empty-state";
 import { MonitorSheet } from "@/components/monitors/monitor-sheet";
 import { TransferToOrgDialog } from "@/components/transfer-to-org-dialog";
-import { DeleteDialog } from "@/components/ds/delete-dialog";
-import { Button } from "@/components/ds/button";
-import { Skeleton } from "@databuddy/ui";
 import { useDateFilters } from "@/hooks/use-date-filters";
 import { useBatchDynamicQuery } from "@/hooks/use-dynamic-query";
 import { orpc } from "@/lib/orpc";
-import { fromNow, localDayjs } from "@databuddy/ui";
 import { LatencyChartChunkPlaceholder } from "@databuddy/ui/uptime";
 import { UptimeHeatmap } from "@/lib/uptime/uptime-heatmap";
 import { cn } from "@/lib/utils";
@@ -37,6 +32,14 @@ import {
 	PlayIcon,
 	TrashIcon,
 } from "@databuddy/ui/icons";
+import { DeleteDialog } from "@databuddy/ui/client";
+import {
+	Button,
+	EmptyState,
+	Skeleton,
+	fromNow,
+	localDayjs,
+} from "@databuddy/ui";
 
 const LatencyChart = dynamic(
 	() =>

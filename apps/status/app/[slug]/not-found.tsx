@@ -1,23 +1,17 @@
-import Link from "next/link";
+import type { Metadata } from "next";
+import { StatusErrorShell } from "../_components/status-error-shell";
+
+export const metadata: Metadata = {
+	title: "Status page not found",
+	robots: { index: false, follow: false },
+};
 
 export default function StatusNotFound() {
 	return (
-		<div className="flex flex-col items-center justify-center py-24 text-center">
-			<h1 className="text-balance font-semibold text-3xl tracking-tight">
-				Status page not found
-			</h1>
-			<p className="mt-2 max-w-sm text-pretty text-muted-foreground text-sm">
-				This organization doesn&apos;t have a public status page, or the URL is
-				incorrect.
-			</p>
-			<Link
-				className="mt-6 font-medium text-foreground text-sm hover:underline"
-				href="https://www.databuddy.cc"
-				rel="noopener noreferrer"
-				target="_blank"
-			>
-				Go to Databuddy
-			</Link>
-		</div>
+		<StatusErrorShell
+			code="404"
+			description="This organization doesn't have a public status page here, or it may have moved."
+			title="Status page not found"
+		/>
 	);
 }

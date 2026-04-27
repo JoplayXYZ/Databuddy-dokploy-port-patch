@@ -12,7 +12,6 @@ import {
 	formatInsightFreshness,
 } from "@/app/(main)/insights/lib/insight-meta";
 import { InsightMetrics } from "@/components/insight-metrics";
-import { DropdownMenu } from "@/components/ds/dropdown-menu";
 import { Skeleton } from "@databuddy/ui";
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
 import {
@@ -44,6 +43,7 @@ import {
 	TrendUpIcon,
 	WarningCircleIcon,
 } from "@databuddy/ui/icons";
+import { DropdownMenu } from "@databuddy/ui/client";
 
 const TYPE_STYLES: Record<
 	InsightType,

@@ -1,6 +1,6 @@
 "use client";
 
-import { CaretDownIcon, MagnifyingGlassIcon } from "@phosphor-icons/react";
+import { CaretDownIcon, MagnifyingGlassIcon } from "@databuddy/ui/icons";
 import { useSearchContext } from "fumadocs-ui/provider";
 import { AnimatePresence, MotionConfig, motion } from "motion/react";
 import { usePathname } from "next/navigation";

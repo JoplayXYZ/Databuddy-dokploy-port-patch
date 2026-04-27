@@ -1,7 +1,7 @@
-import { ArrowRightIcon } from "@phosphor-icons/react/ssr";
+import { ArrowRightIcon } from "@databuddy/ui/icons";
+import { Card as UICard, cn } from "@databuddy/ui";
 import Link from "next/link";
 import type * as React from "react";
-import { cn } from "@/lib/utils";
 
 interface CardProps extends React.ComponentProps<"div"> {
 	description?: string;
@@ -20,33 +20,41 @@ function Card({
 	...props
 }: CardProps) {
 	const content = (
-		<div
+		<UICard
 			className={cn(
-				"not-prose group flex h-full items-start gap-3 border border-border bg-muted px-4 py-3 dark:bg-[#101010]",
-				href && "cursor-pointer",
+				"not-prose group h-full flex-row items-start gap-3 rounded-lg border-border/60 bg-card p-4 transition-[background-color,border-color]",
+				href &&
+					"cursor-pointer hover:border-border hover:bg-accent-brighter/60",
 				className
 			)}
 			{...props}
 		>
-			{icon && <div className="shrink-0 text-foreground/70">{icon}</div>}
-			<div className="min-w-0 flex-1">
+			{icon && (
+				<div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-secondary text-muted-foreground [&_svg]:size-4">
+					{icon}
+				</div>
+			)}
+			<div className="min-w-0 flex-1 pt-0.5">
 				{title && (
-					<span className="font-medium text-foreground text-sm">{title}</span>
+					<span className="font-medium text-[13px] text-foreground">
+						{title}
+					</span>
 				)}
 				{description && (
-					<p className="mt-0.5 text-muted-foreground text-xs">{description}</p>
+					<p className="mt-0.5 text-muted-foreground text-xs leading-5">
+						{description}
+					</p>
 				)}
 				{children && (
-					<div className="mt-0.5 text-muted-foreground text-xs">{children}</div>
+					<div className="mt-2 text-muted-foreground text-sm leading-6 [&>*:first-child]:mt-0 [&>*:last-child]:mb-0 [&_li]:my-0.5 [&_ul]:my-0 [&_ul]:ml-4">
+						{children}
+					</div>
 				)}
 			</div>
 			{href && (
-				<ArrowRightIcon
-					className="mt-0.5 size-3.5 shrink-0 text-muted-foreground"
-					weight="bold"
-				/>
+				<ArrowRightIcon className="mt-1 size-3.5 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
 			)}
-		</div>
+		</UICard>
 	);
 
 	if (href) {
@@ -55,7 +63,7 @@ function Card({
 		if (isExternal) {
 			return (
 				<a
-					className="block no-underline"
+					className="block cursor-pointer no-underline"
 					href={href}
 					rel="noopener noreferrer"
 					target="_blank"
@@ -66,7 +74,7 @@ function Card({
 		}
 
 		return (
-			<Link className="block no-underline" href={href}>
+			<Link className="block cursor-pointer no-underline" href={href}>
 				{content}
 			</Link>
 		);
@@ -89,7 +97,7 @@ function Cards({ className, cols = 2, children, ...props }: CardsProps) {
 
 	return (
 		<div
-			className={cn("my-4 grid gap-2", gridCols[cols], className)}
+			className={cn("not-prose my-4 grid gap-3", gridCols[cols], className)}
 			{...props}
 		>
 			{children}

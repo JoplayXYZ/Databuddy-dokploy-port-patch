@@ -1,7 +1,6 @@
 "use client";
 
 import { List } from "@/components/ui/composables/list";
-import { DropdownMenu } from "@/components/ds/dropdown-menu";
 import { Skeleton } from "@databuddy/ui";
 import type { Goal } from "@/hooks/use-goals";
 import { formatNumber } from "@/lib/formatters";
@@ -13,6 +12,7 @@ import {
 	PencilSimpleIcon,
 	TrashIcon,
 } from "@databuddy/ui/icons";
+import { DropdownMenu } from "@databuddy/ui/client";
 
 interface GoalItemProps {
 	analytics?: {

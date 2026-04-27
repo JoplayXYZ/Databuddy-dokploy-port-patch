@@ -7,7 +7,7 @@ import {
 } from "@maxmind/geoip2-node";
 import { log } from "evlog";
 import { LRUCache } from "lru-cache";
-import { captureError, setAttributes } from "../lib/logging";
+import { captureError, record, setAttributes } from "../lib/logging";
 
 interface GeoIPReader extends Reader {
 	city(ip: string): City;
@@ -32,7 +32,7 @@ const geoMemCache = new LRUCache<string, GeoResult>({
 
 function loadDatabase(): Promise<void> {
 	if (reader) {
-		return;
+		return Promise.resolve();
 	}
 	if (loadPromise) {
 		return loadPromise;
@@ -126,7 +126,7 @@ export async function getGeo(
 		return memHit;
 	}
 
-	const geo = await cachedGeoLookup(ip);
+	const geo = await record("geo.lookup", () => cachedGeoLookup(ip));
 
 	if (!geo.country && request?.headers) {
 		const cf = request.headers.get("cf-ipcountry");

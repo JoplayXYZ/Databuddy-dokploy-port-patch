@@ -1,10 +1,10 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { Button } from "@/components/ds/button";
 import { cn } from "@/lib/utils";
 import { XIcon } from "@phosphor-icons/react/dist/ssr";
 import { ArrowClockwiseIcon, WarningIcon } from "@databuddy/ui/icons";
+import { Button } from "@databuddy/ui";
 
 function displayMessageForError(error: Error | undefined): string {
 	if (!error?.message?.trim()) {

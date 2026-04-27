@@ -2,11 +2,11 @@
 
 import { Command as CommandPrimitive } from "cmdk";
 import type * as React from "react";
-import { Dialog } from "@/components/ds/dialog";
 import { cn } from "@/lib/utils";
 import {
 	MagnifyingGlassIcon,
 } from "@databuddy/ui/icons";
+import { Dialog } from "@databuddy/ui/client";
 
 function Command({
 	className,

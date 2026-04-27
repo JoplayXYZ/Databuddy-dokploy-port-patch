@@ -6,14 +6,13 @@ import {
 import type React from "react";
 import { useState } from "react";
 import ReactDOM from "react-dom";
-import { Card } from "@/components/ds/card";
-import { Skeleton } from "@databuddy/ui";
 import { cn } from "@/lib/utils";
 import { FullScreenModal } from "./fullscreen-modal";
 import { useFullScreen } from "./hooks/use-fullscreen";
 import { TableContent } from "./table-content";
 import { TableTabs } from "./table-tabs";
 import { TableToolbar } from "./table-toolbar";
+import { Card, Skeleton } from "@databuddy/ui";
 
 const DEFAULT_MIN_HEIGHT = 200;
 const FULLSCREEN_HEIGHT = "h-[92vh]";

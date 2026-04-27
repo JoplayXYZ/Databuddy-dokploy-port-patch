@@ -1,12 +1,6 @@
 "use client";
 
-import { Badge } from "@/components/ds/badge";
-import { Button } from "@/components/ds/button";
-import { Dialog } from "@/components/ds/dialog";
-import { DropdownMenu } from "@/components/ds/dropdown-menu";
-import { Text } from "@/components/ds/text";
 import type { CancelInvitation } from "@/hooks/use-organizations";
-import { dayjs } from "@databuddy/ui";
 import type { Invitation } from "@/hooks/use-organization-invitations";
 import {
 	ArrowClockwiseIcon,
@@ -15,6 +9,8 @@ import {
 	XCircleIcon,
 } from "@databuddy/ui/icons";
 import { useState } from "react";
+import { Dialog, DropdownMenu } from "@databuddy/ui/client";
+import { Badge, Button, Text, dayjs } from "@databuddy/ui";
 
 interface InvitationToCancel {
 	email: string;

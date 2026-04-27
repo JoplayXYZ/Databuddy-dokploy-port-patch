@@ -3,9 +3,6 @@
 import Link from "next/link";
 import { parseAsString, useQueryState } from "nuqs";
 import { useMemo } from "react";
-import { Badge } from "@/components/ds/badge";
-import { EmptyState } from "@/components/ds/empty-state";
-import { Select } from "@/components/ds/select";
 import { formatNumber } from "@/lib/formatters";
 import { getPropertyTypeLabel } from "./classify-properties";
 import { PropertyValueCard } from "./property-value-card";
@@ -16,6 +13,8 @@ import {
 	ChartBarIcon,
 	ListBulletsIcon,
 } from "@databuddy/ui/icons";
+import { Badge, EmptyState } from "@databuddy/ui";
+import { Select } from "@databuddy/ui/client";
 
 interface PropertySummaryProps {
 	events: ClassifiedEvent[];

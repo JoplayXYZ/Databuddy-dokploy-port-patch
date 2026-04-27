@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Branding } from "@/components/logo/branding";
-import { Button } from "@/components/ds/button";
 import { HouseIcon } from "@databuddy/ui/icons";
+import { Button } from "@databuddy/ui";
 
 const PARTICLES = [
 	{

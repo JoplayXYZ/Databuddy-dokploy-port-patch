@@ -1,9 +1,8 @@
 "use client";
 
 import { useEffect } from "react";
-import { Button } from "@/components/ds/button";
-import { Card } from "@/components/ds/card";
 import { ArrowClockwiseIcon, WarningIcon } from "@databuddy/ui/icons";
+import { Button, Card } from "@databuddy/ui";
 
 interface ErrorPageProps {
 	error: Error & { digest?: string };

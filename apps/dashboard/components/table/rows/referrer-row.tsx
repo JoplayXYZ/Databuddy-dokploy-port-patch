@@ -3,8 +3,8 @@ import {
 	ReferrerSourceCell,
 	type ReferrerSourceCellData,
 } from "@/components/atomic/ReferrerSourceCell";
-import { PercentageBadge } from "@/components/ds/badge";
 import { formatNumber } from "@/lib/formatters";
+import { PercentageBadge } from "@databuddy/ui";
 
 export interface ReferrerEntry extends ReferrerSourceCellData {
 	pageviews: number;

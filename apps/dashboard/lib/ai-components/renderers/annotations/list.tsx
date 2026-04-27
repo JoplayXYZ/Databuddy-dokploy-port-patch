@@ -1,10 +1,5 @@
 "use client";
 
-import { Badge } from "@/components/ds/badge";
-import { Button } from "@/components/ds/button";
-import { Card } from "@/components/ds/card";
-import { DropdownMenu } from "@/components/ds/dropdown-menu";
-import { fromNow } from "@databuddy/ui";
 import type { BaseComponentProps } from "../../types";
 import {
 	CalendarIcon,
@@ -14,6 +9,8 @@ import {
 	PlusIcon,
 	TrashIcon,
 } from "@databuddy/ui/icons";
+import { DropdownMenu } from "@databuddy/ui/client";
+import { Badge, Button, Card, fromNow } from "@databuddy/ui";
 
 interface AnnotationItem {
 	annotationType: "point" | "line" | "range";

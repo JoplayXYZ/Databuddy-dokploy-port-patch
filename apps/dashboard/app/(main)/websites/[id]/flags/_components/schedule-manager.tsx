@@ -2,10 +2,7 @@
 
 import { DATE_FORMATS, formatDate } from "@lib/formatters";
 import { AnimatePresence, motion } from "motion/react";
-import { Button } from "@/components/ds/button";
-import { Calendar } from "@/components/ds/calendar";
 import { FormField, FormItem } from "@/components/ui/form";
-import { Input } from "@/components/ds/input";
 import {
 	Popover,
 	PopoverContent,
@@ -22,6 +19,8 @@ import {
 	PowerIcon,
 	TrashIcon,
 } from "@databuddy/ui/icons";
+import { Button, Input } from "@databuddy/ui";
+import { Calendar } from "@databuddy/ui/client";
 
 type ScheduleType = "enable" | "disable" | "update_rollout";
 

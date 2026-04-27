@@ -4,14 +4,10 @@ import { ArrowsClockwiseIcon, PencilSimpleIcon } from "@databuddy/ui/icons";
 import { nanoid } from "nanoid";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Avatar } from "@/components/ds/avatar";
-import { Button } from "@/components/ds/button";
-import { Dialog } from "@/components/ds/dialog";
-import { Field } from "@/components/ds/field";
-import { Input } from "@/components/ds/input";
-import { Text } from "@/components/ds/text";
 import { type Organization, useOrganizations } from "@/hooks/use-organizations";
 import { getOrganizationInitials } from "@/lib/utils";
+import { Button, Field, Input, Text } from "@databuddy/ui";
+import { Avatar, Dialog } from "@databuddy/ui/client";
 
 interface OrganizationAvatarEditorProps {
 	organization: Organization;

@@ -1,8 +1,6 @@
 "use client";
 
 import type { SessionEvent } from "@databuddy/shared/types/sessions";
-import { Badge } from "@/components/ds/badge";
-import { formatLocalTime } from "@databuddy/ui";
 import { cleanUrl, formatPropertyValue, getDisplayPath } from "./session-utils";
 import {
 	CursorClickIcon,
@@ -12,6 +10,7 @@ import {
 	TagIcon,
 	WarningCircleIcon,
 } from "@databuddy/ui/icons";
+import { Badge, formatLocalTime } from "@databuddy/ui";
 
 interface SessionEventTimelineProps {
 	events: SessionEvent[];

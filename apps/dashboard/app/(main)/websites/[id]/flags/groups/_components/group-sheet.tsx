@@ -6,12 +6,6 @@ import { useCallback, useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
-import { Button } from "@/components/ds/button";
-import { Divider } from "@/components/ds/divider";
-import { Field } from "@/components/ds/field";
-import { Input } from "@/components/ds/input";
-import { Sheet } from "@/components/ds/sheet";
-import { Textarea } from "@/components/ds/textarea";
 import { orpc } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
 import {
@@ -21,6 +15,8 @@ import {
 } from "../../_components/types";
 import { UserRulesBuilder } from "../../_components/user-rules-builder";
 import { CheckIcon, UsersThreeIcon } from "@databuddy/ui/icons";
+import { Button, Divider, Field, Input, Textarea } from "@databuddy/ui";
+import { Sheet } from "@databuddy/ui/client";
 
 const groupFormSchema = z.object({
 	name: z.string().min(1, "Name is required").max(100),

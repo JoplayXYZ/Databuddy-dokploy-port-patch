@@ -24,7 +24,6 @@ import {
 	ToolOutput,
 	type ToolStatus,
 } from "@/components/ai-elements/tool";
-import { Button } from "@/components/ds/button";
 import { useChat } from "@/contexts/chat-context";
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
 import { parseContentSegments } from "@/lib/ai-components";
@@ -32,6 +31,7 @@ import { formatToolLabel } from "@/lib/tool-display";
 import { cn } from "@/lib/utils";
 import { AgentErrorMessage } from "./agent-error-message";
 import { ArrowsClockwiseIcon, CheckIcon, CopyIcon } from "@databuddy/ui/icons";
+import { Button } from "@databuddy/ui";
 
 type MessagePart = UIMessage["parts"][number];
 

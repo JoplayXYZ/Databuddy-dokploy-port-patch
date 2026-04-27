@@ -5,9 +5,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Avatar } from "@/components/ds/avatar";
-import { Badge } from "@/components/ds/badge";
-import { DropdownMenu } from "@/components/ds/dropdown-menu";
 import {
 	CaretDownIcon,
 	CheckIcon,
@@ -16,8 +13,6 @@ import {
 	PlusIcon,
 	SpinnerGapIcon,
 } from "@databuddy/ui/icons";
-import { Skeleton } from "@databuddy/ui";
-import { Tooltip } from "@databuddy/ui";
 import { CreateOrganizationDialog } from "@/components/organizations/create-organization-dialog";
 import { useBillingContext } from "@/components/providers/billing-provider";
 import {
@@ -25,6 +20,8 @@ import {
 	useOrganizationsContext,
 } from "@/components/providers/organizations-provider";
 import { cn } from "@/lib/utils";
+import { Avatar, DropdownMenu } from "@databuddy/ui/client";
+import { Badge, Skeleton, Tooltip } from "@databuddy/ui";
 
 const getDicebearUrl = (seed: string | undefined) =>
 	`https://api.dicebear.com/9.x/glass/svg?seed=${encodeURIComponent(seed || "")}`;

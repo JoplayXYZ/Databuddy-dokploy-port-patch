@@ -1,10 +1,10 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { Badge } from "@/components/ds/badge";
 import { useFeatureAccess } from "@/hooks/use-feature-access";
 import { getFeatureDescription, getFeatureLabel } from "@/lib/feature-gates";
 import { LockIcon } from "@databuddy/ui/icons";
+import { Badge } from "@databuddy/ui";
 
 interface FeatureAccessGateProps {
 	children: ReactNode;

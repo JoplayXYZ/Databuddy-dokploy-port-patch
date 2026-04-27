@@ -3,8 +3,6 @@ import { links } from "@databuddy/db/schema";
 import {
 	type CachedLink,
 	getCachedLink,
-	getRateLimitHeaders,
-	ratelimit,
 	setCachedLink,
 	setCachedLinkNotFound,
 	shouldRecordClick,
@@ -15,7 +13,12 @@ import { Elysia, redirect, t } from "elysia";
 import { LRUCache } from "lru-cache";
 import { createHash } from "node:crypto";
 import { UAParser } from "ua-parser-js";
-import { captureError, mergeWideEvent, setAttributes } from "../lib/logging";
+import {
+	captureError,
+	emitInfoEvent,
+	mergeWideEvent,
+	record,
+} from "../lib/logging";
 import { sendLinkVisit } from "../lib/producer";
 import { extractIp, getGeo } from "../utils/geo";
 
@@ -159,10 +162,12 @@ async function lookupLink(slug: string) {
 	}
 
 	const t0 = performance.now();
-	const cached = await getCachedLink(slug).catch((err) => {
-		captureError(err, { error_step: "cache_get" });
-		return null;
-	});
+	const cached = await record("link.cache.get", () =>
+		getCachedLink(slug).catch((err) => {
+			captureError(err, { error_step: "cache_get" });
+			return null;
+		})
+	);
 	const redis_ms = ms(t0);
 
 	if (cached) {
@@ -177,28 +182,32 @@ async function lookupLink(slug: string) {
 	}
 
 	const t1 = performance.now();
-	const row = await db.query.links.findFirst({
-		where: eq(links.slug, slug),
-		columns: {
-			id: true,
-			targetUrl: true,
-			expiresAt: true,
-			expiredRedirectUrl: true,
-			ogTitle: true,
-			ogDescription: true,
-			ogImageUrl: true,
-			ogVideoUrl: true,
-			iosUrl: true,
-			androidUrl: true,
-			deepLinkApp: true,
-		},
-	});
+	const row = await record("link.db.find", () =>
+		db.query.links.findFirst({
+			where: eq(links.slug, slug),
+			columns: {
+				id: true,
+				targetUrl: true,
+				expiresAt: true,
+				expiredRedirectUrl: true,
+				ogTitle: true,
+				ogDescription: true,
+				ogImageUrl: true,
+				ogVideoUrl: true,
+				iosUrl: true,
+				androidUrl: true,
+				deepLinkApp: true,
+			},
+		})
+	);
 	const db_ms = ms(t1);
 
 	if (!row) {
 		linkCache.set(slug, NULL_SENTINEL);
-		await setCachedLinkNotFound(slug).catch((err) =>
-			captureError(err, { error_step: "cache_set_not_found" })
+		await record("link.cache.set_not_found", () =>
+			setCachedLinkNotFound(slug).catch((err) =>
+				captureError(err, { error_step: "cache_set_not_found" })
+			)
 		);
 		return {
 			link: null,
@@ -224,44 +233,56 @@ async function lookupLink(slug: string) {
 	};
 
 	linkCache.set(slug, link);
-	await setCachedLink(slug, link).catch((err) =>
-		captureError(err, { error_step: "cache_backfill" })
+	await record("link.cache.set", () =>
+		setCachedLink(slug, link).catch((err) =>
+			captureError(err, { error_step: "cache_backfill" })
+		)
 	);
 	return { link, cacheHit: false, lookup_source: "db", redis_ms, db_ms };
 }
 
 async function recordClick(
 	link: CachedLink,
+	slug: string,
 	ipHash: string,
 	ip: string,
 	request: Request
 ): Promise<void> {
 	const t0 = performance.now();
 	const dedupKey = `${link.id}:${ipHash}`;
+	const baseFields = { link_id: link.id, link_slug: slug };
 
 	if (dedupCache.has(dedupKey)) {
-		setAttributes({
+		const click_ms = ms(t0);
+		emitInfoEvent("link_click", {
+			...baseFields,
 			click_recorded: false,
 			click_reason: "mem_deduplicated",
-			click_ms: ms(t0),
+			duration_ms: click_ms,
+			"timing.click": click_ms,
 		});
 		return;
 	}
 
 	const t1 = performance.now();
-	const shouldRecord = await shouldRecordClick(link.id, ipHash).catch((err) => {
-		captureError(err, { error_step: "dedup_check" });
-		return true;
-	});
+	const shouldRecord = await record("link.click.dedup", () =>
+		shouldRecordClick(link.id, ipHash).catch((err) => {
+			captureError(err, { error_step: "dedup_check" });
+			return true;
+		})
+	);
 	const dedup_ms = ms(t1);
 
 	if (!shouldRecord) {
 		dedupCache.set(dedupKey, true);
-		setAttributes({
+		const click_ms = ms(t0);
+		emitInfoEvent("link_click", {
+			...baseFields,
 			click_recorded: false,
 			click_reason: "deduplicated",
-			dedup_ms,
-			click_ms: ms(t0),
+			duration_ms: click_ms,
+			"timing.dedup": dedup_ms,
+			"timing.click": click_ms,
 		});
 		return;
 	}
@@ -270,42 +291,44 @@ async function recordClick(
 	const ua = parseUA(userAgent);
 
 	const t2 = performance.now();
-	const geo = await getGeo(ip, request);
+	const geo = await record("link.click.geo", () => getGeo(ip, request));
 	const geo_ms = ms(t2);
 
 	const t3 = performance.now();
-	await sendLinkVisit(
-		{
-			link_id: link.id,
-			timestamp: new Date().toISOString().replace("T", " ").replace("Z", ""),
-			referrer: request.headers.get("referer"),
-			user_agent: userAgent,
-			ip_hash: ipHash,
-			country: geo.country,
-			region: geo.region,
-			city: geo.city,
-			browser_name: ua.browser,
-			device_type: ua.device,
-		},
-		link.id
+	const kafkaResult = await record("link.click.kafka", () =>
+		sendLinkVisit(
+			{
+				link_id: link.id,
+				timestamp: new Date().toISOString().replace("T", " ").replace("Z", ""),
+				referrer: request.headers.get("referer"),
+				user_agent: userAgent,
+				ip_hash: ipHash,
+				country: geo.country,
+				region: geo.region,
+				city: geo.city,
+				browser_name: ua.browser,
+				device_type: ua.device,
+			},
+			link.id
+		)
 	);
 	const kafka_ms = ms(t3);
+	const click_ms = ms(t0);
 
-	setAttributes({
+	emitInfoEvent("link_click", {
+		...baseFields,
 		click_recorded: true,
-		dedup_ms,
-		geo_ms,
-		kafka_ms,
-		click_ms: ms(t0),
+		...(ua.browser ? { browser_name: ua.browser } : {}),
+		...(ua.device ? { device_type: ua.device } : {}),
+		...(geo.country ? { geo_country: geo.country } : {}),
+		...kafkaResult,
+		duration_ms: click_ms,
+		"timing.dedup": dedup_ms,
+		"timing.geo": geo_ms,
+		"timing.kafka": kafka_ms,
+		"timing.click": click_ms,
 	});
 }
-
-const DEFAULT_RL = {
-	success: true,
-	limit: 100,
-	remaining: 99,
-	reset: Date.now() + 60_000,
-};
 
 export const redirectRoute = new Elysia().get(
 	"/:slug",
@@ -319,28 +342,15 @@ export const redirectRoute = new Elysia().get(
 		function emit(result: string) {
 			ev.redirect_result = result;
 			ev.total_ms = ms(t0);
+			ev["timing.redirect.total"] = ev.total_ms;
 			mergeWideEvent(ev);
 		}
 
-		const tRl = performance.now();
-		const rl = await ratelimit(`redirect:${ipHash}`, 100, 60).catch((err) => {
-			captureError(err, { error_step: "rate_limit" });
-			return DEFAULT_RL;
-		});
-		ev.rate_limit_ms = ms(tRl);
-		ev.rate_limit_remaining = rl.remaining;
-		const headers = getRateLimitHeaders(rl);
-
-		if (!rl.success) {
-			emit("rate_limited");
-			set.status = 429;
-			set.headers = { ...headers, "Content-Type": "application/json" };
-			return { error: "Too many requests" };
-		}
-
 		const tLookup = performance.now();
-		const { link, cacheHit, lookup_source, redis_ms, db_ms } =
-			await lookupLink(slug);
+		const { link, cacheHit, lookup_source, redis_ms, db_ms } = await record(
+			"redirect.lookup",
+			() => lookupLink(slug)
+		);
 		ev.lookup_ms = ms(tLookup);
 		ev.lookup_source = lookup_source;
 		ev.cache_hit = cacheHit;
@@ -349,7 +359,7 @@ export const redirectRoute = new Elysia().get(
 
 		if (!link) {
 			emit("not_found");
-			set.headers = { ...headers, "Cache-Control": "private, no-store" };
+			set.headers = { "Cache-Control": "private, no-store" };
 			return redirect(NOT_FOUND_URL, 302);
 		}
 
@@ -357,7 +367,7 @@ export const redirectRoute = new Elysia().get(
 
 		if (link.expiresAt && new Date(link.expiresAt) < new Date()) {
 			emit("expired");
-			set.headers = { ...headers, "Cache-Control": "private, no-store" };
+			set.headers = { "Cache-Control": "private, no-store" };
 			return redirect(link.expiredRedirectUrl ?? EXPIRED_URL, 302);
 		}
 
@@ -367,23 +377,24 @@ export const redirectRoute = new Elysia().get(
 
 		if (bot.isSocial) {
 			emit("og_preview");
-			set.headers = { ...headers, "Cache-Control": "private, no-store" };
+			set.headers = { "Cache-Control": "private, no-store" };
 			return redirect(`${OG_PROXY_URL}/${slug}`, 302);
 		}
 		if (bot.isBot) {
 			emit("bot");
-			set.headers = { ...headers, "Cache-Control": "private, no-store" };
+			set.headers = { "Cache-Control": "private, no-store" };
 			return redirect(targetUrl, 302);
 		}
 
 		if (link.deepLinkApp && isMobile(userAgent)) {
 			const deepUri = resolveDeepLink(link.deepLinkApp, targetUrl);
 			if (deepUri) {
-				recordClick(link, ipHash, ip, request).catch((err) =>
+				ev.click_recording_queued = true;
+				recordClick(link, slug, ipHash, ip, request).catch((err) =>
 					captureError(err, { error_step: "record_click", link_id: link.id })
 				);
 				emit("deep_link");
-				set.headers = { ...headers, "Cache-Control": "private, no-store" };
+				set.headers = { "Cache-Control": "private, no-store" };
 				return redirect(deepUri, 302);
 			}
 		}
@@ -395,20 +406,19 @@ export const redirectRoute = new Elysia().get(
 			emit("not_modified");
 			set.status = 304;
 			set.headers = {
-				...headers,
 				"Cache-Control": "private, no-cache",
 				ETag: etag,
 			};
 			return;
 		}
 
-		recordClick(link, ipHash, ip, request).catch((err) =>
+		ev.click_recording_queued = true;
+		recordClick(link, slug, ipHash, ip, request).catch((err) =>
 			captureError(err, { error_step: "record_click", link_id: link.id })
 		);
 
 		emit("success");
 		set.headers = {
-			...headers,
 			"Cache-Control": "private, no-cache",
 			ETag: etag,
 		};

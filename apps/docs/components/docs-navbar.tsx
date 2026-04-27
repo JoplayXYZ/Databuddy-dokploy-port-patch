@@ -1,6 +1,6 @@
 "use client";
 
-import { CaretDownIcon } from "@phosphor-icons/react";
+import { CaretDownIcon } from "@databuddy/ui/icons";
 import { AnimatePresence, motion } from "motion/react";
 import Link from "next/link";
 import { useState } from "react";
@@ -11,7 +11,8 @@ import { navMenu } from "./navbar";
 import { NavbarGithubDesktopLink } from "./navbar-github-desktop-link";
 import { NavbarGithubMobileLink } from "./navbar-github-mobile-link";
 import { NavbarMobileMenuButton } from "./navbar-mobile-menu-button";
-import { contents } from "./sidebar-content";
+import { cn } from "@/lib/utils";
+import { contents, type SidebarItem } from "./sidebar-content";
 
 export interface DocsNavbarProps {
 	stars?: number | null;
@@ -116,45 +117,19 @@ export const DocsNavbar = ({ stars }: DocsNavbarProps) => {
 											>
 												<div className="ml-6 space-y-1 pb-2">
 													{section.list.map((item, itemIndex) => (
-														<div key={item.title}>
-															{item.group ? (
-																<div className="px-2 py-1">
-																	<p className="font-medium text-muted-foreground text-xs uppercase tracking-wider">
-																		{item.title}
-																	</p>
-																</div>
-															) : (
-																<Link
-																	className={`block transform rounded px-3 py-2 text-muted-foreground text-sm transition-all duration-200 hover:translate-x-1 hover:bg-muted/50 hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 active:bg-muted/70 ${
-																		isMobileMenuOpen
-																			? "translate-x-0 opacity-100"
-																			: "-translate-x-4 opacity-0"
-																	}`}
-																	href={item.href || "#"}
-																	onClick={() => setIsMobileMenuOpen(false)}
-																	style={{
-																		transitionDelay: isMobileMenuOpen
-																			? `${(sectionIndex * section.list.length + itemIndex) * 30}ms`
-																			: "0ms",
-																	}}
-																>
-																	<div className="flex items-center gap-2">
-																		{item.icon ? (
-																			<item.icon
-																				className="size-4 shrink-0"
-																				weight="duotone"
-																			/>
-																		) : null}
-																		<span>{item.title}</span>
-																		{item.isNew && (
-																			<span className="rounded border border-border/40 bg-muted/40 px-1.5 py-0.5 text-foreground/80 text-xs">
-																				New
-																			</span>
-																		)}
-																	</div>
-																</Link>
-															)}
-														</div>
+														<MobileSidebarItem
+															isMobileMenuOpen={isMobileMenuOpen}
+															item={item}
+															key={item.title}
+															onNavigateAction={() =>
+																setIsMobileMenuOpen(false)
+															}
+															transitionDelayMs={
+																(sectionIndex * section.list.length +
+																	itemIndex) *
+																30
+															}
+														/>
 													))}
 												</div>
 											</motion.div>
@@ -204,3 +179,95 @@ export const DocsNavbar = ({ stars }: DocsNavbarProps) => {
 		</div>
 	);
 };
+
+function MobileSidebarItem({
+	isMobileMenuOpen,
+	item,
+	level = 0,
+	onNavigateAction,
+	transitionDelayMs,
+}: {
+	isMobileMenuOpen: boolean;
+	item: SidebarItem;
+	level?: number;
+	onNavigateAction: () => void;
+	transitionDelayMs: number;
+}) {
+	if (item.group) {
+		return (
+			<div className="px-2 py-1">
+				<p className="font-medium text-muted-foreground text-xs uppercase tracking-wider">
+					{item.title}
+				</p>
+			</div>
+		);
+	}
+
+	if (item.children) {
+		return (
+			<div className={cn(level > 0 && "ml-2")}>
+				<div
+					className={cn(
+						"flex items-center gap-2 px-3 py-2 font-medium text-muted-foreground text-sm",
+						level > 0 && "py-1.5 text-xs"
+					)}
+				>
+					{item.icon ? (
+						<item.icon className="size-4 shrink-0" weight="duotone" />
+					) : null}
+					<span className="flex-1">{item.title}</span>
+					{item.isNew ? <MobileNewBadge /> : null}
+				</div>
+				<div className="ml-3 border-border border-l pl-2">
+					{item.children.map((child, childIndex) => (
+						<MobileSidebarItem
+							isMobileMenuOpen={isMobileMenuOpen}
+							item={child}
+							key={child.title}
+							level={level + 1}
+							onNavigateAction={onNavigateAction}
+							transitionDelayMs={transitionDelayMs + (childIndex + 1) * 20}
+						/>
+					))}
+				</div>
+			</div>
+		);
+	}
+
+	const isExternal = item.href?.startsWith("http");
+
+	return (
+		<Link
+			className={cn(
+				"block transform rounded px-3 py-2 text-muted-foreground text-sm transition-all duration-200 hover:translate-x-1 hover:bg-muted/50 hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 active:bg-muted/70",
+				level > 0 && "py-1.5 text-xs",
+				isMobileMenuOpen
+					? "translate-x-0 opacity-100"
+					: "-translate-x-4 opacity-0"
+			)}
+			href={item.href || "#"}
+			onClick={onNavigateAction}
+			rel={isExternal ? "noopener noreferrer" : undefined}
+			style={{
+				transitionDelay: isMobileMenuOpen ? `${transitionDelayMs}ms` : "0ms",
+			}}
+			target={isExternal ? "_blank" : undefined}
+		>
+			<div className="flex items-center gap-2">
+				{item.icon ? (
+					<item.icon className="size-4 shrink-0" weight="duotone" />
+				) : null}
+				<span className="flex-1">{item.title}</span>
+				{item.isNew ? <MobileNewBadge /> : null}
+			</div>
+		</Link>
+	);
+}
+
+function MobileNewBadge() {
+	return (
+		<span className="rounded border border-border/40 bg-muted/40 px-1.5 py-0.5 text-foreground/80 text-xs">
+			New
+		</span>
+	);
+}

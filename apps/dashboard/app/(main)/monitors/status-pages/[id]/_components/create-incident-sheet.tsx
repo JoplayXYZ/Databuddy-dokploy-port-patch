@@ -6,16 +6,18 @@ import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
-import { Button } from "@/components/ds/button";
-import { Divider } from "@/components/ds/divider";
-import { Field } from "@/components/ds/field";
-import { Input } from "@/components/ds/input";
-import { SegmentedControl } from "@/components/ds/segmented-control";
-import { Sheet } from "@/components/ds/sheet";
-import { Textarea } from "@/components/ds/textarea";
 import { orpc } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
 import { CheckCircleIcon } from "@databuddy/ui/icons";
+import {
+	Button,
+	Divider,
+	Field,
+	Input,
+	SegmentedControl,
+	Textarea,
+} from "@databuddy/ui";
+import { Sheet } from "@databuddy/ui/client";
 
 const severityOptions = [
 	{ value: "minor", label: "Minor" },

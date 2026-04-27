@@ -1,7 +1,7 @@
 import { useHotkeys } from "react-hotkeys-hook";
-import { Button } from "@/components/ds/button";
 import { cn } from "@/lib/utils";
 import { CircleNotchIcon } from "@databuddy/ui/icons";
+import { Button } from "@databuddy/ui";
 
 interface SettingsSectionProps {
 	children: React.ReactNode;

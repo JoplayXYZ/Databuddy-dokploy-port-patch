@@ -1,18 +1,17 @@
 "use client";
 
-import { Button } from "@/components/ds/button";
 import {
 	HoverCard,
 	HoverCardContent,
 	HoverCardTrigger,
 } from "@/components/ui/hover-card";
-import { Progress } from "@/components/ds/progress";
 import { cn } from "@/lib/utils";
 import type { LanguageModelUsage } from "ai";
 import { type ComponentProps, createContext, useContext } from "react";
 import type { SourceModel } from "tokenlens";
 import { computeTokenCostsForModel } from "tokenlens/helpers";
 import { vercelModels } from "tokenlens/providers/vercel";
+import { Button, Progress } from "@databuddy/ui";
 
 type VercelModelId = keyof typeof vercelModels.models;
 
