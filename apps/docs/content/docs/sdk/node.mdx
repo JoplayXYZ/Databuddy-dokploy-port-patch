@@ -92,7 +92,7 @@ export async function handler(event) {
 <CodeBlock language="tsx">
   {`interface DatabuddyConfig {
     apiKey: string;               // Required: Your API key for authentication
-    websiteId?: string;           // Optional: Default website ID to scope events
+    websiteId?: string;           // Optional: Default Client ID to scope events
     namespace?: string;           // Optional: Default namespace for logical grouping
     source?: string;              // Optional: Default source identifier for events
     apiUrl?: string;              // Default: 'https://basket.databuddy.cc'
@@ -231,7 +231,7 @@ await client.track({
 
 **Use Cases:**
 
-- **websiteId**: Scope events to different websites or projects within your organization
+- **websiteId**: Scope events to different websites within your organization
 - **namespace**: Group events logically (e.g., `billing`, `auth`, `api`, `webhook`)
 - **source**: Identify where the event originated (e.g., `backend`, `webhook`, `cli`, `cron-job`)
 

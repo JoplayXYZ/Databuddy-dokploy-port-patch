@@ -9,11 +9,8 @@ import { Callout } from "@/components/docs";
 import { Card, Cards } from "@/components/docs";
 import { CodeBlock } from "@/components/docs";
 import { LeapComponent } from "@/components/docs";
-import { AddWithAiButton } from "@/components/docs/add-with-ai-button";
 
-This guide will help you set up Databuddy analytics in your application in just a few minutes.
-
-<AddWithAiButton />
+This guide takes you from a new Databuddy account to your first tracked page view.
 
 <LeapComponent/>
 
@@ -31,7 +28,7 @@ This guide will help you set up Databuddy analytics in your application in just 
 
 ## Install the SDK
 
-Choose your installation method based on your application type:
+Choose the install method for your app:
 
 <Tabs items={['React/Next.js', 'Script Tag']}>
 <Tab value="React/Next.js">
@@ -59,7 +56,7 @@ For any website, use the script tag method:
   language="html"
   code={`<script
     src="https://cdn.databuddy.cc/databuddy.js"
-    data-client-id="your-client-id-here"
+    data-client-id="your-client-id"
     data-track-performance
     async
   ></script>`}
@@ -71,12 +68,12 @@ For any website, use the script tag method:
 </Step>
 <Step>
 
-## Configure Tracking
+## Add Tracking
 
 <Tabs items={['React/Next.js', 'Script Tag']}>
 <Tab value="React/Next.js">
 
-Add the `<Databuddy />` component to your root layout:
+Add the `<Databuddy />` component once in your root layout:
 
 <CodeBlock
   language="tsx"
@@ -110,7 +107,7 @@ Add the `<Databuddy />` component to your root layout:
 <CodeBlock
   language="bash"
   filename=".env.local"
-  code="NEXT_PUBLIC_DATABUDDY_CLIENT_ID=your-client-id-here"
+  code="NEXT_PUBLIC_DATABUDDY_CLIENT_ID=your-client-id"
 />
 
 </Tab>
@@ -132,7 +129,7 @@ Add the script to your HTML before the closing `</body>` tag:
       <!-- Databuddy Analytics -->
       <script
         src="https://cdn.databuddy.cc/databuddy.js"
-        data-client-id="your-client-id-here"
+        data-client-id="your-client-id"
         data-track-performance
         data-track-web-vitals
         data-track-errors
@@ -150,48 +147,48 @@ Add the script to your HTML before the closing `</body>` tag:
 
 ## Verify Installation
 
-Check that analytics are working correctly:
+Check that page tracking works:
 
 1. **Visit your website** in a new browser tab
 2. **Open your Databuddy dashboard** at [app.databuddy.cc](https://app.databuddy.cc)
 3. **Check Real-time data** - you should see yourself as an active visitor
-4. **Navigate between pages** - verify page views are being recorded
+4. **Navigate between pages** - Databuddy records route changes automatically
 
 <Callout type="success">
   If you see real-time data in your dashboard, congratulations! Databuddy is now
   tracking your website analytics.
 </Callout>
 
-<Callout type="info">
-  **🔬 Ready to explore?** Test your API access and explore available query
-  types in our [Interactive API Playground](/api). Perfect for understanding
-  data structures before building integrations!
-</Callout>
-
 </Step>
 </Steps>
 
-## Configuration Options
-
-### Essential Settings
+## Track Your First Custom Event
 
 <Tabs items={['React/Next.js', 'Script Tag']}>
 <Tab value="React/Next.js">
 
 <CodeBlock
   language="tsx"
-  filename="Recommended Configuration"
-  code={`<Databuddy
-    clientId="your-client-id"
-    // Core tracking (recommended for all sites)
-    trackPerformance // Track loading times
-    trackWebVitals // Track Core Web Vitals
-    trackErrors // Track JavaScript errors
-    // Optional tracking (enable as needed)
-    trackOutgoingLinks // Track external link clicks
-    trackInteractions // Track button clicks and form submissions
-    trackAttributes // Track elements with data-track attributes
-  />`}
+  filename="components/signup-button.tsx"
+  code={`"use client";
+
+import { track } from "@databuddy/sdk";
+
+export function SignupButton() {
+  return (
+    <button
+      onClick={() =>
+        track("signup_clicked", {
+          location: "header",
+          plan: "free",
+        })
+      }
+      type="button"
+    >
+      Sign up
+    </button>
+  );
+}`}
 />
 
 </Tab>
@@ -199,182 +196,25 @@ Check that analytics are working correctly:
 
 <CodeBlock
   language="html"
-  filename="Recommended Configuration"
-  code={`<script
-    src="https://cdn.databuddy.cc/databuddy.js"
-    data-client-id="your-client-id"
-    data-track-performance
-    data-track-web-vitals
-    data-track-errors
-    data-track-outgoing-links="false"
-    data-enable-batching
-    data-batch-size="10"
-    async
-  ></script>`}
-/>
-
-<Callout type="info">
-  **Security**: All tracking scripts automatically include
-  `crossorigin="anonymous"` for enhanced security.
-</Callout>
-
-</Tab>
-</Tabs>
-
-### Environment-Specific Setup
-
-<Callout type="info">
-  **Best Practice**: Disable tracking in development to avoid polluting your
-  analytics with test data.
-</Callout>
-
-<CodeBlock
-  language="tsx"
-  filename="Environment Configuration"
-  code={`const isDevelopment = process.env.NODE_ENV === "development";
-const isProduction = process.env.NODE_ENV === "production";
-
-<Databuddy
-    clientId={process.env.NEXT_PUBLIC_DATABUDDY_CLIENT_ID!}
-    disabled={isDevelopment} // 🚫 No tracking in development
-    // Core tracking
-    trackPerformance
-    trackWebVitals={isProduction}
-    trackErrors={isProduction}
-    // Performance optimizations for production
-    enableBatching={isProduction}
-    batchSize={isProduction ? 20 : 1}
-    samplingRate={isProduction ? 1.0 : 0.1}
-/>;`}
-/>
-
-## Custom Event Tracking
-
-Track custom events with rich properties for comprehensive analytics:
-
-<Tabs items={['React/Next.js', 'Script Tag']}>
-<Tab value="React/Next.js">
-
-<CodeBlock
-  language="tsx"
-  filename="Custom Events with Rich Properties"
-  code={`import { useEffect } from "react";
-
-  function SignupForm() {
-    const handleSignup = (plan: string) => {
-      // Track conversion event with detailed context
-      window.databuddy?.track("signup_completed", {
-        source: "landing_page",
-        plan: plan,
-        trial_days: plan === "pro" ? 14 : 7,
-        form_type: "in    line",
-        utm_source: new URLSearchParams(window.location.search).get("utm_source"),
-        referrer_domain: document.referrer
-          ? new URL(document.referrer).hostname
-          : null,
-      });
-    };
-
-    const handleFormInteraction = (fieldName: string) => {
-      // Track form engagement
-      window.databuddy?.track("form_field_focused", {
-        form_type: "signup",
-        field_name: fieldName,
-        page: window.location.pathname,
-        user_agent_mobile: /Mobile|Android/i.test(navigator.userAgent),
-      });
-    };
-
-    useEffect(() => {
-      // Track form view with context
-      window.databuddy?.track("signup_form_viewed", {
-        page: window.location.pathname,
-        form_position: "hero_section",
-        visit_source: document.referrer || "direct",
-        viewport_width: window.innerWidth,
-      });
-    }, []);
-
-    return (
-      <form onSubmit={() => handleSignup("free")}>
-        <input
-          type="email"
-          onFocus={() => handleFormInteraction("email")}
-          placeholder="Enter your email"
-        />
-        <button type="submit">Sign Up Free</button>
-        <button type="button" onClick={() => handleSignup("pro")}>
-          Start Pro Trial
-        </button>
-      </form>
-    );
-  }`}
-/>
-
-</Tab>
-<Tab value="Script Tag">
-
-<CodeBlock
-  language="html"
-  filename="Custom Events with Detailed Properties"
+  filename="index.html"
   code={`<script>
-    // Track button clicks with comprehensive context
-    function trackSignup(plan) {
-      db.track("signup_completed", {
-        source: "landing_page",
-        plan: plan,
-        trial_days: plan === "pro" ? 14 : 7,
-        button_position: "hero",
-        page_scroll_depth: Math.round(
-          (window.pageYOffset / document.body.scrollHeight) * 100
-        ),
-        session_page_count: sessionStorage.getItem("page_count") || 1,
+    function trackSignupClick() {
+      db.track("signup_clicked", {
+        location: "header",
+        plan: "free",
       });
     }
-
-    // Track feature usage with user context
-    function trackFeatureUsed(feature, context) {
-      db.track("feature_used", {
-        feature: feature,
-        page: window.location.pathname,
-        user_tier: context?.tier || "free",
-        feature_category: context?.category || "general",
-        previous_page: document.referrer || "direct",
-        time_on_page: Date.now() - window.pageLoadTime,
-      });
-    }
-
-    // Track product interactions
-    function trackProductView(productId, category) {
-      db.track("product_viewed", {
-        product_id: productId,
-        product_category: category,
-        view_source: "product_grid",
-        page: window.location.pathname,
-        user_returning: localStorage.getItem("returning_user") === "true",
-      });
-    }
-
-    // Store page load time for time-on-page calculations
-    window.pageLoadTime = Date.now();
   </script>
 
-<button onclick="trackSignup('free')">Sign Up Free</button>
-<button onclick="trackSignup('pro')">Start Pro Trial</button>
-<button
-  onclick="trackFeatureUsed('export', {tier: 'premium', category: 'data'})"
->
-  Export Data
-</button>`}
+<button onclick="trackSignupClick()">Sign up</button>`}
 />
 
 </Tab>
 </Tabs>
 
 <Callout type="info">
-  **Property Analytics**: Your custom event properties are automatically
-  analyzed in the dashboard with expandable breakdowns, showing property
-  distributions and value percentages in an interactive tree structure.
+  Keep custom event names stable and use properties for details like location,
+  plan, status, or source.
 </Callout>
 
 ## What's Next?
@@ -383,17 +223,14 @@ Track custom events with rich properties for comprehensive analytics:
   <Card title="API Playground" href="/api">
     Test endpoints interactively and explore query types with real data
   </Card>
-  <Card title="SDK Configuration Guide" href="/docs/sdk#configuration-options">
+  <Card title="SDK Configuration" href="/docs/sdk/configuration">
     Explore all SDK configuration props and options
   </Card>
   <Card title="Dashboard Guide" href="/docs/dashboard">
     Learn to navigate your analytics dashboard and its features
   </Card>
-  <Card
-    title="Event Tracking Deep Dive"
-    href="/docs/sdk#sdk-methods"
-  >
-    Master custom event tracking, SDK methods, and standard event types
+  <Card title="Tracker Helpers" href="/docs/sdk/tracker">
+    Use helper methods like track, flush, and getAnonymousId
   </Card>
   <Card title="Security & Privacy" href="/docs/security">
     Configure privacy settings and GDPR compliance
@@ -404,7 +241,7 @@ Track custom events with rich properties for comprehensive analytics:
 
 **Not seeing data in your dashboard?**
 
-1. **Check your Client ID** - Make sure it matches your project
+1. **Check your Client ID** - Make sure it matches this website
 2. **Test manually** - Try `db.track('test', {})` in your browser console
 3. **Check Network tab** - Look for requests to `basket.databuddy.cc`
 4. **Review environment** - Make sure tracking isn't disabled in production

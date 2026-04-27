@@ -21,7 +21,7 @@ Add Databuddy directly to your Shopify theme:
 ```html
 <script
   src="https://cdn.databuddy.cc/databuddy.js"
-  data-client-id="YOUR_SITE_ID"
+  data-client-id="YOUR_CLIENT_ID"
   data-track-attributes
   data-track-outgoing-links
   async
@@ -40,7 +40,7 @@ If you're using Google Tag Manager:
   (function() {
     var script = document.createElement('script');
     script.src = 'https://cdn.databuddy.cc/databuddy.js';
-    script.setAttribute('data-client-id', 'YOUR_SITE_ID');
+    script.setAttribute('data-client-id', 'YOUR_CLIENT_ID');
     script.setAttribute('data-track-screen-views', 'true');
     script.setAttribute('data-track-attributes', 'true');
     script.async = true;
@@ -305,7 +305,7 @@ Load Databuddy after critical resources:
     // Load Databuddy after page is fully loaded
     var script = document.createElement('script');
     script.src = 'https://cdn.databuddy.cc/databuddy.js';
-    script.setAttribute('data-client-id', 'YOUR_SITE_ID');
+    script.setAttribute('data-client-id', 'YOUR_CLIENT_ID');
     script.setAttribute('data-track-screen-views', 'true');
     script.async = true;
     document.head.appendChild(script);
@@ -320,7 +320,7 @@ Optimize for mobile users:
 ```html
 <script
   src="https://cdn.databuddy.cc/databuddy.js"
-  data-client-id="YOUR_SITE_ID"
+  data-client-id="YOUR_CLIENT_ID"
   data-track-attributes
   data-sampling-rate="0.1"
   async
@@ -355,7 +355,7 @@ If using a cookie consent banner:
 function initializeDatabuddy() {
   var script = document.createElement('script');
   script.src = 'https://cdn.databuddy.cc/databuddy.js';
-  script.setAttribute('data-client-id', 'YOUR_SITE_ID');
+  script.setAttribute('data-client-id', 'YOUR_CLIENT_ID');
   script.async = true;
   document.head.appendChild(script);
 }
@@ -370,7 +370,7 @@ document.addEventListener('cookieConsentAccepted', initializeDatabuddy);
 
 **Script Not Loading**: Check if your theme has Content Security Policy restrictions.
 
-**Events Not Tracking**: Verify that your Site ID is correct and the script is loading without errors.
+**Events Not Tracking**: Verify that your Client ID is correct and the script is loading without errors.
 
 **Liquid Syntax Errors**: Ensure all Liquid variables are properly escaped and quoted.
 
@@ -390,7 +390,7 @@ Enable debug mode for development:
 ```html
 <script
   src="https://cdn.databuddy.cc/databuddy.js"
-  data-client-id="YOUR_SITE_ID"
+  data-client-id="YOUR_CLIENT_ID"
   data-debug
   async
 ></script>
@@ -399,8 +399,8 @@ Enable debug mode for development:
 ## Related Integrations
 
 <Cards>
-  <Card title="Stripe" href="/docs/Integrations/stripe">
-    Payment tracking for comprehensive conversion analytics.
+  <Card title="Next.js" href="/docs/Integrations/nextjs">
+    App Router and Pages Router setup for Next.js apps.
   </Card>
   <Card title="Google Tag Manager" href="/docs/Integrations/gtm">
     GTM integration for managing multiple marketing tools.

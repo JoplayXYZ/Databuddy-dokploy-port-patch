@@ -9,7 +9,6 @@
     "events",
     "links",
     "custom-queries",
-    "mcp",
     "errors",
     "rate-limits"
   ]

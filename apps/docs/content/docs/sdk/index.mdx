@@ -60,10 +60,6 @@ For vanilla JavaScript, no installation needed - load directly from CDN.
   </Card>
 </Cards>
 
-<Callout type="info">
-  Looking for AI/LLM observability? Check out the dedicated [@databuddy/ai package](/docs/ai).
-</Callout>
-
 ## Import Paths
 
 The SDK is organized into submodules for tree-shaking:
@@ -74,7 +70,6 @@ The SDK is organized into submodules for tree-shaking:
 | `@databuddy/sdk/react` | React component and hooks |
 | `@databuddy/sdk/vue` | Vue component and composables |
 | `@databuddy/sdk/node` | Node.js server-side SDK |
-| `@databuddy/ai/vercel` | AI/LLM observability (separate package) |
 
 ## Example: React/Next.js
 
@@ -126,27 +121,6 @@ await client.track({
 
 await client.flush(); // Important in serverless!`}
 </CodeBlock>
-
-## Example: AI/LLM Tracking
-
-<CodeBlock language="tsx">
-  {`import { createTracker } from "@databuddy/ai/vercel";
-import { openai } from "@ai-sdk/openai";
-import { generateText } from "ai";
-
-const { track } = createTracker({
-  apiKey: process.env.DATABUDDY_API_KEY
-});
-
-const result = await generateText({
-  model: track(openai("gpt-4o")),
-  prompt: "Hello, world!"
-});`}
-</CodeBlock>
-
-<Callout type="info">
-  AI/LLM observability is now in a separate package. See the [full AI documentation](/docs/ai) for details.
-</Callout>
 
 ## TypeScript Support
 

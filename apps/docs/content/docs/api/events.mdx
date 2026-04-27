@@ -19,7 +19,7 @@ Track custom events programmatically using the Basket API. This is useful for se
 You can authenticate requests using either:
 
 1. **API Key** (recommended for server-side) — Pass in the `Authorization` header
-2. **Website ID** — Pass as `website_id` query parameter or in the event body
+2. **Client ID** — Pass as the `website_id` query parameter or as `websiteId` in the event body
 
 <CodeBlock 
   language="http"
@@ -27,7 +27,7 @@ You can authenticate requests using either:
 POST /track
 Authorization: Bearer your_api_key
 
-# With Website ID
+# With Client ID
 POST /track?website_id={website_id}`}
 />
 
@@ -105,7 +105,7 @@ Send an array of events in a single request:
 | `timestamp` | number \| string \| Date | No | Event timestamp (defaults to now) |
 | `namespace` | string | No | Event namespace for grouping (max 64 chars) |
 | `source` | string | No | Event source identifier (max 64 chars) |
-| `websiteId` | string | No | Public website **client id** (same value as `data-client-id` in the tracker; string id from the dashboard, not necessarily a UUID). Alternative to `?website_id=` |
+| `websiteId` | string | No | Public Databuddy Client ID (same value as `data-client-id` in the tracker; string id from the dashboard, not necessarily a UUID). Alternative to `?website_id=` |
 
 ---
 
@@ -256,7 +256,7 @@ track_event("purchase", {
 
 ## Additional Endpoints
 
-These endpoints are used by the JavaScript tracker SDK and are documented here for completeness.
+These endpoints are used by the JavaScript tracker SDK and are documented here for completeness. The `client_id` query value is your Databuddy Client ID.
 
 ### Web Vitals
 
@@ -264,7 +264,7 @@ Track Core Web Vitals metrics.
 
 <CodeBlock 
   language="http"
-  code="POST /vitals?client_id={website_id}"
+  code="POST /vitals?client_id={client_id}"
 />
 
 <CodeBlock 
@@ -294,7 +294,7 @@ Track JavaScript errors.
 
 <CodeBlock 
   language="http"
-  code="POST /errors?client_id={website_id}"
+  code="POST /errors?client_id={client_id}"
 />
 
 <CodeBlock 
