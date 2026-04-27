@@ -1,4 +1,5 @@
 import { describe, expect, it } from "bun:test";
+import { QueryBuilders } from "./builders";
 import { SimpleQueryBuilder } from "./simple-builder";
 import type { Filter, QueryRequest, SimpleQueryConfig } from "./types";
 
@@ -194,6 +195,103 @@ describe("SimpleQueryBuilder.compile", () => {
 	it("skips date filter when skipDateFilter is true", () => {
 		const { sql } = compile({ skipDateFilter: true });
 		expect(sql).not.toContain("toDateTime({from:String})");
+	});
+
+	it("normalizes timestamp bounds for ClickHouse date parsing", () => {
+		const { sql, params } = compile(
+			{},
+			{
+				from: "2026-04-27 12:00:00Z",
+				to: "2026-04-27 13:28:59Z",
+			}
+		);
+
+		expect(sql).toContain("parseDateTimeBestEffort({from:String}");
+		expect(sql).toContain("parseDateTimeBestEffort({to:String}");
+		expect(sql).not.toContain("concat({to:String}, ' 23:59:59')");
+		expect(params.from).toBe("2026-04-27 12:00:00");
+		expect(params.to).toBe("2026-04-27 13:28:59");
+		expect(params.timezone).toBeUndefined();
+	});
+
+	it("keeps date-only ranges inclusive through the end of the end date", () => {
+		const { sql, params } = compile();
+
+		expect(sql).not.toContain("concat({to:String}, ' 23:59:59')");
+		expect(params.from).toBe("2026-04-01");
+		expect(params.to).toBe("2026-04-11 23:59:59");
+	});
+
+	it("cleans date ranges returned by custom SQL builders", () => {
+		const { sql, params } = compile(
+			{
+				customSql: (_websiteId, startDate, endDate) => ({
+					sql: `
+						SELECT count() as total
+						FROM analytics.events
+						WHERE time >= toDateTime({startDate:String})
+							AND time <= toDateTime({endDate:String})
+					`,
+					params: {
+						startDate,
+						endDate: `${endDate} 23:59:59`,
+					},
+				}),
+			},
+			{
+				from: "2026-04-27T12:00:00.000Z",
+				to: "2026-04-27T13:28:59.000Z",
+			}
+		);
+
+		expect(sql).toContain("parseDateTimeBestEffort({startDate:String}");
+		expect(sql).toContain("parseDateTimeBestEffort({endDate:String}");
+		expect(params.startDate).toBe("2026-04-27 12:00:00");
+		expect(params.endDate).toBe("2026-04-27 13:28:59");
+	});
+
+	it("normalizes session attribution builders with timestamp inputs", () => {
+		const config = QueryBuilders.summary_metrics;
+		if (!config) {
+			throw new Error("summary_metrics builder is missing");
+		}
+
+		const builder = new SimpleQueryBuilder(
+			config,
+			makeRequest({
+				type: "summary_metrics",
+				from: "2026-04-27 12:00:00Z",
+				to: "2026-04-27 13:28:59Z",
+			})
+		);
+
+		const { sql, params } = builder.compile();
+
+		expect(sql).toContain("session_attribution AS");
+		expect(sql).not.toContain("toDateTime({startDate:String})");
+		expect(sql).not.toContain("concat({endDate:String}, ' 23:59:59')");
+		expect(params.startDate).toBe("2026-04-27 12:00:00");
+		expect(params.endDate).toBe("2026-04-27 13:28:59");
+	});
+
+	it("normalizes standard session attribution queries", () => {
+		const { sql, params } = compile(
+			{
+				plugins: { sessionAttribution: true },
+				fields: ["device_type as name", "count() as total"],
+				groupBy: ["device_type"],
+			},
+			{
+				from: "2026-04-27 12:00:00Z",
+				to: "2026-04-27 13:28:59Z",
+			}
+		);
+
+		expect(sql).toContain("session_attribution AS");
+		expect(sql).not.toContain("toDateTime({from:String})");
+		expect(sql).not.toContain("concat({to:String}, ' 23:59:59')");
+		expect(params.from).toBe("2026-04-27 12:00:00");
+		expect(params.to).toBe("2026-04-27 13:28:59");
 	});
 
 	it("applies request limit override", () => {
