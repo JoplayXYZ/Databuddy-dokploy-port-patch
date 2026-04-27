@@ -1,7 +1,5 @@
 "use client";
 
-import { Button } from "@/components/ds/button";
-import { Dialog } from "@/components/ds/dialog";
 import {
 	Drawer,
 	DrawerContent,
@@ -11,6 +9,8 @@ import {
 	DrawerTitle,
 } from "@/components/ui/drawer";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Button } from "@databuddy/ui";
+import { Dialog } from "@databuddy/ui/client";
 
 interface FormDialogProps {
 	cancelLabel?: string;

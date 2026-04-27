@@ -10,10 +10,6 @@ import {
 	DEEP_LINK_APPS,
 } from "@databuddy/shared/constants/deep-link-apps";
 import { useOrganizationsContext } from "@/components/providers/organizations-provider";
-import { Button } from "@/components/ds/button";
-import { Field } from "@/components/ds/field";
-import { Input } from "@/components/ds/input";
-import { Sheet } from "@/components/ds/sheet";
 import { useCreateLink, useLinkFolders } from "@/hooks/use-links";
 import { DeepLinkAppIcon } from "./deep-link-icons";
 import { FolderDropdown } from "./folder-dropdown";
@@ -24,6 +20,8 @@ import {
 	stripProtocol,
 } from "./link-utils";
 import { ArrowLeftIcon } from "@databuddy/ui/icons";
+import { Button, Field, Input } from "@databuddy/ui";
+import { Sheet } from "@databuddy/ui/client";
 
 const deepLinkFormSchema = z.object({
 	name: z.string().min(1, "Name is required").max(255),

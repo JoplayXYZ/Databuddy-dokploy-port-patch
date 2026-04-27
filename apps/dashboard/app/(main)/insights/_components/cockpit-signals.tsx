@@ -3,10 +3,6 @@
 import { useInsightsFeed } from "@/app/(main)/insights/hooks/use-insights-feed";
 import { useInsightsLocalState } from "@/app/(main)/insights/hooks/use-insights-local-state";
 import { useOrganizationsContext } from "@/components/providers/organizations-provider";
-import { Button } from "@/components/ds/button";
-import { Card } from "@/components/ds/card";
-import { GhostTriggerButton } from "@/components/ds/control-shell";
-import { DropdownMenu } from "@/components/ds/dropdown-menu";
 import type { Insight, InsightSeverity } from "@/lib/insight-types";
 import { cn } from "@/lib/utils";
 import {
@@ -28,6 +24,8 @@ import {
 	LightbulbIcon,
 	WarningCircleIcon,
 } from "@databuddy/ui/icons";
+import { Button, Card, GhostTriggerButton } from "@databuddy/ui";
+import { DropdownMenu } from "@databuddy/ui/client";
 
 type SeverityFilter = "all" | InsightSeverity;
 type SortMode = "priority" | "newest" | "change";

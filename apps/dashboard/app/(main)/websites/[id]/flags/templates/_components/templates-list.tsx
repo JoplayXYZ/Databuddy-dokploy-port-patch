@@ -1,9 +1,9 @@
 "use client";
 
-import { EmptyState } from "@/components/ds/empty-state";
 import type { TemplatesListProps } from "../../_components/types";
 import { TemplateItem } from "./template-item";
 import { LayoutIcon } from "@databuddy/ui/icons";
+import { EmptyState } from "@databuddy/ui";
 
 export function TemplatesList({
 	templates,

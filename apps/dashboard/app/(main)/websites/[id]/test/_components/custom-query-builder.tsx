@@ -9,7 +9,6 @@ import type {
 	CustomQueryConfig,
 } from "@databuddy/shared/types/custom-query";
 import { useMemo } from "react";
-import { Field } from "@/components/ds/field";
 import {
 	Select,
 	SelectContent,
@@ -19,6 +18,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
+import { Field } from "@databuddy/ui";
 
 interface CustomQueryBuilderProps {
 	disabled?: boolean;

@@ -1,8 +1,6 @@
 "use client";
 
 import { FaviconImage } from "@/components/analytics/favicon-image";
-import { Badge } from "@/components/ds/badge";
-import { EmptyState } from "@/components/ds/empty-state";
 import { BrowserIcon, CountryFlag, OSIcon } from "@/components/icon";
 import { TopBar } from "@/components/layout/top-bar";
 import {
@@ -21,7 +19,6 @@ import {
 	getCountryName,
 } from "@databuddy/shared/country-codes";
 import type { ProfileData } from "@databuddy/shared/types/analytics";
-import { dayjs, Skeleton, Tooltip } from "@databuddy/ui";
 import { GlobeIcon, UsersIcon } from "@databuddy/ui/icons";
 import {
 	type ColumnDef,
@@ -35,6 +32,7 @@ import { notFound, useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { generateProfileName } from "./[userId]/_components/generate-profile-name";
 import { useProfilesData } from "./use-users";
+import { Badge, EmptyState, Skeleton, Tooltip, dayjs } from "@databuddy/ui";
 
 const wwwRegex = /^www\./;
 

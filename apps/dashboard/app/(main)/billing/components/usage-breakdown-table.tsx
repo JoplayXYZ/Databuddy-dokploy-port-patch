@@ -1,11 +1,6 @@
 "use client";
 
 import type { UsageResponse } from "@databuddy/shared/types/billing";
-import { Badge } from "@/components/ds/badge";
-import { Card } from "@/components/ds/card";
-import { EmptyState } from "@/components/ds/empty-state";
-import { Skeleton } from "@databuddy/ui";
-import { Text } from "@/components/ds/text";
 import { calculateOverageCost, type OverageInfo } from "../utils/billing-utils";
 import {
 	BugIcon,
@@ -15,6 +10,7 @@ import {
 	TableIcon,
 	TagIcon,
 } from "@databuddy/ui/icons";
+import { Badge, Card, EmptyState, Skeleton, Text } from "@databuddy/ui";
 
 const EVENT_TYPE_CONFIG = {
 	event: {

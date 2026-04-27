@@ -1,10 +1,8 @@
 "use client";
 
-import { Button } from "@/components/ds/button";
-import { Card } from "@/components/ds/card";
-import { Skeleton } from "@databuddy/ui";
 import { LightningIcon, RobotIcon, TrendUpIcon } from "@databuddy/ui/icons";
 import { cn } from "@/lib/utils";
+import { Button, Card, Skeleton } from "@databuddy/ui";
 
 interface RewardTier {
 	creditsRequired: number;

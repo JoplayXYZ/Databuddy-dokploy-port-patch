@@ -12,9 +12,6 @@ import {
 } from "@/components/providers/organizations-provider";
 import { RightSidebar } from "@/components/right-sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ds/badge";
-import { Button } from "@/components/ds/button";
-import { dayjs } from "@databuddy/ui";
 import { cn, getOrganizationInitials } from "@/lib/utils";
 import {
 	BuildingsIcon,
@@ -22,6 +19,7 @@ import {
 	CheckCircleIcon,
 	PlusIcon,
 } from "@databuddy/ui/icons";
+import { Badge, Button, dayjs } from "@databuddy/ui";
 
 function getDicebearUrl(seed: string): string {
 	return `https://api.dicebear.com/9.x/glass/svg?seed=${encodeURIComponent(seed)}`;

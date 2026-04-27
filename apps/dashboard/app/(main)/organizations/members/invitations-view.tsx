@@ -1,8 +1,5 @@
 "use client";
 
-import { Button } from "@/components/ds/button";
-import { Card } from "@/components/ds/card";
-import { EmptyState } from "@/components/ds/empty-state";
 import { InviteMemberDialog } from "@/components/organizations/invite-member-dialog";
 import { useOrganizationInvitations } from "@/hooks/use-organization-invitations";
 import type {
@@ -18,6 +15,7 @@ import {
 import { useState } from "react";
 import { InvitationsSkeleton } from "../components/settings-skeletons";
 import { InvitationList } from "./invitation-list";
+import { Button, Card, EmptyState } from "@databuddy/ui";
 
 export function InvitationsView({
 	organization,

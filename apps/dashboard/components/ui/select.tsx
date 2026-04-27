@@ -1,6 +1,5 @@
 "use client";
 
-import { useFieldContext } from "@/components/ds/field";
 import * as SelectPrimitive from "@radix-ui/react-select";
 import type * as React from "react";
 
@@ -10,6 +9,7 @@ import {
 	CaretUpIcon,
 	CheckIcon,
 } from "@databuddy/ui/icons";
+import { useFieldContext } from "@databuddy/ui";
 
 function Select({
 	...props

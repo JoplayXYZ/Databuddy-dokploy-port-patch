@@ -11,7 +11,6 @@ import {
 	StatCard,
 	UnauthorizedAccessError,
 } from "@/components/analytics";
-import { PercentageBadge } from "@/components/ds/badge";
 import { BrowserIcon, OSIcon } from "@/components/icon";
 import { DataTable } from "@/components/table/data-table";
 import {
@@ -24,7 +23,6 @@ import { useChartPreferences } from "@/hooks/use-chart-preferences";
 import { useDateFilters } from "@/hooks/use-date-filters";
 import { useBatchDynamicQuery } from "@/hooks/use-dynamic-query";
 import { useMediaQuery } from "@/hooks/use-media-query";
-import { dayjs } from "@databuddy/ui";
 import { metricVisibilityAtom } from "@/stores/jotai/chartAtoms";
 import {
 	calculatePercentChange,
@@ -40,6 +38,7 @@ import {
 	TimerIcon,
 	UsersIcon,
 } from "@databuddy/ui/icons";
+import { PercentageBadge, dayjs } from "@databuddy/ui";
 
 const GeoMapSection = dynamic(() =>
 	import("./overview/_components/geo-map-section").then((mod) => ({

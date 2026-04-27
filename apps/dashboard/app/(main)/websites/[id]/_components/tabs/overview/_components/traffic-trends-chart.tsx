@@ -13,15 +13,12 @@ import {
 import { RangeSelectionPopup } from "@/components/charts/range-selection-popup";
 import { useDynamicDasharray } from "@/components/charts/use-dynamic-dasharray";
 import { SectionBrandOverlay } from "@/components/logo/section-brand-overlay";
-import { Button } from "@/components/ds/button";
 import {
 	Chart,
 	type ChartInteractiveFeatures,
 	mergeChartInteractiveFeatures,
 } from "@/components/ui/composables/chart";
-import { Skeleton } from "@databuddy/ui";
 import { useChartPreferences } from "@/hooks/use-chart-preferences";
-import { usePersistentState } from "@databuddy/ui";
 import {
 	ANNOTATION_STORAGE_KEYS,
 	CHART_ANNOTATION_STYLES,
@@ -35,7 +32,6 @@ import {
 	chartRechartsLegendInteractiveWrapperStyle,
 } from "@/lib/chart-presentation";
 import { chartQueryOutcome } from "@/lib/chart-query-outcome";
-import { dayjs } from "@databuddy/ui";
 import { formatLocaleNumber } from "@/lib/format-locale-number";
 import { orpc } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
@@ -59,6 +55,7 @@ import {
 	WarningCircleIcon,
 	WarningIcon,
 } from "@databuddy/ui/icons";
+import { Button, Skeleton, dayjs, usePersistentState } from "@databuddy/ui";
 
 const {
 	Area,

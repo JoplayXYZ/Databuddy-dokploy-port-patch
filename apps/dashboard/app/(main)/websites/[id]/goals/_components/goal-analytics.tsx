@@ -1,7 +1,5 @@
 "use client";
 
-import { Button } from "@/components/ds/button";
-import { Card } from "@/components/ds/card";
 import { formatNumber } from "@/lib/formatters";
 import {
 	ArrowClockwiseIcon as ArrowClockwise,
@@ -9,6 +7,7 @@ import {
 	TrendUpIcon as TrendUp,
 	UsersIcon as Users,
 } from "@databuddy/ui/icons";
+import { Button, Card } from "@databuddy/ui";
 
 interface GoalAnalyticsProps {
 	data: any;

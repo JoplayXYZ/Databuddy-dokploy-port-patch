@@ -1,6 +1,6 @@
 import { XIcon } from "@phosphor-icons/react/dist/ssr";
 import { AutocompleteInput } from "@/components/ui/autocomplete-input";
-import { DropdownMenu } from "@/components/ds/dropdown-menu";
+import { DropdownMenu } from "@databuddy/ui/client";
 
 interface FilterRowProps {
 	field: string;

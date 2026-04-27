@@ -1,8 +1,5 @@
 "use client";
 
-import { Button } from "@/components/ds/button";
-import { Card } from "@/components/ds/card";
-import { EmptyState } from "@/components/ds/empty-state";
 import { InviteMemberDialog } from "@/components/organizations/invite-member-dialog";
 import {
 	type ActiveOrganization,
@@ -17,6 +14,7 @@ import {
 import { useState } from "react";
 import { MembersSkeleton } from "../components/settings-skeletons";
 import { MemberList } from "./member-list";
+import { Button, Card, EmptyState } from "@databuddy/ui";
 
 export function MembersView({
 	organization,

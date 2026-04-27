@@ -8,7 +8,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import type { StatCardDisplayMode } from "@/components/analytics/stat-card";
 import { StatCard } from "@/components/analytics/stat-card";
 import { AutocompleteInput } from "@/components/ui/autocomplete-input";
-import { Button } from "@/components/ds/button";
 import {
 	Command,
 	CommandEmpty,
@@ -17,17 +16,11 @@ import {
 	CommandItem,
 	CommandList,
 } from "@/components/ui/command";
-import { DeleteDialog } from "@/components/ds/delete-dialog";
-import { Input } from "@/components/ds/input";
-import { Field } from "@/components/ds/field";
 import {
 	Popover,
 	PopoverContent,
 	PopoverTrigger,
 } from "@/components/ui/popover";
-import { DropdownMenu } from "@/components/ds/dropdown-menu";
-import { Sheet } from "@/components/ds/sheet";
-import { Skeleton } from "@databuddy/ui";
 import { useAutocompleteData } from "@/hooks/use-autocomplete";
 import { operatorOptions } from "@/hooks/use-filters";
 import { cn } from "@/lib/utils";
@@ -62,6 +55,8 @@ import {
 	TextTIcon,
 	TrashIcon,
 } from "@databuddy/ui/icons";
+import { DeleteDialog, DropdownMenu, Sheet } from "@databuddy/ui/client";
+import { Button, Field, Input, Skeleton } from "@databuddy/ui";
 
 export type { DashboardCardConfig } from "./utils/types";
 

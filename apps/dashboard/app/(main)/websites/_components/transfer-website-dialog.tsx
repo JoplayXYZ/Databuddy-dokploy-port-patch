@@ -4,9 +4,6 @@ import type { WebsiteOutput } from "@databuddy/rpc";
 import type { Website } from "@databuddy/shared/types/website";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
-import { Button } from "@/components/ds/button";
-import { Dialog } from "@/components/ds/dialog";
-import { DropdownMenu } from "@/components/ds/dropdown-menu";
 import { type Organization, useOrganizations } from "@/hooks/use-organizations";
 import { useWebsiteTransferToOrg } from "@/hooks/use-website-transfer-to-org";
 import {
@@ -14,6 +11,8 @@ import {
 	ArrowSquareOutIcon,
 	WarningIcon,
 } from "@databuddy/ui/icons";
+import { Button } from "@databuddy/ui";
+import { Dialog, DropdownMenu } from "@databuddy/ui/client";
 
 function getDicebearUrl(seed: string): string {
 	return `https://api.dicebear.com/9.x/glass/svg?seed=${encodeURIComponent(seed)}`;

@@ -4,9 +4,7 @@ import { GATED_FEATURES } from "@databuddy/shared/types/features";
 import { useParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import { FeatureGate } from "@/components/feature-gate";
-import { Card } from "@/components/ds/card";
 import { List } from "@/components/ui/composables/list";
-import { DeleteDialog } from "@/components/ds/delete-dialog";
 import { useAutocompleteData } from "@/hooks/use-autocomplete";
 import { useDateFilters } from "@/hooks/use-date-filters";
 import {
@@ -16,11 +14,12 @@ import {
 	useGoals,
 } from "@/hooks/use-goals";
 import { TopBar } from "@/components/layout/top-bar";
-import { Button } from "@/components/ds/button";
 import { EditGoalDialog } from "./_components/edit-goal-dialog";
 import { GoalItemSkeleton } from "./_components/goal-item";
 import { GoalsList } from "./_components/goals-list";
 import { PlusIcon, TrendDownIcon } from "@databuddy/ui/icons";
+import { Button, Card } from "@databuddy/ui";
+import { DeleteDialog } from "@databuddy/ui/client";
 
 function GoalsListSkeleton() {
 	return (

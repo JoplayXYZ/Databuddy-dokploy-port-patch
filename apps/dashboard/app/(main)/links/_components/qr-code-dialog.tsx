@@ -1,8 +1,8 @@
 "use client";
 
-import { Dialog } from "@/components/ds/dialog";
 import type { Link } from "@/hooks/use-links";
 import { LinkQrCode } from "./link-qr-code";
+import { Dialog } from "@databuddy/ui/client";
 
 interface QrCodeDialogProps {
 	link: Link | null;

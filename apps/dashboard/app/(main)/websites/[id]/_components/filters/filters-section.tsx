@@ -6,8 +6,6 @@ import { useAtom } from "jotai";
 import { useParams } from "next/navigation";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
-import { Button } from "@/components/ds/button";
-import { DeleteDialog } from "@/components/ds/delete-dialog";
 import { getOperatorLabel } from "@/hooks/use-filters";
 import { useSavedFilters } from "@/hooks/use-saved-filters";
 import {
@@ -18,6 +16,8 @@ import { SaveFilterDialog } from "./save-filter-dialog";
 import { SavedFiltersMenu } from "./saved-filters-menu";
 import { XIcon } from "@phosphor-icons/react/dist/ssr";
 import { FloppyDiskIcon, PencilIcon } from "@databuddy/ui/icons";
+import { Button } from "@databuddy/ui";
+import { DeleteDialog } from "@databuddy/ui/client";
 
 function getFieldLabel(field: string): string {
 	return filterOptions.find((o) => o.value === field)?.label ?? field;

@@ -4,11 +4,6 @@ import { authClient } from "@databuddy/auth/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
-import { EmptyState } from "@/components/ds/empty-state";
-import { Badge } from "@/components/ds/badge";
-import { Button } from "@/components/ds/button";
-import { Skeleton } from "@databuddy/ui";
-import { dayjs } from "@databuddy/ui";
 import { orpc } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
 import { TopBar } from "@/components/layout/top-bar";
@@ -20,6 +15,7 @@ import {
 	UserPlusIcon,
 	XCircleIcon,
 } from "@databuddy/ui/icons";
+import { Badge, Button, EmptyState, Skeleton, dayjs } from "@databuddy/ui";
 
 interface InvitationData {
 	email: string;

@@ -2,9 +2,6 @@
 
 import type { Icon } from "@phosphor-icons/react";
 import { useState } from "react";
-import { Badge } from "@/components/ds/badge";
-import { Button } from "@/components/ds/button";
-import { Card } from "@/components/ds/card";
 import { useChat } from "@/contexts/chat-context";
 import { cn } from "@/lib/utils";
 import type { BaseComponentProps } from "../../types";
@@ -15,6 +12,7 @@ import {
 	PencilSimpleIcon,
 	TrashIcon,
 } from "@databuddy/ui/icons";
+import { Badge, Button, Card } from "@databuddy/ui";
 
 interface AnnotationPreviewData {
 	annotationType: "point" | "line" | "range";

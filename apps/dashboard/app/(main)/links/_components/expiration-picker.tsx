@@ -1,14 +1,11 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { Button } from "@/components/ds/button";
-import { Calendar } from "@/components/ds/calendar";
 import {
 	Popover,
 	PopoverContent,
 	PopoverTrigger,
 } from "@/components/ui/popover";
-import { dayjs } from "@databuddy/ui";
 import { cn } from "@/lib/utils";
 import { XIcon } from "@phosphor-icons/react/dist/ssr";
 import {
@@ -17,6 +14,8 @@ import {
 	ClockIcon,
 	InfinityIcon,
 } from "@databuddy/ui/icons";
+import { Calendar } from "@databuddy/ui/client";
+import { Button, dayjs } from "@databuddy/ui";
 
 interface ExpirationPreset {
 	getDate: () => Date;

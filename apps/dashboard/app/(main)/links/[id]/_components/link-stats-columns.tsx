@@ -4,9 +4,9 @@ import type { CellContext, ColumnDef } from "@tanstack/react-table";
 import { DeviceTypeCell } from "@/components/analytics";
 import { ReferrerSourceCell } from "@/components/atomic/ReferrerSourceCell";
 import { CountryFlag } from "@/components/icon";
-import { PercentageBadge } from "@/components/ds/badge";
 import { formatNumber } from "@/lib/formatters";
 import { MapPinIcon } from "@databuddy/ui/icons";
+import { PercentageBadge } from "@databuddy/ui";
 
 export interface SourceEntry {
 	clicks: number;

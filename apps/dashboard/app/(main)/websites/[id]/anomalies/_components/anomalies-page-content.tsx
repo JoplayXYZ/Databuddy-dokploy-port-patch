@@ -1,6 +1,5 @@
 "use client";
 
-import { Button } from "@/components/ds/button";
 import {
 	ArrowClockwiseIcon,
 	CheckCircleIcon,
@@ -18,6 +17,7 @@ import {
 	type AnomalyItemData,
 	AnomalyItemSkeleton,
 } from "./anomaly-item";
+import { Button } from "@databuddy/ui";
 
 interface AnomaliesPageContentProps {
 	params: Promise<{ id: string }>;

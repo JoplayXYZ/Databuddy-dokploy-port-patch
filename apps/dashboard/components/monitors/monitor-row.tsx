@@ -7,13 +7,8 @@ import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { FaviconImage } from "@/components/analytics/favicon-image";
 import { TransferToOrgDialog } from "@/components/transfer-to-org-dialog";
-import { Badge } from "@/components/ds/badge";
-import { DropdownMenu } from "@/components/ds/dropdown-menu";
-import { Skeleton } from "@databuddy/ui";
 import { useBatchDynamicQuery } from "@/hooks/use-dynamic-query";
-import { dayjs } from "@databuddy/ui";
 import { orpc } from "@/lib/orpc";
-import { formatDateOnly } from "@databuddy/ui";
 import { buildUptimeHeatmapDays } from "@databuddy/ui/uptime";
 import { UptimeHeatmapStrip } from "@databuddy/ui/uptime";
 import { cn } from "@/lib/utils";
@@ -27,6 +22,8 @@ import {
 	PlayIcon,
 	TrashIcon,
 } from "@databuddy/ui/icons";
+import { DropdownMenu } from "@databuddy/ui/client";
+import { Badge, Skeleton, dayjs, formatDateOnly } from "@databuddy/ui";
 
 const GRANULARITY_LABELS: Record<string, string> = {
 	minute: "1 min",

@@ -1,7 +1,6 @@
 "use client";
 
 import { List } from "@/components/ui/composables/list";
-import { DropdownMenu } from "@/components/ds/dropdown-menu";
 import { Skeleton } from "@databuddy/ui";
 import { formatNumber } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
@@ -16,6 +15,7 @@ import {
 	PencilSimpleIcon,
 	TrashIcon,
 } from "@databuddy/ui/icons";
+import { DropdownMenu } from "@databuddy/ui/client";
 
 export interface FunnelItemData {
 	createdAt: string | Date;

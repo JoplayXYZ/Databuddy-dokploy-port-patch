@@ -1,19 +1,9 @@
 "use client";
 
-import { Avatar } from "@/components/ds/avatar";
-import { Badge } from "@/components/ds/badge";
-import { Button } from "@/components/ds/button";
-import { Dialog } from "@/components/ds/dialog";
-import { Divider } from "@/components/ds/divider";
-import { DropdownMenu } from "@/components/ds/dropdown-menu";
-import { EmptyState } from "@/components/ds/empty-state";
-import { Input } from "@/components/ds/input";
-import { Text } from "@/components/ds/text";
 import type {
 	OrganizationMember,
 	UpdateMemberData,
 } from "@/hooks/use-organizations";
-import { fromNow } from "@databuddy/ui";
 import { authClient } from "@databuddy/auth/client";
 import {
 	ArrowsDownUpIcon,
@@ -21,6 +11,16 @@ import {
 	MagnifyingGlassIcon,
 } from "@databuddy/ui/icons";
 import { useMemo, useState } from "react";
+import { Avatar, Dialog, DropdownMenu } from "@databuddy/ui/client";
+import {
+	Badge,
+	Button,
+	Divider,
+	EmptyState,
+	Input,
+	Text,
+	fromNow,
+} from "@databuddy/ui";
 
 interface MemberListProps {
 	isRemovingMember: boolean;

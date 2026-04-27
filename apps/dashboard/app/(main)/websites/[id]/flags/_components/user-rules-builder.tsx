@@ -1,11 +1,6 @@
 "use client";
 
 import { z } from "zod/mini";
-import { Button } from "@/components/ds/button";
-import { Input } from "@/components/ds/input";
-import { Select } from "@/components/ds/select";
-import { Switch } from "@/components/ds/switch";
-import { TagsInput } from "@/components/ds/tags-input";
 import type { UserRule, UserRulesBuilderProps } from "./types";
 import {
 	EnvelopeIcon,
@@ -14,6 +9,8 @@ import {
 	UserIcon,
 	WrenchIcon,
 } from "@databuddy/ui/icons";
+import { Button, Input } from "@databuddy/ui";
+import { Select, Switch, TagsInput } from "@databuddy/ui/client";
 
 const TARGET_TYPES = [
 	{ value: "user_id", label: "User ID", icon: UserIcon },

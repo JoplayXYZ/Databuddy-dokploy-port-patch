@@ -4,13 +4,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { EditGoalDialog } from "@/app/(main)/websites/[id]/goals/_components/edit-goal-dialog";
-import { Badge } from "@/components/ds/badge";
-import { Button } from "@/components/ds/button";
-import { Card } from "@/components/ds/card";
-import { DeleteDialog } from "@/components/ds/delete-dialog";
-import { DropdownMenu } from "@/components/ds/dropdown-menu";
 import { type CreateGoalData, type Goal, useGoals } from "@/hooks/use-goals";
-import { fromNow } from "@databuddy/ui";
 import type { BaseComponentProps } from "../../types";
 import {
 	DotsThreeIcon,
@@ -21,6 +15,8 @@ import {
 	TargetIcon,
 	TrashIcon,
 } from "@databuddy/ui/icons";
+import { DeleteDialog, DropdownMenu } from "@databuddy/ui/client";
+import { Badge, Button, Card, fromNow } from "@databuddy/ui";
 
 interface GoalItem {
 	createdAt?: string;

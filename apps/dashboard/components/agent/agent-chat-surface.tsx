@@ -8,13 +8,10 @@ import {
 	ConversationContent,
 	ConversationScrollButton,
 } from "@/components/ai-elements/conversation";
-import { Avatar } from "@/components/ds/avatar";
-import { Button } from "@/components/ds/button";
 import { useChat, useChatLoading } from "@/contexts/chat-context";
 import { useWebsite } from "@/hooks/use-websites";
 import { orpc } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
-import { Skeleton } from "@databuddy/ui";
 import { BrainIcon } from "@phosphor-icons/react/dist/ssr";
 import {
 	ArrowRightIcon,
@@ -26,6 +23,8 @@ import {
 import { AgentInput } from "./agent-input";
 import { AgentMessages } from "./agent-messages";
 import { setLastChatId } from "./hooks/use-chat-db";
+import { Avatar } from "@databuddy/ui/client";
+import { Button, Skeleton } from "@databuddy/ui";
 
 interface AgentChatSurfaceProps {
 	autoSendPromptFromUrl?: boolean;

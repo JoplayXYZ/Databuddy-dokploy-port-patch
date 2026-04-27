@@ -15,12 +15,11 @@ import {
 	MdTh,
 	MdThead,
 } from "@/components/ai-elements/markdown-table";
-import { Button } from "@/components/ds/button";
 import { ButtonGroup, ButtonGroupText } from "@/components/ui/button-group";
-import { Tooltip } from "@databuddy/ui";
 import { cn } from "@/lib/utils";
 import { PaperclipIcon, XIcon } from "@phosphor-icons/react/dist/ssr";
 import { CaretLeftIcon, CaretRightIcon } from "@databuddy/ui/icons";
+import { Button, Tooltip } from "@databuddy/ui";
 
 export type MessageProps = HTMLAttributes<HTMLDivElement> & {
 	from: UIMessage["role"];

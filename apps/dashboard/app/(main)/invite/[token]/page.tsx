@@ -5,7 +5,6 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
 import type { ForwardRefExoticComponent, RefAttributes } from "react";
 import { useCallback } from "react";
-import { Button } from "@/components/ds/button";
 import {
 	getFeatureDescription,
 	getFeatureLabel,
@@ -25,6 +24,7 @@ import {
 	WaveformIcon,
 	XCircleIcon,
 } from "@databuddy/ui/icons";
+import { Button } from "@databuddy/ui";
 
 type PhosphorIcon = ForwardRefExoticComponent<
 	IconProps & RefAttributes<SVGSVGElement>

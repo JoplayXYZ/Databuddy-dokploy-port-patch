@@ -2,10 +2,9 @@
 
 import type { IconProps } from "@phosphor-icons/react";
 import { cloneElement, memo, type ReactElement, type ReactNode } from "react";
-import { Button } from "@/components/ds/button";
-import { Card } from "@/components/ds/card";
 import { cn } from "@/lib/utils";
 import { PlusIcon } from "@databuddy/ui/icons";
+import { Button, Card } from "@databuddy/ui";
 
 export interface EmptyStateAction {
 	label: string;

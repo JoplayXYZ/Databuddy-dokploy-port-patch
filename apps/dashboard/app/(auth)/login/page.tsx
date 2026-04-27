@@ -6,15 +6,17 @@ import { useRouter } from "next/navigation";
 import { parseAsString, useQueryState } from "nuqs";
 import { Suspense, useState } from "react";
 import { toast } from "sonner";
-import { Badge } from "@/components/ds/badge";
-import { Button } from "@/components/ds/button";
-import { Divider } from "@/components/ds/divider";
-import { Field } from "@/components/ds/field";
-import { Input } from "@/components/ds/input";
-import { Spinner } from "@/components/ds/spinner";
-import { Text } from "@/components/ds/text";
 import { GithubMark, GoogleMark } from "@/components/ui/brand-icons";
 import { EnvelopeSimpleIcon, EyeIcon, EyeSlashIcon } from "@databuddy/ui/icons";
+import {
+	Badge,
+	Button,
+	Divider,
+	Field,
+	Input,
+	Spinner,
+	Text,
+} from "@databuddy/ui";
 
 function LoginPage() {
 	const router = useRouter();

@@ -1,11 +1,9 @@
 import Iridescence from "@/components/bits/Iridiscence";
-import { Button } from "@/components/ds/button";
-import { Spinner } from "@/components/ds/spinner";
-import { Text } from "@/components/ds/text";
 import { Logo } from "@/components/layout/logo";
 import Link from "next/link";
 import { Suspense } from "react";
 import { CaretLeftIcon } from "@databuddy/ui/icons";
+import { Button, Spinner, Text } from "@databuddy/ui";
 
 export default function AuthLayout({
 	children,

@@ -1,11 +1,11 @@
 "use client";
 
-import { Avatar } from "@/components/ds/avatar";
 import { AgentChatSurface } from "@/components/agent/agent-chat-surface";
 import { AgentCreditBalance } from "@/components/agent/agent-credit-balance";
 import { ChatHistory } from "@/components/agent/chat-history";
 import { NewChatButton } from "@/components/agent/new-chat-button";
 import { TopBar } from "@/components/layout/top-bar";
+import { Avatar } from "@databuddy/ui/client";
 
 interface AgentPageContentProps {
 	chatId: string;

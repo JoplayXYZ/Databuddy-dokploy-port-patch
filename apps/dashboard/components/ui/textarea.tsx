@@ -1,10 +1,10 @@
 "use client";
 
-import { useFieldContext } from "@/components/ds/field";
 import type { ComponentProps } from "react";
 import { forwardRef } from "react";
 import TextareaAutosize from "react-textarea-autosize";
 import { cn } from "@/lib/utils";
+import { useFieldContext } from "@databuddy/ui";
 
 type TextareaProps = ComponentProps<typeof TextareaAutosize> & {
 	showFocusIndicator?: boolean;

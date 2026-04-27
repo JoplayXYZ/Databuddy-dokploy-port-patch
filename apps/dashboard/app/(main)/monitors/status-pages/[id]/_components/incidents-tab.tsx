@@ -3,10 +3,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { EmptyState } from "@/components/ds/empty-state";
-import { Button } from "@/components/ds/button";
-import { DeleteDialog } from "@/components/ds/delete-dialog";
-import { Skeleton } from "@databuddy/ui";
 import { orpc } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
 import {
@@ -19,6 +15,8 @@ import {
 } from "@databuddy/ui/icons";
 import { CreateIncidentSheet } from "./create-incident-sheet";
 import { UpdateIncidentSheet } from "./update-incident-sheet";
+import { DeleteDialog } from "@databuddy/ui/client";
+import { Button, EmptyState, Skeleton } from "@databuddy/ui";
 
 const STATUS_LABELS: Record<string, string> = {
 	investigating: "Investigating",

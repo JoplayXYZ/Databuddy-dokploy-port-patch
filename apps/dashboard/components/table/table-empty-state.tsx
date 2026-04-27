@@ -1,6 +1,6 @@
 import type { IconProps } from "@phosphor-icons/react";
 import type { ReactElement } from "react";
-import { EmptyState } from "@/components/ds/empty-state";
+import { EmptyState } from "@databuddy/ui";
 
 interface TableEmptyStateProps {
 	description: string;

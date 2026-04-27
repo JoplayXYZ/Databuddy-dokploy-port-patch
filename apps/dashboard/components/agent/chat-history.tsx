@@ -2,12 +2,7 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Button } from "@/components/ds/button";
-import { DeleteDialog } from "@/components/ds/delete-dialog";
-import { Input } from "@/components/ds/input";
-import { Popover } from "@/components/ds/popover";
 import { useChatSafe } from "@/contexts/chat-context";
-import { dayjs } from "@databuddy/ui";
 import { cn } from "@/lib/utils";
 import { clearLastChatId, useChatList } from "./hooks/use-chat-db";
 import { ChatCircleDotsIcon, XIcon } from "@phosphor-icons/react/dist/ssr";
@@ -18,6 +13,8 @@ import {
 	PencilSimpleIcon,
 	TrashIcon,
 } from "@databuddy/ui/icons";
+import { DeleteDialog, Popover } from "@databuddy/ui/client";
+import { Button, Input, dayjs } from "@databuddy/ui";
 
 type Chat = ReturnType<typeof useChatList>["chats"][number];
 

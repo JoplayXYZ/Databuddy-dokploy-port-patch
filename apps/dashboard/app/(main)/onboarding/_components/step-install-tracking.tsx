@@ -10,11 +10,9 @@ import html from "shiki/langs/html.mjs";
 import tsx from "shiki/langs/tsx.mjs";
 import vesper from "shiki/themes/vesper.mjs";
 import { toast } from "sonner";
-import { Badge } from "@/components/ds/badge";
-import { Button } from "@/components/ds/button";
-import { Card } from "@/components/ds/card";
-import { Tabs } from "@/components/ds/tabs";
 import { orpc } from "@/lib/orpc";
+import { Badge, Button, Card } from "@databuddy/ui";
+import { Tabs } from "@databuddy/ui/client";
 import {
 	ArrowClockwiseIcon,
 	CheckIcon,

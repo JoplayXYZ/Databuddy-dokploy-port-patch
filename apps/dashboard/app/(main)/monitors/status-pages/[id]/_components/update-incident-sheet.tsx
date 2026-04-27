@@ -5,12 +5,9 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
-import { Button } from "@/components/ds/button";
-import { Field } from "@/components/ds/field";
-import { SegmentedControl } from "@/components/ds/segmented-control";
-import { Sheet } from "@/components/ds/sheet";
-import { Textarea } from "@/components/ds/textarea";
 import { orpc } from "@/lib/orpc";
+import { Button, Field, SegmentedControl, Textarea } from "@databuddy/ui";
+import { Sheet } from "@databuddy/ui/client";
 
 const statusOptions = [
 	{ value: "investigating", label: "Investigating" },

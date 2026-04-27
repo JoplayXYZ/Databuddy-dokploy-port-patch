@@ -1,11 +1,6 @@
 "use client";
 
 import { FaviconImage } from "@/components/analytics/favicon-image";
-import { Button } from "@/components/ds/button";
-import { EmptyState } from "@/components/ds/empty-state";
-import { Select } from "@/components/ds/select";
-import { Skeleton } from "@databuddy/ui";
-import { Text } from "@/components/ds/text";
 import { useOrganizations } from "@/hooks/use-organizations";
 import type { Website } from "@/hooks/use-websites";
 import { cn } from "@/lib/utils";
@@ -18,6 +13,8 @@ import {
 import { useState } from "react";
 import { toast } from "sonner";
 import { useWebsiteTransfer } from "../settings/destructive/hooks/use-website-transfer";
+import { Select } from "@databuddy/ui/client";
+import { Button, EmptyState, Skeleton, Text } from "@databuddy/ui";
 
 function WebsiteItem({
 	website,

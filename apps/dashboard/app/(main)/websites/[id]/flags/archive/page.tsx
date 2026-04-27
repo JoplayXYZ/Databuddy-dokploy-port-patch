@@ -4,15 +4,15 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAtom } from "jotai";
 import { useParams } from "next/navigation";
 import { Suspense, useMemo, useState } from "react";
-import { EmptyState } from "@/components/ds/empty-state";
 import { ErrorBoundary } from "@/components/error-boundary";
-import { DeleteDialog } from "@/components/ds/delete-dialog";
 import { orpc } from "@/lib/orpc";
 import { isFlagSheetOpenAtom } from "@/stores/jotai/flagsAtoms";
 import { FlagSheet } from "../_components/flag-sheet";
 import type { Flag } from "../_components/types";
 import { ArchivedFlagItem } from "./_components/archived-flag-item";
 import { ArchiveIcon } from "@databuddy/ui/icons";
+import { EmptyState } from "@databuddy/ui";
+import { DeleteDialog } from "@databuddy/ui/client";
 
 const ArchivedFlagsListSkeleton = () => (
 	<div className="border-border border-t">

@@ -1,7 +1,6 @@
 import { flexRender, type Table } from "@tanstack/react-table";
 import type React from "react";
 import { Fragment, memo, useCallback, useState } from "react";
-import { Button } from "@/components/ds/button";
 import {
 	TableBody,
 	TableCell,
@@ -17,6 +16,7 @@ import {
 	CaretRightIcon,
 	DatabaseIcon,
 } from "@databuddy/ui/icons";
+import { Button } from "@databuddy/ui";
 
 const DEFAULT_SHARE_COLUMN_TITLE =
 	"Share of unique visitors in this breakdown. Row percentages may add up to more than 100% when the same user appears in multiple rows.";

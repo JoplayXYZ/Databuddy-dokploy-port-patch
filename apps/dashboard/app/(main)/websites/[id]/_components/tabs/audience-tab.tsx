@@ -2,10 +2,6 @@
 
 import type { CellContext, ColumnDef } from "@tanstack/react-table";
 import { useCallback, useMemo } from "react";
-import { Card } from "@/components/ds/card";
-import { EmptyState } from "@/components/ds/empty-state";
-import { PercentageBadge } from "@/components/ds/badge";
-import { Skeleton } from "@databuddy/ui";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { BrowserIcon } from "@/components/icon";
 import { DataTable } from "@/components/table/data-table";
@@ -22,6 +18,7 @@ import {
 	DeviceTabletIcon,
 	MonitorIcon,
 } from "@databuddy/ui/icons";
+import { Card, EmptyState, PercentageBadge, Skeleton } from "@databuddy/ui";
 
 interface BrowserVersion {
 	pageviews: number;

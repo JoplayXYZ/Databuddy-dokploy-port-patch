@@ -26,8 +26,6 @@ import type {
 	NavigationItem,
 } from "@/components/layout/navigation/types";
 import { useBillingContext } from "@/components/providers/billing-provider";
-import { Badge } from "@/components/ds/badge";
-import { Dialog } from "@/components/ds/dialog";
 import { useWebsites } from "@/hooks/use-websites";
 import { cn } from "@/lib/utils";
 import {
@@ -37,6 +35,8 @@ import {
 	LockSimpleIcon,
 	MagnifyingGlassIcon,
 } from "@databuddy/ui/icons";
+import { Badge } from "@databuddy/ui";
+import { Dialog } from "@databuddy/ui/client";
 
 interface SearchItem {
 	alpha?: boolean;

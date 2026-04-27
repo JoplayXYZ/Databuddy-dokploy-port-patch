@@ -1,15 +1,11 @@
 "use client";
 
-import { Button } from "@/components/ds/button";
-import { FieldTriggerButton } from "@/components/ds/control-shell";
-import { Dialog } from "@/components/ds/dialog";
-import { DropdownMenu } from "@/components/ds/dropdown-menu";
-import { Field } from "@/components/ds/field";
-import { Input } from "@/components/ds/input";
 import { useOrganizationInvitations } from "@/hooks/use-organization-invitations";
 import { CaretUpDown } from "@phosphor-icons/react/dist/ssr";
 import { UserPlusIcon } from "@databuddy/ui/icons";
 import { useState } from "react";
+import { Button, Field, FieldTriggerButton, Input } from "@databuddy/ui";
+import { Dialog, DropdownMenu } from "@databuddy/ui/client";
 
 interface InviteMemberDialogProps {
 	onOpenChangeAction: (open: boolean) => void;

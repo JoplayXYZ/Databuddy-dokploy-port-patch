@@ -4,10 +4,10 @@ import {
 	getCoreRowModel,
 	useReactTable,
 } from "@tanstack/react-table";
-import { Button } from "@/components/ds/button";
 import { SectionBrandOverlay } from "@/components/logo/section-brand-overlay";
 import { TableContent } from "./table-content";
 import { TableTabs } from "./table-tabs";
+import { Button } from "@databuddy/ui";
 
 interface TabConfig<TData> {
 	columns: ColumnDef<TData, unknown>[];

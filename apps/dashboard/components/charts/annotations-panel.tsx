@@ -1,10 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { Badge } from "@/components/ds/badge";
-import { Button } from "@/components/ds/button";
-import { DeleteDialog } from "@/components/ds/delete-dialog";
-import { Sheet } from "@/components/ds/sheet";
 import { formatAnnotationDateRange } from "@/lib/annotation-utils";
 import type { Annotation } from "@/types/annotations";
 import {
@@ -14,6 +10,8 @@ import {
 	TagIcon,
 	TrashIcon,
 } from "@databuddy/ui/icons";
+import { Badge, Button } from "@databuddy/ui";
+import { DeleteDialog, Sheet } from "@databuddy/ui/client";
 
 interface AnnotationsPanelProps {
 	annotations: Annotation[];

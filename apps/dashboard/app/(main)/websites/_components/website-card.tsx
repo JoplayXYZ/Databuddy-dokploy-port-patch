@@ -15,8 +15,6 @@ const WebsiteDialog = dynamic(
 import { memo, useCallback, useState } from "react";
 import { toast } from "sonner";
 import { FaviconImage } from "@/components/analytics/favicon-image";
-import { Card } from "@/components/ds/card";
-import { StatusDot } from "@/components/ds/status-dot";
 import {
 	ContextMenu,
 	ContextMenuContent,
@@ -24,8 +22,6 @@ import {
 	ContextMenuSeparator,
 	ContextMenuTrigger,
 } from "@/components/ui/context-menu";
-import { DeleteDialog } from "@/components/ds/delete-dialog";
-import { Skeleton } from "@databuddy/ui";
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
 import { useDeleteWebsite } from "@/hooks/use-websites";
 import { formatNumber } from "@/lib/formatters";
@@ -45,6 +41,8 @@ import {
 	TrendDownIcon,
 	TrendUpIcon,
 } from "@databuddy/ui/icons";
+import { DeleteDialog } from "@databuddy/ui/client";
+import { Card, Skeleton, StatusDot } from "@databuddy/ui";
 
 interface WebsiteCardProps {
 	activeUsers?: number;

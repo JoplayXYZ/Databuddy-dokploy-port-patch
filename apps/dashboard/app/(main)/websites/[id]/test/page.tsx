@@ -7,8 +7,6 @@ import { useMemo, useState } from "react";
 import type { Layout } from "react-grid-layout";
 import GridLayout, { useContainerWidth } from "react-grid-layout";
 import { StatCard } from "@/components/analytics/stat-card";
-import { Button } from "@/components/ds/button";
-import { Card } from "@/components/ds/card";
 import {
 	formattedDateRangeAtom,
 	timeGranularityAtom,
@@ -24,6 +22,7 @@ import {
 	PencilSimpleIcon,
 	PlusIcon,
 } from "@databuddy/ui/icons";
+import { Button, Card } from "@databuddy/ui";
 
 const GRID_COLS = 4;
 const GRID_ROW_HEIGHT = 140;

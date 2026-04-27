@@ -1,12 +1,5 @@
 "use client";
 
-import { Badge } from "@/components/ds/badge";
-import { Button } from "@/components/ds/button";
-import { Card } from "@/components/ds/card";
-import { Divider } from "@/components/ds/divider";
-import { Input } from "@/components/ds/input";
-import { Switch } from "@/components/ds/switch";
-import { Text } from "@/components/ds/text";
 import { orpc } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
 import {
@@ -25,6 +18,8 @@ import {
 	SlidersHorizontalIcon,
 } from "@phosphor-icons/react/dist/ssr";
 import { InfinityIcon } from "@databuddy/ui/icons";
+import { Badge, Button, Card, Divider, Input, Text } from "@databuddy/ui";
+import { Switch } from "@databuddy/ui/client";
 
 const EVENTS_FEATURE_ID = "events";
 

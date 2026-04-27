@@ -2,7 +2,6 @@
 
 import { FeatureGate } from "@/components/feature-gate";
 import { List } from "@/components/ui/composables/list";
-import { DeleteDialog } from "@/components/ds/delete-dialog";
 import { useAutocompleteData } from "@/hooks/use-autocomplete";
 import { useDateFilters } from "@/hooks/use-date-filters";
 import {
@@ -17,7 +16,6 @@ import dynamic from "next/dynamic";
 import { useParams } from "next/navigation";
 import { useState } from "react";
 import { TopBar } from "@/components/layout/top-bar";
-import { Button } from "@/components/ds/button";
 import {
 	FunnelAnalytics,
 	FunnelAnalyticsByReferrer,
@@ -26,6 +24,8 @@ import {
 	FunnelsList,
 } from "./_components";
 import { ArrowClockwiseIcon, FunnelIcon, PlusIcon } from "@databuddy/ui/icons";
+import { Button } from "@databuddy/ui";
+import { DeleteDialog } from "@databuddy/ui/client";
 
 const EditFunnelDialog = dynamic(
 	() =>

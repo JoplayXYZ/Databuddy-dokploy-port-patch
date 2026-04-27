@@ -7,14 +7,6 @@ import { useRouter } from "next/navigation";
 import { parseAsString, useQueryState } from "nuqs";
 import { Suspense, useState } from "react";
 import { toast } from "sonner";
-import { Button } from "@/components/ds/button";
-import { Checkbox } from "@/components/ds/checkbox";
-import { Divider } from "@/components/ds/divider";
-import { Field } from "@/components/ds/field";
-import { Input } from "@/components/ds/input";
-import { Spinner } from "@/components/ds/spinner";
-import { Text } from "@/components/ds/text";
-import { Tooltip } from "@databuddy/ui";
 import { GithubMark, GoogleMark } from "@/components/ui/brand-icons";
 import VisuallyHidden from "@/components/ui/visuallyhidden";
 import {
@@ -23,6 +15,16 @@ import {
 	EyeSlashIcon,
 	InfoIcon,
 } from "@databuddy/ui/icons";
+import { Checkbox } from "@databuddy/ui/client";
+import {
+	Button,
+	Divider,
+	Field,
+	Input,
+	Spinner,
+	Text,
+	Tooltip,
+} from "@databuddy/ui";
 
 function RegisterPageContent() {
 	const router = useRouter();

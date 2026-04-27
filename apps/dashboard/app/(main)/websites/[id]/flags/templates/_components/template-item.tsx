@@ -1,8 +1,5 @@
 "use client";
 
-import { Badge } from "@/components/ds/badge";
-import { Button } from "@/components/ds/button";
-import { Card } from "@/components/ds/card";
 import type { FlagTemplate } from "../../_components/types";
 import {
 	ArrowRightIcon,
@@ -11,6 +8,7 @@ import {
 	UsersIcon,
 	WarningIcon,
 } from "@databuddy/ui/icons";
+import { Badge, Button, Card } from "@databuddy/ui";
 
 export interface TemplateItemProps {
 	onUseAction: (template: FlagTemplate) => void;

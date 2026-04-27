@@ -9,9 +9,6 @@ import type {
 	NavigationGroup,
 	NavigationItem,
 } from "@/components/layout/navigation/types";
-import { Button } from "@/components/ds/button";
-import { Card } from "@/components/ds/card";
-import { Dialog } from "@/components/ds/dialog";
 import { cn } from "@/lib/utils";
 import {
 	ArrowLeftIcon,
@@ -21,6 +18,8 @@ import {
 	MagnifyingGlassIcon,
 	WarningCircleIcon,
 } from "@databuddy/ui/icons";
+import { Button, Card } from "@databuddy/ui";
+import { Dialog } from "@databuddy/ui/client";
 
 interface SearchItem {
 	icon: NavigationItem["icon"];

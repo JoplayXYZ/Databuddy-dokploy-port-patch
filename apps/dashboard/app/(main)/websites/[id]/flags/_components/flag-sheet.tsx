@@ -12,16 +12,6 @@ import {
 	CodeBlock,
 	CodeBlockCopyButton,
 } from "@/components/ai-elements/code-block";
-import { Accordion } from "@/components/ds/accordion";
-import { Button } from "@/components/ds/button";
-import { Divider } from "@/components/ds/divider";
-import { Field } from "@/components/ds/field";
-import { Input } from "@/components/ds/input";
-import { LineSlider } from "@/components/ds/line-slider";
-import { Sheet } from "@/components/ds/sheet";
-import { Switch } from "@/components/ds/switch";
-import { Text } from "@/components/ds/text";
-import { Textarea } from "@/components/ds/textarea";
 import { orpc } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
 import { GroupSelector } from "../groups/_components/group-selector";
@@ -38,6 +28,8 @@ import {
 	UsersIcon,
 	UsersThreeIcon,
 } from "@databuddy/ui/icons";
+import { Button, Divider, Field, Input, Text, Textarea } from "@databuddy/ui";
+import { Accordion, LineSlider, Sheet, Switch } from "@databuddy/ui/client";
 
 function ImplementationExamples({
 	flagKey,

@@ -3,8 +3,6 @@
 import { filterOptions } from "@databuddy/shared/lists/filters";
 import type { DynamicQueryFilter } from "@databuddy/shared/types/api";
 import { useState } from "react";
-import { Button } from "@/components/ds/button";
-import { DropdownMenu } from "@/components/ds/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { getOperatorLabel } from "@/hooks/use-filters";
 import type { SavedFilter } from "@/hooks/use-saved-filters";
@@ -15,6 +13,8 @@ import {
 	PencilIcon,
 	TrashIcon,
 } from "@databuddy/ui/icons";
+import { Button } from "@databuddy/ui";
+import { DropdownMenu } from "@databuddy/ui/client";
 
 interface SavedFiltersMenuProps {
 	currentFilters: DynamicQueryFilter[];

@@ -5,10 +5,6 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { type ComponentPropsWithoutRef, useState } from "react";
 import { toast } from "sonner";
-import { Avatar } from "@/components/ds/avatar";
-import { DropdownMenu } from "@/components/ds/dropdown-menu";
-import { Text } from "@/components/ds/text";
-import { Tooltip } from "@databuddy/ui";
 import { SignOutIcon } from "@phosphor-icons/react/dist/ssr";
 import {
 	CaretRightIcon,
@@ -16,6 +12,8 @@ import {
 	PlusIcon,
 	SpinnerGapIcon,
 } from "@databuddy/ui/icons";
+import { Avatar, DropdownMenu } from "@databuddy/ui/client";
+import { Text, Tooltip } from "@databuddy/ui";
 
 export interface ProfileButtonUser {
 	email?: string | null;

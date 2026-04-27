@@ -1,10 +1,9 @@
-import { Card } from "@/components/ds/card";
-import { Skeleton } from "@databuddy/ui";
 import { cn } from "@/lib/utils";
 import type { ErrorSummary } from "./types";
 import { ActivityIcon } from "@phosphor-icons/react/dist/ssr";
 import type { NavIcon } from "@/components/layout/navigation/types";
 import { TrendUpIcon, UsersIcon, WarningCircleIcon } from "@databuddy/ui/icons";
+import { Card, Skeleton } from "@databuddy/ui";
 
 type StatVariant = "default" | "destructive" | "warning";
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { Badge } from "@/components/ds/badge";
+import { Badge } from "@databuddy/ui";
 
 const STATUS_CONFIG = {
 	pending: { label: "Pending", variant: "warning" },

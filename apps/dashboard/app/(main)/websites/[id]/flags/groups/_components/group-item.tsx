@@ -1,6 +1,5 @@
 "use client";
 
-import { DropdownMenu } from "@/components/ds/dropdown-menu";
 import { cn } from "@/lib/utils";
 import type { TargetGroup } from "../../_components/types";
 import {
@@ -12,6 +11,7 @@ import {
 	UsersThreeIcon,
 	WrenchIcon,
 } from "@databuddy/ui/icons";
+import { DropdownMenu } from "@databuddy/ui/client";
 
 export interface GroupItemProps {
 	group: TargetGroup;

@@ -11,18 +11,18 @@ import {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Badge } from "@/components/ds/badge";
-import { Button } from "@/components/ds/button";
-import { StatusDot } from "@/components/ds/status-dot";
-import { Card } from "@/components/ds/card";
-import { Dialog } from "@/components/ds/dialog";
-import { DropdownMenu } from "@/components/ds/dropdown-menu";
-import { EmptyState } from "@/components/ds/empty-state";
-import { Skeleton } from "@databuddy/ui";
-import { Switch } from "@/components/ds/switch";
-import { Text } from "@/components/ds/text";
 import { orpc } from "@/lib/orpc";
 import { AlarmSheet } from "./_components/alarm-sheet";
+import { Dialog, DropdownMenu, Switch } from "@databuddy/ui/client";
+import {
+	Badge,
+	Button,
+	Card,
+	EmptyState,
+	Skeleton,
+	StatusDot,
+	Text,
+} from "@databuddy/ui";
 
 interface AlarmDestination {
 	config: Record<string, string | boolean | number | null>;

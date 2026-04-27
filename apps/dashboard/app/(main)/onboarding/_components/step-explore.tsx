@@ -1,8 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { Badge } from "@/components/ds/badge";
-import { Button } from "@/components/ds/button";
 import {
 	ArrowRightIcon,
 	ChartLineUpIcon,
@@ -12,6 +10,7 @@ import {
 	RocketLaunchIcon,
 	UsersIcon,
 } from "@databuddy/ui/icons";
+import { Badge, Button } from "@databuddy/ui";
 
 const FEATURES = [
 	{

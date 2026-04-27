@@ -1,11 +1,6 @@
 "use client";
 
 import { FaviconImage } from "@/components/analytics/favicon-image";
-import { Button } from "@/components/ds/button";
-import { Card } from "@/components/ds/card";
-import { EmptyState } from "@/components/ds/empty-state";
-import { Skeleton } from "@databuddy/ui";
-import { Text } from "@/components/ds/text";
 import { WebsiteDialog } from "@/components/website-dialog";
 import type { Organization } from "@/hooks/use-organizations";
 import { orpc } from "@/lib/orpc";
@@ -13,6 +8,7 @@ import { CaretRightIcon, GlobeIcon, PlusIcon } from "@databuddy/ui/icons";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { useState } from "react";
+import { Button, Card, EmptyState, Skeleton, Text } from "@databuddy/ui";
 
 interface WebsiteRowData {
 	domain: string;

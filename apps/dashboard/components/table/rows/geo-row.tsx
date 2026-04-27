@@ -1,8 +1,8 @@
 import type { CellContext, ColumnDef } from "@tanstack/react-table";
 import { CountryFlag } from "@/components/icon";
-import { PercentageBadge } from "@/components/ds/badge";
 import { formatNumber } from "@/lib/formatters";
 import { MapPinIcon } from "@databuddy/ui/icons";
+import { PercentageBadge } from "@databuddy/ui";
 
 export interface GeoEntry {
 	country_code?: string;

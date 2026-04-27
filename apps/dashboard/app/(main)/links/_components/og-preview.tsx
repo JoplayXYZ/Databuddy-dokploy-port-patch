@@ -1,11 +1,6 @@
 "use client";
 
 import { useCallback, useMemo } from "react";
-import { Button } from "@/components/ds/button";
-import { Input } from "@/components/ds/input";
-import { Field } from "@/components/ds/field";
-import { Switch } from "@/components/ds/switch";
-import { Textarea } from "@/components/ds/textarea";
 import {
 	type FetchedOgData,
 	getProxiedImageUrl,
@@ -22,6 +17,8 @@ import {
 	VideoIcon,
 	WarningCircleIcon,
 } from "@databuddy/ui/icons";
+import { Button, Field, Input, Textarea } from "@databuddy/ui";
+import { Switch } from "@databuddy/ui/client";
 
 export interface OgData {
 	ogDescription: string;

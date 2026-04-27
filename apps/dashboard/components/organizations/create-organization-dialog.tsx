@@ -1,12 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Button } from "@/components/ds/button";
-import { Field } from "@/components/ds/field";
-import { Sheet } from "@/components/ds/sheet";
-import { Input } from "@/components/ds/input";
 import { useOrganizations } from "@/hooks/use-organizations";
 import { BuildingsIcon } from "@databuddy/ui/icons";
+import { Button, Field, Input } from "@databuddy/ui";
+import { Sheet } from "@databuddy/ui/client";
 
 const SLUG_ALLOWED_REGEX = /^[a-z0-9-]+$/;
 const REGEX_NON_SLUG_NAME_CHARS = /[^a-z0-9\s-]/g;

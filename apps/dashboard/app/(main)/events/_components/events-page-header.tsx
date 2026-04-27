@@ -1,13 +1,11 @@
 "use client";
 
-import { Badge } from "@/components/ds/badge";
-import { Button } from "@/components/ds/button";
-import { DropdownMenu } from "@/components/ds/dropdown-menu";
 import { TopBar } from "@/components/layout/top-bar";
-import { Skeleton } from "@databuddy/ui";
 import { cn } from "@/lib/utils";
 import { useEventsPageContext } from "./events-page-context";
 import { ArrowClockwiseIcon, CaretDownIcon } from "@databuddy/ui/icons";
+import { DropdownMenu } from "@databuddy/ui/client";
+import { Badge, Button, Skeleton } from "@databuddy/ui";
 
 function getDropdownLabel(
 	websiteFilterMode: string,

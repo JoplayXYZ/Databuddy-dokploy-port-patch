@@ -1,13 +1,9 @@
 "use client";
 
-import { Badge } from "@/components/ds/badge";
-import { Button } from "@/components/ds/button";
-import { Dialog } from "@/components/ds/dialog";
-import { Divider } from "@/components/ds/divider";
-import { Text } from "@/components/ds/text";
-import { dayjs } from "@databuddy/ui";
 import type { PreviewAttachResponse } from "autumn-js";
 import { useState } from "react";
+import { Dialog } from "@databuddy/ui/client";
+import { Badge, Button, Divider, Text, dayjs } from "@databuddy/ui";
 
 export interface AttachDialogProps {
 	onConfirm: () => Promise<void>;

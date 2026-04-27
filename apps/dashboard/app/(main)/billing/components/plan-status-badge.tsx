@@ -1,4 +1,4 @@
-import { Badge } from "@/components/ds/badge";
+import { Badge } from "@databuddy/ui";
 
 interface PlanStatusBadgeProps {
 	isCanceled: boolean;

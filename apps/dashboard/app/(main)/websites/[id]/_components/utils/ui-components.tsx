@@ -1,9 +1,8 @@
 import type React from "react";
-import { StatusDot } from "@/components/ds/status-dot";
-import { Tooltip } from "@databuddy/ui";
 import { cn } from "@/lib/utils";
 import { PERFORMANCE_THRESHOLDS } from "./analytics-helpers";
 import { ArrowSquareOutIcon, QuestionIcon } from "@databuddy/ui/icons";
+import { StatusDot, Tooltip } from "@databuddy/ui";
 
 // Consistent border radius values
 export const BORDER_RADIUS = {

@@ -10,8 +10,8 @@ import {
 	CommandSeparator,
 	CommandShortcut,
 } from "@/components/ui/command";
-import { Dialog } from "@/components/ds/dialog";
 import { cn } from "@/lib/utils";
+import { Dialog } from "@databuddy/ui/client";
 
 export type ModelSelectorProps = ComponentProps<typeof Dialog>;
 

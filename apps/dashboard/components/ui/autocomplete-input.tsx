@@ -1,7 +1,7 @@
 "use client";
 
-import { Autocomplete } from "@/components/ds/autocomplete";
 import { memo, useMemo, useState } from "react";
+import { Autocomplete } from "@databuddy/ui/client";
 
 interface AutocompleteInputProps {
 	className?: string;

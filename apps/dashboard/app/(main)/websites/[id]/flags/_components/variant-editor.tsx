@@ -2,15 +2,11 @@
 
 import type { Variant } from "@databuddy/shared/flags";
 import { useEffect, useState } from "react";
-import { Button } from "@/components/ds/button";
-import { Checkbox } from "@/components/ds/checkbox";
-import { Field } from "@/components/ds/field";
-import { Input } from "@/components/ds/input";
-import { Select } from "@/components/ds/select";
-import { LineSlider } from "@/components/ds/line-slider";
 import { cn } from "@/lib/utils";
 import type { VariantEditorProps } from "./types";
 import { PlusIcon, TrashIcon } from "@databuddy/ui/icons";
+import { Button, Field, Input } from "@databuddy/ui";
+import { Checkbox, LineSlider, Select } from "@databuddy/ui/client";
 
 export function VariantEditor({
 	variants,

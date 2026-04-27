@@ -2,12 +2,6 @@
 
 import { useState } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
-import { Badge } from "@/components/ds/badge";
-import { Button } from "@/components/ds/button";
-import { Dialog } from "@/components/ds/dialog";
-import { Input } from "@/components/ds/input";
-import { Switch } from "@/components/ds/switch";
-import { Textarea } from "@/components/ds/textarea";
 import {
 	ANNOTATION_COLORS,
 	COMMON_ANNOTATION_TAGS,
@@ -22,6 +16,8 @@ import { cn } from "@/lib/utils";
 import type { Annotation, AnnotationFormData } from "@/types/annotations";
 import { XIcon } from "@phosphor-icons/react/dist/ssr";
 import { EyeIcon, EyeSlashIcon, PlusIcon } from "@databuddy/ui/icons";
+import { Badge, Button, Input, Textarea } from "@databuddy/ui";
+import { Dialog, Switch } from "@databuddy/ui/client";
 
 interface EditModeProps {
 	annotation: Annotation;

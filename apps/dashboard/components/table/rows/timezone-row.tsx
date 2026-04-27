@@ -1,8 +1,7 @@
 import type { CellContext, ColumnDef } from "@tanstack/react-table";
-import { PercentageBadge } from "@/components/ds/badge";
-import { dayjs } from "@databuddy/ui";
 import { formatNumber } from "@/lib/formatters";
 import { ClockIcon } from "@databuddy/ui/icons";
+import { PercentageBadge, dayjs } from "@databuddy/ui";
 
 export interface TimezoneEntry {
 	name: string;

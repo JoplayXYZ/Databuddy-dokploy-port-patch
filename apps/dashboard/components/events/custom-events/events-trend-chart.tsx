@@ -4,9 +4,6 @@ import dynamic from "next/dynamic";
 import { useCallback, useMemo, useState } from "react";
 import { METRIC_COLORS } from "@/components/charts/metrics-constants";
 import { useDynamicDasharray } from "@/components/charts/use-dynamic-dasharray";
-import { Badge } from "@/components/ds/badge";
-import { Button } from "@/components/ds/button";
-import { SegmentedControl } from "@/components/ds/segmented-control";
 import { TableEmptyState } from "@/components/table/table-empty-state";
 import { Chart } from "@/components/ui/composables/chart";
 import {
@@ -25,6 +22,7 @@ import {
 	LightningIcon,
 	ListBulletsIcon,
 } from "@databuddy/ui/icons";
+import { Badge, Button, SegmentedControl } from "@databuddy/ui";
 
 const {
 	Area,

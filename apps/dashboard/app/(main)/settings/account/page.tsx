@@ -13,24 +13,23 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Avatar } from "@/components/ds/avatar";
-import { Badge } from "@/components/ds/badge";
-import { Button } from "@/components/ds/button";
-import { Card } from "@/components/ds/card";
-import { Dialog } from "@/components/ds/dialog";
-import { Divider } from "@/components/ds/divider";
-import { Field } from "@/components/ds/field";
-import { Input } from "@/components/ds/input";
+import { TwoFactorDialog } from "./sections/two-factor-dialog";
+import { Avatar, Dialog } from "@databuddy/ui/client";
 import {
-	Skeleton,
-	SettingCardGroup,
+	Badge,
+	Button,
+	Card,
+	Divider,
+	Field,
+	Input,
 	SettingCard,
+	SettingCardGroup,
 	SettingsZone,
 	SettingsZoneRow,
+	Skeleton,
+	Text,
 	dayjs,
 } from "@databuddy/ui";
-import { Text } from "@/components/ds/text";
-import { TwoFactorDialog } from "./sections/two-factor-dialog";
 
 interface Account {
 	accountId: string;

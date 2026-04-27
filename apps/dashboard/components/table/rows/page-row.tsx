@@ -1,7 +1,7 @@
 import type { CellContext, ColumnDef } from "@tanstack/react-table";
-import { PercentageBadge } from "@/components/ds/badge";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { formatNumber } from "@/lib/formatters";
+import { PercentageBadge } from "@databuddy/ui";
 
 export interface PageEntry {
 	name: string;

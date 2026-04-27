@@ -5,17 +5,10 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { type ReactNode, useState } from "react";
 import { toast } from "sonner";
-import { EmptyState } from "@/components/ds/empty-state";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { FeatureLockedPanel } from "@/components/feature-access-gate";
 import { PageNavigation } from "@/components/layout/page-navigation";
 import { TransferToOrgDialog } from "@/components/transfer-to-org-dialog";
-import { Button, buttonVariants } from "@/components/ds/button";
-import { Card } from "@/components/ds/card";
-import { DeleteDialog } from "@/components/ds/delete-dialog";
-import { Field } from "@/components/ds/field";
-import { Skeleton } from "@databuddy/ui";
-import { Switch } from "@/components/ds/switch";
 import { useFeatureAccess } from "@/hooks/use-feature-access";
 import { getStatusPageUrl } from "@/lib/app-url";
 import { orpc } from "@/lib/orpc";
@@ -34,6 +27,15 @@ import {
 	PlusIcon,
 	SirenIcon,
 } from "@databuddy/ui/icons";
+import { DeleteDialog, Switch } from "@databuddy/ui/client";
+import {
+	Button,
+	Card,
+	EmptyState,
+	Field,
+	Skeleton,
+	buttonVariants,
+} from "@databuddy/ui";
 
 type Tab = "monitors" | "incidents";
 

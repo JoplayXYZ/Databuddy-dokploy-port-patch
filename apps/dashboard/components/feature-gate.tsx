@@ -9,8 +9,6 @@ import {
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { useBillingContext } from "@/components/providers/billing-provider";
-import { Button } from "@/components/ds/button";
-import { Card } from "@/components/ds/card";
 import { cn } from "@/lib/utils";
 import {
 	ArrowRightIcon,
@@ -20,6 +18,7 @@ import {
 	RocketLaunchIcon,
 	StarIcon,
 } from "@databuddy/ui/icons";
+import { Button, Card } from "@databuddy/ui";
 
 const PLAN_CONFIG: Record<
 	string,

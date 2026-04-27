@@ -7,7 +7,6 @@ import { parseAsBoolean, useQueryState } from "nuqs";
 import { useEffect } from "react";
 import { toast } from "sonner";
 import { LiveUserIndicator } from "@/components/analytics";
-import { Button } from "@/components/ds/button";
 import { TopBar } from "@/components/layout/top-bar";
 import { WebsiteErrorState } from "@/components/website-error-state";
 import {
@@ -26,6 +25,7 @@ import { AddFilterForm } from "./_components/filters/add-filters";
 import { WebsiteTrackingSetupTab } from "./_components/tabs/tracking-setup-tab";
 import { useTrackingSetup } from "./hooks/use-tracking-setup";
 import { ArrowClockwiseIcon } from "@databuddy/ui/icons";
+import { Button } from "@databuddy/ui";
 
 const NO_TOOLBAR_ROUTES = [
 	"/assistant",

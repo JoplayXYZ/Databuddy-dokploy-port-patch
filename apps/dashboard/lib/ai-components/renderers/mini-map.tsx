@@ -4,9 +4,9 @@ import type { LocationData } from "@databuddy/shared/types/website";
 import dynamic from "next/dynamic";
 import { useMemo } from "react";
 import { CountryFlag } from "@/components/icon";
-import { Card } from "@/components/ds/card";
 import type { BaseComponentProps } from "../types";
 import { GlobeIcon } from "@databuddy/ui/icons";
+import { Card } from "@databuddy/ui";
 
 const MapComponent = dynamic(
 	() =>

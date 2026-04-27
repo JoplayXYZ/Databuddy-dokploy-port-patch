@@ -4,10 +4,6 @@ import { authClient } from "@databuddy/auth/client";
 import { useTheme } from "next-themes";
 import { useRouter } from "next/navigation";
 import { type ReactNode, useState } from "react";
-import { Avatar } from "@/components/ds/avatar";
-import { DropdownMenu } from "@/components/ds/dropdown-menu";
-import { Skeleton } from "@databuddy/ui";
-import { Tooltip } from "@databuddy/ui";
 import {
 	BugIcon,
 	CalendarIcon,
@@ -21,6 +17,8 @@ import {
 } from "@databuddy/ui/icons";
 import { cn } from "@/lib/utils";
 import { getInitials, ProfileDropdownContent } from "./profile-button-client";
+import { Avatar, DropdownMenu } from "@databuddy/ui/client";
+import { Skeleton, Tooltip } from "@databuddy/ui";
 
 const THEMES = [
 	{ value: "light", icon: SunIcon, label: "Light" },

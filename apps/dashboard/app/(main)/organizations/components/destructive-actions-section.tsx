@@ -1,17 +1,20 @@
 "use client";
 
 import { authClient } from "@databuddy/auth/client";
-import { SettingsZone, SettingsZoneRow } from "@databuddy/ui";
-import { Button } from "@/components/ds/button";
-import { Card } from "@/components/ds/card";
-import { Dialog } from "@/components/ds/dialog";
-import { Field } from "@/components/ds/field";
-import { Input } from "@/components/ds/input";
 import { type Organization, useOrganizations } from "@/hooks/use-organizations";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { TransferAssets } from "./transfer-assets";
+import { Dialog } from "@databuddy/ui/client";
+import {
+	Button,
+	Card,
+	Field,
+	Input,
+	SettingsZone,
+	SettingsZoneRow,
+} from "@databuddy/ui";
 
 export function DestructiveActionsSection({
 	organization,

@@ -6,10 +6,6 @@ import { useAtom } from "jotai";
 import { useParams, usePathname } from "next/navigation";
 import { useCallback, useMemo } from "react";
 import { PageNavigation } from "@/components/layout/page-navigation";
-import { Badge } from "@/components/ds/badge";
-import { Skeleton } from "@databuddy/ui";
-import { Tooltip } from "@databuddy/ui";
-import { useHydrated } from "@databuddy/ui";
 import { orpc } from "@/lib/orpc";
 import { isAnalyticsRefreshingAtom } from "@/stores/jotai/filterAtoms";
 import {
@@ -17,7 +13,6 @@ import {
 	isGroupSheetOpenAtom,
 } from "@/stores/jotai/flagsAtoms";
 import { TopBar } from "@/components/layout/top-bar";
-import { Button } from "@/components/ds/button";
 import { cn } from "@/lib/utils";
 import { HARDCODED_TEMPLATES } from "./templates/_data/templates";
 import {
@@ -29,6 +24,7 @@ import {
 	PlusIcon,
 	UsersThreeIcon,
 } from "@databuddy/ui/icons";
+import { Badge, Button, Skeleton, Tooltip, useHydrated } from "@databuddy/ui";
 
 export default function FlagsLayout({
 	children,

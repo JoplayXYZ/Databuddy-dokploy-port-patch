@@ -2,13 +2,6 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { Badge } from "@/components/ds/badge";
-import { Button } from "@/components/ds/button";
-import { Card } from "@/components/ds/card";
-import { DropdownMenu } from "@/components/ds/dropdown-menu";
-import { EmptyState } from "@/components/ds/empty-state";
-import { Skeleton } from "@databuddy/ui";
-import { Text } from "@/components/ds/text";
 import {
 	BookOpenIcon,
 	BugIcon,
@@ -19,10 +12,19 @@ import {
 	LightbulbIcon,
 	WrenchIcon,
 } from "@databuddy/ui/icons";
-import { dayjs } from "@databuddy/ui";
 import { orpc } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
 import { FeedbackStatusBadge } from "./feedback-status-badge";
+import { DropdownMenu } from "@databuddy/ui/client";
+import {
+	Badge,
+	Button,
+	Card,
+	EmptyState,
+	Skeleton,
+	Text,
+	dayjs,
+} from "@databuddy/ui";
 
 const CATEGORY_CONFIG: Record<
 	string,

@@ -1,11 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { Badge } from "@/components/ds/badge";
-import { Button } from "@/components/ds/button";
-import { Dialog } from "@/components/ds/dialog";
-import { Textarea } from "@/components/ds/textarea";
-import { dayjs } from "@databuddy/ui";
 import { cn } from "@/lib/utils";
 import {
 	ArrowLeftIcon,
@@ -17,6 +12,8 @@ import {
 	SmileyIcon,
 	WarningCircleIcon,
 } from "@databuddy/ui/icons";
+import { Dialog } from "@databuddy/ui/client";
+import { Badge, Button, Textarea, dayjs } from "@databuddy/ui";
 
 interface CancelSubscriptionDialogProps {
 	currentPeriodEnd?: number;

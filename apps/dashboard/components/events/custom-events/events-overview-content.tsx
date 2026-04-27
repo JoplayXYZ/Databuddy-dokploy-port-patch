@@ -2,9 +2,6 @@
 
 import type { DateRange } from "@databuddy/shared/types/analytics";
 import type { ReactNode } from "react";
-import { Card } from "@/components/ds/card";
-import { EmptyState } from "@/components/ds/empty-state";
-import { Skeleton } from "@databuddy/ui";
 import { useChartPreferences } from "@/hooks/use-chart-preferences";
 import { cn } from "@/lib/utils";
 import { ArrowClockwiseIcon, LightningIcon } from "@databuddy/ui/icons";
@@ -13,6 +10,7 @@ import { EventsTrendChart } from "./events-trend-chart";
 import { PropertySummary } from "./property-summary";
 import { useCustomEventsOverview } from "./use-custom-events-overview";
 import type { CustomEventsMetricKey } from "./types";
+import { Card, EmptyState, Skeleton } from "@databuddy/ui";
 
 interface CustomEventsQueryState {
 	error?: Error | null;

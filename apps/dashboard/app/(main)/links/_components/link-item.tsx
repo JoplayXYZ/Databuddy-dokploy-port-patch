@@ -1,12 +1,7 @@
 "use client";
 
 import { FaviconImage } from "@/components/analytics/favicon-image";
-import { DropdownMenu } from "@/components/ds/dropdown-menu";
-import { EmptyState } from "@/components/ds/empty-state";
-import { Skeleton } from "@databuddy/ui";
-import { Tooltip } from "@databuddy/ui";
 import type { Link } from "@/hooks/use-links";
-import { fromNow, localDayjs } from "@databuddy/ui";
 import { cn } from "@/lib/utils";
 import { getDeepLinkApp } from "@databuddy/shared/constants/deep-link-apps";
 import NextLink from "next/link";
@@ -22,6 +17,14 @@ import {
 	PencilSimpleIcon,
 	TrashIcon,
 } from "@databuddy/ui/icons";
+import { DropdownMenu } from "@databuddy/ui/client";
+import {
+	EmptyState,
+	Skeleton,
+	Tooltip,
+	fromNow,
+	localDayjs,
+} from "@databuddy/ui";
 
 function copyShortUrl(slug: string) {
 	navigator.clipboard

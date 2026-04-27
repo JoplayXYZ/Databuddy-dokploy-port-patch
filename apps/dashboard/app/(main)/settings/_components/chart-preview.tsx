@@ -1,8 +1,8 @@
 "use client";
 
-import { Card } from "@/components/ds/card";
 import { Chart } from "@/components/ui/composables/chart";
 import { cn } from "@/lib/utils";
+import { Card } from "@databuddy/ui";
 
 const previewData = [
 	{ date: "Mon", value: 186 },

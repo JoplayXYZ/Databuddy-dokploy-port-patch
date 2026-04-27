@@ -9,11 +9,11 @@ import {
 	useRef,
 	useState,
 } from "react";
-import { Button } from "@/components/ds/button";
 import { MagnifyingGlassIcon } from "@databuddy/ui/icons";
 import { useCommandSearchOpenAction } from "@/components/ui/command-search";
 import { PendingInvitationsButton } from "./pending-invitations-button";
 import { SidebarTrigger } from "./sidebar-layout";
+import { Button } from "@databuddy/ui";
 
 type SlotMap = Map<string, ReactNode>;
 type Listener = () => void;

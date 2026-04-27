@@ -1,12 +1,12 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ds/button";
 import {
 	ArrowCounterClockwiseIcon,
 	HouseIcon,
 	WarningCircleIcon,
 } from "@databuddy/ui/icons";
+import { Button } from "@databuddy/ui";
 
 export default function WebsiteError({
 	error,

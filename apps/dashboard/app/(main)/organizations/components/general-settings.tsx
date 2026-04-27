@@ -8,10 +8,6 @@ import {
 } from "@databuddy/ui/icons";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Button } from "@/components/ds/button";
-import { Card } from "@/components/ds/card";
-import { Field } from "@/components/ds/field";
-import { Input } from "@/components/ds/input";
 import { TopBar } from "@/components/layout/top-bar";
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
 import { type Organization, useOrganizations } from "@/hooks/use-organizations";
@@ -19,6 +15,7 @@ import { ApiKeysSection } from "./api-keys-section";
 import { DestructiveActionsSection } from "./destructive-actions-section";
 import { OrganizationAvatarEditor } from "./organization-avatar-editor";
 import { WorkspaceWebsitesSection } from "./workspace-websites-section";
+import { Button, Card, Field, Input } from "@databuddy/ui";
 
 export function GeneralSettings({
 	organization,

@@ -2,13 +2,6 @@
 
 import type { Invoice } from "autumn-js";
 import { memo, useMemo, useState } from "react";
-import { Badge } from "@/components/ds/badge";
-import { Button } from "@/components/ds/button";
-import { Card } from "@/components/ds/card";
-import { EmptyState } from "@/components/ds/empty-state";
-import { Skeleton } from "@databuddy/ui";
-import { Text } from "@/components/ds/text";
-import { dayjs } from "@databuddy/ui";
 import { cn } from "@/lib/utils";
 import { ErrorState } from "../components/empty-states";
 import { useBilling, useBillingData } from "../hooks/use-billing";
@@ -22,6 +15,15 @@ import {
 	ReceiptIcon,
 	XCircleIcon,
 } from "@databuddy/ui/icons";
+import {
+	Badge,
+	Button,
+	Card,
+	EmptyState,
+	Skeleton,
+	Text,
+	dayjs,
+} from "@databuddy/ui";
 
 const PAGE_SIZE = 10;
 

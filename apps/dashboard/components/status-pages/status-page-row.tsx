@@ -5,10 +5,6 @@ import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
 import { TransferToOrgDialog } from "@/components/transfer-to-org-dialog";
-import { Badge } from "@/components/ds/badge";
-import { DropdownMenu } from "@/components/ds/dropdown-menu";
-import { Field } from "@/components/ds/field";
-import { Switch } from "@/components/ds/switch";
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
 import { getStatusPageUrl } from "@/lib/app-url";
 import { orpc } from "@/lib/orpc";
@@ -21,6 +17,8 @@ import {
 	PencilSimpleIcon,
 	TrashIcon,
 } from "@databuddy/ui/icons";
+import { Badge, Field } from "@databuddy/ui";
+import { DropdownMenu, Switch } from "@databuddy/ui/client";
 
 export interface StatusPage {
 	createdAt: Date | string;

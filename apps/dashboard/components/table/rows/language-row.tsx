@@ -1,7 +1,7 @@
 import type { CellContext, ColumnDef } from "@tanstack/react-table";
-import { PercentageBadge } from "@/components/ds/badge";
 import { formatNumber } from "@/lib/formatters";
 import { TranslateIcon } from "@databuddy/ui/icons";
+import { PercentageBadge } from "@databuddy/ui";
 
 export interface LanguageEntry {
 	code?: string;

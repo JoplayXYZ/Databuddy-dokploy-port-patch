@@ -1,9 +1,8 @@
 "use client";
 
-import { EmptyState } from "@/components/ds/empty-state";
 import { Chart } from "@/components/ui/composables/chart";
-import { dayjs } from "@databuddy/ui";
 import { ChartLineIcon } from "@databuddy/ui/icons";
+import { EmptyState, dayjs } from "@databuddy/ui";
 
 export interface ChartDataPoint {
 	clicks: number;

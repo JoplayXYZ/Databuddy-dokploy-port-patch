@@ -1,10 +1,5 @@
 "use client";
 
-import { Button } from "@/components/ds/button";
-import { Card } from "@/components/ds/card";
-import { DeleteDialog } from "@/components/ds/delete-dialog";
-import { DropdownMenu } from "@/components/ds/dropdown-menu";
-import { EmptyState } from "@/components/ds/empty-state";
 import { ErrorBoundary } from "@/components/error-boundary";
 import {
 	type Link,
@@ -40,6 +35,8 @@ import {
 	PlusIcon,
 	RocketIcon,
 } from "@databuddy/ui/icons";
+import { Button, Card, EmptyState } from "@databuddy/ui";
+import { DeleteDialog, DropdownMenu } from "@databuddy/ui/client";
 
 export default function LinksPage() {
 	const [sheetLink, setSheetLink] = useState<Link | null>(null);
