@@ -42,7 +42,7 @@ export function TransferWebsiteDialog({
 		(org: Organization) => org.id === website.organizationId
 	) || {
 		id: website.organizationId,
-		name: "Current Workspace",
+		name: "Current Organization",
 		slug: "",
 		logo: null as string | null,
 		createdAt: new Date(),
@@ -209,14 +209,14 @@ export function TransferWebsiteDialog({
 				<Dialog.Header>
 					<Dialog.Title>Transfer Website</Dialog.Title>
 					<Dialog.Description>
-						Move "{website.name || website.domain}" to a different workspace
+						Move "{website.name || website.domain}" to a different organization
 					</Dialog.Description>
 				</Dialog.Header>
 
 				<Dialog.Body className="space-y-4">
 					<div className="space-y-2">
 						<span className="font-medium text-foreground text-xs">
-							Current Workspace
+							Current Organization
 						</span>
 						<div className="flex items-center gap-2.5 rounded border bg-secondary p-2.5">
 							<img
@@ -246,8 +246,8 @@ export function TransferWebsiteDialog({
 								{selectedOrgId
 									? (availableOrgs.find(
 											(org: Organization) => org.id === selectedOrgId
-										)?.name ?? "Choose a workspace")
-									: "Choose a workspace"}
+										)?.name ?? "Choose an organization")
+									: "Choose an organization"}
 							</DropdownMenu.Trigger>
 							<DropdownMenu.Content
 								align="start"
@@ -275,7 +275,7 @@ export function TransferWebsiteDialog({
 									</DropdownMenu.RadioGroup>
 								) : (
 									<div className="px-2.5 py-2 text-muted-foreground text-sm">
-										No workspaces available
+										No organizations available
 									</div>
 								)}
 							</DropdownMenu.Content>
@@ -286,8 +286,8 @@ export function TransferWebsiteDialog({
 						<div className="flex items-start gap-2 rounded border border-orange-200 bg-orange-50 p-3 text-orange-800 dark:border-orange-800 dark:bg-orange-950/20 dark:text-orange-200">
 							<WarningIcon className="mt-0.5 size-4 shrink-0" />
 							<p className="text-xs">
-								No other workspaces available. Create a new workspace or get
-								invited to one to transfer this website.
+								No other organizations available. Create a new organization or
+								get invited to one to transfer this website.
 							</p>
 						</div>
 					)}
