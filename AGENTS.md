@@ -119,6 +119,13 @@ Dashboard (Next.js) ←→ ORPC (rpc package) ←→ API (Elysia) → PostgreSQL
 
 **State management in Dashboard**: Jotai for local UI state, TanStack Query for server state.
 
+**Dashboard design system (`apps/dashboard/components/ds`)**: Dashboard UI must be built from DS primitives. Feature code should not use raw form/control primitives (`button`, `input`, `select`, `textarea`, native dialogs), Base UI, Radix, or one-off styled controls directly. If a needed primitive or variant does not exist, add or extend a DS component first, then consume it from the feature. Raw control elements belong inside `components/ds` implementations only.
+
+For picker controls, use the component that matches the interaction:
+- Use `DropdownMenu` for menu-style folder/status/filter/sort/action pickers.
+- Use `Select` only when the established UI pattern is explicitly a select/combobox.
+- Use `Field` with DS inputs for form labeling, descriptions, errors, ids, and accessibility wiring.
+
 ### Tech Stack
 
 - **Runtime**: Bun 1.3.4+
@@ -136,6 +143,7 @@ Dashboard (Next.js) ←→ ORPC (rpc package) ←→ API (Elysia) → PostgreSQL
 
 - **Linter/Formatter**: Ultracite (Biome-based). Run `bun run lint` / `bun run format`.
 - **TypeScript**: Strict mode. Always use proper types — avoid `any`.
+- **Dashboard UI**: Use `apps/dashboard/components/ds` primitives exactly. Do not hand-roll controls in feature components; extend the DS layer first when the current API is missing something.
 - **Commit format**: `<type>(<scope>): <description>` (e.g., `feat(dashboard): add export button`, `fix(api): handle null session`)
 - **Commit slicing rule**: Prefer one commit per coherent product or technical slice, not one giant snapshot and not ultra-fragmented file-by-file commits.
   - Split commits by intent: feature, bug fix, refactor, style/copy pass, or migration slice.

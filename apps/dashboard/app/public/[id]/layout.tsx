@@ -1,26 +1,17 @@
 "use client";
 
-import { PlanetIcon } from "@phosphor-icons/react";
-import { useQueryClient } from "@tanstack/react-query";
-import { useAtom, useSetAtom } from "jotai";
+import { useSetAtom } from "jotai";
 import { useParams } from "next/navigation";
-import { useCallback, useEffect } from "react";
-import { toast } from "sonner";
+import { useEffect } from "react";
 import { AnalyticsToolbar } from "@/app/(main)/websites/[id]/_components/analytics-toolbar";
 import { publicDashboardMarketingHref } from "@/app/public/public-dashboard-constants";
 import { FaviconImage } from "@/components/analytics/favicon-image";
 import { Branding } from "@/components/logo/branding";
-import { Skeleton } from "@/components/ds/skeleton";
+import { Skeleton } from "@databuddy/ui";
 import { WebsiteErrorState } from "@/components/website-error-state";
-import {
-	batchDynamicQueryKeys,
-	dynamicQueryKeys,
-} from "@/hooks/use-dynamic-query";
 import { useWebsite } from "@/hooks/use-websites";
-import {
-	currentFilterWebsiteIdAtom,
-	isAnalyticsRefreshingAtom,
-} from "@/stores/jotai/filterAtoms";
+import { currentFilterWebsiteIdAtom } from "@/stores/jotai/filterAtoms";
+import { PlanetIcon } from "@databuddy/ui/icons";
 
 const poweredByLabelClass =
 	"shrink-0 text-balance font-medium text-muted-foreground text-sm";
@@ -38,8 +29,6 @@ export default function PublicWebsiteLayout({
 }) {
 	const { id } = useParams();
 	const websiteId = id as string;
-	const queryClient = useQueryClient();
-	const [isRefreshing, setIsRefreshing] = useAtom(isAnalyticsRefreshingAtom);
 	const setCurrentFilterWebsiteId = useSetAtom(currentFilterWebsiteIdAtom);
 
 	useEffect(() => {
@@ -52,24 +41,6 @@ export default function PublicWebsiteLayout({
 		isError: isWebsiteError,
 		error: websiteError,
 	} = useWebsite(websiteId);
-
-	const handleRefresh = useCallback(async () => {
-		setIsRefreshing(true);
-		try {
-			await Promise.all([
-				queryClient.invalidateQueries({ queryKey: ["websites", websiteId] }),
-				queryClient.invalidateQueries({
-					queryKey: dynamicQueryKeys.byWebsite(websiteId),
-				}),
-				queryClient.invalidateQueries({
-					queryKey: batchDynamicQueryKeys.byWebsite(websiteId),
-				}),
-			]);
-		} catch {
-			toast.error("Failed to refresh data");
-		}
-		setIsRefreshing(false);
-	}, [websiteId, queryClient, setIsRefreshing]);
 
 	if (!id) {
 		return (
@@ -142,13 +113,7 @@ export default function PublicWebsiteLayout({
 
 			<div className="shrink-0 bg-background">
 				<div className="mx-auto max-w-screen-2xl">
-					<AnalyticsToolbar
-						isDisabled={isWebsiteLoading}
-						isLoading={isWebsiteLoading}
-						isRefreshing={isRefreshing}
-						onRefreshAction={handleRefresh}
-						websiteId={websiteId}
-					/>
+					<AnalyticsToolbar isDisabled={isWebsiteLoading} />
 				</div>
 			</div>
 

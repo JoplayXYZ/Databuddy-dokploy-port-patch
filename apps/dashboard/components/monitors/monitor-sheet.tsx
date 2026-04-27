@@ -1,6 +1,5 @@
 "use client";
 
-import { InfoIcon } from "@phosphor-icons/react/dist/ssr";
 import { useMutation } from "@tanstack/react-query";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -12,9 +11,10 @@ import { Input } from "@/components/ds/input";
 import { SegmentedControl } from "@/components/ds/segmented-control";
 import { Sheet } from "@/components/ds/sheet";
 import { Switch } from "@/components/ds/switch";
-import { Tooltip } from "@/components/ds/tooltip";
+import { Tooltip } from "@databuddy/ui";
 import { useWebsite } from "@/hooks/use-websites";
 import { orpc } from "@/lib/orpc";
+import { InfoIcon } from "@databuddy/ui/icons";
 
 type GranularityValue =
 	| "minute"

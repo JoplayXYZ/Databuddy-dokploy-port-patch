@@ -19,6 +19,7 @@ export default defineBuildConfig({
 		"@ai-sdk/provider",
 		"@anthropic-ai/sdk",
 		"ai",
+		"bun",
 		"openai",
 		"tokenlens",
 		"uuid",

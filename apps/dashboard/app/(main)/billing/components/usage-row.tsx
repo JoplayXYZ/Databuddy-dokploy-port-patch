@@ -1,8 +1,5 @@
 "use client";
 
-import { ChartBarIcon } from "@phosphor-icons/react/dist/ssr";
-import { DatabaseIcon } from "@phosphor-icons/react/dist/ssr";
-import { UsersIcon } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
 import { memo } from "react";
 import { Badge } from "@/components/ds/badge";
@@ -15,6 +12,7 @@ import {
 	getResetText,
 } from "../utils/feature-usage";
 import { PricingTiersTooltip } from "./pricing-tiers-tooltip";
+import { ChartBarIcon, DatabaseIcon, UsersIcon } from "@databuddy/ui/icons";
 
 function formatCurrency(amount: number): string {
 	if (amount >= 1000) {
@@ -123,7 +121,7 @@ export const UsageRow = memo(function UsageRowComponent({
 				<div className="mt-3 flex items-center gap-3">
 					<Progress
 						className="flex-1"
-						tone={hasOverage ? "danger" : isLow ? "warning" : "primary"}
+						tone={hasOverage ? "destructive" : isLow ? "warning" : "primary"}
 						value={hasOverage ? 100 : usedPercent}
 					/>
 					{(isLow || hasOverage) && !isMaxPlan && (

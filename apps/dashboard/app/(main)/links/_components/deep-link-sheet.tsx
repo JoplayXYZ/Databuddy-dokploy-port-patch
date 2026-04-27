@@ -1,7 +1,6 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowLeftIcon } from "@phosphor-icons/react/dist/ssr";
 import { useCallback, useState } from "react";
 import { Controller, type SubmitHandler, useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -15,19 +14,22 @@ import { Button } from "@/components/ds/button";
 import { Field } from "@/components/ds/field";
 import { Input } from "@/components/ds/input";
 import { Sheet } from "@/components/ds/sheet";
-import { useCreateLink } from "@/hooks/use-links";
+import { useCreateLink, useLinkFolders } from "@/hooks/use-links";
 import { DeepLinkAppIcon } from "./deep-link-icons";
+import { FolderDropdown } from "./folder-dropdown";
 import { LINKS_BASE_URL } from "./link-constants";
 import {
 	mapLinkApiError,
 	normalizeUrlInput,
 	stripProtocol,
 } from "./link-utils";
+import { ArrowLeftIcon } from "@databuddy/ui/icons";
 
 const deepLinkFormSchema = z.object({
 	name: z.string().min(1, "Name is required").max(255),
 	targetUrl: z.string().min(1, "URL is required"),
 	slug: z.string().optional(),
+	folderId: z.string().optional(),
 });
 
 type DeepLinkFormData = z.infer<typeof deepLinkFormSchema>;
@@ -92,11 +94,12 @@ function DeepLinkForm({
 	const { activeOrganization, activeOrganizationId } =
 		useOrganizationsContext();
 	const createLink = useCreateLink();
+	const { folders, isLoading: foldersLoading } = useLinkFolders();
 
 	const form = useForm<DeepLinkFormData>({
 		resolver: zodResolver(deepLinkFormSchema),
 		mode: "onChange",
-		defaultValues: { name: "", targetUrl: "", slug: "" },
+		defaultValues: { name: "", targetUrl: "", slug: "", folderId: "" },
 	});
 
 	const handleSubmit: SubmitHandler<DeepLinkFormData> = async (data) => {
@@ -116,6 +119,7 @@ function DeepLinkForm({
 				name: data.name,
 				targetUrl,
 				slug: data.slug?.trim() || undefined,
+				folderId: data.folderId?.trim() || null,
 				deepLinkApp: app.id,
 			});
 			toast.success("Deep link created");
@@ -167,6 +171,22 @@ function DeepLinkForm({
 							{fieldState.error && (
 								<Field.Error>{fieldState.error.message}</Field.Error>
 							)}
+						</Field>
+					)}
+				/>
+
+				<Controller
+					control={form.control}
+					name="folderId"
+					render={({ field }) => (
+						<Field>
+							<Field.Label>Folder</Field.Label>
+							<FolderDropdown
+								folders={folders}
+								isLoading={foldersLoading}
+								onChange={field.onChange}
+								value={field.value}
+							/>
 						</Field>
 					)}
 				/>

@@ -52,6 +52,9 @@ For vanilla JavaScript, no installation needed - load directly from CDN.
   <Card title="Server Flags" href="/docs/sdk/server-flags">
     Server-side feature flag evaluation for Node.js
   </Card>
+  <Card title="DevTools" href="/docs/sdk/devtools">
+    Local overlay for events, identity, queues, diagnostics, and flags
+  </Card>
   <Card title="Configuration" href="/docs/sdk/configuration">
     All configuration options across platforms
   </Card>
@@ -111,7 +114,8 @@ function SignupButton() {
   {`import { Databuddy } from "@databuddy/sdk/node";
 
 const client = new Databuddy({
-  clientId: process.env.DATABUDDY_CLIENT_ID!,
+  apiKey: process.env.DATABUDDY_API_KEY!,
+  websiteId: process.env.DATABUDDY_WEBSITE_ID,
   enableBatching: true
 });
 

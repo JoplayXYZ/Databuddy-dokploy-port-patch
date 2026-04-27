@@ -4,9 +4,9 @@ import type { DynamicQueryFilter } from "@databuddy/shared/types/api";
 import { createContext, useContext, useMemo } from "react";
 import { useOrganizationsContext } from "@/components/providers/organizations-provider";
 import { useCustomEventsData } from "@/hooks/use-custom-events";
-import { usePersistentState } from "@/hooks/use-persistent-state";
+import { usePersistentState } from "@databuddy/ui";
 import { useWebsitesLight } from "@/hooks/use-websites";
-import dayjs from "@/lib/dayjs";
+import { dayjs } from "@databuddy/ui";
 
 /**
  * "no-website" = events not tied to any website

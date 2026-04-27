@@ -1,9 +1,5 @@
 "use client";
 
-import { DotsThreeIcon } from "@phosphor-icons/react";
-import { HeartbeatIcon } from "@phosphor-icons/react";
-import { PencilIcon } from "@phosphor-icons/react";
-import { TrashIcon } from "@phosphor-icons/react";
 import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -11,6 +7,12 @@ import { Card } from "@/components/ds/card";
 import { GhostTriggerButton } from "@/components/ds/control-shell";
 import { DropdownMenu } from "@/components/ds/dropdown-menu";
 import { orpc } from "@/lib/orpc";
+import {
+	DotsThreeIcon,
+	HeartbeatIcon,
+	PencilIcon,
+	TrashIcon,
+} from "@databuddy/ui/icons";
 
 const granularityLabels: Record<string, string> = {
 	minute: "1m",

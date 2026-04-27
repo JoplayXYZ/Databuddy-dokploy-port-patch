@@ -1,18 +1,20 @@
 "use client";
 
 import type { UsageResponse } from "@databuddy/shared/types/billing";
-import { BugIcon } from "@phosphor-icons/react/dist/ssr";
-import { ChartBarIcon } from "@phosphor-icons/react/dist/ssr";
-import { LightningIcon } from "@phosphor-icons/react/dist/ssr";
-import { LinkIcon } from "@phosphor-icons/react/dist/ssr";
-import { TagIcon } from "@phosphor-icons/react/dist/ssr";
-import { TableIcon } from "@phosphor-icons/react/dist/ssr";
 import { Badge } from "@/components/ds/badge";
 import { Card } from "@/components/ds/card";
 import { EmptyState } from "@/components/ds/empty-state";
-import { Skeleton } from "@/components/ds/skeleton";
+import { Skeleton } from "@databuddy/ui";
 import { Text } from "@/components/ds/text";
 import { calculateOverageCost, type OverageInfo } from "../utils/billing-utils";
+import {
+	BugIcon,
+	ChartBarIcon,
+	LightningIcon,
+	LinkIcon,
+	TableIcon,
+	TagIcon,
+} from "@databuddy/ui/icons";
 
 const EVENT_TYPE_CONFIG = {
 	event: {

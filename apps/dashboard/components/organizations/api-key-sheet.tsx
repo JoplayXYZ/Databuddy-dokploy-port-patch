@@ -2,20 +2,6 @@
 
 import { API_SCOPES, type ApiScope } from "@databuddy/api-keys/scopes";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-	ArrowsClockwiseIcon,
-	CheckCircleIcon,
-	ClockIcon,
-	CopyIcon,
-	GaugeIcon,
-	GlobeIcon,
-	KeyIcon,
-	LockKeyIcon,
-	ProhibitIcon,
-	ShieldCheckIcon,
-	TrashIcon,
-	WarningDiamondIcon,
-} from "@phosphor-icons/react/dist/ssr";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -36,10 +22,26 @@ import { TagsInput } from "@/components/ds/tags-input";
 import { Text } from "@/components/ds/text";
 import { Textarea } from "@/components/ds/textarea";
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
-import dayjs from "@/lib/dayjs";
+import { dayjs } from "@databuddy/ui";
 import { orpc } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
 import { type ApiKeyListItem, SCOPE_OPTIONS } from "./api-key-types";
+import {
+	KeyIcon,
+	LockKeyIcon,
+	ShieldCheckIcon,
+	WarningDiamondIcon,
+} from "@phosphor-icons/react/dist/ssr";
+import {
+	ArrowsClockwiseIcon,
+	CheckCircleIcon,
+	ClockIcon,
+	CopyIcon,
+	GaugeIcon,
+	GlobeIcon,
+	ProhibitIcon,
+	TrashIcon,
+} from "@databuddy/ui/icons";
 
 interface ApiKeySheetProps {
 	apiKey: ApiKeyListItem | null;
@@ -889,7 +891,7 @@ export function ApiKeySheet({
 													weight="duotone"
 												/>
 												<Text className="text-destructive" variant="label">
-													Danger zone
+													Destructive actions
 												</Text>
 											</Accordion.Trigger>
 											<Accordion.Content className="bg-destructive/5">
@@ -917,7 +919,7 @@ export function ApiKeySheet({
 																loading={revokeMutation.isPending}
 																onClick={() => setShowRevokeConfirm(true)}
 																size="sm"
-																tone="danger"
+																tone="destructive"
 																type="button"
 																variant="secondary"
 															>
@@ -934,7 +936,7 @@ export function ApiKeySheet({
 															<Button
 																onClick={() => setShowDeleteConfirm(true)}
 																size="sm"
-																tone="danger"
+																tone="destructive"
 																type="button"
 																variant="secondary"
 															>
@@ -990,7 +992,7 @@ export function ApiKeySheet({
 								<Button
 									loading={deleteMutation.isPending}
 									onClick={() => deleteMutation.mutate({ id: apiKey.id })}
-									tone="danger"
+									tone="destructive"
 								>
 									Delete
 								</Button>
@@ -1057,7 +1059,7 @@ export function ApiKeySheet({
 											{ onSettled: () => setShowRevokeConfirm(false) }
 										);
 									}}
-									tone="danger"
+									tone="destructive"
 								>
 									Revoke
 								</Button>

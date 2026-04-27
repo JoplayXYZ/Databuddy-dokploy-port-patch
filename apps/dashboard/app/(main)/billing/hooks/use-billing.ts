@@ -1,7 +1,7 @@
 import { useCustomer, useListPlans } from "autumn-js/react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import dayjs from "@/lib/dayjs";
+import { dayjs } from "@databuddy/ui";
 import { trackCancelFeedbackAction } from "../actions/cancel-feedback-action";
 import type { CancelFeedback } from "../components/cancel-subscription-dialog";
 import {

@@ -1,16 +1,16 @@
 "use client";
 
-import { ClockIcon, CodeIcon, GlobeIcon } from "@phosphor-icons/react";
 import { useCallback, useMemo, useState } from "react";
-import { Tooltip } from "@/components/ds/tooltip";
+import { Tooltip } from "@databuddy/ui";
 import { BrowserIcon, CountryFlag, OSIcon } from "@/components/icon";
 import { DataTable } from "@/components/table/data-table";
-import dayjs from "@/lib/dayjs";
-import { formatDateTime } from "@/lib/time";
+import { dayjs } from "@databuddy/ui";
+import { formatDateTime } from "@databuddy/ui";
 import { ErrorDetailModal } from "./error-detail-modal";
 import { getDeviceIcon, getErrorTypeIcon } from "./error-icons";
 import type { RecentError } from "./types";
 import { getErrorCategory } from "./utils";
+import { ClockIcon, CodeIcon, GlobeIcon } from "@databuddy/ui/icons";
 
 interface Props {
 	isLoading?: boolean;

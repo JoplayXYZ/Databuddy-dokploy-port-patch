@@ -187,7 +187,7 @@ if (tracker) {
   // Access tracker methods directly
   tracker.track("event", { prop: "value" });
   tracker.setGlobalProperties({ plan: "premium" });
-  tracker.screenView("/dashboard");
+  tracker.screenView({ section: "dashboard" });
 }`}
 </CodeBlock>
 
@@ -228,13 +228,13 @@ Pass tracking IDs to your backend for server-side event attribution:
 
 const { anonId, sessionId } = getTrackingIds();
 
-await fetch("/api/purchase", {
+await fetch("/api/projects", {
   method: "POST",
+  headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
     anonId,
     sessionId,
-    orderId: "ORD-123",
-    total: 99.99
+    projectType: "template"
   })
 });`}
 </CodeBlock>
@@ -242,17 +242,23 @@ await fetch("/api/purchase", {
 <CodeBlock language="tsx" filename="Server-side (Node SDK)">
   {`import { Databuddy } from "@databuddy/sdk/node";
 
-const client = new Databuddy({ clientId: process.env.DATABUDDY_CLIENT_ID! });
+const client = new Databuddy({
+  apiKey: process.env.DATABUDDY_API_KEY!,
+  websiteId: process.env.DATABUDDY_WEBSITE_ID!
+});
 
 export async function POST(request: Request) {
-  const { anonId, sessionId, orderId, total } = await request.json();
+  const { anonId, sessionId, projectType } = await request.json();
   
   await client.track({
-    name: "purchase_completed",
+    name: "project_created",
     anonymousId: anonId,
     sessionId: sessionId,
-    properties: { orderId, total }
+    properties: { project_type: projectType },
+    source: "server"
   });
+
+  await client.flush();
   
   return Response.json({ success: true });
 }`}

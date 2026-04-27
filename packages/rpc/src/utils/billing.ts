@@ -2,7 +2,7 @@ import { and, db, eq } from "@databuddy/db";
 import { member } from "@databuddy/db/schema";
 import { cacheable } from "@databuddy/redis";
 import { getAutumn } from "../lib/autumn-client";
-import { logger } from "../lib/logger";
+import { logger, record } from "../lib/logger";
 
 export interface BillingOwner {
 	canUserUpgrade: boolean;
@@ -48,64 +48,61 @@ export async function getBillingCustomerId(
 	return orgOwnerId ?? userId;
 }
 
-export async function getBillingOwner(
-	userId: string,
-	organizationId: string | null | undefined
-): Promise<BillingOwner> {
-	let customerId = userId;
-	let isOrganization = false;
-	let canUserUpgrade = true;
-
-	if (organizationId) {
-		const [orgOwnerResult, currentUserMember] = await Promise.all([
-			db
-				.select({ ownerId: member.userId })
-				.from(member)
-				.where(
-					and(
-						eq(member.organizationId, organizationId),
-						eq(member.role, "owner")
-					)
-				)
-				.limit(1),
-			db
-				.select({ role: member.role })
-				.from(member)
-				.where(
-					and(
-						eq(member.organizationId, organizationId),
-						eq(member.userId, userId)
-					)
-				)
-				.limit(1),
-		]);
-
-		const orgOwner = orgOwnerResult.at(0);
-		if (orgOwner) {
-			customerId = orgOwner.ownerId;
-			isOrganization = true;
-			const role = currentUserMember.at(0)?.role;
-			canUserUpgrade =
-				orgOwner.ownerId === userId || role === "admin" || role === "owner";
-		}
-	}
-
-	let planId = "free";
-	try {
-		const customer = await getAutumn().customers.getOrCreate({
-			customerId,
+const getMemberRole = cacheable(
+	async (userId: string, organizationId: string): Promise<string | null> => {
+		const row = await db.query.member.findFirst({
+			where: and(
+				eq(member.organizationId, organizationId),
+				eq(member.userId, userId)
+			),
+			columns: { role: true },
 		});
+		return row?.role ?? null;
+	},
+	{ expireInSec: 120, prefix: "rpc:member_role" }
+);
 
-		const subs = customer.subscriptions;
-		const activeSub =
-			subs.find((s) => s.status === "active" && s.addOn === false) ??
-			subs.find((s) => s.status === "active");
-		if (activeSub?.planId) {
-			planId = String(activeSub.planId).toLowerCase();
+export const getBillingOwner = cacheable(
+	async (
+		userId: string,
+		organizationId: string | null | undefined
+	): Promise<BillingOwner> => {
+		let customerId = userId;
+		let isOrganization = false;
+		let canUserUpgrade = true;
+
+		if (organizationId) {
+			const [ownerId, role] = await Promise.all([
+				getOrganizationOwnerId(organizationId),
+				getMemberRole(userId, organizationId),
+			]);
+
+			if (ownerId) {
+				customerId = ownerId;
+				isOrganization = true;
+				canUserUpgrade =
+					ownerId === userId || role === "admin" || role === "owner";
+			}
 		}
-	} catch {
-		planId = "free";
-	}
 
-	return { customerId, isOrganization, canUserUpgrade, planId };
-}
+		let planId = "free";
+		try {
+			const customer = await record("autumn.getOrCreate", () =>
+				getAutumn().customers.getOrCreate({ customerId })
+			);
+
+			const subs = customer.subscriptions;
+			const activeSub =
+				subs.find((s) => s.status === "active" && s.addOn === false) ??
+				subs.find((s) => s.status === "active");
+			if (activeSub?.planId) {
+				planId = String(activeSub.planId).toLowerCase();
+			}
+		} catch {
+			planId = "free";
+		}
+
+		return { customerId, isOrganization, canUserUpgrade, planId };
+	},
+	{ expireInSec: 60, prefix: "rpc:billing_owner" }
+);

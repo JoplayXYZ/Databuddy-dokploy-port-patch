@@ -3,7 +3,7 @@ export interface DatabuddyConfig {
 	apiUrl?: string;
 	/** Events per batch before sending (default: 10, max: 50). Only used when `enableBatching` is true. */
 	batchSize?: number;
-	/** Batch flush interval in ms (default: 2000). Only used when `enableBatching` is true. */
+	/** Batch flush interval in ms (default: 5000). Only used when `enableBatching` is true. */
 	batchTimeout?: number;
 	/** Project client ID. Auto-detected from `NEXT_PUBLIC_DATABUDDY_CLIENT_ID` env var if omitted. */
 	clientId?: string;

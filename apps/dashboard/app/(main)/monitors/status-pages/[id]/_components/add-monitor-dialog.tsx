@@ -1,9 +1,6 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { HeartbeatIcon } from "@phosphor-icons/react/dist/ssr";
-import { ListIcon } from "@phosphor-icons/react/dist/ssr";
-import { PlusIcon } from "@phosphor-icons/react/dist/ssr";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -17,6 +14,7 @@ import { Field } from "@/components/ds/field";
 import { Input } from "@/components/ds/input";
 import { orpc } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
+import { HeartbeatIcon, ListIcon, PlusIcon } from "@databuddy/ui/icons";
 
 type Mode = "existing" | "create";
 

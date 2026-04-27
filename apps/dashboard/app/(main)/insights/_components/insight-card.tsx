@@ -1,22 +1,5 @@
 "use client";
 
-import { ArrowRightIcon } from "@phosphor-icons/react/dist/ssr/ArrowRight";
-import { BugIcon } from "@phosphor-icons/react/dist/ssr/Bug";
-import { CaretDownIcon } from "@phosphor-icons/react/dist/ssr/CaretDown";
-import { ChartLineUpIcon } from "@phosphor-icons/react/dist/ssr/ChartLineUp";
-import { CopyIcon } from "@phosphor-icons/react/dist/ssr/Copy";
-import { DotsThreeIcon } from "@phosphor-icons/react/dist/ssr/DotsThree";
-import { GaugeIcon } from "@phosphor-icons/react/dist/ssr/Gauge";
-import { LightbulbFilamentIcon } from "@phosphor-icons/react/dist/ssr/LightbulbFilament";
-import { LightningIcon } from "@phosphor-icons/react/dist/ssr/Lightning";
-import { LinkIcon } from "@phosphor-icons/react/dist/ssr/Link";
-import { RocketIcon } from "@phosphor-icons/react/dist/ssr/Rocket";
-import { ThumbsDownIcon } from "@phosphor-icons/react/dist/ssr/ThumbsDown";
-import { ThumbsUpIcon } from "@phosphor-icons/react/dist/ssr/ThumbsUp";
-import { TrendDownIcon } from "@phosphor-icons/react/dist/ssr/TrendDown";
-import { TrendUpIcon } from "@phosphor-icons/react/dist/ssr/TrendUp";
-import { WarningCircleIcon } from "@phosphor-icons/react/dist/ssr/WarningCircle";
-import { XIcon } from "@phosphor-icons/react/dist/ssr/X";
 import Link from "next/link";
 import { type ReactNode, useMemo } from "react";
 import { toast } from "sonner";
@@ -30,7 +13,7 @@ import {
 } from "@/app/(main)/insights/lib/insight-meta";
 import { InsightMetrics } from "@/components/insight-metrics";
 import { DropdownMenu } from "@/components/ds/dropdown-menu";
-import { Skeleton } from "@/components/ds/skeleton";
+import { Skeleton } from "@databuddy/ui";
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
 import {
 	changePercentChipClassName,
@@ -42,6 +25,25 @@ import type {
 	InsightType,
 } from "@/lib/insight-types";
 import { cn } from "@/lib/utils";
+import { XIcon } from "@phosphor-icons/react/dist/ssr";
+import {
+	ArrowRightIcon,
+	BugIcon,
+	CaretDownIcon,
+	ChartLineUpIcon,
+	CopyIcon,
+	DotsThreeIcon,
+	GaugeIcon,
+	LightbulbFilamentIcon,
+	LightningIcon,
+	LinkIcon,
+	RocketIcon,
+	ThumbsDownIcon,
+	ThumbsUpIcon,
+	TrendDownIcon,
+	TrendUpIcon,
+	WarningCircleIcon,
+} from "@databuddy/ui/icons";
 
 const TYPE_STYLES: Record<
 	InsightType,

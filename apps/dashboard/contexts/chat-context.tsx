@@ -186,6 +186,10 @@ export function useChat() {
 	return chat;
 }
 
+export function useChatSafe() {
+	return useContext(ChatContext);
+}
+
 export function usePendingQueue() {
 	return useContext(PendingQueueContext);
 }

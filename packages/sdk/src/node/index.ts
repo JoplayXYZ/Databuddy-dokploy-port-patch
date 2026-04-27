@@ -48,23 +48,38 @@ export class Databuddy {
 	private readonly maxDeduplicationCacheSize: number;
 
 	constructor(config: DatabuddyConfig) {
-		if (!config.apiKey || typeof config.apiKey !== "string") {
+		const apiKey =
+			typeof config.apiKey === "string" ? config.apiKey.trim() : "";
+		if (!apiKey) {
 			throw new Error("apiKey is required and must be a string");
 		}
 
-		this.apiKey = config.apiKey.trim();
+		this.apiKey = apiKey;
 		this.websiteId = config.websiteId?.trim();
 		this.namespace = config.namespace?.trim();
 		this.source = config.source?.trim();
 		this.apiUrl = config.apiUrl?.trim() || DEFAULT_API_URL;
 		this.enableBatching = config.enableBatching !== false;
-		this.batchSize = Math.min(config.batchSize || DEFAULT_BATCH_SIZE, 100);
-		this.batchTimeout = config.batchTimeout || DEFAULT_BATCH_TIMEOUT;
-		this.maxQueueSize = config.maxQueueSize || DEFAULT_MAX_QUEUE_SIZE;
+		this.batchSize = Math.min(
+			Math.max(1, Math.floor(config.batchSize ?? DEFAULT_BATCH_SIZE)),
+			100
+		);
+		this.batchTimeout = Math.max(
+			1,
+			Math.floor(config.batchTimeout ?? DEFAULT_BATCH_TIMEOUT)
+		);
+		this.maxQueueSize = Math.max(
+			1,
+			Math.floor(config.maxQueueSize ?? DEFAULT_MAX_QUEUE_SIZE)
+		);
 		this.middleware = config.middleware || [];
 		this.enableDeduplication = config.enableDeduplication !== false;
-		this.maxDeduplicationCacheSize =
-			config.maxDeduplicationCacheSize || DEFAULT_MAX_DEDUPLICATION_CACHE_SIZE;
+		this.maxDeduplicationCacheSize = Math.max(
+			0,
+			Math.floor(
+				config.maxDeduplicationCacheSize ?? DEFAULT_MAX_DEDUPLICATION_CACHE_SIZE
+			)
+		);
 
 		if (config.logger) {
 			this.logger = config.logger;
@@ -118,18 +133,19 @@ export class Databuddy {
 			return { success: true };
 		}
 
-		if (this.enableDeduplication && processedEvent.eventId) {
-			if (this.deduplicationCache.has(processedEvent.eventId)) {
-				this.logger.debug("Event deduplicated", {
-					eventId: processedEvent.eventId,
-				});
-				return { success: true };
-			}
-			this.addToDeduplicationCache(processedEvent.eventId);
+		if (this.isDuplicate(processedEvent)) {
+			this.logger.debug("Event deduplicated", {
+				eventId: processedEvent.eventId,
+			});
+			return { success: true };
 		}
 
 		if (!this.enableBatching) {
-			return this.send(processedEvent);
+			const response = await this.send(processedEvent);
+			if (response.success) {
+				this.rememberEvents([processedEvent]);
+			}
+			return response;
 		}
 
 		this.queue.push(processedEvent);
@@ -141,7 +157,7 @@ export class Databuddy {
 			this.queue.length >= this.maxQueueSize ||
 			this.queue.length >= this.batchSize
 		) {
-			await this.flush();
+			return this.flush();
 		}
 
 		return { success: true };
@@ -289,6 +305,7 @@ export class Databuddy {
 		}));
 
 		const processedEvents: BatchEventInput[] = [];
+		const seenEventIds = new Set<string>();
 		for (const event of enrichedEvents) {
 			const processedEvent = await this.applyMiddleware(event);
 			if (!processedEvent) {
@@ -296,13 +313,16 @@ export class Databuddy {
 			}
 
 			if (this.enableDeduplication && processedEvent.eventId) {
-				if (this.deduplicationCache.has(processedEvent.eventId)) {
+				if (
+					this.deduplicationCache.has(processedEvent.eventId) ||
+					seenEventIds.has(processedEvent.eventId)
+				) {
 					this.logger.debug("Event deduplicated in batch", {
 						eventId: processedEvent.eventId,
 					});
 					continue;
 				}
-				this.addToDeduplicationCache(processedEvent.eventId);
+				seenEventIds.add(processedEvent.eventId);
 			}
 
 			processedEvents.push(processedEvent);
@@ -351,6 +371,7 @@ export class Databuddy {
 			this.logger.info("Batch response received", data);
 
 			if (data.status === "success") {
+				this.rememberEvents(processedEvents);
 				return {
 					success: true,
 					processed: data.processed || processedEvents.length,
@@ -409,6 +430,27 @@ export class Databuddy {
 		this.logger.debug("Deduplication cache cleared");
 	}
 
+	private isDuplicate(event: BatchEventInput): boolean {
+		if (!(this.enableDeduplication && event.eventId)) {
+			return false;
+		}
+		return (
+			this.deduplicationCache.has(event.eventId) ||
+			this.queue.some((queuedEvent) => queuedEvent.eventId === event.eventId)
+		);
+	}
+
+	private rememberEvents(events: BatchEventInput[]): void {
+		if (!this.enableDeduplication) {
+			return;
+		}
+		for (const event of events) {
+			if (event.eventId) {
+				this.addToDeduplicationCache(event.eventId);
+			}
+		}
+	}
+
 	private async applyMiddleware(
 		event: BatchEventInput
 	): Promise<BatchEventInput | null> {
@@ -431,11 +473,15 @@ export class Databuddy {
 	}
 
 	private addToDeduplicationCache(eventId: string): void {
-		if (this.deduplicationCache.size >= this.maxDeduplicationCacheSize) {
+		if (this.maxDeduplicationCacheSize === 0) {
+			return;
+		}
+		while (this.deduplicationCache.size >= this.maxDeduplicationCacheSize) {
 			const oldest = this.deduplicationCache.values().next().value;
-			if (oldest) {
-				this.deduplicationCache.delete(oldest);
+			if (oldest === undefined) {
+				break;
 			}
+			this.deduplicationCache.delete(oldest);
 		}
 		this.deduplicationCache.add(eventId);
 	}

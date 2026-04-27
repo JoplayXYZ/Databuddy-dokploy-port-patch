@@ -1,96 +1,125 @@
 "use client";
 
 import { getCountryCode } from "@databuddy/shared/country-codes";
-import type { Session } from "@databuddy/shared/types/sessions";
-import { ArrowLeftIcon } from "@phosphor-icons/react";
-import { ChartLineIcon } from "@phosphor-icons/react";
-import { ClockIcon } from "@phosphor-icons/react";
-import { CursorClickIcon } from "@phosphor-icons/react";
-import { DevicesIcon } from "@phosphor-icons/react";
-import { EyeIcon } from "@phosphor-icons/react";
-import { GlobeIcon } from "@phosphor-icons/react";
-import { SpinnerIcon } from "@phosphor-icons/react";
-import { UserIcon } from "@phosphor-icons/react";
-import { useParams, useRouter } from "next/navigation";
-import { useCallback, useState } from "react";
+import type { ProfileSession, Session } from "@databuddy/shared/types/sessions";
+import { notFound, useParams, useRouter } from "next/navigation";
+import { type ElementType, type ReactNode, useCallback, useState } from "react";
 import { BrowserIcon, CountryFlag, OSIcon } from "@/components/icon";
-import { Badge } from "@/components/ds/badge";
-import { StatusDot } from "@/components/ds/status-dot";
 import { Button } from "@/components/ds/button";
+import { EmptyState } from "@/components/ds/empty-state";
+import { Spinner } from "@/components/ds/spinner";
+import { StatusDot } from "@/components/ds/status-dot";
 import { useDateFilters } from "@/hooks/use-date-filters";
-import { formatDateOnly, formatLocalTime } from "@/lib/time";
-import { getDeviceIcon } from "@/lib/utils";
+import { formatDateOnly, formatLocalTime } from "@databuddy/ui";
+import { cn, getDeviceIcon } from "@/lib/utils";
 import { generateProfileName } from "./_components/generate-profile-name";
 import { SessionRow } from "./_components/session-row";
 import { useUserProfile } from "./use-user-profile";
+import {
+	ArrowLeftIcon,
+	ChartLineIcon,
+	ClockIcon,
+	DevicesIcon,
+	GaugeIcon,
+	GlobeIcon,
+	UserIcon,
+} from "@databuddy/ui/icons";
 
-function StatItem({
+const VITAL_ORDER = ["LCP", "INP", "CLS", "FCP", "TTFB", "FPS"];
+
+interface ProfileWebVital {
+	count: number;
+	metric_name: string;
+	metric_value: number;
+	time: string;
+}
+
+type VitalStatus = "destructive" | "muted" | "success" | "warning";
+
+function MetricBar({
+	className,
+	label,
+	value,
+}: {
+	className?: string;
+	label: string;
+	value: string | number;
+}) {
+	return (
+		<div
+			className={cn(
+				"flex min-h-10 items-center justify-between gap-3 border-b px-4 py-2.5 last:border-b-0",
+				className
+			)}
+		>
+			<span className="text-muted-foreground text-xs">{label}</span>
+			<span className="font-semibold text-foreground text-sm tabular-nums">
+				{value}
+			</span>
+		</div>
+	);
+}
+
+function SectionHeading({
 	icon: Icon,
+	title,
+}: {
+	icon: ElementType;
+	title: string;
+}) {
+	return (
+		<div className="mb-2 flex min-h-7 items-center gap-2">
+			<Icon className="size-4 text-muted-foreground" weight="duotone" />
+			<span className="font-semibold text-foreground text-sm">{title}</span>
+		</div>
+	);
+}
+
+function DetailRow({
+	indicator,
 	label,
 	value,
 	subValue,
 }: {
-	icon: React.ElementType;
+	indicator: ReactNode;
 	label: string;
 	value: string | number;
 	subValue?: string;
 }) {
 	return (
-		<div className="flex items-center gap-3">
-			<div className="flex size-9 shrink-0 items-center justify-center rounded bg-primary/10">
-				<Icon className="size-4 text-primary" weight="duotone" />
+		<div className="flex min-h-10 items-center gap-3 py-2.5">
+			<div className="flex size-5 shrink-0 items-center justify-center">
+				{indicator}
 			</div>
 			<div className="min-w-0 flex-1">
-				<p className="font-semibold text-foreground text-lg tabular-nums leading-tight">
-					{value}
-				</p>
 				<p className="text-muted-foreground text-xs">{label}</p>
-				{subValue && (
-					<p className="text-muted-foreground/70 text-xs">{subValue}</p>
-				)}
-			</div>
-		</div>
-	);
-}
-
-function TechItem({
-	icon,
-	label,
-	value,
-}: {
-	icon: React.ReactNode;
-	label: string;
-	value: string;
-}) {
-	return (
-		<div className="flex items-center gap-3 rounded bg-accent/50 px-3 py-2.5">
-			<div className="shrink-0">{icon}</div>
-			<div className="min-w-0 flex-1">
 				<p className="truncate font-medium text-foreground text-sm">{value}</p>
-				<p className="text-muted-foreground text-xs">{label}</p>
+				{subValue ? (
+					<p className="truncate text-muted-foreground/70 text-xs">
+						{subValue}
+					</p>
+				) : null}
 			</div>
 		</div>
 	);
 }
 
-function TimelineItem({
-	label,
-	date,
-	time,
+function SidebarSection({
+	children,
+	className,
+	icon,
+	title,
 }: {
-	label: string;
-	date: string;
-	time?: string;
+	children: ReactNode;
+	icon: ElementType;
+	title: string;
+	className?: string;
 }) {
 	return (
-		<div className="flex items-start gap-3">
-			<div className="mt-0.5 size-2 shrink-0 rounded-full bg-primary/60" />
-			<div className="min-w-0 flex-1">
-				<p className="text-muted-foreground text-xs">{label}</p>
-				<p className="font-medium text-foreground text-sm">{date}</p>
-				{time && <p className="text-muted-foreground/70 text-xs">{time}</p>}
-			</div>
-		</div>
+		<section className={cn("border-b px-4 py-3 last:border-b-0", className)}>
+			<SectionHeading icon={icon} title={title} />
+			{children}
+		</section>
 	);
 }
 
@@ -100,7 +129,7 @@ function LoadingSkeleton({ onBack }: { onBack: () => void }) {
 			<Header onBack={onBack} />
 			<div className="flex min-h-0 flex-1 items-center justify-center">
 				<div className="flex flex-col items-center gap-3">
-					<SpinnerIcon className="size-8 animate-spin text-primary" />
+					<Spinner className="size-8 text-primary" />
 					<span className="text-muted-foreground text-sm">Loading…</span>
 				</div>
 			</div>
@@ -108,68 +137,178 @@ function LoadingSkeleton({ onBack }: { onBack: () => void }) {
 	);
 }
 
-function ErrorState({
+function UserProfileState({
+	description,
 	onBack,
-	message,
+	title,
+	variant = "minimal",
 }: {
 	onBack: () => void;
-	message?: string;
+	description: string;
+	title: string;
+	variant?: "minimal" | "error";
 }) {
 	return (
 		<div className="flex h-full flex-col">
 			<Header onBack={onBack} />
-			<div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-4">
-				<div className="flex size-16 items-center justify-center rounded-full bg-destructive/10">
-					<UserIcon className="size-8 text-destructive" weight="duotone" />
-				</div>
-				<div className="text-center">
-					<p className="font-semibold text-foreground text-lg">
-						Failed to load user
-					</p>
-					<p className="mt-1 text-muted-foreground text-sm">
-						{message || "Please try again later"}
-					</p>
-				</div>
-				<Button onClick={onBack} variant="outline">
-					<ArrowLeftIcon className="mr-2 size-4" />
-					Back to Users
-				</Button>
-			</div>
+			<EmptyState
+				action={
+					<Button onClick={onBack} variant="secondary">
+						<ArrowLeftIcon className="mr-2 size-4" />
+						Back to users
+					</Button>
+				}
+				className="min-h-0 flex-1"
+				description={description}
+				icon={<UserIcon />}
+				title={title}
+				variant={variant}
+			/>
 		</div>
 	);
 }
 
-function NotFoundState({
-	onBack,
-	userId,
+function toSession(session: ProfileSession, visitorId: string): Session {
+	const countryCode = getCountryCode(session.country || "");
+	return {
+		session_id: session.session_id,
+		first_visit: session.first_visit || "",
+		last_visit: session.last_visit || "",
+		page_views: session.page_views ?? 0,
+		visitor_id: visitorId,
+		country: countryCode,
+		country_name: session.country || "",
+		country_code: countryCode,
+		referrer: session.referrer || "",
+		device_type: session.device || "",
+		browser_name: session.browser || "",
+		os_name: session.os || "",
+		events: session.events || [],
+		session_name: session.session_name || undefined,
+	};
+}
+
+function getVitalRank(metricName: string): number {
+	const rank = VITAL_ORDER.indexOf(metricName);
+	return rank === -1 ? VITAL_ORDER.length : rank;
+}
+
+function getLatestWebVitals(sessions: ProfileSession[]): ProfileWebVital[] {
+	const latestByMetric = new Map<string, ProfileWebVital>();
+
+	for (const session of sessions) {
+		for (const [metric_name, metric_value, time] of session.web_vitals || []) {
+			if (!(metric_name && Number.isFinite(metric_value))) {
+				continue;
+			}
+
+			const current = latestByMetric.get(metric_name);
+			const count = (current?.count ?? 0) + 1;
+			if (
+				!current ||
+				new Date(time).getTime() >= new Date(current.time).getTime()
+			) {
+				latestByMetric.set(metric_name, {
+					count,
+					metric_name,
+					metric_value,
+					time,
+				});
+			} else {
+				current.count = count;
+			}
+		}
+	}
+
+	return [...latestByMetric.values()].sort(
+		(a, b) =>
+			getVitalRank(a.metric_name) - getVitalRank(b.metric_name) ||
+			a.metric_name.localeCompare(b.metric_name)
+	);
+}
+
+function formatVitalValue({
+	metric_name,
+	metric_value,
+}: ProfileWebVital): string {
+	if (metric_name === "CLS") {
+		return metric_value.toFixed(3);
+	}
+
+	if (metric_name === "FPS") {
+		return Math.round(metric_value).toString();
+	}
+
+	return `${Math.round(metric_value)} ms`;
+}
+
+function upperBoundStatus(
+	value: number,
+	good: number,
+	warning: number
+): VitalStatus {
+	if (value <= good) {
+		return "success";
+	}
+	return value <= warning ? "warning" : "destructive";
+}
+
+function lowerBoundStatus(
+	value: number,
+	good: number,
+	warning: number
+): VitalStatus {
+	if (value >= good) {
+		return "success";
+	}
+	return value >= warning ? "warning" : "destructive";
+}
+
+function getVitalStatus({
+	metric_name,
+	metric_value,
+}: ProfileWebVital): VitalStatus {
+	switch (metric_name) {
+		case "CLS":
+			return upperBoundStatus(metric_value, 0.1, 0.25);
+		case "FCP":
+			return upperBoundStatus(metric_value, 1800, 3000);
+		case "FPS":
+			return lowerBoundStatus(metric_value, 55, 30);
+		case "INP":
+			return upperBoundStatus(metric_value, 200, 500);
+		case "LCP":
+			return upperBoundStatus(metric_value, 2500, 4000);
+		case "TTFB":
+			return upperBoundStatus(metric_value, 800, 1800);
+		default:
+			return "muted";
+	}
+}
+
+function WebVitalsSection({
+	className,
+	vitals,
 }: {
-	onBack: () => void;
-	userId: string;
+	className?: string;
+	vitals: ProfileWebVital[];
 }) {
+	if (vitals.length === 0) {
+		return null;
+	}
+
 	return (
-		<div className="flex h-full flex-col">
-			<Header onBack={onBack} />
-			<div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-4">
-				<div className="flex size-16 items-center justify-center rounded-full bg-secondary">
-					<UserIcon
-						className="size-8 text-secondary-foreground"
-						weight="duotone"
-					/>
-				</div>
-				<div className="text-center">
-					<p className="font-semibold text-foreground text-lg">
-						User not found
-					</p>
-					<p className="mt-1 text-muted-foreground text-sm">
-						User "{userId}" was not found in the selected date range.
-					</p>
-				</div>
-				<Button onClick={onBack} variant="outline">
-					<ArrowLeftIcon className="mr-2 size-4" />
-					Back to Users
-				</Button>
-			</div>
-		</div>
+		<SidebarSection className={className} icon={GaugeIcon} title="Web Vitals">
+			{vitals.map((vital) => (
+				<DetailRow
+					indicator={<StatusDot color={getVitalStatus(vital)} size="md" />}
+					key={vital.metric_name}
+					label={vital.metric_name}
+					subValue={`${vital.count} sample${vital.count === 1 ? "" : "s"}`}
+					value={formatVitalValue(vital)}
+				/>
+			))}
+		</SidebarSection>
 	);
 }
 
@@ -188,6 +327,7 @@ function Header({
 	const countryCode = userProfile
 		? getCountryCode(userProfile.country || "")
 		: "";
+	const isReturning = (userProfile?.total_sessions ?? 0) > 1;
 
 	return (
 		<div className="flex h-12 shrink-0 items-center border-b bg-background">
@@ -216,13 +356,12 @@ function Header({
 							</p>
 						</div>
 					</div>
-					<Badge
-						variant={
-							(userProfile.total_sessions ?? 0) > 1 ? "default" : "muted"
-						}
-					>
-						{(userProfile.total_sessions ?? 0) > 1 ? "Return" : "New"}
-					</Badge>
+					<div className="flex items-center gap-1.5 text-xs">
+						<StatusDot color={isReturning ? "success" : "muted"} size="sm" />
+						<span className="font-medium text-foreground">
+							{isReturning ? "Returning" : "New"}
+						</span>
+					</div>
 				</div>
 			) : (
 				<div className="flex flex-1 items-center gap-2.5 px-3">
@@ -238,7 +377,9 @@ function Header({
 }
 
 export default function UserDetailPage() {
-	const { id: websiteId, userId } = useParams();
+	const params = useParams();
+	const websiteId = typeof params.id === "string" ? params.id : "";
+	const userId = typeof params.userId === "string" ? params.userId : "";
 	const router = useRouter();
 	const { dateRange } = useDateFilters();
 	const [expandedSessions, setExpandedSessions] = useState<Set<string>>(
@@ -246,8 +387,8 @@ export default function UserDetailPage() {
 	);
 
 	const { userProfile, isLoading, isError, error } = useUserProfile(
-		websiteId as string,
-		userId as string,
+		websiteId,
+		userId,
 		dateRange
 	);
 
@@ -263,75 +404,61 @@ export default function UserDetailPage() {
 		});
 	}, []);
 
-	const transformSession = useCallback(
-		(session: {
-			session_id: string;
-			first_visit?: string | null;
-			last_visit?: string | null;
-			page_views?: number | null;
-			country?: string | null;
-			referrer?: string | null;
-			device?: string | null;
-			browser?: string | null;
-			os?: string | null;
-			events?: unknown[] | null;
-			session_name?: string | null;
-		}): Session => {
-			const countryCode = getCountryCode(session.country || "");
-			return {
-				session_id: session.session_id,
-				first_visit: session.first_visit || "",
-				last_visit: session.last_visit || "",
-				page_views: session.page_views ?? 0,
-				visitor_id: userId as string,
-				country: countryCode,
-				country_name: session.country || "",
-				country_code: countryCode,
-				referrer: session.referrer || "",
-				device_type: session.device || "",
-				browser_name: session.browser || "",
-				os_name: session.os || "",
-				events: session.events || [],
-				session_name: session.session_name || undefined,
-			} as Session;
-		},
-		[userId]
-	);
-
-	const handleBack = () => {
+	const handleBack = useCallback(() => {
 		router.push(`/websites/${websiteId}/users`);
-	};
+	}, [router, websiteId]);
+
+	if (!(websiteId && userId)) {
+		notFound();
+	}
 
 	if (isLoading) {
 		return <LoadingSkeleton onBack={handleBack} />;
 	}
 
 	if (isError) {
-		return <ErrorState message={error?.message} onBack={handleBack} />;
+		return (
+			<UserProfileState
+				description={error?.message || "Please try again later."}
+				onBack={handleBack}
+				title="Failed to load user"
+				variant="error"
+			/>
+		);
 	}
 
 	if (!userProfile) {
-		return <NotFoundState onBack={handleBack} userId={userId as string} />;
+		return (
+			<UserProfileState
+				description={`User "${userId}" was not found in the selected date range.`}
+				onBack={handleBack}
+				title="User not found"
+			/>
+		);
 	}
 
-	// Calculate stats
-	const totalEvents =
-		userProfile.sessions?.reduce(
-			(acc: number, s: { events?: unknown[] }) =>
-				acc + (Array.isArray(s.events) ? s.events.length : 0),
-			0
-		) ?? 0;
-	const totalPages =
-		userProfile.sessions?.reduce(
-			(acc: number, s: { page_views?: number }) =>
-				acc + (Number(s.page_views) || 0),
-			0
-		) ?? 0;
+	const sessions = userProfile.sessions ?? [];
+	const totalEvents = sessions.reduce(
+		(total, session) => total + session.events.length,
+		0
+	);
+	const totalPages = sessions.reduce(
+		(total, session) => total + (session.page_views || 0),
+		0
+	);
 	const totalSessions = userProfile.total_sessions ?? 0;
-	const avgPagesPerSession =
-		totalSessions > 0 && !Number.isNaN(totalPages)
-			? totalPages / totalSessions
-			: 0;
+	const avgPagesPerSession = totalSessions > 0 ? totalPages / totalSessions : 0;
+	const region =
+		userProfile.region && userProfile.region !== "Unknown"
+			? userProfile.region
+			: undefined;
+	const metrics = [
+		{ label: "Sessions", value: totalSessions },
+		{ label: "Pageviews", value: userProfile.total_pageviews ?? 0 },
+		{ label: "Events", value: totalEvents },
+		{ label: "Avg Pages", value: avgPagesPerSession.toFixed(1) },
+	];
+	const webVitals = getLatestWebVitals(sessions);
 
 	return (
 		<div className="flex h-full flex-col">
@@ -339,176 +466,110 @@ export default function UserDetailPage() {
 
 			<div className="flex min-h-0 flex-1 overflow-hidden">
 				<aside className="hidden w-80 shrink-0 overflow-y-auto border-r bg-sidebar lg:block">
-					<div className="grid grid-cols-2 gap-px border-b bg-border">
-						<div className="bg-sidebar p-4">
-							<StatItem
-								icon={ChartLineIcon}
-								label="Sessions"
-								value={userProfile.total_sessions ?? 0}
+					<div className="border-b">
+						{metrics.map((metric) => (
+							<MetricBar
+								key={metric.label}
+								label={metric.label}
+								value={metric.value}
 							/>
-						</div>
-						<div className="bg-sidebar p-4">
-							<StatItem
-								icon={EyeIcon}
-								label="Pageviews"
-								value={userProfile.total_pageviews ?? 0}
-							/>
-						</div>
-						<div className="bg-sidebar p-4">
-							<StatItem
-								icon={CursorClickIcon}
-								label="Events"
-								value={totalEvents}
-							/>
-						</div>
-						<div className="bg-sidebar p-4">
-							<StatItem
-								icon={ChartLineIcon}
-								label="Avg Pages"
-								value={avgPagesPerSession.toFixed(1)}
-							/>
-						</div>
+						))}
 					</div>
 
-					<div className="border-b p-4">
-						<div className="mb-3 flex items-center gap-2">
-							<GlobeIcon
-								className="size-4 text-muted-foreground"
-								weight="duotone"
-							/>
-							<span className="font-semibold text-foreground text-sm">
-								Location
-							</span>
-						</div>
-						<div className="flex items-center gap-3 rounded bg-accent/50 px-3 py-2.5">
-							<CountryFlag
-								country={getCountryCode(userProfile.country || "")}
-								size="lg"
-							/>
-							<div>
-								<p className="font-medium text-foreground">
-									{userProfile.country || "Unknown"}
-								</p>
-								{userProfile.region && userProfile.region !== "Unknown" && (
-									<p className="text-muted-foreground text-xs">
-										{userProfile.region}
-									</p>
-								)}
-							</div>
-						</div>
-					</div>
+					<WebVitalsSection vitals={webVitals} />
 
-					<div className="border-b p-4">
-						<div className="mb-3 flex items-center gap-2">
-							<DevicesIcon
-								className="size-4 text-muted-foreground"
-								weight="duotone"
-							/>
-							<span className="font-semibold text-foreground text-sm">
-								Technology
-							</span>
-						</div>
-						<div className="space-y-2">
-							<TechItem
-								icon={getDeviceIcon(userProfile.device)}
-								label="Device"
-								value={userProfile.device || "Unknown"}
-							/>
-							<TechItem
-								icon={
-									<BrowserIcon
-										name={userProfile.browser || "Unknown"}
-										size="md"
-									/>
-								}
-								label="Browser"
-								value={userProfile.browser || "Unknown"}
-							/>
-							<TechItem
-								icon={<OSIcon name={userProfile.os || "Unknown"} size="md" />}
-								label="Operating System"
-								value={userProfile.os || "Unknown"}
-							/>
-						</div>
-					</div>
+					<SidebarSection icon={GlobeIcon} title="Location">
+						<DetailRow
+							indicator={
+								<CountryFlag
+									country={getCountryCode(userProfile.country || "")}
+									size="sm"
+								/>
+							}
+							label="Country"
+							subValue={region}
+							value={userProfile.country || "Unknown"}
+						/>
+					</SidebarSection>
 
-					<div className="p-4">
-						<div className="mb-3 flex items-center gap-2">
-							<ClockIcon
-								className="size-4 text-muted-foreground"
-								weight="duotone"
-							/>
-							<span className="font-semibold text-foreground text-sm">
-								Timeline
-							</span>
-						</div>
-						<div className="space-y-4">
-							<TimelineItem
-								date={
-									userProfile.first_visit
-										? formatDateOnly(userProfile.first_visit)
-										: "Unknown"
-								}
-								label="First Visit"
-								time={
-									userProfile.first_visit
-										? formatLocalTime(userProfile.first_visit, "h:mm A")
-										: undefined
-								}
-							/>
-							<TimelineItem
-								date={
-									userProfile.last_visit
-										? formatDateOnly(userProfile.last_visit)
-										: "Unknown"
-								}
-								label="Last Visit"
-								time={
-									userProfile.last_visit
-										? formatLocalTime(userProfile.last_visit, "h:mm A")
-										: undefined
-								}
-							/>
-							<div className="flex items-start gap-3">
-								<StatusDot className="mt-0.5" color="success" size="md" />
-								<div className="min-w-0 flex-1">
-									<p className="text-muted-foreground text-xs">Total Time</p>
-									<p className="font-semibold text-foreground">
-										{userProfile.total_duration_formatted || "0s"}
-									</p>
-								</div>
-							</div>
-						</div>
-					</div>
+					<SidebarSection icon={DevicesIcon} title="Technology">
+						<DetailRow
+							indicator={getDeviceIcon(userProfile.device)}
+							label="Device"
+							value={userProfile.device || "Unknown"}
+						/>
+						<DetailRow
+							indicator={
+								<BrowserIcon
+									name={userProfile.browser || "Unknown"}
+									size="sm"
+								/>
+							}
+							label="Browser"
+							value={userProfile.browser || "Unknown"}
+						/>
+						<DetailRow
+							indicator={
+								<OSIcon name={userProfile.os || "Unknown"} size="sm" />
+							}
+							label="Operating System"
+							value={userProfile.os || "Unknown"}
+						/>
+					</SidebarSection>
+
+					<SidebarSection icon={ClockIcon} title="Timeline">
+						<DetailRow
+							indicator={<StatusDot color="muted" size="md" />}
+							label="First Visit"
+							subValue={
+								userProfile.first_visit
+									? formatLocalTime(userProfile.first_visit, "h:mm A")
+									: undefined
+							}
+							value={
+								userProfile.first_visit
+									? formatDateOnly(userProfile.first_visit)
+									: "Unknown"
+							}
+						/>
+						<DetailRow
+							indicator={<StatusDot color="muted" size="md" />}
+							label="Last Visit"
+							subValue={
+								userProfile.last_visit
+									? formatLocalTime(userProfile.last_visit, "h:mm A")
+									: undefined
+							}
+							value={
+								userProfile.last_visit
+									? formatDateOnly(userProfile.last_visit)
+									: "Unknown"
+							}
+						/>
+						<DetailRow
+							indicator={<StatusDot color="success" size="md" />}
+							label="Total Time"
+							value={userProfile.total_duration_formatted || "0s"}
+						/>
+					</SidebarSection>
 				</aside>
 
 				<main className="min-w-0 flex-1 overflow-y-auto">
 					<div className="grid grid-cols-2 gap-px border-b bg-border sm:grid-cols-4 lg:hidden">
-						<div className="bg-background p-3">
-							<p className="font-bold text-foreground text-xl tabular-nums">
-								{userProfile.total_sessions ?? 0}
-							</p>
-							<p className="text-muted-foreground text-xs">Sessions</p>
-						</div>
-						<div className="bg-background p-3">
-							<p className="font-bold text-foreground text-xl tabular-nums">
-								{userProfile.total_pageviews ?? 0}
-							</p>
-							<p className="text-muted-foreground text-xs">Pageviews</p>
-						</div>
-						<div className="bg-background p-3">
-							<p className="font-bold text-foreground text-xl tabular-nums">
-								{totalEvents}
-							</p>
-							<p className="text-muted-foreground text-xs">Events</p>
-						</div>
-						<div className="bg-background p-3">
-							<p className="font-bold text-foreground text-xl tabular-nums">
-								{avgPagesPerSession.toFixed(1)}
-							</p>
-							<p className="text-muted-foreground text-xs">Avg Pages</p>
-						</div>
+						{metrics.map((metric) => (
+							<MetricBar
+								className="border-b-0 bg-background px-3"
+								key={metric.label}
+								label={metric.label}
+								value={metric.value}
+							/>
+						))}
 					</div>
+
+					<WebVitalsSection
+						className="bg-background lg:hidden"
+						vitals={webVitals}
+					/>
 
 					<div className="sticky top-0 z-10 grid h-[39px] grid-cols-[24px_1fr_120px_80px_60px_60px_70px_80px] items-center gap-2 border-b bg-accent px-3 font-medium text-muted-foreground text-xs shadow-[0_0_0_0.5px_var(--border)] lg:grid-cols-[24px_1fr_120px_80px_100px_60px_60px_70px_80px]">
 						<div />
@@ -521,48 +582,25 @@ export default function UserDetailPage() {
 						<span className="text-right">Last seen</span>
 					</div>
 
-					{userProfile.sessions && userProfile.sessions.length > 0 ? (
+					{sessions.length > 0 ? (
 						<div className="divide-y">
-							{userProfile.sessions.map(
-								(
-									session: {
-										session_id: string;
-										first_visit: string;
-										last_visit: string;
-										page_views: number;
-										country?: string;
-										referrer?: string;
-										device?: string;
-										browser?: string;
-										os?: string;
-										events?: unknown[];
-										session_name?: string;
-									},
-									index: number
-								) => (
-									<SessionRow
-										index={index}
-										isExpanded={expandedSessions.has(session.session_id)}
-										key={session.session_id}
-										onToggle={handleToggleSession}
-										session={transformSession(session)}
-									/>
-								)
-							)}
+							{sessions.map((session: ProfileSession, index: number) => (
+								<SessionRow
+									index={index}
+									isExpanded={expandedSessions.has(session.session_id)}
+									key={session.session_id}
+									onToggle={handleToggleSession}
+									session={toSession(session, userId)}
+								/>
+							))}
 						</div>
 					) : (
-						<div className="flex flex-col items-center justify-center py-16">
-							<div className="flex size-12 items-center justify-center rounded-full bg-secondary">
-								<ChartLineIcon
-									className="size-6 text-secondary-foreground"
-									weight="duotone"
-								/>
-							</div>
-							<p className="mt-4 font-medium text-foreground">No sessions</p>
-							<p className="mt-1 text-muted-foreground text-sm">
-								This user has no session data.
-							</p>
-						</div>
+						<EmptyState
+							className="min-h-[320px]"
+							description="This user has no session data."
+							icon={<ChartLineIcon />}
+							title="No sessions"
+						/>
 					)}
 				</main>
 			</div>

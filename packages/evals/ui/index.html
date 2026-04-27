@@ -752,12 +752,12 @@
         second: "2-digit",
       });
       document.getElementById("meta").innerHTML = `
-      <span>${r.model || "unknown model"}</span>
-      <span class="dot"></span>
-      <span>${ts}</span>
-      <span class="dot"></span>
-      <span>${(r.duration / 1000).toFixed(1)}s total</span>
-    `;
+                                                                                          <span>${r.model || "unknown model"}</span>
+                                                                                          <span class="dot"></span>
+                                                                                          <span>${ts}</span>
+                                                                                          <span class="dot"></span>
+                                                                                          <span>${(r.duration / 1000).toFixed(1)}s total</span>
+                                                                                        `;
       renderCards(r);
       renderTable(r);
       renderFooter(r);
@@ -767,25 +767,29 @@
       const d = r.dimensions;
       const overall = r.summary.score;
       const html = `
-      <div class="card card-overall">
-        <div class="card-label">Overall</div>
-        <div class="card-value ${scoreClass(overall)}">${overall}%</div>
-        <div class="card-sub">${r.summary.passed} of ${r.summary.total} passed</div>
-      </div>
-      <div class="card">
-        <div class="card-label">Pass Rate</div>
-        <div class="card-value">${r.summary.total > 0 ? Math.round((r.summary.passed / r.summary.total) * 100) : 0}%</div>
-        <div class="card-sub">${r.summary.passed}/${r.summary.total}</div>
-      </div>
-      ${DIMS.map(
-        (dim) => `
-        <div class="card">
-          <div class="card-label">${DIM_LABELS[dim]}</div>
-          <div class="card-value ${scoreClass(d[dim])}">${scoreDisplay(d[dim])}</div>
-        </div>
-      `
-      ).join("")}
-    `;
+                                                                                          <div class="card card-overall">
+                                                                                            <div class="card-label">Overall</div>
+                                                                                            <div class="card-value ${scoreClass(overall)}">${overall}%</div>
+                                                                                            <div class="card-sub">${r.summary.passed} of ${r.summary.total} passed</div>
+                                                                                          </div>
+                                                                                          <div class="card">
+                                                                                            <div class="card-label">Pass Rate</div>
+                                                                                            <div class="card-value">${r.summary.total > 0 ? Math.round((r.summary.passed / r.summary.total) * 100) : 0}%</div>
+                                                                                            <div class="card-sub">${r.summary.passed}/${r.summary.total}</div>
+                                                                                          </div>
+                                                                                          ${DIMS.map(
+                                                                                            (
+                                                                                              dim
+                                                                                            ) => `
+                                                                                            <div class="card">
+                                                                                              <div class="card-label">${DIM_LABELS[dim]}</div>
+                                                                                              <div class="card-value ${scoreClass(d[dim])}">${scoreDisplay(d[dim])}</div>
+                                                                                            </div>
+                                                                                          `
+                                                                                          ).join(
+                                                                                            ""
+                                                                                          )}
+                                                                                        `;
       document.getElementById("cards").innerHTML = html;
     }
 
@@ -794,8 +798,8 @@
         .map(
           (c) =>
             `<th data-col="${c.key}" ${c.sortable ? `onclick="sortTable('${c.key}')"` : ""}>
-        ${c.label}${c.sortable ? '<span class="sort-arrow"></span>' : ""}
-      </th>`
+                                                                                            ${c.label}${c.sortable ? '<span class="sort-arrow"></span>' : ""}
+                                                                                          </th>`
         )
         .join("");
     }
@@ -859,17 +863,17 @@
           const steps = c.metrics?.steps ?? c.toolsCalled?.length ?? "--";
           const detailHtml = buildDetail(c);
           return `
-        <tr onclick="toggleDetail('d${ri}')" class="data-row">
-          <td>${ri + 1}</td>
-          <td style="font-weight:500">${c.id}</td>
-          <td><span class="badge-cat ${catClass}">${cat.replace(/_/g, " ")}</span></td>
-          <td>${statusBadge}</td>
-          ${scoreCells}
-          <td>${latency}</td>
-          <td>${steps}</td>
-        </tr>
-        <tr class="detail-row"><td colspan="${columns.length}"><div class="detail-panel" id="d${ri}">${detailHtml}</div></td></tr>
-      `;
+                                                                                            <tr onclick="toggleDetail('d${ri}')" class="data-row">
+                                                                                              <td>${ri + 1}</td>
+                                                                                              <td style="font-weight:500">${c.id}</td>
+                                                                                              <td><span class="badge-cat ${catClass}">${cat.replace(/_/g, " ")}</span></td>
+                                                                                              <td>${statusBadge}</td>
+                                                                                              ${scoreCells}
+                                                                                              <td>${latency}</td>
+                                                                                              <td>${steps}</td>
+                                                                                            </tr>
+                                                                                            <tr class="detail-row"><td colspan="${columns.length}"><div class="detail-panel" id="d${ri}">${detailHtml}</div></td></tr>
+                                                                                          `;
         })
         .join("");
     }
@@ -894,21 +898,21 @@
         )
         .join("");
       return `
-      <div class="detail-grid">
-        <div>
-          <div class="detail-block-title">Response</div>
-          <div class="detail-response">${resp || "No response captured."}</div>
-        </div>
-        <div>
-          ${failures.length ? `<div class="detail-block-title">Failures</div>${failures.map((f) => `<div class="failure-item">${f.replace(/</g, "&lt;")}</div>`).join("")}` : ""}
-          <div class="detail-block-title" style="margin-top:${failures.length ? 12 : 0}px">Tools Called</div>
-          ${tools.length ? `<ul class="detail-list">${tools.map((t) => `<li>${t}</li>`).join("")}</ul>` : '<div style="font-size:12px;color:var(--dim)">No tools called</div>'}
-          <div class="detail-block-title" style="margin-top:12px">Scores</div>
-          <div class="detail-metrics">${scoresHtml}</div>
-          ${metricsHtml ? `<div class="detail-block-title" style="margin-top:12px">Metrics</div><div class="detail-metrics">${metricsHtml}</div>` : ""}
-        </div>
-      </div>
-    `;
+                                                                                          <div class="detail-grid">
+                                                                                            <div>
+                                                                                              <div class="detail-block-title">Response</div>
+                                                                                              <div class="detail-response">${resp || "No response captured."}</div>
+                                                                                            </div>
+                                                                                            <div>
+                                                                                              ${failures.length ? `<div class="detail-block-title">Failures</div>${failures.map((f) => `<div class="failure-item">${f.replace(/</g, "&lt;")}</div>`).join("")}` : ""}
+                                                                                              <div class="detail-block-title" style="margin-top:${failures.length ? 12 : 0}px">Tools Called</div>
+                                                                                              ${tools.length ? `<ul class="detail-list">${tools.map((t) => `<li>${t}</li>`).join("")}</ul>` : '<div style="font-size:12px;color:var(--dim)">No tools called</div>'}
+                                                                                              <div class="detail-block-title" style="margin-top:12px">Scores</div>
+                                                                                              <div class="detail-metrics">${scoresHtml}</div>
+                                                                                              ${metricsHtml ? `<div class="detail-block-title" style="margin-top:12px">Metrics</div><div class="detail-metrics">${metricsHtml}</div>` : ""}
+                                                                                            </div>
+                                                                                          </div>
+                                                                                        `;
     }
 
     function _toggleDetail(id) {
@@ -941,10 +945,10 @@
     function renderFooter(r) {
       const d = new Date(r.timestamp);
       document.getElementById("footer").innerHTML = `
-      <span>${r.summary.total} case${r.summary.total === 1 ? "" : "s"} evaluated</span>
-      <span>Duration: ${(r.duration / 1000).toFixed(1)}s</span>
-      <span>${d.toLocaleString()}</span>
-    `;
+                                                                                          <span>${r.summary.total} case${r.summary.total === 1 ? "" : "s"} evaluated</span>
+                                                                                          <span>Duration: ${(r.duration / 1000).toFixed(1)}s</span>
+                                                                                          <span>${d.toLocaleString()}</span>
+                                                                                        `;
     }
 
     /* Chart */
@@ -978,9 +982,9 @@
         .map(
           (it) =>
             `<div class="legend-item" onclick="toggleLine('${it.key}')" id="leg-${it.key}">
-        <div class="legend-dot" style="background:${it.color};${chartLines[it.key] ? "" : "opacity:.3"}"></div>
-        <span style="${chartLines[it.key] ? "" : "opacity:.4"}">${it.label}</span>
-      </div>`
+                                                                                            <div class="legend-dot" style="background:${it.color};${chartLines[it.key] ? "" : "opacity:.3"}"></div>
+                                                                                            <span style="${chartLines[it.key] ? "" : "opacity:.4"}">${it.label}</span>
+                                                                                          </div>`
         )
         .join("");
     }

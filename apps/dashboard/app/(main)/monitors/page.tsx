@@ -1,11 +1,5 @@
 "use client";
 
-import {
-	ArrowClockwiseIcon,
-	HeartbeatIcon,
-	PlusIcon,
-	UserPlusIcon,
-} from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
 import { Suspense, useState } from "react";
 import { ErrorBoundary } from "@/components/error-boundary";
@@ -16,10 +10,16 @@ import { FeatureInviteDialog } from "@/components/organizations/feature-invite-d
 import { Button } from "@/components/ds/button";
 import { Card } from "@/components/ds/card";
 import { EmptyState } from "@/components/ds/empty-state";
-import { Skeleton } from "@/components/ds/skeleton";
+import { Skeleton } from "@databuddy/ui";
 import { useFeatureAccess } from "@/hooks/use-feature-access";
 import { orpc } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
+import {
+	ArrowClockwiseIcon,
+	HeartbeatIcon,
+	PlusIcon,
+	UserPlusIcon,
+} from "@databuddy/ui/icons";
 
 export interface Monitor {
 	cacheBust: boolean;

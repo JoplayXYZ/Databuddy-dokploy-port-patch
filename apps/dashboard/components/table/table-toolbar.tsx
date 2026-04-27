@@ -1,7 +1,7 @@
-import { ArrowsOutSimpleIcon } from "@phosphor-icons/react";
 import { Button } from "@/components/ds/button";
 import { Card } from "@/components/ds/card";
 import { SectionBrandOverlay } from "@/components/logo/section-brand-overlay";
+import { ArrowsOutSimpleIcon } from "@databuddy/ui/icons";
 
 interface TableToolbarProps {
 	borderBottom?: boolean;

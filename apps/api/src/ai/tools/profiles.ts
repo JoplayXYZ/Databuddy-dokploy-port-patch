@@ -87,7 +87,7 @@ export function createProfileTools() {
 
 	const getProfileTool = tool({
 		description:
-			"Visitor detail by anonymous_id: first/last visit, sessions, pageviews, duration, device, browser, OS, location.",
+			"Visitor detail by anonymous_id: first/last activity, sessions across analytics/custom/error/vital/link events, pageviews, duration, device, browser, OS, location.",
 		inputSchema: z.object({
 			websiteId: z.string(),
 			visitorId: z.string(),
@@ -139,7 +139,7 @@ export function createProfileTools() {
 
 	const getProfileSessionsTool = tool({
 		description:
-			"Session history for a visitor (start/end, duration, pages, device, geo). Use after list_profiles/get_profile.",
+			"Session history for a visitor, including analytics events, custom events, errors, outgoing links, and separate web vitals context. Use after list_profiles/get_profile.",
 		inputSchema: z.object({
 			websiteId: z.string(),
 			visitorId: z.string(),

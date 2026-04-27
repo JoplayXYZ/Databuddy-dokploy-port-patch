@@ -1,12 +1,14 @@
 "use client";
 
-import { ArrowClockwiseIcon } from "@phosphor-icons/react/dist/ssr";
-import { HouseIcon } from "@phosphor-icons/react/dist/ssr";
-import { WarningCircleIcon } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
 import { useEffect } from "react";
 import { Branding } from "@/components/logo/branding";
 import { Button } from "@/components/ds/button";
+import {
+	ArrowClockwiseIcon,
+	HouseIcon,
+	WarningCircleIcon,
+} from "@databuddy/ui/icons";
 
 const PARTICLES = [
 	{
@@ -54,7 +56,6 @@ export default function ErrorPage({
 	return (
 		<div className="relative flex min-h-dvh flex-col items-center justify-center overflow-hidden bg-background p-4 sm:p-6">
 			<style
-				// biome-ignore lint/security/noDangerouslySetInnerHtml: static keyframes
 				dangerouslySetInnerHTML={{
 					__html: `
 						@keyframes float-a {

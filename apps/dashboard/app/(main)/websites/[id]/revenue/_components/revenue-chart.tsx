@@ -1,6 +1,5 @@
 "use client";
 
-import { ChartLineIcon } from "@phosphor-icons/react";
 import { useAtom } from "jotai";
 import { useMemo } from "react";
 import { SkeletonChart } from "@/components/charts/skeleton-chart";
@@ -21,6 +20,7 @@ import {
 	revenueMetricVisibilityAtom,
 	toggleRevenueMetricAtom,
 } from "@/stores/jotai/chartAtoms";
+import { ChartLineIcon } from "@databuddy/ui/icons";
 
 const {
 	Area,

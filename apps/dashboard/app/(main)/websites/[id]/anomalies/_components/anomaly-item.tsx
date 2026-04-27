@@ -1,17 +1,19 @@
 "use client";
 
-import { ArrowDownIcon } from "@phosphor-icons/react";
-import { ArrowUpIcon } from "@phosphor-icons/react";
-import { BugIcon } from "@phosphor-icons/react";
-import { EyeIcon } from "@phosphor-icons/react";
-import { LightningIcon } from "@phosphor-icons/react";
-import { WarningCircleIcon } from "@phosphor-icons/react";
-import { WarningIcon } from "@phosphor-icons/react";
 import type { ElementType } from "react";
 import { Badge } from "@/components/ds/badge";
 import { List } from "@/components/ui/composables/list";
-import { Skeleton } from "@/components/ds/skeleton";
+import { Skeleton } from "@databuddy/ui";
 import { cn } from "@/lib/utils";
+import {
+	ArrowDownIcon,
+	ArrowUpIcon,
+	BugIcon,
+	EyeIcon,
+	LightningIcon,
+	WarningCircleIcon,
+	WarningIcon,
+} from "@databuddy/ui/icons";
 
 export interface AnomalyItemData {
 	baselineMean: number;

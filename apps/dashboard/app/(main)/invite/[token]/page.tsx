@@ -1,17 +1,6 @@
 "use client";
 
 import type { IconProps } from "@phosphor-icons/react";
-import { ArrowRightIcon } from "@phosphor-icons/react/dist/ssr";
-import { CheckCircleIcon } from "@phosphor-icons/react/dist/ssr";
-import { HeartbeatIcon } from "@phosphor-icons/react/dist/ssr";
-import { LightbulbFilamentIcon } from "@phosphor-icons/react/dist/ssr";
-import { LightningIcon } from "@phosphor-icons/react/dist/ssr";
-import { ProhibitIcon } from "@phosphor-icons/react/dist/ssr";
-import { RobotIcon } from "@phosphor-icons/react/dist/ssr";
-import { SpinnerGapIcon } from "@phosphor-icons/react/dist/ssr";
-import { TrendUpIcon } from "@phosphor-icons/react/dist/ssr";
-import { WaveformIcon } from "@phosphor-icons/react/dist/ssr";
-import { XCircleIcon } from "@phosphor-icons/react/dist/ssr";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
 import type { ForwardRefExoticComponent, RefAttributes } from "react";
@@ -23,6 +12,19 @@ import {
 	getFeatureRoute,
 } from "@/lib/feature-gates";
 import { orpc } from "@/lib/orpc";
+import {
+	ArrowRightIcon,
+	CheckCircleIcon,
+	HeartbeatIcon,
+	LightbulbFilamentIcon,
+	LightningIcon,
+	ProhibitIcon,
+	RobotIcon,
+	SpinnerGapIcon,
+	TrendUpIcon,
+	WaveformIcon,
+	XCircleIcon,
+} from "@databuddy/ui/icons";
 
 type PhosphorIcon = ForwardRefExoticComponent<
 	IconProps & RefAttributes<SVGSVGElement>

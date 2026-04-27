@@ -276,10 +276,22 @@ Use Shopify Flow to trigger Databuddy events:
 1. Create a new Flow in Shopify admin
 2. Set trigger (e.g., "Order created")
 3. Add HTTP request action:
-   - URL: `https://api.databuddy.cc/events`
+   - URL: `https://basket.databuddy.cc/track`
    - Method: POST
-   - Headers: `Authorization: Bearer YOUR_API_KEY`
-   - Body: Order data in JSON format
+   - Headers: `Authorization: Bearer YOUR_API_KEY` and `Content-Type: application/json`
+   - Body: JSON with `name`, `websiteId`, `properties`, and `source`
+
+```json
+{
+  "name": "order_created",
+  "websiteId": "your-client-id",
+  "properties": {
+    "order_id": "{{ order.id }}",
+    "status": "{{ order.displayFinancialStatus }}"
+  },
+  "source": "shopify_flow"
+}
+```
 
 ## Performance Optimization
 
@@ -398,4 +410,4 @@ Enable debug mode for development:
   </Card>
 </Cards>
 
-Need help with your Shopify integration? Contact us at [help@databuddy.cc](mailto:help@databuddy.cc). 
+Need help with your Shopify integration? Contact us at [help@databuddy.cc](mailto:help@databuddy.cc).

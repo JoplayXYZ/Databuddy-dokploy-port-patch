@@ -1,14 +1,16 @@
 import {
-	BugIcon,
-	CodeIcon,
-	DeviceTabletIcon,
 	FileCodeIcon,
-	LaptopIcon,
-	MonitorIcon,
 	NetworkIcon,
 	PhoneIcon,
 	TerminalIcon,
 } from "@phosphor-icons/react/dist/ssr";
+import {
+	BugIcon,
+	CodeIcon,
+	DeviceTabletIcon,
+	LaptopIcon,
+	MonitorIcon,
+} from "@databuddy/ui/icons";
 
 const errorIconClass = "size-3.5 text-destructive";
 const deviceIconClass = "size-3.5 text-muted-foreground";

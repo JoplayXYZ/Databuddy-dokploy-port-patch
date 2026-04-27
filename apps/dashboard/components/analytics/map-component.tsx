@@ -1,18 +1,19 @@
 "use client";
 
+import { CountryFlag } from "@/components/icon";
+import { type Country, useCountries } from "@/lib/geo";
 import type {
 	CountryData,
 	LocationData,
 } from "@databuddy/shared/types/website";
+import { GlobeIcon } from "@databuddy/ui/icons";
 import { scalePow } from "d3-scale";
 import type { Feature, GeoJsonObject } from "geojson";
 import type { Layer, Map as LeafletMap } from "leaflet";
-import dynamic from "next/dynamic";
-import { useTheme } from "next-themes";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { CountryFlag } from "@/components/icon";
-import { type Country, useCountries } from "@/lib/geo";
 import "leaflet/dist/leaflet.css";
+import { useTheme } from "next-themes";
+import dynamic from "next/dynamic";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 const MapContainer = dynamic(
 	() => import("react-leaflet").then((mod) => mod.MapContainer),
@@ -86,21 +87,19 @@ export function MapComponent({
 	const [mapView] = useState<"countries" | "subdivisions">("countries");
 	const [hoveredId, setHoveredId] = useState<string | null>(null);
 
-	// Leaflet needs concrete oklch strings, not CSS vars.
 	const themeColors = useMemo(() => {
 		const isDark = resolvedTheme === "dark";
 		return {
-			chart1: "oklch(0.81 0.1 252",
-			chart2: "oklch(0.62 0.19 260",
-			chart3: "oklch(0.55 0.22 263",
-			muted: isDark ? "oklch(0.50 0.006 286.033" : "oklch(0.60 0.0079 240",
-			secondary: isDark ? "oklch(0.28 0.006 286.033" : "oklch(0.93 0.005 240",
+			fill: isDark ? "oklch(0.65 0.15 250" : "oklch(0.62 0.19 250",
+			empty: isDark ? "oklch(0.25 0.005 260" : "oklch(0.94 0.005 260",
+			border: isDark ? "oklch(0.35 0.01 260" : "oklch(0.88 0.01 260",
+			borderHover: isDark ? "oklch(0.70 0.15 250" : "oklch(0.55 0.19 250",
 		};
 	}, [resolvedTheme]);
 
 	const colorScale = useMemo(() => {
 		if (!countryData?.data) {
-			return () => `${themeColors.secondary} / 0.6)`;
+			return () => `${themeColors.empty} / 1)`;
 		}
 
 		const values = countryData.data?.map((d: { count: number }) => d.count) || [
@@ -113,67 +112,18 @@ export function MapComponent({
 		const scale = scalePow<number>()
 			.exponent(0.5)
 			.domain([minValue || 0, maxValue])
-			.range([0.1, 1]);
+			.range([0.15, 0.9]);
 
 		return (value: number) => {
 			if (value === 0) {
-				return `${themeColors.muted} / 0.6)`;
+				return `${themeColors.empty} / 1)`;
 			}
-
-			const intensity = scale(value);
-
-			if (intensity < 0.3) {
-				return `${themeColors.chart1} / ${(0.4 + intensity * 0.3).toFixed(2)})`;
-			}
-			if (intensity < 0.7) {
-				return `${themeColors.chart2} / ${(0.6 + intensity * 0.3).toFixed(2)})`;
-			}
-			return `${themeColors.chart3} / ${(0.8 + intensity * 0.2).toFixed(2)})`;
+			const opacity = scale(value);
+			return `${themeColors.fill} / ${opacity.toFixed(2)})`;
 		};
 	}, [countryData?.data, themeColors]);
 
 	const { data: countriesGeoData } = useCountries();
-
-	const getBorderColor = useCallback(
-		(hasData: boolean, isHovered: boolean) => {
-			if (!hasData) {
-				return `${themeColors.muted} / 0.5)`;
-			}
-			return isHovered
-				? `${themeColors.chart2} / 1)`
-				: `${themeColors.chart2} / 0.6)`;
-		},
-		[themeColors]
-	);
-
-	const getFeatureData = useCallback(
-		(feature?: Feature) => {
-			if (!feature) {
-				return null;
-			}
-
-			const dataKey = feature?.properties?.ISO_A2;
-			const apiCode = mapGeoJsonToApi(dataKey ?? "");
-			const foundData = countryData?.data?.find(
-				({ value }: { value: string }) => value === apiCode
-			);
-
-			const metricValue = foundData?.count || 0;
-			const isHovered = hoveredId === dataKey?.toString();
-			const hasData = metricValue > 0;
-
-			return { dataKey, foundData, metricValue, isHovered, hasData };
-		},
-		[countryData?.data, hoveredId]
-	);
-
-	const getStyleWeights = useCallback(
-		(hasData: boolean, isHovered: boolean) => ({
-			borderWeight: hasData ? (isHovered ? 2.5 : 1.5) : 1.0,
-			fillOpacity: hasData ? (isHovered ? 0.95 : 0.85) : 0.4,
-		}),
-		[]
-	);
 
 	const handleStyle = useCallback(
 		(feature?: Feature) => {
@@ -181,41 +131,28 @@ export function MapComponent({
 				return {};
 			}
 
-			const featureData = getFeatureData(feature);
-			if (!featureData) {
-				return {};
-			}
+			const dataKey = feature?.properties?.ISO_A2;
+			const apiCode = mapGeoJsonToApi(dataKey ?? "");
+			const foundData = countryData?.data?.find(
+				({ value }: { value: string }) => value === apiCode
+			);
+			const metricValue = foundData?.count || 0;
+			const isHovered = hoveredId === dataKey?.toString();
+			const hasData = metricValue > 0;
 
-			const { metricValue, isHovered, hasData } = featureData;
-			const fillColor = colorScale(metricValue);
-			const borderColor = getBorderColor(hasData, isHovered);
-			const weights = getStyleWeights(hasData, isHovered);
-
-			const baseStyle = {
-				color: borderColor,
-				weight: weights.borderWeight,
+			return {
+				color:
+					isHovered && hasData
+						? `${themeColors.borderHover} / 1)`
+						: `${themeColors.border} / 1)`,
+				weight: isHovered && hasData ? 1.5 : 0.5,
 				fill: true,
-				fillColor,
-				fillOpacity: weights.fillOpacity,
+				fillColor: colorScale(metricValue),
+				fillOpacity: 1,
 				opacity: 1,
-				transition: "all 0.2s ease-in-out",
 			};
-
-			if (isHovered && hasData) {
-				return {
-					...baseStyle,
-					filter:
-						resolvedTheme === "dark"
-							? "drop-shadow(0 2px 4px oklch(0 0 0 / 0.3))"
-							: "drop-shadow(0 2px 4px oklch(0 0 0 / 0.1))",
-					transform: "scale(1.02)",
-					transformOrigin: "center",
-				};
-			}
-
-			return baseStyle;
 		},
-		[colorScale, resolvedTheme, getBorderColor, getStyleWeights, getFeatureData]
+		[colorScale, countryData?.data, hoveredId, themeColors]
 	);
 
 	const handleEachFeature = useCallback(
@@ -334,15 +271,15 @@ export function MapComponent({
 
 	return (
 		<div
-			className="relative flex h-full w-full flex-col overflow-hidden rounded border bg-card"
+			className="relative flex h-full w-full flex-col overflow-hidden bg-card"
 			style={{ height }}
 		>
 			{Boolean(passedIsLoading) && (
-				<div className="absolute inset-0 z-10 flex items-center justify-center bg-background/70 backdrop-blur-sm">
-					<div className="flex flex-col items-center gap-3">
-						<div className="size-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-						<span className="font-medium text-muted-foreground text-sm">
-							Loading map data...
+				<div className="absolute inset-0 z-10 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+					<div className="flex flex-col items-center gap-2">
+						<GlobeIcon className="size-6 animate-pulse text-muted-foreground" />
+						<span className="font-medium text-muted-foreground text-xs">
+							Loading map data…
 						</span>
 					</div>
 				</div>
@@ -388,34 +325,36 @@ export function MapComponent({
 
 			{!passedIsLoading &&
 				(!locationData?.countries || locationData.countries.length === 0) && (
-					<div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center bg-background/70 text-center text-muted-foreground text-sm">
-						<div>
-							<p className="font-semibold text-foreground">No map data yet</p>
-							<p>Visitors will appear as soon as traffic flows in.</p>
+					<div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+						<div className="text-center">
+							<GlobeIcon className="mx-auto size-8 text-muted-foreground/40" />
+							<p className="mt-2 font-medium text-foreground text-sm">
+								No location data yet
+							</p>
+							<p className="mt-0.5 text-muted-foreground text-xs">
+								Visitors will appear as traffic flows in
+							</p>
 						</div>
 					</div>
 				)}
 
 			{tooltipContent && (
-				<div className="pointer-events-none absolute top-3 left-3 z-20 rounded border bg-card/95 p-2.5 shadow-lg backdrop-blur-sm">
-					<div className="flex items-center gap-2 text-sm">
+				<div className="pointer-events-none absolute top-3 left-3 z-20 rounded-md border bg-card/95 px-3 py-2 shadow-lg backdrop-blur-sm">
+					<div className="flex items-center gap-2">
 						<CountryFlag country={tooltipContent.code} size={16} />
-						<span className="font-semibold text-foreground">
+						<span className="font-semibold text-foreground text-sm">
 							{tooltipContent.name}
 						</span>
 					</div>
-					<div className="mt-1 text-muted-foreground text-xs">
-						<span className="font-semibold text-foreground">
-							{tooltipContent.count.toLocaleString()}
-						</span>{" "}
-						visitors (
+					<p className="mt-1 text-muted-foreground text-xs tabular-nums">
+						{tooltipContent.count.toLocaleString()} visitors ·{" "}
 						{(tooltipContent.percentage == null ||
 						Number.isNaN(tooltipContent.percentage)
 							? 0
 							: tooltipContent.percentage
 						).toFixed(1)}
-						%)
-					</div>
+						%
+					</p>
 				</div>
 			)}
 		</div>

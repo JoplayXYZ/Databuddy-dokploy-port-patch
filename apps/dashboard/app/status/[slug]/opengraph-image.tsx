@@ -1,6 +1,7 @@
 // biome-ignore-all lint/a11y: OG image SVGs don't need alt text and it breaks the ui because it displays the alt text
 
 import { ImageResponse } from "next/og";
+import { STATUS_URL } from "@/lib/app-url";
 import { publicRPCClient } from "@/lib/orpc-public";
 
 export const revalidate = 60;
@@ -67,6 +68,7 @@ function getBarColor(uptime: number): string {
 
 const MAX_MONITORS = 3;
 const BAR_DAYS = 90;
+const URL_PROTOCOL_PATTERN = /^https?:\/\//;
 
 export default async function OGImage({
 	params,
@@ -83,6 +85,7 @@ export default async function OGImage({
 	const banner = STATUS_BANNER[status] ?? STATUS_BANNER.operational;
 	const monitors = data?.monitors.slice(0, MAX_MONITORS) ?? [];
 	const totalMonitors = data?.monitors.length ?? 0;
+	const displayUrl = `${STATUS_URL.replace(URL_PROTOCOL_PATTERN, "")}/${slug}`;
 
 	return new ImageResponse(
 		<div
@@ -401,7 +404,7 @@ export default async function OGImage({
 						fontFamily: "monospace",
 					}}
 				>
-					app.databuddy.cc/status/{slug}
+					{displayUrl}
 				</span>
 			</div>
 		</div>,

@@ -1,15 +1,25 @@
 "use client";
 
 import { useBatchDynamicQuery } from "@/hooks/use-dynamic-query";
-import dayjs from "@/lib/dayjs";
+import { dayjs } from "@databuddy/ui";
 import { orpc } from "@/lib/orpc";
-import type { Link } from "@databuddy/db/schema";
+import type { Link, LinkFolder } from "@databuddy/db/schema";
 import type { DateRange } from "@databuddy/shared/types/analytics";
 import type { QueryKey } from "@tanstack/react-query";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo } from "react";
 
-export type { Link } from "@databuddy/db/schema";
+export type { Link, LinkFolder } from "@databuddy/db/schema";
+
+export interface LinkListInput {
+	externalId?: string;
+	folderId?: string | null;
+	organizationId?: string;
+	sourceId?: string;
+	sourceOwnerId?: string;
+	sourceType?: string;
+	targetDomain?: string;
+}
 
 interface GeoEntry {
 	clicks: number;
@@ -51,9 +61,13 @@ export interface LinkStats {
 }
 
 const EMPTY_LINKS: Link[] = [];
+const EMPTY_LINK_FOLDERS: LinkFolder[] = [];
 
-export const getLinksListKey = (): QueryKey =>
-	orpc.links.list.queryKey({ input: {} });
+export const getLinksListKey = (input: LinkListInput = {}): QueryKey =>
+	orpc.links.list.queryKey({ input });
+
+export const getLinkFoldersListKey = (): QueryKey =>
+	orpc.linkFolders.list.queryKey({ input: {} });
 
 export const getLinkByIdKey = (id: string): QueryKey =>
 	orpc.links.get.queryKey({ input: { id } });
@@ -88,16 +102,36 @@ const removeLinkFromList = (
 	return old.filter((l) => l.id !== linkId);
 };
 
-export function useLinks(options?: { enabled?: boolean }) {
+export function useLinks(options?: {
+	enabled?: boolean;
+	input?: LinkListInput;
+}) {
 	const query = useQuery({
 		...orpc.links.list.queryOptions({
-			input: {},
+			input: options?.input ?? {},
 		}),
 		enabled: options?.enabled !== false,
 	});
 
 	return {
 		links: query.data ?? EMPTY_LINKS,
+		isLoading: query.isLoading,
+		isFetching: query.isFetching,
+		isError: query.isError,
+		refetch: query.refetch,
+	};
+}
+
+export function useLinkFolders(options?: { enabled?: boolean }) {
+	const query = useQuery({
+		...orpc.linkFolders.list.queryOptions({
+			input: {},
+		}),
+		enabled: options?.enabled !== false,
+	});
+
+	return {
+		folders: query.data ?? EMPTY_LINK_FOLDERS,
 		isLoading: query.isLoading,
 		isFetching: query.isFetching,
 		isError: query.isError,
@@ -267,6 +301,7 @@ export function useCreateLink() {
 			queryClient.setQueryData<Link[]>(listKey, (old) =>
 				addLinkToList(old, newLink)
 			);
+			queryClient.invalidateQueries({ queryKey: orpc.links.list.key() });
 		},
 	});
 }
@@ -283,6 +318,7 @@ export function useUpdateLink() {
 			);
 
 			queryClient.setQueryData(getLinkByIdKey(updatedLink.id), updatedLink);
+			queryClient.invalidateQueries({ queryKey: orpc.links.list.key() });
 		},
 	});
 }
@@ -307,6 +343,49 @@ export function useDeleteLink() {
 			if (context?.previousData && context.listKey) {
 				queryClient.setQueryData(context.listKey, context.previousData);
 			}
+		},
+		onSettled: () => {
+			queryClient.invalidateQueries({ queryKey: orpc.links.list.key() });
+		},
+	});
+}
+
+export function useCreateLinkFolder() {
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		...orpc.linkFolders.create.mutationOptions(),
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: orpc.linkFolders.list.key(),
+			});
+		},
+	});
+}
+
+export function useUpdateLinkFolder() {
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		...orpc.linkFolders.update.mutationOptions(),
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: orpc.linkFolders.list.key(),
+			});
+		},
+	});
+}
+
+export function useDeleteLinkFolder() {
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		...orpc.linkFolders.delete.mutationOptions(),
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: orpc.linkFolders.list.key(),
+			});
+			queryClient.invalidateQueries({ queryKey: orpc.links.list.key() });
 		},
 	});
 }

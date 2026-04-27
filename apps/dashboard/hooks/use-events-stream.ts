@@ -8,7 +8,7 @@ import { useMemo } from "react";
 import type {
 	RawRecentCustomEvent,
 	RecentCustomEvent,
-} from "@/app/(main)/events/_components/types";
+} from "@/components/events/custom-events";
 import { useBatchDynamicQuery } from "./use-dynamic-query";
 
 export type EventsStreamScope =

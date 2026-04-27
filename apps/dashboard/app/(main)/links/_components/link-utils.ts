@@ -67,6 +67,7 @@ interface BuildPayloadInput {
 		name: string;
 		targetUrl: string;
 		slug?: string;
+		folderId?: string;
 		expiresAt?: string;
 		expiredRedirectUrl?: string;
 		iosUrl?: string;
@@ -84,6 +85,7 @@ interface LinkPayload {
 	expiresAtDate: Date | undefined;
 	expiresAtString: string | undefined;
 	externalId: string | undefined;
+	folderId: string | null;
 	iosUrl: string | undefined;
 	name: string;
 	ogDescription: string | undefined;
@@ -106,6 +108,7 @@ export function buildLinkPayload({
 	);
 
 	const slug = formData.slug?.trim() || undefined;
+	const folderId = formData.folderId?.trim() || null;
 
 	const expiresAtDate = formData.expiresAt
 		? new Date(formData.expiresAt)
@@ -150,6 +153,7 @@ export function buildLinkPayload({
 		iosUrl,
 		androidUrl,
 		externalId,
+		folderId,
 	};
 }
 

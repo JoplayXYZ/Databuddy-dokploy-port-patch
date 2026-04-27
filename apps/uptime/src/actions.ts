@@ -42,6 +42,7 @@ interface FetchFailure {
 export interface ScheduleData {
 	cacheBust: boolean;
 	id: string;
+	isPaused: boolean;
 	jsonParsingConfig: unknown;
 	name: string | null;
 	organizationId: string;
@@ -101,6 +102,7 @@ export async function lookupSchedule(
 				websiteId: schedule.websiteId,
 				organizationId: schedule.organizationId,
 				name: schedule.name,
+				isPaused: schedule.isPaused,
 				website: schedule.website
 					? {
 							name: schedule.website.name,

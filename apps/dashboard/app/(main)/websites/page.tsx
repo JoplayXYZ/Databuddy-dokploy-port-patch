@@ -1,19 +1,16 @@
 "use client";
 
-import { ArrowClockwiseIcon } from "@phosphor-icons/react/dist/ssr/ArrowClockwise";
-import { GlobeIcon } from "@phosphor-icons/react/dist/ssr/Globe";
-import { PlusIcon } from "@phosphor-icons/react/dist/ssr/Plus";
-import { TrendUpIcon } from "@phosphor-icons/react/dist/ssr/TrendUp";
 import dynamic from "next/dynamic";
 import { useState } from "react";
 import { Button } from "@/components/ds/button";
 import { Card } from "@/components/ds/card";
 import { EmptyState } from "@/components/ds/empty-state";
-import { Skeleton } from "@/components/ds/skeleton";
+import { TopBar } from "@/components/layout/top-bar";
+import { Skeleton } from "@databuddy/ui";
 import { useWebsites } from "@/hooks/use-websites";
 import { cn } from "@/lib/utils";
-import { PageHeader } from "./_components/page-header";
 import { WebsiteCard } from "./_components/website-card";
+import { ArrowClockwiseIcon, GlobeIcon, PlusIcon } from "@databuddy/ui/icons";
 
 const WebsiteDialog = dynamic(
 	() => import("@/components/website-dialog").then((mod) => mod.WebsiteDialog),
@@ -67,46 +64,31 @@ export default function WebsitesPage() {
 
 	return (
 		<div className="flex h-full flex-col">
-			<PageHeader
-				description="Track analytics for all your websites"
-				icon={<TrendUpIcon />}
-				right={
-					<>
-						<Button
-							aria-label="Refresh websites"
-							disabled={isLoading || isFetching}
-							onClick={() => refetch()}
-							size="icon"
-							variant="outline"
-						>
-							<ArrowClockwiseIcon
-								aria-hidden
-								className={cn(
-									"size-4",
-									isLoading || isFetching ? "animate-spin" : ""
-								)}
-							/>
-						</Button>
-						<Button
-							className={cn(
-								"gap-2 px-3 py-2 font-medium sm:px-4 sm:py-2",
-								"bg-linear-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary",
-								"group relative overflow-hidden shadow-lg transition-all duration-300 hover:shadow-xl"
-							)}
-							data-button-type="primary"
-							data-section="header"
-							data-track="websites-new-website-header"
-							onClick={() => setDialogOpen(true)}
-							size="default"
-						>
-							<div className="absolute inset-0 -translate-x-full bg-linear-to-r from-white/0 via-white/20 to-white/0 transition-transform duration-700 group-hover:translate-x-full" />
-							<PlusIcon className="relative z-10 size-4 transition-transform duration-300 group-hover:rotate-90" />
-							<span className="relative z-10 truncate">New Website</span>
-						</Button>
-					</>
-				}
-				title="Websites"
-			/>
+			<TopBar.Title>
+				<h1 className="font-semibold text-sm">Websites</h1>
+			</TopBar.Title>
+			<TopBar.Actions>
+				<Button
+					aria-label="Refresh websites"
+					disabled={isLoading || isFetching}
+					onClick={() => refetch()}
+					size="sm"
+					variant="secondary"
+				>
+					<ArrowClockwiseIcon
+						aria-hidden
+						className={cn("size-4 shrink-0", isFetching ? "animate-spin" : "")}
+					/>
+				</Button>
+				<Button
+					data-track="websites-new-website-header"
+					onClick={() => setDialogOpen(true)}
+					size="sm"
+				>
+					<PlusIcon className="size-4" />
+					New Website
+				</Button>
+			</TopBar.Actions>
 
 			<div
 				aria-busy={isFetching}

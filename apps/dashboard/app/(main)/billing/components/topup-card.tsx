@@ -18,14 +18,11 @@ import {
 	TOPUP_PRODUCT_ID,
 	TOPUP_TIERS,
 } from "@databuddy/shared/billing/topup-math";
-import {
-	CaretDownIcon,
-	CoinsIcon,
-	TrendDownIcon,
-} from "@phosphor-icons/react/dist/ssr";
 import { useCustomer } from "autumn-js/react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { CoinsIcon } from "@phosphor-icons/react/dist/ssr";
+import { CaretDownIcon, TrendDownIcon } from "@databuddy/ui/icons";
 
 const PRESET_QUANTITIES = [100, 500, 2500, 10_000];
 const BASE_RATE = TOPUP_TIERS[0].amount;

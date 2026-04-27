@@ -1,6 +1,5 @@
 "use client";
 
-import { WarningIcon } from "@phosphor-icons/react";
 import { useAtom } from "jotai";
 import { useParams } from "next/navigation";
 import { WebsiteOverviewTab } from "@/app/(main)/websites/[id]/_components/tabs/overview-tab";
@@ -12,6 +11,7 @@ import {
 	addDynamicFilterAtom,
 	dynamicQueryFiltersAtom,
 } from "@/stores/jotai/filterAtoms";
+import { WarningIcon } from "@databuddy/ui/icons";
 
 export default function PublicDashboardPage() {
 	const { id } = useParams();

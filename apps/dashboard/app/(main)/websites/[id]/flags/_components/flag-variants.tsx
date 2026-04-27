@@ -2,7 +2,7 @@
 
 import type { Variant } from "@databuddy/shared/flags";
 import { Chart } from "@/components/ui/composables/chart";
-import { Tooltip } from "@/components/ds/tooltip";
+import { Tooltip } from "@databuddy/ui";
 
 const { Cell, Pie, PieChart } = Chart.Recharts;
 

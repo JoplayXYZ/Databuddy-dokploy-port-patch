@@ -1,5 +1,4 @@
 import { db, sql } from "@databuddy/db";
-import { clickHouseOG } from "@databuddy/db/clickhouse";
 import { redis } from "@databuddy/redis";
 import { Elysia } from "elysia";
 
@@ -26,18 +25,12 @@ async function ping(probe: () => Promise<unknown>): Promise<PingResult> {
 
 export const health = new Elysia()
 	.get("/health/status", async () => {
-		const [postgres, clickhouse, cache] = await Promise.all([
+		const [postgres, cache] = await Promise.all([
 			ping(() => db.execute(sql`SELECT 1`)),
-			ping(async () => {
-				const { success } = await clickHouseOG.ping();
-				if (!success) {
-					throw new Error("ping failed");
-				}
-			}),
 			ping(() => redis.ping()),
 		]);
 
-		const services = { postgres, clickhouse, redis: cache };
+		const services = { postgres, redis: cache };
 		const allOk = Object.values(services).every((s) => s.status === "ok");
 		const status = allOk ? "ok" : "degraded";
 

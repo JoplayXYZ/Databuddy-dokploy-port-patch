@@ -9,18 +9,6 @@ import {
 	PLAN_IDS,
 	type PlanId,
 } from "@databuddy/shared/types/features";
-import {
-	CheckIcon,
-	CrownIcon,
-	LeafIcon,
-	LockKeyIcon,
-	ReceiptIcon,
-	RocketLaunchIcon,
-	ShieldCheckIcon,
-	StarIcon,
-	TreeIcon,
-	WarningIcon,
-} from "@phosphor-icons/react/dist/ssr";
 import type { PreviewAttachResponse } from "autumn-js";
 import { useCustomer, useListPlans } from "autumn-js/react";
 import { createContext, useContext, useState } from "react";
@@ -34,6 +22,20 @@ import { EmptyState } from "@/components/ds/empty-state";
 import { Text } from "@/components/ds/text";
 import { formatLocaleNumber } from "@/lib/format-locale-number";
 import { cn } from "@/lib/utils";
+import {
+	LockKeyIcon,
+	ShieldCheckIcon,
+	TreeIcon,
+} from "@phosphor-icons/react/dist/ssr";
+import {
+	CheckIcon,
+	CrownIcon,
+	LeafIcon,
+	ReceiptIcon,
+	RocketLaunchIcon,
+	StarIcon,
+	WarningIcon,
+} from "@databuddy/ui/icons";
 
 const DISPLAYED_PLAN_IDS = ["hobby", "pro", "scale"] as const;
 const RECOMMENDED_PLAN_ID = "pro";

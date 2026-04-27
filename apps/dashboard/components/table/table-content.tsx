@@ -1,8 +1,3 @@
-import {
-	CaretDownIcon,
-	CaretRightIcon,
-	DatabaseIcon,
-} from "@phosphor-icons/react";
 import { flexRender, type Table } from "@tanstack/react-table";
 import type React from "react";
 import { Fragment, memo, useCallback, useState } from "react";
@@ -16,6 +11,11 @@ import {
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import { TableEmptyState } from "./table-empty-state";
+import {
+	CaretDownIcon,
+	CaretRightIcon,
+	DatabaseIcon,
+} from "@databuddy/ui/icons";
 
 const DEFAULT_SHARE_COLUMN_TITLE =
 	"Share of unique visitors in this breakdown. Row percentages may add up to more than 100% when the same user appears in multiple rows.";
@@ -229,7 +229,7 @@ function TableContentInner<TData extends { name: string | number }>({
 									className={cn(
 										"border-border/80 border-b transition-colors last:border-b-0 hover:bg-accent/50",
 										canActivate &&
-											"cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+											"cursor-pointer focus-visible:bg-accent/70 focus-visible:outline-none"
 									)}
 									onClick={() =>
 										handleRowClick(row.original, hasSubRows, row.id)
@@ -238,6 +238,25 @@ function TableContentInner<TData extends { name: string | number }>({
 										if (e.key === "Enter" || e.key === " ") {
 											e.preventDefault();
 											e.currentTarget.click();
+											return;
+										}
+										if (e.key === "ArrowDown" || e.key === "j") {
+											e.preventDefault();
+											const next = e.currentTarget
+												.nextElementSibling as HTMLElement | null;
+											next?.focus();
+											return;
+										}
+										if (e.key === "ArrowUp" || e.key === "k") {
+											e.preventDefault();
+											const prev = e.currentTarget
+												.previousElementSibling as HTMLElement | null;
+											prev?.focus();
+											return;
+										}
+										if (e.key === "Escape") {
+											e.preventDefault();
+											(e.currentTarget as HTMLElement).blur();
 										}
 									}}
 									role={canActivate ? "button" : undefined}

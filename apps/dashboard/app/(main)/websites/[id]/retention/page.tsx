@@ -1,10 +1,10 @@
 "use client";
 
 import { GATED_FEATURES } from "@databuddy/shared/types/features";
-import { SpinnerIcon } from "@phosphor-icons/react";
 import dynamic from "next/dynamic";
 import { useParams } from "next/navigation";
 import { FeatureGate } from "@/components/feature-gate";
+import { SpinnerIcon } from "@databuddy/ui/icons";
 
 const RetentionContentDynamic = dynamic(
 	() =>

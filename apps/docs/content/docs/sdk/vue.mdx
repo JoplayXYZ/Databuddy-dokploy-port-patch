@@ -65,9 +65,9 @@ The `Databuddy` component injects the tracking script and configures analytics.
 
 | Prop | Default | Description |
 |------|---------|-------------|
-| `enable-batching` | `false` | Group events into batches |
+| `enable-batching` | `true` | Group events into batches |
 | `batch-size` | `10` | Events per batch (1-50) |
-| `batch-timeout` | `2000` | Batch timeout in ms |
+| `batch-timeout` | `5000` | Batch timeout in ms |
 | `sampling-rate` | `1.0` | Event sampling rate (0.0-1.0) |
 
 ### Full Example
@@ -167,7 +167,7 @@ const runtimeConfig = useRuntimeConfig();
   {`export default defineNuxtConfig({
   runtimeConfig: {
     public: {
-      databuddyClientId: process.env.DATABUDDY_CLIENT_ID
+      databuddyClientId: process.env.NUXT_PUBLIC_DATABUDDY_CLIENT_ID
     }
   }
 });`}

@@ -1,5 +1,5 @@
 import { toast } from "sonner";
-import dayjs from "@/lib/dayjs";
+import { dayjs } from "@databuddy/ui";
 
 export function clampBounceRate(value: number | null | undefined): number {
 	if (value == null || Number.isNaN(value)) {
@@ -129,11 +129,11 @@ export const groupBrowserData = (
 
 export const getColorVariant = (
 	value: number,
-	dangerThreshold: number,
+	destructiveThreshold: number,
 	warningThreshold: number
-): "danger" | "warning" | "success" => {
-	if (value > dangerThreshold) {
-		return "danger";
+): "destructive" | "warning" | "success" => {
+	if (value > destructiveThreshold) {
+		return "destructive";
 	}
 	if (value > warningThreshold) {
 		return "warning";

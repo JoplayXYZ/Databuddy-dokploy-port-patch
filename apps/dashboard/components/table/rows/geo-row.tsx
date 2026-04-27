@@ -1,8 +1,8 @@
-import { MapPinIcon } from "@phosphor-icons/react";
 import type { CellContext, ColumnDef } from "@tanstack/react-table";
 import { CountryFlag } from "@/components/icon";
 import { PercentageBadge } from "@/components/ds/badge";
 import { formatNumber } from "@/lib/formatters";
+import { MapPinIcon } from "@databuddy/ui/icons";
 
 export interface GeoEntry {
 	country_code?: string;

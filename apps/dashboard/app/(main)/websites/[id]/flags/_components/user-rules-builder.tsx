@@ -1,10 +1,5 @@
 "use client";
 
-import { EnvelopeIcon } from "@phosphor-icons/react/dist/ssr";
-import { PlusIcon } from "@phosphor-icons/react/dist/ssr";
-import { TrashIcon } from "@phosphor-icons/react/dist/ssr";
-import { UserIcon } from "@phosphor-icons/react/dist/ssr";
-import { WrenchIcon } from "@phosphor-icons/react/dist/ssr";
 import { z } from "zod/mini";
 import { Button } from "@/components/ds/button";
 import { Input } from "@/components/ds/input";
@@ -12,6 +7,13 @@ import { Select } from "@/components/ds/select";
 import { Switch } from "@/components/ds/switch";
 import { TagsInput } from "@/components/ds/tags-input";
 import type { UserRule, UserRulesBuilderProps } from "./types";
+import {
+	EnvelopeIcon,
+	PlusIcon,
+	TrashIcon,
+	UserIcon,
+	WrenchIcon,
+} from "@databuddy/ui/icons";
 
 const TARGET_TYPES = [
 	{ value: "user_id", label: "User ID", icon: UserIcon },

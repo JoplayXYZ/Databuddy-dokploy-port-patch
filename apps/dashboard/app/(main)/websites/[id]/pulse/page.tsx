@@ -1,10 +1,5 @@
 "use client";
 
-import { HeartbeatIcon } from "@phosphor-icons/react/dist/ssr";
-import { PauseIcon } from "@phosphor-icons/react/dist/ssr";
-import { PencilIcon } from "@phosphor-icons/react/dist/ssr";
-import { PlayIcon } from "@phosphor-icons/react/dist/ssr";
-import { TrashIcon } from "@phosphor-icons/react/dist/ssr";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
 import { useMemo, useState } from "react";
@@ -13,28 +8,25 @@ import { EmptyState } from "@/components/ds/empty-state";
 import { FeatureAccessGate } from "@/components/feature-access-gate";
 import { MonitorSheet } from "@/components/monitors/monitor-sheet";
 import { DeleteDialog } from "@/components/ds/delete-dialog";
-import { Badge } from "@/components/ds/badge";
 import { Button } from "@/components/ds/button";
-import { Skeleton } from "@/components/ds/skeleton";
+import { Skeleton } from "@databuddy/ui";
 import { useDateFilters } from "@/hooks/use-date-filters";
 import { useBatchDynamicQuery } from "@/hooks/use-dynamic-query";
 import { useFeatureAccess } from "@/hooks/use-feature-access";
-import { useWebsite } from "@/hooks/use-websites";
 import { orpc } from "@/lib/orpc";
-import { fromNow, localDayjs } from "@/lib/time";
+import { localDayjs } from "@databuddy/ui";
 import { UptimeHeatmap } from "@/lib/uptime/uptime-heatmap";
-import { WebsitePageHeader } from "../_components/website-page-header";
+import { TopBar } from "@/components/layout/top-bar";
+import { cn } from "@/lib/utils";
 import { RecentActivity } from "./_components/recent-activity";
-
-const granularityLabels: Record<string, string> = {
-	minute: "Every minute",
-	ten_minutes: "Every 10 minutes",
-	thirty_minutes: "Every 30 minutes",
-	hour: "Hourly",
-	six_hours: "Every 6 hours",
-	twelve_hours: "Every 12 hours",
-	day: "Daily",
-};
+import {
+	ArrowClockwiseIcon,
+	HeartbeatIcon,
+	PauseIcon,
+	PencilIcon,
+	PlayIcon,
+	TrashIcon,
+} from "@databuddy/ui/icons";
 
 interface Schedule {
 	granularity: string;
@@ -50,7 +42,6 @@ interface Schedule {
 
 export default function PulsePage() {
 	const { id: websiteId } = useParams();
-	const { data: website } = useWebsite(websiteId as string);
 	const { dateRange } = useDateFilters();
 	const [isDialogOpen, setIsDialogOpen] = useState(false);
 	const [editingSchedule, setEditingSchedule] = useState<{
@@ -233,58 +224,6 @@ export default function PulsePage() {
 		}
 	};
 
-	// Determine current status based on the most recent check
-	const latestCheck = recentChecks[0];
-	const currentStatus = latestCheck
-		? latestCheck.status === 1
-			? "up"
-			: latestCheck.status === 2
-				? "unknown"
-				: "down"
-		: "unknown";
-
-	// Build header subtitle with status
-	const headerSubtitle = schedule ? (
-		<div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
-			<Badge
-				className={
-					!schedule.isPaused && currentStatus === "up"
-						? "border-emerald-500/20 bg-emerald-500/10 text-emerald-600"
-						: ""
-				}
-				variant={
-					schedule.isPaused
-						? "muted"
-						: currentStatus === "down"
-							? "destructive"
-							: "default"
-				}
-			>
-				{schedule.isPaused
-					? "Paused"
-					: currentStatus === "down"
-						? "Outage"
-						: currentStatus === "up"
-							? "Operational"
-							: "Unknown"}
-			</Badge>
-			<span className="text-muted-foreground">•</span>
-			<span className="text-muted-foreground text-sm">
-				{granularityLabels[schedule.granularity] || schedule.granularity}
-			</span>
-			{latestCheck ? (
-				<>
-					<span className="text-muted-foreground">•</span>
-					<span className="text-muted-foreground text-sm">
-						Last checked {fromNow(latestCheck.timestamp)}
-					</span>
-				</>
-			) : (
-				<span className="text-muted-foreground text-sm">No checks yet</span>
-			)}
-		</div>
-	) : undefined;
-
 	// Build header actions
 	const headerActions = schedule ? (
 		<>
@@ -326,23 +265,23 @@ export default function PulsePage() {
 
 	return (
 		<div className="relative flex h-full flex-col">
-			<WebsitePageHeader
-				additionalActions={headerActions}
-				description="Track uptime and availability"
-				icon={
-					<HeartbeatIcon
-						className="size-6 text-accent-foreground"
-						size={16}
-						weight="duotone"
+			<TopBar.Title>
+				<h1 className="font-semibold text-sm">Uptime</h1>
+			</TopBar.Title>
+			<TopBar.Actions>
+				<Button
+					aria-label="Refresh"
+					disabled={isRefreshing}
+					onClick={handleRefresh}
+					size="sm"
+					variant="secondary"
+				>
+					<ArrowClockwiseIcon
+						className={cn("size-4 shrink-0", isRefreshing && "animate-spin")}
 					/>
-				}
-				isRefreshing={isRefreshing}
-				onRefreshAction={handleRefresh}
-				subtitle={headerSubtitle}
-				title="Uptime"
-				websiteId={websiteId as string}
-				websiteName={website?.name || undefined}
-			/>
+				</Button>
+				{headerActions}
+			</TopBar.Actions>
 			<FeatureAccessGate
 				flagKey="monitors"
 				loadingFallback={

@@ -1,14 +1,14 @@
-import {
-	CheckCircleIcon,
-	MinusCircleIcon,
-	WarningCircleIcon,
-	XCircleIcon,
-} from "@phosphor-icons/react/dist/ssr";
 import Image from "next/image";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { LastChecked } from "./last-checked";
 import { MonitorRowInteractive } from "./monitor-row-interactive";
+import { MinusCircleIcon } from "@phosphor-icons/react/dist/ssr";
+import {
+	CheckCircleIcon,
+	WarningCircleIcon,
+	XCircleIcon,
+} from "@databuddy/ui/icons";
 
 interface StatusRootProps {
 	children: ReactNode;

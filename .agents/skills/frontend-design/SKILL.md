@@ -8,6 +8,12 @@ This skill guides creation of distinctive, production-grade frontend interfaces 
 
 The user provides frontend requirements: a component, page, application, or interface to build. They may include context about the purpose, audience, or technical constraints.
 
+## Repository UI Guardrail
+
+When working inside the Databuddy dashboard (`apps/dashboard`), the existing design system is mandatory and overrides the generic creative guidance below. Read `apps/dashboard/components/ds/README.md` and build feature UI from `apps/dashboard/components/ds` primitives exactly. Do not use raw form/control elements (`button`, `input`, `select`, `textarea`, native dialogs), Base UI/Radix primitives, or one-off styled controls in feature components. If the needed API or variant is missing, add or extend the DS primitive first.
+
+For Databuddy dashboard pickers, use `DropdownMenu` for menu-style folder/status/filter/sort/action choices. Use `Select` only when the established pattern is truly a select/combobox. Product dashboard surfaces should stay consistent, dense, and operational rather than exploratory or marketing-styled.
+
 ## Design Thinking
 
 Before coding, understand the context and commit to a BOLD aesthetic direction:

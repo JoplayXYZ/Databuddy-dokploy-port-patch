@@ -1,9 +1,9 @@
 "use client";
 
-import { SpinnerIcon } from "@phosphor-icons/react/dist/ssr";
 import { parseAsString, useQueryState } from "nuqs";
 import { Suspense } from "react";
 import PricingTable from "@/components/autumn/pricing-table";
+import { SpinnerIcon } from "@databuddy/ui/icons";
 
 function PlansPageContent() {
 	const [selectedPlan] = useQueryState("plan", parseAsString);

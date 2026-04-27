@@ -1,10 +1,5 @@
 "use client";
 
-import {
-	ArrowsClockwiseIcon,
-	CheckIcon,
-	CopyIcon,
-} from "@phosphor-icons/react";
 import type { UIMessage } from "ai";
 import { AIComponent } from "@/components/ai-elements/ai-component";
 import {
@@ -37,6 +32,7 @@ import { parseContentSegments } from "@/lib/ai-components";
 import { formatToolLabel } from "@/lib/tool-display";
 import { cn } from "@/lib/utils";
 import { AgentErrorMessage } from "./agent-error-message";
+import { ArrowsClockwiseIcon, CheckIcon, CopyIcon } from "@databuddy/ui/icons";
 
 type MessagePart = UIMessage["parts"][number];
 

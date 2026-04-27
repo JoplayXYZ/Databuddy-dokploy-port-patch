@@ -1,31 +1,95 @@
 "use client";
 
 import type { SessionEvent } from "@databuddy/shared/types/sessions";
-import { CursorClickIcon } from "@phosphor-icons/react";
-import { FileTextIcon } from "@phosphor-icons/react";
-import { LightningIcon } from "@phosphor-icons/react";
-import { TagIcon } from "@phosphor-icons/react";
 import { Badge } from "@/components/ds/badge";
-import { formatLocalTime } from "@/lib/time";
+import { formatLocalTime } from "@databuddy/ui";
 import { cleanUrl, formatPropertyValue, getDisplayPath } from "./session-utils";
+import {
+	CursorClickIcon,
+	FileTextIcon,
+	LightningIcon,
+	LinkIcon,
+	TagIcon,
+	WarningCircleIcon,
+} from "@databuddy/ui/icons";
 
 interface SessionEventTimelineProps {
 	events: SessionEvent[];
 }
 
-function getEventIcon(eventName: string, hasProperties: boolean) {
-	if (hasProperties) {
-		return TagIcon;
+function getEventBadge(event: SessionEvent) {
+	switch (event.source) {
+		case "custom":
+			return {
+				label: "Custom",
+				className: "bg-primary/10 text-primary",
+			};
+		case "error":
+			return {
+				label: "Error",
+				className: "bg-destructive/10 text-destructive",
+			};
+		case "outgoing_link":
+			return {
+				label: "Outbound",
+				className: "bg-secondary text-secondary-foreground",
+			};
+		default:
+			return event.properties && Object.keys(event.properties).length > 0
+				? {
+						label: "Props",
+						className: "bg-muted text-muted-foreground",
+					}
+				: null;
 	}
-	switch (eventName) {
+}
+
+function getEventIconClass(event: SessionEvent, hasProperties: boolean) {
+	switch (event.source) {
+		case "error":
+			return "text-destructive";
+		case "custom":
+			return "text-primary";
+		case "outgoing_link":
+			return "text-secondary-foreground";
+		default:
+			return hasProperties ? "text-primary" : "text-muted-foreground";
+	}
+}
+
+function EventIcon({
+	event,
+	hasProperties,
+}: {
+	event: SessionEvent;
+	hasProperties: boolean;
+}) {
+	const className = `size-4 ${getEventIconClass(event, hasProperties)}`;
+
+	switch (event.source) {
+		case "custom":
+			return <TagIcon className={className} />;
+		case "error":
+			return <WarningCircleIcon className={className} />;
+		case "outgoing_link":
+			return <LinkIcon className={className} />;
+		default:
+			break;
+	}
+
+	if (hasProperties) {
+		return <TagIcon className={className} />;
+	}
+
+	switch (event.event_name) {
 		case "screen_view":
 		case "page_view":
-			return FileTextIcon;
+			return <FileTextIcon className={className} />;
 		case "click":
 		case "player-page-tab":
-			return CursorClickIcon;
+			return <CursorClickIcon className={className} />;
 		default:
-			return LightningIcon;
+			return <LightningIcon className={className} />;
 	}
 }
 
@@ -39,20 +103,24 @@ function EventItem({
 	const hasProperties = Boolean(
 		event.properties && Object.keys(event.properties).length > 0
 	);
-	const Icon = getEventIcon(event.event_name, hasProperties);
-	const displayPath = getDisplayPath(event.path || "");
-	const fullPath = cleanUrl(event.path || "");
+	const badge = getEventBadge(event);
+	const fullPath =
+		event.source === "outgoing_link"
+			? event.path || ""
+			: cleanUrl(event.path || "");
+	const displayPath =
+		event.source === "outgoing_link"
+			? event.path || ""
+			: getDisplayPath(event.path || "");
 	const time = formatLocalTime(event.time, "h:mm:ss A");
 
 	return (
-		<div className="grid grid-cols-[28px_16px_100px_1fr_auto_70px] items-center gap-2 px-2 py-1.5 text-sm">
+		<div className="grid grid-cols-[28px_16px_100px_1fr_72px_70px] items-center gap-2 px-2 py-1.5 text-sm">
 			<span className="text-right font-mono text-muted-foreground text-xs tabular-nums">
 				{eventIndex + 1}
 			</span>
 
-			<Icon
-				className={`size-4 ${hasProperties ? "text-primary" : "text-muted-foreground"}`}
-			/>
+			<EventIcon event={event} hasProperties={hasProperties} />
 
 			<span className="truncate font-medium">{event.event_name}</span>
 
@@ -63,13 +131,13 @@ function EventItem({
 				{displayPath || "—"}
 			</span>
 
-			<div className="w-[52px]">
-				{hasProperties && (
+			<div className="w-[72px]">
+				{badge && (
 					<Badge
-						className="bg-primary/10 text-[10px] text-primary"
+						className={`w-[68px] justify-center text-[10px] ${badge.className}`}
 						variant="muted"
 					>
-						Custom
+						{badge.label}
 					</Badge>
 				)}
 			</div>
@@ -92,14 +160,19 @@ function EventProperties({
 	}
 
 	return (
-		<div className="ml-12 flex flex-wrap gap-1.5 pb-2">
+		<div className="ml-12 flex max-w-full flex-wrap gap-1.5 pb-2">
 			{entries.map(([key, value]) => (
 				<div
-					className="flex items-center gap-1 rounded bg-muted/50 px-1.5 py-0.5 text-xs"
+					className="flex max-w-full items-center gap-1 rounded bg-muted/50 px-1.5 py-0.5 text-xs"
 					key={key}
 				>
-					<span className="font-mono text-muted-foreground">{key}:</span>
-					<span className="font-medium text-foreground">
+					<span className="shrink-0 font-mono text-muted-foreground">
+						{key}:
+					</span>
+					<span
+						className="truncate font-medium text-foreground"
+						title={formatPropertyValue(value)}
+					>
 						{formatPropertyValue(value)}
 					</span>
 				</div>
@@ -119,17 +192,17 @@ export function SessionEventTimeline({ events }: SessionEventTimelineProps) {
 
 	return (
 		<div className="max-h-[280px] overflow-y-auto rounded border bg-background">
-			<div className="sticky top-0 grid grid-cols-[28px_16px_100px_1fr_auto_70px] items-center gap-2 border-b bg-accent px-2 py-1.5 font-medium text-muted-foreground text-xs">
+			<div className="sticky top-0 grid grid-cols-[28px_16px_100px_1fr_72px_70px] items-center gap-2 border-b bg-accent px-2 py-1.5 font-medium text-muted-foreground text-xs">
 				<span className="text-right">#</span>
 				<span />
 				<span>Event</span>
 				<span>Path</span>
-				<span className="w-[52px]" />
+				<span className="w-[72px]" />
 				<span className="text-right">Time</span>
 			</div>
 			<div className="divide-y divide-border/50">
 				{events.map((event, eventIndex) => (
-					<div key={event.event_id || eventIndex}>
+					<div key={`${event.event_id || "event"}:${event.time}:${eventIndex}`}>
 						<EventItem event={event} eventIndex={eventIndex} />
 						{event.properties && Object.keys(event.properties).length > 0 && (
 							<EventProperties properties={event.properties} />

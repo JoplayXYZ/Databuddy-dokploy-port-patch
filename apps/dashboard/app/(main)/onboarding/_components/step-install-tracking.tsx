@@ -1,16 +1,6 @@
 "use client";
 
 import { track } from "@databuddy/sdk";
-import {
-	ArrowClockwiseIcon,
-	CheckIcon,
-	ClipboardIcon,
-	CodeIcon,
-	PackageIcon,
-	PulseIcon,
-	RobotIcon,
-	WarningCircleIcon,
-} from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { createHighlighterCoreSync } from "shiki/core";
@@ -25,6 +15,16 @@ import { Button } from "@/components/ds/button";
 import { Card } from "@/components/ds/card";
 import { Tabs } from "@/components/ds/tabs";
 import { orpc } from "@/lib/orpc";
+import {
+	ArrowClockwiseIcon,
+	CheckIcon,
+	ClipboardIcon,
+	CodeIcon,
+	PackageIcon,
+	PulseIcon,
+	RobotIcon,
+	WarningCircleIcon,
+} from "@databuddy/ui/icons";
 import { cn } from "@/lib/utils";
 import {
 	COPY_SUCCESS_TIMEOUT,
@@ -108,6 +108,16 @@ Enable what makes sense for this project. A good starting point:
 
 \`\`\`tsx
 import { track } from "@databuddy/sdk";
+import {
+	ArrowClockwiseIcon,
+	CheckIcon,
+	ClipboardIcon,
+	CodeIcon,
+	PackageIcon,
+	PulseIcon,
+	RobotIcon,
+	WarningCircleIcon,
+} from "@databuddy/ui/icons";
 track("signup_completed", { method: "google", plan: "pro" });
 \`\`\`
 

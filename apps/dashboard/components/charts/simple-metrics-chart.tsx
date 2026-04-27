@@ -1,6 +1,5 @@
 "use client";
 
-import { ChartLineIcon } from "@phosphor-icons/react";
 import { useMemo } from "react";
 import {
 	Chart,
@@ -12,6 +11,7 @@ import {
 import { chartSeriesColorAtIndex } from "@/lib/chart-presentation";
 import type { ChartQueryOutcome } from "@/lib/chart-query-outcome";
 import { cn } from "@/lib/utils";
+import { ChartLineIcon } from "@databuddy/ui/icons";
 
 interface SimpleMetricsChartProps {
 	chartStepType?: ChartCurveType;

@@ -1,10 +1,12 @@
-import { CurrencyDollarIcon } from "@phosphor-icons/react";
-import { MapPinIcon } from "@phosphor-icons/react";
-import { QuestionIcon } from "@phosphor-icons/react";
 import type { CellContext, ColumnDef } from "@tanstack/react-table";
 import { BrowserIcon, CountryFlag, OSIcon } from "@/components/icon";
 import { PercentageBadge } from "@/components/ds/badge";
 import { formatNumber } from "@/lib/formatters";
+import {
+	CurrencyDollarIcon,
+	MapPinIcon,
+	QuestionIcon,
+} from "@databuddy/ui/icons";
 
 export interface RevenueEntry {
 	country_code?: string;

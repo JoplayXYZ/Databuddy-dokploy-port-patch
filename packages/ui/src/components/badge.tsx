@@ -3,7 +3,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import type { HTMLAttributes } from "react";
 
 const badge = cva(
-  "inline-flex items-center gap-1 whitespace-nowrap rounded-full font-medium leading-none",
+  "inline-flex items-center gap-1 whitespace-nowrap rounded-full font-semibold leading-none",
   {
     variants: {
       variant: {
@@ -15,8 +15,8 @@ const badge = cva(
         muted: "bg-secondary text-muted-foreground",
       },
       size: {
-        sm: "px-1.5 py-0.5 text-[10px]",
-        md: "px-2 py-0.5 text-xs",
+        sm: "px-2 py-0.5 text-[10px]",
+        md: "px-2.5 py-1 text-xs",
       },
     },
     defaultVariants: {

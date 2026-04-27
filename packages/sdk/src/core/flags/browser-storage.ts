@@ -32,7 +32,7 @@ export class BrowserFlagStorage implements StorageInterface {
 				localStorage.removeItem(STORAGE_KEY);
 				return {};
 			}
-			return blob.flags;
+			return blob.flags && typeof blob.flags === "object" ? blob.flags : {};
 		} catch {
 			return {};
 		}

@@ -1,5 +1,7 @@
 import type { FlagResult, FlagsConfig, UserContext } from "./types";
 
+const CACHE_CONTEXT_SEPARATOR = "::databuddy-context::";
+
 export const DEFAULT_RESULT: FlagResult = {
 	enabled: false,
 	value: false,
@@ -7,11 +9,61 @@ export const DEFAULT_RESULT: FlagResult = {
 	reason: "DEFAULT",
 };
 
-export function getCacheKey(key: string, user?: UserContext): string {
-	if (!(user?.userId || user?.email)) {
+export function getCacheContext(
+	user?: UserContext,
+	environment?: string
+): string {
+	const params = new URLSearchParams();
+
+	if (user?.userId) {
+		params.set("userId", user.userId);
+	}
+	if (user?.email) {
+		params.set("email", user.email);
+	}
+	if (user?.organizationId) {
+		params.set("organizationId", user.organizationId);
+	}
+	if (user?.teamId) {
+		params.set("teamId", user.teamId);
+	}
+	if (user?.properties) {
+		params.set("properties", JSON.stringify(user.properties));
+	}
+	if (environment) {
+		params.set("environment", environment);
+	}
+
+	return params.toString();
+}
+
+export function getCacheKey(
+	key: string,
+	user?: UserContext,
+	environment?: string
+): string {
+	const context = getCacheContext(user, environment);
+	if (!context) {
 		return key;
 	}
-	return `${key}:${user.userId ?? ""}:${user.email ?? ""}`;
+	return `${key}${CACHE_CONTEXT_SEPARATOR}${context}`;
+}
+
+export function getFlagKey(cacheKey: string): string {
+	const index = cacheKey.indexOf(CACHE_CONTEXT_SEPARATOR);
+	return index === -1 ? cacheKey : cacheKey.slice(0, index);
+}
+
+export function cacheKeyBelongsToContext(
+	cacheKey: string,
+	user?: UserContext,
+	environment?: string
+): boolean {
+	const context = getCacheContext(user, environment);
+	if (!context) {
+		return !cacheKey.includes(CACHE_CONTEXT_SEPARATOR);
+	}
+	return cacheKey.endsWith(`${CACHE_CONTEXT_SEPARATOR}${context}`);
 }
 
 export function buildQueryParams(
@@ -96,12 +148,19 @@ export class RequestBatcher {
 	private timer: ReturnType<typeof setTimeout> | null = null;
 	private readonly batchDelayMs: number;
 	private readonly apiUrl: string;
+	private readonly onIdle?: () => void;
 	private readonly params: URLSearchParams;
 
-	constructor(apiUrl: string, params: URLSearchParams, batchDelayMs = 10) {
+	constructor(
+		apiUrl: string,
+		params: URLSearchParams,
+		batchDelayMs = 10,
+		onIdle?: () => void
+	) {
 		this.apiUrl = apiUrl;
 		this.params = params;
 		this.batchDelayMs = batchDelayMs;
+		this.onIdle = onIdle;
 	}
 
 	request(key: string): Promise<FlagResult> {
@@ -127,6 +186,7 @@ export class RequestBatcher {
 		this.pending.clear();
 
 		if (keys.length === 0) {
+			this.onIdle?.();
 			return;
 		}
 
@@ -148,6 +208,10 @@ export class RequestBatcher {
 				for (const cb of cbs) {
 					cb.reject(error);
 				}
+			}
+		} finally {
+			if (!(this.timer || this.pending.size)) {
+				this.onIdle?.();
 			}
 		}
 	}

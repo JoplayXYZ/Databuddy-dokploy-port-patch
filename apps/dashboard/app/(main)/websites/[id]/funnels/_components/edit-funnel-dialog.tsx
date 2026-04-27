@@ -27,15 +27,13 @@ import {
 	Droppable,
 	type DropResult,
 } from "@hello-pangea/dnd";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
 	DotsNineIcon,
-	FunnelIcon,
 	FunnelSimpleIcon,
-	GearIcon,
-	PlusIcon,
 	XIcon,
 } from "@phosphor-icons/react/dist/ssr";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { FunnelIcon, GearIcon, PlusIcon } from "@databuddy/ui/icons";
 
 const defaultFilter: FunnelFilter = {
 	field: "browser_name",

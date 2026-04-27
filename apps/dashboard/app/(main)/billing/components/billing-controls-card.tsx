@@ -13,17 +13,17 @@ import {
 	calculateTopupCost,
 	TOPUP_FEATURE_ID,
 } from "@databuddy/shared/billing/topup-math";
-import {
-	BellRingingIcon,
-	InfinityIcon,
-	ShieldCheckIcon,
-	SlidersHorizontalIcon,
-} from "@phosphor-icons/react/dist/ssr";
 import { useMutation } from "@tanstack/react-query";
 import { useCustomer } from "autumn-js/react";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import {
+	BellRingingIcon,
+	ShieldCheckIcon,
+	SlidersHorizontalIcon,
+} from "@phosphor-icons/react/dist/ssr";
+import { InfinityIcon } from "@databuddy/ui/icons";
 
 const EVENTS_FEATURE_ID = "events";
 

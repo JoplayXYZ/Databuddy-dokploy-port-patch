@@ -1,14 +1,5 @@
 "use client";
 
-import { ArrowClockwiseIcon } from "@phosphor-icons/react/dist/ssr/ArrowClockwise";
-import { CaretDownIcon } from "@phosphor-icons/react/dist/ssr/CaretDown";
-import { ChartLineIcon } from "@phosphor-icons/react/dist/ssr/ChartLine";
-import { CursorIcon } from "@phosphor-icons/react/dist/ssr/Cursor";
-import { GlobeIcon } from "@phosphor-icons/react/dist/ssr/Globe";
-import { LightbulbIcon } from "@phosphor-icons/react/dist/ssr/Lightbulb";
-import { TimerIcon } from "@phosphor-icons/react/dist/ssr/Timer";
-import { TrashIcon } from "@phosphor-icons/react/dist/ssr/Trash";
-import { UsersIcon } from "@phosphor-icons/react/dist/ssr/Users";
 import type { ColumnDef } from "@tanstack/react-table";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAtom, useAtomValue } from "jotai";
@@ -17,7 +8,7 @@ import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useInsightsFeed } from "@/app/(main)/insights/hooks/use-insights-feed";
 import { useInsightsLocalState } from "@/app/(main)/insights/hooks/use-insights-local-state";
-import { PageHeader } from "@/app/(main)/websites/_components/page-header";
+import { TopBar } from "@/components/layout/top-bar";
 import { FaviconImage } from "@/components/analytics/favicon-image";
 import { StatCard } from "@/components/analytics/stat-card";
 import { EmptyState } from "@/components/ds/empty-state";
@@ -36,7 +27,7 @@ import { Button } from "@/components/ds/button";
 import { DropdownMenu } from "@/components/ds/dropdown-menu";
 import { useBatchDynamicQuery } from "@/hooks/use-dynamic-query";
 import { useWebsites } from "@/hooks/use-websites";
-import dayjs from "@/lib/dayjs";
+import { dayjs } from "@databuddy/ui";
 import { formatNumber } from "@/lib/formatters";
 import {
 	clearInsightsHistory,
@@ -50,6 +41,16 @@ import { insightsRangeAtom } from "../lib/time-range";
 import { CockpitNarrative } from "./cockpit-narrative";
 import { CockpitSignals } from "./cockpit-signals";
 import { TimeRangeSelector } from "./time-range-selector";
+import {
+	ArrowClockwiseIcon,
+	CaretDownIcon,
+	ChartLineIcon,
+	CursorIcon,
+	GlobeIcon,
+	TimerIcon,
+	TrashIcon,
+	UsersIcon,
+} from "@databuddy/ui/icons";
 
 const insightsFocusSiteAtom = atomWithStorage<string | null>(
 	"insights.focus-site",
@@ -129,7 +130,7 @@ function FocusSitePicker({ websites, value, onChange }: FocusSitePickerProps) {
 						domain={selected.domain}
 						size={16}
 					/>
-					<span className="truncate font-medium text-sm">
+					<span className="truncate font-semibold text-sm">
 						{selected.name ?? selected.domain}
 					</span>
 				</span>
@@ -329,47 +330,43 @@ export function InsightsPageContent() {
 				aria-busy={isLoading || cockpitLoading || websitesLoading}
 				className="flex h-full flex-col overflow-y-auto"
 			>
-				<PageHeader
-					count={isLoading ? undefined : insights.length}
-					description="Understand your business at a glance"
-					icon={<LightbulbIcon weight="duotone" />}
-					right={
-						<div className="flex items-center gap-2">
-							<FocusSitePicker
-								onChange={setFocusSiteId}
-								value={focusSiteId}
-								websites={websites}
-							/>
-							<TimeRangeSelector />
-							<Button
-								aria-label="Refresh insights"
-								disabled={isLoading || cockpitLoading}
-								onClick={handleRefreshAll}
-								size="icon"
-								type="button"
-								variant="outline"
-							>
-								<ArrowClockwiseIcon
-									aria-hidden
-									className={cn(
-										"size-4",
-										(isRefreshing || cockpitLoading) && "animate-spin"
-									)}
-								/>
-							</Button>
-							<Button
-								disabled={!orgId || clearInsightsMutation.isPending}
-								onClick={() => setClearDialogOpen(true)}
-								type="button"
-								variant="outline"
-							>
-								<TrashIcon className="size-4" weight="duotone" />
-								Clear all
-							</Button>
-						</div>
-					}
-					title="Insights"
-				/>
+				<TopBar.Title>
+					<h1 className="font-semibold text-sm">Insights</h1>
+				</TopBar.Title>
+				<TopBar.Actions>
+					<FocusSitePicker
+						onChange={setFocusSiteId}
+						value={focusSiteId}
+						websites={websites}
+					/>
+					<TimeRangeSelector />
+					<Button
+						aria-label="Refresh insights"
+						disabled={isLoading || cockpitLoading}
+						onClick={handleRefreshAll}
+						size="sm"
+						type="button"
+						variant="secondary"
+					>
+						<ArrowClockwiseIcon
+							aria-hidden
+							className={cn(
+								"size-4 shrink-0",
+								(isRefreshing || cockpitLoading) && "animate-spin"
+							)}
+						/>
+					</Button>
+					<Button
+						disabled={!orgId || clearInsightsMutation.isPending}
+						onClick={() => setClearDialogOpen(true)}
+						size="sm"
+						type="button"
+						variant="secondary"
+					>
+						<TrashIcon className="size-4 shrink-0" weight="duotone" />
+						Clear all
+					</Button>
+				</TopBar.Actions>
 
 				{hasNoWebsites ? (
 					<EmptyOrgState />

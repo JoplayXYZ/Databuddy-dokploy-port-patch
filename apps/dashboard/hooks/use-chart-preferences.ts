@@ -2,7 +2,7 @@ import type {
 	ChartCurveType,
 	ChartSeriesKind,
 } from "@/components/ui/composables/chart";
-import { usePersistentState } from "@/hooks/use-persistent-state";
+import { usePersistentState } from "@databuddy/ui";
 
 const CHART_PREFERENCES_STORAGE_KEY = "databuddy-chart-preferences";
 

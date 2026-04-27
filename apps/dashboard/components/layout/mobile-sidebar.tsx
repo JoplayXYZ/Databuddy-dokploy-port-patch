@@ -2,31 +2,40 @@
 
 import { authClient } from "@databuddy/auth/client";
 import {
+	FEATURE_METADATA,
+	type GatedFeatureId,
+} from "@databuddy/shared/types/features";
+import { useTheme } from "next-themes";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
+import { Avatar } from "@/components/ds/avatar";
+import { Button } from "@/components/ds/button";
+import {
+	ArrowSquareOutIcon,
 	ListIcon,
+	LockSimpleIcon,
 	MagnifyingGlassIcon,
 	MonitorIcon,
 	MoonIcon,
 	SignOutIcon,
 	SunIcon,
-} from "@phosphor-icons/react/dist/ssr";
-import { useTheme } from "next-themes";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
-import { toast } from "sonner";
-import { Avatar } from "@/components/ds/avatar";
-import { Button } from "@/components/ds/button";
+} from "@databuddy/ui/icons";
+import { useBillingContext } from "@/components/providers/billing-provider";
 import { useCommandSearchOpenAction } from "@/components/ui/command-search";
 import { Drawer, DrawerContent } from "@/components/ui/drawer";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { Branding } from "./logo";
-import { NavigationRenderer } from "./navigation/navigation-renderer";
+import { isNavItemActive } from "./navigation/nav-item-active";
+import type { NavigationGroup, NavigationItem } from "./navigation/types";
+import { OrganizationSelector } from "./organization-selector";
 import { useSidebarNavigation } from "./sidebar-navigation-provider";
 
 function MobileThemeToggle() {
 	const { theme, setTheme } = useTheme();
-	const currentTheme = theme ?? "system";
+	const current = theme ?? "system";
 
 	const themes = [
 		{ id: "light" as const, icon: SunIcon, label: "Light" },
@@ -39,9 +48,9 @@ function MobileThemeToggle() {
 			{themes.map(({ id, icon: Icon, label }) => (
 				<button
 					className={cn(
-						"flex h-7 flex-1 items-center justify-center gap-1.5 rounded text-xs transition-colors",
-						currentTheme === id
-							? "bg-background font-medium text-sidebar-accent-foreground shadow-sm"
+						"flex h-8 flex-1 items-center justify-center gap-1.5 rounded font-semibold text-xs",
+						current === id
+							? "bg-background text-sidebar-accent-foreground shadow-sm"
 							: "text-sidebar-foreground/50 hover:text-sidebar-foreground"
 					)}
 					key={id}
@@ -49,11 +58,7 @@ function MobileThemeToggle() {
 					suppressHydrationWarning
 					type="button"
 				>
-					<Icon
-						className="size-3.5"
-						suppressHydrationWarning
-						weight="duotone"
-					/>
+					<Icon className="size-4 shrink-0" suppressHydrationWarning />
 					<span suppressHydrationWarning>{label}</span>
 				</button>
 			))}
@@ -61,10 +66,10 @@ function MobileThemeToggle() {
 	);
 }
 
-const getInitials = (
+function getInitials(
 	name: string | null | undefined,
 	email: string | null | undefined
-) => {
+) {
 	if (name) {
 		return name
 			.split(" ")
@@ -74,18 +79,199 @@ const getInitials = (
 			.slice(0, 2);
 	}
 	return email?.at(0)?.toUpperCase() || "U";
-};
+}
+
+function MobileNavItem({
+	item,
+	pathname,
+	currentWebsiteId,
+	isDemo,
+	isLocked,
+	lockedPlanName,
+}: {
+	currentWebsiteId?: string | null;
+	isDemo: boolean;
+	isLocked: boolean;
+	item: NavigationItem;
+	lockedPlanName: string | null;
+	pathname: string;
+}) {
+	const active = isNavItemActive(item, pathname, currentWebsiteId);
+
+	const fullPath = useMemo(() => {
+		if (item.rootLevel) {
+			return item.href;
+		}
+		if (isDemo) {
+			return item.href === ""
+				? `/demo/${currentWebsiteId}`
+				: `/demo/${currentWebsiteId}${item.href}`;
+		}
+		return `/websites/${currentWebsiteId}${item.href}`;
+	}, [item.href, item.rootLevel, currentWebsiteId, isDemo]);
+
+	if (item.production === false && process.env.NODE_ENV === "production") {
+		return null;
+	}
+
+	const Icon = item.icon;
+	const base = "flex h-9 min-w-0 items-center gap-3 rounded px-3 text-sm";
+
+	if (isLocked) {
+		return (
+			<div
+				aria-disabled
+				className={cn(base, "cursor-not-allowed text-sidebar-foreground/30")}
+			>
+				<Icon aria-hidden className="size-[18px] shrink-0" />
+				<span className="min-w-0 flex-1 truncate">{item.name}</span>
+				<LockSimpleIcon aria-hidden className="size-3.5 shrink-0" />
+				{lockedPlanName && (
+					<span className="rounded bg-sidebar-accent px-1.5 py-0.5 font-semibold text-[10px] text-sidebar-foreground/40 uppercase">
+						{lockedPlanName}
+					</span>
+				)}
+			</div>
+		);
+	}
+
+	if (item.disabled) {
+		return (
+			<div aria-disabled className={cn(base, "cursor-not-allowed opacity-25")}>
+				<Icon aria-hidden className="size-[18px] shrink-0" />
+				<span className="min-w-0 flex-1 truncate">{item.name}</span>
+			</div>
+		);
+	}
+
+	const LinkComponent = item.external ? "a" : Link;
+	const linkProps = item.external
+		? { href: item.href, target: "_blank", rel: "noopener noreferrer" }
+		: { href: fullPath, prefetch: true as const };
+
+	return (
+		<LinkComponent
+			{...linkProps}
+			aria-current={active ? "page" : undefined}
+			className={cn(
+				base,
+				"group",
+				active
+					? "bg-sidebar-accent font-semibold text-sidebar-accent-foreground"
+					: "text-sidebar-foreground/60 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground"
+			)}
+		>
+			<Icon aria-hidden className="size-[18px] shrink-0" />
+			<span className="min-w-0 flex-1 truncate">{item.name}</span>
+			{item.alpha && (
+				<span className="font-semibold text-[10px] text-sidebar-foreground/30 uppercase">
+					ALPHA
+				</span>
+			)}
+			{item.badge && (
+				<span
+					className={cn(
+						"rounded px-1.5 py-0.5 font-semibold text-[10px]",
+						item.badge.variant === "orange"
+							? "bg-amber-500/10 text-amber-600 dark:text-amber-500"
+							: item.badge.variant === "red"
+								? "bg-destructive/10 text-destructive"
+								: "bg-accent text-accent-foreground"
+					)}
+				>
+					{item.badge.text}
+				</span>
+			)}
+			{item.external && (
+				<ArrowSquareOutIcon
+					aria-hidden
+					className="size-3.5 shrink-0 text-sidebar-foreground/25 opacity-0 group-hover:opacity-100"
+				/>
+			)}
+		</LinkComponent>
+	);
+}
+
+function MobileNavGroup({
+	group,
+	pathname,
+	currentWebsiteId,
+	isDemo,
+	isFeatureEnabled,
+	isBillingLoading,
+}: {
+	currentWebsiteId?: string | null;
+	group: NavigationGroup;
+	isBillingLoading: boolean;
+	isDemo: boolean;
+	isFeatureEnabled: (feature: GatedFeatureId) => boolean;
+	pathname: string;
+}) {
+	const visibleItems = group.items.filter((item) => {
+		if (item.production === false && process.env.NODE_ENV === "production") {
+			return false;
+		}
+		if (item.hideFromDemo && isDemo) {
+			return false;
+		}
+		if (item.showOnlyOnDemo && !isDemo) {
+			return false;
+		}
+		return true;
+	});
+
+	if (visibleItems.length === 0) {
+		return null;
+	}
+
+	return (
+		<div>
+			{group.label && (
+				<div className="px-4 pt-5 pb-2 font-semibold text-[11px] text-sidebar-foreground/35 uppercase tracking-wider">
+					{group.label}
+				</div>
+			)}
+			<div className="flex flex-col gap-0.5 px-2">
+				{visibleItems.map((item) => {
+					const locked =
+						!isBillingLoading &&
+						item.gatedFeature != null &&
+						!isFeatureEnabled(item.gatedFeature);
+
+					return (
+						<MobileNavItem
+							currentWebsiteId={currentWebsiteId}
+							isDemo={isDemo}
+							isLocked={locked}
+							item={item}
+							key={`${item.name}::${item.href}`}
+							lockedPlanName={
+								locked && item.gatedFeature
+									? (FEATURE_METADATA[
+											item.gatedFeature
+										]?.minPlan?.toUpperCase() ?? null)
+									: null
+							}
+							pathname={pathname}
+						/>
+					);
+				})}
+			</div>
+		</div>
+	);
+}
 
 export function MobileSidebar() {
 	const { data: session } = authClient.useSession();
 	const user = session?.user ?? null;
 
-	const { header, categories, activeCategory, setCategory, pathname } =
+	const { navigation, currentWebsiteId, pathname, isDemo } =
 		useSidebarNavigation();
+	const { isFeatureEnabled, isLoading: isBillingLoading } = useBillingContext();
 
 	const [isOpen, setIsOpen] = useState(false);
 	const router = useRouter();
-	const openCommandSearchAction = useCommandSearchOpenAction();
+	const openSearch = useCommandSearchOpenAction();
 
 	useEffect(() => {
 		setIsOpen(false);
@@ -107,38 +293,44 @@ export function MobileSidebar() {
 		});
 	}, [router]);
 
+	const topGroups = navigation.filter((g) => !g.pinToBottom);
+	const bottomGroups = navigation.filter((g) => g.pinToBottom);
+
+	const groupProps = {
+		currentWebsiteId,
+		isBillingLoading,
+		isDemo,
+		isFeatureEnabled,
+		pathname,
+	};
+
 	return (
 		<div className="md:hidden">
-			<header className="fixed top-0 right-0 left-0 z-40 h-12 w-full border-b bg-background">
+			<header className="fixed top-0 right-0 left-0 z-40 h-12 w-full border-b bg-sidebar">
 				<div className="flex h-full items-center justify-between px-3">
 					<div className="flex items-center gap-2.5">
 						<Button
 							aria-label="Open navigation menu"
-							className="size-9 p-0"
-							data-track="sidebar-toggle"
 							onClick={() => setIsOpen(true)}
+							size="sm"
 							variant="ghost"
 						>
-							<ListIcon className="size-5" weight="duotone" />
+							<ListIcon className="size-[18px] shrink-0" />
 						</Button>
-
 						<Link
-							className="flex min-w-0 select-none items-center gap-2 transition-opacity hover:opacity-80"
-							data-track="logo-click"
+							className="flex min-w-0 select-none items-center gap-2 hover:opacity-80"
 							href="/websites"
 						>
 							<Branding heightPx={22} priority variant="primary-logo" />
 						</Link>
 					</div>
-
 					<Button
 						aria-label="Search"
-						className="size-9 p-0"
-						data-track="mobile-search"
-						onClick={() => openCommandSearchAction()}
+						onClick={() => openSearch()}
+						size="sm"
 						variant="ghost"
 					>
-						<MagnifyingGlassIcon className="size-5" weight="duotone" />
+						<MagnifyingGlassIcon className="size-[18px] shrink-0" />
 					</Button>
 				</div>
 			</header>
@@ -147,7 +339,7 @@ export function MobileSidebar() {
 				<DrawerContent className="bg-sidebar">
 					<div className="flex h-12 shrink-0 items-center border-b px-4">
 						<Link
-							className="flex select-none items-center gap-2 transition-opacity hover:opacity-80"
+							className="flex select-none items-center gap-2 hover:opacity-80"
 							href="/websites"
 							onClick={() => setIsOpen(false)}
 						>
@@ -155,73 +347,60 @@ export function MobileSidebar() {
 						</Link>
 					</div>
 
-					{header}
-
-					{categories.length > 1 ? (
-						<div className="shrink-0 border-b px-3 py-2.5">
-							<div className="flex gap-1 overflow-x-auto">
-								{categories.map((category) => {
-									const Icon = category.icon;
-									const isActive = activeCategory === category.id;
-									return (
-										<button
-											className={cn(
-												"flex shrink-0 items-center gap-1.5 rounded px-2.5 py-1.5 font-medium text-xs transition-colors",
-												isActive
-													? "bg-sidebar-accent text-sidebar-accent-foreground"
-													: "text-sidebar-foreground/50 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
-											)}
-											key={category.id}
-											onClick={() => setCategory(category.id)}
-											type="button"
-										>
-											<Icon
-												className="size-3.5"
-												weight={isActive ? "fill" : "duotone"}
-											/>
-											<span>{category.name}</span>
-										</button>
-									);
-								})}
-							</div>
-						</div>
-					) : null}
+					<OrganizationSelector />
 
 					<ScrollArea className="flex-1">
-						<NavigationRenderer />
+						<div className="flex flex-col pb-2">
+							{topGroups.map((group) => (
+								<MobileNavGroup
+									group={group}
+									key={group.label || "__top"}
+									{...groupProps}
+								/>
+							))}
+						</div>
 					</ScrollArea>
 
-					<div className="shrink-0 border-t bg-sidebar">
-						<div className="border-b px-3 py-2.5">
+					<div className="shrink-0 border-sidebar-border/40 border-t bg-sidebar">
+						{bottomGroups.map((group) => (
+							<MobileNavGroup
+								group={group}
+								key={group.label || "__bottom"}
+								{...groupProps}
+							/>
+						))}
+
+						<div className="px-3 py-2.5">
 							<MobileThemeToggle />
 						</div>
 
-						{user ? (
-							<div className="flex items-center gap-3 px-3 py-3">
+						{user && (
+							<div className="flex items-center gap-3 border-sidebar-border/40 border-t px-3 py-3">
 								<Avatar
 									alt={user.name || "User"}
-									className="size-8 shrink-0"
+									className="size-9 shrink-0"
 									fallback={getInitials(user.name, user.email)}
 									src={user.image || undefined}
 								/>
 								<div className="min-w-0 flex-1">
-									<p className="truncate font-medium text-sidebar-foreground text-sm">
+									<p className="truncate font-semibold text-sidebar-foreground text-sm">
 										{user.name || "User"}
 									</p>
-									<p className="truncate text-sidebar-foreground/50 text-xs">
+									<p className="truncate text-sidebar-foreground/40 text-xs">
 										{user.email}
 									</p>
 								</div>
 								<Button
 									aria-label="Sign out"
-									className="size-8 shrink-0 p-0 text-sidebar-foreground/50 hover:text-destructive"
+									className="shrink-0 text-sidebar-foreground/40 hover:text-destructive"
 									onClick={handleSignOut}
+									size="sm"
 									variant="ghost"
 								>
-									<SignOutIcon className="size-4" weight="duotone" />
+									<SignOutIcon className="size-[18px] shrink-0" />
 								</Button>
 							</div>
-						) : null}
+						)}
 					</div>
 				</DrawerContent>
 			</Drawer>

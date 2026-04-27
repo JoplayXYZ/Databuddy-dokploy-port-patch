@@ -1,12 +1,12 @@
 "use client";
 
-import { ArrowDownIcon } from "@phosphor-icons/react/dist/ssr";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Button } from "@/components/ds/button";
 import { Dialog } from "@/components/ds/dialog";
 import { Text } from "@/components/ds/text";
 import { orpc } from "@/lib/orpc";
+import { ArrowDownIcon } from "@databuddy/ui/icons";
 
 interface RedeemDialogProps {
 	creditsRequired: number;
@@ -49,8 +49,9 @@ export function RedeemDialog({
 				<Dialog.Header>
 					<Dialog.Title>Confirm Redemption</Dialog.Title>
 					<Dialog.Description>
-						This will deduct credits from your balance and add events to your
-						account.
+						This will deduct credits from your balance and add{" "}
+						{rewardType === "agent-credits" ? "agent credits" : "events"} to
+						your account.
 					</Dialog.Description>
 				</Dialog.Header>
 				<Dialog.Body className="space-y-2">
@@ -70,7 +71,8 @@ export function RedeemDialog({
 					</div>
 					<div className="flex items-center justify-between rounded-md bg-secondary px-4 py-3">
 						<Text tone="muted" variant="body">
-							Events added
+							{rewardType === "agent-credits" ? "Agent credits" : "Events"}{" "}
+							added
 						</Text>
 						<Text className="text-success tabular-nums" variant="label">
 							+{rewardAmount.toLocaleString()} {rewardType}

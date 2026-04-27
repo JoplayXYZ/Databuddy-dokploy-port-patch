@@ -6,22 +6,23 @@ import { DeleteDialog } from "@/components/ds/delete-dialog";
 import { DropdownMenu } from "@/components/ds/dropdown-menu";
 import { EmptyState } from "@/components/ds/empty-state";
 import { ErrorBoundary } from "@/components/error-boundary";
-import { type Link, useDeleteLink, useLinks } from "@/hooks/use-links";
-import { useFlags } from "@databuddy/sdk/react";
 import {
-	LinkIcon,
-	LinkSimpleIcon,
-	MagnifyingGlassIcon,
-	PlusIcon,
-	RocketIcon,
-} from "@phosphor-icons/react";
-import { useCallback, useState } from "react";
+	type Link,
+	useCreateLinkFolder,
+	useDeleteLink,
+	useLinkFolders,
+	useLinks,
+} from "@/hooks/use-links";
+import { useFlags } from "@databuddy/sdk/react";
+import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { DeepLinkSheet } from "./_components/deep-link-sheet";
+import { LinkFolderSheet } from "./_components/link-folder-sheet";
+import { LinkFoldersList } from "./_components/link-folders-list";
 import {
-	LinksList,
 	LinksListSkeleton,
 	LinksSearchBarSkeleton,
+	LinksList,
 } from "./_components/link-item";
 import { LinkSheet } from "./_components/link-sheet";
 import { LinksSearchBar } from "./_components/links-search-bar";
@@ -31,6 +32,14 @@ import {
 	type TypeFilter,
 	useFilteredLinks,
 } from "./_components/use-filtered-links";
+import { LinkSimpleIcon } from "@phosphor-icons/react/dist/ssr";
+import {
+	ArchiveIcon,
+	LinkIcon,
+	MagnifyingGlassIcon,
+	PlusIcon,
+	RocketIcon,
+} from "@databuddy/ui/icons";
 
 export default function LinksPage() {
 	const [sheetLink, setSheetLink] = useState<Link | null>(null);
@@ -38,6 +47,7 @@ export default function LinksPage() {
 	const [deleteId, setDeleteId] = useState<string | null>(null);
 	const [qrLink, setQrLink] = useState<Link | null>(null);
 	const [isDeepLinkSheetOpen, setIsDeepLinkSheetOpen] = useState(false);
+	const [isFolderSheetOpen, setIsFolderSheetOpen] = useState(false);
 	const [search, setSearch] = useState("");
 	const [sort, setSort] = useState<SortOption>("newest");
 	const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
@@ -45,12 +55,19 @@ export default function LinksPage() {
 	const { isOn } = useFlags();
 	const deepLinksEnabled = isOn("deeplinks");
 	const { links, isLoading, isError, isFetching, refetch } = useLinks();
+	const { folders } = useLinkFolders();
+	const createFolder = useCreateLinkFolder();
 	const deleteLink = useDeleteLink();
 	const filtered = useFilteredLinks(links, search, sort, typeFilter);
+	const foldersById = useMemo(
+		() => new Map(folders.map((folder) => [folder.id, folder.name])),
+		[folders]
+	);
 	const hasDeepLinks = links.some((l) => !!l.deepLinkApp);
 
 	const busy = isLoading || isFetching;
 	const hasLinks = links.length > 0;
+	const hasFolders = folders.length > 0;
 	const noResults = !busy && hasLinks && filtered.length === 0;
 
 	const openCreate = useCallback(() => {
@@ -79,6 +96,18 @@ export default function LinksPage() {
 		}
 	};
 
+	const handleCreateFolder = async (name: string) => {
+		try {
+			await createFolder.mutateAsync({ name });
+			setIsFolderSheetOpen(false);
+			toast.success("Folder created");
+		} catch (error: unknown) {
+			toast.error(
+				error instanceof Error ? error.message : "Failed to create folder"
+			);
+		}
+	};
+
 	return (
 		<ErrorBoundary>
 			<div className="flex-1 overflow-y-auto">
@@ -93,32 +122,42 @@ export default function LinksPage() {
 										: "Create and manage short links with analytics"}
 								</Card.Description>
 							</div>
-							{deepLinksEnabled ? (
-								<DropdownMenu>
-									<DropdownMenu.Trigger className="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-md bg-primary px-3 font-medium text-primary-foreground text-sm transition-colors hover:bg-primary/90">
+							<div className="flex shrink-0 items-center gap-2">
+								<Button
+									onClick={() => setIsFolderSheetOpen(true)}
+									size="sm"
+									variant="secondary"
+								>
+									<ArchiveIcon className="size-3.5" weight="duotone" />
+									Folder
+								</Button>
+								{deepLinksEnabled ? (
+									<DropdownMenu>
+										<DropdownMenu.Trigger className="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-md bg-primary px-3 font-medium text-primary-foreground text-sm transition-colors hover:bg-primary/90">
+											<PlusIcon size={14} />
+											New Link
+										</DropdownMenu.Trigger>
+										<DropdownMenu.Content align="end" className="w-44">
+											<DropdownMenu.Item className="gap-2" onClick={openCreate}>
+												<LinkSimpleIcon className="size-4" weight="duotone" />
+												Short Link
+											</DropdownMenu.Item>
+											<DropdownMenu.Item
+												className="gap-2"
+												onClick={() => setIsDeepLinkSheetOpen(true)}
+											>
+												<RocketIcon className="size-4" weight="duotone" />
+												Deep Link
+											</DropdownMenu.Item>
+										</DropdownMenu.Content>
+									</DropdownMenu>
+								) : (
+									<Button onClick={openCreate} size="sm">
 										<PlusIcon size={14} />
 										New Link
-									</DropdownMenu.Trigger>
-									<DropdownMenu.Content align="end" className="w-44">
-										<DropdownMenu.Item className="gap-2" onClick={openCreate}>
-											<LinkSimpleIcon className="size-4" weight="duotone" />
-											Short Link
-										</DropdownMenu.Item>
-										<DropdownMenu.Item
-											className="gap-2"
-											onClick={() => setIsDeepLinkSheetOpen(true)}
-										>
-											<RocketIcon className="size-4" weight="duotone" />
-											Deep Link
-										</DropdownMenu.Item>
-									</DropdownMenu.Content>
-								</DropdownMenu>
-							) : (
-								<Button onClick={openCreate} size="sm">
-									<PlusIcon size={14} />
-									New Link
-								</Button>
-							)}
+									</Button>
+								)}
+							</div>
 						</Card.Header>
 						<Card.Content className="p-0">
 							{busy ? (
@@ -126,19 +165,21 @@ export default function LinksPage() {
 									<LinksSearchBarSkeleton />
 									<LinksListSkeleton />
 								</>
-							) : hasLinks ? (
+							) : hasLinks || hasFolders ? (
 								<>
-									<div className="border-b px-4 py-2">
-										<LinksSearchBar
-											hasDeepLinks={hasDeepLinks}
-											onSearchQueryChangeAction={setSearch}
-											onSortByChangeAction={setSort}
-											onTypeFilterChangeAction={setTypeFilter}
-											searchQuery={search}
-											sortBy={sort}
-											typeFilter={typeFilter}
-										/>
-									</div>
+									{hasLinks && (
+										<div className="border-b px-4 py-2">
+											<LinksSearchBar
+												hasDeepLinks={hasDeepLinks}
+												onSearchQueryChangeAction={setSearch}
+												onSortByChangeAction={setSort}
+												onTypeFilterChangeAction={setTypeFilter}
+												searchQuery={search}
+												sortBy={sort}
+												typeFilter={typeFilter}
+											/>
+										</div>
+									)}
 									{noResults ? (
 										<div className="px-5 py-12">
 											<EmptyState
@@ -149,7 +190,9 @@ export default function LinksPage() {
 											/>
 										</div>
 									) : (
-										<LinksList
+										<LinkFoldersList
+											folders={folders}
+											foldersById={foldersById}
 											links={filtered}
 											onCreateLink={openCreate}
 											onDelete={setDeleteId}
@@ -173,6 +216,7 @@ export default function LinksPage() {
 								</div>
 							) : (
 								<LinksList
+									foldersById={foldersById}
 									links={[]}
 									onCreateLink={openCreate}
 									onDelete={setDeleteId}
@@ -194,6 +238,13 @@ export default function LinksPage() {
 			<DeepLinkSheet
 				onOpenChange={setIsDeepLinkSheetOpen}
 				open={isDeepLinkSheetOpen}
+			/>
+
+			<LinkFolderSheet
+				isCreating={createFolder.isPending}
+				onCreate={handleCreateFolder}
+				onOpenChange={setIsFolderSheetOpen}
+				open={isFolderSheetOpen}
 			/>
 
 			<QrCodeDialog

@@ -1,14 +1,16 @@
 "use client";
 
-import { ArrowRightIcon } from "@phosphor-icons/react/dist/ssr";
-import { RocketLaunchIcon } from "@phosphor-icons/react/dist/ssr";
-import { TestTubeIcon } from "@phosphor-icons/react/dist/ssr";
-import { UsersIcon } from "@phosphor-icons/react/dist/ssr";
-import { WarningIcon } from "@phosphor-icons/react/dist/ssr";
 import { Badge } from "@/components/ds/badge";
 import { Button } from "@/components/ds/button";
 import { Card } from "@/components/ds/card";
 import type { FlagTemplate } from "../../_components/types";
+import {
+	ArrowRightIcon,
+	RocketLaunchIcon,
+	TestTubeIcon,
+	UsersIcon,
+	WarningIcon,
+} from "@databuddy/ui/icons";
 
 export interface TemplateItemProps {
 	onUseAction: (template: FlagTemplate) => void;

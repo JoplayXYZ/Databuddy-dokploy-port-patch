@@ -2,11 +2,6 @@
 
 import { track } from "@databuddy/sdk";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-	CaretUpDown,
-	EnvelopeSimpleIcon,
-	UsersIcon,
-} from "@phosphor-icons/react/dist/ssr";
 import { useState } from "react";
 import { useController, useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -18,6 +13,8 @@ import { DropdownMenu } from "@/components/ds/dropdown-menu";
 import { Field } from "@/components/ds/field";
 import { Input } from "@/components/ds/input";
 import { useOrganizationInvitations } from "@/hooks/use-organization-invitations";
+import { CaretUpDown } from "@phosphor-icons/react/dist/ssr";
+import { EnvelopeSimpleIcon, UsersIcon } from "@databuddy/ui/icons";
 
 const formSchema = z.object({
 	email: z.string().email("Enter a valid email address"),

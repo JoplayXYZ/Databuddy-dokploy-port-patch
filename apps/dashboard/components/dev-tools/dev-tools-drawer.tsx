@@ -1,29 +1,5 @@
 "use client";
 
-import { BugIcon } from "@phosphor-icons/react";
-import { CaretDownIcon } from "@phosphor-icons/react";
-import { ChartBarIcon } from "@phosphor-icons/react";
-import { ChartLineIcon } from "@phosphor-icons/react";
-import { CheckCircleIcon } from "@phosphor-icons/react";
-import { ClipboardIcon } from "@phosphor-icons/react";
-import { CopyIcon } from "@phosphor-icons/react";
-import { DatabaseIcon } from "@phosphor-icons/react";
-import { DesktopIcon } from "@phosphor-icons/react";
-import { FunnelIcon } from "@phosphor-icons/react";
-import { GearIcon } from "@phosphor-icons/react";
-import { InfoIcon } from "@phosphor-icons/react";
-import { LightningIcon } from "@phosphor-icons/react";
-import { MonitorIcon } from "@phosphor-icons/react";
-import { MoonIcon } from "@phosphor-icons/react";
-import { PresentationChartIcon } from "@phosphor-icons/react";
-import { SpinnerIcon } from "@phosphor-icons/react";
-import { SquaresFourIcon } from "@phosphor-icons/react";
-import { StackIcon } from "@phosphor-icons/react";
-import { SunIcon } from "@phosphor-icons/react";
-import { TrashIcon } from "@phosphor-icons/react";
-import { UsersIcon } from "@phosphor-icons/react";
-import { WarningCircleIcon } from "@phosphor-icons/react";
-import { XIcon } from "@phosphor-icons/react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTheme } from "next-themes";
 import { useCallback, useEffect, useState } from "react";
@@ -56,6 +32,33 @@ import {
 	SelectValue,
 } from "../ui/select";
 import { Separator } from "../ui/separator";
+import { XIcon } from "@phosphor-icons/react/dist/ssr";
+import type { NavIcon } from "@/components/layout/navigation/types";
+import {
+	BugIcon,
+	CaretDownIcon,
+	ChartBarIcon,
+	ChartLineIcon,
+	CheckCircleIcon,
+	ClipboardIcon,
+	CopyIcon,
+	DatabaseIcon,
+	DesktopIcon,
+	FunnelIcon,
+	GearIcon,
+	InfoIcon,
+	LightningIcon,
+	MonitorIcon,
+	MoonIcon,
+	PresentationChartIcon,
+	SpinnerIcon,
+	SquaresFourIcon,
+	StackIcon,
+	SunIcon,
+	TrashIcon,
+	UsersIcon,
+	WarningCircleIcon,
+} from "@databuddy/ui/icons";
 
 function InfoSection({
 	title,
@@ -81,7 +84,7 @@ function ActionButton({
 	onClick,
 	variant = "outline",
 }: {
-	icon: typeof BugIcon;
+	icon: NavIcon;
 	label: string;
 	onClick: () => void;
 	variant?: "outline" | "destructive";
@@ -93,7 +96,7 @@ function ActionButton({
 			size="sm"
 			variant={variant}
 		>
-			<Icon className="size-4" weight="duotone" />
+			<Icon className="size-4" />
 			{label}
 		</Button>
 	);
@@ -700,7 +703,7 @@ const THEME_OPTIONS = [
 const CHART_TYPE_OPTIONS: {
 	id: ChartSeriesKind;
 	name: string;
-	icon: typeof ChartBarIcon;
+	icon: NavIcon;
 }[] = [
 	{ id: "bar", name: "Bar", icon: ChartBarIcon },
 	{ id: "line", name: "Line", icon: ChartLineIcon },
@@ -715,7 +718,7 @@ const STEP_TYPE_OPTIONS: { id: ChartCurveType; name: string }[] = [
 	{ id: "stepAfter", name: "Step After" },
 ];
 
-const LOCATION_ICONS: Record<ChartLocation, typeof ChartLineIcon> = {
+const LOCATION_ICONS: Record<ChartLocation, NavIcon> = {
 	"overview-stats": SquaresFourIcon,
 	"overview-main": PresentationChartIcon,
 	funnels: FunnelIcon,
@@ -794,7 +797,7 @@ function AppearanceSettings() {
 									{CHART_TYPE_OPTIONS.map(({ id, name, icon: OptIcon }) => (
 										<SelectItem key={id} value={id}>
 											<div className="flex items-center gap-2">
-												<OptIcon className="size-3" weight="duotone" />
+												<OptIcon className="size-3" />
 												{name}
 											</div>
 										</SelectItem>
@@ -858,10 +861,7 @@ function AppearanceSettings() {
 										key={location}
 									>
 										<div className="flex items-center gap-2">
-											<Icon
-												className="size-3 shrink-0 text-muted-foreground"
-												weight="duotone"
-											/>
+											<Icon className="size-3 shrink-0 text-muted-foreground" />
 											<span className="truncate">
 												{CHART_LOCATION_LABELS[location]}
 											</span>
@@ -887,10 +887,7 @@ function AppearanceSettings() {
 														({ id, name, icon: OptIcon }) => (
 															<SelectItem key={id} value={id}>
 																<div className="flex items-center gap-2">
-																	<OptIcon
-																		className="size-3"
-																		weight="duotone"
-																	/>
+																	<OptIcon className="size-3" />
 																	{name}
 																</div>
 															</SelectItem>

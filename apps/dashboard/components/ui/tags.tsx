@@ -1,11 +1,13 @@
 "use client";
 
-import { PlusIcon } from "@phosphor-icons/react";
-import { XCircleIcon } from "@phosphor-icons/react";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import {
+	PlusIcon,
+	XCircleIcon,
+} from "@databuddy/ui/icons";
 
 export interface TagsChatProps {
 	allowDuplicates?: boolean;

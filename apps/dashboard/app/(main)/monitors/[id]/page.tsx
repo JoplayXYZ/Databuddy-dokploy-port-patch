@@ -1,15 +1,5 @@
 "use client";
 
-import { ArrowClockwiseIcon } from "@phosphor-icons/react/dist/ssr";
-import { ArrowLeftIcon } from "@phosphor-icons/react/dist/ssr";
-import { ArrowSquareOutIcon } from "@phosphor-icons/react/dist/ssr";
-import { GlobeIcon } from "@phosphor-icons/react/dist/ssr";
-import { HeartbeatIcon } from "@phosphor-icons/react/dist/ssr";
-import { LightningIcon } from "@phosphor-icons/react/dist/ssr";
-import { PauseIcon } from "@phosphor-icons/react/dist/ssr";
-import { PencilIcon } from "@phosphor-icons/react/dist/ssr";
-import { PlayIcon } from "@phosphor-icons/react/dist/ssr";
-import { TrashIcon } from "@phosphor-icons/react/dist/ssr";
 import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
 import dynamic from "next/dynamic";
 import Link from "next/link";
@@ -17,19 +7,18 @@ import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { MonitorDetailLoading } from "@/app/(main)/monitors/_components/monitor-detail-loading";
-import { PageHeader } from "@/app/(main)/websites/_components/page-header";
-import { FaviconImage } from "@/components/analytics/favicon-image";
+import { TopBar } from "@/components/layout/top-bar";
 import { EmptyState } from "@/components/ds/empty-state";
 import { MonitorSheet } from "@/components/monitors/monitor-sheet";
 import { TransferToOrgDialog } from "@/components/transfer-to-org-dialog";
 import { DeleteDialog } from "@/components/ds/delete-dialog";
 import { Button } from "@/components/ds/button";
-import { Skeleton } from "@/components/ds/skeleton";
+import { Skeleton } from "@databuddy/ui";
 import { useDateFilters } from "@/hooks/use-date-filters";
 import { useBatchDynamicQuery } from "@/hooks/use-dynamic-query";
 import { orpc } from "@/lib/orpc";
-import { fromNow, localDayjs } from "@/lib/time";
-import { LatencyChartChunkPlaceholder } from "@/lib/uptime/latency-chart-chunk-placeholder";
+import { fromNow, localDayjs } from "@databuddy/ui";
+import { LatencyChartChunkPlaceholder } from "@databuddy/ui/uptime";
 import { UptimeHeatmap } from "@/lib/uptime/uptime-heatmap";
 import { cn } from "@/lib/utils";
 import {
@@ -37,10 +26,21 @@ import {
 	type RecentActivityCheck,
 	recentActivityCheckKey,
 } from "../../websites/[id]/pulse/_components/recent-activity";
+import {
+	ArrowClockwiseIcon,
+	ArrowSquareOutIcon,
+	GlobeIcon,
+	HeartbeatIcon,
+	LightningIcon,
+	PauseIcon,
+	PencilIcon,
+	PlayIcon,
+	TrashIcon,
+} from "@databuddy/ui/icons";
 
 const LatencyChart = dynamic(
 	() =>
-		import("@/lib/uptime/latency-chart").then((m) => ({
+		import("@databuddy/ui/uptime").then((m) => ({
 			default: m.LatencyChart,
 		})),
 	{
@@ -72,7 +72,7 @@ interface ScheduleData {
 	jsonParsingConfig?: { enabled: boolean } | null;
 	name: string | null;
 	organizationId: string;
-	qstashStatus: string;
+	schedulerStatus: string;
 	timeout: number | null;
 	url: string;
 	website?: {
@@ -535,121 +535,94 @@ export default function MonitorDetailsPage() {
 			schedule.name ||
 			"Uptime Monitor"
 		: schedule.name || schedule.url || "Uptime Monitor";
-	const displayDomain = isWebsiteMonitor
-		? schedule.website?.domain
-		: schedule.url;
-
 	return (
 		<div className="flex min-h-0 flex-1 flex-col">
-			<PageHeader
-				description={schedule.url}
-				icon={
-					displayDomain ? (
-						<FaviconImage
-							altText={`${displayName} favicon`}
-							domain={displayDomain}
-							fallbackIcon={<HeartbeatIcon weight="duotone" />}
-							size={20}
-						/>
+			<TopBar.Title>
+				<h1 className="font-semibold text-sm">{displayName}</h1>
+			</TopBar.Title>
+			<TopBar.Actions>
+				<Button
+					aria-label="Refresh monitor data"
+					disabled={isRefreshing}
+					onClick={handleRefresh}
+					size="sm"
+					type="button"
+					variant="secondary"
+				>
+					<ArrowClockwiseIcon
+						className={cn("size-4 shrink-0", isRefreshing && "animate-spin")}
+					/>
+				</Button>
+				<Button
+					aria-label="Trigger manual check"
+					disabled={manualCheckMutation.isPending || schedule.isPaused}
+					onClick={handleManualCheck}
+					size="sm"
+					type="button"
+					variant="secondary"
+				>
+					<LightningIcon
+						className={cn(
+							"size-4 shrink-0",
+							manualCheckMutation.isPending && "animate-spin"
+						)}
+						weight="fill"
+					/>
+					Check Now
+				</Button>
+				<Button
+					disabled={
+						isPausing || pauseMutation.isPending || resumeMutation.isPending
+					}
+					onClick={handleTogglePause}
+					size="sm"
+					type="button"
+					variant="secondary"
+				>
+					{schedule.isPaused ? (
+						<>
+							<PlayIcon className="size-4 shrink-0" weight="fill" />
+							Resume
+						</>
 					) : (
-						<HeartbeatIcon />
-					)
-				}
-				right={
-					<>
-						<Button
-							onClick={() => router.push("/monitors")}
-							size="sm"
-							type="button"
-							variant="ghost"
-						>
-							<ArrowLeftIcon className="mr-2 size-4" />
-							Back
-						</Button>
-						<Button
-							aria-label="Refresh monitor data"
-							className="size-8 px-0"
-							disabled={isRefreshing}
-							onClick={handleRefresh}
-							size="md"
-							type="button"
-							variant="secondary"
-						>
-							<ArrowClockwiseIcon
-								className={isRefreshing ? "animate-spin" : ""}
-							/>
-						</Button>
-						<Button
-							aria-label="Trigger manual check"
-							disabled={manualCheckMutation.isPending || schedule.isPaused}
-							onClick={handleManualCheck}
-							size="sm"
-							type="button"
-							variant="secondary"
-						>
-							<LightningIcon
-								className={manualCheckMutation.isPending ? "animate-spin" : ""}
-								size={16}
-								weight="fill"
-							/>
-							Check Now
-						</Button>
-						<Button
-							disabled={
-								isPausing || pauseMutation.isPending || resumeMutation.isPending
-							}
-							onClick={handleTogglePause}
-							size="sm"
-							type="button"
-							variant="secondary"
-						>
-							{schedule.isPaused ? (
-								<>
-									<PlayIcon size={16} weight="fill" />
-									Resume
-								</>
-							) : (
-								<>
-									<PauseIcon size={16} weight="fill" />
-									Pause
-								</>
-							)}
-						</Button>
-						<Button
-							aria-label="Configure monitor"
-							onClick={handleEditMonitor}
-							size="sm"
-							type="button"
-							variant="secondary"
-						>
-							<PencilIcon size={16} weight="duotone" />
-							<span className="hidden sm:inline">Configure</span>
-						</Button>
-						<Button
-							aria-label="Transfer monitor"
-							onClick={() => setIsTransferOpen(true)}
-							size="sm"
-							type="button"
-							variant="secondary"
-						>
-							<ArrowSquareOutIcon size={16} weight="duotone" />
-							<span className="hidden sm:inline">Transfer</span>
-						</Button>
-						<Button
-							aria-label="Delete monitor"
-							disabled={deleteMutation.isPending}
-							onClick={() => setIsDeleteDialogOpen(true)}
-							size="sm"
-							type="button"
-							variant="secondary"
-						>
-							<TrashIcon size={16} weight="duotone" />
-							<span className="hidden sm:inline">Delete</span>
-						</Button>
-					</>
-				}
-				title={displayName}
-			/>
+						<>
+							<PauseIcon className="size-4 shrink-0" weight="fill" />
+							Pause
+						</>
+					)}
+				</Button>
+				<Button
+					aria-label="Configure monitor"
+					onClick={handleEditMonitor}
+					size="sm"
+					type="button"
+					variant="secondary"
+				>
+					<PencilIcon className="size-4 shrink-0" weight="duotone" />
+					<span className="hidden sm:inline">Configure</span>
+				</Button>
+				<Button
+					aria-label="Transfer monitor"
+					onClick={() => setIsTransferOpen(true)}
+					size="sm"
+					type="button"
+					variant="secondary"
+				>
+					<ArrowSquareOutIcon className="size-4 shrink-0" weight="duotone" />
+					<span className="hidden sm:inline">Transfer</span>
+				</Button>
+				<Button
+					aria-label="Delete monitor"
+					disabled={deleteMutation.isPending}
+					onClick={() => setIsDeleteDialogOpen(true)}
+					size="sm"
+					type="button"
+					variant="secondary"
+				>
+					<TrashIcon className="size-4 shrink-0" weight="duotone" />
+					<span className="hidden sm:inline">Delete</span>
+				</Button>
+			</TopBar.Actions>
 
 			<div className="flex min-h-0 flex-1 flex-col overflow-hidden">
 				<div className="flex min-h-10 shrink-0 flex-wrap items-center gap-x-5 gap-y-1 border-b bg-card px-4 py-2.5 text-xs sm:px-6">
@@ -689,7 +662,7 @@ export default function MonitorDetailsPage() {
 						>
 							<GlobeIcon
 								aria-hidden
-								className="size-3.5 shrink-0"
+								className="size-4 shrink-0"
 								weight="duotone"
 							/>
 							<span className="truncate font-medium">

@@ -1,12 +1,14 @@
 "use client";
 
-import { CheckCircleIcon } from "@phosphor-icons/react";
-import { InfoIcon } from "@phosphor-icons/react";
-import { SpinnerIcon } from "@phosphor-icons/react";
-import { WarningCircleIcon } from "@phosphor-icons/react";
-import { XCircleIcon } from "@phosphor-icons/react";
 import { useTheme } from "next-themes";
 import { Toaster as Sonner, type ToasterProps } from "sonner";
+import {
+	CheckCircleIcon,
+	InfoIcon,
+	SpinnerIcon,
+	WarningCircleIcon,
+	XCircleIcon,
+} from "@databuddy/ui/icons";
 
 function Toaster({ ...props }: ToasterProps) {
 	const { theme = "system" } = useTheme();

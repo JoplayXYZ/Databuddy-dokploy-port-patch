@@ -23,7 +23,7 @@ alwaysApply: true
 ## Interaction
 
 - MUST use an AlertDialog for destructive or irreversible actions
-- SHOULD use structural skeletons for loading states
+- MUST use structural skeletons for loading states — NEVER conditionally render `null` for UI that occupies space (`if (isPending) return null`), always render a skeleton/placeholder with matching dimensions to prevent layout shift
 - NEVER use h-screen, use h-dvh
 - MUST respect safe-area-inset for fixed elements
 - MUST show errors next to where the action happens

@@ -2,13 +2,9 @@
 
 import { DropdownMenu } from "@/components/ds/dropdown-menu";
 import { Input } from "@/components/ds/input";
-import {
-	FunnelIcon,
-	MagnifyingGlassIcon,
-	SortAscendingIcon,
-	XIcon,
-} from "@phosphor-icons/react/dist/ssr";
 import type { SortOption, TypeFilter } from "./use-filtered-links";
+import { SortAscendingIcon, XIcon } from "@phosphor-icons/react/dist/ssr";
+import { FunnelIcon, MagnifyingGlassIcon } from "@databuddy/ui/icons";
 
 const SORT_LABELS: Record<SortOption, string> = {
 	newest: "Newest",

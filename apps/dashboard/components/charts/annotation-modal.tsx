@@ -1,9 +1,5 @@
 "use client";
 
-import { EyeIcon } from "@phosphor-icons/react/dist/ssr";
-import { EyeSlashIcon } from "@phosphor-icons/react/dist/ssr";
-import { PlusIcon } from "@phosphor-icons/react/dist/ssr";
-import { XIcon } from "@phosphor-icons/react/dist/ssr";
 import { useState } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { Badge } from "@/components/ds/badge";
@@ -24,6 +20,8 @@ import {
 } from "@/lib/annotation-utils";
 import { cn } from "@/lib/utils";
 import type { Annotation, AnnotationFormData } from "@/types/annotations";
+import { XIcon } from "@phosphor-icons/react/dist/ssr";
+import { EyeIcon, EyeSlashIcon, PlusIcon } from "@databuddy/ui/icons";
 
 interface EditModeProps {
 	annotation: Annotation;

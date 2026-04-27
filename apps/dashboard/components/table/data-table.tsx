@@ -7,7 +7,7 @@ import type React from "react";
 import { useState } from "react";
 import ReactDOM from "react-dom";
 import { Card } from "@/components/ds/card";
-import { Skeleton } from "@/components/ds/skeleton";
+import { Skeleton } from "@databuddy/ui";
 import { cn } from "@/lib/utils";
 import { FullScreenModal } from "./fullscreen-modal";
 import { useFullScreen } from "./hooks/use-fullscreen";

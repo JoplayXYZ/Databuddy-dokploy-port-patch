@@ -3,15 +3,14 @@
 import { Databuddy } from "@databuddy/sdk/node";
 import type { ActionResponse, Feedback } from "@/components/feedback";
 
-if (!process.env.DATABUDDY_API_KEY) {
-	console.error("DATABUDDY_API_KEY environment variable is required");
-}
-
-const client = new Databuddy({
-	apiKey: process.env.DATABUDDY_API_KEY ?? "no",
-	websiteId: process.env.DATABUDDY_WEBSITE_ID,
-	debug: process.env.NODE_ENV === "development",
-});
+const databuddyApiKey = process.env.DATABUDDY_API_KEY;
+const client = databuddyApiKey
+	? new Databuddy({
+			apiKey: databuddyApiKey,
+			websiteId: process.env.DATABUDDY_WEBSITE_ID,
+			debug: process.env.NODE_ENV === "development",
+		})
+	: null;
 
 const MAX_MESSAGE_LENGTH = 1000;
 const VALID_OPINIONS = ["good", "bad"] as const;
@@ -42,6 +41,10 @@ export async function onRateDocs(
 	}
 
 	try {
+		if (!client) {
+			return { success: true };
+		}
+
 		const result = await client.track({
 			name: "docs_feedback",
 			properties: {

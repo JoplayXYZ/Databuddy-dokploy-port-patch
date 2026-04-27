@@ -1,10 +1,10 @@
 "use client";
 
-import { CheckIcon, CopyIcon } from "@phosphor-icons/react/dist/ssr";
 import { Button } from "@/components/ds/button";
-import { Tooltip } from "@/components/ds/tooltip";
+import { Tooltip } from "@databuddy/ui";
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
 import { cn } from "@/lib/utils";
+import { CheckIcon, CopyIcon } from "@databuddy/ui/icons";
 
 type CopyButtonProps = Omit<
 	React.ComponentProps<typeof Button>,

@@ -1,7 +1,7 @@
-import { CircleNotchIcon } from "@phosphor-icons/react/dist/ssr";
 import { useHotkeys } from "react-hotkeys-hook";
 import { Button } from "@/components/ds/button";
 import { cn } from "@/lib/utils";
+import { CircleNotchIcon } from "@databuddy/ui/icons";
 
 interface SettingsSectionProps {
 	children: React.ReactNode;

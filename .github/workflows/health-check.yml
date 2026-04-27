@@ -5,15 +5,25 @@ on:
     branches: [main, staging]
     paths:
       - "*.Dockerfile"
+      - ".dockerignore"
       - "apps/api/**"
       - "apps/basket/**"
+      - "packages/**"
+      - "bun.lock"
+      - "package.json"
+      - "turbo.json"
       - ".github/workflows/health-check.yml"
   pull_request:
     branches: [main, staging]
     paths:
       - "*.Dockerfile"
+      - ".dockerignore"
       - "apps/api/**"
       - "apps/basket/**"
+      - "packages/**"
+      - "bun.lock"
+      - "package.json"
+      - "turbo.json"
       - ".github/workflows/health-check.yml"
 
 permissions:
@@ -36,6 +46,19 @@ jobs:
           - 6379:6379
         options: >-
           --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: databuddy_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d databuddy_test"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
@@ -64,6 +87,9 @@ jobs:
 
       - name: Run API health check
         run: |
+          set -euo pipefail
+          trap 'docker rm -f api-health-check >/dev/null 2>&1 || true' EXIT
+
           docker run -d \
             --name api-health-check \
             --network host \
@@ -71,12 +97,9 @@ jobs:
             -e PORT=3001 \
             -e DATABASE_URL=postgresql://postgres:postgres@localhost:5432/databuddy_test \
             -e REDIS_URL=redis://localhost:6379 \
+            -e BULLMQ_REDIS_URL=redis://localhost:6379/2 \
             -e REDIS_HOST=localhost \
             -e REDIS_PORT=6379 \
-            -e CLICKHOUSE_URL=http://localhost:8123 \
-            -e CLICKHOUSE_HOST=localhost \
-            -e CLICKHOUSE_PORT=8123 \
-            -e CLICKHOUSE_DATABASE=databuddy_test \
             -e BETTER_AUTH_SECRET=test-auth-secret-for-ci \
             -e BETTER_AUTH_URL=http://localhost:3000 \
             -e GITHUB_CLIENT_ID=test-github-client-id \
@@ -87,7 +110,6 @@ jobs:
             -e AUTUMN_SECRET_KEY=test-autumn-secret-key \
             -e EMAIL_API_KEY=test-email-api-key \
             -e IP_HASH_SALT=test-ip-hash-salt \
-            -e UPSTASH_QSTASH_TOKEN=test-upstash-qstash-token \
             api:test
 
           echo "Waiting for API to start..."
@@ -99,14 +121,20 @@ jobs:
             if [ $i -eq 30 ]; then
               echo "API failed to start within 30 seconds"
               docker logs api-health-check
-              docker rm -f api-health-check
               exit 1
             fi
             sleep 1
           done
 
-          STATUS_BODY=$(curl -sS http://localhost:3001/health/status || echo '{}')
+          STATUS_BODY=$(curl -sS http://localhost:3001/health/status)
           echo "API /health/status: $STATUS_BODY"
+          if echo "$STATUS_BODY" | grep -q '"status":"ok"'; then
+            echo "API dependency health is valid"
+          else
+            echo "API dependency health is not ok"
+            docker logs api-health-check
+            exit 1
+          fi
 
           RESPONSE=$(curl -sf http://localhost:3001/health || echo '{}')
           echo "API /health: $RESPONSE"
@@ -116,11 +144,9 @@ jobs:
           else
             echo "API health endpoint response missing expected fields"
             docker logs api-health-check
-            docker rm -f api-health-check
             exit 1
           fi
 
-          docker rm -f api-health-check
           echo "API health check passed!"
 
   basket-health-check:
@@ -163,6 +189,34 @@ jobs:
 
       - name: Run Basket health check
         run: |
+          set -euo pipefail
+          trap 'docker rm -f basket-health-check basket-redpanda >/dev/null 2>&1 || true' EXIT
+
+          docker run -d \
+            --name basket-redpanda \
+            --network host \
+            redpandadata/redpanda:v25.2.9 \
+            redpanda start \
+            --mode dev-container \
+            --smp 1 \
+            --default-log-level=warn \
+            --kafka-addr 0.0.0.0:9092 \
+            --advertise-kafka-addr localhost:9092
+
+          echo "Waiting for Redpanda to start..."
+          for i in {1..30}; do
+            if docker exec basket-redpanda rpk cluster health > /dev/null 2>&1; then
+              echo "Redpanda is healthy!"
+              break
+            fi
+            if [ $i -eq 30 ]; then
+              echo "Redpanda failed to start within 30 seconds"
+              docker logs basket-redpanda
+              exit 1
+            fi
+            sleep 1
+          done
+
           docker run -d \
             --name basket-health-check \
             --network host \
@@ -172,9 +226,7 @@ jobs:
             -e REDIS_HOST=localhost \
             -e REDIS_PORT=6379 \
             -e DATABASE_URL=postgresql://postgres:postgres@localhost:5432/databuddy_test \
-            -e CLICKHOUSE_URL=http://localhost:8123 \
-            -e CLICKHOUSE_HOST=localhost \
-            -e CLICKHOUSE_PORT=8123 \
+            -e REDPANDA_BROKER=localhost:9092 \
             -e IP_HASH_SALT=test-ip-hash-salt \
             -e KAFKA_ENABLED=false \
             basket:test
@@ -188,14 +240,20 @@ jobs:
             if [ $i -eq 30 ]; then
               echo "Basket failed to start within 30 seconds"
               docker logs basket-health-check
-              docker rm -f basket-health-check
               exit 1
             fi
             sleep 1
           done
 
-          STATUS_BODY=$(curl -sS http://localhost:4000/health/status || echo '{}')
+          STATUS_BODY=$(curl -sS http://localhost:4000/health/status)
           echo "Basket /health/status: $STATUS_BODY"
+          if echo "$STATUS_BODY" | grep -q '"status":"ok"'; then
+            echo "Basket dependency health is valid"
+          else
+            echo "Basket dependency health is not ok"
+            docker logs basket-health-check
+            exit 1
+          fi
 
           RESPONSE=$(curl -sf http://localhost:4000/health || echo '{}')
           echo "Basket /health: $RESPONSE"
@@ -205,9 +263,7 @@ jobs:
           else
             echo "Basket health endpoint response missing expected fields"
             docker logs basket-health-check
-            docker rm -f basket-health-check
             exit 1
           fi
 
-          docker rm -f basket-health-check
           echo "Basket health check passed!"

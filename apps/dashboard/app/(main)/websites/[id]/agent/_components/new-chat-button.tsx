@@ -1,9 +1,9 @@
 "use client";
 
-import { PlusIcon } from "@phosphor-icons/react/dist/ssr";
 import { generateId } from "ai";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ds/button";
+import { PlusIcon } from "@databuddy/ui/icons";
 
 export function NewChatButton() {
 	const router = useRouter();

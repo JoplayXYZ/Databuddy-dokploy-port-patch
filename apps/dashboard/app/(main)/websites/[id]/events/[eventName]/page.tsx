@@ -1,23 +1,28 @@
 "use client";
 
-import { CalendarBlankIcon } from "@phosphor-icons/react";
-import { ClockIcon } from "@phosphor-icons/react";
-import { LightningIcon } from "@phosphor-icons/react";
-import { LinkIcon } from "@phosphor-icons/react";
-import { TagIcon } from "@phosphor-icons/react";
-import { UserIcon } from "@phosphor-icons/react";
-import { UsersIcon } from "@phosphor-icons/react";
 import Link from "next/link";
 import { notFound, useParams } from "next/navigation";
 import { useMemo } from "react";
-import { StatCard } from "@/components/analytics";
+import { Card } from "@/components/ds/card";
 import { EmptyState } from "@/components/ds/empty-state";
-import { Skeleton } from "@/components/ds/skeleton";
+import {
+	EventsStatsGrid,
+	PropertyValueCard,
+	type CustomEventsMetricKey,
+} from "@/components/events/custom-events";
+import { Skeleton } from "@databuddy/ui";
 import { useChartPreferences } from "@/hooks/use-chart-preferences";
 import { useDateFilters } from "@/hooks/use-date-filters";
-import { formatNumber } from "@/lib/formatters";
-import { formatTime, fromNow } from "@/lib/time";
+import { formatTime, fromNow } from "@databuddy/ui";
 import { useEventDetailData } from "./use-event-detail";
+import { ClockIcon, LightningIcon, LinkIcon } from "@databuddy/ui/icons";
+
+const EVENT_DETAIL_METRICS: CustomEventsMetricKey[] = [
+	"total_events",
+	"unique_users",
+	"unique_sessions",
+	"unique_pages",
+];
 
 export default function EventDetailPage() {
 	const params = useParams();
@@ -52,21 +57,21 @@ export default function EventDetailPage() {
 			dateRange.granularity === "hourly" ? date : date.slice(0, 10);
 
 		return {
-			total_events: data.trends.map((t) => ({
-				date: formatDate(t.date),
-				value: t.total_events ?? 0,
+			total_events: data.trends.map((trend) => ({
+				date: formatDate(trend.date),
+				value: trend.total_events ?? 0,
 			})),
-			unique_users: data.trends.map((t) => ({
-				date: formatDate(t.date),
-				value: t.unique_users ?? 0,
+			unique_users: data.trends.map((trend) => ({
+				date: formatDate(trend.date),
+				value: trend.unique_users ?? 0,
 			})),
-			unique_sessions: data.trends.map((t) => ({
-				date: formatDate(t.date),
-				value: t.unique_sessions ?? 0,
+			unique_sessions: data.trends.map((trend) => ({
+				date: formatDate(trend.date),
+				value: trend.unique_sessions ?? 0,
 			})),
-			unique_pages: data.trends.map((t) => ({
-				date: formatDate(t.date),
-				value: t.unique_pages ?? 0,
+			unique_pages: data.trends.map((trend) => ({
+				date: formatDate(trend.date),
+				value: trend.unique_pages ?? 0,
 			})),
 		};
 	}, [data?.trends, dateRange.granularity]);
@@ -74,21 +79,13 @@ export default function EventDetailPage() {
 	if (error) {
 		return (
 			<div className="p-3 sm:p-4">
-				<div className="rounded border border-destructive/20 bg-destructive/5 p-6">
-					<div className="flex flex-col items-center text-center">
-						<div className="mb-4 flex size-12 items-center justify-center rounded bg-destructive/10">
-							<LightningIcon
-								className="size-6 text-destructive"
-								weight="duotone"
-							/>
-						</div>
-						<h4 className="mb-2 font-semibold text-destructive">
-							Error loading event data
-						</h4>
-						<p className="max-w-md text-balance text-destructive/80 text-sm">
-							There was an issue loading data for this event.
-						</p>
-					</div>
+				<div className="rounded-lg border border-destructive/20 bg-destructive/5 p-6">
+					<EmptyState
+						description="There was an issue loading data for this event."
+						icon={<LightningIcon />}
+						title="Error loading event data"
+						variant="error"
+					/>
 				</div>
 			</div>
 		);
@@ -100,7 +97,14 @@ export default function EventDetailPage() {
 		unique_sessions: 0,
 		unique_pages: 0,
 	};
-
+	const metricSummary = {
+		...summary,
+		unique_event_types: summary.total_events > 0 ? 1 : 0,
+	};
+	const metricChartData = {
+		...miniChartData,
+		unique_event_types: [],
+	};
 	const recentEvents = data?.recentEvents ?? [];
 	const properties = data?.classifiedProperties ?? [];
 
@@ -119,86 +123,56 @@ export default function EventDetailPage() {
 				</div>
 			) : (
 				<>
-					<div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
-						<StatCard
-							chartData={isLoading ? undefined : miniChartData.total_events}
-							chartStepType={chartStepType}
-							chartType={chartType}
-							icon={LightningIcon}
-							id="event-total"
-							isLoading={isLoading}
-							showChart
-							title="Total Events"
-							value={formatNumber(summary.total_events)}
-						/>
-						<StatCard
-							chartData={isLoading ? undefined : miniChartData.unique_users}
-							chartStepType={chartStepType}
-							chartType={chartType}
-							icon={UserIcon}
-							id="event-users"
-							isLoading={isLoading}
-							showChart
-							title="Unique Users"
-							value={formatNumber(summary.unique_users)}
-						/>
-						<StatCard
-							chartData={isLoading ? undefined : miniChartData.unique_sessions}
-							chartStepType={chartStepType}
-							chartType={chartType}
-							icon={UsersIcon}
-							id="event-sessions"
-							isLoading={isLoading}
-							showChart
-							title="Sessions"
-							value={formatNumber(summary.unique_sessions)}
-						/>
-						<StatCard
-							chartData={isLoading ? undefined : miniChartData.unique_pages}
-							chartStepType={chartStepType}
-							chartType={chartType}
-							icon={CalendarBlankIcon}
-							id="event-pages"
-							isLoading={isLoading}
-							showChart
-							title="Unique Pages"
-							value={formatNumber(summary.unique_pages)}
-						/>
-					</div>
+					<EventsStatsGrid
+						chartStepType={chartStepType}
+						chartType={chartType}
+						isLoading={isLoading}
+						metricKeys={EVENT_DETAIL_METRICS}
+						miniChartData={metricChartData}
+						summary={metricSummary}
+						todayEvents={0}
+						todayUsers={0}
+					/>
 
 					{properties.length > 0 && (
-						<div className="rounded border bg-card">
-							<div className="border-b px-4 py-3">
-								<h3 className="font-medium text-foreground">Properties</h3>
-								<p className="text-muted-foreground text-sm">
+						<Card>
+							<Card.Header>
+								<Card.Title>Properties</Card.Title>
+								<Card.Description>
 									Value distribution for each property
-								</p>
-							</div>
-							<div className="grid gap-3 p-4 sm:grid-cols-2 xl:grid-cols-3">
-								{properties.map((prop) => (
-									<PropertyCard key={prop.key} property={prop} />
+								</Card.Description>
+							</Card.Header>
+							<Card.Content className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+								{properties.map((property) => (
+									<PropertyValueCard
+										key={property.key}
+										maxVisibleValues={10}
+										title={property.key}
+										uniqueCount={property.classification.cardinality}
+										values={property.values}
+									/>
 								))}
-							</div>
-						</div>
+							</Card.Content>
+						</Card>
 					)}
 
-					<div className="rounded border bg-card">
-						<div className="border-b px-4 py-3">
-							<h3 className="font-medium text-foreground">Recent Events</h3>
-							<p className="text-muted-foreground text-sm">
+					<Card>
+						<Card.Header>
+							<Card.Title>Recent Events</Card.Title>
+							<Card.Description>
 								Latest occurrences of this event
-							</p>
-						</div>
+							</Card.Description>
+						</Card.Header>
 						<div className="divide-y">
 							{recentEvents.length === 0 ? (
 								<div className="p-6 text-center text-muted-foreground text-sm">
 									No recent events
 								</div>
 							) : (
-								recentEvents.slice(0, 20).map((event, idx) => (
+								recentEvents.slice(0, 20).map((event, index) => (
 									<div
 										className="flex items-start gap-3 px-4 py-3 transition-colors hover:bg-muted/30"
-										key={`${event.timestamp}-${event.session_id}-${idx}`}
+										key={`${event.timestamp}-${event.session_id}-${index}`}
 									>
 										<div className="flex shrink-0 flex-col items-center text-muted-foreground">
 											<ClockIcon className="size-4" weight="duotone" />
@@ -253,93 +227,13 @@ export default function EventDetailPage() {
 									className="text-primary text-sm hover:underline"
 									href={`/websites/${websiteId}/events/stream?event=${encodeURIComponent(eventName)}`}
 								>
-									View all in stream →
+									View all in stream
 								</Link>
 							</div>
 						)}
-					</div>
+					</Card>
 				</>
 			)}
-		</div>
-	);
-}
-
-interface PropertyCardProps {
-	property: {
-		key: string;
-		classification: {
-			cardinality: number;
-			inferred_type: string;
-		};
-		values: Array<{
-			property_value: string;
-			count: number;
-			percentage: number;
-		}>;
-	};
-}
-
-function PropertyCard({ property }: PropertyCardProps) {
-	const { classification, values } = property;
-	const maxCount = Math.max(...values.map((v) => v.count), 1);
-
-	return (
-		<div className="rounded border bg-background">
-			<div className="flex items-center justify-between border-b px-3 py-2">
-				<div className="flex items-center gap-2">
-					<TagIcon
-						className="size-3.5 text-muted-foreground"
-						weight="duotone"
-					/>
-					<span className="font-medium text-foreground text-sm">
-						{property.key}
-					</span>
-				</div>
-				<span className="text-muted-foreground text-xs tabular-nums">
-					{classification.cardinality} unique
-				</span>
-			</div>
-			<div className="max-h-[160px] overflow-y-auto p-1.5">
-				{values.slice(0, 10).map((value, idx) => {
-					const barWidth = (value.count / maxCount) * 100;
-					const safePercentage =
-						value.percentage == null || Number.isNaN(value.percentage)
-							? 0
-							: value.percentage;
-					return (
-						<div
-							className="group relative flex items-center gap-2 rounded px-2 py-1.5"
-							key={`${value.property_value}-${idx}`}
-						>
-							<div
-								className="absolute inset-y-0 left-0 rounded bg-primary/8"
-								style={{ width: `${barWidth}%` }}
-							/>
-							<div className="relative z-10 flex min-w-0 flex-1 items-center justify-between gap-2">
-								<span
-									className="truncate text-foreground text-sm"
-									title={value.property_value}
-								>
-									{value.property_value || "(empty)"}
-								</span>
-								<div className="flex shrink-0 items-center gap-2">
-									<span className="text-muted-foreground text-xs tabular-nums">
-										{formatNumber(value.count)}
-									</span>
-									<span className="w-10 text-right text-muted-foreground/60 text-xs tabular-nums">
-										{safePercentage.toFixed(0)}%
-									</span>
-								</div>
-							</div>
-						</div>
-					);
-				})}
-				{values.length > 10 && (
-					<div className="mt-1 border-t pt-2 text-center text-muted-foreground/60 text-xs">
-						+{values.length - 10} more values
-					</div>
-				)}
-			</div>
 		</div>
 	);
 }
@@ -348,8 +242,11 @@ function EventDetailSkeleton() {
 	return (
 		<div className="space-y-3 sm:space-y-4">
 			<div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
-				{Array.from({ length: 4 }).map((_, i) => (
-					<div className="rounded border bg-card p-3 sm:p-4" key={`stat-${i}`}>
+				{Array.from({ length: 4 }).map((_, index) => (
+					<div
+						className="rounded border border-border/60 bg-card p-3 sm:p-4"
+						key={`stat-${index}`}
+					>
 						<div className="flex items-center justify-between">
 							<Skeleton className="h-4 w-20" />
 							<Skeleton className="size-8 rounded" />
@@ -360,23 +257,26 @@ function EventDetailSkeleton() {
 				))}
 			</div>
 
-			<div className="rounded border bg-card">
-				<div className="border-b px-4 py-3">
+			<Card>
+				<Card.Header>
 					<Skeleton className="h-5 w-24" />
-					<Skeleton className="mt-1 h-3 w-40" />
-				</div>
-				<div className="grid gap-3 p-4 sm:grid-cols-2 xl:grid-cols-3">
-					{Array.from({ length: 3 }).map((_, i) => (
-						<div className="rounded border bg-background" key={`prop-${i}`}>
-							<div className="flex items-center justify-between border-b px-3 py-2">
+					<Skeleton className="h-3 w-40" />
+				</Card.Header>
+				<Card.Content className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+					{Array.from({ length: 3 }).map((_, index) => (
+						<div
+							className="rounded-lg border border-border/60 bg-background"
+							key={`prop-${index}`}
+						>
+							<div className="flex items-center justify-between border-border/60 border-b px-3 py-2">
 								<Skeleton className="h-4 w-16" />
 								<Skeleton className="h-3 w-12" />
 							</div>
 							<div className="space-y-1.5 p-1.5">
-								{Array.from({ length: 4 }).map((_, j) => (
+								{Array.from({ length: 4 }).map((_, row) => (
 									<div
 										className="flex items-center justify-between px-2 py-1.5"
-										key={`val-${j}`}
+										key={`value-${row}`}
 									>
 										<Skeleton className="h-4 w-20" />
 										<Skeleton className="h-3 w-12" />
@@ -385,19 +285,19 @@ function EventDetailSkeleton() {
 							</div>
 						</div>
 					))}
-				</div>
-			</div>
+				</Card.Content>
+			</Card>
 
-			<div className="rounded border bg-card">
-				<div className="border-b px-4 py-3">
+			<Card>
+				<Card.Header>
 					<Skeleton className="h-5 w-28" />
-					<Skeleton className="mt-1 h-3 w-44" />
-				</div>
+					<Skeleton className="h-3 w-44" />
+				</Card.Header>
 				<div className="divide-y">
-					{Array.from({ length: 5 }).map((_, i) => (
+					{Array.from({ length: 5 }).map((_, index) => (
 						<div
 							className="flex items-start gap-3 px-4 py-3"
-							key={`event-${i}`}
+							key={`event-${index}`}
 						>
 							<Skeleton className="size-4 rounded" />
 							<div className="flex-1">
@@ -411,7 +311,7 @@ function EventDetailSkeleton() {
 						</div>
 					))}
 				</div>
-			</div>
+			</Card>
 		</div>
 	);
 }

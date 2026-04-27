@@ -1,9 +1,6 @@
 "use client";
 
 import { GATED_FEATURES } from "@databuddy/shared/types/features";
-import { TargetIcon } from "@phosphor-icons/react";
-import { TrendDownIcon } from "@phosphor-icons/react";
-import { useAtomValue } from "jotai";
 import { useParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import { FeatureGate } from "@/components/feature-gate";
@@ -18,11 +15,12 @@ import {
 	useBulkGoalAnalytics,
 	useGoals,
 } from "@/hooks/use-goals";
-import { isAnalyticsRefreshingAtom } from "@/stores/jotai/filterAtoms";
-import { WebsitePageHeader } from "../_components/website-page-header";
+import { TopBar } from "@/components/layout/top-bar";
+import { Button } from "@/components/ds/button";
 import { EditGoalDialog } from "./_components/edit-goal-dialog";
 import { GoalItemSkeleton } from "./_components/goal-item";
 import { GoalsList } from "./_components/goals-list";
+import { PlusIcon, TrendDownIcon } from "@databuddy/ui/icons";
 
 function GoalsListSkeleton() {
 	return (
@@ -37,7 +35,6 @@ function GoalsListSkeleton() {
 export default function GoalsPage() {
 	const { id } = useParams();
 	const websiteId = id as string;
-	const isRefreshing = useAtomValue(isAnalyticsRefreshingAtom);
 	const [isDialogOpen, setIsDialogOpen] = useState(false);
 	const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
 	const [deletingGoalId, setDeletingGoalId] = useState<string | null>(null);
@@ -135,32 +132,21 @@ export default function GoalsPage() {
 	return (
 		<FeatureGate feature={GATED_FEATURES.GOALS}>
 			<div className="relative flex h-full flex-col">
-				<WebsitePageHeader
-					createActionLabel="Create Goal"
-					currentUsage={goals.length}
-					description="Track key conversions and measure success"
-					feature={GATED_FEATURES.GOALS}
-					hasError={!!goalsError}
-					icon={
-						<TargetIcon
-							className="size-6 text-accent-foreground"
-							weight="duotone"
-						/>
-					}
-					isLoading={goalsLoading}
-					isRefreshing={isRefreshing}
-					onCreateAction={() => {
-						setEditingGoal(null);
-						setIsDialogOpen(true);
-					}}
-					subtitle={
-						goalsLoading
-							? undefined
-							: `${goals.length} goal${goals.length === 1 ? "" : "s"}`
-					}
-					title="Goals"
-					websiteId={websiteId}
-				/>
+				<TopBar.Title>
+					<h1 className="font-semibold text-sm">Goals</h1>
+				</TopBar.Title>
+				<TopBar.Actions>
+					<Button
+						onClick={() => {
+							setEditingGoal(null);
+							setIsDialogOpen(true);
+						}}
+						size="sm"
+					>
+						<PlusIcon className="size-4 shrink-0" />
+						Create Goal
+					</Button>
+				</TopBar.Actions>
 
 				<div className="min-h-0 flex-1 overflow-y-auto overscroll-none">
 					{goalsLoading ? (

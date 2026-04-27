@@ -1,8 +1,5 @@
 "use client";
 
-import { CheckIcon } from "@phosphor-icons/react/dist/ssr";
-import { CopyIcon } from "@phosphor-icons/react/dist/ssr";
-import { HeartbeatIcon } from "@phosphor-icons/react/dist/ssr";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Badge } from "@/components/ds/badge";
@@ -13,11 +10,12 @@ import {
 	DrawerHeader,
 	DrawerTitle,
 } from "@/components/ui/drawer";
-import { Skeleton } from "@/components/ds/skeleton";
+import { Skeleton } from "@databuddy/ui";
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { getFeatureLabel } from "@/lib/feature-gates";
 import { orpc } from "@/lib/orpc";
+import { CheckIcon, CopyIcon, HeartbeatIcon } from "@databuddy/ui/icons";
 
 interface FeatureInviteDialogProps {
 	flagKey: string;

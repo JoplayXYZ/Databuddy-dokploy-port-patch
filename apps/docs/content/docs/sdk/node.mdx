@@ -13,7 +13,7 @@ The Databuddy Node SDK provides a lightweight, type-safe way to track server-sid
 
 ## TL;DR
 
-The Node SDK is perfect for tracking server-side events like API calls, background jobs, webhooks, and more. It supports batching, retries, and is optimized for serverless environments.
+The Node SDK is perfect for tracking server-side events like API calls, background jobs, webhooks, and more. It supports batching and explicit flushes for serverless environments.
 
 <CodeBlock language="tsx">
   {`import { Databuddy } from '@databuddy/sdk/node';
@@ -78,7 +78,10 @@ export async function handler(event) {
   });
   
   // Ensure events are sent before function exits
-  await client.flush();
+  const flushResult = await client.flush();
+  if (!flushResult.success) {
+    console.error("Failed to flush analytics:", flushResult.error);
+  }
   
   return { statusCode: 200 };
 }`}
@@ -99,6 +102,9 @@ export async function handler(event) {
     batchSize?: number;           // Default: 10, Max: 100
     batchTimeout?: number;        // Default: 2000ms
     maxQueueSize?: number;        // Default: 1000
+    enableDeduplication?: boolean; // Default: true
+    maxDeduplicationCacheSize?: number; // Default: 10000
+    middleware?: Middleware[];     // Transform or drop events before send
   }`}
 </CodeBlock>
 
@@ -122,6 +128,7 @@ Track custom events with optional properties, session IDs, and anonymous IDs:
 <CodeBlock language="tsx">
   {`await client.track({
   name: 'purchase_completed',
+  eventId: 'purchase-ORD-789',
   anonymousId: 'anon_123',
   sessionId: 'sess_456',
   properties: {
@@ -142,6 +149,10 @@ Track custom events with optional properties, session IDs, and anonymous IDs:
   error?: string;
 }`}
 </CodeBlock>
+
+With `enableBatching: true`, `track()` usually confirms that the event was queued. It returns a delivery failure only when the call immediately sends the event, such as `enableBatching: false` or when the queue reaches `batchSize` or `maxQueueSize`. Call `flush()` when you need the final delivery result.
+
+Use `eventId` when your code may retry the same logical event. The SDK uses it as a local deduplication key for queued or already delivered events.
 
 ### `batch(events)`
 
@@ -174,7 +185,10 @@ await client.track({ name: 'event2' });
 await client.track({ name: 'event3' });
 
 // Flush all queued events before function exits
-await client.flush();`}
+const flushResult = await client.flush();
+if (!flushResult.success) {
+  console.error("Failed to flush analytics:", flushResult.error);
+}`}
 </CodeBlock>
 
 ## Event Tracking Patterns
@@ -344,16 +358,13 @@ The web SDK automatically generates and manages these IDs. You need to pass them
 **Client-Side (React/Next.js):**
 
 <CodeBlock language="tsx" filename="app/components/checkout-button.tsx">
-  {`import { getTracker } from '@databuddy/sdk';
+  {`import { getTrackingIds } from '@databuddy/sdk';
 
 export function CheckoutButton() {
   const handleCheckout = async () => {
-    const tracker = getTracker();
+    const { anonId: anonymousId, sessionId } = getTrackingIds();
     
-    if (tracker) {
-      const anonymousId = tracker.anonymousId;
-      const sessionId = tracker.sessionId;
-      
+    if (anonymousId || sessionId) {
       await fetch('/api/checkout', {
         method: 'POST',
         body: JSON.stringify({ anonymousId, sessionId, cart: [...] })
@@ -395,16 +406,14 @@ export async function POST(request: Request) {
 ### Web SDK ID Access Methods
 
 <CodeBlock language="tsx">
-  {`import { getTracker } from '@databuddy/sdk';
+  {`import { getAnonymousId, getSessionId, getTrackingIds } from '@databuddy/sdk';
 
-// Method 1: Via SDK import (React/Next.js)
-const tracker = getTracker();
-const anonymousId = tracker?.anonymousId;
-const sessionId = tracker?.sessionId;
+// Method 1: Via SDK helpers (React/Next.js)
+const { anonId: anonymousId, sessionId } = getTrackingIds();
 
-// Method 2: Via window.databuddy (Vanilla JS)
-const anonymousId = window.databuddy?.anonymousId;
-const sessionId = window.databuddy?.sessionId;`}
+// Method 2: Individual helpers
+const currentAnonymousId = getAnonymousId();
+const currentSessionId = getSessionId();`}
 </CodeBlock>
 
 <Callout type="info">
@@ -581,7 +590,29 @@ Events are automatically batched when batch size or timeout is reached:
 // These will be batched automatically
 await client.track({ name: 'event1' });
 await client.track({ name: 'event2' });
-await client.track({ name: 'event3' });`}
+await client.track({ name: 'event3' });
+
+const flushResult = await client.flush();
+if (!flushResult.success) {
+  console.error("Failed to deliver analytics:", flushResult.error);
+}`}
+</CodeBlock>
+
+## Deduplication
+
+When `enableDeduplication` is enabled, events with the same `eventId` are dropped if they are already queued or were delivered successfully. Failed sends do not poison the deduplication cache, so you can retry the same `eventId` after a temporary network or API failure.
+
+<CodeBlock language="tsx">
+  {`const response = await client.track({
+  name: "invoice_paid",
+  eventId: \`stripe-\${stripeEvent.id}\`,
+  properties: { invoice_id: invoice.id }
+});
+
+if (!response.success) {
+  // Safe to retry later with the same eventId
+  await retryAnalyticsEvent();
+}`}
 </CodeBlock>
 
 ## Debugging
@@ -597,7 +628,7 @@ Enable debug logging:
 
 ## Error Handling
 
-The SDK returns success/failure status instead of throwing errors:
+The SDK returns success/failure status for delivery errors instead of throwing:
 
 <CodeBlock language="tsx">
   {`const response = await client.track({
@@ -609,6 +640,8 @@ if (!response.success) {
   console.error('Failed to track event:', response.error);
 }`}
 </CodeBlock>
+
+The constructor still throws for invalid configuration, such as a missing or blank `apiKey`.
 
 ## TypeScript Support
 
@@ -684,6 +717,7 @@ await client.track({
 | TypeScript errors | Ensure TypeScript 4.5+, check `@databuddy/sdk` version |
 | Serverless events missing | Always call `await client.flush()` before function exits |
 | High latency | Enable batching: `enableBatching: true, batchSize: 50` |
+| Temporary network failures | Check `response.success` and retry from your application when the event is safe to send again |
 | Memory issues | Reduce `maxQueueSize`, flush more frequently |
 | Wrong website/namespace | Check per-event `websiteId`, `namespace`, and `source` values |
 

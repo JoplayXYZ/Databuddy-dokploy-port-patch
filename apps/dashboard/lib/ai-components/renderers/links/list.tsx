@@ -1,12 +1,5 @@
 "use client";
 
-import { ClockCountdownIcon } from "@phosphor-icons/react/dist/ssr";
-import { CopyIcon } from "@phosphor-icons/react/dist/ssr";
-import { DotsThreeIcon } from "@phosphor-icons/react/dist/ssr";
-import { LinkIcon } from "@phosphor-icons/react/dist/ssr";
-import { PencilSimpleIcon } from "@phosphor-icons/react/dist/ssr";
-import { PlusIcon } from "@phosphor-icons/react/dist/ssr";
-import { TrashIcon } from "@phosphor-icons/react/dist/ssr";
 import { useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
@@ -18,9 +11,18 @@ import { DeleteDialog } from "@/components/ds/delete-dialog";
 import { DropdownMenu } from "@/components/ds/dropdown-menu";
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
 import { type Link, useDeleteLink } from "@/hooks/use-links";
-import { fromNow, localDayjs } from "@/lib/time";
+import { fromNow, localDayjs } from "@databuddy/ui";
 import { cn } from "@/lib/utils";
 import type { BaseComponentProps } from "../../types";
+import {
+	ClockCountdownIcon,
+	CopyIcon,
+	DotsThreeIcon,
+	LinkIcon,
+	PencilSimpleIcon,
+	PlusIcon,
+	TrashIcon,
+} from "@databuddy/ui/icons";
 
 const BASE_URL = "dby.sh";
 

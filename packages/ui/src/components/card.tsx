@@ -25,7 +25,7 @@ function Header({ className, ...rest }: HTMLAttributes<HTMLDivElement>) {
 function Title({ className, ...rest }: HTMLAttributes<HTMLHeadingElement>) {
   return (
     <h3
-      className={cn("font-semibold text-foreground text-xs", className)}
+      className={cn("font-semibold text-foreground text-sm", className)}
       {...rest}
     />
   );
@@ -37,7 +37,7 @@ function Description({
 }: HTMLAttributes<HTMLParagraphElement>) {
   return (
     <p
-      className={cn("text-[11px] text-muted-foreground", className)}
+      className={cn("text-xs text-muted-foreground", className)}
       {...rest}
     />
   );

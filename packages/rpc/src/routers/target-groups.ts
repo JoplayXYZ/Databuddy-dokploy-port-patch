@@ -1,4 +1,4 @@
-import { and, desc, eq, isNull } from "@databuddy/db";
+import { and, desc, eq, isNull, withTransaction } from "@databuddy/db";
 import { flagsToTargetGroups, targetGroups } from "@databuddy/db/schema";
 import {
 	createDrizzleCache,
@@ -318,19 +318,18 @@ export const targetGroupsRouter = {
 				permissions: ["delete"],
 			});
 
-			// Remove all flag associations before soft-deleting the group
-			await context.db
-				.delete(flagsToTargetGroups)
-				.where(eq(flagsToTargetGroups.targetGroupId, input.id));
+			await withTransaction(async (tx) => {
+				await tx
+					.delete(flagsToTargetGroups)
+					.where(eq(flagsToTargetGroups.targetGroupId, input.id));
 
-			await context.db
-				.update(targetGroups)
-				.set({
-					deletedAt: new Date(),
-				})
-				.where(
-					and(eq(targetGroups.id, input.id), isNull(targetGroups.deletedAt))
-				);
+				await tx
+					.update(targetGroups)
+					.set({ deletedAt: new Date() })
+					.where(
+						and(eq(targetGroups.id, input.id), isNull(targetGroups.deletedAt))
+					);
+			});
 
 			await targetGroupsCache.invalidateByTables(["target_groups"]);
 			await flagsCache.invalidateByTables(["flags", "flags_to_target_groups"]);

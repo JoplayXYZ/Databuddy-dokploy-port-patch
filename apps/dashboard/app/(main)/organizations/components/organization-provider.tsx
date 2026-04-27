@@ -1,36 +1,41 @@
 "use client";
 
-import type { Icon as PhosphorIcon } from "@phosphor-icons/react";
-import { BuildingsIcon } from "@phosphor-icons/react/dist/ssr";
-import { EnvelopeIcon } from "@phosphor-icons/react/dist/ssr";
-import { GearIcon } from "@phosphor-icons/react/dist/ssr";
-import { GlobeIcon } from "@phosphor-icons/react/dist/ssr";
-import { UsersIcon } from "@phosphor-icons/react/dist/ssr";
 import { useAtomValue } from "jotai";
 import { usePathname } from "next/navigation";
 import { useMemo, useState } from "react";
-import { PageHeader } from "@/app/(main)/websites/_components/page-header";
+import { TopBar } from "@/components/layout/top-bar";
 import { EmptyState } from "@/components/ds/empty-state";
 import { CreateOrganizationDialog } from "@/components/organizations/create-organization-dialog";
 import { InviteMemberDialog } from "@/components/organizations/invite-member-dialog";
 import { Button } from "@/components/ds/button";
-import { Skeleton } from "@/components/ds/skeleton";
+import { Skeleton } from "@databuddy/ui";
 import {
 	activeOrganizationAtom,
 	isLoadingOrganizationsAtom,
 } from "@/stores/jotai/organizationsAtoms";
+import {
+	BuildingsIcon,
+	EnvelopeIcon,
+	GearIcon,
+	GlobeIcon,
+	UsersIcon,
+} from "@databuddy/ui/icons";
+
+type IconComponent = React.ForwardRefExoticComponent<
+	React.SVGProps<SVGSVGElement> & React.RefAttributes<SVGSVGElement>
+>;
 
 interface HeaderActionButton {
 	action: () => void;
 	disabled?: boolean;
-	icon: PhosphorIcon;
+	icon: IconComponent;
 	text: string;
 }
 
 interface PageInfo {
 	actionButton?: HeaderActionButton;
 	description: string;
-	icon: PhosphorIcon;
+	icon: IconComponent;
 	requiresOrg?: boolean;
 	title: string;
 }
@@ -86,13 +91,10 @@ export function OrganizationProvider({
 	const [showCreateDialog, setShowCreateDialog] = useState(false);
 	const [showInviteMemberDialog, setShowInviteMemberDialog] = useState(false);
 
-	const {
-		title,
-		description,
-		icon: Icon,
-		requiresOrg,
-		actionButton,
-	} = useMemo(() => PAGE_INFO_MAP[pathname] ?? DEFAULT_PAGE_INFO, [pathname]);
+	const { title, requiresOrg, actionButton } = useMemo(
+		() => PAGE_INFO_MAP[pathname] ?? DEFAULT_PAGE_INFO,
+		[pathname]
+	);
 
 	if (isLoading) {
 		return (
@@ -124,23 +126,21 @@ export function OrganizationProvider({
 	if (requiresOrg && !activeOrganization) {
 		return (
 			<div className="flex h-full flex-col">
-				<PageHeader
-					description={description}
-					icon={<Icon />}
-					right={
-						actionButton && (
-							<Button
-								className="w-full sm:w-auto"
-								disabled={actionButton.disabled}
-								onClick={actionButton.action}
-							>
-								<actionButton.icon />
-								{actionButton.text}
-							</Button>
-						)
-					}
-					title={title}
-				/>
+				<TopBar.Title>
+					<h1 className="font-semibold text-sm">{title}</h1>
+				</TopBar.Title>
+				{actionButton && (
+					<TopBar.Actions>
+						<Button
+							disabled={actionButton.disabled}
+							onClick={actionButton.action}
+							size="sm"
+						>
+							<actionButton.icon className="size-4 shrink-0" />
+							{actionButton.text}
+						</Button>
+					</TopBar.Actions>
+				)}
 
 				<CreateOrganizationDialog
 					isOpen={showCreateDialog}
@@ -163,23 +163,21 @@ export function OrganizationProvider({
 
 	return (
 		<div className="flex h-full flex-col">
-			<PageHeader
-				description={description}
-				icon={<Icon />}
-				right={
-					actionButton && (
-						<Button
-							className="w-full sm:w-auto"
-							disabled={actionButton.disabled}
-							onClick={actionButton.action}
-						>
-							<actionButton.icon />
-							{actionButton.text}
-						</Button>
-					)
-				}
-				title={title}
-			/>
+			<TopBar.Title>
+				<h1 className="font-semibold text-sm">{title}</h1>
+			</TopBar.Title>
+			{actionButton && (
+				<TopBar.Actions>
+					<Button
+						disabled={actionButton.disabled}
+						onClick={actionButton.action}
+						size="sm"
+					>
+						<actionButton.icon className="size-4 shrink-0" />
+						{actionButton.text}
+					</Button>
+				</TopBar.Actions>
+			)}
 
 			<main className="flex-1 overflow-y-auto">{children}</main>
 

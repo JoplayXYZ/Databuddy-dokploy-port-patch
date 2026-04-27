@@ -1,8 +1,7 @@
-import { ArrowDownIcon } from "@phosphor-icons/react/dist/ssr/ArrowDown";
-import { ArrowUpIcon } from "@phosphor-icons/react/dist/ssr/ArrowUp";
 import { computeMetricChange, formatMetric } from "@/lib/format-insight-metric";
 import type { InsightMetric } from "@/lib/insight-types";
 import { cn } from "@/lib/utils";
+import { ArrowDownIcon, ArrowUpIcon } from "@databuddy/ui/icons";
 
 function MetricItem({ metric }: { metric: InsightMetric }) {
 	const change = computeMetricChange(metric);

@@ -1,9 +1,5 @@
 "use client";
 
-import { BugIcon } from "@phosphor-icons/react/dist/ssr";
-import { CheckIcon } from "@phosphor-icons/react/dist/ssr";
-import { CopyIcon } from "@phosphor-icons/react/dist/ssr";
-import { StackIcon } from "@phosphor-icons/react/dist/ssr";
 import { useState } from "react";
 import { toast } from "sonner";
 import { BrowserIcon, CountryFlag, OSIcon } from "@/components/icon";
@@ -12,10 +8,11 @@ import { Badge } from "@/components/ds/badge";
 import { Button } from "@/components/ds/button";
 import { Sheet } from "@/components/ds/sheet";
 import { cn } from "@/lib/utils";
-import { formatDateTime, fromNow } from "@/lib/time";
+import { formatDateTime, fromNow } from "@databuddy/ui";
 import { getDeviceIcon } from "./error-icons";
 import type { RecentError } from "./types";
 import { getErrorCategory, getSeverityColor } from "./utils";
+import { BugIcon, CheckIcon, CopyIcon, StackIcon } from "@databuddy/ui/icons";
 
 interface ErrorDetailModalProps {
 	error: RecentError;

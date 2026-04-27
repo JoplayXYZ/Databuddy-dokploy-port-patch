@@ -1,14 +1,13 @@
 "use client";
 
-import { ArrowClockwiseIcon } from "@phosphor-icons/react/dist/ssr/ArrowClockwise";
-import { LightbulbIcon } from "@phosphor-icons/react/dist/ssr/Lightbulb";
 import { useAtomValue } from "jotai";
 import { Card } from "@/components/ds/card";
-import { Skeleton } from "@/components/ds/skeleton";
-import dayjs from "@/lib/dayjs";
+import { Skeleton } from "@databuddy/ui";
+import { dayjs } from "@databuddy/ui";
 import { cn } from "@/lib/utils";
 import { useOrgNarrative } from "../hooks/use-org-narrative";
 import { insightsRangeAtom } from "../lib/time-range";
+import { ArrowClockwiseIcon, LightbulbIcon } from "@databuddy/ui/icons";
 
 export function CockpitNarrative() {
 	const range = useAtomValue(insightsRangeAtom);

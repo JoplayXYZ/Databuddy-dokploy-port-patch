@@ -1,12 +1,14 @@
 "use client";
 
-import { ChartBarIcon } from "@phosphor-icons/react";
-import { ChartLineIcon } from "@phosphor-icons/react";
-import { ChartPieIcon } from "@phosphor-icons/react";
-import { WaveformIcon } from "@phosphor-icons/react";
 import { StatCard } from "@/components/analytics/stat-card";
 import { MiniPieChart } from "@/components/charts/pie-chart";
 import { Card } from "@/components/ds/card";
+import {
+	ChartBarIcon,
+	ChartLineIcon,
+	ChartPieIcon,
+	WaveformIcon,
+} from "@databuddy/ui/icons";
 
 function generateChartData(days: number, baseValue: number, variance: number) {
 	const data: { date: string; value: number }[] = [];

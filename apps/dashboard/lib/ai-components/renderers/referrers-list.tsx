@@ -1,11 +1,11 @@
 "use client";
 
-import { GlobeIcon } from "@phosphor-icons/react";
 import { FaviconImage } from "@/components/analytics/favicon-image";
 import { Card } from "@/components/ds/card";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { cn } from "@/lib/utils";
 import type { BaseComponentProps } from "../types";
+import { GlobeIcon } from "@databuddy/ui/icons";
 
 export interface ReferrerItem {
 	domain?: string;

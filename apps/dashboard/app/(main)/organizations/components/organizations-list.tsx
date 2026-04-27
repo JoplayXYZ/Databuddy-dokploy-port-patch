@@ -1,10 +1,6 @@
 "use client";
 
 import { authClient } from "@databuddy/auth/client";
-import { BuildingsIcon } from "@phosphor-icons/react/dist/ssr";
-import { CaretRightIcon } from "@phosphor-icons/react/dist/ssr";
-import { CheckCircleIcon } from "@phosphor-icons/react/dist/ssr";
-import { PlusIcon } from "@phosphor-icons/react/dist/ssr";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -18,8 +14,14 @@ import { RightSidebar } from "@/components/right-sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ds/badge";
 import { Button } from "@/components/ds/button";
-import dayjs from "@/lib/dayjs";
+import { dayjs } from "@databuddy/ui";
 import { cn, getOrganizationInitials } from "@/lib/utils";
+import {
+	BuildingsIcon,
+	CaretRightIcon,
+	CheckCircleIcon,
+	PlusIcon,
+} from "@databuddy/ui/icons";
 
 function getDicebearUrl(seed: string): string {
 	return `https://api.dicebear.com/9.x/glass/svg?seed=${encodeURIComponent(seed)}`;

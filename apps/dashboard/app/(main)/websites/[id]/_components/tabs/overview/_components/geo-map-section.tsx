@@ -1,13 +1,13 @@
 "use client";
 
 import type { LocationData } from "@databuddy/shared/types/website";
-import { GlobeIcon } from "@phosphor-icons/react";
 import dynamic from "next/dynamic";
 import { useMemo } from "react";
 import { Card } from "@/components/ds/card";
-import { Skeleton } from "@/components/ds/skeleton";
+import { Skeleton } from "@databuddy/ui";
 import { CountryFlag } from "@/components/icon";
 import { formatNumber } from "@/lib/formatters";
+import { GlobeIcon } from "@databuddy/ui/icons";
 
 const MapComponent = dynamic(
 	() =>

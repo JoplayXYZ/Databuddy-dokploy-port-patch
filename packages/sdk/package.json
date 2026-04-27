@@ -10,8 +10,11 @@
   "type": "module",
   "scripts": {
     "build": "unbuild",
-    "test": "bun test tests/*.test.ts",
+    "test": "bun run test:unit",
+    "test:all": "bun run test:unit && bun run test:e2e",
+    "test:unit": "bun test tests/*.test.ts",
     "test:e2e": "playwright test",
+    "test:e2e:chromium": "playwright test --project=chromium",
     "test:e2e:install": "playwright install",
     "serve": "bun test-server.ts",
     "vscode:prepublish": "bun run build"

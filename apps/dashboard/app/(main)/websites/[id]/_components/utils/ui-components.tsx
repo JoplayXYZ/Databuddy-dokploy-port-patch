@@ -1,9 +1,9 @@
-import { ExternalLink, HelpCircle } from "lucide-react";
 import type React from "react";
 import { StatusDot } from "@/components/ds/status-dot";
-import { Tooltip } from "@/components/ds/tooltip";
+import { Tooltip } from "@databuddy/ui";
 import { cn } from "@/lib/utils";
 import { PERFORMANCE_THRESHOLDS } from "./analytics-helpers";
+import { ArrowSquareOutIcon, QuestionIcon } from "@databuddy/ui/icons";
 
 // Consistent border radius values
 export const BORDER_RADIUS = {
@@ -121,7 +121,7 @@ export const MetricToggles: React.FC<MetricTogglesProps> = ({
 	</div>
 );
 
-interface ExternalLinkButtonProps {
+interface ArrowSquareOutIconButtonProps {
 	className?: string;
 	href: string;
 	label: string;
@@ -129,7 +129,9 @@ interface ExternalLinkButtonProps {
 	title?: string;
 }
 
-export const ExternalLinkButton: React.FC<ExternalLinkButtonProps> = ({
+export const ArrowSquareOutIconButton: React.FC<
+	ArrowSquareOutIconButtonProps
+> = ({
 	href,
 	label,
 	title,
@@ -144,7 +146,7 @@ export const ExternalLinkButton: React.FC<ExternalLinkButtonProps> = ({
 			target="_blank"
 		>
 			{label}
-			<ExternalLink className="size-3 opacity-70" />
+			<ArrowSquareOutIcon className="size-3 opacity-70" />
 		</a>
 	);
 
@@ -208,7 +210,7 @@ export const MetricTooltip = ({
 							</span>
 						</div>
 						<div className="flex items-center">
-							<StatusDot className="mr-1.5" color="danger" size="md" />
+							<StatusDot className="mr-1.5" color="destructive" size="md" />
 							<span>
 								Poor: &gt; {threshold.average}
 								{threshold.unit}
@@ -220,7 +222,7 @@ export const MetricTooltip = ({
 		>
 			<div className="relative w-full">
 				{children}
-				<HelpCircle className="absolute top-2 right-2 size-3 text-muted-foreground/50" />
+				<QuestionIcon className="absolute top-2 right-2 size-3 text-muted-foreground/50" />
 			</div>
 		</Tooltip>
 	);

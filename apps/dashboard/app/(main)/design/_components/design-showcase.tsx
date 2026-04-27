@@ -20,49 +20,51 @@ import { Progress } from "@/components/ds/progress";
 import { SegmentedControl } from "@/components/ds/segmented-control";
 import { Select } from "@/components/ds/select";
 import { Sheet } from "@/components/ds/sheet";
-import { Skeleton } from "@/components/ds/skeleton";
+import { Skeleton } from "@databuddy/ui";
 import { Spinner } from "@/components/ds/spinner";
 import { StatusDot } from "@/components/ds/status-dot";
 import { Switch } from "@/components/ds/switch";
 import { Tabs } from "@/components/ds/tabs";
 import { Text } from "@/components/ds/text";
 import { Textarea } from "@/components/ds/textarea";
-import { Tooltip } from "@/components/ds/tooltip";
+import { Tooltip } from "@databuddy/ui";
 import {
-	ArrowRight,
-	ArrowUp,
-	Bell,
-	CaretRight,
-	Check,
-	CheckCircle,
-	Clock,
-	CreditCard,
-	DotsThree,
-	EnvelopeSimple,
-	Gear,
-	Globe,
 	Key,
-	Lightning,
-	Lock,
-	MagnifyingGlass,
-	Moon,
 	Palette,
 	PaperPlaneTilt,
-	Plus,
-	Rocket,
 	ShieldCheck,
-	Sun,
-	Trash,
-	TrendUp,
-	User,
-	UsersThree,
-	Warning,
 } from "@phosphor-icons/react/dist/ssr";
+import {
+	ArrowRightIcon,
+	ArrowUpIcon,
+	BellIcon,
+	CaretRightIcon,
+	CheckCircleIcon,
+	CheckIcon,
+	ClockIcon,
+	CreditCardIcon,
+	DotsThreeIcon,
+	EnvelopeSimpleIcon,
+	GearIcon,
+	GlobeIcon,
+	LightningIcon,
+	LockIcon,
+	MagnifyingGlassIcon,
+	MoonIcon,
+	PlusIcon,
+	RocketIcon,
+	SunIcon,
+	TrashIcon,
+	TrendUpIcon,
+	UserIcon,
+	UsersThreeIcon,
+	WarningIcon,
+} from "@databuddy/ui/icons";
 import { useState } from "react";
 import { ShowcaseRow, ShowcaseSection } from "./showcase-section";
 
 const BUTTON_VARIANTS = ["primary", "secondary", "ghost"] as const;
-const BUTTON_TONES = ["neutral", "danger"] as const;
+const BUTTON_TONES = ["neutral", "destructive"] as const;
 const BUTTON_SIZES = ["sm", "md", "lg"] as const;
 
 const BADGE_VARIANTS = [
@@ -153,7 +155,7 @@ export function DesignShowcase() {
 			</ShowcaseSection>
 
 			<ShowcaseSection
-				description="Three variants (primary, secondary, ghost) × two tones (neutral, danger) × three sizes."
+				description="Three variants (primary, secondary, ghost) × two tones (neutral, destructive) × three sizes."
 				id="button"
 				title="Button"
 			>
@@ -190,19 +192,19 @@ export function DesignShowcase() {
 				))}
 				<ShowcaseRow label="With icons">
 					<Button>
-						<Plus className="size-3.5" />
+						<PlusIcon className="size-3.5" />
 						Create
 					</Button>
-					<Button tone="danger">
-						<Trash className="size-3.5" />
+					<Button tone="destructive">
+						<TrashIcon className="size-3.5" />
 						Delete
 					</Button>
 					<Button variant="secondary">
-						<Gear className="size-3.5" />
+						<GearIcon className="size-3.5" />
 						Settings
 					</Button>
 					<Button variant="ghost">
-						<User className="size-3.5" />
+						<UserIcon className="size-3.5" />
 						Profile
 					</Button>
 				</ShowcaseRow>
@@ -298,7 +300,7 @@ export function DesignShowcase() {
 						<Field.Label>With prefix</Field.Label>
 						<Input
 							placeholder="Search…"
-							prefix={<MagnifyingGlass className="size-3.5" />}
+							prefix={<MagnifyingGlassIcon className="size-3.5" />}
 						/>
 					</Field>
 					<Field>
@@ -605,7 +607,7 @@ export function DesignShowcase() {
 					<Dialog>
 						<Dialog.Trigger
 							render={
-								<Button tone="danger" variant="secondary">
+								<Button tone="destructive" variant="secondary">
 									Destructive dialog
 								</Button>
 							}
@@ -623,7 +625,7 @@ export function DesignShowcase() {
 								<Dialog.Close>
 									<Button variant="secondary">Cancel</Button>
 								</Dialog.Close>
-								<Button tone="danger">Delete forever</Button>
+								<Button tone="destructive">Delete forever</Button>
 							</Dialog.Footer>
 						</Dialog.Content>
 					</Dialog>
@@ -683,17 +685,17 @@ export function DesignShowcase() {
 							<DropdownMenu.Group>
 								<DropdownMenu.GroupLabel>Navigate</DropdownMenu.GroupLabel>
 								<DropdownMenu.Item>
-									<Gear className="size-3.5" />
+									<GearIcon className="size-3.5" />
 									Settings
 								</DropdownMenu.Item>
 								<DropdownMenu.Item>
-									<User className="size-3.5" />
+									<UserIcon className="size-3.5" />
 									Profile
 								</DropdownMenu.Item>
 							</DropdownMenu.Group>
 							<DropdownMenu.Separator />
 							<DropdownMenu.Item variant="destructive">
-								<Trash className="size-3.5" />
+								<TrashIcon className="size-3.5" />
 								Delete
 							</DropdownMenu.Item>
 						</DropdownMenu.Content>
@@ -702,7 +704,7 @@ export function DesignShowcase() {
 						<DropdownMenu.Trigger
 							render={
 								<Button size="sm" variant="ghost">
-									<Gear className="size-3.5" />
+									<GearIcon className="size-3.5" />
 									Icon trigger
 								</Button>
 							}
@@ -845,12 +847,12 @@ export function DesignShowcase() {
 						<EmptyState
 							action={
 								<Button size="sm">
-									<Plus className="size-3.5" />
+									<PlusIcon className="size-3.5" />
 									Add website
 								</Button>
 							}
 							description="Get started by adding your first website to track."
-							icon={<TrendUp />}
+							icon={<TrendUpIcon />}
 							title="No websites yet"
 						/>
 					</div>
@@ -878,8 +880,8 @@ export function DesignShowcase() {
 						<Text variant="caption">warning</Text>
 					</div>
 					<div className="flex items-center gap-1.5">
-						<StatusDot color="danger" />
-						<Text variant="caption">danger</Text>
+						<StatusDot color="destructive" />
+						<Text variant="caption">destructive</Text>
 					</div>
 					<div className="flex items-center gap-1.5">
 						<StatusDot color="muted" />
@@ -908,7 +910,7 @@ export function DesignShowcase() {
 						<Text variant="caption">3 users online</Text>
 					</div>
 					<div className="flex items-center gap-1.5">
-						<StatusDot color="danger" pulse />
+						<StatusDot color="destructive" pulse />
 						<Text variant="caption">Incident active</Text>
 					</div>
 				</ShowcaseRow>
@@ -975,9 +977,9 @@ export function DesignShowcase() {
 								tone="muted"
 								variant="caption"
 							>
-								danger
+								destructive
 							</Text>
-							<Progress className="flex-1" tone="danger" value={91} />
+							<Progress className="flex-1" tone="destructive" value={91} />
 						</div>
 					</div>
 				</ShowcaseRow>
@@ -1121,10 +1123,10 @@ export function DesignShowcase() {
 				<ShowcaseRow>
 					<Button
 						onClick={() => setDeleteOpen(true)}
-						tone="danger"
+						tone="destructive"
 						variant="secondary"
 					>
-						<Trash className="size-3.5" />
+						<TrashIcon className="size-3.5" />
 						Delete item
 					</Button>
 					<DeleteDialog
@@ -1136,10 +1138,10 @@ export function DesignShowcase() {
 					/>
 					<Button
 						onClick={() => setDeleteChildrenOpen(true)}
-						tone="danger"
+						tone="destructive"
 						variant="secondary"
 					>
-						<Warning className="size-3.5" />
+						<WarningIcon className="size-3.5" />
 						With extra content
 					</Button>
 					<DeleteDialog
@@ -1208,8 +1210,8 @@ export function DesignShowcase() {
 }
 
 const NAV_ITEMS = [
-	{ id: "general", label: "General", icon: User },
-	{ id: "notifications", label: "Notifications", icon: Bell },
+	{ id: "general", label: "General", icon: UserIcon },
+	{ id: "notifications", label: "Notifications", icon: BellIcon },
 	{ id: "appearance", label: "Appearance", icon: Palette },
 	{ id: "security", label: "Security", icon: ShieldCheck },
 ] as const;
@@ -1224,7 +1226,7 @@ function SettingsMockup() {
 		<div className="flex overflow-hidden rounded-xl border border-border/60">
 			<nav className="flex w-56 shrink-0 flex-col gap-1 border-border/60 border-r bg-muted/30 p-3">
 				<div className="flex items-center gap-2 px-2 pb-3">
-					<Gear className="size-4 text-muted-foreground" />
+					<GearIcon className="size-4 text-muted-foreground" />
 					<Text variant="label">Settings</Text>
 				</div>
 				{NAV_ITEMS.map((item) => (
@@ -1272,7 +1274,7 @@ function SettingsMockup() {
 									<Field.Label>Email</Field.Label>
 									<Input
 										defaultValue="iza@databuddy.cc"
-										prefix={<Globe className="size-3.5" />}
+										prefix={<GlobeIcon className="size-3.5" />}
 									/>
 								</Field>
 								<Field>
@@ -1376,7 +1378,7 @@ function SettingsMockup() {
 								<Field.Label>Notification email</Field.Label>
 								<Input
 									defaultValue="iza@databuddy.cc"
-									prefix={<Bell className="size-3.5" />}
+									prefix={<BellIcon className="size-3.5" />}
 								/>
 								<Field.Description>
 									Override the default email for notifications.
@@ -1408,9 +1410,9 @@ function SettingsMockup() {
 										onClick={() => setTheme(t)}
 										type="button"
 									>
-										{t === "light" && <Sun className="size-5" />}
-										{t === "dark" && <Moon className="size-5" />}
-										{t === "system" && <Gear className="size-5" />}
+										{t === "light" && <SunIcon className="size-5" />}
+										{t === "dark" && <MoonIcon className="size-5" />}
+										{t === "system" && <GearIcon className="size-5" />}
 										<Text variant="caption">
 											{t.charAt(0).toUpperCase() + t.slice(1)}
 										</Text>
@@ -1482,7 +1484,7 @@ function SettingsMockup() {
 									<Field.Label>Current password</Field.Label>
 									<Input
 										placeholder="••••••••"
-										suffix={<Lock className="size-3.5" />}
+										suffix={<LockIcon className="size-3.5" />}
 										type="password"
 									/>
 								</Field>
@@ -1558,7 +1560,7 @@ function SettingsMockup() {
 									>
 										<div className="flex items-center gap-3">
 											<div className="flex size-8 items-center justify-center rounded-md bg-secondary">
-												<Globe className="size-3.5 text-muted-foreground" />
+												<GlobeIcon className="size-3.5 text-muted-foreground" />
 											</div>
 											<div className="flex flex-col gap-0.5">
 												<div className="flex items-center gap-2">
@@ -1575,7 +1577,7 @@ function SettingsMockup() {
 											</div>
 										</div>
 										{!s.current && (
-											<Button size="sm" tone="danger" variant="ghost">
+											<Button size="sm" tone="destructive" variant="ghost">
 												Revoke
 											</Button>
 										)}
@@ -1639,7 +1641,7 @@ function AnalyticsMockup() {
 						</Select.Content>
 					</Select>
 					<Button size="sm" variant="secondary">
-						<ArrowUp className="size-3.5" />
+						<ArrowUpIcon className="size-3.5" />
 						Export
 					</Button>
 				</div>
@@ -1719,7 +1721,7 @@ function AnalyticsMockup() {
 								key={r.source}
 							>
 								<div className="flex items-center gap-2">
-									<Globe className="size-3.5 text-muted-foreground" />
+									<GlobeIcon className="size-3.5 text-muted-foreground" />
 									<Text variant="caption">{r.source}</Text>
 								</div>
 								<Text mono tone="muted" variant="caption">
@@ -1808,7 +1810,7 @@ function TeamMockup() {
 					<Dialog.Trigger
 						render={
 							<Button size="sm">
-								<Plus className="size-3.5" />
+								<PlusIcon className="size-3.5" />
 								Invite
 							</Button>
 						}
@@ -1826,7 +1828,7 @@ function TeamMockup() {
 								<Field.Label>Email</Field.Label>
 								<Input
 									placeholder="name@company.com"
-									prefix={<EnvelopeSimple className="size-3.5" />}
+									prefix={<EnvelopeSimpleIcon className="size-3.5" />}
 								/>
 							</Field>
 							<Field>
@@ -1862,7 +1864,7 @@ function TeamMockup() {
 				<Input
 					className="max-w-xs"
 					placeholder="Search members..."
-					prefix={<MagnifyingGlass className="size-3.5" />}
+					prefix={<MagnifyingGlassIcon className="size-3.5" />}
 				/>
 				<Select defaultValue="all">
 					<Select.Trigger />
@@ -1936,13 +1938,13 @@ function TeamMockup() {
 									<DropdownMenu.Trigger
 										render={
 											<Button size="sm" variant="ghost">
-												<DotsThree className="size-3.5" />
+												<DotsThreeIcon className="size-3.5" />
 											</Button>
 										}
 									/>
 									<DropdownMenu.Content align="end">
 										<DropdownMenu.Item>
-											<Gear className="size-3.5" />
+											<GearIcon className="size-3.5" />
 											Change role
 										</DropdownMenu.Item>
 										{m.status === "pending" && (
@@ -1953,7 +1955,7 @@ function TeamMockup() {
 										)}
 										<DropdownMenu.Separator />
 										<DropdownMenu.Item variant="destructive">
-											<Trash className="size-3.5" />
+											<TrashIcon className="size-3.5" />
 											Remove
 										</DropdownMenu.Item>
 									</DropdownMenu.Content>
@@ -2047,7 +2049,7 @@ function BillingMockup() {
 								</Text>
 							</div>
 							<Progress
-								tone={u.used / u.limit > 0.8 ? "danger" : "primary"}
+								tone={u.used / u.limit > 0.8 ? "destructive" : "primary"}
 								value={(u.used / u.limit) * 100}
 							/>
 						</div>
@@ -2083,7 +2085,7 @@ function BillingMockup() {
 							<div className="flex flex-col gap-2">
 								{plan.features.map((f) => (
 									<div className="flex items-center gap-2" key={f}>
-										<Check className="size-3.5 shrink-0 text-primary" />
+										<CheckIcon className="size-3.5 shrink-0 text-primary" />
 										<Text variant="caption">{f}</Text>
 									</div>
 								))}
@@ -2110,7 +2112,7 @@ function BillingMockup() {
 				<Card.Content className="flex items-center justify-between">
 					<div className="flex items-center gap-3">
 						<div className="flex size-10 items-center justify-center rounded-lg bg-secondary">
-							<CreditCard className="size-5 text-muted-foreground" />
+							<CreditCardIcon className="size-5 text-muted-foreground" />
 						</div>
 						<div className="flex flex-col gap-0.5">
 							<Text variant="caption">Visa ending in 4242</Text>
@@ -2139,10 +2141,10 @@ function BillingMockup() {
 }
 
 const ONBOARDING_STEPS = [
-	{ id: 1, label: "Create workspace", icon: Rocket },
-	{ id: 2, label: "Add website", icon: Globe },
-	{ id: 3, label: "Install tracking", icon: Lightning },
-	{ id: 4, label: "Invite team", icon: UsersThree },
+	{ id: 1, label: "Create workspace", icon: RocketIcon },
+	{ id: 2, label: "Add website", icon: GlobeIcon },
+	{ id: 3, label: "Install tracking", icon: LightningIcon },
+	{ id: 4, label: "Invite team", icon: UsersThreeIcon },
 ];
 
 function OnboardingMockup() {
@@ -2172,14 +2174,14 @@ function OnboardingMockup() {
 							type="button"
 						>
 							{s.id < step ? (
-								<CheckCircle className="size-3.5" />
+								<CheckCircleIcon className="size-3.5" />
 							) : (
 								<s.icon className="size-3.5" />
 							)}
 							{s.label}
 						</button>
 						{i < ONBOARDING_STEPS.length - 1 && (
-							<CaretRight className="size-3 text-muted-foreground/50" />
+							<CaretRightIcon className="size-3 text-muted-foreground/50" />
 						)}
 					</div>
 				))}
@@ -2224,7 +2226,7 @@ function OnboardingMockup() {
 								<Field.Label>Domain</Field.Label>
 								<Input
 									defaultValue="acme.com"
-									prefix={<Globe className="size-3.5" />}
+									prefix={<GlobeIcon className="size-3.5" />}
 								/>
 							</Field>
 						</div>
@@ -2280,7 +2282,7 @@ function OnboardingMockup() {
 							/>
 						</div>
 						<div className="flex items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 p-3">
-							<Clock className="size-4 shrink-0 text-primary" />
+							<ClockIcon className="size-4 shrink-0 text-primary" />
 							<Text variant="caption">
 								Waiting for first event... this usually takes under a minute.
 							</Text>
@@ -2303,7 +2305,7 @@ function OnboardingMockup() {
 									<Input
 										className="flex-1"
 										placeholder="name@company.com"
-										prefix={<EnvelopeSimple className="size-3.5" />}
+										prefix={<EnvelopeSimpleIcon className="size-3.5" />}
 									/>
 									<Select defaultValue="member">
 										<Select.Trigger />
@@ -2317,7 +2319,7 @@ function OnboardingMockup() {
 							))}
 						</div>
 						<Button className="self-start" size="sm" variant="ghost">
-							<Plus className="size-3.5" />
+							<PlusIcon className="size-3.5" />
 							Add another
 						</Button>
 					</Card.Content>
@@ -2334,11 +2336,11 @@ function OnboardingMockup() {
 					{step < 4 ? (
 						<Button onClick={() => setStep(Math.min(4, step + 1))}>
 							Continue
-							<ArrowRight className="size-3.5" />
+							<ArrowRightIcon className="size-3.5" />
 						</Button>
 					) : (
 						<Button>
-							<CheckCircle className="size-3.5" />
+							<CheckCircleIcon className="size-3.5" />
 							Finish setup
 						</Button>
 					)}

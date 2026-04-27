@@ -1,15 +1,17 @@
 "use client";
 
-import { DotsThreeIcon } from "@phosphor-icons/react";
-import { EnvelopeIcon } from "@phosphor-icons/react";
-import { PencilSimpleIcon } from "@phosphor-icons/react";
-import { TrashIcon } from "@phosphor-icons/react";
-import { UserIcon } from "@phosphor-icons/react";
-import { UsersThreeIcon } from "@phosphor-icons/react";
-import { WrenchIcon } from "@phosphor-icons/react";
 import { DropdownMenu } from "@/components/ds/dropdown-menu";
 import { cn } from "@/lib/utils";
 import type { TargetGroup } from "../../_components/types";
+import {
+	DotsThreeIcon,
+	EnvelopeIcon,
+	PencilSimpleIcon,
+	TrashIcon,
+	UserIcon,
+	UsersThreeIcon,
+	WrenchIcon,
+} from "@databuddy/ui/icons";
 
 export interface GroupItemProps {
 	group: TargetGroup;

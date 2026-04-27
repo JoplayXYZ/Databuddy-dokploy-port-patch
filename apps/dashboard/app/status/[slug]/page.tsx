@@ -76,7 +76,7 @@ export async function generateMetadata({
 				}
 			: {}),
 		alternates: {
-			canonical: `/status/${slug}`,
+			canonical: getStatusPageUrl(slug),
 		},
 		openGraph: {
 			title,

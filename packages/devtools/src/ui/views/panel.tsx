@@ -236,7 +236,7 @@ function IdentityStrip({
 					{formatAge(identity.sessionAgeMs)}
 				</span>
 				<button
-					className="btn btn--ghost btn--danger"
+					className="btn btn--ghost btn--destructive"
 					onClick={onResetSession}
 					type="button"
 				>
@@ -366,7 +366,7 @@ function FlagAdvanced({
 				</button>
 				{flag.source === "override" ? (
 					<button
-						className="btn btn--ghost btn--danger"
+						className="btn btn--ghost btn--destructive"
 						onClick={() => onClearOverride(flag.key)}
 						type="button"
 					>
@@ -638,7 +638,7 @@ function FlagManageControls({
 					{pending === "save" ? "Saving…" : "Save"}
 				</button>
 				<button
-					className="btn btn--ghost btn--danger"
+					className="btn btn--ghost btn--destructive"
 					disabled={pending !== null}
 					onClick={remove}
 					type="button"
@@ -864,7 +864,7 @@ function FlagAdminStrip({
 				className={`flag-admin-strip ${catalog.status === "error" ? "flag-admin-strip--error" : ""}`}
 			>
 				<span className="flag-admin-label">
-					<span className={`dot dot--${catalog.status === "error" ? "danger" : "ok"} dot--mini`} />
+					<span className={`dot dot--${catalog.status === "error" ? "destructive" : "ok"} dot--mini`} />
 					{status}
 				</span>
 				<div className="button-row">
@@ -931,7 +931,7 @@ function FlagAdminStrip({
 				</button>
 				{adminKey || adminApiUrl ? (
 					<button
-						className="btn btn--ghost btn--danger"
+						className="btn btn--ghost btn--destructive"
 						onClick={() => {
 							clearAll();
 							setSettingsOpen(false);
@@ -1105,7 +1105,7 @@ function EventsSection({
 				</span>
 				{events.length > 0 ? (
 					<button
-						className="btn btn--ghost btn--danger"
+						className="btn btn--ghost btn--destructive"
 						onClick={onClear}
 						type="button"
 					>
@@ -1354,7 +1354,7 @@ function AdvancedSection({
 				{globalEntries.length > 0 ? (
 					<div className="fold-footer">
 						<button
-							className="btn btn--ghost btn--danger"
+							className="btn btn--ghost btn--destructive"
 							onClick={onClearGlobalProperties}
 							type="button"
 						>

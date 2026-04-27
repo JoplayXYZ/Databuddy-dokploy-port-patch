@@ -1,35 +1,29 @@
 "use client";
 
-import { ArrowLeftIcon } from "@phosphor-icons/react/dist/ssr";
-import { CommandIcon } from "@phosphor-icons/react/dist/ssr";
-import { HouseIcon } from "@phosphor-icons/react/dist/ssr";
-import { LockIcon } from "@phosphor-icons/react/dist/ssr";
-import { MagnifyingGlassIcon } from "@phosphor-icons/react/dist/ssr";
-import { WarningCircleIcon } from "@phosphor-icons/react/dist/ssr";
 import { Command as CommandPrimitive } from "cmdk";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
-import {
-	resourcesNavigation,
-	settingsNavigation,
-} from "@/components/layout/navigation/navigation-config";
+import { mainNavigation } from "@/components/layout/navigation/navigation-config";
 import type {
+	NavigationGroup,
 	NavigationItem,
-	NavigationSection,
 } from "@/components/layout/navigation/types";
 import { Button } from "@/components/ds/button";
 import { Card } from "@/components/ds/card";
 import { Dialog } from "@/components/ds/dialog";
 import { cn } from "@/lib/utils";
-
-const ALL_NAVIGATION: NavigationSection[] = [
-	...settingsNavigation,
-	...resourcesNavigation,
-];
+import {
+	ArrowLeftIcon,
+	CommandIcon,
+	HouseIcon,
+	LockIcon,
+	MagnifyingGlassIcon,
+	WarningCircleIcon,
+} from "@databuddy/ui/icons";
 
 interface SearchItem {
-	icon: typeof MagnifyingGlassIcon;
+	icon: NavigationItem["icon"];
 	name: string;
 	path: string;
 }
@@ -41,14 +35,14 @@ function toSearchItem(item: NavigationItem): SearchItem | null {
 	return {
 		name: item.name,
 		path: item.href,
-		icon: item.icon || MagnifyingGlassIcon,
+		icon: item.icon,
 	};
 }
 
-function flattenNavigation(sections: NavigationSection[]): SearchItem[] {
+function flattenNavigation(groups: NavigationGroup[]): SearchItem[] {
 	const items: SearchItem[] = [];
-	for (const section of sections) {
-		for (const item of section.items) {
+	for (const group of groups) {
+		for (const item of group.items) {
 			const searchItem = toSearchItem(item);
 			if (searchItem) {
 				items.push(searchItem);
@@ -213,7 +207,7 @@ export function WebsiteErrorState({
 	const [search, setSearch] = useState("");
 
 	const searchItems = useMemo(() => {
-		const items = flattenNavigation(ALL_NAVIGATION);
+		const items = flattenNavigation(mainNavigation);
 		if (!search.trim()) {
 			return items;
 		}
@@ -445,10 +439,7 @@ export function WebsiteErrorState({
 														value={`${item.name} ${item.path}`}
 													>
 														<div className="flex size-7 shrink-0 items-center justify-center rounded bg-accent group-data-[selected=true]:bg-background">
-															<ItemIcon
-																className="size-4 text-muted-foreground"
-																weight="duotone"
-															/>
+															<ItemIcon className="size-4 text-muted-foreground" />
 														</div>
 														<div className="min-w-0 flex-1">
 															<p className="truncate font-medium text-sm leading-tight">

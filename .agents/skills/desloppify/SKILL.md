@@ -60,6 +60,7 @@ Prioritize files with:
 - repeated `as` assertions, especially double-casts (`as unknown as`)
 - duplicate or near-duplicate functions that differ only in small branches
 - mirrored state (`ref/useState`) that can be derived from existing source state
+- **conditional rendering that causes layout shift** — `if (isPending) return null` or `if (!data) return null` for UI that occupies space. Always render a skeleton/placeholder with the same dimensions instead. `return null` is only acceptable for truly optional UI that doesn't affect layout (e.g. a badge that may or may not appear)
 - **magic string identity fallbacks** — `userId = x ?? y ?? "api-key"` or `?? "unknown"` or `?? ""` where a real ID is required. If a value must exist, guard and fail; never silently degrade to a shared string that corrupts rate limits, billing, and audit trails
 - **permission checks missing organizationId** — every `hasPermission` call MUST pass `organizationId` explicitly. Omitting it lets Better-Auth fall back to the session's `activeOrganizationId`, enabling cross-org access
 - **`protectedProcedure` on session-only handlers** — if a handler dereferences `context.user.id/.email/.name` without a null check, it must use `sessionProcedure` (API keys have `context.user = undefined`)

@@ -6,7 +6,6 @@ import {
 	CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
-import { CaretDownIcon } from "@phosphor-icons/react";
 import { useControllableState } from "@radix-ui/react-use-controllable-state";
 import type { ComponentProps, ReactNode } from "react";
 import { createContext, memo, useContext, useEffect, useState } from "react";
@@ -14,6 +13,7 @@ import { Streamdown } from "streamdown";
 import { Shimmer } from "./shimmer";
 import { useThinkingPhrase } from "./thinking-phrases";
 import { UnicodeSpinner, useRandomThinkingVariant } from "./unicode-spinner";
+import { CaretDownIcon } from "@databuddy/ui/icons";
 
 interface ReasoningContextValue {
 	duration: number | undefined;

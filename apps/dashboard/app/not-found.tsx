@@ -1,7 +1,7 @@
-import { HouseIcon } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
 import { Branding } from "@/components/logo/branding";
 import { Button } from "@/components/ds/button";
+import { HouseIcon } from "@databuddy/ui/icons";
 
 const PARTICLES = [
 	{
@@ -39,7 +39,6 @@ export default function NotFound() {
 	return (
 		<div className="relative flex min-h-dvh flex-col items-center justify-center overflow-hidden bg-background p-4 sm:p-6">
 			<style
-				// biome-ignore lint/security/noDangerouslySetInnerHtml: static keyframes
 				dangerouslySetInnerHTML={{
 					__html: `
 						@keyframes float-a {

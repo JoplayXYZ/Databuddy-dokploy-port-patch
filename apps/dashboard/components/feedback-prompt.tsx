@@ -1,11 +1,11 @@
 "use client";
 
-import { ChatTextIcon } from "@phosphor-icons/react";
-import { XIcon } from "@phosphor-icons/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ds/button";
+import { XIcon } from "@phosphor-icons/react/dist/ssr";
+import { ChatTextIcon } from "@databuddy/ui/icons";
 
 const STORAGE_KEY = "databuddy-feedback-prompt";
 

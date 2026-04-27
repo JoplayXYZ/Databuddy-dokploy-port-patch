@@ -1,10 +1,5 @@
 "use client";
 
-import { ChartLineIcon } from "@phosphor-icons/react";
-import { CursorIcon } from "@phosphor-icons/react";
-import { GlobeIcon } from "@phosphor-icons/react";
-import { TimerIcon } from "@phosphor-icons/react";
-import { UsersIcon } from "@phosphor-icons/react";
 import type { ColumnDef } from "@tanstack/react-table";
 import { useAtom } from "jotai";
 import dynamic from "next/dynamic";
@@ -28,7 +23,7 @@ import { useChartPreferences } from "@/hooks/use-chart-preferences";
 import { useDateFilters } from "@/hooks/use-date-filters";
 import { useBatchDynamicQuery } from "@/hooks/use-dynamic-query";
 import { useMediaQuery } from "@/hooks/use-media-query";
-import dayjs from "@/lib/dayjs";
+import { dayjs } from "@databuddy/ui";
 import { metricVisibilityAtom } from "@/stores/jotai/chartAtoms";
 import {
 	calculatePercentChange,
@@ -38,6 +33,13 @@ import {
 import { PercentageBadge } from "../utils/technology-helpers";
 import type { FullTabProps, MetricPoint } from "../utils/types";
 import { TrafficTrendsChart } from "./overview/_components/traffic-trends-chart";
+import {
+	ChartLineIcon,
+	CursorIcon,
+	GlobeIcon,
+	TimerIcon,
+	UsersIcon,
+} from "@databuddy/ui/icons";
 
 const GeoMapSection = dynamic(() =>
 	import("./overview/_components/geo-map-section").then((mod) => ({

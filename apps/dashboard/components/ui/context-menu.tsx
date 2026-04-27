@@ -1,10 +1,14 @@
 "use client";
 
-import { CheckIcon, ChevronRightIcon, CircleIcon } from "lucide-react";
 import { ContextMenu as ContextMenuPrimitive } from "radix-ui";
 import type * as React from "react";
 
 import { cn } from "@/lib/utils";
+import {
+	CaretRightIcon,
+	CheckIcon,
+	CircleIcon,
+} from "@databuddy/ui/icons";
 
 function ContextMenu({
 	...props
@@ -72,7 +76,7 @@ function ContextMenuSubTrigger({
 			{...props}
 		>
 			{children}
-			<ChevronRightIcon className="ml-auto" />
+			<CaretRightIcon className="ml-auto" />
 		</ContextMenuPrimitive.SubTrigger>
 	);
 }

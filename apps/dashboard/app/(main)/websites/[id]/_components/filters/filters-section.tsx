@@ -2,9 +2,6 @@
 
 import { filterOptions } from "@databuddy/shared/lists/filters";
 import type { DynamicQueryFilter } from "@databuddy/shared/types/api";
-import { FloppyDiskIcon } from "@phosphor-icons/react/dist/ssr";
-import { PencilIcon } from "@phosphor-icons/react/dist/ssr";
-import { XIcon } from "@phosphor-icons/react/dist/ssr";
 import { useAtom } from "jotai";
 import { useParams } from "next/navigation";
 import { useCallback, useState } from "react";
@@ -19,6 +16,8 @@ import {
 } from "@/stores/jotai/filterAtoms";
 import { SaveFilterDialog } from "./save-filter-dialog";
 import { SavedFiltersMenu } from "./saved-filters-menu";
+import { XIcon } from "@phosphor-icons/react/dist/ssr";
+import { FloppyDiskIcon, PencilIcon } from "@databuddy/ui/icons";
 
 function getFieldLabel(field: string): string {
 	return filterOptions.find((o) => o.value === field)?.label ?? field;

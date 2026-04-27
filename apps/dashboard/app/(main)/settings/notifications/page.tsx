@@ -1,13 +1,13 @@
 "use client";
 
 import {
-	Bell,
-	DotsThree,
-	Pencil,
-	Plus,
-	TestTube,
-	Trash,
-} from "@phosphor-icons/react/dist/ssr";
+	BellIcon,
+	DotsThreeIcon,
+	PencilIcon,
+	PlusIcon,
+	TestTubeIcon,
+	TrashIcon,
+} from "@databuddy/ui/icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -18,7 +18,7 @@ import { Card } from "@/components/ds/card";
 import { Dialog } from "@/components/ds/dialog";
 import { DropdownMenu } from "@/components/ds/dropdown-menu";
 import { EmptyState } from "@/components/ds/empty-state";
-import { Skeleton } from "@/components/ds/skeleton";
+import { Skeleton } from "@databuddy/ui";
 import { Switch } from "@/components/ds/switch";
 import { Text } from "@/components/ds/text";
 import { orpc } from "@/lib/orpc";
@@ -118,7 +118,7 @@ function DeleteAlarmDialog({
 					<Button onClick={onClose} variant="secondary">
 						Cancel
 					</Button>
-					<Button loading={isPending} onClick={onConfirm} tone="danger">
+					<Button loading={isPending} onClick={onConfirm} tone="destructive">
 						Delete
 					</Button>
 				</Dialog.Footer>
@@ -218,7 +218,7 @@ export default function NotificationsSettingsPage() {
 							</Card.Description>
 						</div>
 						<Button onClick={handleNew} size="sm" variant="secondary">
-							<Plus size={14} />
+							<PlusIcon size={14} />
 							New Alert
 						</Button>
 					</Card.Header>
@@ -248,12 +248,12 @@ export default function NotificationsSettingsPage() {
 								<EmptyState
 									action={
 										<Button onClick={handleNew} size="sm" variant="secondary">
-											<Plus size={14} />
+											<PlusIcon size={14} />
 											New Alert
 										</Button>
 									}
 									description="Create alerts with Slack, email, or webhook destinations. Attach them to monitors and anomaly rules from their settings."
-									icon={<Bell weight="duotone" />}
+									icon={<BellIcon weight="duotone" />}
 									title="No alerts yet"
 								/>
 							</div>
@@ -271,7 +271,7 @@ export default function NotificationsSettingsPage() {
 										>
 											<div className="flex flex-1 items-center gap-4 px-5 py-3">
 												<div className="flex size-10 shrink-0 items-center justify-center rounded-lg border border-border/60 bg-secondary">
-													<Bell
+													<BellIcon
 														className="text-muted-foreground"
 														size={20}
 														weight="duotone"
@@ -336,20 +336,23 @@ export default function NotificationsSettingsPage() {
 														aria-label="Alert actions"
 														className="inline-flex size-7 cursor-pointer items-center justify-center rounded-md text-muted-foreground opacity-0 transition-all hover:bg-interactive-hover hover:text-foreground group-hover:opacity-100"
 													>
-														<DotsThree className="size-4" weight="bold" />
+														<DotsThreeIcon className="size-4" weight="bold" />
 													</DropdownMenu.Trigger>
 													<DropdownMenu.Content>
 														<DropdownMenu.Item
 															onClick={() => handleEdit(alarm)}
 														>
-															<Pencil className="size-4" weight="duotone" />
+															<PencilIcon className="size-4" weight="duotone" />
 															Edit
 														</DropdownMenu.Item>
 														<DropdownMenu.Item
 															disabled={isTesting}
 															onClick={() => handleTest(alarm)}
 														>
-															<TestTube className="size-4" weight="duotone" />
+															<TestTubeIcon
+																className="size-4"
+																weight="duotone"
+															/>
 															{isTesting ? "Sending…" : "Send test"}
 														</DropdownMenu.Item>
 														<DropdownMenu.Separator />
@@ -357,7 +360,7 @@ export default function NotificationsSettingsPage() {
 															onClick={() => setDeletingAlarm(alarm)}
 															variant="destructive"
 														>
-															<Trash className="size-4" weight="duotone" />
+															<TrashIcon className="size-4" weight="duotone" />
 															Delete
 														</DropdownMenu.Item>
 													</DropdownMenu.Content>

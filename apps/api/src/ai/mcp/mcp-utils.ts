@@ -180,8 +180,9 @@ const QUERY_TYPE_DESCRIPTIONS: Record<string, string> = {
 	profile_list:
 		"List of identified user profiles with visit counts and metadata.",
 	profile_detail:
-		"Detailed profile information for a specific identified user.",
-	profile_sessions: "Session history for a specific user profile.",
+		"Detailed profile information for a specific identified user, based on analytics, custom, error, vital, and link activity.",
+	profile_sessions:
+		"Session history for a user profile, including analytics events, custom events, errors, outgoing links, and separate web vitals context.",
 	vitals_overview:
 		"Overview of Core Web Vitals scores (LCP, FCP, CLS, INP, TTFB).",
 	vitals_time_series: "Core Web Vitals metrics plotted over time.",

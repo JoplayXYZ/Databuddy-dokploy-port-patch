@@ -1,14 +1,16 @@
 "use client";
 
-import { GlobeIcon } from "@phosphor-icons/react";
-import { TargetIcon } from "@phosphor-icons/react";
-import { UsersIcon } from "@phosphor-icons/react";
-import { WarningCircleIcon } from "@phosphor-icons/react";
 import { useMemo, useRef, useState } from "react";
 import { FaviconImage } from "@/components/analytics/favicon-image";
-import { Skeleton } from "@/components/ds/skeleton";
+import { Skeleton } from "@databuddy/ui";
 import { cn } from "@/lib/utils";
 import type { FunnelAnalyticsByReferrerResult } from "@/types/funnels";
+import {
+	GlobeIcon,
+	TargetIcon,
+	UsersIcon,
+	WarningCircleIcon,
+} from "@databuddy/ui/icons";
 
 interface FunnelAnalyticsByReferrerProps {
 	data: { referrer_analytics: FunnelAnalyticsByReferrerResult[] } | undefined;

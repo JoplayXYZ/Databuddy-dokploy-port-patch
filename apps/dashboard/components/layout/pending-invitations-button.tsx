@@ -1,14 +1,14 @@
 "use client";
 
-import { BuildingsIcon, EnvelopeIcon } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
 import { useState } from "react";
 import { Badge } from "@/components/ds/badge";
 import { DropdownMenu } from "@/components/ds/dropdown-menu";
-import { Tooltip } from "@/components/ds/tooltip";
-import dayjs from "@/lib/dayjs";
+import { Tooltip } from "@databuddy/ui";
+import { dayjs } from "@databuddy/ui";
 import { cn } from "@/lib/utils";
 import { useUserInvitations } from "./hooks/use-user-invitations";
+import { BuildingsIcon, EnvelopeIcon } from "@databuddy/ui/icons";
 
 export function PendingInvitationsButton() {
 	const [isOpen, setIsOpen] = useState(false);
@@ -22,21 +22,18 @@ export function PendingInvitationsButton() {
 		<DropdownMenu onOpenChange={setIsOpen} open={isOpen}>
 			<Tooltip
 				content={`${count} pending invitation${count === 1 ? "" : "s"}`}
-				side="right"
+				side="bottom"
 			>
 				<DropdownMenu.Trigger
 					aria-label={`${count} pending invitations`}
 					className={cn(
 						"relative flex size-8 items-center justify-center rounded-md",
-						"transition-colors duration-(--duration-quick) ease-(--ease-smooth)",
-						"hover:bg-interactive-hover",
+						"text-sidebar-foreground/65 transition-colors duration-(--duration-quick) ease-(--ease-smooth)",
+						"hover:bg-sidebar-accent hover:text-sidebar-foreground",
 						"focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
 					)}
 				>
-					<EnvelopeIcon
-						className="size-5 text-sidebar-foreground/75"
-						weight="duotone"
-					/>
+					<EnvelopeIcon className="size-4" weight="duotone" />
 					<Badge
 						className={cn(
 							"absolute -top-1 -right-1 flex size-4 items-center justify-center bg-destructive p-0 text-[10px] text-destructive-foreground",
@@ -48,7 +45,7 @@ export function PendingInvitationsButton() {
 				</DropdownMenu.Trigger>
 			</Tooltip>
 
-			<DropdownMenu.Content align="start" className="w-72" side="right">
+			<DropdownMenu.Content align="end" className="w-72">
 				<DropdownMenu.Group>
 					<DropdownMenu.GroupLabel>Pending Invitations</DropdownMenu.GroupLabel>
 				</DropdownMenu.Group>

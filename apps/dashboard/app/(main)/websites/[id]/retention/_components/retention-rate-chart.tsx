@@ -1,7 +1,5 @@
 "use client";
 
-import { ChartLineIcon } from "@phosphor-icons/react";
-import { SpinnerIcon } from "@phosphor-icons/react";
 import { useMemo } from "react";
 import { EmptyState } from "@/components/ds/empty-state";
 import { StatusDot } from "@/components/ds/status-dot";
@@ -15,8 +13,9 @@ import {
 	chartLegendPillDotClassName,
 	chartLegendPillLabelClassName,
 } from "@/lib/chart-presentation";
-import dayjs from "@/lib/dayjs";
+import { dayjs } from "@databuddy/ui";
 import { cn } from "@/lib/utils";
+import { ChartLineIcon, SpinnerIcon } from "@databuddy/ui/icons";
 
 const {
 	Area,

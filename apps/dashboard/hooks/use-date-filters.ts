@@ -4,7 +4,7 @@ import {
 	getDefaultDateRangePresetSync,
 	getDefaultDatesFromPreset,
 } from "@/hooks/use-default-date-range";
-import dayjs from "@/lib/dayjs";
+import { dayjs } from "@databuddy/ui";
 import type {
 	DateRangeState,
 	TimeGranularity,

@@ -1,4 +1,4 @@
-import dayjs from "@/lib/dayjs";
+import { dayjs } from "@databuddy/ui";
 
 export const formatNumber = (value: number | null | undefined): string => {
 	if (value == null || Number.isNaN(value)) {

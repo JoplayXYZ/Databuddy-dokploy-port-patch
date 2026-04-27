@@ -1,5 +1,5 @@
 import type { DateRange } from "@databuddy/shared/types/analytics";
-import dayjs from "@/lib/dayjs";
+import { dayjs } from "@databuddy/ui";
 import type { DateRangePreset } from "./types";
 
 export const DATE_RANGE_PRESETS: {

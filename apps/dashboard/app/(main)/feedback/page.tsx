@@ -2,19 +2,28 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { Card } from "@/components/ds/card";
+import { TopBar } from "@/components/layout/top-bar";
 import { orpc } from "@/lib/orpc";
-import { FeedbackCreditsCard } from "./components/feedback-credits-card";
-import { FeedbackTable } from "./components/feedback-table";
+import { FeedbackList } from "./components/feedback-list";
+import { CreditsPanel } from "./components/credits-panel";
 import { RedeemDialog } from "./components/redeem-dialog";
-import { ShopRewardCard } from "./components/shop-reward-card";
+import { SubmitFeedbackDialog } from "./components/submit-feedback-dialog";
 
 const REWARD_TIERS = [
 	{ creditsRequired: 50, rewardType: "events", rewardAmount: 1000 },
 	{ creditsRequired: 100, rewardType: "events", rewardAmount: 2500 },
 	{ creditsRequired: 200, rewardType: "events", rewardAmount: 5000 },
 	{ creditsRequired: 500, rewardType: "events", rewardAmount: 15_000 },
+	{ creditsRequired: 25, rewardType: "agent-credits", rewardAmount: 10 },
+	{ creditsRequired: 75, rewardType: "agent-credits", rewardAmount: 35 },
+	{ creditsRequired: 150, rewardType: "agent-credits", rewardAmount: 80 },
+	{ creditsRequired: 400, rewardType: "agent-credits", rewardAmount: 250 },
 ] as const;
+
+const EVENT_TIERS = REWARD_TIERS.filter((t) => t.rewardType === "events");
+const AGENT_TIERS = REWARD_TIERS.filter(
+	(t) => t.rewardType === "agent-credits"
+);
 
 export default function FeedbackPage() {
 	const { data: balance, isLoading: isBalanceLoading } = useQuery(
@@ -24,40 +33,31 @@ export default function FeedbackPage() {
 	const [redeemTier, setRedeemTier] = useState<number | null>(null);
 
 	return (
-		<div className="flex-1 overflow-y-auto">
-			<div className="mx-auto max-w-2xl space-y-6 p-5">
-				<FeedbackCreditsCard
-					available={balance?.available ?? 0}
-					isLoading={isBalanceLoading}
-					totalEarned={balance?.totalEarned ?? 0}
-					totalSpent={balance?.totalSpent ?? 0}
-				/>
+		<div className="flex h-full flex-col">
+			<TopBar.Title>
+				<h1 className="font-semibold text-sm">Feedback & Credits</h1>
+			</TopBar.Title>
+			<TopBar.Actions>
+				<SubmitFeedbackDialog />
+			</TopBar.Actions>
 
-				<FeedbackTable />
+			<div className="flex-1 overflow-y-auto">
+				<div className="mx-auto grid max-w-5xl gap-5 p-5 lg:grid-cols-[1fr_320px]">
+					<FeedbackList />
 
-				<Card>
-					<Card.Header>
-						<Card.Title>Credits Shop</Card.Title>
-						<Card.Description>
-							Exchange earned credits for extra event balance
-						</Card.Description>
-					</Card.Header>
-					<Card.Content>
-						<div className="grid gap-3 sm:grid-cols-2">
-							{REWARD_TIERS.map((tier, index) => (
-								<ShopRewardCard
-									availableCredits={balance?.available ?? 0}
-									creditsRequired={tier.creditsRequired}
-									isRedeeming={redeemTier === index}
-									key={tier.creditsRequired}
-									onRedeemAction={() => setRedeemTier(index)}
-									rewardAmount={tier.rewardAmount}
-									rewardType={tier.rewardType}
-								/>
-							))}
-						</div>
-					</Card.Content>
-				</Card>
+					<div className="space-y-5 lg:sticky lg:top-0 lg:self-start">
+						<CreditsPanel
+							agentTiers={AGENT_TIERS}
+							available={balance?.available ?? 0}
+							eventTiers={EVENT_TIERS}
+							isLoading={isBalanceLoading}
+							onRedeemAction={setRedeemTier}
+							redeemingTier={redeemTier}
+							totalEarned={balance?.totalEarned ?? 0}
+							totalSpent={balance?.totalSpent ?? 0}
+						/>
+					</div>
+				</div>
 			</div>
 
 			{redeemTier !== null && (

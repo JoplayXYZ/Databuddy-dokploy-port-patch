@@ -1,11 +1,5 @@
 "use client";
 
-import {
-	CursorClickIcon,
-	GlobeIcon,
-	LinkIcon,
-	UsersIcon,
-} from "@phosphor-icons/react";
 import { useParams, useRouter } from "next/navigation";
 import { useMemo } from "react";
 import { StatCard } from "@/components/analytics";
@@ -14,7 +8,7 @@ import { DataTable } from "@/components/table/data-table";
 import { useDateFilters } from "@/hooks/use-date-filters";
 import { useLink, useLinkStats } from "@/hooks/use-links";
 import { useMediaQuery } from "@/hooks/use-media-query";
-import dayjs from "@/lib/dayjs";
+import { dayjs } from "@databuddy/ui";
 import { formatNumber } from "@/lib/formatters";
 import { type ChartDataPoint, ClicksChart } from "./clicks-chart";
 import {
@@ -24,6 +18,12 @@ import {
 	type GeoEntry,
 	type SourceEntry,
 } from "./link-stats-columns";
+import {
+	CursorClickIcon,
+	GlobeIcon,
+	LinkIcon,
+	UsersIcon,
+} from "@databuddy/ui/icons";
 
 interface MiniChartDataPoint {
 	date: string;

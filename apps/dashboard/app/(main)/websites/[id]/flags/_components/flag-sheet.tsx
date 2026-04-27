@@ -3,13 +3,6 @@
 import type { FlagWithScheduleForm } from "@databuddy/shared/flags";
 import { flagWithScheduleSchema } from "@databuddy/shared/flags";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { BuildingsIcon } from "@phosphor-icons/react/dist/ssr";
-import { CodeIcon } from "@phosphor-icons/react/dist/ssr";
-import { FlagIcon } from "@phosphor-icons/react/dist/ssr";
-import { GitBranchIcon } from "@phosphor-icons/react/dist/ssr";
-import { UserIcon } from "@phosphor-icons/react/dist/ssr";
-import { UsersIcon } from "@phosphor-icons/react/dist/ssr";
-import { UsersThreeIcon } from "@phosphor-icons/react/dist/ssr";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "motion/react";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -36,6 +29,15 @@ import { DependencySelector } from "./dependency-selector";
 import type { Flag, FlagSheetProps, TargetGroup } from "./types";
 import { UserRulesBuilder } from "./user-rules-builder";
 import { VariantEditor } from "./variant-editor";
+import {
+	BuildingsIcon,
+	CodeIcon,
+	FlagIcon,
+	GitBranchIcon,
+	UserIcon,
+	UsersIcon,
+	UsersThreeIcon,
+} from "@databuddy/ui/icons";
 
 function ImplementationExamples({
 	flagKey,

@@ -82,11 +82,16 @@ async function syncEmailToFlagRules(
 		});
 	}
 
+	await withTransaction(async (tx) => {
+		for (const { id, rules } of updates) {
+			await tx.update(flags).set({ rules }).where(eq(flags.id, id));
+		}
+	});
+
 	await Promise.all(
-		updates.map(async ({ id, rules, websiteId, organizationId }) => {
-			await db.update(flags).set({ rules }).where(eq(flags.id, id));
-			await invalidateFlagCache(id, websiteId, organizationId, flagKey);
-		})
+		updates.map(({ id, websiteId, organizationId }) =>
+			invalidateFlagCache(id, websiteId, organizationId, flagKey)
+		)
 	);
 }
 

@@ -44,7 +44,7 @@ const FEATURES = [
 		icon: GlobeIcon,
 		title: "Public Status Pages",
 		description:
-			"Branded, SEO-indexed status pages at /status/your-org. Share uptime transparently with customers.",
+			"Branded, SEO-indexed status pages at status.databuddy.cc/your-org. Share uptime transparently with customers.",
 	},
 	{
 		icon: ChartLineUpIcon,

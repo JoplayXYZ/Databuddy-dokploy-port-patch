@@ -131,9 +131,103 @@ export const statusPageMonitors = pgTable(
 	]
 );
 
+export const incidents = pgTable(
+	"incidents",
+	{
+		id: text().primaryKey(),
+		statusPageId: text("status_page_id").notNull(),
+		title: text().notNull(),
+		status: text()
+			.$type<"investigating" | "identified" | "monitoring" | "resolved">()
+			.notNull()
+			.default("investigating"),
+		severity: text()
+			.$type<"minor" | "major" | "critical">()
+			.notNull()
+			.default("minor"),
+		resolvedAt: timestamp("resolved_at", {
+			precision: 3,
+			withTimezone: true,
+		}),
+		createdAt: timestamp("created_at", { precision: 3, withTimezone: true })
+			.defaultNow()
+			.notNull(),
+		updatedAt: timestamp("updated_at", { precision: 3, withTimezone: true })
+			.defaultNow()
+			.notNull()
+			.$onUpdate(() => new Date()),
+	},
+	(table) => [
+		index("incidents_status_page_id_idx").on(table.statusPageId),
+		index("incidents_created_at_idx").on(table.createdAt),
+		foreignKey({
+			columns: [table.statusPageId],
+			foreignColumns: [statusPages.id],
+			name: "incidents_status_page_id_fkey",
+		}).onDelete("cascade"),
+	]
+);
+
+export const incidentUpdates = pgTable(
+	"incident_updates",
+	{
+		id: text().primaryKey(),
+		incidentId: text("incident_id").notNull(),
+		status: text()
+			.$type<"investigating" | "identified" | "monitoring" | "resolved">()
+			.notNull(),
+		message: text().notNull(),
+		createdAt: timestamp("created_at", { precision: 3, withTimezone: true })
+			.defaultNow()
+			.notNull(),
+	},
+	(table) => [
+		index("incident_updates_incident_id_idx").on(table.incidentId),
+		foreignKey({
+			columns: [table.incidentId],
+			foreignColumns: [incidents.id],
+			name: "incident_updates_incident_id_fkey",
+		}).onDelete("cascade"),
+	]
+);
+
+export const incidentAffectedMonitors = pgTable(
+	"incident_affected_monitors",
+	{
+		id: text().primaryKey(),
+		incidentId: text("incident_id").notNull(),
+		statusPageMonitorId: text("status_page_monitor_id").notNull(),
+		impact: text().$type<"degraded" | "down">().notNull().default("degraded"),
+	},
+	(table) => [
+		index("incident_affected_monitors_incident_id_idx").on(table.incidentId),
+		index("incident_affected_monitors_monitor_id_idx").on(
+			table.statusPageMonitorId
+		),
+		foreignKey({
+			columns: [table.incidentId],
+			foreignColumns: [incidents.id],
+			name: "incident_affected_monitors_incident_id_fkey",
+		}).onDelete("cascade"),
+		foreignKey({
+			columns: [table.statusPageMonitorId],
+			foreignColumns: [statusPageMonitors.id],
+			name: "incident_affected_monitors_monitor_id_fkey",
+		}).onDelete("cascade"),
+	]
+);
+
 export type UptimeSchedules = typeof uptimeSchedules.$inferSelect;
 export type UptimeSchedulesInsert = typeof uptimeSchedules.$inferInsert;
 export type StatusPages = typeof statusPages.$inferSelect;
 export type StatusPagesInsert = typeof statusPages.$inferInsert;
 export type StatusPageMonitors = typeof statusPageMonitors.$inferSelect;
 export type StatusPageMonitorsInsert = typeof statusPageMonitors.$inferInsert;
+export type Incidents = typeof incidents.$inferSelect;
+export type IncidentsInsert = typeof incidents.$inferInsert;
+export type IncidentUpdates = typeof incidentUpdates.$inferSelect;
+export type IncidentUpdatesInsert = typeof incidentUpdates.$inferInsert;
+export type IncidentAffectedMonitors =
+	typeof incidentAffectedMonitors.$inferSelect;
+export type IncidentAffectedMonitorsInsert =
+	typeof incidentAffectedMonitors.$inferInsert;

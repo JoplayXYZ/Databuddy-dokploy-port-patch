@@ -48,7 +48,7 @@ serve({
                       bg: '#0f172a',
                       card: '#1e293b',
                       primary: '#3b82f6',
-                      danger: '#ef4444',
+                      destructive: '#ef4444',
                       success: '#22c55e',
                     }
                   }

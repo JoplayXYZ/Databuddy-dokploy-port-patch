@@ -3,7 +3,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { ChartErrorBoundary } from "@/components/chart-error-boundary";
 import { Chart } from "@/components/ui/composables/chart";
-import { Skeleton } from "@/components/ds/skeleton";
+import { Skeleton } from "@databuddy/ui";
 import {
 	chartAxisTickDefault,
 	chartAxisYWidthCompact,
@@ -16,7 +16,7 @@ import {
 	chartSurfaceClassName,
 	chartTooltipSingleShellClassName,
 } from "@/lib/chart-presentation";
-import dayjs from "@/lib/dayjs";
+import { dayjs } from "@databuddy/ui";
 import { formatNumber } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
 import type { ChartComponentProps } from "../../types";

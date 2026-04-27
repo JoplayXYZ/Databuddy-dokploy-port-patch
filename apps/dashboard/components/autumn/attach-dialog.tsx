@@ -5,7 +5,7 @@ import { Button } from "@/components/ds/button";
 import { Dialog } from "@/components/ds/dialog";
 import { Divider } from "@/components/ds/divider";
 import { Text } from "@/components/ds/text";
-import dayjs from "@/lib/dayjs";
+import { dayjs } from "@databuddy/ui";
 import type { PreviewAttachResponse } from "autumn-js";
 import { useState } from "react";
 

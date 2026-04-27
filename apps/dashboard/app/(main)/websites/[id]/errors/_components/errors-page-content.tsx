@@ -1,13 +1,12 @@
 "use client";
 
 import { GATED_FEATURES } from "@databuddy/shared/types/features";
-import { BugIcon } from "@phosphor-icons/react";
 import { useAtom, useAtomValue } from "jotai";
 import { use, useCallback } from "react";
 import { EmptyState } from "@/components/ds/empty-state";
 import { FeatureGate } from "@/components/feature-gate";
 import { useDateFilters } from "@/hooks/use-date-filters";
-import { formatDateOnly } from "@/lib/time";
+import { formatDateOnly } from "@databuddy/ui";
 import {
 	type DynamicQueryFilter,
 	dynamicQueryFiltersAtom,
@@ -27,6 +26,7 @@ import type {
 	ProcessedChartData,
 	RecentError,
 } from "./types";
+import { BugIcon } from "@databuddy/ui/icons";
 
 interface ErrorsPageContentProps {
 	params: Promise<{ id: string }>;

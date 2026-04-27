@@ -1,11 +1,11 @@
 "use client";
 
-import { CaretRightIcon } from "@phosphor-icons/react/dist/ssr";
 import { Badge } from "@/components/ds/badge";
 import { Text } from "@/components/ds/text";
 import type { ApiKeyListItem } from "@/components/organizations/api-key-types";
-import dayjs from "@/lib/dayjs";
+import { dayjs } from "@databuddy/ui";
 import { cn } from "@/lib/utils";
+import { CaretRightIcon, LockSimpleIcon } from "@databuddy/ui/icons";
 
 interface ApiKeyRowProps {
 	apiKey: ApiKeyListItem;
@@ -27,11 +27,23 @@ function resolveStatus(k: ApiKeyListItem): Status {
 	return "active";
 }
 
-const STATUS_DOT: Record<Status, string> = {
-	active: "bg-success",
-	disabled: "bg-muted-foreground/30",
-	expired: "bg-warning",
-	revoked: "bg-destructive",
+const STATUS_ICON_STYLE: Record<Status, { container: string; icon: string }> = {
+	active: {
+		container: "bg-emerald-500/10",
+		icon: "text-emerald-500",
+	},
+	disabled: {
+		container: "bg-muted",
+		icon: "text-muted-foreground",
+	},
+	expired: {
+		container: "bg-warning/10",
+		icon: "text-warning",
+	},
+	revoked: {
+		container: "bg-destructive/10",
+		icon: "text-destructive",
+	},
 };
 
 const STATUS_BADGE: Record<
@@ -74,7 +86,16 @@ export function ApiKeyRow({ apiKey, onSelect }: ApiKeyRowProps) {
 			onClick={onSelect}
 			type="button"
 		>
-			<div className={cn("size-2 shrink-0 rounded-full", STATUS_DOT[status])} />
+			<div
+				className={cn(
+					"flex size-7 shrink-0 items-center justify-center rounded",
+					STATUS_ICON_STYLE[status].container
+				)}
+			>
+				<LockSimpleIcon
+					className={cn("size-4", STATUS_ICON_STYLE[status].icon)}
+				/>
+			</div>
 
 			<div className="min-w-0 flex-1">
 				<div className="flex flex-wrap items-center gap-2">

@@ -1,7 +1,7 @@
 "use client";
 
-import { CheckIcon } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
+import { CheckIcon } from "@databuddy/ui/icons";
 
 interface Step {
 	id: string;

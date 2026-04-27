@@ -1,10 +1,12 @@
 "use client";
 
-import { ArrowCounterClockwiseIcon } from "@phosphor-icons/react/dist/ssr";
-import { HouseIcon } from "@phosphor-icons/react/dist/ssr";
-import { WarningCircleIcon } from "@phosphor-icons/react/dist/ssr";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ds/button";
+import {
+	ArrowCounterClockwiseIcon,
+	HouseIcon,
+	WarningCircleIcon,
+} from "@databuddy/ui/icons";
 
 export default function WebsiteError({
 	error,

@@ -1,4 +1,66 @@
+import { Analytics } from "../../types/tables";
 import type { Filter, SimpleQueryConfig, TimeUnit } from "../types";
+
+const PROFILE_ACTIVITY_CTE = `
+      profile_activity AS (
+        SELECT
+          session_id,
+          time
+        FROM ${Analytics.events}
+        WHERE
+          client_id = {websiteId:String}
+          AND anonymous_id = {visitorId:String}
+          AND time >= toDateTime({startDate:String})
+          AND time <= toDateTime({endDate:String})
+
+        UNION ALL
+
+        SELECT
+          ifNull(session_id, '') as session_id,
+          timestamp as time
+        FROM ${Analytics.custom_events}
+        WHERE
+          website_id = {websiteId:String}
+          AND anonymous_id = {visitorId:String}
+          AND timestamp >= toDateTime({startDate:String})
+          AND timestamp <= toDateTime({endDate:String})
+
+        UNION ALL
+
+        SELECT
+          session_id,
+          timestamp as time
+        FROM ${Analytics.error_spans}
+        WHERE
+          client_id = {websiteId:String}
+          AND anonymous_id = {visitorId:String}
+          AND timestamp >= toDateTime({startDate:String})
+          AND timestamp <= toDateTime({endDate:String})
+
+        UNION ALL
+
+        SELECT
+          session_id,
+          timestamp as time
+        FROM ${Analytics.web_vitals_spans}
+        WHERE
+          client_id = {websiteId:String}
+          AND anonymous_id = {visitorId:String}
+          AND timestamp >= toDateTime({startDate:String})
+          AND timestamp <= toDateTime({endDate:String})
+
+        UNION ALL
+
+        SELECT
+          session_id,
+          timestamp as time
+        FROM ${Analytics.outgoing_links}
+        WHERE
+          client_id = {websiteId:String}
+          AND anonymous_id = {visitorId:String}
+          AND timestamp >= toDateTime({startDate:String})
+          AND timestamp <= toDateTime({endDate:String})
+      )`;
 
 export const ProfilesBuilders: Record<string, SimpleQueryConfig> = {
 	profile_list: {
@@ -35,7 +97,7 @@ export const ProfilesBuilders: Record<string, SimpleQueryConfig> = {
         any(browser_name) as browser_name,
         any(os_name) as os_name,
         any(referrer) as referrer
-      FROM analytics.events
+      FROM ${Analytics.events}
       WHERE 
         client_id = {websiteId:String}
         AND time >= toDateTime({startDate:String})
@@ -76,7 +138,7 @@ export const ProfilesBuilders: Record<string, SimpleQueryConfig> = {
             END
           )
         ) as events
-      FROM analytics.events e
+      FROM ${Analytics.events} e
       INNER JOIN visitor_profiles vp ON e.anonymous_id = vp.visitor_id
       WHERE e.client_id = {websiteId:String}
 	${combinedWhereClause}
@@ -150,26 +212,59 @@ export const ProfilesBuilders: Record<string, SimpleQueryConfig> = {
 
 			return {
 				sql: `
+    WITH ${PROFILE_ACTIVITY_CTE},
+    activity_stats AS (
+      SELECT
+        {visitorId:String} as visitor_id,
+        MIN(time) as first_visit,
+        MAX(time) as last_visit,
+        COUNT(DISTINCT session_id) as total_sessions
+      FROM profile_activity
+      WHERE session_id != ''
+    ),
+    event_stats AS (
+      SELECT
+        countIf(event_name = 'screen_view') as total_pageviews,
+        SUM(CASE WHEN time_on_page > 0 THEN time_on_page ELSE 0 END) as total_duration,
+        formatReadableTimeDelta(SUM(CASE WHEN time_on_page > 0 THEN time_on_page ELSE 0 END)) as total_duration_formatted
+      FROM ${Analytics.events}
+      WHERE
+        client_id = {websiteId:String}
+        AND anonymous_id = {visitorId:String}
+        AND time >= toDateTime({startDate:String})
+        AND time <= toDateTime({endDate:String})
+    ),
+    profile_context AS (
+      SELECT
+        any(device_type) as device,
+        any(browser_name) as browser,
+        any(os_name) as os,
+        any(country) as country,
+        any(region) as region
+      FROM ${Analytics.events}
+      WHERE
+        client_id = {websiteId:String}
+        AND anonymous_id = {visitorId:String}
+        AND time >= toDateTime({startDate:String})
+        AND time <= toDateTime({endDate:String})
+    )
     SELECT
-      anonymous_id as visitor_id,
-      MIN(time) as first_visit,
-      MAX(time) as last_visit,
-      COUNT(DISTINCT session_id) as total_sessions,
-      COUNT(*) as total_pageviews,
-      SUM(CASE WHEN time_on_page > 0 THEN time_on_page ELSE 0 END) as total_duration,
-      formatReadableTimeDelta(SUM(CASE WHEN time_on_page > 0 THEN time_on_page ELSE 0 END)) as total_duration_formatted,
-      any(device_type) as device,
-      any(browser_name) as browser,
-      any(os_name) as os,
-      any(country) as country,
-      any(region) as region
-    FROM analytics.events
-    WHERE 
-      client_id = {websiteId:String}
-      AND anonymous_id = {visitorId:String}
-      AND time >= toDateTime({startDate:String})
-      AND time <= toDateTime({endDate:String})
-    GROUP BY anonymous_id
+      ast.visitor_id,
+      ast.first_visit,
+      ast.last_visit,
+      ast.total_sessions,
+      es.total_pageviews,
+      es.total_duration,
+      es.total_duration_formatted,
+      pc.device,
+      pc.browser,
+      pc.os,
+      pc.country,
+      pc.region
+    FROM activity_stats ast
+    CROSS JOIN event_stats es
+    CROSS JOIN profile_context pc
+    WHERE ast.total_sessions > 0
   `,
 				params: {
 					websiteId,
@@ -201,14 +296,24 @@ export const ProfilesBuilders: Record<string, SimpleQueryConfig> = {
 
 			return {
 				sql: `
-    WITH user_sessions AS (
+    WITH ${PROFILE_ACTIVITY_CTE},
+    user_sessions AS (
       SELECT
         session_id,
         CONCAT('Session ', ROW_NUMBER() OVER (ORDER BY MIN(time))) as session_name,
         MIN(time) as first_visit,
         MAX(time) as last_visit,
         LEAST(dateDiff('second', MIN(time), MAX(time)), 28800) as duration,
-        formatReadableTimeDelta(LEAST(dateDiff('second', MIN(time), MAX(time)), 28800)) as duration_formatted,
+        formatReadableTimeDelta(LEAST(dateDiff('second', MIN(time), MAX(time)), 28800)) as duration_formatted
+      FROM profile_activity
+      WHERE session_id != ''
+      GROUP BY session_id
+      ORDER BY first_visit DESC
+      LIMIT {limit:Int32} OFFSET {offset:Int32}
+    ),
+    session_context AS (
+      SELECT
+        e.session_id,
         countIf(event_name = 'screen_view') as page_views,
         COUNT(DISTINCT CASE WHEN event_name = 'screen_view' THEN path ELSE NULL END) as unique_pages,
         any(device_type) as device,
@@ -217,40 +322,138 @@ export const ProfilesBuilders: Record<string, SimpleQueryConfig> = {
         any(country) as country,
         any(region) as region,
         any(referrer) as referrer
-      FROM analytics.events
-      WHERE 
-        client_id = {websiteId:String}
-        AND anonymous_id = {visitorId:String}
-        AND time >= toDateTime({startDate:String})
-        AND time <= toDateTime({endDate:String})
-      GROUP BY session_id
-      ORDER BY first_visit DESC
-      LIMIT {limit:Int32} OFFSET {offset:Int32}
-    ),
-    session_events AS (
-      SELECT
-        e.session_id,
-        groupArray(
-          tuple(
-            e.id,
-            e.time,
-            e.event_name,
-            e.path,
-            CASE 
-              WHEN e.event_name NOT IN ('screen_view', 'page_exit', 'web_vitals', 'link_out') 
-                AND e.properties IS NOT NULL 
-                AND e.properties != '{}' 
-              THEN CAST(e.properties AS String)
-              ELSE NULL
-            END
-          )
-        ) as events
-      FROM analytics.events e
+      FROM ${Analytics.events} e
       INNER JOIN user_sessions us ON e.session_id = us.session_id
-      WHERE 
+      WHERE
         e.client_id = {websiteId:String}
         AND e.anonymous_id = {visitorId:String}
       GROUP BY e.session_id
+    ),
+    all_events AS (
+      SELECT
+        toString(e.id) as id,
+        e.session_id,
+        e.time,
+        e.event_name,
+        e.path,
+        CASE
+          WHEN e.event_name NOT IN ('screen_view', 'page_exit', 'web_vitals', 'link_out')
+            AND e.properties IS NOT NULL
+            AND e.properties != '{}'
+          THEN CAST(e.properties AS Nullable(String))
+          ELSE NULL
+        END as properties,
+        CASE
+          WHEN e.event_name NOT IN ('screen_view', 'page_exit', 'web_vitals', 'link_out') THEN 'custom'
+          ELSE 'analytics'
+        END as source
+      FROM ${Analytics.events} e
+      INNER JOIN user_sessions us ON e.session_id = us.session_id
+      WHERE
+        e.client_id = {websiteId:String}
+        AND e.anonymous_id = {visitorId:String}
+
+      UNION ALL
+
+      SELECT
+        concat('custom:', toString(cityHash64(concat(
+          ifNull(ce.session_id, ''),
+          toString(ce.timestamp),
+          ce.event_name,
+          ce.properties
+        )))) as id,
+        ifNull(ce.session_id, '') as session_id,
+        ce.timestamp as time,
+        ce.event_name,
+        ifNull(ce.path, '') as path,
+        CASE
+          WHEN ce.properties != '{}' THEN CAST(ce.properties AS Nullable(String))
+          ELSE NULL
+        END as properties,
+        'custom' as source
+      FROM ${Analytics.custom_events} ce
+      INNER JOIN user_sessions us ON ifNull(ce.session_id, '') = us.session_id
+      WHERE
+        ce.website_id = {websiteId:String}
+        AND ce.anonymous_id = {visitorId:String}
+
+      UNION ALL
+
+      SELECT
+        concat('error:', toString(cityHash64(concat(
+          es.session_id,
+          toString(es.timestamp),
+          es.error_type,
+          es.message
+        )))) as id,
+        es.session_id,
+        es.timestamp as time,
+        es.error_type as event_name,
+        es.path,
+        toJSONString(map(
+          'message', es.message,
+          'filename', ifNull(es.filename, ''),
+          'line', ifNull(toString(es.lineno), ''),
+          'column', ifNull(toString(es.colno), '')
+        )) as properties,
+        'error' as source
+      FROM ${Analytics.error_spans} es
+      INNER JOIN user_sessions us ON es.session_id = us.session_id
+      WHERE
+        es.client_id = {websiteId:String}
+        AND es.anonymous_id = {visitorId:String}
+
+      UNION ALL
+
+      SELECT
+        toString(ol.id) as id,
+        ol.session_id,
+        ol.timestamp as time,
+        'outgoing_link' as event_name,
+        ol.href as path,
+        toJSONString(map(
+          'href', ol.href,
+          'text', ifNull(ol.text, '')
+        )) as properties,
+        'outgoing_link' as source
+      FROM ${Analytics.outgoing_links} ol
+      INNER JOIN user_sessions us ON ol.session_id = us.session_id
+      WHERE
+        ol.client_id = {websiteId:String}
+        AND ol.anonymous_id = {visitorId:String}
+    ),
+    session_events AS (
+      SELECT
+        session_id,
+        groupArray(tuple(id, time, event_name, path, properties, source)) as events
+      FROM (
+        SELECT *
+        FROM all_events
+        WHERE session_id != ''
+        ORDER BY time ASC
+      )
+      GROUP BY session_id
+    ),
+    session_vitals AS (
+      SELECT
+        session_id,
+        groupArray(tuple(metric_name, metric_value, time, path)) as web_vitals
+      FROM (
+        SELECT
+          wv.session_id,
+          wv.metric_name,
+          round(wv.metric_value, 3) as metric_value,
+          wv.timestamp as time,
+          wv.path
+        FROM ${Analytics.web_vitals_spans} wv
+        INNER JOIN user_sessions us ON wv.session_id = us.session_id
+        WHERE
+          wv.client_id = {websiteId:String}
+          AND wv.anonymous_id = {visitorId:String}
+        ORDER BY wv.timestamp ASC
+      )
+      WHERE session_id != ''
+      GROUP BY session_id
     )
     SELECT
       us.session_id,
@@ -259,17 +462,20 @@ export const ProfilesBuilders: Record<string, SimpleQueryConfig> = {
       us.last_visit,
       us.duration,
       us.duration_formatted,
-      us.page_views,
-      us.unique_pages,
-      us.device,
-      us.browser,
-      us.os,
-      us.country,
-      us.region,
-      us.referrer,
-      COALESCE(se.events, []) as events
+      COALESCE(sc.page_views, 0) as page_views,
+      COALESCE(sc.unique_pages, 0) as unique_pages,
+      COALESCE(sc.device, '') as device,
+      COALESCE(sc.browser, '') as browser,
+      COALESCE(sc.os, '') as os,
+      COALESCE(sc.country, '') as country,
+      COALESCE(sc.region, '') as region,
+      COALESCE(sc.referrer, '') as referrer,
+      COALESCE(se.events, []) as events,
+      COALESCE(sv.web_vitals, []) as web_vitals
     FROM user_sessions us
+    LEFT JOIN session_context sc ON us.session_id = sc.session_id
     LEFT JOIN session_events se ON us.session_id = se.session_id
+    LEFT JOIN session_vitals sv ON us.session_id = sv.session_id
     ORDER BY us.first_visit DESC
   `,
 				params: {

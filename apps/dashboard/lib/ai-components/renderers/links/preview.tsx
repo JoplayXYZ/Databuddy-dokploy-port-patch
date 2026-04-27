@@ -1,12 +1,6 @@
 "use client";
 
 import type { Icon } from "@phosphor-icons/react";
-import { CalendarIcon } from "@phosphor-icons/react/dist/ssr";
-import { CheckIcon } from "@phosphor-icons/react/dist/ssr";
-import { ImageIcon } from "@phosphor-icons/react/dist/ssr";
-import { LinkIcon } from "@phosphor-icons/react/dist/ssr";
-import { PencilSimpleIcon } from "@phosphor-icons/react/dist/ssr";
-import { TrashIcon } from "@phosphor-icons/react/dist/ssr";
 import { useState } from "react";
 import { LinkSheet } from "@/app/(main)/links/_components/link-sheet";
 import { Button } from "@/components/ds/button";
@@ -15,6 +9,14 @@ import { useChat } from "@/contexts/chat-context";
 import type { Link } from "@/hooks/use-links";
 import { cn } from "@/lib/utils";
 import type { BaseComponentProps } from "../../types";
+import {
+	CalendarIcon,
+	CheckIcon,
+	ImageIcon,
+	LinkIcon,
+	PencilSimpleIcon,
+	TrashIcon,
+} from "@databuddy/ui/icons";
 
 interface LinkPreviewData {
 	expiredRedirectUrl?: string | null;
@@ -38,7 +40,7 @@ interface ModeConfig {
 	confirmLabel: string;
 	confirmMessage: string;
 	title: string;
-	tone?: "danger";
+	tone?: "destructive";
 }
 
 const MODE_CONFIG: Record<string, ModeConfig> = {
@@ -61,7 +63,7 @@ const MODE_CONFIG: Record<string, ModeConfig> = {
 		confirmLabel: "Delete",
 		confirmMessage: "Yes, delete it",
 		accent: "border-destructive/30",
-		tone: "danger",
+		tone: "destructive",
 		ButtonIcon: TrashIcon,
 	},
 };

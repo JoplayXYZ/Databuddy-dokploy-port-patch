@@ -1,9 +1,11 @@
 "use client";
 
-import { ArrowClockwiseIcon } from "@phosphor-icons/react/dist/ssr";
-import { TrendUpIcon } from "@phosphor-icons/react/dist/ssr";
-import { WarningCircleIcon } from "@phosphor-icons/react/dist/ssr";
 import { Button } from "@/components/ds/button";
+import {
+	ArrowClockwiseIcon,
+	TrendUpIcon,
+	WarningCircleIcon,
+} from "@databuddy/ui/icons";
 
 export function EmptyUsageState() {
 	return (

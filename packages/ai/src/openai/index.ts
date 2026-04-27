@@ -1,3 +1,4 @@
+import { randomUUIDv7 } from "bun";
 import { type ClientOptions, OpenAI as OpenAIOriginal } from "openai";
 import type { APIPromise } from "openai/core";
 import type {
@@ -7,7 +8,6 @@ import type {
 	ChatCompletionCreateParamsStreaming,
 } from "openai/resources/chat/completions";
 import type { Stream } from "openai/streaming";
-import { v7 as uuidv7 } from "uuid";
 
 import { formatMessages, formatResponse, formatStreamOutput } from "./messages";
 import type {
@@ -27,11 +27,6 @@ export type {
 	OpenAITrackerOptions,
 	OpenAITransport,
 } from "./types";
-
-/** Creates a trace ID using UUIDv7 */
-export function createTraceId(): string {
-	return uuidv7();
-}
 
 /** Default HTTP transport */
 export function httpTransport(url: string, apiKey?: string): OpenAITransport {
@@ -175,7 +170,7 @@ class DatabuddyCompletions extends OpenAIOriginal.Chat.Completions {
 	): APIPromise<ChatCompletion | Stream<ChatCompletionChunk>> {
 		const { databuddy: opts, ...params } = body;
 		const startTime = Date.now();
-		const traceId = opts?.traceId ?? createTraceId();
+		const traceId = opts?.traceId ?? randomUUIDv7();
 		const isPrivate = opts?.privacyMode ?? this.db.privacyMode;
 		const shouldCost = opts?.computeCosts ?? this.db.computeCosts;
 		const onSuccess = opts?.onSuccess ?? this.db.onSuccess;

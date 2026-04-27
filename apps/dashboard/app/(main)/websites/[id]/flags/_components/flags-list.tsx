@@ -1,28 +1,30 @@
 "use client";
 
-import { ArchiveIcon } from "@phosphor-icons/react";
-import { DotsThreeIcon } from "@phosphor-icons/react";
-import { FlagIcon } from "@phosphor-icons/react";
-import { FlaskIcon } from "@phosphor-icons/react";
-import { GaugeIcon } from "@phosphor-icons/react";
-import { LinkIcon } from "@phosphor-icons/react";
-import { PencilSimpleIcon } from "@phosphor-icons/react";
-import { ShareNetworkIcon } from "@phosphor-icons/react";
-import { TrashIcon } from "@phosphor-icons/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { type SyntheticEvent, useMemo } from "react";
 import { Badge } from "@/components/ds/badge";
 import { List } from "@/components/ui/composables/list";
 import { DropdownMenu } from "@/components/ds/dropdown-menu";
-import { Skeleton } from "@/components/ds/skeleton";
+import { Skeleton } from "@databuddy/ui";
 import { Switch } from "@/components/ds/switch";
-import { Tooltip } from "@/components/ds/tooltip";
+import { Tooltip } from "@databuddy/ui";
 import { orpc } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
 import { FlagKey } from "./flag-key";
 import { FlagVariants } from "./flag-variants";
 import { RolloutProgress } from "./rollout-progress";
 import type { Flag, TargetGroup } from "./types";
+import {
+	ArchiveIcon,
+	DotsThreeIcon,
+	FlagIcon,
+	FlaskIcon,
+	GaugeIcon,
+	LinkIcon,
+	PencilSimpleIcon,
+	ShareNetworkIcon,
+	TrashIcon,
+} from "@databuddy/ui/icons";
 
 interface FlagsListProps {
 	flags: Flag[];

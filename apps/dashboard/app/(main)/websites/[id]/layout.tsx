@@ -6,19 +6,26 @@ import { useParams, usePathname } from "next/navigation";
 import { parseAsBoolean, useQueryState } from "nuqs";
 import { useEffect } from "react";
 import { toast } from "sonner";
+import { LiveUserIndicator } from "@/components/analytics";
+import { Button } from "@/components/ds/button";
+import { TopBar } from "@/components/layout/top-bar";
 import { WebsiteErrorState } from "@/components/website-error-state";
 import {
 	batchDynamicQueryKeys,
 	dynamicQueryKeys,
 } from "@/hooks/use-dynamic-query";
 import { useWebsite } from "@/hooks/use-websites";
+import { cn } from "@/lib/utils";
 import {
+	addDynamicFilterAtom,
 	currentFilterWebsiteIdAtom,
 	isAnalyticsRefreshingAtom,
 } from "@/stores/jotai/filterAtoms";
 import { AnalyticsToolbar } from "./_components/analytics-toolbar";
+import { AddFilterForm } from "./_components/filters/add-filters";
 import { WebsiteTrackingSetupTab } from "./_components/tabs/tracking-setup-tab";
 import { useTrackingSetup } from "./hooks/use-tracking-setup";
+import { ArrowClockwiseIcon } from "@databuddy/ui/icons";
 
 const NO_TOOLBAR_ROUTES = [
 	"/assistant",
@@ -43,6 +50,7 @@ export default function WebsiteLayout({ children }: WebsiteLayoutProps) {
 	const [isRefreshing, setIsRefreshing] = useAtom(isAnalyticsRefreshingAtom);
 	const setCurrentFilterWebsiteId = useSetAtom(currentFilterWebsiteIdAtom);
 	const [isEmbed] = useQueryState("embed", parseAsBoolean.withDefault(false));
+	const [, addFilter] = useAtom(addDynamicFilterAtom);
 
 	useEffect(() => {
 		setCurrentFilterWebsiteId(websiteId);
@@ -106,15 +114,35 @@ export default function WebsiteLayout({ children }: WebsiteLayoutProps) {
 	return (
 		<div className="flex h-full flex-col overflow-hidden">
 			{!hideToolbar && (
-				<div className="shrink-0 bg-background">
-					<AnalyticsToolbar
-						isDisabled={isToolbarDisabled}
-						isLoading={isToolbarLoading}
-						isRefreshing={isRefreshing}
-						onRefreshAction={handleRefresh}
-						websiteId={websiteId}
-					/>
-				</div>
+				<>
+					<TopBar.Actions>
+						<AddFilterForm
+							addFilter={addFilter}
+							buttonText="Filter"
+							disabled={isToolbarDisabled}
+						/>
+						<LiveUserIndicator websiteId={websiteId} />
+						<Button
+							aria-label="Refresh data"
+							disabled={isRefreshing || isToolbarDisabled}
+							onClick={handleRefresh}
+							size="sm"
+							variant="secondary"
+						>
+							<ArrowClockwiseIcon
+								aria-hidden
+								className={cn(
+									"size-4 shrink-0",
+									isRefreshing || isToolbarLoading ? "animate-spin" : ""
+								)}
+							/>
+						</Button>
+					</TopBar.Actions>
+
+					<div className="shrink-0">
+						<AnalyticsToolbar isDisabled={isToolbarDisabled} />
+					</div>
+				</>
 			)}
 
 			{hideToolbar ? (

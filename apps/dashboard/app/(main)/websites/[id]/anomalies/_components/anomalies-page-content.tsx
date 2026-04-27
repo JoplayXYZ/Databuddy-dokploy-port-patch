@@ -1,13 +1,18 @@
 "use client";
 
-import { CheckCircleIcon } from "@phosphor-icons/react";
-import { WarningIcon } from "@phosphor-icons/react";
-import { useQuery } from "@tanstack/react-query";
-import { use, useMemo } from "react";
+import { Button } from "@/components/ds/button";
+import {
+	ArrowClockwiseIcon,
+	CheckCircleIcon,
+	WarningIcon,
+} from "@databuddy/ui/icons";
+import { TopBar } from "@/components/layout/top-bar";
 import { List } from "@/components/ui/composables/list";
 import { listQueryOutcome } from "@/lib/list-query-outcome";
 import { orpc } from "@/lib/orpc";
-import { WebsitePageHeader } from "../../_components/website-page-header";
+import { cn } from "@/lib/utils";
+import { useQuery } from "@tanstack/react-query";
+import { use, useMemo } from "react";
 import {
 	AnomalyItem,
 	type AnomalyItemData,
@@ -33,7 +38,6 @@ export function AnomaliesPageContent({ params }: AnomaliesPageContentProps) {
 
 	const {
 		data: anomalies,
-		isLoading,
 		isPending,
 		isError,
 		isSuccess,
@@ -59,43 +63,24 @@ export function AnomaliesPageContent({ params }: AnomaliesPageContentProps) {
 		[items, isError, isPending, isSuccess]
 	);
 
-	const criticalCount = items.filter((a) => a.severity === "critical").length;
-
-	const subtitle = useMemo(() => {
-		if (isLoading) {
-			return;
-		}
-		if (items.length === 0) {
-			return "No anomalies detected";
-		}
-		const parts: string[] = [];
-		parts.push(
-			`${items.length} anomal${items.length === 1 ? "y" : "ies"} detected`
-		);
-		if (criticalCount > 0) {
-			parts.push(`${criticalCount} critical`);
-		}
-		return parts.join(" · ");
-	}, [isLoading, items.length, criticalCount]);
-
 	return (
 		<div className="relative flex h-full flex-col">
-			<WebsitePageHeader
-				description="Detects unusual patterns in event data"
-				hasError={isError}
-				icon={
-					<WarningIcon
-						className="size-6 text-accent-foreground"
-						weight="duotone"
+			<TopBar.Title>
+				<h1 className="font-semibold text-sm">Anomalies</h1>
+			</TopBar.Title>
+			<TopBar.Actions>
+				<Button
+					aria-label="Refresh"
+					disabled={isFetching}
+					onClick={() => refetch()}
+					size="sm"
+					variant="secondary"
+				>
+					<ArrowClockwiseIcon
+						className={cn("size-4 shrink-0", isFetching && "animate-spin")}
 					/>
-				}
-				isLoading={isLoading}
-				isRefreshing={isFetching}
-				onRefreshAction={() => refetch()}
-				subtitle={subtitle}
-				title="Anomalies"
-				websiteId={websiteId}
-			/>
+				</Button>
+			</TopBar.Actions>
 
 			<div className="min-h-0 flex-1 overflow-y-auto overscroll-none">
 				<List.Content

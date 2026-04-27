@@ -1,9 +1,8 @@
 "use client";
 
-import { ChartBarIcon } from "@phosphor-icons/react";
-import { ListBulletsIcon } from "@phosphor-icons/react";
 import { useParams } from "next/navigation";
 import { PageNavigation } from "@/components/layout/page-navigation";
+import { ChartBarIcon, ListBulletsIcon } from "@databuddy/ui/icons";
 
 export default function EventsLayout({
 	children,

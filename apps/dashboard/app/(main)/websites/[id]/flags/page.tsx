@@ -1,7 +1,6 @@
 "use client";
 
 import { GATED_FEATURES } from "@databuddy/shared/types/features";
-import { FlagIcon } from "@phosphor-icons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAtom } from "jotai";
 import { useParams } from "next/navigation";
@@ -15,6 +14,7 @@ import { isFlagSheetOpenAtom } from "@/stores/jotai/flagsAtoms";
 import { FlagSheet } from "./_components/flag-sheet";
 import { FlagsList, FlagsListSkeleton } from "./_components/flags-list";
 import type { Flag, TargetGroup } from "./_components/types";
+import { FlagIcon } from "@databuddy/ui/icons";
 
 export default function FlagsPage() {
 	const { id } = useParams();

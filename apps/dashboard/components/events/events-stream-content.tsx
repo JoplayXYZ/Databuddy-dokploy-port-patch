@@ -1,13 +1,5 @@
 "use client";
 
-import { BracketsSquareIcon } from "@phosphor-icons/react";
-import { CopyIcon } from "@phosphor-icons/react";
-import { FunnelIcon } from "@phosphor-icons/react";
-import { LightningIcon } from "@phosphor-icons/react";
-import { LinkIcon } from "@phosphor-icons/react";
-import { MagnifyingGlassIcon } from "@phosphor-icons/react";
-import { TagIcon } from "@phosphor-icons/react";
-import { XIcon } from "@phosphor-icons/react";
 import { useDebouncedCallback } from "@tanstack/react-pacer";
 import type { ColumnDef } from "@tanstack/react-table";
 import {
@@ -28,6 +20,7 @@ import { EmptyState } from "@/components/ds/empty-state";
 import { Badge } from "@/components/ds/badge";
 import { Button } from "@/components/ds/button";
 import { Input } from "@/components/ds/input";
+import type { RecentCustomEvent as StreamCustomEvent } from "@/components/events/custom-events";
 import {
 	Select,
 	SelectContent,
@@ -35,7 +28,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
-import { Skeleton } from "@/components/ds/skeleton";
+import { Skeleton } from "@databuddy/ui";
 import {
 	Table,
 	TableBody,
@@ -45,22 +38,24 @@ import {
 	TableRow,
 } from "@/components/ui/table";
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
-import { formatTime, fromNow } from "@/lib/time";
+import { formatTime, fromNow } from "@databuddy/ui";
 import { cn } from "@/lib/utils";
+import { XIcon } from "@phosphor-icons/react/dist/ssr";
+import {
+	BracketsSquareIcon,
+	CopyIcon,
+	FunnelIcon,
+	LightningIcon,
+	LinkIcon,
+	MagnifyingGlassIcon,
+	TagIcon,
+} from "@databuddy/ui/icons";
 
-export interface RecentCustomEvent {
-	anonymous_id: string;
-	event_name: string;
-	name: string;
-	path: string;
-	properties: Record<string, unknown>;
-	session_id: string;
-	timestamp: string;
-}
+export type { RecentCustomEvent } from "@/components/events/custom-events";
 
 export interface EventsStreamData {
 	error: Error | null;
-	events: RecentCustomEvent[] | undefined;
+	events: StreamCustomEvent[] | undefined;
 	isError: boolean;
 	isLoading: boolean;
 	pagination: { hasNext: boolean };
@@ -72,7 +67,7 @@ export interface EventsStreamContentProps {
 	isPageLoading?: boolean;
 	onPageChange: (page: number) => void;
 	page: number;
-	renderEventName: (event: RecentCustomEvent) => ReactNode;
+	renderEventName: (event: StreamCustomEvent) => ReactNode;
 }
 
 type HasPropertiesFilter = "all" | "with" | "without";
@@ -182,7 +177,7 @@ export function EventsStreamContent({
 }: EventsStreamContentProps) {
 	const { events, pagination, isLoading, isError, error } = data;
 
-	const [allEvents, setAllEvents] = useState<RecentCustomEvent[]>([]);
+	const [allEvents, setAllEvents] = useState<StreamCustomEvent[]>([]);
 	const [loadMoreRef, setLoadMoreRef] = useState<HTMLTableCellElement | null>(
 		null
 	);
@@ -458,7 +453,7 @@ export function EventsStreamContent({
 	const { copyToClipboard } = useCopyToClipboard();
 
 	const handleCopyEvent = useCallback(
-		(event: RecentCustomEvent) => {
+		(event: StreamCustomEvent) => {
 			const copyData = {
 				event_name: event.event_name,
 				path: event.path,
@@ -478,7 +473,7 @@ export function EventsStreamContent({
 		[setSelectedPropertyKey, setSelectedPropertyValue]
 	);
 
-	const columns = useMemo<ColumnDef<RecentCustomEvent>[]>(
+	const columns = useMemo<ColumnDef<StreamCustomEvent>[]>(
 		() => [
 			{
 				id: "timestamp",

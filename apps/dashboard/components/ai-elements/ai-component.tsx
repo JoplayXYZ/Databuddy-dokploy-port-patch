@@ -1,6 +1,6 @@
 "use client";
 
-import { Skeleton } from "@/components/ds/skeleton";
+import { Skeleton } from "@databuddy/ui";
 import {
 	getComponent,
 	hasComponent,

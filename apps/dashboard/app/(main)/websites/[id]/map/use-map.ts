@@ -19,13 +19,19 @@ export function useMapLocationData(
 			{
 				id: "map-countries",
 				parameters: ["country"],
-				limit: 100,
+				limit: 200,
 				filters,
 			},
 			{
 				id: "map-regions",
 				parameters: ["region"],
-				limit: 100,
+				limit: 200,
+				filters,
+			},
+			{
+				id: "map-cities",
+				parameters: ["city"],
+				limit: 200,
 				filters,
 			},
 		],

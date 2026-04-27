@@ -1,8 +1,6 @@
 "use client";
 
 import type { Variant } from "@databuddy/shared/flags";
-import { PlusIcon } from "@phosphor-icons/react";
-import { TrashIcon } from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ds/button";
 import { Checkbox } from "@/components/ds/checkbox";
@@ -12,6 +10,7 @@ import { Select } from "@/components/ds/select";
 import { LineSlider } from "@/components/ds/line-slider";
 import { cn } from "@/lib/utils";
 import type { VariantEditorProps } from "./types";
+import { PlusIcon, TrashIcon } from "@databuddy/ui/icons";
 
 export function VariantEditor({
 	variants,

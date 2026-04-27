@@ -28,7 +28,7 @@ import {
 import { ChartErrorBoundary } from "@/components/chart-error-boundary";
 import { useDynamicDasharray } from "@/components/charts/use-dynamic-dasharray";
 import { EmptyState, type EmptyStateProps } from "@/components/ds/empty-state";
-import { Skeleton } from "@/components/ds/skeleton";
+import { Skeleton } from "@databuddy/ui";
 import {
 	chartAxisTickDefault,
 	chartAxisYWidthCompact,
@@ -61,7 +61,7 @@ import type {
 	ChartQuerySlice,
 } from "@/lib/chart-query-outcome";
 import { chartQueryOutcomeFromQuery } from "@/lib/chart-query-outcome";
-import dayjs from "@/lib/dayjs";
+import { dayjs } from "@databuddy/ui";
 import { formatLocaleNumber } from "@/lib/format-locale-number";
 import { formatNumber } from "@/lib/formatters";
 import { cn } from "@/lib/utils";

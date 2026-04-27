@@ -3,8 +3,13 @@
   "version": "1.0.0",
   "description": "Redis caching and pub/sub utilities for Databuddy",
   "main": "index.ts",
+  "scripts": {
+    "check-types": "tsc --build",
+    "test": "bun test *.test.ts"
+  },
   "exports": {
     ".": "./index.ts",
+    "./bullmq": "./bullmq.ts",
     "./cacheable": "./cacheable.ts",
     "./rate-limit": "./rate-limit.ts",
     "./redis": "./redis.ts",
@@ -12,9 +17,11 @@
     "./drizzle-cache": "./drizzle-cache.ts",
     "./cache-invalidation": "./cache-invalidation.ts",
     "./links-cache": "./links-cache.ts",
-    "./click-dedup": "./click-dedup.ts"
+    "./click-dedup": "./click-dedup.ts",
+    "./uptime-queue": "./uptime-queue.ts"
   },
   "dependencies": {
+    "bullmq": "^5.66.5",
     "ioredis": "^5.8.2",
     "superjson": "catalog:",
     "zod": "catalog:"

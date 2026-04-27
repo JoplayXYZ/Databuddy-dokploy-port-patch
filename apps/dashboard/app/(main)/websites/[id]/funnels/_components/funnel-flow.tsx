@@ -1,15 +1,17 @@
 "use client";
 
-import { ArrowSquareOutIcon } from "@phosphor-icons/react";
-import { CaretDownIcon } from "@phosphor-icons/react";
-import { CheckCircleIcon } from "@phosphor-icons/react";
-import { WarningCircleIcon } from "@phosphor-icons/react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useLayoutEffect, useRef, useState } from "react";
-import { Tooltip } from "@/components/ds/tooltip";
+import { Tooltip } from "@databuddy/ui";
 import { cn } from "@/lib/utils";
 import type { FunnelStepAnalytics } from "@/types/funnels";
+import {
+	ArrowSquareOutIcon,
+	CaretDownIcon,
+	CheckCircleIcon,
+	WarningCircleIcon,
+} from "@databuddy/ui/icons";
 
 interface FunnelFlowProps {
 	steps: FunnelStepAnalytics[];

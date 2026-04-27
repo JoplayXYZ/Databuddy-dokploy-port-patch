@@ -1,6 +1,6 @@
-import { LifebuoyIcon } from "@phosphor-icons/react/dist/ssr";
 import Image from "next/image";
-import { ThemeToggle } from "@/components/layout/theme-toggle";
+import { ThemeToggle } from "@databuddy/ui/client";
+import { LifebuoyIcon } from "@databuddy/ui/icons";
 
 interface StatusNavbarProps {
 	logoUrl?: string | null;

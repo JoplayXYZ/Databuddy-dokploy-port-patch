@@ -1,9 +1,6 @@
 "use client";
 
 import { authClient } from "@databuddy/auth/client";
-import { EnvelopeSimpleIcon } from "@phosphor-icons/react";
-import { EyeIcon } from "@phosphor-icons/react";
-import { EyeSlashIcon } from "@phosphor-icons/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { parseAsString, useQueryState } from "nuqs";
@@ -17,6 +14,7 @@ import { Input } from "@/components/ds/input";
 import { Spinner } from "@/components/ds/spinner";
 import { Text } from "@/components/ds/text";
 import { GithubMark, GoogleMark } from "@/components/ui/brand-icons";
+import { EnvelopeSimpleIcon, EyeIcon, EyeSlashIcon } from "@databuddy/ui/icons";
 
 function LoginPage() {
 	const router = useRouter();

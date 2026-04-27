@@ -6,7 +6,7 @@ import {
 	enableAllOptimization,
 } from "../../app/(main)/websites/[id]/_components/utils/tracking-helpers";
 import type { TrackingOptions } from "../../app/(main)/websites/[id]/_components/utils/types";
-import dayjs, { guessTimezone } from "@/lib/dayjs";
+import { dayjs, guessTimezone } from "@databuddy/ui";
 
 export interface DynamicQueryFilter {
 	field: string;

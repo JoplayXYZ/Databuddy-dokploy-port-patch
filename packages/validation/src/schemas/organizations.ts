@@ -71,3 +71,7 @@ export const getPendingInvitationsSchema = z.object({
 	organizationId: z.string().min(1, "Organization ID is required"),
 	includeExpired: z.boolean().optional(),
 });
+
+export const clearExpiredInvitationsSchema = z.object({
+	organizationId: z.string().min(1, "Organization ID is required"),
+});

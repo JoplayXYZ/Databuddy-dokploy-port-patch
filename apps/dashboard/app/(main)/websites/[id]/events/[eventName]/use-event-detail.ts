@@ -1,14 +1,16 @@
 import type { DateRange } from "@databuddy/shared/types/analytics";
 import { useMemo } from "react";
 import { useBatchDynamicQuery } from "@/hooks/use-dynamic-query";
+import { classifyEventProperties } from "@/components/events/custom-events";
 import type {
+	ClassifiedProperty,
 	CustomEventsTrend,
 	PropertyClassification,
 	PropertyDistribution,
 	PropertyTopValue,
 	RawRecentCustomEvent,
 	RecentCustomEvent,
-} from "../_components/types";
+} from "@/components/events/custom-events";
 
 interface EventSummary {
 	total_events: number;
@@ -17,21 +19,8 @@ interface EventSummary {
 	unique_users: number;
 }
 
-interface ClassifiedPropertySimple {
-	classification: {
-		cardinality: number;
-		inferred_type: string;
-	};
-	key: string;
-	values: Array<{
-		property_value: string;
-		count: number;
-		percentage: number;
-	}>;
-}
-
 interface EventDetailData {
-	classifiedProperties: ClassifiedPropertySimple[];
+	classifiedProperties: ClassifiedProperty[];
 	recentEvents: RecentCustomEvent[];
 	summary: EventSummary;
 	trends: CustomEventsTrend[];
@@ -130,73 +119,40 @@ export function useEventDetailData(
 			};
 		});
 
-		const classifiedProperties: ClassifiedPropertySimple[] =
-			classificationsData.map((classification) => {
-				const propKey = classification.property_key;
-
-				let values: Array<{
-					property_value: string;
-					count: number;
-					percentage: number;
-				}> = [];
-
-				if (
-					classification.render_strategy === "distribution_bar" ||
-					classification.render_strategy === "top_n_chart"
-				) {
-					const distValues = distributionsData.filter(
-						(d) => d.property_key === propKey
-					);
-					values = distValues.map((d) => ({
-						property_value: d.property_value,
-						count: d.count,
-						percentage: d.percentage,
-					}));
-				} else {
-					const topVals = topValuesData.filter(
-						(t) => t.property_key === propKey
-					);
-					values = topVals.map((t) => ({
-						property_value: t.property_value,
-						count: t.count,
-						percentage: t.percentage,
-					}));
-				}
-
-				return {
-					key: propKey,
-					classification: {
-						cardinality: classification.cardinality,
-						inferred_type: classification.inferred_type,
-					},
-					values,
-				};
-			});
-
-		classifiedProperties.sort((a, b) => {
-			if (a.values.length === 0 && b.values.length > 0) {
-				return 1;
-			}
-			if (a.values.length > 0 && b.values.length === 0) {
-				return -1;
-			}
-			return a.classification.cardinality - b.classification.cardinality;
-		});
+		const summary = summaryData[0] ?? {
+			total_events: 0,
+			unique_users: 0,
+			unique_sessions: 0,
+			unique_pages: 0,
+		};
+		const [classifiedEvent] = classifyEventProperties(
+			[
+				{
+					events_with_properties: 0,
+					first_occurrence: "",
+					last_occurrence: "",
+					name: eventName,
+					percentage: 100,
+					total_events: summary.total_events,
+					unique_sessions: summary.unique_sessions,
+					unique_users: summary.unique_users,
+				},
+			],
+			classificationsData,
+			distributionsData,
+			topValuesData
+		);
+		const classifiedProperties = (
+			classifiedEvent?.summaryProperties ?? []
+		).filter((property) => property.values.length > 0);
 
 		return {
-			summary: summaryData[0] ?? {
-				total_events: 0,
-				unique_users: 0,
-				unique_sessions: 0,
-				unique_pages: 0,
-			},
+			summary,
 			trends: trendsData,
 			recentEvents,
-			classifiedProperties: classifiedProperties.filter(
-				(p) => p.values.length > 0
-			),
+			classifiedProperties,
 		};
-	}, [results]);
+	}, [results, eventName]);
 
 	return {
 		data,

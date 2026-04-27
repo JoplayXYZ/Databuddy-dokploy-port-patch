@@ -4,12 +4,12 @@ import { FaviconImage } from "@/components/analytics/favicon-image";
 import { Button } from "@/components/ds/button";
 import { Card } from "@/components/ds/card";
 import { EmptyState } from "@/components/ds/empty-state";
-import { Skeleton } from "@/components/ds/skeleton";
+import { Skeleton } from "@databuddy/ui";
 import { Text } from "@/components/ds/text";
 import { WebsiteDialog } from "@/components/website-dialog";
 import type { Organization } from "@/hooks/use-organizations";
 import { orpc } from "@/lib/orpc";
-import { CaretRight, Globe, Plus } from "@phosphor-icons/react/dist/ssr";
+import { CaretRightIcon, GlobeIcon, PlusIcon } from "@databuddy/ui/icons";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { useState } from "react";
@@ -31,10 +31,9 @@ function WebsiteRow({ website }: { website: WebsiteRowData }) {
 				className="size-8"
 				domain={website.domain}
 				fallbackIcon={
-					<Globe
+					<GlobeIcon
 						className="absolute inset-0 m-auto text-muted-foreground"
 						size={20}
-						weight="duotone"
 					/>
 				}
 				size={32}
@@ -47,11 +46,7 @@ function WebsiteRow({ website }: { website: WebsiteRowData }) {
 					{website.domain}
 				</Text>
 			</div>
-			<CaretRight
-				className="text-muted-foreground/40 transition-all group-hover:translate-x-0.5 group-hover:text-foreground"
-				size={14}
-				weight="bold"
-			/>
+			<CaretRightIcon className="size-4 shrink-0 text-muted-foreground/40 group-hover:translate-x-0.5 group-hover:text-foreground" />
 		</Link>
 	);
 }
@@ -109,7 +104,7 @@ export function WorkspaceWebsitesSection({
 					size="sm"
 					variant="secondary"
 				>
-					<Plus size={14} />
+					<PlusIcon className="size-4 shrink-0" />
 					New Website
 				</Button>
 			</Card.Header>
@@ -125,12 +120,12 @@ export function WorkspaceWebsitesSection({
 									size="sm"
 									variant="secondary"
 								>
-									<Plus size={14} />
+									<PlusIcon className="size-4 shrink-0" />
 									Add Website
 								</Button>
 							}
 							description="Add your first website to start tracking analytics."
-							icon={<Globe weight="duotone" />}
+							icon={<GlobeIcon />}
 							title="No websites yet"
 						/>
 					</div>

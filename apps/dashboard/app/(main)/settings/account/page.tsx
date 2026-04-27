@@ -1,17 +1,14 @@
 "use client";
 
 import { authClient } from "@databuddy/auth/client";
-import type { Icon } from "@phosphor-icons/react";
+import { GithubLogo, GoogleLogo } from "@phosphor-icons/react/dist/ssr";
 import {
-	GithubLogo,
-	GoogleLogo,
-	Key,
-	LinkBreak,
-	Link as LinkIcon,
-	ShieldCheck,
-	Trash,
-	WarningCircle,
-} from "@phosphor-icons/react/dist/ssr";
+	KeyIcon,
+	LinkBreakIcon,
+	LinkIcon,
+	ShieldCheckIcon,
+	WarningCircleIcon,
+} from "@databuddy/ui/icons";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -24,9 +21,15 @@ import { Dialog } from "@/components/ds/dialog";
 import { Divider } from "@/components/ds/divider";
 import { Field } from "@/components/ds/field";
 import { Input } from "@/components/ds/input";
-import { Skeleton } from "@/components/ds/skeleton";
+import {
+	Skeleton,
+	SettingCardGroup,
+	SettingCard,
+	SettingsZone,
+	SettingsZoneRow,
+	dayjs,
+} from "@databuddy/ui";
 import { Text } from "@/components/ds/text";
-import dayjs from "@/lib/dayjs";
 import { TwoFactorDialog } from "./sections/two-factor-dialog";
 
 interface Account {
@@ -40,10 +43,14 @@ type SocialProvider = "google" | "github";
 
 const SOCIAL_PROVIDERS: SocialProvider[] = ["google", "github"];
 
-const PROVIDER_CONFIG: Record<string, { icon: Icon; name: string }> = {
+type IconComponent = React.ComponentType<
+	React.SVGProps<SVGSVGElement> & Record<string, unknown>
+>;
+
+const PROVIDER_CONFIG: Record<string, { icon: IconComponent; name: string }> = {
 	google: { icon: GoogleLogo, name: "Google" },
 	github: { icon: GithubLogo, name: "GitHub" },
-	credential: { icon: Key, name: "Password" },
+	credential: { icon: KeyIcon, name: "Password" },
 };
 
 function getInitials(name: string): string {
@@ -177,7 +184,7 @@ function UnlinkConfirmDialog({
 					<Button onClick={onClose} variant="secondary">
 						Cancel
 					</Button>
-					<Button loading={isPending} onClick={onConfirm} tone="danger">
+					<Button loading={isPending} onClick={onConfirm} tone="destructive">
 						Unlink
 					</Button>
 				</Dialog.Footer>
@@ -273,9 +280,9 @@ function DeleteAccountDialog({
 					</Dialog.Description>
 				</Dialog.Header>
 				<Dialog.Body className="space-y-4">
-					<div className="flex items-start gap-3 rounded-lg border border-danger/20 bg-danger/5 p-3">
-						<WarningCircle
-							className="mt-0.5 size-5 shrink-0 text-danger"
+					<div className="flex items-start gap-3 rounded-lg border border-destructive/20 bg-destructive/5 p-3">
+						<WarningCircleIcon
+							className="mt-0.5 size-5 shrink-0 text-destructive"
 							weight="duotone"
 						/>
 						<Text tone="muted" variant="caption">
@@ -319,7 +326,7 @@ function DeleteAccountDialog({
 						disabled={!canSubmit || deleteAccount.isPending}
 						loading={deleteAccount.isPending}
 						onClick={() => deleteAccount.mutate()}
-						tone="danger"
+						tone="destructive"
 					>
 						{hasPassword ? "Delete My Account" : "Send Confirmation Email"}
 					</Button>
@@ -548,54 +555,38 @@ export default function AccountSettingsPage() {
 						</Card.Content>
 					</Card>
 
-					<Card>
-						<Card.Header>
-							<Card.Title>Security</Card.Title>
-							<Card.Description>
-								Secure your account with additional authentication
-							</Card.Description>
-						</Card.Header>
-						<Card.Content className="space-y-4">
-							<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-								<div className="min-w-0 flex-1">
-									<Text variant="label">Two-Factor Authentication</Text>
-									<Text tone="muted" variant="caption">
-										Add an extra layer of security to your account
-									</Text>
-								</div>
+					<SettingCardGroup>
+						<SettingCard
+							description="Add an extra layer of security to your account"
+							icon={
+								<ShieldCheckIcon className="size-4 text-muted-foreground" />
+							}
+							title="Two-Factor Authentication"
+						>
+							<Button
+								onClick={() => setShowTwoFactorDialog(true)}
+								size="sm"
+								variant="secondary"
+							>
+								{user?.twoFactorEnabled ? "Manage" : "Enable"}
+							</Button>
+						</SettingCard>
+						{hasCredentialAccount && (
+							<SettingCard
+								description="Update your password regularly for security"
+								icon={<KeyIcon className="size-4 text-muted-foreground" />}
+								title="Change Password"
+							>
 								<Button
-									onClick={() => setShowTwoFactorDialog(true)}
+									onClick={() => setShowPasswordDialog(true)}
 									size="sm"
 									variant="secondary"
 								>
-									<ShieldCheck className="size-3.5" weight="duotone" />
-									{user?.twoFactorEnabled ? "Manage" : "Enable"}
+									Change
 								</Button>
-							</div>
-
-							{hasCredentialAccount && (
-								<>
-									<Divider />
-									<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-										<div className="min-w-0 flex-1">
-											<Text variant="label">Change Password</Text>
-											<Text tone="muted" variant="caption">
-												Update your password regularly for security
-											</Text>
-										</div>
-										<Button
-											onClick={() => setShowPasswordDialog(true)}
-											size="sm"
-											variant="secondary"
-										>
-											<Key className="size-3.5" weight="duotone" />
-											Change
-										</Button>
-									</div>
-								</>
-							)}
-						</Card.Content>
-					</Card>
+							</SettingCard>
+						)}
+					</SettingCardGroup>
 
 					<Card>
 						<Card.Header>
@@ -649,7 +640,7 @@ export default function AccountSettingsPage() {
 																	size="sm"
 																	variant="ghost"
 																>
-																	<LinkBreak className="size-3.5" />
+																	<LinkBreakIcon className="size-3.5" />
 																	Unlink
 																</Button>
 															)}
@@ -676,10 +667,7 @@ export default function AccountSettingsPage() {
 											<Divider />
 											<div className="flex items-center justify-between">
 												<div className="flex items-center gap-3">
-													<Key
-														className="size-4 text-muted-foreground"
-														weight="duotone"
-													/>
+													<KeyIcon className="size-4 text-muted-foreground" />
 													<div>
 														<Text variant="label">Password</Text>
 														<Text tone="muted" variant="caption">
@@ -696,33 +684,16 @@ export default function AccountSettingsPage() {
 						</Card.Content>
 					</Card>
 
-					<Card>
-						<Card.Header>
-							<Card.Title>Danger Zone</Card.Title>
-							<Card.Description>
-								Irreversible actions that permanently affect your account
-							</Card.Description>
-						</Card.Header>
-						<Card.Content>
-							<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-								<div className="min-w-0 flex-1">
-									<Text variant="label">Delete Account</Text>
-									<Text tone="muted" variant="caption">
-										Permanently delete your account and all associated data
-									</Text>
-								</div>
-								<Button
-									onClick={() => setShowDeleteDialog(true)}
-									size="sm"
-									tone="danger"
-									variant="secondary"
-								>
-									<Trash className="size-3.5" weight="duotone" />
-									Delete Account
-								</Button>
-							</div>
-						</Card.Content>
-					</Card>
+					<SettingsZone title="Destructive actions" variant="destructive">
+						<SettingsZoneRow
+							action={{
+								label: "Delete Account",
+								onClick: () => setShowDeleteDialog(true),
+							}}
+							description="Permanently delete your account and all associated data"
+							title="Delete Account"
+						/>
+					</SettingsZone>
 				</div>
 			</div>
 
@@ -744,6 +715,11 @@ export default function AccountSettingsPage() {
 							Discard
 						</Button>
 						<Button
+							keyboard={{
+								display: "⌘S",
+								trigger: (e) => (e.metaKey || e.ctrlKey) && e.key === "s",
+								callback: () => updateProfileMutation.mutate(),
+							}}
 							loading={updateProfileMutation.isPending}
 							onClick={() => updateProfileMutation.mutate()}
 							size="sm"

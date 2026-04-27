@@ -1,4 +1,7 @@
-import { getApiKeyFromHeader } from "@databuddy/api-keys/resolve";
+import {
+	type ApiKeyRow,
+	getApiKeyFromHeader,
+} from "@databuddy/api-keys/resolve";
 import { auth, type User } from "@databuddy/auth";
 import { db } from "@databuddy/db";
 import { os as createOS } from "@orpc/server";
@@ -15,11 +18,21 @@ import {
 	getOrganizationOwnerId,
 } from "./utils/billing";
 
-export const createRPCContext = async (opts: { headers: Headers }) => {
-	const [session, apiKey] = await Promise.all([
-		auth.api.getSession({ headers: opts.headers }),
-		getApiKeyFromHeader(opts.headers),
-	]);
+interface PreResolvedAuth {
+	apiKey: ApiKeyRow | null;
+	session: Awaited<ReturnType<typeof auth.api.getSession>> | null;
+}
+
+export const createRPCContext = async (
+	opts: { headers: Headers },
+	preResolved?: PreResolvedAuth
+) => {
+	const [session, apiKey] = preResolved
+		? [preResolved.session, preResolved.apiKey]
+		: await Promise.all([
+				auth.api.getSession({ headers: opts.headers }),
+				getApiKeyFromHeader(opts.headers),
+			]);
 
 	const user = session?.user as User | undefined;
 

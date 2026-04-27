@@ -1,4 +1,4 @@
-import { db, eq } from "@databuddy/db";
+import { db, eq, withTransaction } from "@databuddy/db";
 import {
 	alarmDestinations,
 	alarmDestinationTypeValues,
@@ -122,32 +122,34 @@ export const alarmsRouter = {
 			const alarmId = randomUUIDv7();
 			const now = new Date();
 
-			await db.insert(alarms).values({
-				id: alarmId,
-				organizationId: input.organizationId,
-				websiteId: input.websiteId ?? null,
-				name: input.name,
-				description: input.description ?? null,
-				enabled: input.enabled,
-				triggerType: input.triggerType,
-				triggerConditions: input.triggerConditions,
-				createdAt: now,
-				updatedAt: now,
-			});
+			await withTransaction(async (tx) => {
+				await tx.insert(alarms).values({
+					id: alarmId,
+					organizationId: input.organizationId,
+					websiteId: input.websiteId ?? null,
+					name: input.name,
+					description: input.description ?? null,
+					enabled: input.enabled,
+					triggerType: input.triggerType,
+					triggerConditions: input.triggerConditions,
+					createdAt: now,
+					updatedAt: now,
+				});
 
-			if (input.destinations.length > 0) {
-				await db.insert(alarmDestinations).values(
-					input.destinations.map((d) => ({
-						id: randomUUIDv7(),
-						alarmId,
-						type: d.type,
-						identifier: d.identifier,
-						config: d.config,
-						createdAt: now,
-						updatedAt: now,
-					}))
-				);
-			}
+				if (input.destinations.length > 0) {
+					await tx.insert(alarmDestinations).values(
+						input.destinations.map((d) => ({
+							id: randomUUIDv7(),
+							alarmId,
+							type: d.type,
+							identifier: d.identifier,
+							config: d.config,
+							createdAt: now,
+							updatedAt: now,
+						}))
+					);
+				}
+			});
 
 			return getAlarmAndAuthorize(alarmId, context);
 		}),
@@ -182,30 +184,32 @@ export const alarmsRouter = {
 				Object.entries(fields).filter(([_, v]) => v !== undefined)
 			);
 
-			await db
-				.update(alarms)
-				.set({ ...updateData, updatedAt: now })
-				.where(eq(alarms.id, alarmId));
+			await withTransaction(async (tx) => {
+				await tx
+					.update(alarms)
+					.set({ ...updateData, updatedAt: now })
+					.where(eq(alarms.id, alarmId));
 
-			if (input.destinations !== undefined) {
-				await db
-					.delete(alarmDestinations)
-					.where(eq(alarmDestinations.alarmId, input.alarmId));
+				if (input.destinations !== undefined) {
+					await tx
+						.delete(alarmDestinations)
+						.where(eq(alarmDestinations.alarmId, input.alarmId));
 
-				if (input.destinations.length > 0) {
-					await db.insert(alarmDestinations).values(
-						input.destinations.map((d) => ({
-							id: randomUUIDv7(),
-							alarmId: input.alarmId,
-							type: d.type,
-							identifier: d.identifier,
-							config: d.config,
-							createdAt: now,
-							updatedAt: now,
-						}))
-					);
+					if (input.destinations.length > 0) {
+						await tx.insert(alarmDestinations).values(
+							input.destinations.map((d) => ({
+								id: randomUUIDv7(),
+								alarmId: input.alarmId,
+								type: d.type,
+								identifier: d.identifier,
+								config: d.config,
+								createdAt: now,
+								updatedAt: now,
+							}))
+						);
+					}
 				}
-			}
+			});
 
 			return getAlarmAndAuthorize(input.alarmId, context);
 		}),

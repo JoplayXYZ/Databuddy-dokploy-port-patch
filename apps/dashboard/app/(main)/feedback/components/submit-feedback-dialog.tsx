@@ -1,6 +1,5 @@
 "use client";
 
-import { CaretDownIcon, PlusIcon } from "@phosphor-icons/react/dist/ssr";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -14,6 +13,7 @@ import { Input } from "@/components/ds/input";
 import { Textarea } from "@/components/ds/textarea";
 import { Text } from "@/components/ds/text";
 import { orpc } from "@/lib/orpc";
+import { CaretDownIcon, PlusIcon } from "@databuddy/ui/icons";
 
 const CATEGORIES = [
 	{ value: "bug_report", label: "Bug Report" },

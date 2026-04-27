@@ -12,28 +12,30 @@ import {
 	useRef,
 	useState,
 } from "react";
-import { useHydrated } from "@/hooks/use-hydrated";
-import { useAccordionStates } from "@/hooks/use-persistent-state";
+import { useHydrated } from "@databuddy/ui";
 import { useWebsitesLight } from "@/hooks/use-websites";
 import {
-	filterCategoriesByFlags,
-	filterCategoriesForRoute,
-	getContextConfig,
-	getDefaultCategory,
+	getNavContext,
+	getNavDirection,
+	getNavigation,
+	type NavContext,
 } from "./navigation/navigation-config";
-import type { Category, NavigationEntry } from "./navigation/types";
-import { WebsiteHeader } from "./navigation/website-header";
-import { OrganizationSelector } from "./organization-selector";
+import type { NavigationGroup } from "./navigation/types";
 
 interface SidebarNavigationContextValue {
-	accordionStates: ReturnType<typeof useAccordionStates>;
-	activeCategory: string;
-	categories: Category[];
+	currentWebsite: {
+		id: string;
+		name: string | null;
+		domain: string;
+		favicon?: string | null;
+	} | null;
 	currentWebsiteId: string | null | undefined;
-	header: ReactNode;
-	navigation: NavigationEntry[];
+	isDemo: boolean;
+	isWebsite: boolean;
+	navContext: NavContext;
+	navigation: NavigationGroup[];
 	pathname: string;
-	setCategory: (id: string) => void;
+	transitionDirection: "left" | "right" | null;
 }
 
 const SidebarNavigationContext =
@@ -60,64 +62,42 @@ export function SidebarNavigationProvider({
 	const pathname = usePathname();
 	const { getFlag } = useFlags();
 	const isHydrated = useHydrated();
-	const accordionStates = useAccordionStates();
-
-	const [selectedCategory, setSelectedCategory] = useState<string | undefined>(
-		undefined
-	);
 
 	const isDemo = pathname.startsWith("/demo");
 	const isWebsite = pathname.startsWith("/websites/");
 	const websiteId = isDemo || isWebsite ? pathname.split("/")[2] : null;
 
-	// Only fetch websites for the website header (when viewing a specific website)
 	const { websites } = useWebsitesLight({
 		enabled: user !== null && (isWebsite || isDemo),
 	});
 
 	const currentWebsite = useMemo(
-		() => (websiteId ? websites?.find((site) => site.id === websiteId) : null),
+		() =>
+			websiteId
+				? (websites?.find((site) => site.id === websiteId) ?? null)
+				: null,
 		[websiteId, websites]
 	);
 
-	const config = useMemo(() => getContextConfig(pathname), [pathname]);
-
-	const categories = useMemo(
-		() =>
-			filterCategoriesByFlags(
-				filterCategoriesForRoute(config.categories, pathname),
-				isHydrated,
-				getFlag
-			),
-		[config.categories, pathname, isHydrated, getFlag]
-	);
-
-	const defaultCategory = useMemo(
-		() => getDefaultCategory(pathname),
-		[pathname]
-	);
-	const previousDefaultCategoryRef = useRef<string | undefined>(undefined);
+	const navContext = getNavContext(pathname);
+	const prevContextRef = useRef<NavContext>(navContext);
+	const [transitionDirection, setTransitionDirection] = useState<
+		"left" | "right" | null
+	>(null);
 
 	useEffect(() => {
-		if (
-			previousDefaultCategoryRef.current !== undefined &&
-			previousDefaultCategoryRef.current !== defaultCategory
-		) {
-			setSelectedCategory(undefined);
+		const prev = prevContextRef.current;
+		if (prev !== navContext) {
+			const dir = getNavDirection(prev, navContext);
+			setTransitionDirection(dir);
+			const timeout = setTimeout(() => setTransitionDirection(null), 200);
+			prevContextRef.current = navContext;
+			return () => clearTimeout(timeout);
 		}
-		previousDefaultCategoryRef.current = defaultCategory;
-	}, [defaultCategory]);
-
-	const activeCategory = selectedCategory || defaultCategory;
+	}, [navContext]);
 
 	const navigation = useMemo(() => {
-		const navSections =
-			config.navigationMap[
-				activeCategory as keyof typeof config.navigationMap
-			] ||
-			config.navigationMap[
-				config.defaultCategory as keyof typeof config.navigationMap
-			];
+		const groups = getNavigation(pathname);
 
 		const isFlagOn = (flag: string) => {
 			if (!isHydrated) {
@@ -127,57 +107,37 @@ export function SidebarNavigationProvider({
 			return flagState.status === "ready" && flagState.on;
 		};
 
-		return navSections
-			.map((entry) => {
-				if ("items" in entry) {
-					const filteredItems = entry.items.filter(
-						(item) => !item.flag || isFlagOn(item.flag)
-					);
-					return { ...entry, items: filteredItems };
-				}
-				return entry;
-			})
-			.filter((entry) => {
-				if (entry.flag && !isFlagOn(entry.flag)) {
-					return false;
-				}
-				if ("items" in entry && entry.items.length === 0) {
-					return false;
-				}
-				return true;
-			});
-	}, [config, activeCategory, getFlag, isHydrated]);
-
-	const header = useMemo(() => {
-		if (isWebsite || isDemo) {
-			return (
-				<WebsiteHeader showBackButton={!isDemo} website={currentWebsite} />
-			);
-		}
-		return <OrganizationSelector />;
-	}, [isWebsite, isDemo, currentWebsite]);
+		return groups
+			.filter((group) => !group.flag || isFlagOn(group.flag))
+			.map((group) => ({
+				...group,
+				items: group.items.filter((item) => !item.flag || isFlagOn(item.flag)),
+			}))
+			.filter((group) => group.items.length > 0);
+	}, [pathname, getFlag, isHydrated]);
 
 	const currentWebsiteId = isWebsite || isDemo ? websiteId : undefined;
 
 	const value = useMemo<SidebarNavigationContextValue>(
 		() => ({
 			navigation,
-			categories,
-			activeCategory,
-			setCategory: setSelectedCategory,
-			header,
 			currentWebsiteId,
+			currentWebsite: currentWebsite ?? null,
 			pathname,
-			accordionStates,
+			isDemo,
+			isWebsite,
+			navContext,
+			transitionDirection,
 		}),
 		[
 			navigation,
-			categories,
-			activeCategory,
-			header,
 			currentWebsiteId,
+			currentWebsite,
 			pathname,
-			accordionStates,
+			isDemo,
+			isWebsite,
+			navContext,
+			transitionDirection,
 		]
 	);
 

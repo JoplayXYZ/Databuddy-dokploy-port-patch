@@ -6,15 +6,21 @@ import { Button } from "@/components/ds/button";
 import { Dialog } from "@/components/ds/dialog";
 import { Divider } from "@/components/ds/divider";
 import { DropdownMenu } from "@/components/ds/dropdown-menu";
+import { EmptyState } from "@/components/ds/empty-state";
+import { Input } from "@/components/ds/input";
 import { Text } from "@/components/ds/text";
 import type {
 	OrganizationMember,
 	UpdateMemberData,
 } from "@/hooks/use-organizations";
-import { fromNow } from "@/lib/time";
+import { fromNow } from "@databuddy/ui";
 import { authClient } from "@databuddy/auth/client";
-import { CaretUpDown, Crown } from "@phosphor-icons/react/dist/ssr";
-import { useState } from "react";
+import {
+	ArrowsDownUpIcon,
+	CrownIcon,
+	MagnifyingGlassIcon,
+} from "@databuddy/ui/icons";
+import { useMemo, useState } from "react";
 
 interface MemberListProps {
 	isRemovingMember: boolean;
@@ -66,7 +72,7 @@ function MemberRow({
 						</Text>
 					)}
 					{member.role === "owner" && (
-						<Crown
+						<CrownIcon
 							className="shrink-0 text-amber-500"
 							size={12}
 							weight="fill"
@@ -156,7 +162,7 @@ function MemberDetailDialog({
 							<Button
 								loading={isRemovingMember}
 								onClick={handleRemove}
-								tone="danger"
+								tone="destructive"
 							>
 								Remove
 							</Button>
@@ -204,7 +210,7 @@ function MemberDetailDialog({
 												disabled={isUpdatingMember}
 											>
 												{roleLabel(member.role)}
-												<CaretUpDown className="size-3.5 text-muted-foreground" />
+												<ArrowsDownUpIcon className="size-3.5 text-muted-foreground" />
 											</DropdownMenu.Trigger>
 											<DropdownMenu.Content align="start" side="bottom">
 												<DropdownMenu.RadioGroup
@@ -240,7 +246,7 @@ function MemberDetailDialog({
 									<Button
 										className="w-full"
 										onClick={() => setView("confirm-remove")}
-										tone="danger"
+										tone="destructive"
 										variant="secondary"
 									>
 										Remove from workspace
@@ -255,6 +261,38 @@ function MemberDetailDialog({
 	);
 }
 
+type SortKey = "name" | "role" | "joined";
+
+const ROLE_ORDER: Record<string, number> = {
+	owner: 0,
+	admin: 1,
+	member: 2,
+	viewer: 3,
+};
+
+const SORT_LABELS: Record<SortKey, string> = {
+	name: "Name",
+	role: "Role",
+	joined: "Joined",
+};
+
+function sortMembers(members: OrganizationMember[], key: SortKey) {
+	return [...members].sort((a, b) => {
+		switch (key) {
+			case "name":
+				return (a.user.name ?? "").localeCompare(b.user.name ?? "");
+			case "role":
+				return (ROLE_ORDER[a.role] ?? 9) - (ROLE_ORDER[b.role] ?? 9);
+			case "joined":
+				return (
+					new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+				);
+			default:
+				return 0;
+		}
+	});
+}
+
 export function MemberList({
 	members,
 	onRemoveMember,
@@ -265,6 +303,8 @@ export function MemberList({
 }: MemberListProps) {
 	const [selectedMember, setSelectedMember] =
 		useState<OrganizationMember | null>(null);
+	const [search, setSearch] = useState("");
+	const [sortKey, setSortKey] = useState<SortKey>("role");
 	const { data: session } = authClient.useSession();
 
 	const currentUserMember = session?.user?.id
@@ -274,16 +314,76 @@ export function MemberList({
 	const canEditRoles =
 		currentUserMember?.role === "admin" || currentUserMember?.role === "owner";
 
+	const filteredMembers = useMemo(() => {
+		const q = search.toLowerCase().trim();
+		const filtered = q
+			? members.filter(
+					(m) =>
+						m.user.name?.toLowerCase().includes(q) ||
+						m.user.email?.toLowerCase().includes(q)
+				)
+			: members;
+		return sortMembers(filtered, sortKey);
+	}, [members, search, sortKey]);
+
 	return (
 		<>
-			{members.map((member) => (
-				<MemberRow
-					isCurrentUser={member.userId === session?.user?.id}
-					key={member.id}
-					member={member}
-					onClick={() => setSelectedMember(member)}
-				/>
-			))}
+			{members.length > 5 && (
+				<div className="flex items-center gap-2 border-b px-5 py-3">
+					<div className="relative flex-1">
+						<MagnifyingGlassIcon
+							className="absolute top-1/2 left-2.5 -translate-y-1/2 text-muted-foreground"
+							size={14}
+						/>
+						<Input
+							className="pl-8"
+							onChange={(e) => setSearch(e.target.value)}
+							placeholder="Search members…"
+							value={search}
+						/>
+					</div>
+					<DropdownMenu>
+						<DropdownMenu.Trigger className="flex h-8 shrink-0 cursor-pointer items-center gap-1.5 rounded-md bg-secondary px-3 text-muted-foreground text-xs transition-colors hover:bg-interactive-hover hover:text-foreground">
+							<ArrowsDownUpIcon size={14} />
+							{SORT_LABELS[sortKey]}
+						</DropdownMenu.Trigger>
+						<DropdownMenu.Content align="end">
+							<DropdownMenu.RadioGroup
+								onValueChange={(v) => setSortKey(v as SortKey)}
+								value={sortKey}
+							>
+								<DropdownMenu.RadioItem value="name">
+									Name
+								</DropdownMenu.RadioItem>
+								<DropdownMenu.RadioItem value="role">
+									Role
+								</DropdownMenu.RadioItem>
+								<DropdownMenu.RadioItem value="joined">
+									Joined
+								</DropdownMenu.RadioItem>
+							</DropdownMenu.RadioGroup>
+						</DropdownMenu.Content>
+					</DropdownMenu>
+				</div>
+			)}
+
+			{filteredMembers.length === 0 && search ? (
+				<div className="px-5 py-8">
+					<EmptyState
+						icon={<MagnifyingGlassIcon />}
+						title={`No members matching "${search}"`}
+					/>
+				</div>
+			) : (
+				filteredMembers.map((member) => (
+					<MemberRow
+						isCurrentUser={member.userId === session?.user?.id}
+						key={member.id}
+						member={member}
+						onClick={() => setSelectedMember(member)}
+					/>
+				))
+			)}
 
 			{selectedMember && (
 				<MemberDetailDialog

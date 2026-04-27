@@ -1,9 +1,5 @@
 "use client";
 
-import { ArrowCounterClockwiseIcon } from "@phosphor-icons/react/dist/ssr";
-import { DotsThreeIcon } from "@phosphor-icons/react/dist/ssr";
-import { PencilSimpleIcon } from "@phosphor-icons/react/dist/ssr";
-import { TrashIcon } from "@phosphor-icons/react/dist/ssr";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ds/badge";
 import { Button } from "@/components/ds/button";
@@ -11,6 +7,12 @@ import { DropdownMenu } from "@/components/ds/dropdown-menu";
 import { orpc } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
 import type { Flag } from "../../_components/types";
+import {
+	ArrowCounterClockwiseIcon,
+	DotsThreeIcon,
+	PencilSimpleIcon,
+	TrashIcon,
+} from "@databuddy/ui/icons";
 
 interface ArchivedFlagItemProps {
 	className?: string;

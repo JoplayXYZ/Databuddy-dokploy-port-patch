@@ -1,4 +1,4 @@
-import dayjs from "@/lib/dayjs";
+import { dayjs } from "@databuddy/ui";
 import type { Insight } from "@/lib/insight-types";
 
 const PATH_IN_TEXT = /\/[a-zA-Z0-9][a-zA-Z0-9/_-]*/g;

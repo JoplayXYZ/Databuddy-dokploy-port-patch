@@ -1,8 +1,21 @@
 import type { DateRange } from "@databuddy/shared/types/analytics";
 import type { DynamicQueryResponse } from "@databuddy/shared/types/api";
+import type { ProfileSession } from "@databuddy/shared/types/sessions";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { useDynamicQuery } from "@/hooks/use-dynamic-query";
+
+function fallbackSessionId(
+	visitorId: string,
+	session: ProfileSession,
+	index: number
+) {
+	return [
+		visitorId,
+		session.first_visit || session.last_visit || "session",
+		index,
+	].join(":");
+}
 
 export function useUserProfile(
 	websiteId: string,
@@ -17,7 +30,7 @@ export function useUserProfile(
 		enabled: Boolean(userId && websiteId),
 	};
 
-	const profileQuery = useDynamicQuery(
+	const profileQuery = useDynamicQuery<["profile_detail"]>(
 		websiteId,
 		dateRange,
 		{
@@ -34,7 +47,7 @@ export function useUserProfile(
 		sharedOptions
 	);
 
-	const sessionsQuery = useDynamicQuery(
+	const sessionsQuery = useDynamicQuery<["profile_sessions"]>(
 		websiteId,
 		dateRange,
 		{
@@ -53,16 +66,18 @@ export function useUserProfile(
 	);
 
 	const userProfile = useMemo(() => {
-		const rawProfile = (profileQuery.data as any)?.profile_detail?.[0];
+		const rawProfile = profileQuery.data.profile_detail?.[0];
 		if (!rawProfile) {
 			return null;
 		}
 
-		const rawSessions = (sessionsQuery.data as any)?.profile_sessions || [];
+		const rawSessions = sessionsQuery.data.profile_sessions || [];
 
 		const sessions = Array.isArray(rawSessions)
-			? rawSessions.map((session: any) => ({
-					session_id: session.session_id,
+			? rawSessions.map((session: ProfileSession, index) => ({
+					session_id:
+						session.session_id ||
+						fallbackSessionId(rawProfile.visitor_id, session, index),
 					session_name: session.session_name || "Session",
 					first_visit: session.first_visit,
 					last_visit: session.last_visit,
@@ -76,26 +91,10 @@ export function useUserProfile(
 					country: session.country || "",
 					region: session.region || "",
 					referrer: session.referrer || "direct",
-					events:
-						Array.isArray(session.events) && session.events.length > 0
-							? session.events.map((eventTuple: any[]) => {
-									let propertiesObj: Record<string, unknown> = {};
-									if (eventTuple[4]) {
-										try {
-											propertiesObj = JSON.parse(eventTuple[4]);
-										} catch {
-											// Silent fail
-										}
-									}
-									return {
-										event_id: eventTuple[0],
-										time: eventTuple[1],
-										event_name: eventTuple[2],
-										path: eventTuple[3],
-										properties: propertiesObj,
-									};
-								})
-							: [],
+					events: Array.isArray(session.events) ? session.events : [],
+					web_vitals: Array.isArray(session.web_vitals)
+						? session.web_vitals
+						: [],
 				}))
 			: [];
 
@@ -107,11 +106,11 @@ export function useUserProfile(
 			total_pageviews: rawProfile.total_pageviews,
 			total_duration: rawProfile.total_duration,
 			total_duration_formatted: rawProfile.total_duration_formatted,
-			device: rawProfile.device,
-			browser: rawProfile.browser,
-			os: rawProfile.os,
-			country: rawProfile.country,
-			region: rawProfile.region,
+			device: rawProfile.device || "",
+			browser: rawProfile.browser || "",
+			os: rawProfile.os || "",
+			country: rawProfile.country || "",
+			region: rawProfile.region || "",
 			sessions,
 		};
 	}, [profileQuery.data, sessionsQuery.data]);

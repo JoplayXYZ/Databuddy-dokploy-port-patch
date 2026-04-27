@@ -3,7 +3,7 @@
 import { useCallback, useState } from "react";
 import { ChartErrorBoundary } from "@/components/chart-error-boundary";
 import { Chart } from "@/components/ui/composables/chart";
-import { Skeleton } from "@/components/ds/skeleton";
+import { Skeleton } from "@databuddy/ui";
 import {
 	chartLegendPillClassName,
 	chartLegendPillDotClassName,

@@ -1,4 +1,4 @@
-# Databuddy SDK & React Component
+# Databuddy SDK
 
 [![npm version](https://img.shields.io/npm/v/@databuddy/sdk?style=flat-square)](https://www.npmjs.com/package/@databuddy/sdk)
 [![License](https://img.shields.io/npm/l/@databuddy/sdk?style=flat-square)](./LICENSE)
@@ -13,7 +13,9 @@
 - 📊 **Automatic page/screen view tracking**
 - ⚡ **Performance, Web Vitals, and error tracking**
 - 🧑‍💻 **Custom event tracking**
-- 🧩 **Drop-in React/Next.js component: `<Databuddy />`**
+- 🧩 **Drop-in React/Next.js and Vue components**
+- 🖥️ **Node.js server-side event tracking**
+- 🚩 **Client and server-side feature flags**
 - 🛡️ **Privacy-first: anonymized by default, sampling, batching, and more**
 - 🛠️ **Type-safe config and autocompletion**
 - 📋 **Observability: logging, error tracking, and distributed tracing**
@@ -53,7 +55,46 @@ export default function RootLayout({ children }) {
 
 ---
 
-## 🛠️ Configuration Options
+## 🖥️ Node.js Events
+
+```ts
+import { Databuddy } from "@databuddy/sdk/node";
+
+const client = new Databuddy({
+  apiKey: process.env.DATABUDDY_API_KEY!,
+  websiteId: process.env.DATABUDDY_WEBSITE_ID,
+  source: "server"
+});
+
+await client.track({
+  name: "job_completed",
+  eventId: "job-123",
+  properties: { queue: "emails" }
+});
+
+const result = await client.flush();
+if (!result.success) {
+  console.error("Failed to flush analytics:", result.error);
+}
+```
+
+## 🚩 Server-Side Flags
+
+```ts
+import { createServerFlagsManager } from "@databuddy/sdk/node";
+
+const flags = createServerFlagsManager({
+  clientId: process.env.DATABUDDY_CLIENT_ID!,
+  maxCacheSize: 5000
+});
+
+const result = await flags.getFlag("new-dashboard", {
+  userId: "user-123",
+  organizationId: "org-456"
+});
+```
+
+## 🛠️ Browser Configuration Options
 
 All options are type-safe and documented in `DatabuddyConfig`:
 
@@ -126,4 +167,4 @@ A: In your [Databuddy dashboard](https://app.databuddy.cc).
 
 ---
 
-© Databuddy. All rights reserved. 
+© Databuddy. All rights reserved.

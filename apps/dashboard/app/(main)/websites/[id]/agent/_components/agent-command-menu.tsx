@@ -1,24 +1,25 @@
 "use client";
 
 import {
-	ChartBarIcon,
-	ClipboardTextIcon,
-	CompassIcon,
-	FileTextIcon,
-	FunnelIcon,
-	LightningIcon,
-	MagnifyingGlassIcon,
-	WarningIcon,
-} from "@phosphor-icons/react";
-import {
 	Popover,
 	PopoverAnchor,
 	PopoverContent,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import type { AgentCommand } from "./agent-commands";
+import { ClipboardTextIcon } from "@phosphor-icons/react/dist/ssr";
+import type { NavIcon } from "@/components/layout/navigation/types";
+import {
+	ChartBarIcon,
+	CompassIcon,
+	FileTextIcon,
+	FunnelIcon,
+	LightningIcon,
+	MagnifyingGlassIcon,
+	WarningIcon,
+} from "@databuddy/ui/icons";
 
-const COMMAND_ICONS: Record<string, typeof MagnifyingGlassIcon> = {
+const COMMAND_ICONS: Record<string, NavIcon> = {
 	"/analyze": MagnifyingGlassIcon,
 	"/sources": CompassIcon,
 	"/funnel": FunnelIcon,
@@ -91,10 +92,7 @@ export function AgentCommandMenu({
 									type="button"
 								>
 									<div className="flex size-8 shrink-0 items-center justify-center rounded border bg-background">
-										<Icon
-											className="size-4 text-foreground/60"
-											weight="duotone"
-										/>
+										<Icon className="size-4 text-foreground/60" />
 									</div>
 									<div className="min-w-0 flex-1">
 										<p className="truncate font-medium text-sm leading-tight">

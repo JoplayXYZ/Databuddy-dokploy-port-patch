@@ -6,7 +6,7 @@ import {
 	type ChartSeriesKind,
 } from "@/components/ui/composables/chart";
 import { useChartPreferences } from "@/hooks/use-chart-preferences";
-import dayjs from "@/lib/dayjs";
+import { dayjs } from "@databuddy/ui";
 import { formatNumber } from "@/lib/formatters";
 
 interface MiniChartProps {

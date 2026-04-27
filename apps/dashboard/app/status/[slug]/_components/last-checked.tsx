@@ -1,6 +1,6 @@
 "use client";
 
-import { fromNow } from "@/lib/time";
+import { fromNow } from "@databuddy/ui";
 
 interface LastCheckedProps {
 	timestamp: string;

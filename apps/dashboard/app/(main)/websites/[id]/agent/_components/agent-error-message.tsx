@@ -1,8 +1,9 @@
 "use client";
 
-import { ArrowClockwiseIcon, WarningIcon, XIcon } from "@phosphor-icons/react";
 import { useCallback, useState } from "react";
 import { cn } from "@/lib/utils";
+import { XIcon } from "@phosphor-icons/react/dist/ssr";
+import { ArrowClockwiseIcon, WarningIcon } from "@databuddy/ui/icons";
 
 function displayMessageForError(error: Error | undefined): string {
 	if (!error?.message?.trim()) {

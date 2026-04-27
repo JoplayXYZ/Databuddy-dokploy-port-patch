@@ -1,4 +1,5 @@
 // Parameter and query-related types
+import type { ProfileDetail, ProfileSession } from "./sessions";
 
 export interface ParametersResponse {
 	categories: {
@@ -244,7 +245,9 @@ export interface ParameterDataMap {
 	performance_by_os: GenericParameterRow;
 	performance_by_region: GenericParameterRow;
 	// Profiles
+	profile_detail: ProfileDetail;
 	profile_list: GenericParameterRow;
+	profile_sessions: ProfileSession;
 	// Error-related parameters
 	recent_errors: GenericParameterRow;
 	recent_transactions: GenericParameterRow;

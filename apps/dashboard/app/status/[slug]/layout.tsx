@@ -6,7 +6,7 @@ export const metadata: Metadata = {
 	},
 	description: "Real-time system status and uptime monitoring",
 	robots: {
-		index: true,
+		index: false,
 		follow: true,
 	},
 };

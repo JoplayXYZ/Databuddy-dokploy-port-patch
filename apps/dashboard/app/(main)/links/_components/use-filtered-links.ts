@@ -29,7 +29,11 @@ export function useFilteredLinks(
 					link.name.toLowerCase().includes(query) ||
 					link.slug.toLowerCase().includes(query) ||
 					link.targetUrl.toLowerCase().includes(query) ||
-					(link.externalId?.toLowerCase().includes(query) ?? false)
+					(link.externalId?.toLowerCase().includes(query) ?? false) ||
+					(link.sourceType?.toLowerCase().includes(query) ?? false) ||
+					(link.sourceId?.toLowerCase().includes(query) ?? false) ||
+					(link.sourceOwnerId?.toLowerCase().includes(query) ?? false) ||
+					(link.targetDomain?.toLowerCase().includes(query) ?? false)
 			);
 		}
 

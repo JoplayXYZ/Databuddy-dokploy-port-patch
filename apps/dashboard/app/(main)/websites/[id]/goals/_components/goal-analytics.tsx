@@ -1,12 +1,14 @@
 "use client";
 
-import { ArrowClockwiseIcon as ArrowClockwise } from "@phosphor-icons/react/dist/ssr";
-import { TargetIcon as Target } from "@phosphor-icons/react/dist/ssr";
-import { TrendUpIcon as TrendUp } from "@phosphor-icons/react/dist/ssr";
-import { UsersIcon as Users } from "@phosphor-icons/react/dist/ssr";
 import { Button } from "@/components/ds/button";
 import { Card } from "@/components/ds/card";
 import { formatNumber } from "@/lib/formatters";
+import {
+	ArrowClockwiseIcon as ArrowClockwise,
+	TargetIcon as Target,
+	TrendUpIcon as TrendUp,
+	UsersIcon as Users,
+} from "@databuddy/ui/icons";
 
 interface GoalAnalyticsProps {
 	data: any;

@@ -1,5 +1,8 @@
 "use client";
 
+import Link from "next/link";
+import { Badge } from "@/components/ds/badge";
+import { Button } from "@/components/ds/button";
 import {
 	ArrowRightIcon,
 	ChartLineUpIcon,
@@ -8,10 +11,7 @@ import {
 	LightningIcon,
 	RocketLaunchIcon,
 	UsersIcon,
-} from "@phosphor-icons/react/dist/ssr";
-import Link from "next/link";
-import { Badge } from "@/components/ds/badge";
-import { Button } from "@/components/ds/button";
+} from "@databuddy/ui/icons";
 
 const FEATURES = [
 	{

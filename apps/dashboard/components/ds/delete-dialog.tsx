@@ -1,8 +1,8 @@
 "use client";
 
-import { TrashIcon } from "@phosphor-icons/react/dist/ssr";
 import { Button } from "@/components/ds/button";
 import { Dialog } from "@/components/ds/dialog";
+import { TrashIcon } from "@databuddy/ui/icons";
 
 interface DeleteDialogProps {
 	cancelLabel?: string;
@@ -99,7 +99,7 @@ export function DeleteDialog({
 						disabled={confirmDisabled}
 						loading={Boolean(isDeleting)}
 						onClick={handleConfirm}
-						tone="danger"
+						tone="destructive"
 					>
 						{confirmLabel}
 					</Button>

@@ -1,5 +1,5 @@
-import { usePersistentState } from "@/hooks/use-persistent-state";
-import dayjs from "@/lib/dayjs";
+import { usePersistentState } from "@databuddy/ui";
+import { dayjs } from "@databuddy/ui";
 
 const DEFAULT_DATE_RANGE_STORAGE_KEY = "databuddy-default-date-range";
 

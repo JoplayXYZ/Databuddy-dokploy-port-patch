@@ -1,20 +1,22 @@
 "use client";
 
-import { EyeIcon } from "@phosphor-icons/react/dist/ssr/Eye";
-import { GlobeIcon } from "@phosphor-icons/react/dist/ssr/Globe";
-import { HeartbeatIcon } from "@phosphor-icons/react/dist/ssr/Heartbeat";
-import { LockIcon } from "@phosphor-icons/react/dist/ssr/Lock";
-import { MinusIcon } from "@phosphor-icons/react/dist/ssr/Minus";
-import { TrendDownIcon } from "@phosphor-icons/react/dist/ssr/TrendDown";
-import { TrendUpIcon } from "@phosphor-icons/react/dist/ssr/TrendUp";
-import { UsersIcon } from "@phosphor-icons/react/dist/ssr/Users";
 import Link from "next/link";
 import { Badge } from "@/components/ds/badge";
 import { Card } from "@/components/ds/card";
-import { Skeleton } from "@/components/ds/skeleton";
+import { Skeleton } from "@databuddy/ui";
 import { StatusDot } from "@/components/ds/status-dot";
 import { formatNumber } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
+import {
+	EyeIcon,
+	GlobeIcon,
+	HeartbeatIcon,
+	LockIcon,
+	MinusIcon,
+	TrendDownIcon,
+	TrendUpIcon,
+	UsersIcon,
+} from "@databuddy/ui/icons";
 
 interface SummaryStatsProps {
 	activeMonitors: number;

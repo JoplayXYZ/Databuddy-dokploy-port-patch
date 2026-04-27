@@ -73,7 +73,7 @@ test.describe("BrowserFlagsManager — edge cases", () => {
 		expect(result.hasRemoteOnly).toBe(true);
 	});
 
-	test("getFlag(key, user): per-call user affects cache key; bulk request uses config user", async ({
+	test("getFlag(key, user): per-call user affects cache key", async ({
 		page,
 	}) => {
 		await bulkOnlyRoute(page, (keys) =>
@@ -157,7 +157,7 @@ test.describe("BrowserFlagsManager — edge cases", () => {
 		expect(bulkCount).toBe(1);
 	});
 
-	test("getMemoryFlags: colon in flag keys — last wins for same first segment", async ({
+	test("getMemoryFlags: preserves flag keys that contain colons", async ({
 		page,
 	}) => {
 		await bulkOnlyRoute(page, (keys) => {
@@ -188,11 +188,13 @@ test.describe("BrowserFlagsManager — edge cases", () => {
 			const mem = manager.getMemoryFlags();
 
 			manager.destroy();
-			return { keys: Object.keys(mem), x: mem.x };
+			return { keys: Object.keys(mem), y: mem["x:y"], z: mem["x:z"] };
 		});
 
-		expect(result.keys).toContain("x");
-		expect(result.x?.enabled).toBe(false);
+		expect(result.keys).toContain("x:y");
+		expect(result.keys).toContain("x:z");
+		expect(result.y?.enabled).toBe(true);
+		expect(result.z?.enabled).toBe(false);
 	});
 
 	test("fetchAllFlags with empty flags removes prior cache entries", async ({

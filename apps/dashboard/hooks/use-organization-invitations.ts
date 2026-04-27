@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { toast } from "sonner";
 import type { OrganizationRole } from "@/hooks/use-organizations";
-import dayjs from "@/lib/dayjs";
+import { dayjs } from "@databuddy/ui";
 import { orpc } from "@/lib/orpc";
 
 export type Invitation = typeof invitation.$inferSelect;
@@ -85,15 +85,75 @@ export function useOrganizationInvitations(organizationId: string) {
 		},
 	});
 
+	const clearExpiredMutation = useMutation({
+		mutationFn: async () =>
+			orpc.organizations.clearExpiredInvitations.call({
+				organizationId,
+			}),
+		onSuccess: (data) => {
+			toast.success(
+				`Cleared ${data.deleted} invitation${data.deleted === 1 ? "" : "s"}`
+			);
+			queryClient.invalidateQueries({ queryKey: listKey });
+		},
+		onError: (error) => {
+			toast.error(
+				error instanceof Error
+					? error.message
+					: "Failed to clear expired invitations"
+			);
+		},
+	});
+
+	const resendMutation = useMutation({
+		mutationFn: async (input: { email: string; role: string }) => {
+			const { error } = await authClient.organization.inviteMember({
+				email: input.email,
+				role: input.role as OrganizationRole,
+				organizationId,
+				resend: true,
+			});
+			if (error) {
+				throw new Error(error.message);
+			}
+		},
+		onSuccess: () => {
+			toast.success("Invitation resent");
+			queryClient.invalidateQueries({ queryKey: listKey });
+		},
+		onError: (error) => {
+			toast.error(
+				error instanceof Error ? error.message : "Failed to resend invitation"
+			);
+		},
+	});
+
+	const expiredCount = useMemo(
+		() =>
+			invitations.filter(
+				(inv) =>
+					inv.status === "accepted" ||
+					inv.status === "canceled" ||
+					inv.status === "rejected" ||
+					(inv.status === "pending" && dayjs(inv.expiresAt).isBefore(dayjs()))
+			).length,
+		[invitations]
+	);
+
 	return {
 		invitations,
 		isLoading: query.isLoading,
 		error: query.error,
 		pendingCount,
+		expiredCount,
 		isInviting: inviteMutation.isPending,
 		isCancelling: cancelMutation.isPending,
+		isClearingExpired: clearExpiredMutation.isPending,
+		isResending: resendMutation.isPending,
 		inviteMember: inviteMutation.mutateAsync,
 		cancelInvitation: cancelMutation.mutateAsync,
+		clearExpiredInvitations: clearExpiredMutation.mutateAsync,
+		resendInvitation: resendMutation.mutateAsync,
 		refetch: query.refetch,
 	};
 }

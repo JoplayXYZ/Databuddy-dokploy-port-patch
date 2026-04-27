@@ -26,11 +26,12 @@ const flags = createServerFlagsManager({
   clientId: process.env.DATABUDDY_CLIENT_ID!,
   user: {
     userId: "user-123",
-    email: "user@example.com"
+    organizationId: "org-456"
   }
 });
 
-// Wait for initialization
+// Wait for initialization. Server managers only preload flags here when
+// autoFetch is true; getFlag() below fetches this flag on demand.
 await flags.waitForInit();
 
 // Check a flag
@@ -54,15 +55,16 @@ const flags = createServerFlagsManager({
   apiUrl: "https://api.databuddy.cc",
   user: {
     userId: "user-123",
-    email: "user@example.com",
     organizationId: "org-456",
     properties: {
-      plan: "premium"
+      role: "admin",
+      workspace_type: "team"
     }
   },
   environment: "production",
   cacheTtl: 60_000,      // 1 minute cache
   staleTime: 30_000,     // Revalidate after 30s
+  maxCacheSize: 5000,    // Cap in-memory cache entries
   debug: false
 });`}
 </CodeBlock>
@@ -77,6 +79,7 @@ const flags = createServerFlagsManager({
 | `environment` | `string` | - | Environment name |
 | `cacheTtl` | `number` | `60000` | Cache TTL in ms |
 | `staleTime` | `number` | `30000` | Revalidate after (ms) |
+| `maxCacheSize` | `number` | `5000` | Maximum in-memory cache entries |
 | `autoFetch` | `boolean` | `false` | Fetch all flags on init |
 | `debug` | `boolean` | `false` | Enable debug logging |
 | `disabled` | `boolean` | `false` | Disable flag evaluation |
@@ -111,15 +114,17 @@ console.log({
 Override user context for a specific check:
 
 <CodeBlock language="tsx">
-  {`const result = await flags.getFlag("premium-feature", {
+  {`const result = await flags.getFlag("advanced-feature", {
   userId: "different-user",
-  properties: { plan: "enterprise" }
+  properties: { role: "admin" }
 });`}
 </CodeBlock>
 
+Per-call user context is sent to the flags API for that evaluation and overrides the manager's default user. Cache entries are isolated by flag key, environment, and the full targeting context (`userId`, `email`, `organizationId`, `teamId`, and `properties`).
+
 ### fetchAllFlags(user?)
 
-Pre-fetch all flags for a user:
+Pre-fetch all flags for a user before using synchronous reads:
 
 <CodeBlock language="tsx">
   {`// Fetch all flags upfront
@@ -201,8 +206,11 @@ export default async function DashboardPage() {
     clientId: process.env.DATABUDDY_CLIENT_ID!,
     user: session?.user ? {
       userId: session.user.id,
-      email: session.user.email,
-      properties: { plan: session.user.plan }
+      organizationId: session.user.organizationId,
+      properties: {
+        role: session.user.role,
+        workspace_type: session.user.workspaceType
+      }
     } : undefined
   });
   
@@ -278,6 +286,62 @@ export async function handler(event: any) {
 }`}
 </CodeBlock>
 
+## Measure Server-Side Outcomes
+
+Server-side flag evaluation does not emit browser exposure events. When a server action, API route, webhook, or job is the source of truth, track the durable outcome on the server and include the flag key and variant. If the outcome belongs to a browser session, send `anonId` and `sessionId` from the client using `getTrackingIds()` and map `anonId` to `anonymousId`.
+
+<CodeBlock language="tsx" filename="client.tsx">
+  {`import { getTrackingIds } from "@databuddy/sdk";
+
+async function startExport(format: string) {
+  const { anonId, sessionId } = getTrackingIds();
+
+  await fetch("/api/export", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ anonId, sessionId, format })
+  });
+}`}
+</CodeBlock>
+
+<CodeBlock language="tsx" filename="app/api/export/route.ts">
+  {`import { Databuddy, createServerFlagsManager } from "@databuddy/sdk/node";
+
+const events = new Databuddy({
+  apiKey: process.env.DATABUDDY_API_KEY!,
+  websiteId: process.env.DATABUDDY_WEBSITE_ID!,
+  source: "server"
+});
+
+const flags = createServerFlagsManager({
+  clientId: process.env.DATABUDDY_CLIENT_ID!
+});
+
+export async function POST(request: Request) {
+  const { anonId, sessionId, format } = await request.json();
+  const userId = request.headers.get("x-user-id") ?? undefined;
+
+  const exportFlow = await flags.getFlag("export-flow", { userId });
+  const variant = exportFlow.variant ?? "control";
+  const result = await runExport({ format, variant });
+
+  await events.track({
+    name: "report_exported",
+    anonymousId: anonId,
+    sessionId,
+    properties: {
+      flag_key: "export-flow",
+      variant,
+      status: result.ok ? "success" : "failed",
+      format: result.format
+    }
+  });
+
+  await events.flush();
+  return Response.json({ ok: result.ok });
+}`}
+</CodeBlock>
+
 ## Caching Behavior
 
 The server manager uses stale-while-revalidate caching:
@@ -290,7 +354,8 @@ The server manager uses stale-while-revalidate caching:
   {`const flags = createServerFlagsManager({
   clientId: process.env.DATABUDDY_CLIENT_ID!,
   cacheTtl: 60_000,      // Cache valid for 1 minute
-  staleTime: 30_000      // Revalidate after 30 seconds
+  staleTime: 30_000,     // Revalidate after 30 seconds
+  maxCacheSize: 5000     // Evict old entries above this size
 });
 
 // First call: fetches from API
@@ -306,9 +371,11 @@ const result3 = await flags.getFlag("my-feature");
 const result4 = await flags.getFlag("my-feature");`}
 </CodeBlock>
 
+Expired entries are pruned during cache writes and reads. Long-lived shared managers should keep the default `maxCacheSize` or set a limit that matches their traffic shape, especially when passing per-request users.
+
 ## Request Batching
 
-Multiple concurrent flag requests are batched automatically:
+Multiple concurrent flag requests with the same API URL and targeting context are batched automatically:
 
 <CodeBlock language="tsx">
   {`// These 3 concurrent requests become 1 API call
@@ -318,6 +385,8 @@ const [flag1, flag2, flag3] = await Promise.all([
   flags.getFlag("feature-3")
 ]);`}
 </CodeBlock>
+
+Requests for different users, organizations, teams, properties, or environments are intentionally sent through separate batches so evaluations cannot mix targeting contexts.
 
 ## Request Deduplication
 
@@ -337,7 +406,8 @@ const [result1, result2] = await Promise.all([
   {`// Update user for subsequent calls
 flags.updateUser({
   userId: "new-user",
-  properties: { plan: "enterprise" }
+  organizationId: "org-456",
+  properties: { role: "admin" }
 });
 
 // Refresh flags for new user
@@ -392,7 +462,8 @@ export function getFlags() {
   if (!flagsManager) {
     flagsManager = createServerFlagsManager({
       clientId: process.env.DATABUDDY_CLIENT_ID!,
-      autoFetch: true
+      autoFetch: true,
+      maxCacheSize: 5000
     });
   }
   return flagsManager;

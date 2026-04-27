@@ -293,7 +293,7 @@ function diagnosticsChanged(a: DiagnosticItem[], b: DiagnosticItem[]) {
 	return false;
 }
 
-export type RuntimeTone = "ok" | "warn" | "danger";
+export type RuntimeTone = "ok" | "warn" | "destructive";
 
 export function runtimeStatus(snapshot: DatabuddyTrackerSnapshot): {
 	tone: RuntimeTone;
@@ -305,7 +305,7 @@ export function runtimeStatus(snapshot: DatabuddyTrackerSnapshot): {
 	if (snapshot.hasTracker) {
 		return { tone: "ok", label: "LIVE" };
 	}
-	return { tone: "danger", label: "MISSING" };
+	return { tone: "destructive", label: "MISSING" };
 }
 
 class DevtoolsStore {

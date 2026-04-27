@@ -1,11 +1,5 @@
 "use client";
 
-import { ArrowClockwiseIcon } from "@phosphor-icons/react";
-import { ArrowSquareOutIcon } from "@phosphor-icons/react";
-import { BrowserIcon } from "@phosphor-icons/react";
-import { HeartbeatIcon } from "@phosphor-icons/react";
-import { PlusIcon } from "@phosphor-icons/react";
-import { SirenIcon } from "@phosphor-icons/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
@@ -16,29 +10,41 @@ import { ErrorBoundary } from "@/components/error-boundary";
 import { FeatureLockedPanel } from "@/components/feature-access-gate";
 import { PageNavigation } from "@/components/layout/page-navigation";
 import { TransferToOrgDialog } from "@/components/transfer-to-org-dialog";
-import { Badge } from "@/components/ds/badge";
 import { Button, buttonVariants } from "@/components/ds/button";
 import { Card } from "@/components/ds/card";
 import { DeleteDialog } from "@/components/ds/delete-dialog";
 import { Field } from "@/components/ds/field";
-import { Skeleton } from "@/components/ds/skeleton";
+import { Skeleton } from "@databuddy/ui";
 import { Switch } from "@/components/ds/switch";
 import { useFeatureAccess } from "@/hooks/use-feature-access";
 import { getStatusPageUrl } from "@/lib/app-url";
 import { orpc } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
 import { AddMonitorDialog } from "./_components/add-monitor-dialog";
+import { IncidentsTab } from "./_components/incidents-tab";
 import {
 	type StatusPageMonitor,
 	StatusPageMonitorRow,
 } from "./_components/status-page-monitor-row";
+import { BrowserIcon } from "@phosphor-icons/react/dist/ssr";
+import {
+	ArrowClockwiseIcon,
+	ArrowSquareOutIcon,
+	HeartbeatIcon,
+	PlusIcon,
+	SirenIcon,
+} from "@databuddy/ui/icons";
+
+type Tab = "monitors" | "incidents";
 
 export default function StatusPageDetailsPage() {
 	const params = useParams();
 	const router = useRouter();
 	const statusPageId = params.id as string;
 	const queryClient = useQueryClient();
+	const [activeTab, setActiveTab] = useState<Tab>("monitors");
 	const [isDialogOpen, setIsDialogOpen] = useState(false);
+	const [isIncidentSheetOpen, setIsIncidentSheetOpen] = useState(false);
 	const [isTransferOpen, setIsTransferOpen] = useState(false);
 	const [includeMonitors, setIncludeMonitors] = useState(true);
 	const [monitorToRemove, setMonitorToRemove] = useState<string | null>(null);
@@ -247,10 +253,20 @@ export default function StatusPageDetailsPage() {
 												/>
 												<span className="hidden sm:inline">Transfer</span>
 											</Button>
-											<Button onClick={() => setIsDialogOpen(true)} size="sm">
-												<PlusIcon className="size-3.5" />
-												Add Monitor
-											</Button>
+											{activeTab === "monitors" ? (
+												<Button onClick={() => setIsDialogOpen(true)} size="sm">
+													<PlusIcon className="size-3.5" />
+													Add Monitor
+												</Button>
+											) : (
+												<Button
+													onClick={() => setIsIncidentSheetOpen(true)}
+													size="sm"
+												>
+													<PlusIcon className="size-3.5" />
+													Report Incident
+												</Button>
+											)}
 										</>
 									) : (
 										<>
@@ -264,34 +280,56 @@ export default function StatusPageDetailsPage() {
 
 							<div className="flex h-10 shrink-0 border-border border-t bg-accent/30">
 								<button
-									className="relative flex cursor-pointer items-center gap-2 px-3 py-2.5 font-medium text-foreground text-sm"
+									className={cn(
+										"relative flex cursor-pointer items-center gap-2 px-3 py-2.5 font-medium text-sm",
+										activeTab === "monitors"
+											? "text-foreground"
+											: "text-muted-foreground hover:text-foreground"
+									)}
+									onClick={() => setActiveTab("monitors")}
 									type="button"
 								>
-									<span className="inline-flex">
-										<HeartbeatIcon
-											className="size-4 text-primary"
-											weight="fill"
-										/>
-									</span>
+									<HeartbeatIcon
+										className="size-4"
+										weight={activeTab === "monitors" ? "fill" : "duotone"}
+									/>
 									Monitors
-									<div className="absolute inset-x-0 bottom-0 h-0.5 bg-brand-purple" />
+									{activeTab === "monitors" && (
+										<div className="absolute inset-x-0 bottom-0 h-0.5 bg-brand-purple" />
+									)}
 								</button>
 								<button
-									className="flex cursor-not-allowed items-center gap-2 px-3 py-2.5 font-medium text-muted-foreground/50 text-sm"
-									disabled
+									className={cn(
+										"relative flex cursor-pointer items-center gap-2 px-3 py-2.5 font-medium text-sm",
+										activeTab === "incidents"
+											? "text-foreground"
+											: "text-muted-foreground hover:text-foreground"
+									)}
+									onClick={() => setActiveTab("incidents")}
 									type="button"
 								>
-									<span className="inline-flex">
-										<SirenIcon className="size-4" weight="duotone" />
-									</span>
+									<SirenIcon
+										className="size-4"
+										weight={activeTab === "incidents" ? "fill" : "duotone"}
+									/>
 									Incidents
-									<Badge className="px-1.5 py-0" variant="muted">
-										Soon
-									</Badge>
+									{activeTab === "incidents" && (
+										<div className="absolute inset-x-0 bottom-0 h-0.5 bg-brand-purple" />
+									)}
 								</button>
 							</div>
 
-							<Card.Content className="p-0">{monitorsContent}</Card.Content>
+							<Card.Content className="p-0">
+								{activeTab === "monitors" ? (
+									monitorsContent
+								) : (
+									<IncidentsTab
+										isSheetOpen={isIncidentSheetOpen}
+										onSheetOpenChange={setIsIncidentSheetOpen}
+										statusPageId={statusPageId}
+									/>
+								)}
+							</Card.Content>
 						</Card>
 					</div>
 				</div>

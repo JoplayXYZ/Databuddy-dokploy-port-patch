@@ -1,14 +1,5 @@
 "use client";
 
-import {
-	ArrowSquareOutIcon,
-	CheckIcon,
-	ClipboardIcon,
-	InfoIcon,
-	PencilSimpleIcon,
-	TrashIcon,
-	WarningCircleIcon,
-} from "@phosphor-icons/react/dist/ssr";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
@@ -16,10 +7,14 @@ import { toast } from "sonner";
 import { NoticeBanner } from "@/app/(main)/websites/_components/notice-banner";
 import { Badge } from "@/components/ds/badge";
 import { Button } from "@/components/ds/button";
-import { Card } from "@/components/ds/card";
-import { Divider } from "@/components/ds/divider";
 import { Switch } from "@/components/ds/switch";
 import { DeleteDialog } from "@/components/ds/delete-dialog";
+import {
+	SettingCard,
+	SettingCardGroup,
+	SettingsZone,
+	SettingsZoneRow,
+} from "@databuddy/ui";
 import { WebsiteDialog } from "@/components/website-dialog";
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
 import {
@@ -30,28 +25,13 @@ import {
 } from "@/hooks/use-websites";
 import { orpc } from "@/lib/orpc";
 import { TOAST_MESSAGES } from "../../_components/shared/tracking-constants";
-
-function SettingsRow({
-	label,
-	description,
-	children,
-}: {
-	label: string;
-	description?: string;
-	children: React.ReactNode;
-}) {
-	return (
-		<div className="flex items-center justify-between gap-3">
-			<div className="min-w-0 flex-1">
-				<p className="font-medium text-sm">{label}</p>
-				{description && (
-					<p className="text-muted-foreground text-xs">{description}</p>
-				)}
-			</div>
-			<div className="shrink-0">{children}</div>
-		</div>
-	);
-}
+import {
+	CheckIcon,
+	ClipboardIcon,
+	InfoIcon,
+	PencilSimpleIcon,
+	WarningCircleIcon,
+} from "@databuddy/ui/icons";
 
 export default function GeneralSettingsPage() {
 	const params = useParams();
@@ -135,93 +115,61 @@ export default function GeneralSettingsPage() {
 	return (
 		<div className="flex-1 overflow-y-auto">
 			<div className="mx-auto max-w-2xl space-y-6 p-5">
-				<Card>
-					<Card.Header>
-						<Card.Title>Website Details</Card.Title>
-						<Card.Description>Name, domain, and identifiers</Card.Description>
-					</Card.Header>
-					<Card.Content className="space-y-4">
-						<SettingsRow label="Website ID">
-							<div className="flex items-center gap-2">
-								<code className="font-mono text-muted-foreground text-xs">
-									{websiteId}
-								</code>
-								<Button
-									onClick={() => copyId(websiteId)}
-									size="sm"
-									variant="secondary"
-								>
-									{copiedId ? (
-										<>
-											<CheckIcon className="size-3.5" weight="bold" />
-											Copied
-										</>
-									) : (
-										<>
-											<ClipboardIcon className="size-3.5" weight="duotone" />
-											Copy
-										</>
-									)}
-								</Button>
-							</div>
-						</SettingsRow>
-
-						<Divider />
-
-						<SettingsRow
-							description={websiteData.name || "Not set"}
-							label="Name"
+				<SettingCardGroup>
+					<SettingCard
+						description={
+							<code className="font-mono text-[11px]">{websiteId}</code>
+						}
+						title="Website ID"
+					>
+						<Button
+							onClick={() => copyId(websiteId)}
+							size="sm"
+							variant="secondary"
 						>
-							<Button
-								onClick={() => setShowEditDialog(true)}
-								size="sm"
-								variant="secondary"
-							>
-								<PencilSimpleIcon className="size-3.5" />
-								Edit
-							</Button>
-						</SettingsRow>
-
-						<Divider />
-
-						<SettingsRow
-							description={websiteData.domain || "Not set"}
-							label="Domain"
+							{copiedId ? (
+								<>
+									<CheckIcon className="size-3.5" weight="bold" />
+									Copied
+								</>
+							) : (
+								<>
+									<ClipboardIcon className="size-3.5" weight="duotone" />
+									Copy
+								</>
+							)}
+						</Button>
+					</SettingCard>
+					<SettingCard description={websiteData.name || "Not set"} title="Name">
+						<Button
+							onClick={() => setShowEditDialog(true)}
+							size="sm"
+							variant="secondary"
 						>
-							<Button
-								onClick={() => setShowEditDialog(true)}
-								size="sm"
-								variant="secondary"
-							>
-								<PencilSimpleIcon className="size-3.5" />
-								Edit
-							</Button>
-						</SettingsRow>
-					</Card.Content>
-				</Card>
-
-				<Card>
-					<Card.Header>
-						<Card.Title>Privacy & Sharing</Card.Title>
-						<Card.Description>
-							Control public access to your analytics overview
-						</Card.Description>
-					</Card.Header>
-					<Card.Content className="space-y-4">
-						<SettingsRow
-							description="Anyone with the link sees the overview only — no settings or other tabs"
-							label="Public sharing"
+							<PencilSimpleIcon className="size-3.5" />
+							Edit
+						</Button>
+					</SettingCard>
+					<SettingCard
+						description={websiteData.domain || "Not set"}
+						title="Domain"
+					>
+						<Button
+							onClick={() => setShowEditDialog(true)}
+							size="sm"
+							variant="secondary"
 						>
-							<Switch
-								aria-label="Toggle public access"
-								checked={isPublic}
-								onCheckedChange={handleTogglePublic}
-							/>
-						</SettingsRow>
+							<PencilSimpleIcon className="size-3.5" />
+							Edit
+						</Button>
+					</SettingCard>
+				</SettingCardGroup>
 
-						{isPublic && (
-							<>
-								<Divider />
+				<SettingCardGroup>
+					<SettingCard
+						description="Anyone with the link sees the overview only — no settings or other tabs"
+						expandable={
+							isPublic ? (
 								<div className="space-y-3">
 									<div className="flex items-center gap-2">
 										<p className="font-medium text-sm">Public overview link</p>
@@ -252,52 +200,37 @@ export default function GeneralSettingsPage() {
 										icon={<InfoIcon />}
 									/>
 								</div>
-							</>
-						)}
-					</Card.Content>
-				</Card>
+							) : undefined
+						}
+						title="Public sharing"
+					>
+						<Switch
+							aria-label="Toggle public access"
+							checked={isPublic}
+							onCheckedChange={handleTogglePublic}
+						/>
+					</SettingCard>
+				</SettingCardGroup>
 
-				<Card>
-					<Card.Header>
-						<Card.Title>Danger Zone</Card.Title>
-						<Card.Description>
-							Irreversible actions for this website
-						</Card.Description>
-					</Card.Header>
-					<Card.Content className="space-y-4">
-						<SettingsRow
-							description="Move to another organization"
-							label="Transfer website"
-						>
-							<Button
-								onClick={() =>
-									router.push(`/websites/${websiteId}/settings/transfer`)
-								}
-								size="sm"
-								variant="secondary"
-							>
-								<ArrowSquareOutIcon className="size-3.5" />
-								Transfer
-							</Button>
-						</SettingsRow>
-
-						<Divider />
-
-						<SettingsRow
-							description="Permanently delete this website and all its data"
-							label="Delete website"
-						>
-							<Button
-								onClick={() => setShowDeleteDialog(true)}
-								size="sm"
-								tone="danger"
-							>
-								<TrashIcon className="size-3.5" />
-								Delete
-							</Button>
-						</SettingsRow>
-					</Card.Content>
-				</Card>
+				<SettingsZone title="Destructive actions" variant="destructive">
+					<SettingsZoneRow
+						action={{
+							label: "Transfer",
+							onClick: () =>
+								router.push(`/websites/${websiteId}/settings/transfer`),
+						}}
+						description="Move to another organization"
+						title="Transfer website"
+					/>
+					<SettingsZoneRow
+						action={{
+							label: "Delete",
+							onClick: () => setShowDeleteDialog(true),
+						}}
+						description="Permanently delete this website and all its data"
+						title="Delete website"
+					/>
+				</SettingsZone>
 			</div>
 
 			<WebsiteDialog

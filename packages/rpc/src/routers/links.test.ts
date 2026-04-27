@@ -7,6 +7,7 @@ const createLinkSchema = z.object({
 	organizationId: z.string().optional(),
 	name: z.string().min(1).max(255),
 	targetUrl: z.url(),
+	folderId: z.string().nullable().optional(),
 	slug: z
 		.string()
 		.min(3)
@@ -22,12 +23,17 @@ const createLinkSchema = z.object({
 	ogDescription: z.string().max(500).nullable().optional(),
 	ogImageUrl: z.url().nullable().optional(),
 	externalId: z.string().max(255).nullable().optional(),
+	sourceType: z.string().max(64).nullable().optional(),
+	sourceId: z.string().max(255).nullable().optional(),
+	sourceOwnerId: z.string().max(255).nullable().optional(),
+	targetDomain: z.string().max(255).nullable().optional(),
 });
 
 const updateLinkSchema = z.object({
 	id: z.string(),
 	name: z.string().min(1).max(255).optional(),
 	targetUrl: z.url().optional(),
+	folderId: z.string().nullable().optional(),
 	slug: z
 		.string()
 		.min(3)
@@ -43,12 +49,21 @@ const updateLinkSchema = z.object({
 	ogDescription: z.string().max(500).nullable().optional(),
 	ogImageUrl: z.url().nullable().optional(),
 	externalId: z.string().max(255).nullable().optional(),
+	sourceType: z.string().max(64).nullable().optional(),
+	sourceId: z.string().max(255).nullable().optional(),
+	sourceOwnerId: z.string().max(255).nullable().optional(),
+	targetDomain: z.string().max(255).nullable().optional(),
 });
 
 const listLinksSchema = z
 	.object({
 		organizationId: z.string().optional(),
 		externalId: z.string().optional(),
+		folderId: z.string().nullable().optional(),
+		sourceType: z.string().max(64).optional(),
+		sourceId: z.string().max(255).optional(),
+		sourceOwnerId: z.string().max(255).optional(),
+		targetDomain: z.string().max(255).optional(),
 	})
 	.default({});
 
@@ -114,6 +129,21 @@ describe("createLinkSchema validation", () => {
 			name: "Invite Link",
 			targetUrl: "https://example.com/signup",
 			externalId: "company_acme",
+		});
+		expect(result.success).toBe(true);
+	});
+
+	it("accepts internal organization and source metadata", () => {
+		const result = createLinkSchema.safeParse({
+			organizationId: "org-123",
+			folderId: "folder-posts",
+			name: "Post Link",
+			targetUrl: "https://example.com/signup",
+			externalId: "post_link:post_123:0:abc",
+			sourceType: "post",
+			sourceId: "post_123",
+			sourceOwnerId: "user_456",
+			targetDomain: "example.com",
 		});
 		expect(result.success).toBe(true);
 	});
@@ -312,6 +342,26 @@ describe("listLinksSchema validation", () => {
 		});
 		expect(result.success).toBe(true);
 	});
+
+	it("accepts folder and source filters", () => {
+		const result = listLinksSchema.safeParse({
+			organizationId: "org-123",
+			folderId: "folder-posts",
+			sourceType: "post",
+			sourceId: "post_123",
+			sourceOwnerId: "user_456",
+			targetDomain: "example.com",
+		});
+		expect(result.success).toBe(true);
+	});
+
+	it("accepts null folder filter for unfiled links", () => {
+		const result = listLinksSchema.safeParse({
+			organizationId: "org-123",
+			folderId: null,
+		});
+		expect(result.success).toBe(true);
+	});
 });
 
 describe("getLinkSchema validation", () => {
@@ -428,9 +478,14 @@ describe("link data structure", () => {
 			id: "link-123",
 			organizationId: "org-456",
 			createdBy: "user-789",
+			folderId: "folder-posts",
 			name: "Marketing Campaign",
 			slug: "campaign-2025",
 			targetUrl: "https://example.com/landing?utm_source=twitter",
+			targetDomain: "example.com",
+			sourceType: "post",
+			sourceId: "post_123",
+			sourceOwnerId: "user_456",
 			expiresAt: null,
 			expiredRedirectUrl: null,
 			ogTitle: "Special Offer",

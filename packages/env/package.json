@@ -32,6 +32,9 @@
   "files": [
     "src"
   ],
+  "scripts": {
+    "check-types": "tsc --build"
+  },
   "dependencies": {
     "zod": "catalog:"
   },

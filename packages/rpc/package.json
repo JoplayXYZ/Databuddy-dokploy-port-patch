@@ -5,6 +5,9 @@
   "type": "module",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
+  "scripts": {
+    "test": "bun test src/services/uptime-lifecycle.test.ts src/services/uptime-scheduler.test.ts src/services/uptime-scheduler.integration.test.ts"
+  },
   "exports": {
     ".": "./src/index.ts",
     "./autumn": "./src/lib/autumn-client.ts"
@@ -20,15 +23,13 @@
     "@databuddy/validation": "workspace:*",
     "@orpc/server": "^1.14.0",
     "@types/jszip": "^3.4.1",
-    "@upstash/qstash": "^2.8.4",
     "ai": "^6.0.0",
     "autumn-js": "catalog:",
-    "bullmq": "^5.34.0",
     "dayjs": "^1.11.19",
     "drizzle-orm": "^0.45.2",
     "evlog": "catalog:",
     "jszip": "^3.10.1",
-    "keypal": "^0.1.11",
+    "keypal": "0.2.0",
     "nanoid": "^5.1.6",
     "pg": "^8.16.3",
     "redis": "^5.10.0",
@@ -37,6 +38,7 @@
   },
   "devDependencies": {
     "@types/pg": "^8.16.0",
+    "bullmq": "^5.66.5",
     "typescript": "^5.9.3"
   }
 }

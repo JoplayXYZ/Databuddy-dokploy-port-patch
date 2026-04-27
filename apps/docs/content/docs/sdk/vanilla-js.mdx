@@ -52,8 +52,9 @@ Configure the tracker using data attributes on the script tag:
 | `data-track-performance` | `true` | Include performance metrics |
 | `data-track-web-vitals` | `false` | Track Core Web Vitals |
 | `data-track-errors` | `false` | Track JavaScript errors |
-| `data-enable-batching` | `false` | Batch events before sending |
+| `data-enable-batching` | `true` | Batch events before sending |
 | `data-batch-size` | `10` | Events per batch when batching enabled |
+| `data-batch-timeout` | `5000` | Batch timeout in ms |
 | `data-sampling-rate` | `1.0` | Sample rate 0.0-1.0 |
 
 ## Tracking Events
@@ -81,10 +82,12 @@ window.databuddy.track('feature_used', {
 Manually track page views (useful for SPAs):
 
 <CodeBlock language="jsx">
-  {`window.databuddy.screenView('/dashboard');
+  {`window.databuddy.screenView({
+  section: 'dashboard'
+});
 
 // With properties
-window.databuddy.screenView('/dashboard', {
+window.databuddy.screenView({
   section: 'analytics'
 });`}
 </CodeBlock>
@@ -95,7 +98,7 @@ For convenience, use the shorter `window.db` alias:
 
 <CodeBlock language="jsx">
   {`window.db.track('button_click', { button_id: 'cta' });
-window.db.screenView('/dashboard');`}
+window.db.screenView({ section: 'dashboard' });`}
 </CodeBlock>
 
 ## Getting Tracking IDs
@@ -104,11 +107,11 @@ The tracker provides access to anonymous and session IDs for attribution trackin
 
 <CodeBlock language="jsx">
   {`// Get anonymous ID
-const anonId = window.databuddy.anonymousId;
+const anonId = localStorage.getItem("did");
 console.log('Anonymous ID:', anonId);
 
 // Get session ID
-const sessionId = window.databuddy.sessionId;
+const sessionId = sessionStorage.getItem("did_session");
 console.log('Session ID:', sessionId);
 
 // Use for redirect attribution
@@ -235,7 +238,7 @@ Enable batching to reduce network requests:
   data-client-id="your-client-id"
   data-enable-batching
   data-batch-size="20"
-  data-batch-timeout="2000"
+  data-batch-timeout="5000"
   async
 ></script>`}
 </CodeBlock>
@@ -315,8 +318,8 @@ Opt-out is stored in localStorage and persists across sessions.
       });
       
       // Redirect with attribution
-      const anonId = window.databuddy.anonymousId;
-      const sessionId = window.databuddy.sessionId;
+      const anonId = localStorage.getItem("did");
+      const sessionId = sessionStorage.getItem("did_session");
       window.location.href = \`https://app.databuddy.cc/register?anonId=\${anonId}&sessionId=\${sessionId}\`;
     }
   </script>

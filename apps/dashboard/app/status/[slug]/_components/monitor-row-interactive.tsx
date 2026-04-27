@@ -2,14 +2,16 @@
 
 import dynamic from "next/dynamic";
 import { useMemo } from "react";
-import { formatDateOnly, localDayjs } from "@/lib/time";
-import { buildUptimeHeatmapDays } from "@/lib/uptime/heatmap-days";
-import { UptimeHeatmapStrip } from "@/lib/uptime/heatmap-strip";
-import { LatencyChartChunkPlaceholder } from "@/lib/uptime/latency-chart-chunk-placeholder";
+import { formatDateOnly, localDayjs } from "@databuddy/ui";
+import {
+	buildUptimeHeatmapDays,
+	UptimeHeatmapStrip,
+	LatencyChartChunkPlaceholder,
+} from "@databuddy/ui/uptime";
 
 const LatencyChart = dynamic(
 	() =>
-		import("@/lib/uptime/latency-chart").then((m) => ({
+		import("@databuddy/ui/uptime").then((m) => ({
 			default: m.LatencyChart,
 		})),
 	{

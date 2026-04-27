@@ -1,7 +1,7 @@
 import { Slot } from "@radix-ui/react-slot";
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
 import { EmptyState, type EmptyStateProps } from "@/components/ds/empty-state";
-import { Skeleton } from "@/components/ds/skeleton";
+import { Skeleton } from "@databuddy/ui";
 import type {
 	ListQueryOutcome,
 	ListQuerySlice,

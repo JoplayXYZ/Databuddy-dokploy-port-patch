@@ -94,7 +94,7 @@ Add Databuddy's privacy-first analytics to your Laravel application by adding th
   </Step>
 
   <Step title="Configure Environment Variables (Recommended)">
-    It's best practice to store your Databuddy Client ID in your `.env` file and access it via Laravel's configuration.
+    It's best practice to store your Databuddy Client ID and server API key in your `.env` file and access them via Laravel's configuration.
 
     **a. Add to `.env` file:**
     Open your `.env` file and add:
@@ -102,7 +102,9 @@ Add Databuddy's privacy-first analytics to your Laravel application by adding th
     <CodeBlock
       language="bash"
       filename=".env"
-      code={`DATABUDDY_CLIENT_ID=your-client-id-here`}
+      code={`DATABUDDY_CLIENT_ID=your-client-id-here
+DATABUDDY_API_KEY=your-api-key-here
+DATABUDDY_WEBSITE_ID=your-client-id-here`}
     />
 
     **b. Add to `config/services.php`:**
@@ -118,6 +120,8 @@ return [
 
     'databuddy' => [
         'client_id' => env('DATABUDDY_CLIENT_ID'),
+        'api_key' => env('DATABUDDY_API_KEY'),
+        'website_id' => env('DATABUDDY_WEBSITE_ID', env('DATABUDDY_CLIENT_ID')),
     ],
 ];`}
     />
@@ -250,22 +254,25 @@ use Illuminate\Support\Facades\Http;
 
 class DatabuddyService
 {
-    protected string $clientId;
+    protected string $apiKey;
+    protected ?string $websiteId;
     protected string $apiUrl;
 
     public function __construct()
     {
-        $this->clientId = config('services.databuddy.client_id');
+        $this->apiKey = config('services.databuddy.api_key');
+        $this->websiteId = config('services.databuddy.website_id');
         $this->apiUrl = 'https://basket.databuddy.cc';
     }
 
-    public function track(string $eventName, array $properties = []): void
+    public function track(string $name, array $properties = []): void
     {
-        Http::post("{$this->apiUrl}/events", [
-            'clientId' => $this->clientId,
-            'eventName' => $eventName,
+        Http::withToken($this->apiKey)->post("{$this->apiUrl}/track", [
+            'name' => $name,
             'properties' => $properties,
-            'timestamp' => now()->timestamp,
+            'websiteId' => $this->websiteId,
+            'timestamp' => now()->toISOString(),
+            'source' => 'server',
         ]);
     }
 }`}
@@ -369,4 +376,3 @@ Track form submissions:
 </Cards>
 
 Need help with your Laravel integration? Contact us at [help@databuddy.cc](mailto:help@databuddy.cc).
-

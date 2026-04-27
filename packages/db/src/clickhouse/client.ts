@@ -2,6 +2,20 @@ import { createClient, type ResponseJSON } from "@clickhouse/client";
 import type { NodeClickHouseClientConfigOptions } from "@clickhouse/client/dist/config";
 
 import SqlString from "sqlstring";
+
+let _record:
+	| (<T>(name: string, fn: () => Promise<T> | T) => Promise<T>)
+	| null = null;
+
+export function setChRecordFn(
+	fn: <T>(name: string, fn: () => Promise<T> | T) => Promise<T>
+) {
+	_record = fn;
+}
+
+function traced<T>(name: string, fn: () => Promise<T>): Promise<T> {
+	return _record ? _record(name, fn) : fn();
+}
 /**
  * ClickHouse table names used throughout the application
  */
@@ -98,14 +112,16 @@ export async function chQueryWithMeta<T extends Record<string, any>>(
 	params?: Record<string, unknown>,
 	options?: ChQueryOptions
 ): Promise<ResponseJSON<T>> {
-	const res = await clickHouse.query({
-		query,
-		query_params: params,
-		...(options?.readonly && {
-			clickhouse_settings: { readonly: "1" },
-		}),
+	const json = await traced("ch.query", async () => {
+		const res = await clickHouse.query({
+			query,
+			query_params: params,
+			...(options?.readonly && {
+				clickhouse_settings: { readonly: "1" },
+			}),
+		});
+		return res.json<T>();
 	});
-	const json = await res.json<T>();
 	const keys = Object.keys(json.data[0] || {});
 
 	return {
@@ -138,11 +154,13 @@ export async function chCommand(
 	query: string,
 	params?: Record<string, unknown>
 ): Promise<void> {
-	await clickHouse.command({
-		query,
-		query_params: params,
-		clickhouse_settings: { wait_end_of_query: 1 },
-	});
+	await traced("ch.command", () =>
+		clickHouse.command({
+			query,
+			query_params: params,
+			clickhouse_settings: { wait_end_of_query: 1 },
+		})
+	);
 }
 
 const Z_REGEX = /Z+$/;

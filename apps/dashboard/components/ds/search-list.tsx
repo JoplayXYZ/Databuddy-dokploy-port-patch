@@ -1,9 +1,9 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { MagnifyingGlassIcon } from "@phosphor-icons/react/dist/ssr";
 import { Command as CommandPrimitive } from "cmdk";
 import type { ComponentPropsWithoutRef } from "react";
+import { MagnifyingGlassIcon } from "@databuddy/ui/icons";
 
 function Root({
 	className,

@@ -1,7 +1,7 @@
 "use client";
 
-import { Skeleton } from "@/components/ds/skeleton";
-import { LatencyChartChunkPlaceholder } from "@/lib/uptime/latency-chart-chunk-placeholder";
+import { Skeleton } from "@databuddy/ui";
+import { LatencyChartChunkPlaceholder } from "@databuddy/ui/uptime";
 
 export function MonitorDetailLoading() {
 	return (

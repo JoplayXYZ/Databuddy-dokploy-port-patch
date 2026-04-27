@@ -1,17 +1,17 @@
 "use client";
 
 import type { IconProps } from "@phosphor-icons/react";
-import { PlusIcon } from "@phosphor-icons/react/dist/ssr";
 import { cloneElement, memo, type ReactElement, type ReactNode } from "react";
 import { Button } from "@/components/ds/button";
 import { Card } from "@/components/ds/card";
 import { cn } from "@/lib/utils";
+import { PlusIcon } from "@databuddy/ui/icons";
 
 export interface EmptyStateAction {
 	label: string;
 	onClick: () => void;
 	size?: "sm" | "md" | "lg";
-	tone?: "danger";
+	tone?: "destructive";
 	variant?: "primary" | "secondary" | "ghost";
 }
 

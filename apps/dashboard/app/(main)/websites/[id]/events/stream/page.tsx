@@ -1,7 +1,5 @@
 "use client";
 
-import { ArrowSquareOutIcon } from "@phosphor-icons/react";
-import { FunnelIcon } from "@phosphor-icons/react";
 import { useAtom } from "jotai";
 import Link from "next/link";
 import { notFound, useParams } from "next/navigation";
@@ -16,6 +14,7 @@ import {
 	addDynamicFilterAtom,
 	dynamicQueryFiltersAtom,
 } from "@/stores/jotai/filterAtoms";
+import { ArrowSquareOutIcon, FunnelIcon } from "@databuddy/ui/icons";
 
 export default function EventsStreamPage() {
 	const params = useParams();

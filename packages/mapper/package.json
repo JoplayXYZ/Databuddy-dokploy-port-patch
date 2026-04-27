@@ -3,7 +3,6 @@
   "module": "index.ts",
   "type": "module",
   "private": true,
-  "scripts": {},
   "devDependencies": {
     "@types/bun": "catalog:"
   },

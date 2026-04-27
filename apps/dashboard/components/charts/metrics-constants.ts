@@ -1,16 +1,16 @@
-import {
-	Activity,
-	Bug,
-	Clock,
-	Eye,
-	Gauge,
-	MousePointer,
-	TrendingUp,
-	Users,
-	Zap,
-} from "lucide-react";
 import { formatLocaleNumber } from "@/lib/format-locale-number";
 import { formatDuration } from "@/lib/utils";
+import {
+	BugIcon,
+	ClockIcon,
+	CursorClickIcon,
+	EyeIcon,
+	GaugeIcon,
+	LightningIcon,
+	PulseIcon,
+	TrendUpIcon,
+	UsersIcon,
+} from "@databuddy/ui/icons";
 
 const createColorSet = (
 	primary: string,
@@ -207,27 +207,27 @@ const createMetric = (
 });
 
 export const ANALYTICS_METRICS: MetricConfig[] = [
-	createMetric("pageviews", "Pageviews", "pageviews", Eye, (value) =>
+	createMetric("pageviews", "Pageviews", "pageviews", EyeIcon, (value) =>
 		formatLocaleNumber(value)
 	),
-	createMetric("sessions", "Sessions", "sessions", TrendingUp, (value) =>
+	createMetric("sessions", "Sessions", "sessions", TrendUpIcon, (value) =>
 		formatLocaleNumber(value)
 	),
-	createMetric("visitors", "Visitors", "visitors", Users, (value) =>
+	createMetric("visitors", "Visitors", "visitors", UsersIcon, (value) =>
 		formatLocaleNumber(value)
 	),
 	createMetric(
 		"bounce_rate",
 		"Bounce Rate",
 		"bounce_rate",
-		MousePointer,
+		CursorClickIcon,
 		(value) => `${value.toFixed(1)}%`
 	),
 	createMetric(
 		"median_session_duration",
 		"Session Duration",
 		"session_duration",
-		TrendingUp,
+		TrendUpIcon,
 		(value, row) =>
 			typeof row.median_session_duration_formatted === "string"
 				? row.median_session_duration_formatted
@@ -240,7 +240,7 @@ export const PERFORMANCE_METRICS: MetricConfig[] = [
 		"avg_load_time",
 		"Avg Load Time",
 		"avg_load_time",
-		Clock,
+		ClockIcon,
 		formatPerformanceTime,
 		"performance"
 	),
@@ -248,7 +248,7 @@ export const PERFORMANCE_METRICS: MetricConfig[] = [
 		"p50_load_time",
 		"P50 Load Time",
 		"p50_load_time",
-		Clock,
+		ClockIcon,
 		formatPerformanceTime,
 		"performance"
 	),
@@ -259,7 +259,7 @@ export const CORE_WEB_VITALS_METRICS: MetricConfig[] = [
 		"avg_fcp",
 		"FCP (Avg)",
 		"avg_fcp",
-		Zap,
+		LightningIcon,
 		formatPerformanceTime,
 		"core_web_vitals"
 	),
@@ -267,7 +267,7 @@ export const CORE_WEB_VITALS_METRICS: MetricConfig[] = [
 		"p50_fcp",
 		"FCP (P50)",
 		"p50_fcp",
-		Zap,
+		LightningIcon,
 		formatPerformanceTime,
 		"core_web_vitals"
 	),
@@ -275,7 +275,7 @@ export const CORE_WEB_VITALS_METRICS: MetricConfig[] = [
 		"avg_lcp",
 		"LCP (Avg)",
 		"avg_lcp",
-		Activity,
+		PulseIcon,
 		formatPerformanceTime,
 		"core_web_vitals"
 	),
@@ -283,7 +283,7 @@ export const CORE_WEB_VITALS_METRICS: MetricConfig[] = [
 		"p50_lcp",
 		"LCP (P50)",
 		"p50_lcp",
-		Activity,
+		PulseIcon,
 		formatPerformanceTime,
 		"core_web_vitals"
 	),
@@ -291,7 +291,7 @@ export const CORE_WEB_VITALS_METRICS: MetricConfig[] = [
 		"avg_cls",
 		"CLS (Avg)",
 		"avg_cls",
-		Gauge,
+		GaugeIcon,
 		formatCLS,
 		"core_web_vitals"
 	),
@@ -299,7 +299,7 @@ export const CORE_WEB_VITALS_METRICS: MetricConfig[] = [
 		"p50_cls",
 		"CLS (P50)",
 		"p50_cls",
-		Gauge,
+		GaugeIcon,
 		formatCLS,
 		"core_web_vitals"
 	),
@@ -307,7 +307,7 @@ export const CORE_WEB_VITALS_METRICS: MetricConfig[] = [
 		"avg_fid",
 		"FID (Avg)",
 		"avg_fid",
-		MousePointer,
+		CursorClickIcon,
 		formatPerformanceTime,
 		"core_web_vitals"
 	),
@@ -315,7 +315,7 @@ export const CORE_WEB_VITALS_METRICS: MetricConfig[] = [
 		"p50_fid",
 		"FID (P50)",
 		"p50_fid",
-		MousePointer,
+		CursorClickIcon,
 		formatPerformanceTime,
 		"core_web_vitals"
 	),
@@ -323,7 +323,7 @@ export const CORE_WEB_VITALS_METRICS: MetricConfig[] = [
 		"avg_inp",
 		"INP (Avg)",
 		"avg_inp",
-		Activity,
+		PulseIcon,
 		formatPerformanceTime,
 		"core_web_vitals"
 	),
@@ -331,21 +331,25 @@ export const CORE_WEB_VITALS_METRICS: MetricConfig[] = [
 		"p50_inp",
 		"INP (P50)",
 		"p50_inp",
-		Activity,
+		PulseIcon,
 		formatPerformanceTime,
 		"core_web_vitals"
 	),
 ];
 
 export const ERROR_METRICS: MetricConfig[] = [
-	createMetric("total_errors", "Total Errors", "bounce_rate", Bug, (value) =>
-		formatLocaleNumber(value)
+	createMetric(
+		"total_errors",
+		"Total Errors",
+		"bounce_rate",
+		BugIcon,
+		(value) => formatLocaleNumber(value)
 	),
 	createMetric(
 		"affected_users",
 		"Affected Users",
 		"session_duration",
-		Users,
+		UsersIcon,
 		(value) => formatLocaleNumber(value)
 	),
 ];

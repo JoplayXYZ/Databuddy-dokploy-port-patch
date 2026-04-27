@@ -1,4 +1,4 @@
-import { Skeleton } from "@/components/ds/skeleton";
+import { Skeleton } from "@databuddy/ui";
 
 function MonitorRowSkeleton() {
 	return (

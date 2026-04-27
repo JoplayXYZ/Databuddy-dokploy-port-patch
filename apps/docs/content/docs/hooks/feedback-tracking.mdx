@@ -18,7 +18,8 @@ Track user feedback (e.g., thumbs up/down on documentation pages) using both ser
 import { Databuddy } from "@databuddy/sdk/node";
 
 const client = new Databuddy({
-  clientId: process.env.NEXT_PUBLIC_DATABUDDY_CLIENT_ID!,
+  apiKey: process.env.DATABUDDY_API_KEY!,
+  websiteId: process.env.DATABUDDY_WEBSITE_ID,
 });
 
 export async function onRateDocs(
@@ -31,7 +32,8 @@ export async function onRateDocs(
       properties: {
         url,
         opinion: feedback.opinion,
-        message: feedback.message.trim(),
+        has_message: feedback.message.trim().length > 0,
+        message_length: feedback.message.trim().length,
       },
     });
 
@@ -94,12 +96,11 @@ export function useFeedbackTracking() {
 ## What It Tracks
 
 - **Events**: 
-  - `docs_feedback`: Server-side tracking with full message
+  - `docs_feedback`: Server-side tracking with submitted feedback metadata
   - `feedback_submitted`: Client-side tracking with metadata
 - **Properties**:
   - `url`: Page URL where feedback was submitted
   - `opinion`: "good" or "bad"
-  - `message`: User's feedback message (server-side only)
   - `has_message`: Whether user provided a message
   - `message_length`: Length of feedback message
 
@@ -126,4 +127,3 @@ Use server actions for detailed feedback tracking and client hooks for immediate
     View all available tracking hooks
   </Card>
 </Cards>
-

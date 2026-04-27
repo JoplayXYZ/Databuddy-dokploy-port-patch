@@ -311,32 +311,36 @@ npm install @databuddy/sdk`}
   language="typescript"
   filename="src/lib/databuddy.ts"
   code={`import { Databuddy } from '@databuddy/sdk/node';
+import { DATABUDDY_API_KEY, DATABUDDY_WEBSITE_ID } from '$env/static/private';
 
 export const databuddy = new Databuddy({
-  clientId: process.env.DATABUDDY_CLIENT_ID!,
-  clientSecret: process.env.DATABUDDY_CLIENT_SECRET!
+  apiKey: DATABUDDY_API_KEY,
+  websiteId: DATABUDDY_WEBSITE_ID
 });
 
 // Track server-side events
-export function trackServerEvent(eventName: string, properties?: Record<string, unknown>) {
-  return databuddy.track({
-    eventName,
+export async function trackServerEvent(name: string, properties?: Record<string, unknown>) {
+  await databuddy.track({
+    name,
     properties,
-    anonymousId: 'server-event', // Use appropriate identifier
+    anonymousId: 'server-event', // Use an appropriate identifier
+    source: 'server'
   });
+
+  await databuddy.flush();
 }`}
 />
 
 ## Environment Variables
 
-Store your Client ID in environment variables:
+Store your Client ID and server API key in environment variables:
 
 <CodeBlock
   language="bash"
   filename=".env"
   code={`PUBLIC_DATABUDDY_CLIENT_ID=your-client-id-here
-DATABUDDY_CLIENT_ID=your-client-id-here
-DATABUDDY_CLIENT_SECRET=your-client-secret-here`}
+DATABUDDY_API_KEY=your-api-key-here
+DATABUDDY_WEBSITE_ID=your-client-id-here`}
 />
 
 Then use them in your code:
@@ -394,4 +398,3 @@ Then use them in your code:
 </Cards>
 
 Need help with your SvelteKit integration? Contact us at [help@databuddy.cc](mailto:help@databuddy.cc).
-

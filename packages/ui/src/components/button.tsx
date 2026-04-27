@@ -1,13 +1,15 @@
+"use client";
+
 import { cn } from "../lib/utils";
 import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
-import type { ButtonHTMLAttributes } from "react";
+import { type ButtonHTMLAttributes, useEffect, useRef, useState } from "react";
 import { Spinner } from "./spinner";
 
 const button = cva(
   [
-    "inline-flex items-center justify-center gap-1.5",
-    "select-none whitespace-nowrap font-medium",
+    "inline-flex items-center justify-center gap-2",
+    "select-none whitespace-nowrap font-semibold",
     "rounded-md",
     "transition-[background-color,color,opacity,transform,filter,box-shadow] duration-(--duration-quick) ease-(--ease-smooth)",
     "motion-reduce:transition-none",
@@ -28,29 +30,29 @@ const button = cva(
       },
       tone: {
         neutral: "",
-        danger: "",
+        destructive: "",
       },
       size: {
-        sm: "h-7 px-2.5 text-xs",
-        md: "h-8 px-3 text-xs",
-        lg: "h-9 px-4 text-sm",
+        sm: "h-8 px-3 text-xs",
+        md: "h-9 px-3.5 text-sm",
+        lg: "h-10 px-4 text-sm",
       },
     },
     compoundVariants: [
       {
         variant: "primary",
-        tone: "danger",
+        tone: "destructive",
         class:
           "bg-destructive text-destructive-foreground hover:brightness-[1.15]",
       },
       {
         variant: "secondary",
-        tone: "danger",
+        tone: "destructive",
         class: "bg-destructive/10 text-destructive hover:bg-destructive/15",
       },
       {
         variant: "ghost",
-        tone: "danger",
+        tone: "destructive",
         class:
           "text-destructive hover:bg-destructive/10 hover:text-destructive",
       },
@@ -74,9 +76,16 @@ type CompatSize =
   | "icon"
   | "icon-sm";
 
+interface KeyboardShortcut {
+  display: string;
+  trigger: (e: KeyboardEvent) => boolean;
+  callback: (e: KeyboardEvent) => void | Promise<void>;
+}
+
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> &
   Omit<VariantProps<typeof button>, "variant" | "size"> & {
     asChild?: boolean;
+    keyboard?: KeyboardShortcut;
     loading?: boolean;
     size?: CompatSize;
     variant?: CompatVariant;
@@ -87,7 +96,7 @@ function resolveButtonVariant(variant?: CompatVariant) {
     case "default":
       return { variant: "primary" as const };
     case "destructive":
-      return { tone: "danger" as const, variant: "primary" as const };
+      return { tone: "destructive" as const, variant: "primary" as const };
     case "outline":
       return { variant: "secondary" as const };
     default:
@@ -142,25 +151,73 @@ export function Button({
   type = "button",
   loading,
   disabled,
+  keyboard,
   children,
   ...rest
 }: ButtonProps) {
   const Comp = asChild ? Slot : "button";
+  const ref = useRef<HTMLButtonElement>(null);
+  const [lockedWidth, setLockedWidth] = useState<number>();
+  const isClickDisabled = disabled || loading;
+
+  useEffect(() => {
+    if (loading && ref.current && !lockedWidth) {
+      setLockedWidth(ref.current.offsetWidth);
+    } else if (!loading) {
+      setLockedWidth(undefined);
+    }
+  }, [loading, lockedWidth]);
+
+  useEffect(() => {
+    if (!keyboard || isClickDisabled) {
+      return;
+    }
+    const handler = (e: KeyboardEvent) => {
+      if (keyboard.trigger(e)) {
+        e.preventDefault();
+        keyboard.callback(e);
+      }
+    };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, [keyboard, isClickDisabled]);
+
+  if (asChild) {
+    return (
+      <Comp
+        className={buttonVariants({ className, size, tone, variant })}
+        disabled={disabled}
+        type={type}
+        {...rest}
+      >
+        {children}
+      </Comp>
+    );
+  }
 
   return (
     <Comp
       className={buttonVariants({ className, size, tone, variant })}
-      disabled={disabled || loading}
+      disabled={disabled}
+      aria-disabled={isClickDisabled}
+      aria-busy={loading}
+      ref={ref}
+      style={lockedWidth ? { width: lockedWidth } : undefined}
       type={type}
+      onClick={loading ? undefined : rest.onClick}
       {...rest}
     >
       {loading ? (
-        <>
-          <Spinner size="sm" />
-          {children}
-        </>
+        <Spinner size="sm" />
       ) : (
-        children
+        <>
+          {children}
+          {keyboard && (
+            <kbd className="ml-1 rounded border bg-black/5 px-1.5 py-0.5 font-mono text-[10px] dark:bg-white/10">
+              {keyboard.display}
+            </kbd>
+          )}
+        </>
       )}
     </Comp>
   );

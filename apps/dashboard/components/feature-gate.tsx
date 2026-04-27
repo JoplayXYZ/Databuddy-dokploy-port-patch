@@ -6,18 +6,20 @@ import {
 	getMinimumPlanForFeature,
 	PLAN_IDS,
 } from "@databuddy/shared/types/features";
-import { ArrowRightIcon } from "@phosphor-icons/react";
-import { CrownIcon } from "@phosphor-icons/react";
-import { LockSimpleIcon } from "@phosphor-icons/react";
-import { RocketLaunchIcon } from "@phosphor-icons/react";
-import { LeafIcon } from "@phosphor-icons/react";
-import { StarIcon } from "@phosphor-icons/react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { useBillingContext } from "@/components/providers/billing-provider";
 import { Button } from "@/components/ds/button";
 import { Card } from "@/components/ds/card";
 import { cn } from "@/lib/utils";
+import {
+	ArrowRightIcon,
+	CrownIcon,
+	LeafIcon,
+	LockSimpleIcon,
+	RocketLaunchIcon,
+	StarIcon,
+} from "@databuddy/ui/icons";
 
 const PLAN_CONFIG: Record<
 	string,

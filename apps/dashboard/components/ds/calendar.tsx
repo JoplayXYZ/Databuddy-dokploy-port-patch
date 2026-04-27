@@ -1,11 +1,6 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import {
-	CaretDownIcon,
-	CaretLeftIcon,
-	CaretRightIcon,
-} from "@phosphor-icons/react/dist/ssr";
 import type { ComponentProps, HTMLAttributes } from "react";
 import { useEffect, useRef } from "react";
 import {
@@ -13,6 +8,11 @@ import {
 	DayPicker,
 	getDefaultClassNames,
 } from "react-day-picker";
+import {
+	CaretDownIcon,
+	CaretLeftIcon,
+	CaretRightIcon,
+} from "@databuddy/ui/icons";
 
 type CalendarComponents = NonNullable<
 	ComponentProps<typeof DayPicker>["components"]

@@ -37,6 +37,7 @@ export const linkFormSchema = z.object({
 		})
 		.optional()
 		.or(z.literal("")),
+	folderId: z.string().optional().or(z.literal("")),
 	expiresAt: z.string().optional().or(z.literal("")),
 	expiredRedirectUrl: z
 		.string()

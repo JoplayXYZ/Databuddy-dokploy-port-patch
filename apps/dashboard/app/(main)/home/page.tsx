@@ -1,19 +1,15 @@
 "use client";
 
-import { ArrowClockwiseIcon } from "@phosphor-icons/react/dist/ssr/ArrowClockwise";
-import { GlobeIcon } from "@phosphor-icons/react/dist/ssr/Globe";
-import { HouseIcon } from "@phosphor-icons/react/dist/ssr/House";
-import { PlusIcon } from "@phosphor-icons/react/dist/ssr/Plus";
 import Link from "next/link";
 import { useState } from "react";
 import { Button } from "@/components/ds/button";
 import { Card } from "@/components/ds/card";
 import { EmptyState } from "@/components/ds/empty-state";
-import { Skeleton } from "@/components/ds/skeleton";
+import { TopBar } from "@/components/layout/top-bar";
+import { Skeleton } from "@databuddy/ui";
 import { WebsiteDialog } from "@/components/website-dialog";
 import { useWebsites } from "@/hooks/use-websites";
 import { cn } from "@/lib/utils";
-import { PageHeader } from "../websites/_components/page-header";
 import { WebsiteCard } from "../websites/_components/website-card";
 import { MonitorsSection } from "./_components/monitors-section";
 import { SmartInsightsSection } from "./_components/smart-insights-section";
@@ -21,6 +17,7 @@ import { SummaryStats } from "./_components/summary-stats";
 import { useGlobalAnalytics } from "./hooks/use-global-analytics";
 import { usePulseStatus } from "./hooks/use-pulse-status";
 import { useSmartInsights } from "./hooks/use-smart-insights";
+import { ArrowClockwiseIcon, GlobeIcon, PlusIcon } from "@databuddy/ui/icons";
 
 function WebsiteCardSkeleton() {
 	return (
@@ -99,44 +96,40 @@ export default function HomePage() {
 
 	return (
 		<div className="flex h-full flex-col">
-			<PageHeader
-				description="Overview of your analytics across all websites"
-				icon={<HouseIcon />}
-				right={
-					<>
-						<Button
-							aria-label="Refresh data"
-							disabled={
-								isLoading ||
+			<TopBar.Title>
+				<h1 className="font-semibold text-sm">Overview</h1>
+			</TopBar.Title>
+			<TopBar.Actions>
+				<Button
+					aria-label="Refresh data"
+					disabled={
+						isLoading ||
+						isFetching ||
+						isPulseLoading ||
+						isPulseFetching ||
+						isInsightsLoading
+					}
+					onClick={handleRefetch}
+					size="sm"
+					variant="secondary"
+				>
+					<ArrowClockwiseIcon
+						aria-hidden
+						className={cn(
+							"size-4 shrink-0",
+							(isLoading ||
 								isFetching ||
-								isPulseLoading ||
 								isPulseFetching ||
-								isInsightsLoading
-							}
-							onClick={handleRefetch}
-							size="icon"
-							variant="outline"
-						>
-							<ArrowClockwiseIcon
-								aria-hidden
-								className={cn(
-									"size-4",
-									(isLoading ||
-										isFetching ||
-										isPulseFetching ||
-										isInsightsRefreshing) &&
-										"animate-spin"
-								)}
-							/>
-						</Button>
-						<Button onClick={() => setDialogOpen(true)}>
-							<PlusIcon className="size-4" />
-							New Website
-						</Button>
-					</>
-				}
-				title="Overview"
-			/>
+								isInsightsRefreshing) &&
+								"animate-spin"
+						)}
+					/>
+				</Button>
+				<Button onClick={() => setDialogOpen(true)} size="sm">
+					<PlusIcon className="size-4 shrink-0" />
+					New Website
+				</Button>
+			</TopBar.Actions>
 
 			<div
 				aria-busy={

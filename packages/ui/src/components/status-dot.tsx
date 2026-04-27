@@ -7,7 +7,7 @@ const statusDot = cva("shrink-0 rounded-full", {
     color: {
       success: "bg-success",
       warning: "bg-warning",
-      danger: "bg-destructive",
+      destructive: "bg-destructive",
       muted: "bg-muted-foreground",
       info: "bg-blue-500",
     },

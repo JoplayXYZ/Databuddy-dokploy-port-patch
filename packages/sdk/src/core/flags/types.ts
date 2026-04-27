@@ -28,6 +28,8 @@ export interface FlagsConfig {
 	environment?: string;
 	/** Defer evaluation until session resolves */
 	isPending?: boolean;
+	/** Max in-memory flag cache entries (default: 5000) */
+	maxCacheSize?: number;
 	/** Skip persistent storage (browser only) */
 	skipStorage?: boolean;
 	/** Stale time in ms — revalidate in background after this (default: cacheTtl/2) */

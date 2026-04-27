@@ -1,3 +1,18 @@
+# Databuddy Dashboard
+
+## UI Rules
+
+Dashboard UI must use the local design system in `components/ds`.
+
+- Do not use raw form/control elements (`button`, `input`, `select`,
+  `textarea`, native dialogs), Base UI/Radix primitives, or one-off styled
+  controls in feature components.
+- If a needed control or variant is missing, add or extend the DS primitive
+  first, then consume it from the feature.
+- Use `DropdownMenu` for menu-style folder/status/filter/sort/action pickers.
+- Use `Select` only for an actual select/combobox pattern.
+- Read `components/ds/README.md` before creating or updating dashboard UI.
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started

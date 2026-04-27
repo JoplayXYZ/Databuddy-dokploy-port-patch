@@ -196,6 +196,50 @@ describe("ServerFlagsManager", () => {
 
 			expect(resultA.enabled).toBe(true);
 			expect(resultB.enabled).toBe(true);
+			expect(
+				fetchMock.calls.some((url) => url.includes("userId=user-a"))
+			).toBe(true);
+			expect(
+				fetchMock.calls.some((url) => url.includes("userId=user-b"))
+			).toBe(true);
+			expect(
+				fetchMock.calls.some((url) => url.includes("userId=global-user"))
+			).toBe(false);
+		});
+
+		it("isolates cache by organization context", async () => {
+			fetchMock.restore();
+			const calls: string[] = [];
+			globalThis.fetch = mock(async (input: string | URL | Request) => {
+				const url = typeof input === "string" ? input : input.toString();
+				calls.push(url);
+				const orgId = new URL(url).searchParams.get("organizationId");
+				return new Response(
+					JSON.stringify({
+						flags: {
+							"org-rollout":
+								orgId === "org-a" ? FLAG_ENABLED : FLAG_DISABLED,
+						},
+					}),
+					{
+						status: 200,
+						headers: { "Content-Type": "application/json" },
+					}
+				);
+			}) as typeof fetch;
+
+			const manager = await create({ clientId: "test-id" });
+
+			const resultA = await manager.getFlag("org-rollout", {
+				organizationId: "org-a",
+			});
+			const resultB = await manager.getFlag("org-rollout", {
+				organizationId: "org-b",
+			});
+
+			expect(resultA.enabled).toBe(true);
+			expect(resultB.enabled).toBe(false);
+			expect(calls).toHaveLength(2);
 		});
 	});
 
@@ -279,6 +323,22 @@ describe("ServerFlagsManager", () => {
 			expect(flags["feature-on"].enabled).toBe(true);
 			expect(flags["feature-off"]).toBeDefined();
 			expect(flags["feature-off"].enabled).toBe(false);
+		});
+
+		it("caps the in-memory flag cache", async () => {
+			const manager = await create({
+				clientId: "test-id",
+				autoFetch: false,
+				maxCacheSize: 2,
+			});
+
+			await manager.getFlag("feature-on", { userId: "user-1" });
+			await manager.getFlag("feature-off", { userId: "user-2" });
+			await manager.getFlag("feature-variant", { userId: "user-3" });
+
+			expect(Object.keys(manager.getMemoryFlags()).length).toBeLessThanOrEqual(
+				2
+			);
 		});
 	});
 

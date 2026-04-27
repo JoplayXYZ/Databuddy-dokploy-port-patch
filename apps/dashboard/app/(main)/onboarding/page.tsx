@@ -1,7 +1,6 @@
 "use client";
 
 import { track } from "@databuddy/sdk";
-import { ArrowLeftIcon, ArrowRightIcon } from "@phosphor-icons/react/dist/ssr";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ds/button";
@@ -12,6 +11,7 @@ import { StepCreateWebsite } from "./_components/step-create-website";
 import { StepExplore } from "./_components/step-explore";
 import { StepInstallTracking } from "./_components/step-install-tracking";
 import { StepInviteTeam } from "./_components/step-invite-team";
+import { ArrowLeftIcon, ArrowRightIcon } from "@databuddy/ui/icons";
 
 const STEPS = [
 	{

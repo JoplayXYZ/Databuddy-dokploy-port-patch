@@ -2,7 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import { Collapsible as BaseCollapsible } from "@base-ui-components/react/collapsible";
-import { CaretDown } from "@phosphor-icons/react/dist/ssr";
+import { CaretDownIcon } from "@databuddy/ui/icons";
 import type { ComponentPropsWithoutRef } from "react";
 
 function Root({
@@ -30,7 +30,7 @@ function Trigger({
 			{...rest}
 		>
 			<span className="flex min-w-0 flex-1 items-center gap-2">{children}</span>
-			<CaretDown
+			<CaretDownIcon
 				className={cn(
 					"size-3.5 shrink-0 text-muted-foreground",
 					"transition-transform duration-(--duration-quick) ease-(--ease-smooth)",

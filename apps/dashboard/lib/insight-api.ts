@@ -3,7 +3,7 @@ import {
 	keepPreviousData,
 	queryOptions,
 } from "@tanstack/react-query";
-import { guessTimezone } from "@/lib/dayjs";
+import { guessTimezone } from "@databuddy/ui";
 import type { HistoryInsightRow, Insight } from "@/lib/insight-types";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";

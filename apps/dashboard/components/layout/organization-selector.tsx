@@ -1,14 +1,6 @@
 "use client";
 
 import { authClient } from "@databuddy/auth/client";
-import {
-	CaretDownIcon,
-	CheckIcon,
-	CreditCardIcon,
-	GearIcon,
-	PlusIcon,
-	SpinnerGapIcon,
-} from "@phosphor-icons/react/dist/ssr";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -16,7 +8,16 @@ import { toast } from "sonner";
 import { Avatar } from "@/components/ds/avatar";
 import { Badge } from "@/components/ds/badge";
 import { DropdownMenu } from "@/components/ds/dropdown-menu";
-import { Skeleton } from "@/components/ds/skeleton";
+import {
+	CaretDownIcon,
+	CheckIcon,
+	CreditCardIcon,
+	GearIcon,
+	PlusIcon,
+	SpinnerGapIcon,
+} from "@databuddy/ui/icons";
+import { Skeleton } from "@databuddy/ui";
+import { Tooltip } from "@databuddy/ui";
 import { CreateOrganizationDialog } from "@/components/organizations/create-organization-dialog";
 import { useBillingContext } from "@/components/providers/billing-provider";
 import {
@@ -27,11 +28,6 @@ import { cn } from "@/lib/utils";
 
 const getDicebearUrl = (seed: string | undefined) =>
 	`https://api.dicebear.com/9.x/glass/svg?seed=${encodeURIComponent(seed || "")}`;
-
-const MENU_ITEM_BASE_CLASSES =
-	"flex h-10 cursor-pointer items-center gap-3 rounded-none px-4 text-sm text-sidebar-foreground/70 data-highlighted:bg-sidebar-accent/60 data-highlighted:text-sidebar-accent-foreground";
-const MENU_ITEM_ACTIVE_CLASSES =
-	"bg-sidebar-accent font-medium text-sidebar-accent-foreground";
 
 function filterOrganizations<T extends { name: string; slug?: string | null }>(
 	orgs: T[] | undefined,
@@ -50,77 +46,79 @@ function filterOrganizations<T extends { name: string; slug?: string | null }>(
 	);
 }
 
-interface OrganizationSelectorTriggerProps
-	extends React.ComponentPropsWithRef<"button"> {
-	activeOrganization: {
-		id?: string;
+function OrgDropdownItems({
+	organizations,
+	activeId,
+	planLabel,
+	onSelect,
+	onNavigate,
+	onCreateClick,
+}: {
+	activeId?: string;
+	onCreateClick: () => void;
+	onNavigate: (href: string) => void;
+	onSelect: (id: string) => void;
+	organizations: Array<{
+		id: string;
 		name: string;
 		slug?: string | null;
 		logo?: string | null;
-	} | null;
-	isOpen: boolean;
-	isSettingActiveOrganization: boolean;
-}
-
-function OrganizationSelectorTrigger({
-	activeOrganization,
-	isOpen,
-	isSettingActiveOrganization,
-	ref,
-	className,
-	type = "button",
-	...rest
-}: OrganizationSelectorTriggerProps) {
+	}>;
+	planLabel: string | null;
+}) {
 	return (
-		<button
-			className={cn(
-				"flex h-12 w-full items-center overflow-hidden border-b bg-sidebar-accent px-3 py-3",
-				"transition-colors duration-(--duration-quick) ease-(--ease-smooth)",
-				"hover:bg-sidebar-accent/80",
-				isSettingActiveOrganization ? "cursor-not-allowed opacity-70" : "",
-				isOpen ? "bg-sidebar-accent/60" : "",
-				className
-			)}
-			ref={ref}
-			type={type}
-			{...rest}
-		>
-			<div className="flex w-full min-w-0 items-center gap-2">
-				<Avatar
-					alt={activeOrganization?.name ?? "Workspace"}
-					className="size-7 shrink-0 rounded ring-1 ring-black/10 ring-inset"
-					src={getDicebearUrl(
-						activeOrganization?.logo || activeOrganization?.id
+		<>
+			{organizations.map((org) => (
+				<DropdownMenu.Item
+					className={cn(
+						"flex h-9 items-center gap-2.5 rounded px-2.5 text-sm",
+						activeId === org.id &&
+							"bg-accent font-semibold text-accent-foreground"
 					)}
-				/>
-				<div className="flex min-w-0 flex-1 flex-col gap-1 overflow-hidden">
-					<span className="min-w-0 truncate text-left font-semibold text-sidebar-accent-foreground text-sm">
-						{activeOrganization?.name ?? "Select workspace"}
-					</span>
-					<span className="truncate text-left text-sidebar-accent-foreground/70 text-xs">
-						{activeOrganization?.slug ?? "No workspace selected"}
-					</span>
-				</div>
-				{isSettingActiveOrganization ? (
-					<SpinnerGapIcon
-						aria-label="Switching workspace"
-						className="size-4 shrink-0 animate-spin text-sidebar-accent-foreground/60"
-						weight="duotone"
+					key={org.id}
+					onClick={() => onSelect(org.id)}
+				>
+					<Avatar
+						alt={org.name}
+						className="size-5 shrink-0 rounded ring-1 ring-black/10 ring-inset"
+						src={getDicebearUrl(org.logo || org.id)}
 					/>
-				) : (
-					<CaretDownIcon
-						className={cn(
-							"size-4 shrink-0 text-sidebar-accent-foreground/60 transition-transform duration-(--duration-quick)",
-							isOpen ? "rotate-180" : ""
-						)}
-					/>
+					<span className="min-w-0 flex-1 truncate font-medium text-sm">
+						{org.name}
+					</span>
+					{activeId === org.id && (
+						<CheckIcon className="size-4 shrink-0 text-accent-foreground" />
+					)}
+				</DropdownMenu.Item>
+			))}
+			<DropdownMenu.Separator />
+			<DropdownMenu.Item onClick={() => onNavigate("/organizations/settings")}>
+				<GearIcon className="size-4 shrink-0" />
+				Workspace settings
+			</DropdownMenu.Item>
+			<DropdownMenu.Item onClick={() => onNavigate("/billing")}>
+				<CreditCardIcon className="size-4 shrink-0" />
+				Billing
+				{planLabel && (
+					<Badge className="ml-auto" size="sm">
+						{planLabel}
+					</Badge>
 				)}
-			</div>
-		</button>
+			</DropdownMenu.Item>
+			<DropdownMenu.Separator />
+			<DropdownMenu.Item onClick={onCreateClick}>
+				<PlusIcon className="size-4 shrink-0" />
+				Create Organization
+			</DropdownMenu.Item>
+		</>
 	);
 }
 
-export function OrganizationSelector() {
+export function OrganizationSelector({
+	collapsed = false,
+}: {
+	collapsed?: boolean;
+}) {
 	const queryClient = useQueryClient();
 	const router = useRouter();
 	const { organizations, activeOrganization, isLoading } =
@@ -169,123 +167,137 @@ export function OrganizationSelector() {
 
 	const filteredOrganizations = filterOrganizations(organizations, query);
 
+	const avatarUrl = getDicebearUrl(
+		activeOrganization?.logo || activeOrganization?.id
+	);
+
+	const dropdownItems = (
+		<OrgDropdownItems
+			activeId={activeOrganization?.id}
+			onCreateClick={() => {
+				setShowCreateDialog(true);
+				setIsOpen(false);
+			}}
+			onNavigate={navigateTo}
+			onSelect={handleSelectOrganization}
+			organizations={filteredOrganizations}
+			planLabel={planLabel}
+		/>
+	);
+
 	if (isLoading) {
 		return (
-			<div className="flex h-12 w-full items-center border-b bg-sidebar-accent px-3 py-3">
-				<div className="flex w-full min-w-0 items-center justify-between">
-					<div className="flex min-w-0 items-center gap-3">
-						<Skeleton className="size-7 shrink-0 rounded-full" />
-						<div className="flex min-w-0 flex-1 flex-col items-start">
-							<Skeleton className="h-4 w-24 rounded" />
-							<Skeleton className="mt-1 h-3 w-16 rounded" />
-						</div>
-					</div>
-					<Skeleton className="size-4 shrink-0 rounded" />
+			<div className={cn("px-2 py-2", collapsed && "px-1.5")}>
+				<div
+					className={cn(
+						"flex items-center gap-2.5 rounded bg-sidebar-accent/50",
+						collapsed ? "size-9 justify-center" : "h-9 px-2.5"
+					)}
+				>
+					<Skeleton className="size-6 shrink-0 rounded" />
+					{!collapsed && <Skeleton className="h-3.5 w-24 rounded" />}
 				</div>
 			</div>
 		);
 	}
 
+	if (collapsed) {
+		return (
+			<>
+				<div className="px-1.5 py-2">
+					<DropdownMenu
+						onOpenChange={(open) => {
+							setIsOpen(open);
+							if (!open) {
+								setQuery("");
+							}
+						}}
+						open={isOpen}
+					>
+						<Tooltip
+							content={activeOrganization?.name ?? "Workspace"}
+							side="right"
+						>
+							<DropdownMenu.Trigger
+								className="flex size-9 items-center justify-center rounded bg-sidebar-accent/50 hover:bg-sidebar-accent"
+								disabled={isSwitching}
+								render={<button type="button" />}
+							>
+								<Avatar
+									alt={activeOrganization?.name ?? "Workspace"}
+									className="size-6 shrink-0 rounded ring-1 ring-black/10 ring-inset"
+									src={avatarUrl}
+								/>
+							</DropdownMenu.Trigger>
+						</Tooltip>
+						<DropdownMenu.Content
+							align="start"
+							className="w-56"
+							side="right"
+							sideOffset={8}
+						>
+							{dropdownItems}
+						</DropdownMenu.Content>
+					</DropdownMenu>
+				</div>
+				<CreateOrganizationDialog
+					isOpen={showCreateDialog}
+					onClose={() => setShowCreateDialog(false)}
+				/>
+			</>
+		);
+	}
+
 	return (
 		<>
-			<DropdownMenu
-				onOpenChange={(open) => {
-					setIsOpen(open);
-					if (!open) {
-						setQuery("");
-					}
-				}}
-				open={isOpen}
-			>
-				<DropdownMenu.Trigger
-					className="w-full text-left focus-visible:outline-none"
-					disabled={isSwitching}
-					render={
-						<OrganizationSelectorTrigger
-							activeOrganization={activeOrganization}
-							isOpen={isOpen}
-							isSettingActiveOrganization={isSwitching}
-						/>
-					}
-				/>
-				<DropdownMenu.Content
-					align="start"
-					className="w-72 rounded-none border-t-0 border-l-0 bg-sidebar p-0"
-					sideOffset={0}
+			<div className="px-2 py-2">
+				<DropdownMenu
+					onOpenChange={(open) => {
+						setIsOpen(open);
+						if (!open) {
+							setQuery("");
+						}
+					}}
+					open={isOpen}
 				>
-					{filteredOrganizations.length > 0 && (
-						<div className="flex flex-col">
-							{filteredOrganizations.map((org) => (
-								<DropdownMenu.Item
-									className={cn(
-										MENU_ITEM_BASE_CLASSES,
-										activeOrganization?.id === org.id &&
-											MENU_ITEM_ACTIVE_CLASSES
-									)}
-									key={org.id}
-									onClick={() => handleSelectOrganization(org.id)}
-								>
-									<Avatar
-										alt={org.name}
-										className="size-5 shrink-0 rounded ring-1 ring-black/10 ring-inset"
-										src={getDicebearUrl(org.logo || org.id)}
-									/>
-									<div className="flex min-w-0 flex-1 flex-col items-start overflow-hidden text-left">
-										<span className="w-full truncate text-left font-medium text-sm">
-											{org.name}
-										</span>
-										<span className="w-full truncate text-left text-sidebar-foreground/70 text-xs">
-											{org.slug}
-										</span>
-									</div>
-									{activeOrganization?.id === org.id && (
-										<CheckIcon className="size-4 text-accent-foreground" />
-									)}
-								</DropdownMenu.Item>
-							))}
-						</div>
-					)}
-
-					<DropdownMenu.Separator className="m-0" />
-					<DropdownMenu.Item
-						className={MENU_ITEM_BASE_CLASSES}
-						onClick={() => navigateTo("/organizations/settings")}
-					>
-						<GearIcon
-							className="size-5 text-accent-foreground"
-							weight="duotone"
-						/>
-						<span className="font-medium text-sm">Workspace settings</span>
-					</DropdownMenu.Item>
-					<DropdownMenu.Item
-						className={MENU_ITEM_BASE_CLASSES}
-						onClick={() => navigateTo("/billing")}
-					>
-						<CreditCardIcon
-							className="size-5 text-accent-foreground"
-							weight="duotone"
-						/>
-						<span className="font-medium text-sm">Billing</span>
-						{planLabel && (
-							<Badge className="ml-auto" size="sm">
-								{planLabel}
-							</Badge>
+					<DropdownMenu.Trigger
+						className={cn(
+							"flex h-9 w-full items-center gap-2.5 rounded bg-sidebar-accent/50 px-2.5",
+							"hover:bg-sidebar-accent",
+							isSwitching && "cursor-not-allowed opacity-70",
+							isOpen && "bg-sidebar-accent"
 						)}
-					</DropdownMenu.Item>
-					<DropdownMenu.Separator className="m-0" />
-					<DropdownMenu.Item
-						className={MENU_ITEM_BASE_CLASSES}
-						onClick={() => {
-							setShowCreateDialog(true);
-							setIsOpen(false);
-						}}
+						disabled={isSwitching}
+						render={<button type="button" />}
 					>
-						<PlusIcon className="size-5 text-accent-foreground" />
-						<span className="font-medium text-sm">Create Organization</span>
-					</DropdownMenu.Item>
-				</DropdownMenu.Content>
-			</DropdownMenu>
-
+						<Avatar
+							alt={activeOrganization?.name ?? "Workspace"}
+							className="size-6 shrink-0 rounded ring-1 ring-black/10 ring-inset"
+							src={avatarUrl}
+						/>
+						<span className="min-w-0 flex-1 truncate text-left font-semibold text-sidebar-foreground text-sm">
+							{activeOrganization?.name ?? "Select workspace"}
+						</span>
+						{isSwitching ? (
+							<SpinnerGapIcon className="size-3.5 shrink-0 animate-spin text-sidebar-foreground/30" />
+						) : (
+							<CaretDownIcon
+								className={cn(
+									"size-3.5 shrink-0 text-sidebar-foreground/30",
+									isOpen && "rotate-180"
+								)}
+							/>
+						)}
+					</DropdownMenu.Trigger>
+					<DropdownMenu.Content
+						align="start"
+						className="min-w-60"
+						sideOffset={4}
+					>
+						{dropdownItems}
+					</DropdownMenu.Content>
+				</DropdownMenu>
+			</div>
 			<CreateOrganizationDialog
 				isOpen={showCreateDialog}
 				onClose={() => setShowCreateDialog(false)}

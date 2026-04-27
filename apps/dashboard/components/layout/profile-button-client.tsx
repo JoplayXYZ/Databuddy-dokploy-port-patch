@@ -1,32 +1,33 @@
 "use client";
 
 import { authClient } from "@databuddy/auth/client";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
+import { type ComponentPropsWithoutRef, useState } from "react";
+import { toast } from "sonner";
+import { Avatar } from "@/components/ds/avatar";
+import { DropdownMenu } from "@/components/ds/dropdown-menu";
+import { Text } from "@/components/ds/text";
+import { Tooltip } from "@databuddy/ui";
+import { cn } from "@/lib/utils";
+import { SignOutIcon } from "@phosphor-icons/react/dist/ssr";
 import {
 	CaretRightIcon,
 	CreditCardIcon,
 	GearIcon,
+	MonitorIcon,
+	MoonIcon,
 	PlusIcon,
-	SignOutIcon,
 	SpinnerGapIcon,
-} from "@phosphor-icons/react/dist/ssr";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { toast } from "sonner";
-import { Avatar } from "@/components/ds/avatar";
-import { DropdownMenu } from "@/components/ds/dropdown-menu";
-import { Tooltip } from "@/components/ds/tooltip";
-import { Text } from "@/components/ds/text";
+	SunIcon,
+} from "@databuddy/ui/icons";
+import { useTheme } from "next-themes";
 
 export interface ProfileButtonUser {
 	email?: string | null;
 	id?: string;
 	image?: string | null;
 	name?: string | null;
-}
-
-interface ProfileButtonClientProps {
-	user: ProfileButtonUser | null;
 }
 
 interface DeviceSession {
@@ -53,7 +54,7 @@ interface DeviceSession {
 
 const PRESERVED_QUERY_KEYS = [["auth", "session"], ["device-sessions"]];
 
-function getInitials(
+export function getInitials(
 	name: string | null | undefined,
 	email: string | null | undefined
 ) {
@@ -68,26 +69,14 @@ function getInitials(
 	return email?.[0]?.toUpperCase() || "U";
 }
 
-export function ProfileButtonClient({ user }: ProfileButtonClientProps) {
+function useProfileActions(_user: ProfileButtonUser | null) {
 	const [isLoggingOut, setIsLoggingOut] = useState(false);
 	const [switchingTo, setSwitchingTo] = useState<string | null>(null);
-	const [isOpen, setIsOpen] = useState(false);
 	const router = useRouter();
 	const queryClient = useQueryClient();
 
-	const { data: deviceSessions } = useQuery({
-		queryKey: ["device-sessions"],
-		queryFn: async () => {
-			const result = await authClient.multiSession.listDeviceSessions({});
-			return result.data as DeviceSession[] | null;
-		},
-		enabled: isOpen,
-		staleTime: 30 * 1000,
-	});
-
 	const handleLogout = async () => {
 		setIsLoggingOut(true);
-		setIsOpen(false);
 		await authClient.signOut({
 			fetchOptions: {
 				onSuccess: () => {
@@ -105,7 +94,6 @@ export function ProfileButtonClient({ user }: ProfileButtonClientProps) {
 
 	const handleSwitchAccount = async (session: DeviceSession) => {
 		setSwitchingTo(session.session.id);
-		setIsOpen(false);
 
 		const result = await authClient.multiSession.setActive({
 			sessionToken: session.session.token,
@@ -133,95 +121,196 @@ export function ProfileButtonClient({ user }: ProfileButtonClientProps) {
 		setSwitchingTo(null);
 	};
 
-	const userInitials = getInitials(user?.name, user?.email);
+	const navigateTo = (href: string) => {
+		router.push(href);
+	};
+
+	return {
+		isLoggingOut,
+		switchingTo,
+		handleLogout,
+		handleSwitchAccount,
+		navigateTo,
+	};
+}
+
+const THEMES = [
+	{ value: "light", icon: SunIcon, label: "Light" },
+	{ value: "dark", icon: MoonIcon, label: "Dark" },
+	{ value: "system", icon: MonitorIcon, label: "System" },
+] as const;
+
+type DropdownContentPlacement = Pick<
+	ComponentPropsWithoutRef<typeof DropdownMenu.Content>,
+	"align" | "side"
+>;
+
+function ThemeSwitcherRow() {
+	const { theme, setTheme } = useTheme();
+
+	return (
+		<div className="flex items-center gap-1 px-2 py-1.5">
+			<span className="mr-auto text-muted-foreground text-xs">Theme</span>
+			{THEMES.map(({ value, icon: Icon, label }) => (
+				<button
+					aria-label={label}
+					className={cn(
+						"flex size-7 items-center justify-center rounded text-muted-foreground hover:bg-secondary hover:text-foreground",
+						theme === value && "bg-secondary text-foreground"
+					)}
+					key={value}
+					onClick={() => setTheme(value)}
+					type="button"
+				>
+					<Icon className="size-3.5" />
+				</button>
+			))}
+		</div>
+	);
+}
+
+export function ProfileDropdownContent({
+	user,
+	onClose,
+	isOpen,
+	align = "start",
+	side = "top",
+}: {
+	isOpen?: boolean;
+	onClose: () => void;
+	user: ProfileButtonUser;
+} & DropdownContentPlacement) {
+	const {
+		isLoggingOut,
+		switchingTo,
+		handleLogout,
+		handleSwitchAccount,
+		navigateTo,
+	} = useProfileActions(user);
+
+	const { data: deviceSessions } = useQuery({
+		queryKey: ["device-sessions"],
+		queryFn: async () => {
+			const result = await authClient.multiSession.listDeviceSessions({});
+			return result.data as DeviceSession[] | null;
+		},
+		enabled: isOpen,
+		staleTime: 30 * 1000,
+	});
 
 	const otherSessions =
-		deviceSessions?.filter((session) => session.user.email !== user?.email) ??
+		deviceSessions?.filter((session) => session.user.email !== user.email) ??
 		[];
 	const hasMultipleAccounts = otherSessions.length > 0;
 
 	return (
+		<DropdownMenu.Content align={align} className="w-56" side={side}>
+			{hasMultipleAccounts &&
+				otherSessions.map((session) => (
+					<DropdownMenu.Item
+						disabled={switchingTo === session.session.id}
+						key={session.session.id}
+						onClick={() => {
+							handleSwitchAccount(session);
+							onClose();
+						}}
+					>
+						<Avatar
+							alt={session.user.name}
+							className="size-5 text-[10px]"
+							fallback={getInitials(session.user.name, session.user.email)}
+							src={session.user.image || undefined}
+						/>
+						<Text className="min-w-0 flex-1 truncate" variant="body">
+							{session.user.email}
+						</Text>
+						{switchingTo === session.session.id ? (
+							<SpinnerGapIcon className="size-3.5 shrink-0 animate-spin text-muted-foreground" />
+						) : (
+							<CaretRightIcon className="size-3.5 shrink-0 text-muted-foreground" />
+						)}
+					</DropdownMenu.Item>
+				))}
+
+			{hasMultipleAccounts && <DropdownMenu.Separator />}
+
+			<DropdownMenu.Item
+				onClick={() => {
+					onClose();
+					navigateTo("/login?add_account=true");
+				}}
+			>
+				<PlusIcon className="size-4 shrink-0" />
+				Add account
+			</DropdownMenu.Item>
+			<DropdownMenu.Item
+				onClick={() => {
+					onClose();
+					navigateTo("/settings/account");
+				}}
+			>
+				<GearIcon className="size-4 shrink-0" weight="duotone" />
+				Settings
+			</DropdownMenu.Item>
+			<DropdownMenu.Item
+				onClick={() => {
+					onClose();
+					navigateTo("/billing");
+				}}
+			>
+				<CreditCardIcon className="size-4 shrink-0" weight="duotone" />
+				Billing
+			</DropdownMenu.Item>
+			<DropdownMenu.Separator />
+			<ThemeSwitcherRow />
+			<DropdownMenu.Separator />
+			<DropdownMenu.Item
+				disabled={isLoggingOut}
+				onClick={() => {
+					handleLogout();
+					onClose();
+				}}
+				variant="destructive"
+			>
+				<SignOutIcon className="size-4 shrink-0" weight="duotone" />
+				{isLoggingOut ? "Signing out…" : "Sign out"}
+			</DropdownMenu.Item>
+		</DropdownMenu.Content>
+	);
+}
+
+export function ProfileButtonClient({
+	user,
+}: {
+	user: ProfileButtonUser | null;
+}) {
+	const [isOpen, setIsOpen] = useState(false);
+
+	if (!user) {
+		return null;
+	}
+
+	return (
 		<DropdownMenu onOpenChange={setIsOpen} open={isOpen}>
-			<Tooltip content={user?.email ?? "Account"} side="right">
+			<Tooltip content={user.email ?? "Account"} side="top">
 				<DropdownMenu.Trigger
 					aria-label="Profile menu"
 					className="flex size-8 items-center justify-center rounded-full transition-opacity duration-(--duration-quick) ease-(--ease-smooth) hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60"
-					disabled={isLoggingOut || Boolean(switchingTo)}
 					render={<button type="button" />}
 				>
 					<Avatar
-						alt={user?.name || "User"}
+						alt={user.name || "User"}
 						className="size-8"
-						fallback={userInitials}
-						src={user?.image || undefined}
+						fallback={getInitials(user.name, user.email)}
+						src={user.image || undefined}
 					/>
 				</DropdownMenu.Trigger>
 			</Tooltip>
-
-			<DropdownMenu.Content align="start" className="w-56" side="right">
-				{hasMultipleAccounts &&
-					otherSessions.map((session) => (
-						<DropdownMenu.Item
-							disabled={switchingTo === session.session.id}
-							key={session.session.id}
-							onClick={() => handleSwitchAccount(session)}
-						>
-							<Avatar
-								alt={session.user.name}
-								className="size-5 text-[10px]"
-								fallback={getInitials(session.user.name, session.user.email)}
-								src={session.user.image || undefined}
-							/>
-							<Text className="min-w-0 flex-1 truncate" variant="body">
-								{session.user.email}
-							</Text>
-							{switchingTo === session.session.id ? (
-								<SpinnerGapIcon className="size-3.5 animate-spin text-muted-foreground" />
-							) : (
-								<CaretRightIcon className="size-3.5 text-muted-foreground" />
-							)}
-						</DropdownMenu.Item>
-					))}
-
-				{hasMultipleAccounts && <DropdownMenu.Separator />}
-
-				<DropdownMenu.Item
-					onClick={() => {
-						setIsOpen(false);
-						router.push("/login?add_account=true");
-					}}
-				>
-					<PlusIcon className="size-4" />
-					Add account
-				</DropdownMenu.Item>
-				<DropdownMenu.Item
-					onClick={() => {
-						setIsOpen(false);
-						router.push("/settings/account");
-					}}
-				>
-					<GearIcon className="size-4" weight="duotone" />
-					Settings
-				</DropdownMenu.Item>
-				<DropdownMenu.Item
-					onClick={() => {
-						setIsOpen(false);
-						router.push("/billing");
-					}}
-				>
-					<CreditCardIcon className="size-4" weight="duotone" />
-					Billing
-				</DropdownMenu.Item>
-				<DropdownMenu.Separator />
-				<DropdownMenu.Item
-					disabled={isLoggingOut}
-					onClick={handleLogout}
-					variant="destructive"
-				>
-					<SignOutIcon className="size-4" weight="duotone" />
-					{isLoggingOut ? "Signing out…" : "Sign out"}
-				</DropdownMenu.Item>
-			</DropdownMenu.Content>
+			<ProfileDropdownContent
+				isOpen={isOpen}
+				onClose={() => setIsOpen(false)}
+				user={user}
+			/>
 		</DropdownMenu>
 	);
 }

@@ -30,9 +30,9 @@ This page documents all configuration options across the Databuddy SDK platforms
   trackHashChanges        // default: false
   
   // Batching
-  enableBatching          // default: false
+  enableBatching          // default: true
   batchSize={10}          // 1-50
-  batchTimeout={2000}     // ms
+  batchTimeout={5000}     // ms
   
   // Retries
   enableRetries           // default: true
@@ -79,9 +79,9 @@ This page documents all configuration options across the Databuddy SDK platforms
 
 | Prop | Type | Default | Description |
 |------|------|---------|-------------|
-| `enableBatching` | `boolean` | `false` | Group events into batches |
+| `enableBatching` | `boolean` | `true` | Group events into batches |
 | `batchSize` | `number` | `10` | Events per batch (1-50) |
-| `batchTimeout` | `number` | `2000` | Batch timeout in ms |
+| `batchTimeout` | `number` | `5000` | Batch timeout in ms |
 | `enableRetries` | `boolean` | `true` | Retry failed requests |
 | `maxRetries` | `number` | `3` | Maximum retry attempts |
 | `initialRetryDelay` | `number` | `500` | Initial retry delay in ms |
@@ -129,7 +129,7 @@ Vue uses the same props as React but with kebab-case naming:
   data-track-outgoing-links
   data-enable-batching
   data-batch-size="20"
-  data-batch-timeout="2000"
+  data-batch-timeout="5000"
   data-sampling-rate="1.0"
   data-skip-patterns='["/admin/**"]'
   data-mask-patterns='["/users/*"]'
@@ -149,16 +149,16 @@ Vue uses the same props as React but with kebab-case naming:
 | `data-track-interactions` | flag | `false` | Track interactions |
 | `data-track-attributes` | flag | `false` | Track data-track elements |
 | `data-track-hash-changes` | flag | `false` | Track hash changes |
-| `data-enable-batching` | flag | `false` | Enable event batching |
+| `data-enable-batching` | flag | `true` | Enable event batching |
 | `data-batch-size` | `number` | `10` | Batch size |
-| `data-batch-timeout` | `number` | `2000` | Batch timeout (ms) |
+| `data-batch-timeout` | `number` | `5000` | Batch timeout (ms) |
 | `data-sampling-rate` | `number` | `1.0` | Sampling rate |
 | `data-skip-patterns` | `JSON` | `[]` | Paths to skip |
 | `data-mask-patterns` | `JSON` | `[]` | Paths to mask |
 | `data-disabled` | flag | `false` | Disable tracking |
 
 <Callout type="info">
-  **Flag attributes**: Boolean attributes are enabled by their presence. Just add `data-track-web-vitals` (no value needed).
+  **Boolean options**: Vue templates use kebab-case props such as `track-web-vitals`; vanilla CDN installs use `data-*` attributes such as `data-track-web-vitals`.
 </Callout>
 
 ## Node.js
@@ -173,7 +173,7 @@ const client = new Databuddy({
   // Optional: Scope events to a specific website
   websiteId: process.env.DATABUDDY_WEBSITE_ID,
   
-  // Optional: Logical grouping (e.g., 'billing', 'auth', 'api')
+  // Optional: Logical grouping (e.g., 'auth', 'api', 'jobs')
   namespace: "api",
   
   // Optional: Source identifier (e.g., 'backend', 'webhook', 'cli')
@@ -290,6 +290,7 @@ const { track } = databuddyLLM({
   environment="production"
   cacheTtl={60_000}
   staleTime={30_000}
+  maxCacheSize={5000}
 >
   <App />
 </FlagsProvider>`}
@@ -310,6 +311,7 @@ const { track } = databuddyLLM({
 | `environment` | `string` | - | Environment name |
 | `cacheTtl` | `number` | `60000` | Cache TTL (ms) |
 | `staleTime` | `number` | `30000` | Revalidate after (ms) |
+| `maxCacheSize` | `number` | `5000` | Maximum in-memory cache entries |
 
 ### User Context
 
@@ -335,13 +337,14 @@ const flags = createServerFlagsManager({
   environment: "production",
   cacheTtl: 60_000,
   staleTime: 30_000,
+  maxCacheSize: 5000,
   autoFetch: false,
   debug: false,
   disabled: false
 });`}
 </CodeBlock>
 
-Server flags use the same options as client flags, but `skipStorage` is always `true`.
+Server flags use the same options as client flags, but `skipStorage` is always `true`, `autoFetch` defaults to `false`, and the in-memory cache is capped by `maxCacheSize`.
 
 ## Environment Variables
 

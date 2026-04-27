@@ -1,27 +1,27 @@
 "use client";
 
+import { FaviconImage } from "@/components/analytics/favicon-image";
+import { DropdownMenu } from "@/components/ds/dropdown-menu";
+import { EmptyState } from "@/components/ds/empty-state";
+import { Skeleton } from "@databuddy/ui";
+import { Tooltip } from "@databuddy/ui";
+import type { Link } from "@/hooks/use-links";
+import { fromNow, localDayjs } from "@databuddy/ui";
+import { cn } from "@/lib/utils";
+import { getDeepLinkApp } from "@databuddy/shared/constants/deep-link-apps";
+import NextLink from "next/link";
+import { toast } from "sonner";
+import { DeepLinkAppIcon } from "./deep-link-icons";
+import { LINKS_BASE_URL, LINKS_FULL_URL } from "./link-constants";
+import { QrCodeIcon } from "@phosphor-icons/react/dist/ssr";
 import {
 	ClockCountdownIcon,
 	CopyIcon,
 	DotsThreeIcon,
 	LinkIcon,
 	PencilSimpleIcon,
-	QrCodeIcon,
 	TrashIcon,
-} from "@phosphor-icons/react";
-import NextLink from "next/link";
-import { toast } from "sonner";
-import { getDeepLinkApp } from "@databuddy/shared/constants/deep-link-apps";
-import { FaviconImage } from "@/components/analytics/favicon-image";
-import { DeepLinkAppIcon } from "./deep-link-icons";
-import { DropdownMenu } from "@/components/ds/dropdown-menu";
-import { EmptyState } from "@/components/ds/empty-state";
-import { Skeleton } from "@/components/ds/skeleton";
-import { Tooltip } from "@/components/ds/tooltip";
-import type { Link } from "@/hooks/use-links";
-import { fromNow, localDayjs } from "@/lib/time";
-import { cn } from "@/lib/utils";
-import { LINKS_BASE_URL, LINKS_FULL_URL } from "./link-constants";
+} from "@databuddy/ui/icons";
 
 function copyShortUrl(slug: string) {
 	navigator.clipboard
@@ -87,10 +87,12 @@ function LinkRowIcon({ link }: { link: Link }) {
 
 export function LinkRow({
 	link,
+	folderName,
 	onEdit,
 	onDelete,
 	onShowQr,
 }: {
+	folderName?: string;
 	link: Link;
 	onEdit: (link: Link) => void;
 	onDelete: (linkId: string) => void;
@@ -131,6 +133,14 @@ export function LinkRow({
 						<span className="shrink-0 text-muted-foreground text-xs tabular-nums">
 							{fromNow(link.createdAt)}
 						</span>
+						{folderName && (
+							<>
+								<span className="text-muted-foreground text-xs">&middot;</span>
+								<span className="truncate text-muted-foreground text-xs">
+									{folderName}
+								</span>
+							</>
+						)}
 					</div>
 				</div>
 			</NextLink>
@@ -174,21 +184,28 @@ export function LinkRow({
 }
 
 interface LinksListProps {
+	foldersById?: Map<string, string>;
 	links: Link[];
 	onCreateLink: () => void;
 	onDelete: (linkId: string) => void;
 	onEdit: (link: Link) => void;
 	onShowQr: (link: Link) => void;
+	showEmptyState?: boolean;
 }
 
 export function LinksList({
 	links,
+	foldersById,
 	onEdit,
 	onDelete,
 	onShowQr,
 	onCreateLink,
+	showEmptyState = true,
 }: LinksListProps) {
 	if (links.length === 0) {
+		if (!showEmptyState) {
+			return null;
+		}
 		return (
 			<div className="px-5 py-12">
 				<EmptyState
@@ -197,7 +214,7 @@ export function LinksList({
 						onClick: onCreateLink,
 					}}
 					description="Create short links to track clicks and measure engagement across your marketing campaigns."
-					icon={<LinkIcon weight="duotone" />}
+					icon={<LinkIcon weight="regular" />}
 					title="No links yet"
 					variant="minimal"
 				/>
@@ -209,6 +226,9 @@ export function LinksList({
 		<div className="divide-y">
 			{links.map((link) => (
 				<LinkRow
+					folderName={
+						link.folderId ? foldersById?.get(link.folderId) : undefined
+					}
 					key={link.id}
 					link={link}
 					onDelete={onDelete}

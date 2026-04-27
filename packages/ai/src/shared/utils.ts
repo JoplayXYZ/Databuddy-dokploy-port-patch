@@ -54,7 +54,6 @@ export function extractText(content: unknown): string {
 	return "";
 }
 
-/** Generates a UUIDv7 trace ID */
 export function createTraceId(): string {
 	return uuidv7();
 }

@@ -1,7 +1,5 @@
 "use client";
 
-import { MinusIcon } from "@phosphor-icons/react";
-import { PlusIcon } from "@phosphor-icons/react";
 import {
 	motion,
 	useMotionValue,
@@ -10,6 +8,10 @@ import {
 } from "motion/react";
 import { useCallback, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
+import {
+	MinusIcon,
+	PlusIcon,
+} from "@databuddy/ui/icons";
 
 const MAX_OVERFLOW = 30;
 

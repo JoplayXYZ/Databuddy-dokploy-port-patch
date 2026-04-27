@@ -1,16 +1,18 @@
 "use client";
 
-import { DotsThreeIcon } from "@phosphor-icons/react";
-import { EyeIcon } from "@phosphor-icons/react";
-import { MouseMiddleClickIcon } from "@phosphor-icons/react";
-import { PencilSimpleIcon } from "@phosphor-icons/react";
-import { TrashIcon } from "@phosphor-icons/react";
 import { List } from "@/components/ui/composables/list";
 import { DropdownMenu } from "@/components/ds/dropdown-menu";
-import { Skeleton } from "@/components/ds/skeleton";
+import { Skeleton } from "@databuddy/ui";
 import type { Goal } from "@/hooks/use-goals";
 import { formatNumber } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
+import {
+	DotsThreeIcon,
+	EyeIcon,
+	MouseMiddleClickIcon,
+	PencilSimpleIcon,
+	TrashIcon,
+} from "@databuddy/ui/icons";
 
 interface GoalItemProps {
 	analytics?: {

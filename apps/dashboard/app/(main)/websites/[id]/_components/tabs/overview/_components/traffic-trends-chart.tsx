@@ -1,12 +1,5 @@
 "use client";
 
-import { EyeIcon } from "@phosphor-icons/react";
-import { EyeSlashIcon } from "@phosphor-icons/react";
-import { NoteIcon } from "@phosphor-icons/react";
-import { XIcon } from "@phosphor-icons/react";
-import { ChartLineIcon } from "@phosphor-icons/react";
-import { WarningIcon } from "@phosphor-icons/react";
-import { WarningCircleIcon } from "@phosphor-icons/react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useAtom } from "jotai";
 import { useMemo, useState } from "react";
@@ -26,9 +19,9 @@ import {
 	type ChartInteractiveFeatures,
 	mergeChartInteractiveFeatures,
 } from "@/components/ui/composables/chart";
-import { Skeleton } from "@/components/ds/skeleton";
+import { Skeleton } from "@databuddy/ui";
 import { useChartPreferences } from "@/hooks/use-chart-preferences";
-import { usePersistentState } from "@/hooks/use-persistent-state";
+import { usePersistentState } from "@databuddy/ui";
 import {
 	ANNOTATION_STORAGE_KEYS,
 	CHART_ANNOTATION_STYLES,
@@ -42,7 +35,7 @@ import {
 	chartRechartsLegendInteractiveWrapperStyle,
 } from "@/lib/chart-presentation";
 import { chartQueryOutcome } from "@/lib/chart-query-outcome";
-import dayjs from "@/lib/dayjs";
+import { dayjs } from "@databuddy/ui";
 import { formatLocaleNumber } from "@/lib/format-locale-number";
 import { orpc } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
@@ -57,6 +50,15 @@ import type {
 	CreateAnnotationData,
 } from "@/types/annotations";
 import type { DateRange } from "../../../utils/types";
+import { XIcon } from "@phosphor-icons/react/dist/ssr";
+import {
+	ChartLineIcon,
+	EyeIcon,
+	EyeSlashIcon,
+	NoteIcon,
+	WarningCircleIcon,
+	WarningIcon,
+} from "@databuddy/ui/icons";
 
 const {
 	Area,

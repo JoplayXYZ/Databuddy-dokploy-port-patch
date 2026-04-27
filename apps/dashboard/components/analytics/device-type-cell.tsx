@@ -1,13 +1,15 @@
 "use client";
 
-import { DesktopIcon } from "@phosphor-icons/react";
-import { DeviceMobileIcon } from "@phosphor-icons/react";
-import { DeviceTabletIcon } from "@phosphor-icons/react";
-import { GameControllerIcon } from "@phosphor-icons/react";
-import { LaptopIcon } from "@phosphor-icons/react";
-import { QuestionIcon } from "@phosphor-icons/react";
-import { TelevisionIcon } from "@phosphor-icons/react";
-import { DeviceTabletIcon as XrIcon } from "@phosphor-icons/react";
+import {
+	DesktopIcon,
+	DeviceMobileIcon,
+	DeviceTabletIcon,
+	GameControllerIcon,
+	GlobeSimpleIcon,
+	LaptopIcon,
+	QuestionIcon,
+	TelevisionIcon,
+} from "@databuddy/ui/icons";
 
 const deviceTypeIconMap: Record<string, React.ElementType> = {
 	desktop: DesktopIcon,
@@ -16,7 +18,7 @@ const deviceTypeIconMap: Record<string, React.ElementType> = {
 	laptop: LaptopIcon,
 	smarttv: TelevisionIcon,
 	console: GameControllerIcon,
-	xr: XrIcon,
+	xr: GlobeSimpleIcon,
 	embedded: LaptopIcon,
 };
 

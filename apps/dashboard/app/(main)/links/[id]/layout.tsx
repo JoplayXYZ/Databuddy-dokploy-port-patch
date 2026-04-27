@@ -1,6 +1,5 @@
 "use client";
 
-import { ArrowClockwiseIcon } from "@phosphor-icons/react";
 import { useQueryClient } from "@tanstack/react-query";
 import clsx from "clsx";
 import { useParams } from "next/navigation";
@@ -11,11 +10,12 @@ import { toast } from "sonner";
 import { DateRangePicker } from "@/components/date-range-picker";
 import { PageNavigation } from "@/components/layout/page-navigation";
 import { Button } from "@/components/ds/button";
-import { Skeleton } from "@/components/ds/skeleton";
+import { Skeleton } from "@databuddy/ui";
 import { useDateFilters } from "@/hooks/use-date-filters";
 import { batchDynamicQueryKeys } from "@/hooks/use-dynamic-query";
 import { useLink } from "@/hooks/use-links";
-import dayjs from "@/lib/dayjs";
+import { dayjs } from "@databuddy/ui";
+import { ArrowClockwiseIcon } from "@databuddy/ui/icons";
 
 const MAX_HOURLY_DAYS = 7;
 

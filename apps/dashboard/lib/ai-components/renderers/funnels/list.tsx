@@ -1,11 +1,5 @@
 "use client";
 
-import { CaretRightIcon } from "@phosphor-icons/react/dist/ssr";
-import { DotsThreeIcon } from "@phosphor-icons/react/dist/ssr";
-import { FunnelIcon } from "@phosphor-icons/react/dist/ssr";
-import { PencilSimpleIcon } from "@phosphor-icons/react/dist/ssr";
-import { PlusIcon } from "@phosphor-icons/react/dist/ssr";
-import { TrashIcon } from "@phosphor-icons/react/dist/ssr";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
@@ -16,9 +10,17 @@ import { Card } from "@/components/ds/card";
 import { DeleteDialog } from "@/components/ds/delete-dialog";
 import { DropdownMenu } from "@/components/ds/dropdown-menu";
 import { useFunnels } from "@/hooks/use-funnels";
-import { fromNow } from "@/lib/time";
+import { fromNow } from "@databuddy/ui";
 import type { CreateFunnelData, Funnel } from "@/types/funnels";
 import type { BaseComponentProps, FunnelStepInput } from "../../types";
+import {
+	CaretRightIcon,
+	DotsThreeIcon,
+	FunnelIcon,
+	PencilSimpleIcon,
+	PlusIcon,
+	TrashIcon,
+} from "@databuddy/ui/icons";
 
 interface FunnelItem {
 	createdAt?: string;

@@ -1,10 +1,9 @@
 "use client";
 
-import { ArrowClockwiseIcon } from "@phosphor-icons/react/dist/ssr";
-import { WarningIcon } from "@phosphor-icons/react/dist/ssr";
 import { useEffect } from "react";
 import { Button } from "@/components/ds/button";
 import { Card } from "@/components/ds/card";
+import { ArrowClockwiseIcon, WarningIcon } from "@databuddy/ui/icons";
 
 interface ErrorPageProps {
 	error: Error & { digest?: string };

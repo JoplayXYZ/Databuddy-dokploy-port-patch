@@ -1,5 +1,17 @@
 "use client";
 
+import type { Invoice } from "autumn-js";
+import { memo, useMemo, useState } from "react";
+import { Badge } from "@/components/ds/badge";
+import { Button } from "@/components/ds/button";
+import { Card } from "@/components/ds/card";
+import { EmptyState } from "@/components/ds/empty-state";
+import { Skeleton } from "@databuddy/ui";
+import { Text } from "@/components/ds/text";
+import { dayjs } from "@databuddy/ui";
+import { cn } from "@/lib/utils";
+import { ErrorState } from "../components/empty-states";
+import { useBilling, useBillingData } from "../hooks/use-billing";
 import {
 	ArrowSquareOutIcon,
 	CaretLeftIcon,
@@ -9,19 +21,7 @@ import {
 	FileTextIcon,
 	ReceiptIcon,
 	XCircleIcon,
-} from "@phosphor-icons/react/dist/ssr";
-import type { Invoice } from "autumn-js";
-import { memo, useMemo, useState } from "react";
-import { Badge } from "@/components/ds/badge";
-import { Button } from "@/components/ds/button";
-import { Card } from "@/components/ds/card";
-import { EmptyState } from "@/components/ds/empty-state";
-import { Skeleton } from "@/components/ds/skeleton";
-import { Text } from "@/components/ds/text";
-import dayjs from "@/lib/dayjs";
-import { cn } from "@/lib/utils";
-import { ErrorState } from "../components/empty-states";
-import { useBilling, useBillingData } from "../hooks/use-billing";
+} from "@databuddy/ui/icons";
 
 const PAGE_SIZE = 10;
 
@@ -203,23 +203,29 @@ const InvoiceRow = memo(function InvoiceRowComponent({
 						<Badge variant={status.variant}>{status.label}</Badge>
 					</div>
 					<Text className="truncate" tone="muted" variant="caption">
-						#{invoice.stripeId.slice(-8)} · {amount}
+						#{invoice.stripeId.slice(-8)}
 					</Text>
 				</div>
 			</div>
 
-			{invoice.hostedInvoiceUrl && (
-				<Button
-					aria-label="View invoice"
-					className="shrink-0"
-					onClick={() => window.open(invoice.hostedInvoiceUrl ?? "", "_blank")}
-					size="sm"
-					variant="ghost"
-				>
-					<FileTextIcon size={14} weight="duotone" />
-					View
-				</Button>
-			)}
+			<div className="flex shrink-0 items-center gap-3">
+				<Text className="tabular-nums" variant="label">
+					{amount}
+				</Text>
+				{invoice.hostedInvoiceUrl && (
+					<Button
+						aria-label="View invoice"
+						onClick={() =>
+							window.open(invoice.hostedInvoiceUrl ?? "", "_blank")
+						}
+						size="sm"
+						variant="ghost"
+					>
+						<FileTextIcon size={14} />
+						View
+					</Button>
+				)}
+			</div>
 		</div>
 	);
 });

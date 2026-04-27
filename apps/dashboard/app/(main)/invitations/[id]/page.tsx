@@ -1,23 +1,25 @@
 "use client";
 
 import { authClient } from "@databuddy/auth/client";
-import { ArrowRightIcon } from "@phosphor-icons/react/dist/ssr";
-import { BuildingsIcon } from "@phosphor-icons/react/dist/ssr";
-import { CheckCircleIcon } from "@phosphor-icons/react/dist/ssr";
-import { ClockIcon } from "@phosphor-icons/react/dist/ssr";
-import { UserPlusIcon } from "@phosphor-icons/react/dist/ssr";
-import { XCircleIcon } from "@phosphor-icons/react/dist/ssr";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
 import { EmptyState } from "@/components/ds/empty-state";
 import { Badge } from "@/components/ds/badge";
 import { Button } from "@/components/ds/button";
-import { Skeleton } from "@/components/ds/skeleton";
-import dayjs from "@/lib/dayjs";
+import { Skeleton } from "@databuddy/ui";
+import { dayjs } from "@databuddy/ui";
 import { orpc } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
-import { PageHeader } from "../../websites/_components/page-header";
+import { TopBar } from "@/components/layout/top-bar";
+import {
+	ArrowRightIcon,
+	BuildingsIcon,
+	CheckCircleIcon,
+	ClockIcon,
+	UserPlusIcon,
+	XCircleIcon,
+} from "@databuddy/ui/icons";
 
 interface InvitationData {
 	email: string;
@@ -342,11 +344,9 @@ export default function AcceptInvitationPage() {
 	if (isLoading) {
 		return (
 			<div className="flex h-full flex-col">
-				<PageHeader
-					description="Loading invitation…"
-					icon={<UserPlusIcon />}
-					title="Invitation"
-				/>
+				<TopBar.Title>
+					<h1 className="font-semibold text-sm">Invitation</h1>
+				</TopBar.Title>
 				<ContentSkeleton />
 			</div>
 		);
@@ -358,11 +358,9 @@ export default function AcceptInvitationPage() {
 			error.message?.includes("not found");
 		return (
 			<div className="flex h-full flex-col">
-				<PageHeader
-					description="Unable to process invitation"
-					icon={<UserPlusIcon />}
-					title="Invitation"
-				/>
+				<TopBar.Title>
+					<h1 className="font-semibold text-sm">Invitation</h1>
+				</TopBar.Title>
 				{isExpired ? <ExpiredState /> : <ErrorState message={error.message} />}
 			</div>
 		);
@@ -371,11 +369,9 @@ export default function AcceptInvitationPage() {
 	if (!invitation) {
 		return (
 			<div className="flex h-full flex-col">
-				<PageHeader
-					description="Invitation not found"
-					icon={<UserPlusIcon />}
-					title="Invitation"
-				/>
+				<TopBar.Title>
+					<h1 className="font-semibold text-sm">Invitation</h1>
+				</TopBar.Title>
 				<ErrorState message="Invitation not found" />
 			</div>
 		);
@@ -388,26 +384,11 @@ export default function AcceptInvitationPage() {
 
 	const isAlreadyAccepted = invitation.status === "accepted";
 
-	const getDescription = () => {
-		if (actionStatus === "success") {
-			return "Successfully joined";
-		}
-		if (isAlreadyAccepted) {
-			return "Already a member";
-		}
-		if (isExpired) {
-			return "Invitation expired";
-		}
-		return `Join ${invitation.organizationName}`;
-	};
-
 	return (
 		<div className="flex h-full flex-col">
-			<PageHeader
-				description={getDescription()}
-				icon={<UserPlusIcon />}
-				title="Invitation"
-			/>
+			<TopBar.Title>
+				<h1 className="font-semibold text-sm">Invitation</h1>
+			</TopBar.Title>
 
 			{actionStatus === "success" ? (
 				<SuccessState organizationName={invitation.organizationName} />

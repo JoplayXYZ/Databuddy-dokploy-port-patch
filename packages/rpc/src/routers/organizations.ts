@@ -1,13 +1,15 @@
-import { and, db, desc, eq, gt } from "@databuddy/db";
+import { and, db, desc, eq, gt, lt, or } from "@databuddy/db";
 import { invitation, organization } from "@databuddy/db/schema";
-import { getPendingInvitationsSchema } from "@databuddy/validation";
+import {
+	clearExpiredInvitationsSchema,
+	getPendingInvitationsSchema,
+} from "@databuddy/validation";
 import { z } from "zod";
 import { rpcError } from "../errors";
 import { getAutumn } from "../lib/autumn-client";
-import { logger } from "../lib/logger";
+import { logger, record } from "../lib/logger";
 import { protectedProcedure, publicProcedure, sessionProcedure } from "../orpc";
 import { withWorkspace } from "../procedures/with-workspace";
-import { getBillingOwner } from "../utils/billing";
 
 const updateAvatarSeedSchema = z.object({
 	organizationId: z.string().min(1, "Organization ID is required"),
@@ -161,6 +163,45 @@ export const organizationsRouter = {
 			return pendingInvitations;
 		}),
 
+	clearExpiredInvitations: protectedProcedure
+		.route({
+			description:
+				"Deletes expired and accepted invitations for an organization.",
+			method: "POST",
+			path: "/organizations/clearExpiredInvitations",
+			summary: "Clear expired invitations",
+			tags: ["Organizations"],
+		})
+		.input(clearExpiredInvitationsSchema)
+		.output(z.object({ deleted: z.number() }))
+		.handler(async ({ input, context }) => {
+			await withWorkspace(context, {
+				organizationId: input.organizationId,
+				resource: "organization",
+				permissions: ["update"],
+			});
+
+			const result = await db
+				.delete(invitation)
+				.where(
+					and(
+						eq(invitation.organizationId, input.organizationId),
+						or(
+							eq(invitation.status, "accepted"),
+							eq(invitation.status, "canceled"),
+							eq(invitation.status, "rejected"),
+							and(
+								eq(invitation.status, "pending"),
+								lt(invitation.expiresAt, new Date())
+							)
+						)
+					)
+				)
+				.returning({ id: invitation.id });
+
+			return { deleted: result.length };
+		}),
+
 	getUsage: sessionProcedure
 		.route({
 			description: "Returns Autumn usage for current user/workspace.",
@@ -171,14 +212,15 @@ export const organizationsRouter = {
 		})
 		.output(z.record(z.string(), z.unknown()))
 		.handler(async ({ context }) => {
-			const { customerId, isOrganization, canUserUpgrade } =
-				await getBillingOwner(context.user.id, context.organizationId);
+			const billing = await context.getBilling();
+			const customerId = billing?.customerId ?? context.user.id;
+			const isOrganization = billing?.isOrganization ?? false;
+			const canUserUpgrade = billing?.canUserUpgrade ?? true;
 
 			try {
-				const response = await getAutumn().check({
-					customerId,
-					featureId: "events",
-				});
+				const response = await record("autumn.check", () =>
+					getAutumn().check({ customerId, featureId: "events" })
+				);
 
 				const b = response.balance;
 				const unlimited = b?.unlimited ?? false;
@@ -230,35 +272,25 @@ export const organizationsRouter = {
 			let activeOrgId: string | null | undefined;
 
 			if (input?.websiteId) {
-				const workspace = await withWorkspace(context, {
+				await withWorkspace(context, {
 					websiteId: input.websiteId,
 					permissions: ["read"],
 					allowPublicAccess: true,
 				});
-				try {
-					const billing = await getBillingOwner(
-						workspace.user?.id ?? "",
-						workspace.organizationId
-					);
+				const billing = await context.getBilling();
+				if (billing) {
 					customerId = billing.customerId;
 					isOrganization = billing.isOrganization;
 					canUserUpgrade = false;
-				} catch (error) {
-					logger.error(
-						{ error, websiteId: input.websiteId },
-						"Error fetching billing owner from website"
-					);
-					throw rpcError.internal("Failed to retrieve billing information");
 				}
 			} else if (context.user) {
 				activeOrgId = context.organizationId;
-				const userBilling = await getBillingOwner(
-					context.user.id,
-					context.organizationId
-				);
-				customerId = userBilling.customerId;
-				isOrganization = userBilling.isOrganization;
-				canUserUpgrade = userBilling.canUserUpgrade;
+				const billing = await context.getBilling();
+				if (billing) {
+					customerId = billing.customerId;
+					isOrganization = billing.isOrganization;
+					canUserUpgrade = billing.canUserUpgrade;
+				}
 			}
 
 			const debugInfo = isDev
@@ -285,9 +317,9 @@ export const organizationsRouter = {
 			}
 
 			try {
-				const customer = await getAutumn().customers.getOrCreate({
-					customerId,
-				});
+				const customer = await record("autumn.getOrCreate", () =>
+					getAutumn().customers.getOrCreate({ customerId })
+				);
 
 				const subs = customer.subscriptions;
 				const activeSub =

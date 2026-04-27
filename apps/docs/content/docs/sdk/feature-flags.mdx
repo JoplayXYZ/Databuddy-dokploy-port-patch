@@ -11,37 +11,37 @@ import { Card, Cards } from "@/components/docs";
 Feature flags allow you to control feature rollouts and conduct A/B testing without deploying new code. Enable or disable features instantly from your dashboard.
 
 <Callout type="info">
-  **Real-time Updates** | **Client-side Caching** | **Stale-While-Revalidate**
+  **Dashboard-controlled Rollouts** | **Client-side Caching** | **Stale-While-Revalidate**
 </Callout>
 
 ## Quick Start
 
-<Tabs items={['React/Next.js with Auth', 'React/Next.js Basic', 'Setup']}>
+<Tabs items={['React with User Context', 'Vue', 'Setup']}>
 
 <Tab>
 <CodeBlock language="tsx" filename="app.tsx">
   {`'use client';
 
   import { FlagsProvider, useFlag } from '@databuddy/sdk/react';
-  import { useSession } from '@databuddy/auth/client';
+  // Replace with your app's auth/session hook.
+  import { useCurrentUser } from '@/lib/auth-client';
 
   function App() {
-    const { data: session, isPending } = useSession();
+    const { user, isLoading } = useCurrentUser();
 
     return (
       <FlagsProvider
-        clientId="your-website-id"
+        clientId={process.env.NEXT_PUBLIC_DATABUDDY_CLIENT_ID!}
         apiUrl="https://api.databuddy.cc"
-        isPending={isPending}
-        user={session?.user ? {
-          userId: session.user.id,
-          email: session.user.email,
-          organizationId: session.user.organizationId,
-          teamId: session.user.teamId,
+        isPending={isLoading}
+        user={user ? {
+          userId: user.id,
+          organizationId: user.organizationId,
+          teamId: user.teamId,
           properties: {
-            plan: session.user.plan || 'free',
-            role: session.user.role || 'user',
-            region: 'us-east',
+            role: user.role,
+            workspace_type: user.workspaceType,
+            region: user.region,
           }
         } : undefined}
       >
@@ -66,32 +66,41 @@ Feature flags allow you to control feature rollouts and conduct A/B testing with
 </Tab>
 
 <Tab>
-<CodeBlock language="tsx" filename="app.tsx">
-  {`'use client';
+<CodeBlock language="ts" filename="main.ts">
+  {`import { createApp } from 'vue';
+  import { createFlagsPlugin } from '@databuddy/sdk/vue';
+  import App from './App.vue';
 
-  import { FlagsProvider, useFlag } from '@databuddy/sdk/react';
+  // currentUser should come from your app's auth/session store.
+  createApp(App)
+    .use(createFlagsPlugin({
+      clientId: import.meta.env.VITE_DATABUDDY_CLIENT_ID,
+      apiUrl: 'https://api.databuddy.cc',
+      user: {
+        userId: currentUser.id,
+        organizationId: currentUser.organizationId,
+        teamId: currentUser.teamId,
+        properties: {
+          role: currentUser.role,
+          workspace_type: currentUser.workspaceType,
+        },
+      },
+    }))
+    .mount('#app');`}
+</CodeBlock>
 
-  function App() {
-    return (
-      <FlagsProvider
-        clientId="your-client-id"
-        apiUrl="https://api.databuddy.cc"
-        user={{
-          userId: "user-123",
-          email: "user@example.com"
-        }}
-      >
-        <MyComponent />
-      </FlagsProvider>
-    );
-  }
+<CodeBlock language="vue" filename="FeatureGate.vue">
+  {`<script setup lang="ts">
+  import { useFlag } from '@databuddy/sdk/vue';
 
-  function MyComponent() {
-    const { on, loading } = useFlag('new-feature');
+  const newNav = useFlag('new-nav');
+  </script>
 
-    if (loading) return <Skeleton />;
-    return on ? <NewFeature /> : <OldFeature />;
-  }`}
+  <template>
+    <Skeleton v-if="newNav.loading.value" />
+    <NewNav v-else-if="newNav.on.value" />
+    <OldNav v-else />
+  </template>`}
 </CodeBlock>
 </Tab>
 
@@ -162,8 +171,8 @@ Access the full flags context for advanced use cases like checking multiple flag
     } = useFlags();
 
     // Simple boolean check
-    if (isOn('premium-feature')) {
-      // Show premium content
+    if (isOn('advanced-feature')) {
+      // Show the advanced experience
     }
 
     // Typed values (string, number, boolean)
@@ -175,7 +184,7 @@ Access the full flags context for advanced use cases like checking multiple flag
     console.log(flag.on, flag.loading, flag.status);
 
     // A/B test variants
-    const variant = getFlag('checkout-experiment').variant;
+    const variant = getFlag('export-flow').variant;
   }`}
 </CodeBlock>
 
@@ -212,7 +221,7 @@ Control how users are grouped for rollouts. In the dashboard, choose the **Rollo
 | Unit | Description | Use Case |
 |------|-------------|----------|
 | **User** | Each user individually | Standard per-user rollouts |
-| **Organization** | All org members together | Enterprise features, billing changes |
+| **Organization** | All org members together | Organization-wide launches |
 | **Team** | All team members together | Team-specific features |
 
 <CodeBlock language="tsx" filename="org-rollout.tsx">
@@ -221,7 +230,6 @@ Control how users are grouped for rollouts. In the dashboard, choose the **Rollo
     clientId="your-website-id"
     user={{
       userId: "user_123",
-      email: "user@company.com",
       organizationId: "org_abc",  // All org members get same result
       teamId: "team_456",         // All team members get same result
     }}
@@ -238,23 +246,23 @@ Control how users are grouped for rollouts. In the dashboard, choose the **Rollo
 
 Run experiments with multiple variants. Each user is consistently assigned to a variant based on their identifier. Use the `variant` field from `useFlag`:
 
-<CodeBlock language="tsx" filename="checkout-experiment.tsx">
+<CodeBlock language="tsx" filename="export-flow.tsx">
   {`import { useFlag } from '@databuddy/sdk/react';
 
-  function CheckoutPage() {
-    const { variant, loading } = useFlag('checkout-experiment');
+  function ExportPanel() {
+    const { variant, loading } = useFlag('export-flow');
 
     if (loading) return <Skeleton />;
 
     switch (variant) {
       case 'control':
-        return <CurrentCheckout />;
-      case 'simplified':
-        return <SimplifiedCheckout />;
-      case 'one-click':
-        return <OneClickCheckout />;
+        return <DefaultExportPanel />;
+      case 'compact':
+        return <CompactExportPanel />;
+      case 'guided':
+        return <GuidedExportPanel />;
       default:
-        return <CurrentCheckout />;
+        return <DefaultExportPanel />;
     }
   }`}
 </CodeBlock>
@@ -263,18 +271,23 @@ Run experiments with multiple variants. Each user is consistently assigned to a 
 
 1. Select "multivariant" as the flag type
 2. Add your variants with keys and values (string, number, or JSON)
-3. Set traffic weights for each variant (must sum to 100%)
-4. Optionally add targeting rules to show specific variants to certain users
+3. Add traffic weights when you need a weighted split, or omit weights for even assignment
+4. Avoid using force targeting rules to assign variants; rules are gates or overrides, not variant selectors
 
 <Callout type="info">
   **Consistent Assignment**: Users are deterministically assigned to variants based on their userId or email, ensuring they always see the same variant across sessions.
 </Callout>
 
+<Callout type="info">
+  **Variant weights**: If no variant weights are configured, users are split evenly. If you add weights, keep the totals easy to reason about, commonly 100.
+</Callout>
+
 **Use cases:**
 - **A/B Testing**: Compare two versions of a feature
-- **Pricing experiments**: Test different price points
 - **UI variations**: Test layouts, colors, copy
-- **Multi-armed bandits**: Run experiments with 3+ variants
+- **Onboarding flows**: Compare guided vs. compact setup paths
+- **Feature configuration**: Ship string, number, or JSON values without a deploy
+- **A/B/n experiments**: Run experiments with 3+ variants
 
 ## Configuration
 
@@ -284,14 +297,13 @@ Run experiments with multiple variants. Each user is consistently assigned to a 
     apiUrl="https://api.databuddy.cc"
     user={{
       userId: currentUser.id,
-      email: currentUser.email,
       organizationId: currentUser.organizationId,  // For org-level rollouts
       teamId: currentUser.teamId,                  // For team-level rollouts
       properties: {
-        plan: currentUser.plan || 'free',
         role: currentUser.role || 'user',
+        workspace_type: currentUser.workspaceType || 'personal',
         region: currentUser.region || 'us-east',
-        signupDate: currentUser.createdAt,
+        created_at: currentUser.createdAt,
       }
     }}
     isPending={isLoadingSession}
@@ -329,6 +341,19 @@ Run experiments with multiple variants. Each user is consistently assigned to a 
 | `organizationId` | string | Organization ID for org-level rollouts |
 | `teamId` | string | Team ID for team-level rollouts |
 | `properties` | object | Custom properties for targeting rules |
+
+### Environments
+
+Pass `environment` when you maintain separate flag definitions for production, staging, or previews. If `environment` is omitted, the SDK fetches definitions that do not have an environment assigned.
+
+<CodeBlock language="tsx">
+  {`<FlagsProvider
+    clientId={process.env.NEXT_PUBLIC_DATABUDDY_CLIENT_ID!}
+    environment={process.env.NEXT_PUBLIC_VERCEL_ENV ?? "production"}
+  >
+    <App />
+  </FlagsProvider>`}
+</CodeBlock>
 
 ## Flag States
 
@@ -407,13 +432,12 @@ Target specific users or groups from your dashboard:
 
 ### Organization & Team Rollouts
 
-For enterprise features or billing changes that should apply to all members of an organization:
+For launches that should apply to all members of an organization:
 
 <CodeBlock language="tsx">
   {`<FlagsProvider
     user={{
       userId: "user-123",
-      email: "user@company.com",
       organizationId: "org_abc",  // All org members get same result
       teamId: "team_456",         // All team members get same result
     }}
@@ -422,20 +446,40 @@ For enterprise features or billing changes that should apply to all members of a
 
 Then in the dashboard, set the **Rollout Unit** to "Organization" or "Team" when configuring your rollout flag.
 
+### Target Groups
+
+Target groups are reusable audiences you can attach to flags. They can match:
+
+- `userId`
+- `email`
+- custom `properties` fields
+
+Supported rule operators include `equals`, `contains`, `starts_with`, `ends_with`, `in`, and `not_in`. Property rules also support `exists` and `not_exists`.
+
+Evaluation order matters:
+
+1. Direct user targeting rules
+2. Attached target group rules
+3. Multivariant assignment
+4. Rollout percentage
+5. Boolean default value
+
+Direct rules and target group matches short-circuit evaluation as force on/off rules. For A/B/n experiments, use them to control eligibility carefully, but do not rely on them to choose a specific variant. If you need both strict eligibility and variant measurement, use a boolean eligibility flag plus a separate multivariant assignment flag.
+
 ### Advanced Targeting with Custom Properties
 
 <CodeBlock language="tsx">
   {`<FlagsProvider
     user={{
       userId: "user-123",
-      email: "user@example.com",
       organizationId: "org_abc",
       teamId: "team_456",
       properties: {
-        plan: 'premium',           // Plan-based rollouts
+        role: 'admin',             // Role-based rollouts
+        workspace_type: 'team',    // Workspace targeting
         region: 'us-east',         // Geographic targeting
-        signupDate: '2024-01-01',  // Time-based targeting
-        experimentGroup: 'A',      // A/B testing
+        created_at: '2024-01-01',  // Time-based targeting
+        cohort: 'activation-a',    // Experiment or onboarding cohort
         featureUsage: {
           reportsViewed: 25        // Behavioral targeting
         }
@@ -445,12 +489,88 @@ Then in the dashboard, set the **Rollout Unit** to "Organization" or "Team" when
 </CodeBlock>
 
 **Targeting Examples:**
-- **Plan-based**: `plan: 'premium'` → Show premium features
+- **Role-based**: `role: 'admin'` → Show admin workflows
+- **Workspace-based**: `workspace_type: 'team'` → Group-specific experience
 - **Geographic**: `region: 'us-east'` → Test in specific regions
 - **Behavioral**: `reportsViewed > 10` → Target power users
-- **Time-based**: `signupDate > '2024-01-01'` → New vs. existing users
+- **Time-based**: `created_at > '2024-01-01'` → New vs. existing users
 
 ## Best Practices
+
+### Measure Flag Outcomes
+
+Treat flag metrics as two separate questions: who was exposed, and what changed afterward. The browser SDK emits `$flag_evaluated` for single-flag fetches when the tracker is available, but bulk-prefetched or cached reads may not emit a fresh exposure event. For experiments where exposure accounting must be complete, track one explicit exposure event when the meaningful flagged view appears.
+
+<CodeBlock language="tsx">
+  {`import { track } from "@databuddy/sdk";
+import { useEffect, useRef } from "react";
+import { useFlag } from "@databuddy/sdk/react";
+
+function ExportPanel() {
+  const exportFlow = useFlag("export-flow");
+  const trackedExposure = useRef(false);
+
+  useEffect(() => {
+    if (exportFlow.loading || trackedExposure.current) {
+      return;
+    }
+
+    trackedExposure.current = true;
+    track("feature_exposed", {
+      flag_key: "export-flow",
+      variant: exportFlow.variant ?? "control",
+      feature: "report_export",
+    });
+  }, [exportFlow.loading, exportFlow.variant]);
+
+  return exportFlow.variant === "compact" ? (
+    <CompactExportPanel />
+  ) : (
+    <DefaultExportPanel />
+  );
+}`}
+</CodeBlock>
+
+Then track the downstream outcome and include the same flag key and variant.
+
+<CodeBlock language="tsx">
+  {`import { track } from "@databuddy/sdk";
+import { useFlag } from "@databuddy/sdk/react";
+
+function ExportButton() {
+  const exportFlow = useFlag("export-flow");
+
+  async function handleExport() {
+    const result = await runExport();
+
+    track("report_exported", {
+      flag_key: "export-flow",
+      variant: exportFlow.variant ?? "control",
+      status: result.ok ? "success" : "failed",
+      format: result.format,
+    });
+  }
+
+  return exportFlow.variant === "compact" ? (
+    <CompactExportButton onClick={handleExport} />
+  ) : (
+    <DefaultExportButton onClick={handleExport} />
+  );
+}`}
+</CodeBlock>
+
+Use one meaningful exposure event and one meaningful outcome event. Avoid tracking every render of a flagged component.
+
+### Flag Planning Checklist
+
+Before adding a flag, decide:
+
+- **Owner**: who removes or expands the flag later
+- **Default**: what users see if evaluation fails
+- **Rollout unit**: user, organization, or team
+- **Targeting inputs**: which IDs and low-cardinality properties are required
+- **Success metric**: the one outcome event that proves the rollout helped
+- **Cleanup date**: when the flag should be removed or made permanent
 
 ### Use the Right API
 
@@ -463,7 +583,7 @@ Then in the dashboard, set the **Rollout Unit** to "Organization" or "Team" when
   if (flag.status === 'ready') { ... }
 
   // A/B test variants
-  const { variant } = useFlag('checkout-test');
+  const { variant } = useFlag('export-flow');
 
   // Typed values via context
   const { getValue } = useFlags();
@@ -471,7 +591,7 @@ Then in the dashboard, set the **Rollout Unit** to "Organization" or "Team" when
 
   // Quick boolean via context (no loading state)
   const { isOn } = useFlags();
-  if (isOn('premium')) { ... }`}
+  if (isOn('advanced-search')) { ... }`}
 </CodeBlock>
 
 ### Handle Loading States
@@ -505,21 +625,59 @@ Then in the dashboard, set the **Rollout Unit** to "Organization" or "Team" when
 ### Update User Context
 
 <CodeBlock language="tsx">
-  {`function UpgradeButton() {
-    const { updateUser } = useFlags();
+  {`function WorkspaceSwitcher() {
+    const { updateUser, refresh } = useFlags();
 
-    const handleUpgrade = () => {
+    const handleWorkspaceChange = async (workspace: Workspace) => {
       // Update user context to refresh flags
       updateUser({
         userId: user.id,
-        email: user.email,
-        properties: { plan: 'premium' }
+        organizationId: workspace.organizationId,
+        teamId: workspace.teamId,
+        properties: {
+          role: workspace.role,
+          workspace_type: workspace.type
+        }
       });
+
+      // Clear stored flag values when switching between unrelated workspaces.
+      await refresh(true);
     };
 
-    return <button onClick={handleUpgrade}>Upgrade</button>;
+    return <WorkspaceMenu onChange={handleWorkspaceChange} />;
   }`}
 </CodeBlock>
+
+## Debug With DevTools
+
+Install DevTools in local development to inspect the flag manager that `FlagsProvider` or Vue `createFlagsPlugin` mounted on the page.
+
+<CodeBlock language="bash">
+  {`bun add -d @databuddy/devtools`}
+</CodeBlock>
+
+<CodeBlock language="tsx">
+  {`import { DatabuddyDevtools } from "@databuddy/devtools/react";
+
+export function AppShell({ children }: { children: React.ReactNode }) {
+  return (
+    <>
+      {children}
+      <DatabuddyDevtools enabled={process.env.NODE_ENV !== "production"} />
+    </>
+  );
+}`}
+</CodeBlock>
+
+Use the flag panel to verify:
+
+- `clientId`, API host, environment, and readiness
+- user context used for targeting
+- evaluated values, variants, reasons, and sources
+- whether a value came from API, cache, default, error, or local override
+- local overrides before you ship a UI branch
+
+When you paste an API key with `manage:flags` scope at runtime, DevTools can also create, edit, and delete flag definitions. Do not hard-code management keys in source, and clear local overrides before validating production-like behavior.
 
 ## Debug Mode
 
@@ -546,6 +704,9 @@ Enable debug mode to see flag evaluation in the console:
   </Card>
   <Card title="Configuration" href="/docs/sdk/configuration">
     All configuration options
+  </Card>
+  <Card title="DevTools" href="/docs/sdk/devtools">
+    Inspect flag values, variants, and local overrides
   </Card>
 </Cards>
 

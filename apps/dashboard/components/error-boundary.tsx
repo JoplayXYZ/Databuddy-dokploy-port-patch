@@ -1,12 +1,11 @@
 "use client";
 
 import { trackError } from "@databuddy/sdk";
-import { ArrowLeftIcon } from "@phosphor-icons/react/dist/ssr";
-import { WarningCircleIcon } from "@phosphor-icons/react/dist/ssr";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ds/button";
 import { Card } from "@/components/ds/card";
+import { ArrowLeftIcon, WarningCircleIcon } from "@databuddy/ui/icons";
 
 interface ErrorBoundaryProps {
 	children: React.ReactNode;

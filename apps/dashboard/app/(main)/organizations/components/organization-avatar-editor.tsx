@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowsClockwise, PencilSimple } from "@phosphor-icons/react/dist/ssr";
+import { ArrowsClockwiseIcon, PencilSimpleIcon } from "@databuddy/ui/icons";
 import { nanoid } from "nanoid";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -73,7 +73,7 @@ export function OrganizationAvatarEditor({
 						onClick={() => setIsModalOpen(true)}
 						type="button"
 					>
-						<PencilSimple className="text-accent" size={16} />
+						<PencilSimpleIcon className="text-accent" size={16} />
 					</button>
 				</div>
 				<div className="space-y-0.5">
@@ -111,7 +111,7 @@ export function OrganizationAvatarEditor({
 										size="md"
 										variant="secondary"
 									>
-										<ArrowsClockwise size={16} />
+										<ArrowsClockwiseIcon size={16} />
 									</Button>
 								</div>
 								<Field.Description>

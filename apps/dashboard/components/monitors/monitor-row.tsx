@@ -1,14 +1,7 @@
 "use client";
 
-import { ArrowSquareOutIcon } from "@phosphor-icons/react";
-import { DotsThreeIcon } from "@phosphor-icons/react";
-import { HeartbeatIcon } from "@phosphor-icons/react";
-import { LightningIcon } from "@phosphor-icons/react";
-import { PauseIcon } from "@phosphor-icons/react";
-import { PencilSimpleIcon } from "@phosphor-icons/react";
-import { PlayIcon } from "@phosphor-icons/react";
-import { TrashIcon } from "@phosphor-icons/react";
 import { useMutation } from "@tanstack/react-query";
+import { PrefetchZone } from "@/components/ds/prefetch-zone";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -16,14 +9,24 @@ import { FaviconImage } from "@/components/analytics/favicon-image";
 import { TransferToOrgDialog } from "@/components/transfer-to-org-dialog";
 import { Badge } from "@/components/ds/badge";
 import { DropdownMenu } from "@/components/ds/dropdown-menu";
-import { Skeleton } from "@/components/ds/skeleton";
+import { Skeleton } from "@databuddy/ui";
 import { useBatchDynamicQuery } from "@/hooks/use-dynamic-query";
-import dayjs from "@/lib/dayjs";
+import { dayjs } from "@databuddy/ui";
 import { orpc } from "@/lib/orpc";
-import { formatDateOnly } from "@/lib/time";
-import { buildUptimeHeatmapDays } from "@/lib/uptime/heatmap-days";
-import { UptimeHeatmapStrip } from "@/lib/uptime/heatmap-strip";
+import { formatDateOnly } from "@databuddy/ui";
+import { buildUptimeHeatmapDays } from "@databuddy/ui/uptime";
+import { UptimeHeatmapStrip } from "@databuddy/ui/uptime";
 import { cn } from "@/lib/utils";
+import {
+	ArrowSquareOutIcon,
+	DotsThreeIcon,
+	HeartbeatIcon,
+	LightningIcon,
+	PauseIcon,
+	PencilSimpleIcon,
+	PlayIcon,
+	TrashIcon,
+} from "@databuddy/ui/icons";
 
 const GRANULARITY_LABELS: Record<string, string> = {
 	minute: "1 min",
@@ -366,80 +369,83 @@ export function MonitorRow({
 	};
 
 	return (
-		<Link
-			className={cn(
-				"group flex items-center hover:bg-interactive-hover",
-				!isActive && "opacity-50"
-			)}
-			href={`/monitors/${schedule.id}`}
-			onClick={handleClick}
-		>
-			<div className="flex flex-1 items-center gap-4 px-5 py-3">
-				<div
-					className={cn(
-						"flex size-10 shrink-0 items-center justify-center rounded-lg border border-border/60",
-						isActive
-							? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-							: "bg-secondary text-muted-foreground"
-					)}
-				>
-					{displayUrl ? (
-						<FaviconImage
-							altText={`${displayName} favicon`}
-							domain={displayUrl}
-							fallbackIcon={
-								<HeartbeatIcon className="size-5" weight="duotone" />
-							}
-							size={20}
-						/>
-					) : (
-						<HeartbeatIcon className="size-5" weight="duotone" />
-					)}
-				</div>
-				<div className="min-w-0 flex-1">
-					<div className="flex items-center gap-2">
-						<span className="truncate font-medium text-foreground text-sm">
-							{displayName}
-						</span>
-						<Badge
-							className="shrink-0"
-							variant={isActive ? "success" : "warning"}
-						>
-							{isActive ? "Active" : "Paused"}
-						</Badge>
+		<PrefetchZone href={`/monitors/${schedule.id}`}>
+			<Link
+				className={cn(
+					"group flex items-center hover:bg-interactive-hover",
+					!isActive && "opacity-50"
+				)}
+				href={`/monitors/${schedule.id}`}
+				onClick={handleClick}
+			>
+				<div className="flex flex-1 items-center gap-4 px-5 py-3">
+					<div
+						className={cn(
+							"flex size-10 shrink-0 items-center justify-center rounded-lg border border-border/60",
+							isActive
+								? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+								: "bg-secondary text-muted-foreground"
+						)}
+					>
+						{displayUrl ? (
+							<FaviconImage
+								altText={`${displayName} favicon`}
+								domain={displayUrl}
+								fallbackIcon={
+									<HeartbeatIcon className="size-5" weight="duotone" />
+								}
+								size={20}
+							/>
+						) : (
+							<HeartbeatIcon className="size-5" weight="duotone" />
+						)}
 					</div>
-					<div className="mt-0.5 flex items-center gap-1.5">
-						{displayUrl && (
-							<span className="truncate text-muted-foreground text-xs">
-								{displayUrl}
+					<div className="min-w-0 flex-1">
+						<div className="flex items-center gap-2">
+							<span className="truncate font-medium text-foreground text-sm">
+								{displayName}
 							</span>
-						)}
-						{displayUrl && (
-							<span className="text-muted-foreground text-xs">·</span>
-						)}
-						<span className="shrink-0 text-muted-foreground text-xs tabular-nums">
-							{GRANULARITY_LABELS[schedule.granularity] || schedule.granularity}
-						</span>
+							<Badge
+								className="shrink-0"
+								variant={isActive ? "success" : "warning"}
+							>
+								{isActive ? "Active" : "Paused"}
+							</Badge>
+						</div>
+						<div className="mt-0.5 flex items-center gap-1.5">
+							{displayUrl && (
+								<span className="truncate text-muted-foreground text-xs">
+									{displayUrl}
+								</span>
+							)}
+							{displayUrl && (
+								<span className="text-muted-foreground text-xs">·</span>
+							)}
+							<span className="shrink-0 text-muted-foreground text-xs tabular-nums">
+								{GRANULARITY_LABELS[schedule.granularity] ||
+									schedule.granularity}
+							</span>
+						</div>
 					</div>
 				</div>
-			</div>
 
-			<div className="hidden shrink-0 items-center gap-3 pr-2 lg:flex">
-				<MiniHeatmap
-					isActive={isActive}
-					scheduleId={schedule.id}
-					websiteId={schedule.websiteId}
-				/>
-			</div>
+				<div className="hidden shrink-0 items-center gap-3 pr-2 lg:flex">
+					<MiniHeatmap
+						isActive={isActive}
+						scheduleId={schedule.id}
+						websiteId={schedule.websiteId}
+					/>
+				</div>
 
-			<div className="flex shrink-0 items-center pr-4">
-				<MonitorActions
-					onDeleteAction={onDeleteAction}
-					onEditAction={onEditAction}
-					onRefetchAction={onRefetchAction}
-					schedule={schedule}
-				/>
-			</div>
-		</Link>
+				<div className="flex shrink-0 items-center pr-4">
+					<MonitorActions
+						onDeleteAction={onDeleteAction}
+						onEditAction={onEditAction}
+						onRefetchAction={onRefetchAction}
+						schedule={schedule}
+					/>
+				</div>
+			</Link>
+		</PrefetchZone>
 	);
 }

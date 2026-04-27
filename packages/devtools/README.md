@@ -36,9 +36,9 @@ It does not require changes to `@databuddy/sdk` or the tracker script.
 ## Manual Mount
 
 ```ts
-import { mountDatabuddyDevtools } from "@databuddy/devtools/react";
+import { mountDevtools } from "@databuddy/devtools/react";
 
-const unmount = mountDatabuddyDevtools({ initialOpen: true });
+const unmount = mountDevtools();
 ```
 
 ## Shortcut
@@ -51,4 +51,7 @@ Press `Cmd/Ctrl + Shift + D` to toggle the overlay.
 - Client, anonymous, and session IDs
 - Observed `track`, `screenView`, `flush`, and `clear` calls
 - Manual test event, screen view, flush, and clear actions
+- Feature flag inspection, local overrides, and refresh actions
+- Flag definition management with a runtime API key that has `manage:flags`
+- Queue, identity, storage, and diagnostic panels
 - Moveable, minimized overlay with local position persistence

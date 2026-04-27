@@ -1,13 +1,12 @@
 "use client";
 
-import { ArrowLeftIcon } from "@phosphor-icons/react";
-import { ShieldWarningIcon } from "@phosphor-icons/react";
 import Link from "next/link";
 import { parseAsString, useQueryState } from "nuqs";
 import { Suspense } from "react";
 import { Button } from "@/components/ds/button";
 import { Spinner } from "@/components/ds/spinner";
 import { Text } from "@/components/ds/text";
+import { ArrowLeftIcon, ShieldWarningIcon } from "@databuddy/ui/icons";
 
 const ERROR_MESSAGES: Record<string, { title: string; description: string }> = {
 	account_already_linked_to_different_user: {

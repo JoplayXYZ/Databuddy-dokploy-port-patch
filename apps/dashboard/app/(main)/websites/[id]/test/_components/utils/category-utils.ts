@@ -1,13 +1,15 @@
-import { ChartLineUpIcon } from "@phosphor-icons/react";
-import { ClockIcon } from "@phosphor-icons/react";
-import { CursorClickIcon } from "@phosphor-icons/react";
-import { DevicesIcon } from "@phosphor-icons/react";
-import { GlobeIcon } from "@phosphor-icons/react";
-import { LinkIcon } from "@phosphor-icons/react";
-import { SquaresFourIcon } from "@phosphor-icons/react";
-import { UsersIcon } from "@phosphor-icons/react";
-import { WarningIcon } from "@phosphor-icons/react";
 import type { ElementType } from "react";
+import {
+	ChartLineUpIcon,
+	ClockIcon,
+	CursorClickIcon,
+	DevicesIcon,
+	GlobeIcon,
+	LinkIcon,
+	SquaresFourIcon,
+	UsersIcon,
+	WarningIcon,
+} from "@databuddy/ui/icons";
 
 /** Icon mapping for query type categories */
 export const CATEGORY_ICONS: Record<string, ElementType> = {

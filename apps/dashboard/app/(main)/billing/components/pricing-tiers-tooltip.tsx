@@ -1,9 +1,9 @@
 "use client";
 
-import { InfoIcon } from "@phosphor-icons/react/dist/ssr";
-import { Tooltip } from "@/components/ds/tooltip";
+import { Tooltip } from "@databuddy/ui";
 import { formatLocaleNumber } from "@/lib/format-locale-number";
 import { cn } from "@/lib/utils";
+import { InfoIcon } from "@databuddy/ui/icons";
 
 interface PricingTier {
 	amount: number;

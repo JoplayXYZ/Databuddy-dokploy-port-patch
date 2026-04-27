@@ -1,10 +1,9 @@
-import { CheckIcon } from "@phosphor-icons/react/dist/ssr";
-import { CopyIcon } from "@phosphor-icons/react/dist/ssr";
 import { Button } from "@/components/ds/button";
-import { Tooltip } from "@/components/ds/tooltip";
+import { Tooltip } from "@databuddy/ui";
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
 import { cn } from "@/lib/utils";
 import type { Flag } from "./types";
+import { CheckIcon, CopyIcon } from "@databuddy/ui/icons";
 
 export function FlagKey({
 	flag,

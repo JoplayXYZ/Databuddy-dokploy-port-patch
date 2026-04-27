@@ -3,7 +3,7 @@ import type { DatabuddyTracker } from "./types";
 
 /** Check if the full tracker instance (`window.databuddy`) is available. */
 export function isTrackerAvailable(): boolean {
-	return typeof window !== "undefined" && !!window.databuddy;
+	return typeof window !== "undefined" && !!(window.databuddy || window.db);
 }
 
 /** Returns the `window.databuddy` tracker instance, or `null` if unavailable. */

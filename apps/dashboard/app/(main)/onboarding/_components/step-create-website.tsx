@@ -2,7 +2,6 @@
 
 import { track } from "@databuddy/sdk";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { GlobeIcon } from "@phosphor-icons/react/dist/ssr";
 import { useController, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -11,6 +10,7 @@ import { Button } from "@/components/ds/button";
 import { Field } from "@/components/ds/field";
 import { Input } from "@/components/ds/input";
 import { useCreateWebsite } from "@/hooks/use-websites";
+import { GlobeIcon } from "@databuddy/ui/icons";
 
 const domainRegex =
 	/^(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,63}$/;

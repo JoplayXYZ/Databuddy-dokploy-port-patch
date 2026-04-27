@@ -1,7 +1,5 @@
 import { and, db, eq } from "@databuddy/db";
 import { uptimeSchedules } from "@databuddy/db/schema";
-import { ratelimit } from "@databuddy/redis";
-import { Client } from "@upstash/qstash";
 import { randomUUIDv7 } from "bun";
 import { z } from "zod";
 import { rpcError } from "../errors";
@@ -9,21 +7,21 @@ import { logger } from "../lib/logger";
 import { protectedProcedure } from "../orpc";
 import { withFeatureAccess } from "../procedures/with-feature-access";
 import { withWorkspace } from "../procedures/with-workspace";
+import {
+	createScheduleWithScheduler,
+	deleteScheduleWithScheduler,
+	pauseScheduleWithScheduler,
+	resumeScheduleWithScheduler,
+	triggerManualUptimeCheck,
+	updateScheduleWithScheduler,
+	type UptimeScheduleUpdate,
+} from "../services/uptime-lifecycle";
+import {
+	CRON_GRANULARITIES,
+	hasUptimeSchedule,
+} from "../services/uptime-scheduler";
 
 const monitorsProcedure = protectedProcedure.use(withFeatureAccess("monitors"));
-
-const client = new Client({ token: process.env.UPSTASH_QSTASH_TOKEN });
-
-const CRON_GRANULARITIES = {
-	minute: "* * * * *",
-	five_minutes: "*/5 * * * *",
-	ten_minutes: "*/10 * * * *",
-	thirty_minutes: "*/30 * * * *",
-	hour: "0 * * * *",
-	six_hours: "0 */6 * * *",
-	twelve_hours: "0 */12 * * *",
-	day: "0 0 * * *",
-} as const;
 
 const granularityEnum = z.enum([
 	"minute",
@@ -36,8 +34,15 @@ const granularityEnum = z.enum([
 	"day",
 ]);
 
-const isProd = process.env.NODE_ENV === "production";
-const UPTIME_URL_GROUP = isProd ? "uptime" : "uptime-staging";
+function parseStoredGranularity(
+	value: string
+): z.infer<typeof granularityEnum> {
+	const parsed = granularityEnum.safeParse(value);
+	if (!parsed.success) {
+		throw rpcError.internal(`Invalid monitor granularity: ${value}`);
+	}
+	return parsed.data;
+}
 
 async function getScheduleAndAuthorize(
 	scheduleId: string,
@@ -60,35 +65,6 @@ async function getScheduleAndAuthorize(
 	return schedule;
 }
 
-async function createQStashSchedule(
-	scheduleId: string,
-	granularity: z.infer<typeof granularityEnum>
-) {
-	await client.schedules.create({
-		scheduleId,
-		destination: UPTIME_URL_GROUP,
-		cron: CRON_GRANULARITIES[granularity],
-		headers: {
-			"Content-Type": "application/json",
-			"X-Schedule-Id": scheduleId,
-		},
-	});
-}
-
-function triggerInitialCheck(scheduleId: string) {
-	client
-		.publish({
-			urlGroup: UPTIME_URL_GROUP,
-			headers: {
-				"Content-Type": "application/json",
-				"X-Schedule-Id": scheduleId,
-			},
-		})
-		.catch((error) =>
-			logger.error({ scheduleId, error }, "Initial check failed")
-		);
-}
-
 const getScheduleOutputSchema = z
 	.object({
 		id: z.string(),
@@ -104,7 +80,7 @@ const getScheduleOutputSchema = z
 		jsonParsingConfig: z.unknown().nullable(),
 		createdAt: z.union([z.date(), z.string()]),
 		updatedAt: z.union([z.date(), z.string()]),
-		qstashStatus: z.enum(["active", "missing"]),
+		schedulerStatus: z.enum(["active", "missing"]),
 		website: z
 			.object({
 				id: z.string(),
@@ -120,7 +96,7 @@ const getScheduleOutputSchema = z
 const scheduleOutputSchema = z.record(z.string(), z.unknown());
 
 const listScheduleItemSchema = getScheduleOutputSchema
-	.omit({ qstashStatus: true })
+	.omit({ schedulerStatus: true })
 	.loose();
 
 export const uptimeRouter = {
@@ -191,7 +167,7 @@ export const uptimeRouter = {
 
 	getSchedule: monitorsProcedure
 		.route({
-			description: "Returns schedule with QStash status.",
+			description: "Returns schedule with BullMQ scheduler status.",
 			method: "POST",
 			path: "/uptime/getSchedule",
 			summary: "Get schedule",
@@ -200,12 +176,12 @@ export const uptimeRouter = {
 		.input(z.object({ scheduleId: z.string() }))
 		.output(getScheduleOutputSchema)
 		.handler(async ({ context, input }) => {
-			const [dbSchedule, qstashSchedule] = await Promise.all([
+			const [dbSchedule, schedulerActive] = await Promise.all([
 				db.query.uptimeSchedules.findFirst({
 					where: eq(uptimeSchedules.id, input.scheduleId),
 					with: { website: true },
 				}),
-				client.schedules.get(input.scheduleId).catch(() => null),
+				hasUptimeSchedule(input.scheduleId).catch(() => false),
 			]);
 
 			if (!dbSchedule) {
@@ -220,7 +196,7 @@ export const uptimeRouter = {
 
 			return {
 				...dbSchedule,
-				qstashStatus: qstashSchedule ? "active" : "missing",
+				schedulerStatus: schedulerActive ? "active" : "missing",
 			};
 		}),
 
@@ -278,7 +254,7 @@ export const uptimeRouter = {
 
 			const scheduleId = randomUUIDv7();
 
-			await db.insert(uptimeSchedules).values({
+			await createScheduleWithScheduler({
 				id: scheduleId,
 				organizationId,
 				websiteId: input.websiteId ?? null,
@@ -292,17 +268,6 @@ export const uptimeRouter = {
 				jsonParsingConfig: input.jsonParsingConfig ?? { enabled: true },
 			});
 
-			try {
-				await createQStashSchedule(scheduleId, input.granularity);
-			} catch (error) {
-				await db
-					.delete(uptimeSchedules)
-					.where(eq(uptimeSchedules.id, scheduleId));
-				logger.error({ scheduleId, error }, "QStash failed, rolled back");
-				throw rpcError.internal("Failed to create monitor");
-			}
-
-			triggerInitialCheck(scheduleId);
 			logger.info({ scheduleId, url: input.url }, "Schedule created");
 
 			const created = await db.query.uptimeSchedules.findFirst({
@@ -343,17 +308,12 @@ export const uptimeRouter = {
 		)
 		.output(scheduleOutputSchema)
 		.handler(async ({ context, input }) => {
-			await getScheduleAndAuthorize(input.scheduleId, context);
+			const existingSchedule = await getScheduleAndAuthorize(
+				input.scheduleId,
+				context
+			);
 
-			const updateData: {
-				name?: string | null;
-				granularity?: string;
-				cron?: string;
-				timeout?: number | null;
-				cacheBust?: boolean;
-				jsonParsingConfig?: { enabled: boolean };
-				updatedAt: Date;
-			} = {
+			const updateData: UptimeScheduleUpdate = {
 				updatedAt: new Date(),
 			};
 
@@ -363,8 +323,6 @@ export const uptimeRouter = {
 			}
 
 			if (input.granularity) {
-				await client.schedules.delete(input.scheduleId);
-				await createQStashSchedule(input.scheduleId, input.granularity);
 				updateData.granularity = input.granularity;
 				updateData.cron = CRON_GRANULARITIES[input.granularity];
 			}
@@ -381,10 +339,11 @@ export const uptimeRouter = {
 				updateData.jsonParsingConfig = input.jsonParsingConfig;
 			}
 
-			await db
-				.update(uptimeSchedules)
-				.set(updateData)
-				.where(eq(uptimeSchedules.id, input.scheduleId));
+			await updateScheduleWithScheduler(
+				input.scheduleId,
+				updateData,
+				existingSchedule
+			);
 
 			logger.info({ scheduleId: input.scheduleId }, "Schedule updated");
 
@@ -414,12 +373,7 @@ export const uptimeRouter = {
 		.handler(async ({ context, input }) => {
 			await getScheduleAndAuthorize(input.scheduleId, context);
 
-			await Promise.all([
-				client.schedules.delete(input.scheduleId),
-				db
-					.delete(uptimeSchedules)
-					.where(eq(uptimeSchedules.id, input.scheduleId)),
-			]);
+			await deleteScheduleWithScheduler(input.scheduleId);
 
 			logger.info({ scheduleId: input.scheduleId }, "Schedule deleted");
 			return { success: true };
@@ -445,19 +399,18 @@ export const uptimeRouter = {
 			}
 
 			try {
-				await Promise.all([
-					input.pause
-						? client.schedules.pause({ schedule: input.scheduleId })
-						: client.schedules.resume({ schedule: input.scheduleId }),
-					db
-						.update(uptimeSchedules)
-						.set({ isPaused: input.pause, updatedAt: new Date() })
-						.where(eq(uptimeSchedules.id, input.scheduleId)),
-				]);
+				if (input.pause) {
+					await pauseScheduleWithScheduler(input.scheduleId);
+				} else {
+					await resumeScheduleWithScheduler(
+						input.scheduleId,
+						parseStoredGranularity(schedule.granularity)
+					);
+				}
 			} catch (error) {
 				logger.error(
 					{ scheduleId: input.scheduleId, error },
-					"Failed to toggle QStash schedule"
+					"Failed to toggle uptime scheduler"
 				);
 				throw rpcError.internal("Failed to update monitor status");
 			}
@@ -488,13 +441,7 @@ export const uptimeRouter = {
 			}
 
 			try {
-				await Promise.all([
-					client.schedules.pause({ schedule: input.scheduleId }),
-					db
-						.update(uptimeSchedules)
-						.set({ isPaused: true, updatedAt: new Date() })
-						.where(eq(uptimeSchedules.id, input.scheduleId)),
-				]);
+				await pauseScheduleWithScheduler(input.scheduleId);
 			} catch (error) {
 				logger.error(
 					{ scheduleId: input.scheduleId, error },
@@ -572,30 +519,7 @@ export const uptimeRouter = {
 		.handler(async ({ context, input }) => {
 			const schedule = await getScheduleAndAuthorize(input.scheduleId, context);
 
-			if (schedule.isPaused) {
-				throw rpcError.badRequest("Cannot trigger check on a paused monitor");
-			}
-
-			const rl = await ratelimit(`manual-check:${input.scheduleId}`, 5, 60);
-			if (!rl.success) {
-				throw rpcError.rateLimited(60);
-			}
-
-			try {
-				await client.publish({
-					urlGroup: UPTIME_URL_GROUP,
-					headers: {
-						"Content-Type": "application/json",
-						"X-Schedule-Id": input.scheduleId,
-					},
-				});
-			} catch (error) {
-				logger.error(
-					{ scheduleId: input.scheduleId, error },
-					"Manual check failed"
-				);
-				throw rpcError.internal("Failed to trigger check");
-			}
+			await triggerManualUptimeCheck(input.scheduleId, schedule.isPaused);
 
 			logger.info({ scheduleId: input.scheduleId }, "Manual check triggered");
 			return { success: true };
@@ -619,13 +543,10 @@ export const uptimeRouter = {
 			}
 
 			try {
-				await Promise.all([
-					client.schedules.resume({ schedule: input.scheduleId }),
-					db
-						.update(uptimeSchedules)
-						.set({ isPaused: false, updatedAt: new Date() })
-						.where(eq(uptimeSchedules.id, input.scheduleId)),
-				]);
+				await resumeScheduleWithScheduler(
+					input.scheduleId,
+					parseStoredGranularity(schedule.granularity)
+				);
 			} catch (error) {
 				logger.error(
 					{ scheduleId: input.scheduleId, error },

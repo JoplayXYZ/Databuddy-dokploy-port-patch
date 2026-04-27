@@ -24,8 +24,8 @@ export const STYLES = `
   --success-fg: rgb(134, 239, 172);
   --warn: rgb(250, 204, 21);
   --warn-fg: rgb(253, 224, 71);
-  --danger: rgb(248, 113, 113);
-  --danger-fg: rgb(252, 165, 165);
+  --destructive: rgb(248, 113, 113);
+  --destructive-fg: rgb(252, 165, 165);
   --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
   --dur-fast: 120ms;
   --dur: 160ms;
@@ -162,7 +162,7 @@ export const STYLES = `
 .dot--mini::after { inset: -2px; }
 .dot--ok { background: var(--success); color: var(--success); }
 .dot--warn { background: var(--warn); color: var(--warn); }
-.dot--danger { background: var(--danger); color: var(--danger); }
+.dot--destructive { background: var(--destructive); color: var(--destructive); }
 .dot--idle { background: rgb(120, 120, 130); color: rgb(120, 120, 130); }
 .dot--idle::after { animation: none; opacity: 0; }
 .dot--mini.dot--ok::after, .dot--mini.dot--idle::after { animation: none; opacity: 0; }
@@ -383,10 +383,10 @@ export const STYLES = `
 }
 .btn--compact svg { width: 11px; height: 11px; }
 
-.btn--danger { color: var(--danger-fg); border-color: rgba(248, 113, 113, 0.2); }
-.btn--danger:hover { background: rgba(248, 113, 113, 0.1); border-color: rgba(248, 113, 113, 0.32); }
-.btn--ghost.btn--danger { border-color: transparent; }
-.btn--ghost.btn--danger:hover { background: rgba(248, 113, 113, 0.1); border-color: transparent; }
+.btn--destructive { color: var(--destructive-fg); border-color: rgba(248, 113, 113, 0.2); }
+.btn--destructive:hover { background: rgba(248, 113, 113, 0.1); border-color: rgba(248, 113, 113, 0.32); }
+.btn--ghost.btn--destructive { border-color: transparent; }
+.btn--ghost.btn--destructive:hover { background: rgba(248, 113, 113, 0.1); border-color: transparent; }
 
 /* ---------- Inputs ---------- */
 
@@ -632,7 +632,7 @@ input[type="checkbox"]:focus-visible { outline: 2px solid var(--accent-ring); ou
   background: rgba(99, 102, 241, 0.1);
 }
 .flag-source-tag--error {
-  color: var(--danger-fg);
+  color: var(--destructive-fg);
   border-color: rgba(248, 113, 113, 0.28);
   background: rgba(248, 113, 113, 0.08);
 }
@@ -664,13 +664,13 @@ input[type="checkbox"]:focus-visible { outline: 2px solid var(--accent-ring); ou
 }
 
 .form-error {
-  color: var(--danger-fg);
+  color: var(--destructive-fg);
   font-size: 11px;
   margin-top: 6px;
 }
 
 .hint { font-size: 11px; color: var(--fg-faint); line-height: 1.45; }
-.hint--error { color: var(--danger); }
+.hint--error { color: var(--destructive); }
 
 .meta-text {
   font-size: 10px;
@@ -728,7 +728,7 @@ input[type="checkbox"]:focus-visible { outline: 2px solid var(--accent-ring); ou
 .diag-icon svg { width: 14px; height: 14px; }
 .diag-icon--ok { color: rgb(74, 222, 128); }
 .diag-icon--warn { color: var(--warn); }
-.diag-icon--fail { color: var(--danger); }
+.diag-icon--fail { color: var(--destructive); }
 .diag-icon--info { color: rgb(165, 180, 252); }
 .diag-label { font-size: 12px; color: var(--fg); }
 .diag-hint { font-size: 11px; color: var(--fg-subtle); margin-top: 2px; line-height: 1.45; }
@@ -1020,7 +1020,7 @@ details.fold > summary:hover { color: var(--fg); }
   min-width: 0;
 }
 .flag-admin-label svg { width: 12px; height: 12px; color: var(--fg-subtle); }
-.flag-admin-strip--error .flag-admin-label { color: var(--danger-fg); }
+.flag-admin-strip--error .flag-admin-label { color: var(--destructive-fg); }
 
 .flag-admin-settings {
   display: flex;

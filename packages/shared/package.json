@@ -36,6 +36,9 @@
     "./ssrf-guard": "./src/ssrf-guard.ts",
     "./constants/deep-link-apps": "./src/constants/deep-link-apps.ts"
   },
+  "scripts": {
+    "check-types": "tsc --build"
+  },
   "dependencies": {
     "@databuddy/redis": "workspace:*",
     "@databuddy/db": "workspace:*",

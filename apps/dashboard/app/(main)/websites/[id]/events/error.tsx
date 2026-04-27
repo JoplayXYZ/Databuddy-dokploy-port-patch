@@ -1,10 +1,12 @@
 "use client";
 
-import { ArrowCounterClockwiseIcon } from "@phosphor-icons/react/dist/ssr";
-import { ArrowLeftIcon } from "@phosphor-icons/react/dist/ssr";
-import { LightningIcon } from "@phosphor-icons/react/dist/ssr";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ds/button";
+import {
+	ArrowCounterClockwiseIcon,
+	ArrowLeftIcon,
+	LightningIcon,
+} from "@databuddy/ui/icons";
 
 export default function EventsError({
 	error,

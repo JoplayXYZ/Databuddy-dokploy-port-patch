@@ -3,7 +3,8 @@
 import { useFieldContext } from "@/components/ds/field";
 import { cn } from "@/lib/utils";
 import { Select as BaseSelect } from "@base-ui-components/react/select";
-import { CaretUpDown, Check } from "@phosphor-icons/react/dist/ssr";
+import { CaretUpDown } from "@phosphor-icons/react/dist/ssr";
+import { CheckIcon } from "@databuddy/ui/icons";
 import {
 	Children,
 	Fragment,
@@ -96,6 +97,7 @@ function Trigger({
 					: cn(
 							"flex h-(--control-h) w-full cursor-pointer select-none items-center justify-between rounded-md bg-secondary px-(--control-px) text-foreground text-xs [--control-h:--spacing(8)] [--control-px:--spacing(3)]",
 							"transition-colors duration-(--duration-quick) ease-(--ease-smooth)",
+							"hover:bg-interactive-hover data-[popup-open]:bg-interactive-hover data-[state=open]:bg-interactive-hover",
 							"focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
 							"disabled:cursor-not-allowed disabled:opacity-50",
 							"data-placeholder:text-muted-foreground",
@@ -197,7 +199,7 @@ function Item({
 			{...rest}
 		>
 			<BaseSelect.ItemIndicator className="flex size-3.5 items-center justify-center">
-				<Check className="size-3" />
+				<CheckIcon className="size-3" />
 			</BaseSelect.ItemIndicator>
 			<BaseSelect.ItemText>{children}</BaseSelect.ItemText>
 		</BaseSelect.Item>
