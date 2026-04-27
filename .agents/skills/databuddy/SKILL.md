@@ -22,6 +22,8 @@ Do not expose `DATABUDDY_API_KEY` in browser code. Browser integrations use a pu
 - REST analytics: query API under `https://api.databuddy.cc/v1`.
 - Raw event ingestion: `POST https://basket.databuddy.cc/track`; prefer SDKs unless the user explicitly wants HTTP.
 
+Do not recommend `@databuddy/sdk/ai/vercel`; the public SDK currently exports only core, React, Vue, and Node entry points.
+
 If the user says "API", determine whether they mean analytics queries, event ingestion, or feature flags before writing code.
 
 Read [public-surfaces.md](./references/public-surfaces.md) when you need exact env vars, routes, scopes, snippets, or framework routing.
