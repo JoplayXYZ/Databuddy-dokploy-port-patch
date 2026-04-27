@@ -13,6 +13,7 @@ import { authClient } from "@databuddy/auth/client";
 import { Avatar } from "@/components/ds/avatar";
 import { Button } from "@/components/ds/button";
 import { DropdownMenu } from "@/components/ds/dropdown-menu";
+import { GlobalAgentTrigger } from "@/components/agent/global-agent-trigger";
 import { Skeleton } from "@databuddy/ui";
 import { Tooltip } from "@databuddy/ui";
 import {
@@ -315,6 +316,7 @@ export function TopBar() {
 				) : null}
 
 				<div className="flex shrink-0 items-center gap-1 border-sidebar-border/50 border-l pl-2">
+					<GlobalAgentTrigger />
 					<Button
 						aria-label="Search"
 						className="h-8 min-w-9 justify-start gap-2 rounded-md px-2.5 text-sidebar-foreground/65 hover:text-sidebar-foreground lg:min-w-40"

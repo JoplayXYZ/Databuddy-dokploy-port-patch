@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { Button } from "@/components/ds/button";
 import { cn } from "@/lib/utils";
 import { XIcon } from "@phosphor-icons/react/dist/ssr";
 import { ArrowClockwiseIcon, WarningIcon } from "@databuddy/ui/icons";
@@ -74,31 +75,33 @@ export function AgentErrorMessage({
 			<span className="min-w-0 flex-1 truncate text-muted-foreground">
 				{message}
 			</span>
-			<button
+			<Button
 				aria-busy={isRetrying}
 				aria-label="Try again"
-				className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50"
+				className="h-6 gap-1 px-1.5 text-xs"
 				disabled={isRetrying}
 				onClick={handleRetry}
+				size="sm"
 				title="Try again"
-				type="button"
+				variant="ghost"
 			>
 				<ArrowClockwiseIcon
 					className={cn("size-3.5", isRetrying && "animate-spin")}
 					weight="bold"
 				/>
 				<span>Try again</span>
-			</button>
-			<button
+			</Button>
+			<Button
 				aria-label="Dismiss"
-				className="inline-flex size-5 items-center justify-center rounded text-muted-foreground/70 transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50"
+				className="size-5"
 				disabled={isRetrying}
 				onClick={onDismissAction}
+				size="icon-sm"
 				title="Dismiss"
-				type="button"
+				variant="ghost"
 			>
 				<XIcon className="size-3" weight="bold" />
-			</button>
+			</Button>
 		</div>
 	);
 }

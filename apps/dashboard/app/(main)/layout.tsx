@@ -1,4 +1,6 @@
 import { FeedbackPrompt } from "@/components/feedback-prompt";
+import { GlobalAgentLayout } from "@/components/agent/global-agent-layout";
+import { GlobalAgentProvider } from "@/components/agent/global-agent-provider";
 import { Sidebar } from "@/components/layout/sidebar";
 import {
 	SidebarInset,
@@ -49,18 +51,21 @@ export default function MainLayout({
 						<SessionGuard>
 							<SidebarLayout>
 								<TopBarProvider>
-									<div className="flex min-h-0 flex-1 flex-col overflow-hidden text-foreground">
-										<Suspense fallback={<SidebarFallback />}>
-											<Sidebar />
-										</Suspense>
-										<SidebarInset>
-											<TopBar />
-											<div className="flex min-h-0 flex-1 flex-col overflow-hidden overflow-x-hidden overscroll-y-none pt-12 md:pt-0">
-												{children}
-											</div>
-										</SidebarInset>
-										<FeedbackPrompt />
-									</div>
+									<GlobalAgentProvider>
+										<div className="flex min-h-0 flex-1 overflow-hidden text-foreground">
+											<Suspense fallback={<SidebarFallback />}>
+												<Sidebar />
+											</Suspense>
+											<SidebarInset className="min-w-0">
+												<TopBar />
+												<div className="flex min-h-0 flex-1 flex-col overflow-hidden overflow-x-hidden overscroll-y-none pt-12 md:pt-0">
+													{children}
+												</div>
+											</SidebarInset>
+											<GlobalAgentLayout />
+											<FeedbackPrompt />
+										</div>
+									</GlobalAgentProvider>
 								</TopBarProvider>
 							</SidebarLayout>
 						</SessionGuard>

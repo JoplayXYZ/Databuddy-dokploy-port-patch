@@ -8,12 +8,15 @@ import {
 	MessageResponse,
 } from "@/components/ai-elements/message";
 import {
+	DotMatrixLoader,
+	useRandomDotMatrixLoader,
+} from "@/components/ai-elements/dotmatrix-loader";
+import {
 	Reasoning,
 	ReasoningContent,
 	ReasoningTrigger,
 } from "@/components/ai-elements/reasoning";
 import { Shimmer } from "@/components/ai-elements/shimmer";
-import { useThinkingPhrase } from "@/components/ai-elements/thinking-phrases";
 import {
 	Tool,
 	ToolDetail,
@@ -21,10 +24,6 @@ import {
 	ToolOutput,
 	type ToolStatus,
 } from "@/components/ai-elements/tool";
-import {
-	UnicodeSpinner,
-	useRandomThinkingVariant,
-} from "@/components/ai-elements/unicode-spinner";
 import { Button } from "@/components/ds/button";
 import { useChat } from "@/contexts/chat-context";
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
@@ -334,12 +333,17 @@ function AssistantActions({
 	);
 }
 
-export function AgentMessages() {
+interface AgentMessagesProps {
+	variant?: "page" | "dock";
+}
+
+export function AgentMessages({ variant = "page" }: AgentMessagesProps) {
 	const { status, messages, error, regenerate, clearError, sendMessage } =
 		useChat();
 	const hasError = status === "error";
 	const isStreaming = status === "streaming" || status === "submitted";
 	const lastMessage = messages.at(-1);
+	const isDock = variant === "dock";
 
 	if (messages.length === 0) {
 		return null;
@@ -368,11 +372,21 @@ export function AgentMessages() {
 
 				return (
 					<Message
-						className="group/message"
+						className={cn(
+							"group/message",
+							isDock && "max-w-full gap-1.5",
+							isDock && message.role === "user" && "max-w-[86%]"
+						)}
 						from={message.role}
 						key={messageKey}
 					>
-						<MessageContent className={cn(isAssistant ? "w-full" : "")}>
+						<MessageContent
+							className={cn(
+								isAssistant && "w-full",
+								isDock && "gap-1.5 text-[13px] leading-5",
+								isDock && !isAssistant && "px-3 py-2"
+							)}
+						>
 							{groupedParts.map((part, partIndex) =>
 								renderMessagePart(
 									part,
@@ -432,20 +446,22 @@ function showTailIndicator(
 }
 
 function StreamingIndicator({ label }: { label: string | null }) {
-	const phrase = useThinkingPhrase();
-	const variant = useRandomThinkingVariant();
+	const loader = useRandomDotMatrixLoader();
+	const text = label ?? "Working";
 	return (
 		<div
 			className="fade-in flex w-full animate-in items-center gap-2 duration-200"
 			data-role="assistant"
 		>
-			<UnicodeSpinner
-				className="text-muted-foreground text-sm"
-				label="Thinking"
-				variant={variant}
+			<DotMatrixLoader
+				className="text-primary"
+				dotSize={2}
+				label={text}
+				loader={loader}
+				size={14}
 			/>
 			<Shimmer as="span" className="text-sm" duration={1} spread={4}>
-				{label ?? phrase}
+				{text}
 			</Shimmer>
 		</div>
 	);

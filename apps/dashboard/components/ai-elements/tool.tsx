@@ -7,6 +7,7 @@ import {
 } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
 import type { ComponentProps } from "react";
+import { DotMatrixLoader } from "./dotmatrix-loader";
 
 export type ToolStatus = "running" | "complete" | "error";
 
@@ -49,16 +50,29 @@ export const Tool = ({
 	return (
 		<Collapsible className={cn("group/tool", className)} {...props}>
 			<CollapsibleTrigger className="flex w-full items-center gap-2 py-0.5 text-left text-muted-foreground text-xs hover:text-foreground">
-				<span
-					aria-hidden="true"
+				<DotMatrixLoader
+					animated={isRunning}
 					className={cn(
-						"size-1.5 shrink-0 rounded-full",
-						isRunning && "animate-pulse bg-primary",
-						isError && "bg-destructive",
-						!(isRunning || isError) && "bg-muted-foreground/50"
+						isRunning && "text-primary",
+						isError && "text-destructive",
+						!(isRunning || isError) && "text-muted-foreground/45"
 					)}
+					decorative={!isRunning}
+					dotSize={2}
+					label={`${title} ${isRunning ? "running" : status}`}
+					seed={title}
+					size={14}
+					speed={1.55}
 				/>
-				<span className="truncate">{title}</span>
+				<span
+					className={cn(
+						"truncate",
+						isRunning && "text-foreground",
+						isError && "text-destructive"
+					)}
+				>
+					{title}
+				</span>
 			</CollapsibleTrigger>
 			<CollapsibleContent className="data-[state=open]:fade-in-0 data-[state=open]:animate-in">
 				{children}
