@@ -1,5 +1,9 @@
 "use client";
 
+import {
+	FEATURE_METADATA,
+	type GatedFeatureId,
+} from "@databuddy/shared/types/features";
 import { useDebouncedCallback } from "@tanstack/react-pacer";
 import { Command as CommandPrimitive } from "cmdk";
 import { usePathname, useRouter } from "next/navigation";
@@ -21,6 +25,7 @@ import type {
 	NavigationGroup,
 	NavigationItem,
 } from "@/components/layout/navigation/types";
+import { useBillingContext } from "@/components/providers/billing-provider";
 import { Badge } from "@/components/ds/badge";
 import { Dialog } from "@/components/ds/dialog";
 import { useWebsites } from "@/hooks/use-websites";
@@ -29,6 +34,7 @@ import {
 	ArrowSquareOutIcon,
 	CommandIcon,
 	GlobeIcon,
+	LockSimpleIcon,
 	MagnifyingGlassIcon,
 } from "@databuddy/ui/icons";
 
@@ -37,7 +43,9 @@ interface SearchItem {
 	badge?: { text: string };
 	disabled?: boolean;
 	external?: boolean;
+	gatedFeature?: GatedFeatureId;
 	icon: NavIcon;
+	lockedPlanName?: string | null;
 	name: string;
 	path: string;
 	tag?: string;
@@ -48,23 +56,45 @@ interface SearchGroup {
 	items: SearchItem[];
 }
 
-function toSearchItem(item: NavigationItem, pathPrefix = ""): SearchItem {
+function toSearchItem(
+	item: NavigationItem,
+	pathPrefix = "",
+	access?: {
+		isBillingLoading: boolean;
+		isFeatureEnabled: (feature: GatedFeatureId) => boolean;
+	}
+): SearchItem {
 	const path = item.rootLevel ? item.href : `${pathPrefix}${item.href}`;
+	const locked =
+		access != null &&
+		!access.isBillingLoading &&
+		item.gatedFeature != null &&
+		!access.isFeatureEnabled(item.gatedFeature);
+
 	return {
 		name: item.name,
 		path: path || pathPrefix,
 		icon: item.icon,
-		disabled: item.disabled,
+		disabled: item.disabled || locked,
 		tag: item.tag,
 		external: item.external,
 		alpha: item.alpha,
 		badge: item.badge,
+		gatedFeature: item.gatedFeature,
+		lockedPlanName:
+			locked && item.gatedFeature
+				? (FEATURE_METADATA[item.gatedFeature]?.minPlan?.toUpperCase() ?? null)
+				: null,
 	};
 }
 
 function groupsToSearchGroups(
 	groups: NavigationGroup[],
 	pathPrefix = "",
+	access?: {
+		isBillingLoading: boolean;
+		isFeatureEnabled: (feature: GatedFeatureId) => boolean;
+	}
 ): SearchGroup[] {
 	return groups
 		.filter((g) => g.items.length > 0)
@@ -72,7 +102,7 @@ function groupsToSearchGroups(
 			category: g.label || "Quick Access",
 			items: g.items
 				.filter((item) => !item.hideFromDemo)
-				.map((item) => toSearchItem(item, pathPrefix)),
+				.map((item) => toSearchItem(item, pathPrefix, access)),
 		}));
 }
 
@@ -115,6 +145,7 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
 	const router = useRouter();
 	const pathname = usePathname();
 	const { websites } = useWebsites({ enabled: open });
+	const { isFeatureEnabled, isLoading: isBillingLoading } = useBillingContext();
 
 	const currentWebsiteId = pathname.startsWith("/websites/")
 		? pathname.split("/")[2]
@@ -162,11 +193,21 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
 		}
 
 		if (currentWebsiteId) {
-			result.push(...groupsToSearchGroups(websiteNavigation, websitePrefix));
+			result.push(
+				...groupsToSearchGroups(websiteNavigation, websitePrefix, {
+					isBillingLoading,
+					isFeatureEnabled,
+				})
+			);
 		}
 
 		return mergeGroups(result);
-	}, [websites, pathname, currentWebsiteId]);
+	}, [
+		websites,
+		currentWebsiteId,
+		isBillingLoading,
+		isFeatureEnabled,
+	]);
 
 	const filteredGroups = useMemo(() => {
 		if (!debouncedSearch.trim()) {
@@ -388,6 +429,15 @@ function SearchResultItem({
 					<Badge className="text-[10px]" variant="muted">
 						{item.badge.text}
 					</Badge>
+				)}
+
+				{item.lockedPlanName && (
+					<>
+						<LockSimpleIcon className="size-3.5 text-muted-foreground" />
+						<Badge className="text-[10px]" variant="muted">
+							{item.lockedPlanName}
+						</Badge>
+					</>
 				)}
 
 				{item.external && (
