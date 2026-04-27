@@ -227,7 +227,7 @@ Control how users are grouped for rollouts. In the dashboard, choose the **Rollo
 <CodeBlock language="tsx" filename="org-rollout.tsx">
   {`// Pass organizationId for org-level rollouts
   <FlagsProvider
-    clientId="your-website-id"
+    clientId="your-client-id"
     user={{
       userId: "user_123",
       organizationId: "org_abc",  // All org members get same result
@@ -293,7 +293,7 @@ Run experiments with multiple variants. Each user is consistently assigned to a 
 
 <CodeBlock language="tsx" filename="provider.tsx">
   {`<FlagsProvider
-    clientId="your-website-id"
+    clientId="your-client-id"
     apiUrl="https://api.databuddy.cc"
     user={{
       userId: currentUser.id,
@@ -320,7 +320,7 @@ Run experiments with multiple variants. Each user is consistently assigned to a 
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `clientId` | string | Required | Your website ID from the dashboard |
+| `clientId` | string | Required | Your Databuddy Client ID from the dashboard |
 | `apiUrl` | string | `https://api.databuddy.cc` | API endpoint |
 | `user` | object | `undefined` | User context for targeting |
 | `isPending` | boolean | `false` | Defer evaluation while session loads |

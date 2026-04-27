@@ -93,13 +93,13 @@ The `details` array contains all validation issues found, with suggestions when 
 }`}
 />
 
-### Missing Project ID
+### Missing Resource Identifier
 
 <CodeBlock 
   language="json"
   code={`{
   "success": false,
-  "error": "Missing project identifier (website_id, schedule_id, link_id, or organization_id)",
+  "error": "Missing resource identifier (website_id, schedule_id, link_id, or organization_id)",
   "code": "MISSING_PROJECT_ID"
 }`}
 />
@@ -180,7 +180,7 @@ The top-level `success: true` indicates the request was processed. Check each pa
 
 - Check spelling of the query type
 - Use `GET /v1/query/types` to see available types
-- Some types require specific project IDs (e.g., `link_*` needs `link_id`)
+- Some types require specific resource IDs (e.g., `link_*` needs `link_id`)
 
 ### "Hourly granularity only supports up to 30 days"
 

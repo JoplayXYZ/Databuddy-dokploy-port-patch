@@ -2,10 +2,8 @@ import {
 	ArrowSquareOutIcon,
 	AtomIcon,
 	BookOpenIcon,
-	BrainIcon,
 	ChartBarIcon,
 	CodeIcon,
-	CurrencyDollarIcon,
 	DatabaseIcon,
 	FileTextIcon,
 	type IconWeight,
@@ -101,29 +99,6 @@ export const contents: SidebarSection[] = [
 				],
 			},
 			{
-				title: "LLM Observability",
-				icon: BrainIcon,
-				isNew: true,
-				children: [
-					{
-						title: "Overview",
-						href: "/docs/ai",
-					},
-					{
-						title: "Vercel AI SDK",
-						href: "/docs/ai/vercel",
-					},
-					{
-						title: "OpenAI SDK",
-						href: "/docs/ai/openai",
-					},
-					{
-						title: "Anthropic SDK",
-						href: "/docs/ai/anthropic",
-					},
-				],
-			},
-			{
 				title: "API Reference",
 				icon: DatabaseIcon,
 				children: [
@@ -155,10 +130,6 @@ export const contents: SidebarSection[] = [
 					{
 						title: "Custom Queries",
 						href: "/docs/api/custom-queries",
-					},
-					{
-						title: "MCP (Model Context Protocol)",
-						href: "/docs/api/mcp",
 					},
 					{
 						title: "Error Handling",
@@ -264,28 +235,6 @@ export const contents: SidebarSection[] = [
 				title: "Dashboard",
 				href: "/docs/dashboard",
 				icon: MonitorIcon,
-			},
-			{
-				title: "Revenue Tracking",
-				icon: CurrencyDollarIcon,
-				children: [
-					{
-						title: "Overview",
-						href: "/docs/revenue",
-					},
-					{
-						title: "Stripe",
-						href: "/docs/revenue/stripe",
-					},
-					{
-						title: "Paddle",
-						href: "/docs/revenue/paddle",
-					},
-					{
-						title: "Autumn",
-						href: "/docs/revenue/autumn",
-					},
-				],
 			},
 		],
 	},

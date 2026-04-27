@@ -381,7 +381,7 @@ function() {
       var el = document.createElement("script");
       el.src = "https://cdn.databuddy.cc/databuddy.js";
       el.async = true;
-      el.setAttribute("data-client-id", "{{Databuddy Site ID}}");
+      el.setAttribute("data-client-id", "{{Databuddy Client ID}}");
       el.onerror = function () {
         console.warn("Databuddy script failed to load");
       };
@@ -454,7 +454,7 @@ Map GA4 events to Databuddy equivalents:
 
 1. ✅ GTM container code installed correctly
 2. ✅ Databuddy tag fires on correct triggers
-3. ✅ Site ID variable contains correct value
+3. ✅ Client ID variable contains correct value
 4. ✅ No JavaScript errors in console
 5. ✅ Events appear in Databuddy dashboard
 6. ✅ Privacy settings respected
@@ -465,8 +465,8 @@ Map GA4 events to Databuddy equivalents:
   <Card title="Shopify" href="/docs/Integrations/shopify">
     Complete e-commerce tracking with purchase analytics.
   </Card>
-  <Card title="Stripe" href="/docs/Integrations/stripe">
-    Payment tracking for comprehensive conversion analytics.
+  <Card title="Next.js" href="/docs/Integrations/nextjs">
+    App Router and Pages Router setup for Next.js apps.
   </Card>
   <Card title="WordPress" href="/docs/Integrations/wordpress">
     Plugin or manual setup for WordPress sites.

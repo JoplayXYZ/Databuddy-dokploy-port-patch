@@ -2,9 +2,6 @@ import { checkBotId } from "botid/server";
 import { type NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-const AUDIENCE_ID = process.env.RESEND_AUDIENCE_ID ?? "";
-
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 export async function POST(request: NextRequest) {
@@ -34,16 +31,20 @@ export async function POST(request: NextRequest) {
 			);
 		}
 
-		if (!AUDIENCE_ID) {
+		const apiKey = process.env.RESEND_API_KEY;
+		const audienceId = process.env.RESEND_AUDIENCE_ID;
+
+		if (!(apiKey && audienceId)) {
 			return NextResponse.json(
 				{ error: "Newsletter is not configured" },
 				{ status: 500 }
 			);
 		}
 
+		const resend = new Resend(apiKey);
 		await resend.contacts.create({
 			email,
-			audienceId: AUDIENCE_ID,
+			audienceId,
 		});
 
 		return NextResponse.json({ success: true });

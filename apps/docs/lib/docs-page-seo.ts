@@ -19,7 +19,6 @@ const SECTION_MAP: [test: string, label: string][] = [
 	["compliance", "Compliance"],
 	["privacy", "Privacy"],
 	["security", "Security"],
-	["revenue", "Revenue"],
 	["dashboard", "Dashboard"],
 ];
 

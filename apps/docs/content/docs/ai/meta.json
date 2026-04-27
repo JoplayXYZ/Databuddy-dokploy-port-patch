@@ -1,6 +1,0 @@
-{
-  "title": "AI / LLM Observability",
-  "description": "Track LLM calls, costs, and token usage across OpenAI, Anthropic, and Vercel AI SDK",
-  "icon": "Brain",
-  "pages": ["index", "vercel", "openai", "anthropic"]
-}

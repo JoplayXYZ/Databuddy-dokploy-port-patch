@@ -296,7 +296,7 @@ Discover your global audience and optimize for different regions:
   derived from the user's IP address at the beginning of a session. This
   functionality is an integral part of session tracking. Ensure `trackSessions=
   {true}` (which is enabled by default) in your [SDK
-  configuration](/docs/sdk#configuration-options) to collect this data.
+  configuration](/docs/sdk/configuration) to collect this data.
 </Callout>
 
 ## Technology Stack Analysis
@@ -358,9 +358,7 @@ Track and analyze your business-specific events with detailed property breakdown
   `db.track('your_event_name', {your_properties})` method. The more relevant and
   well-structured custom events you track, the more insightful this section will
   become. For detailed guidance on how to implement custom event tracking,
-  please refer to the [SDK Methods Reference](/docs/sdk#sdk-methods)
-  and strategies in the [Custom Event
-  Tracking](/docs/sdk#custom-event-tracking) section of the SDK documentation.
+  please refer to the [Tracker Helpers](/docs/sdk/tracker) guide.
 </Callout>
 
 ### Enhanced Event Interface
@@ -534,7 +532,7 @@ Monitor your website's technical health and user experience:
   The performance metrics, including Core Web Vitals, are populated when you
   enable `trackPerformance={true}` (enabled by default) and `trackWebVitals=
   {true}` (disabled by default, but recommended) in your [SDK
-  configuration](/docs/sdk#optional-features). Enabling these options
+  configuration](/docs/sdk/configuration). Enabling these options
   allows the SDK to collect detailed timing and performance data from the user's
   browser.
 </Callout>
@@ -618,11 +616,11 @@ Monitor and resolve issues affecting your users:
 <Callout type="tip" title="Enabling Error Data Collection">
   To populate the error tracking sections of the dashboard, ensure you have
   `trackErrors={true}` enabled in your [SDK
-  configuration](/docs/sdk#optional-features). This will automatically
+  configuration](/docs/sdk/configuration). This will automatically
   capture unhandled JavaScript errors and promise rejections. For more detailed
   context on specific handled errors, you can manually send error events using
-  `db.track('error', {/* custom properties */})` as described in the [SDK
-  Methods Reference](/docs/sdk#sdk-methods).
+  `db.track('error', {/* custom properties */})` as described in the [Tracker
+  Helpers](/docs/sdk/tracker) guide.
 </Callout>
 
 ### JavaScript Error Analytics
