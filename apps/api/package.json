@@ -44,7 +44,7 @@
     "autumn-js": "catalog:",
     "bullmq": "^5.66.5",
     "dayjs": "^1.11.19",
-    "elysia": "^1.4.22",
+    "elysia": "catalog:",
     "evlog": "catalog:",
     "jszip": "^3.10.1",
     "keypal": "0.2.0",

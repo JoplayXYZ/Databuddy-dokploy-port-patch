@@ -1,10 +1,10 @@
-import { db, eq, inArray } from "@databuddy/db";
-import { member, websites } from "@databuddy/db/schema";
 import {
 	type ApiKeyRow,
 	getAccessibleWebsiteIds,
 	hasGlobalAccess,
-} from "./api-key";
+} from "@databuddy/api-keys/resolve";
+import { db, eq, inArray } from "@databuddy/db";
+import { member, websites } from "@databuddy/db/schema";
 
 export interface WebsiteSummary {
 	createdAt: Date | null;
@@ -29,13 +29,6 @@ export async function getAccessibleWebsites(
 		isPublic: websites.isPublic,
 		createdAt: websites.createdAt,
 	};
-
-	if (authCtx.user?.role === "ADMIN") {
-		return db
-			.select(select)
-			.from(websites)
-			.orderBy((t) => t.createdAt);
-	}
 
 	if (authCtx.user) {
 		const userMemberships = await db.query.member.findMany({

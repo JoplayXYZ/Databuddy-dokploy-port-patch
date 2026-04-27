@@ -1,19 +1,19 @@
-import { auth, websitesApi } from "@databuddy/auth";
-import { db, eq } from "@databuddy/db";
-import { member } from "@databuddy/db/schema";
-import { getRedisCache } from "@databuddy/redis";
 import {
 	getAccessibleWebsites,
 	type WebsiteSummary,
-} from "../../lib/accessible-websites";
+} from "@/lib/accessible-websites";
 import {
 	type ApiKeyRow,
 	getAccessibleWebsiteIds,
 	hasGlobalAccess,
 	hasKeyScope,
 	hasWebsiteScope,
-} from "../../lib/api-key";
-import { getCachedWebsite, validateWebsite } from "../../lib/website-utils";
+} from "@databuddy/api-keys/resolve";
+import { getCachedWebsite, validateWebsite } from "@/lib/website-utils";
+import { websitesApi } from "@databuddy/auth";
+import { db, eq } from "@databuddy/db";
+import { member } from "@databuddy/db/schema";
+import { getRedisCache } from "@databuddy/redis";
 import type { AppContext } from "../config/context";
 
 const PROTOCOL_RE = /^https?:\/\//;
@@ -55,11 +55,6 @@ export async function ensureWebsiteAccess(
 		if (!hasWebsiteAccess) {
 			return new Error("Access denied to this website");
 		}
-		return { domain: website.domain ?? "unknown" };
-	}
-
-	const session = await auth.api.getSession({ headers });
-	if (session?.user?.role === "ADMIN") {
 		return { domain: website.domain ?? "unknown" };
 	}
 

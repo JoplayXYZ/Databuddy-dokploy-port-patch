@@ -12,7 +12,7 @@
     "@databuddy/redis": "workspace:*",
     "@databuddy/shared": "workspace:*",
     "bullmq": "^5.66.5",
-    "elysia": "^1.4.18",
+    "elysia": "catalog:",
     "evlog": "catalog:",
     "kafkajs": "^2.2.4",
     "react": "catalog:",

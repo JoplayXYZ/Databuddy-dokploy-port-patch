@@ -11,6 +11,7 @@ import {
 	StatCard,
 	UnauthorizedAccessError,
 } from "@/components/analytics";
+import { PercentageBadge } from "@/components/ds/badge";
 import { BrowserIcon, OSIcon } from "@/components/icon";
 import { DataTable } from "@/components/table/data-table";
 import {
@@ -30,7 +31,6 @@ import {
 	clampBounceRate,
 	formatDateByGranularity,
 } from "../utils/analytics-helpers";
-import { PercentageBadge } from "../utils/technology-helpers";
 import type { FullTabProps, MetricPoint } from "../utils/types";
 import { TrafficTrendsChart } from "./overview/_components/traffic-trends-chart";
 import {

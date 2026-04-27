@@ -1,11 +1,4 @@
 import { auth } from "@databuddy/auth";
-import { and, db, eq, isNull } from "@databuddy/db";
-import { links, member, uptimeSchedules, websites } from "@databuddy/db/schema";
-import { ratelimit } from "@databuddy/redis/rate-limit";
-import { filterOptions } from "@databuddy/shared/lists/filters";
-import type { CustomQueryRequest } from "@databuddy/shared/types/custom-query";
-import { Elysia, t } from "elysia";
-import { getAccessibleWebsites } from "../lib/accessible-websites";
 import {
 	type ApiKeyRow,
 	getAccessibleWebsiteIds,
@@ -13,7 +6,14 @@ import {
 	hasGlobalAccess,
 	hasKeyScope,
 	isApiKeyPresent,
-} from "../lib/api-key";
+} from "@databuddy/api-keys/resolve";
+import { and, db, eq, isNull } from "@databuddy/db";
+import { links, member, uptimeSchedules, websites } from "@databuddy/db/schema";
+import { ratelimit } from "@databuddy/redis/rate-limit";
+import { filterOptions } from "@databuddy/shared/lists/filters";
+import type { CustomQueryRequest } from "@databuddy/shared/types/custom-query";
+import { Elysia, t } from "elysia";
+import { getAccessibleWebsites } from "../lib/accessible-websites";
 import { resolveDatePreset } from "../lib/date-presets";
 import { mergeWideEvent } from "../lib/tracing";
 import { getCachedWebsiteDomain, getWebsiteDomain } from "../lib/website-utils";
@@ -211,11 +211,7 @@ interface AuthContext {
 	apiKey: ApiKeyRow | null;
 	authMethod: "api_key" | "session" | "none";
 	isAuthenticated: boolean;
-	user: { id: string; name: string; email: string; role?: string } | null;
-}
-
-function isAdminUser(user: AuthContext["user"]): boolean {
-	return Boolean(user && "role" in user && user.role === "ADMIN");
+	user: { id: string; name: string; email: string } | null;
 }
 
 type ProjectType = "website" | "schedule" | "link" | "organization";
@@ -358,11 +354,6 @@ function verifyWebsiteAccess(
 			return false;
 		}
 
-		if (isAdminUser(ctx.user)) {
-			mergeWideEvent({ access_result: "admin" });
-			return true;
-		}
-
 		if (website.isPublic) {
 			mergeWideEvent({ access_result: "public" });
 			return true;
@@ -442,11 +433,6 @@ function verifyScheduleAccess(
 			return false;
 		}
 
-		if (isAdminUser(ctx.user)) {
-			mergeWideEvent({ access_result: "admin" });
-			return true;
-		}
-
 		if (!ctx.isAuthenticated) {
 			mergeWideEvent({ access_result: "unauthenticated" });
 			return false;
@@ -512,11 +498,6 @@ function verifyLinkAccess(ctx: AuthContext, linkId: string): Promise<boolean> {
 			return false;
 		}
 
-		if (isAdminUser(ctx.user)) {
-			mergeWideEvent({ access_result: "admin" });
-			return true;
-		}
-
 		if (!ctx.isAuthenticated) {
 			mergeWideEvent({ access_result: "unauthenticated" });
 			return false;
@@ -569,11 +550,6 @@ function verifyOrganizationAccess(
 			access_check_type: "organization",
 			organization_id: organizationId,
 		});
-
-		if (isAdminUser(ctx.user)) {
-			mergeWideEvent({ access_result: "admin" });
-			return true;
-		}
 
 		if (!ctx.isAuthenticated) {
 			mergeWideEvent({ access_result: "unauthenticated" });

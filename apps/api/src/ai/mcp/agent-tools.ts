@@ -1,3 +1,4 @@
+import type { ApiKeyRow } from "@databuddy/api-keys/resolve";
 import { auth } from "@databuddy/auth";
 import {
 	AGENT_SQL_VALIDATION_ERROR,
@@ -22,9 +23,7 @@ import { buildBatchQueryRequests, MCP_DATE_PRESETS } from "./mcp-utils";
 import { ensureWebsiteAccess } from "./tool-context";
 
 export interface McpAgentContext {
-	apiKey: Awaited<
-		ReturnType<typeof import("../../lib/api-key").getApiKeyFromHeader>
-	>;
+	apiKey: ApiKeyRow | null;
 	requestHeaders: Headers;
 	userId: string | null;
 }

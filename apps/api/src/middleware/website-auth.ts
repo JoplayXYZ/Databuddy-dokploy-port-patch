@@ -1,13 +1,13 @@
+import {
+	getApiKeyFromHeader,
+	hasWebsiteScope,
+	isApiKeyPresent,
+} from "@databuddy/api-keys/resolve";
 import { auth } from "@databuddy/auth";
 import { and, db, eq } from "@databuddy/db";
 import { member } from "@databuddy/db/schema";
 import { Elysia } from "elysia";
 import { useLogger } from "evlog/elysia";
-import {
-	getApiKeyFromHeader,
-	hasWebsiteScope,
-	isApiKeyPresent,
-} from "../lib/api-key";
 import { record } from "../lib/tracing";
 import { getCachedWebsite, getTimezone } from "../lib/website-utils";
 
@@ -125,10 +125,7 @@ async function checkWebsiteAuth(
 
 	// Check session-based authentication
 	if (sessionUser && typeof sessionUser === "object" && "id" in sessionUser) {
-		const userObj = sessionUser as { id: string; role?: string };
-		if (userObj.role === "ADMIN") {
-			return null;
-		}
+		const userObj = sessionUser as { id: string };
 
 		const userId = userObj.id;
 

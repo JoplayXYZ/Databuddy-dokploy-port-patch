@@ -1,24 +1,22 @@
 import {
-	MCP_DATE_PRESETS,
-	resolveDatePreset as resolveDatePresetForMcp,
-} from "../../lib/date-presets";
-import { QueryBuilders } from "../../query/builders";
-import type { QueryRequest } from "../../query/types";
-import type { DatePreset } from "../../schemas/query-schemas";
-import {
 	type SchemaDocOptions,
 	generateSchemaDocumentation,
-} from "../prompts/clickhouse-schema";
+} from "@/ai/prompts/clickhouse-schema";
+import { MCP_DATE_PRESETS, resolveDatePreset } from "@/lib/date-presets";
+import { QueryBuilders } from "@/query/builders";
+import type { QueryRequest } from "@/query/types";
+import type { DatePreset } from "@/schemas/query-schemas";
 
 export {
 	MCP_DATE_PRESETS,
 	resolveDatePreset as resolveDatePresetForMcp,
-} from "../../lib/date-presets";
+} from "@/lib/date-presets";
+
 export {
 	CLICKHOUSE_SCHEMA_DOCS,
 	SCHEMA_SECTIONS,
 	type SchemaSection,
-} from "../prompts/clickhouse-schema";
+} from "@/ai/prompts/clickhouse-schema";
 
 export interface McpQueryItem {
 	filters?: Array<{
@@ -79,7 +77,7 @@ export function buildBatchQueryRequests(
 		let to = q.to;
 		const preset = q.preset ?? (from && to ? undefined : "last_7d");
 		if (preset && MCP_DATE_PRESETS.includes(preset as DatePreset)) {
-			const resolved = resolveDatePresetForMcp(preset as DatePreset, timezone);
+			const resolved = resolveDatePreset(preset as DatePreset, timezone);
 			from = resolved.from;
 			to = resolved.to;
 		}

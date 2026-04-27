@@ -207,5 +207,3 @@ export const TechnologyIcon = ({
 
 	return <GlobeIcon className="size-4 text-muted-foreground" />;
 };
-
-export { PercentageBadge } from "@/components/ds/badge";

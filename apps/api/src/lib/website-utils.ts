@@ -1,13 +1,13 @@
+import {
+	getApiKeyFromHeader,
+	hasWebsiteScope,
+	isApiKeyPresent,
+} from "@databuddy/api-keys/resolve";
 import { auth } from "@databuddy/auth";
 import { db, eq, inArray } from "@databuddy/db";
 import { userPreferences, websites } from "@databuddy/db/schema";
 import { cacheable } from "@databuddy/redis";
 import type { Website } from "@databuddy/shared/types/website";
-import {
-	getApiKeyFromHeader,
-	hasWebsiteScope,
-	isApiKeyPresent,
-} from "./api-key";
 import { record } from "./tracing";
 
 export interface WebsiteContext {

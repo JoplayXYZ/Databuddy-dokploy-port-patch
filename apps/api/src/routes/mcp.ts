@@ -1,14 +1,14 @@
+import {
+	getApiKeyFromHeader,
+	hasKeyScope,
+	isApiKeyPresent,
+} from "@databuddy/api-keys/resolve";
 import { auth } from "@databuddy/auth";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 import type { AnySchema } from "@modelcontextprotocol/sdk/server/zod-compat.js";
 import { Elysia } from "elysia";
 import { createMcpTools } from "../ai/mcp/tools";
-import {
-	getApiKeyFromHeader,
-	hasKeyScope,
-	isApiKeyPresent,
-} from "../lib/api-key";
 import { captureError, mergeWideEvent } from "../lib/tracing";
 
 export const mcp = new Elysia({ prefix: "/v1/mcp" })

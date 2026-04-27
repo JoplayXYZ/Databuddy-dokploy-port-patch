@@ -1,26 +1,25 @@
-import type { LanguageModelUsage } from "ai";
-import { ToolLoopAgent } from "ai";
+import { getAILogger } from "@/lib/ai-logger";
 import {
 	formatMemoryForPrompt,
 	getMemoryContext,
 	isMemoryEnabled,
 	storeConversation,
-} from "../../lib/supermemory";
+} from "@/lib/supermemory";
+import type { ApiKeyRow } from "@databuddy/api-keys/resolve";
+import type { LanguageModelUsage } from "ai";
+import { ToolLoopAgent } from "ai";
 import {
 	ensureAgentCreditsAvailable,
 	resolveAgentBillingCustomerId,
 	trackAgentUsageAndBill,
 } from "../agents/execution";
 import { createMcpAgentConfig } from "../agents/mcp";
-import { getAILogger } from "../../lib/ai-logger";
 import { modelNames } from "../config/models";
 
 const MCP_AGENT_TIMEOUT_MS = 45_000;
 
 export interface RunMcpAgentOptions {
-	apiKey: Awaited<
-		ReturnType<typeof import("../../lib/api-key").getApiKeyFromHeader>
-	>;
+	apiKey: ApiKeyRow | null;
 	conversationId?: string;
 	priorMessages?: Array<{ role: "user" | "assistant"; content: string }>;
 	question: string;
