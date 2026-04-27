@@ -3,6 +3,7 @@ import { connect } from "node:tls";
 import { db, eq } from "@databuddy/db";
 import { uptimeSchedules } from "@databuddy/db/schema";
 import { validateUrl } from "@databuddy/shared/ssrf-guard";
+import { UPTIME_ENV } from "./lib/env";
 import { extractHealth, isHealthExtractionEnabled } from "./json-parser";
 import { captureError, mergeWideEvent } from "./lib/tracing";
 import type { ActionResult, UptimeData } from "./types";
@@ -11,13 +12,10 @@ import { MonitorStatus } from "./types";
 const DEFAULT_TIMEOUT = 60_000;
 const MAX_REDIRECTS = 10;
 
-const CONFIG = {
-	userAgent:
-		"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
-	region:
-		process.env.PROBE_REGION || process.env.RAILWAY_REPLICA_REGION || "default",
-	env: process.env.NODE_ENV || "prod",
-} as const;
+const USER_AGENT =
+	"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36";
+const PROBE_REGION =
+	process.env.PROBE_REGION || process.env.UNKEY_REGION || "default";
 
 interface FetchSuccess {
 	bytes: number;
@@ -132,7 +130,7 @@ function normalizeUrl(url: string): string {
 
 function buildHeaders(acceptEncoding: string): Record<string, string> {
 	return {
-		"User-Agent": CONFIG.userAgent,
+		"User-Agent": USER_AGENT,
 		Accept:
 			"text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
 		"Accept-Language": "en-US,en;q=0.9",
@@ -334,24 +332,22 @@ function checkCertificate(url: string): Promise<{
 	});
 }
 
+let cachedProbeIp: string | null = null;
+
 async function getProbeMetadata(): Promise<{ ip: string; region: string }> {
-	try {
-		const res = await fetch("https://api.ipify.org?format=json", {
-			signal: AbortSignal.timeout(5000),
-		});
-
-		if (res.ok) {
-			const data = await res.json();
-			return {
-				ip: typeof data?.ip === "string" ? data.ip : "unknown",
-				region: CONFIG.region,
-			};
-		}
-	} catch {
-		// Failed to get probe IP
+	if (!cachedProbeIp) {
+		try {
+			const res = await fetch("https://api.ipify.org?format=json", {
+				signal: AbortSignal.timeout(5000),
+			});
+			if (res.ok) {
+				const data = await res.json();
+				cachedProbeIp = typeof data?.ip === "string" ? data.ip : "unknown";
+			}
+		} catch {}
+		cachedProbeIp ??= "unknown";
 	}
-
-	return { ip: "unknown", region: CONFIG.region };
+	return { ip: cachedProbeIp, region: PROBE_REGION };
 }
 
 export interface CheckOptions {
@@ -364,7 +360,6 @@ export async function checkUptime(
 	siteId: string,
 	url: string,
 	attempt = 1,
-	_maxRetries = 3,
 	options: CheckOptions = {}
 ): Promise<ActionResult<UptimeData>> {
 	try {
@@ -422,9 +417,9 @@ export async function checkUptime(
 			probe_ip: probe.ip,
 			ssl_expiry: cert.expiry,
 			ssl_valid: cert.valid ? 1 : 0,
-			env: CONFIG.env,
+			env: UPTIME_ENV.environment,
 			check_type: "http",
-			user_agent: CONFIG.userAgent,
+			user_agent: USER_AGENT,
 			error,
 			json_data: jsonDataStr,
 		};
