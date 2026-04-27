@@ -131,8 +131,20 @@ export const VitalsBuilders: Record<string, SimpleQueryConfig> = {
 				: "";
 			return {
 				sql: `
-					SELECT 
-						any(e.country) as name,
+					WITH session_geo AS (
+						SELECT
+							session_id,
+							client_id,
+							any(country) as country
+						FROM ${Analytics.events}
+						WHERE client_id = {websiteId:String}
+							AND time >= toDateTime({startDate:String})
+							AND time <= toDateTime(concat({endDate:String}, ' 23:59:59'))
+							AND country != ''
+						GROUP BY session_id, client_id
+					)
+					SELECT
+						sg.country as name,
 						COUNT(DISTINCT wv.anonymous_id) as visitors,
 						quantileIf(0.50)(wv.metric_value, wv.metric_name = 'LCP' AND wv.metric_value > 0) as p50_lcp,
 						quantileIf(0.50)(wv.metric_value, wv.metric_name = 'FCP' AND wv.metric_value > 0) as p50_fcp,
@@ -141,18 +153,13 @@ export const VitalsBuilders: Record<string, SimpleQueryConfig> = {
 						quantileIf(0.50)(wv.metric_value, wv.metric_name = 'TTFB' AND wv.metric_value > 0) as p50_ttfb,
 						COUNT(*) as samples
 					FROM ${Analytics.web_vitals_spans} wv
-					LEFT JOIN ${Analytics.events} e ON (
-						wv.session_id = e.session_id 
-						AND wv.client_id = e.client_id
-						AND abs(dateDiff('second', wv.timestamp, e.time)) < 60
-					)
-					WHERE 
+					INNER JOIN session_geo sg ON wv.session_id = sg.session_id AND wv.client_id = sg.client_id
+					WHERE
 						wv.client_id = {websiteId:String}
 						AND wv.timestamp >= toDateTime({startDate:String})
 						AND wv.timestamp <= toDateTime(concat({endDate:String}, ' 23:59:59'))
-						AND e.country != ''
 						${filterClause}
-					GROUP BY e.country
+					GROUP BY sg.country
 					ORDER BY samples DESC
 					LIMIT {limit:UInt32}
 				`,
@@ -183,8 +190,20 @@ export const VitalsBuilders: Record<string, SimpleQueryConfig> = {
 				: "";
 			return {
 				sql: `
-					SELECT 
-						any(e.browser_name) as name,
+					WITH session_browsers AS (
+						SELECT
+							session_id,
+							client_id,
+							any(browser_name) as browser_name
+						FROM ${Analytics.events}
+						WHERE client_id = {websiteId:String}
+							AND time >= toDateTime({startDate:String})
+							AND time <= toDateTime(concat({endDate:String}, ' 23:59:59'))
+							AND browser_name != ''
+						GROUP BY session_id, client_id
+					)
+					SELECT
+						sb.browser_name as name,
 						COUNT(DISTINCT wv.anonymous_id) as visitors,
 						quantileIf(0.50)(wv.metric_value, wv.metric_name = 'LCP' AND wv.metric_value > 0) as p50_lcp,
 						quantileIf(0.50)(wv.metric_value, wv.metric_name = 'FCP' AND wv.metric_value > 0) as p50_fcp,
@@ -193,18 +212,13 @@ export const VitalsBuilders: Record<string, SimpleQueryConfig> = {
 						quantileIf(0.50)(wv.metric_value, wv.metric_name = 'TTFB' AND wv.metric_value > 0) as p50_ttfb,
 						COUNT(*) as samples
 					FROM ${Analytics.web_vitals_spans} wv
-					LEFT JOIN ${Analytics.events} e ON (
-						wv.session_id = e.session_id 
-						AND wv.client_id = e.client_id
-						AND abs(dateDiff('second', wv.timestamp, e.time)) < 60
-					)
-					WHERE 
+					INNER JOIN session_browsers sb ON wv.session_id = sb.session_id AND wv.client_id = sb.client_id
+					WHERE
 						wv.client_id = {websiteId:String}
 						AND wv.timestamp >= toDateTime({startDate:String})
 						AND wv.timestamp <= toDateTime(concat({endDate:String}, ' 23:59:59'))
-						AND e.browser_name != ''
 						${filterClause}
-					GROUP BY e.browser_name
+					GROUP BY sb.browser_name
 					ORDER BY samples DESC
 					LIMIT {limit:UInt32}
 				`,
@@ -234,8 +248,21 @@ export const VitalsBuilders: Record<string, SimpleQueryConfig> = {
 				: "";
 			return {
 				sql: `
-					SELECT 
-						CONCAT(e.region, ', ', e.country) as name,
+					WITH session_geo AS (
+						SELECT
+							session_id,
+							client_id,
+							any(region) as region,
+							any(country) as country
+						FROM ${Analytics.events}
+						WHERE client_id = {websiteId:String}
+							AND time >= toDateTime({startDate:String})
+							AND time <= toDateTime(concat({endDate:String}, ' 23:59:59'))
+							AND region != ''
+						GROUP BY session_id, client_id
+					)
+					SELECT
+						CONCAT(sg.region, ', ', sg.country) as name,
 						COUNT(DISTINCT wv.anonymous_id) as visitors,
 						quantileIf(0.50)(wv.metric_value, wv.metric_name = 'LCP' AND wv.metric_value > 0) as p50_lcp,
 						quantileIf(0.50)(wv.metric_value, wv.metric_name = 'FCP' AND wv.metric_value > 0) as p50_fcp,
@@ -244,18 +271,13 @@ export const VitalsBuilders: Record<string, SimpleQueryConfig> = {
 						quantileIf(0.50)(wv.metric_value, wv.metric_name = 'TTFB' AND wv.metric_value > 0) as p50_ttfb,
 						COUNT(*) as samples
 					FROM ${Analytics.web_vitals_spans} wv
-					LEFT JOIN ${Analytics.events} e ON (
-						wv.session_id = e.session_id 
-						AND wv.client_id = e.client_id
-						AND abs(dateDiff('second', wv.timestamp, e.time)) < 60
-					)
-					WHERE 
+					INNER JOIN session_geo sg ON wv.session_id = sg.session_id AND wv.client_id = sg.client_id
+					WHERE
 						wv.client_id = {websiteId:String}
 						AND wv.timestamp >= toDateTime({startDate:String})
 						AND wv.timestamp <= toDateTime(concat({endDate:String}, ' 23:59:59'))
-						AND e.region != ''
 						${filterClause}
-					GROUP BY e.region, e.country
+					GROUP BY sg.region, sg.country
 					ORDER BY samples DESC
 					LIMIT {limit:UInt32}
 				`,
@@ -286,8 +308,21 @@ export const VitalsBuilders: Record<string, SimpleQueryConfig> = {
 				: "";
 			return {
 				sql: `
-					SELECT 
-						CONCAT(e.city, ', ', e.country) as name,
+					WITH session_geo AS (
+						SELECT
+							session_id,
+							client_id,
+							any(city) as city,
+							any(country) as country
+						FROM ${Analytics.events}
+						WHERE client_id = {websiteId:String}
+							AND time >= toDateTime({startDate:String})
+							AND time <= toDateTime(concat({endDate:String}, ' 23:59:59'))
+							AND city != ''
+						GROUP BY session_id, client_id
+					)
+					SELECT
+						CONCAT(sg.city, ', ', sg.country) as name,
 						COUNT(DISTINCT wv.anonymous_id) as visitors,
 						quantileIf(0.50)(wv.metric_value, wv.metric_name = 'LCP' AND wv.metric_value > 0) as p50_lcp,
 						quantileIf(0.50)(wv.metric_value, wv.metric_name = 'FCP' AND wv.metric_value > 0) as p50_fcp,
@@ -296,18 +331,13 @@ export const VitalsBuilders: Record<string, SimpleQueryConfig> = {
 						quantileIf(0.50)(wv.metric_value, wv.metric_name = 'TTFB' AND wv.metric_value > 0) as p50_ttfb,
 						COUNT(*) as samples
 					FROM ${Analytics.web_vitals_spans} wv
-					LEFT JOIN ${Analytics.events} e ON (
-						wv.session_id = e.session_id 
-						AND wv.client_id = e.client_id
-						AND abs(dateDiff('second', wv.timestamp, e.time)) < 60
-					)
-					WHERE 
+					INNER JOIN session_geo sg ON wv.session_id = sg.session_id AND wv.client_id = sg.client_id
+					WHERE
 						wv.client_id = {websiteId:String}
 						AND wv.timestamp >= toDateTime({startDate:String})
 						AND wv.timestamp <= toDateTime(concat({endDate:String}, ' 23:59:59'))
-						AND e.city != ''
 						${filterClause}
-					GROUP BY e.city, e.country
+					GROUP BY sg.city, sg.country
 					ORDER BY samples DESC
 					LIMIT {limit:UInt32}
 				`,

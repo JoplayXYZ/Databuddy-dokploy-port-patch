@@ -22,7 +22,24 @@ export const ErrorsBuilders: Record<string, SimpleQueryConfig> = {
 
 			return {
 				sql: `
-					SELECT 
+					WITH session_context AS (
+						SELECT
+							session_id,
+							client_id,
+							any(browser_name) as browser_name,
+							any(browser_version) as browser_version,
+							any(os_name) as os_name,
+							any(os_version) as os_version,
+							any(device_type) as device_type,
+							any(country) as country,
+							any(region) as region
+						FROM ${Analytics.events}
+						WHERE client_id = {websiteId:String}
+							AND time >= toDateTime({startDate:String})
+							AND time <= toDateTime(concat({endDate:String}, ' 23:59:59'))
+						GROUP BY session_id, client_id
+					)
+					SELECT
 						es.message,
 						es.stack,
 						es.path,
@@ -33,37 +50,21 @@ export const ErrorsBuilders: Record<string, SimpleQueryConfig> = {
 						es.lineno,
 						es.colno,
 						es.error_type,
-						-- Get context from events table
-						any(e.browser_name) as browser_name,
-						any(e.browser_version) as browser_version,
-						any(e.os_name) as os_name,
-						any(e.os_version) as os_version,
-						any(e.device_type) as device_type,
-						any(e.country) as country,
-						any(e.region) as region
+						sc.browser_name,
+						sc.browser_version,
+						sc.os_name,
+						sc.os_version,
+						sc.device_type,
+						sc.country,
+						sc.region
 					FROM ${Analytics.error_spans} es
-					LEFT JOIN ${Analytics.events} e ON (
-						es.session_id = e.session_id 
-						AND es.client_id = e.client_id
-						AND abs(dateDiff('second', es.timestamp, e.time)) < 60
-					)
-					WHERE 
+					LEFT JOIN session_context sc ON es.session_id = sc.session_id AND es.client_id = sc.client_id
+					WHERE
 						es.client_id = {websiteId:String}
 						AND es.timestamp >= toDateTime({startDate:String})
 						AND es.timestamp <= toDateTime(concat({endDate:String}, ' 23:59:59'))
 						AND es.message != ''
 						${combinedWhereClause}
-					GROUP BY 
-						es.message,
-						es.stack,
-						es.path,
-						es.anonymous_id,
-						es.session_id,
-						es.timestamp,
-						es.filename,
-						es.lineno,
-						es.colno,
-						es.error_type
 					ORDER BY es.timestamp DESC
 					LIMIT {limit:UInt32}
 				`,
