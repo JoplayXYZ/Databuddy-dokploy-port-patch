@@ -4,6 +4,7 @@ import type { CellContext, ColumnDef } from "@tanstack/react-table";
 import { useCallback, useMemo } from "react";
 import { Card } from "@/components/ds/card";
 import { EmptyState } from "@/components/ds/empty-state";
+import { PercentageBadge } from "@/components/ds/badge";
 import { Skeleton } from "@databuddy/ui";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { BrowserIcon } from "@/components/icon";
@@ -15,7 +16,6 @@ import {
 } from "@/components/table/rows";
 import { useBatchDynamicQuery } from "@/hooks/use-dynamic-query";
 import { formatNumber } from "@/lib/formatters";
-import { PercentageBadge } from "../utils/technology-helpers";
 import type { FullTabProps } from "../utils/types";
 import {
 	DeviceMobileIcon,

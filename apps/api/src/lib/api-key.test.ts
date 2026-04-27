@@ -14,7 +14,7 @@ import {
 	hasWebsiteScope,
 	isApiKeyPresent,
 	resolveEffectiveScopesForWebsite,
-} from "./api-key";
+} from "@databuddy/api-keys/resolve";
 
 const createMockKey = (overrides: Partial<ApiKeyRow> = {}): ApiKeyRow =>
 	({

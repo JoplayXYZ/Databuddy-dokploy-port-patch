@@ -1,3 +1,10 @@
+import {
+	getAccessibleWebsiteIds,
+	getApiKeyFromHeader,
+	hasGlobalAccess,
+	hasKeyScope,
+	isApiKeyPresent,
+} from "@databuddy/api-keys/resolve";
 import { auth } from "@databuddy/auth";
 import { and, db, eq } from "@databuddy/db";
 import { agentChats } from "@databuddy/db/schema";
@@ -47,13 +54,6 @@ import {
 	models,
 } from "../ai/config/models";
 import { getAILogger } from "../lib/ai-logger";
-import {
-	getAccessibleWebsiteIds,
-	getApiKeyFromHeader,
-	hasGlobalAccess,
-	hasKeyScope,
-	isApiKeyPresent,
-} from "../lib/api-key";
 import { trackAgentEvent } from "../lib/databuddy";
 import {
 	formatMemoryForPrompt,

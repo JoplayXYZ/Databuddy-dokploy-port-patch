@@ -4,7 +4,7 @@ import {
 	hasKeyScope,
 	hasWebsiteScope,
 	isApiKeyPresent,
-} from "@/lib/api-key";
+} from "@databuddy/api-keys/resolve";
 import { mergeWideEvent, record } from "@/lib/tracing";
 import { and, db, eq, isNull, or, withTransaction } from "@databuddy/db";
 import {

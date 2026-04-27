@@ -1,11 +1,4 @@
 import { auth } from "@databuddy/auth";
-import { and, db, eq, isNull } from "@databuddy/db";
-import { links, member, uptimeSchedules, websites } from "@databuddy/db/schema";
-import { ratelimit } from "@databuddy/redis/rate-limit";
-import { filterOptions } from "@databuddy/shared/lists/filters";
-import type { CustomQueryRequest } from "@databuddy/shared/types/custom-query";
-import { Elysia, t } from "elysia";
-import { getAccessibleWebsites } from "../lib/accessible-websites";
 import {
 	type ApiKeyRow,
 	getAccessibleWebsiteIds,
@@ -13,7 +6,14 @@ import {
 	hasGlobalAccess,
 	hasKeyScope,
 	isApiKeyPresent,
-} from "../lib/api-key";
+} from "@databuddy/api-keys/resolve";
+import { and, db, eq, isNull } from "@databuddy/db";
+import { links, member, uptimeSchedules, websites } from "@databuddy/db/schema";
+import { ratelimit } from "@databuddy/redis/rate-limit";
+import { filterOptions } from "@databuddy/shared/lists/filters";
+import type { CustomQueryRequest } from "@databuddy/shared/types/custom-query";
+import { Elysia, t } from "elysia";
+import { getAccessibleWebsites } from "../lib/accessible-websites";
 import { resolveDatePreset } from "../lib/date-presets";
 import { mergeWideEvent } from "../lib/tracing";
 import { getCachedWebsiteDomain, getWebsiteDomain } from "../lib/website-utils";

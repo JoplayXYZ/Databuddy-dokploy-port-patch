@@ -1,10 +1,10 @@
-import { db, eq, inArray } from "@databuddy/db";
-import { member, websites } from "@databuddy/db/schema";
 import {
 	type ApiKeyRow,
 	getAccessibleWebsiteIds,
 	hasGlobalAccess,
-} from "./api-key";
+} from "@databuddy/api-keys/resolve";
+import { db, eq, inArray } from "@databuddy/db";
+import { member, websites } from "@databuddy/db/schema";
 
 export interface WebsiteSummary {
 	createdAt: Date | null;
