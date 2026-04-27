@@ -364,7 +364,7 @@ export default function StatusPageDetailsPage() {
 				{statusPage ? (
 					<TransferToOrgDialog
 						currentOrganizationId={statusPage.organizationId}
-						description={`Move "${statusPage.name}" to a different workspace.`}
+						description={`Move "${statusPage.name}" to a different organization.`}
 						isPending={transferMutation.isPending}
 						onOpenChangeAction={setIsTransferOpen}
 						onTransferAction={handleTransfer}

@@ -229,7 +229,7 @@ export default function OnboardingPage() {
 						<div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
 							<div className="space-y-1.5">
 								<p className="font-medium text-[11px] text-muted-foreground uppercase tracking-[0.14em]">
-									Workspace Setup
+									Organization Setup
 								</p>
 								<h1 className="font-semibold text-base text-foreground sm:text-lg">
 									Get Databuddy running

@@ -218,7 +218,7 @@ function SuccessState({ organizationName }: { organizationName: string }) {
 						Welcome to {organizationName}!
 					</h2>
 					<p className="text-muted-foreground text-sm">
-						You now have access to all projects and resources.
+						You now have access to all websites and resources.
 					</p>
 				</div>
 

@@ -75,11 +75,11 @@ export function TransferToOrgDialog({
 				<Dialog.Body className="space-y-4">
 					<div className="space-y-2">
 						<span className="font-medium text-foreground text-xs">
-							Current Workspace
+							Current Organization
 						</span>
 						<div className="flex items-center gap-2.5 rounded border bg-secondary p-2.5">
 							<img
-								alt={currentOrg?.name ?? "Current workspace"}
+								alt={currentOrg?.name ?? "Current organization"}
 								className="size-8 shrink-0 rounded"
 								height={32}
 								src={getDicebearUrl(
@@ -88,7 +88,7 @@ export function TransferToOrgDialog({
 								width={32}
 							/>
 							<p className="truncate font-medium text-sm">
-								{currentOrg?.name ?? "Current workspace"}
+								{currentOrg?.name ?? "Current organization"}
 							</p>
 						</div>
 					</div>
@@ -110,7 +110,7 @@ export function TransferToOrgDialog({
 									<Select.Value />
 								) : (
 									<span className="text-muted-foreground">
-										Choose a workspace
+										Choose an organization
 									</span>
 								)}
 							</Select.Trigger>
@@ -132,7 +132,7 @@ export function TransferToOrgDialog({
 									))
 								) : (
 									<Select.Item disabled value="no-orgs">
-										No workspaces available
+										No organizations available
 									</Select.Item>
 								)}
 							</Select.Content>
@@ -145,8 +145,8 @@ export function TransferToOrgDialog({
 						<div className="flex items-start gap-2 rounded border border-orange-200 bg-orange-50 p-3 text-orange-800 dark:border-orange-800 dark:bg-orange-950/20 dark:text-orange-200">
 							<WarningIcon className="mt-0.5 size-4 shrink-0" />
 							<p className="text-xs">
-								No other workspaces available. Create a new workspace or get
-								invited to one to transfer.
+								No other organizations available. Create a new organization or
+								get invited to one to transfer.
 							</p>
 						</div>
 					) : null}

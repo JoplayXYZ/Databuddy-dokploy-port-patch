@@ -100,7 +100,7 @@ All options are type-safe and documented in `DatabuddyConfig`:
 
 | Option                | Type      | Default      | Description |
 |-----------------------|-----------|--------------|-------------|
-| `clientId`            | string    | —            | **Required.** Your Databuddy project client ID. |
+| `clientId`            | string    | —            | **Required.** Your Databuddy Client ID. |
 | `clientSecret`        | string    | —            | (Advanced) For server-side use only. |
 | `apiUrl`              | string    | `https://basket.databuddy.cc` | Custom API endpoint. |
 | `scriptUrl`           | string    | `https://cdn.databuddy.cc/databuddy.js` | Custom script URL. |

@@ -98,7 +98,7 @@ function TransferPageContent() {
 		(org: Organization) => org.id === websiteOrgId
 	) || {
 		id: websiteOrgId ?? "",
-		name: "Current Workspace",
+		name: "Current Organization",
 		slug: "",
 		logo: null as string | null,
 		createdAt: new Date(),

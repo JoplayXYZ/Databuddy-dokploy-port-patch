@@ -131,7 +131,7 @@ export function ApiKeysSection({
 					<Card.Title>API Keys</Card.Title>
 					<Card.Description>
 						{isEmpty
-							? "Create keys for programmatic access to your workspace"
+							? "Create keys for programmatic access to your organization"
 							: `${activeCount} active of ${items.length} key${items.length === 1 ? "" : "s"}`}
 					</Card.Description>
 				</div>

@@ -89,7 +89,7 @@ export function DestructiveActionsSection({
 				<Card.Header>
 					<Card.Title>Transfer Assets</Card.Title>
 					<Card.Description>
-						Move websites from this workspace to another
+						Move websites from this organization to another
 					</Card.Description>
 				</Card.Header>
 				<Card.Content>

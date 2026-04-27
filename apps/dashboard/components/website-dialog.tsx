@@ -177,7 +177,7 @@ export function WebsiteDialog({
 						<Field error={!!nameError}>
 							<Field.Label>Name</Field.Label>
 							<Input
-								placeholder="Your project's name"
+								placeholder="Your website's name"
 								{...form.register("name")}
 							/>
 							{nameError && <Field.Error>{nameError}</Field.Error>}

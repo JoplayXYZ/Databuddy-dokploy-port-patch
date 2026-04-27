@@ -112,7 +112,7 @@ export function GeneralSettings({
 						<Card.Header>
 							<Card.Title>Avatar</Card.Title>
 							<Card.Description>
-								Customize your workspace avatar
+								Customize your organization avatar
 							</Card.Description>
 						</Card.Header>
 						<Card.Content>
@@ -124,7 +124,7 @@ export function GeneralSettings({
 						<Card.Header>
 							<Card.Title>Details</Card.Title>
 							<Card.Description>
-								Name, slug, and workspace identifier
+								Name, slug, and organization identifier
 							</Card.Description>
 						</Card.Header>
 						<Card.Content className="space-y-5">
@@ -134,7 +134,7 @@ export function GeneralSettings({
 								</div>
 								<div className="min-w-0 flex-1">
 									<p className="font-semibold text-foreground text-xs">
-										Workspace ID
+										Organization ID
 									</p>
 									<p className="truncate font-mono text-muted-foreground text-xs">
 										{organization.id}
@@ -163,7 +163,7 @@ export function GeneralSettings({
 										value={name}
 									/>
 									<Field.Description>
-										Display name for your workspace
+										Display name for your organization
 									</Field.Description>
 								</Field>
 

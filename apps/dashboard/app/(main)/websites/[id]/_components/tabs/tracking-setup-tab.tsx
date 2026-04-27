@@ -349,16 +349,16 @@ function InstallationStep({
 			</Tabs>
 
 			<div className="flex items-center gap-2 pt-2">
-				<span className="text-muted-foreground text-xs">Website ID:</span>
+				<span className="text-muted-foreground text-xs">Client ID:</span>
 				<button
 					className="group flex items-center gap-1.5 rounded bg-accent px-2 py-1 font-mono text-xs hover:bg-accent-brighter"
 					onClick={() =>
-						onCopyCode(websiteId, "website-id", "Website ID copied!")
+						onCopyCode(websiteId, "client-id", "Client ID copied!")
 					}
 					type="button"
 				>
 					<span className="truncate">{websiteId}</span>
-					{copiedBlockId === "website-id" ? (
+					{copiedBlockId === "client-id" ? (
 						<CheckIcon className="size-3 text-success" weight="bold" />
 					) : (
 						<ClipboardIcon
@@ -615,7 +615,7 @@ function DiagnosticsStep() {
 											<code className="rounded bg-accent px-1 py-0.5 font-mono">
 												{"<head>"}
 											</code>{" "}
-											section and your website ID is correct.
+											section and your Client ID is correct.
 										</p>
 									</div>
 								</div>
@@ -701,7 +701,7 @@ function DiagnosticsStep() {
 											troubleshooting documentation
 										</a>{" "}
 										for detailed debugging steps, or contact support with your
-										website ID for personalized help.
+										Client ID for personalized help.
 									</p>
 								</div>
 							</div>

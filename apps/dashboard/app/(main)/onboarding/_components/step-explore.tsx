@@ -56,7 +56,7 @@ export function StepExplore({ onComplete, websiteId }: StepExploreProps) {
 				<div>
 					<h2 className="text-balance font-semibold text-lg">You're all set</h2>
 					<p className="text-pretty text-muted-foreground text-sm">
-						Your workspace is ready. Start with one of the core views below.
+						Your organization is ready. Start with one of the core views below.
 					</p>
 				</div>
 			</div>

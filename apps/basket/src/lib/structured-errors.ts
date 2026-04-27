@@ -35,7 +35,7 @@ export const basketErrors = {
 		createError({
 			message: "Could not resolve billing owner",
 			status: 400,
-			why: "Workspace owner could not be loaded for billing.",
+			why: "Organization owner could not be loaded for billing.",
 			fix: "Verify the organization has an active owner.",
 		}),
 
@@ -92,7 +92,7 @@ export const basketErrors = {
 			message: "Website not found",
 			status: 404,
 			why: "No active website matches the given website_id.",
-			fix: "Check the website_id and that the site exists in your workspace.",
+			fix: "Check the website_id and that the site exists in your organization.",
 		}),
 
 	trackWebsiteNoOrganization: () =>
@@ -123,7 +123,7 @@ export const basketErrors = {
 		createError({
 			message: "Invalid or inactive client ID",
 			status: 400,
-			why: "The website ID is unknown, inactive, or not found.",
+			why: "The Client ID is unknown, inactive, or not found.",
 			fix: "Use the client ID from your site snippet and ensure the site is active.",
 		}),
 

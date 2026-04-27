@@ -94,7 +94,7 @@ function OrgDropdownItems({
 			<DropdownMenu.Separator />
 			<DropdownMenu.Item onClick={() => onNavigate("/organizations/settings")}>
 				<GearIcon className="size-4 shrink-0" />
-				Workspace settings
+				Organization settings
 			</DropdownMenu.Item>
 			<DropdownMenu.Item onClick={() => onNavigate("/billing")}>
 				<CreditCardIcon className="size-4 shrink-0" />
@@ -151,7 +151,7 @@ export function OrganizationSelector({
 		});
 
 		if (error) {
-			toast.error(error.message || "Failed to switch workspace");
+			toast.error(error.message || "Failed to switch organization");
 			setIsSwitching(false);
 			return;
 		}
@@ -162,7 +162,7 @@ export function OrganizationSelector({
 		queryClient.invalidateQueries();
 
 		setIsSwitching(false);
-		toast.success("Workspace updated");
+		toast.success("Organization updated");
 	};
 
 	const filteredOrganizations = filterOrganizations(organizations, query);
@@ -215,7 +215,7 @@ export function OrganizationSelector({
 						open={isOpen}
 					>
 						<Tooltip
-							content={activeOrganization?.name ?? "Workspace"}
+							content={activeOrganization?.name ?? "Organization"}
 							side="right"
 						>
 							<DropdownMenu.Trigger
@@ -224,7 +224,7 @@ export function OrganizationSelector({
 								render={<button type="button" />}
 							>
 								<Avatar
-									alt={activeOrganization?.name ?? "Workspace"}
+									alt={activeOrganization?.name ?? "Organization"}
 									className="size-6 shrink-0 rounded ring-1 ring-black/10 ring-inset"
 									src={avatarUrl}
 								/>
@@ -271,12 +271,12 @@ export function OrganizationSelector({
 						render={<button type="button" />}
 					>
 						<Avatar
-							alt={activeOrganization?.name ?? "Workspace"}
+							alt={activeOrganization?.name ?? "Organization"}
 							className="size-6 shrink-0 rounded ring-1 ring-black/10 ring-inset"
 							src={avatarUrl}
 						/>
 						<span className="min-w-0 flex-1 truncate text-left font-semibold text-sidebar-foreground text-sm">
-							{activeOrganization?.name ?? "Select workspace"}
+							{activeOrganization?.name ?? "Select organization"}
 						</span>
 						{isSwitching ? (
 							<SpinnerGapIcon className="size-3.5 shrink-0 animate-spin text-sidebar-foreground/30" />

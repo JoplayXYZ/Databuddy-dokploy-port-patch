@@ -1803,7 +1803,7 @@ function TeamMockup() {
 				<div className="flex flex-col gap-1">
 					<Text variant="heading">Team</Text>
 					<Text tone="muted" variant="caption">
-						{MEMBERS.length} members in this workspace
+						{MEMBERS.length} members in this organization
 					</Text>
 				</div>
 				<Dialog>
@@ -1844,7 +1844,7 @@ function TeamMockup() {
 							</Field>
 							<Field>
 								<Field.Label>Message (optional)</Field.Label>
-								<Textarea placeholder="Hey, join our analytics workspace!" />
+								<Textarea placeholder="Hey, join our analytics organization!" />
 							</Field>
 						</Dialog.Body>
 						<Dialog.Footer>
@@ -2141,7 +2141,7 @@ function BillingMockup() {
 }
 
 const ONBOARDING_STEPS = [
-	{ id: 1, label: "Create workspace", icon: RocketIcon },
+	{ id: 1, label: "Create organization", icon: RocketIcon },
 	{ id: 2, label: "Add website", icon: GlobeIcon },
 	{ id: 3, label: "Install tracking", icon: LightningIcon },
 	{ id: 4, label: "Invite team", icon: UsersThreeIcon },
@@ -2191,18 +2191,18 @@ function OnboardingMockup() {
 				{step === 1 && (
 					<Card.Content className="flex flex-col gap-6 p-6">
 						<div className="flex flex-col gap-1">
-							<Text variant="heading">Create your workspace</Text>
+							<Text variant="heading">Create your organization</Text>
 							<Text tone="muted" variant="caption">
 								This is where your team's analytics live.
 							</Text>
 						</div>
 						<div className="grid gap-6 sm:grid-cols-2">
 							<Field>
-								<Field.Label>Workspace name</Field.Label>
+								<Field.Label>Organization name</Field.Label>
 								<Input defaultValue="Acme Inc" />
 							</Field>
 							<Field>
-								<Field.Label>Workspace URL</Field.Label>
+								<Field.Label>Organization URL</Field.Label>
 								<Input defaultValue="acme-inc" prefix="dby.cc/" />
 							</Field>
 						</div>

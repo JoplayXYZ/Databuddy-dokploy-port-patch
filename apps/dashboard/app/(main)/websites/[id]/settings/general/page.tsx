@@ -52,7 +52,7 @@ export default function GeneralSettingsPage() {
 	});
 
 	const { isCopied: copiedId, copyToClipboard: copyId } = useCopyToClipboard({
-		onCopy: () => toast.success("Website ID copied to clipboard"),
+		onCopy: () => toast.success("Client ID copied to clipboard"),
 	});
 	const { isCopied: copiedLink, copyToClipboard: copyLink } =
 		useCopyToClipboard({
@@ -120,7 +120,7 @@ export default function GeneralSettingsPage() {
 						description={
 							<code className="font-mono text-[11px]">{websiteId}</code>
 						}
-						title="Website ID"
+						title="Client ID"
 					>
 						<Button
 							onClick={() => copyId(websiteId)}

@@ -5,7 +5,7 @@ export interface DatabuddyConfig {
 	batchSize?: number;
 	/** Batch flush interval in ms (default: 5000). Only used when `enableBatching` is true. */
 	batchTimeout?: number;
-	/** Project client ID. Auto-detected from `NEXT_PUBLIC_DATABUDDY_CLIENT_ID` env var if omitted. */
+	/** Databuddy Client ID. Auto-detected from `NEXT_PUBLIC_DATABUDDY_CLIENT_ID` env var if omitted. */
 	clientId?: string;
 	/** Server-side only. Not required for browser usage. */
 	clientSecret?: string;

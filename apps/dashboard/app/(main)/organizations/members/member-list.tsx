@@ -152,7 +152,7 @@ function MemberDetailDialog({
 							<Dialog.Title>Remove Member</Dialog.Title>
 							<Dialog.Description>
 								This will permanently remove {member.user.name} from the
-								workspace. This action cannot be undone.
+								organization. This action cannot be undone.
 							</Dialog.Description>
 						</Dialog.Header>
 						<Dialog.Footer>
@@ -249,7 +249,7 @@ function MemberDetailDialog({
 										tone="destructive"
 										variant="secondary"
 									>
-										Remove from workspace
+										Remove from organization
 									</Button>
 								</>
 							)}

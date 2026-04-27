@@ -5,7 +5,7 @@ export const TOAST_MESSAGES = {
 	SCRIPT_COPIED: "Script tag copied to clipboard!",
 	TRACKING_COPIED: "Tracking code copied to clipboard!",
 	COMMAND_COPIED: "Command copied to clipboard!",
-	WEBSITE_ID_COPIED: "Website ID copied to clipboard!",
+	WEBSITE_ID_COPIED: "Client ID copied to clipboard!",
 	SHAREABLE_LINK_COPIED: "Shareable link copied to clipboard!",
 	PRIVACY_UPDATING: "Updating privacy settings...",
 	PRIVACY_UPDATED: "Privacy settings updated successfully",

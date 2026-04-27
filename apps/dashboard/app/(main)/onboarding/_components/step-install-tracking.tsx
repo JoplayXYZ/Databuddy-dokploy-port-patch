@@ -49,7 +49,7 @@ function generateAgentPrompt(websiteId: string): string {
 
 ## Installation
 
-Choose the right method for this project's framework:
+Choose the right method for this website's framework:
 
 **React / Next.js** — \`bun add @databuddy/sdk\` (or npm/yarn/pnpm)
 \`\`\`tsx
@@ -99,7 +99,7 @@ All options work as React/Vue props or \`data-*\` attributes on the script tag.
 | enableRetries | bool | true | Retry failed requests |
 | maxRetries | num | 3 | Max retry attempts |
 
-Enable what makes sense for this project. A good starting point:
+Enable what makes sense for this website. A good starting point:
 \`\`\`tsx
 <Databuddy clientId={...} trackWebVitals trackErrors />
 \`\`\`
@@ -592,16 +592,16 @@ export function StepInstallTracking({
 			</Tabs>
 
 			<div className="flex items-center gap-2">
-				<span className="text-muted-foreground text-xs">Website ID:</span>
+				<span className="text-muted-foreground text-xs">Client ID:</span>
 				<button
 					className="group flex items-center gap-1.5 rounded bg-accent px-2 py-1 font-mono text-xs hover:bg-accent-brighter"
 					onClick={() =>
-						handleCopy(websiteId, "website-id", "Website ID copied!")
+						handleCopy(websiteId, "client-id", "Client ID copied!")
 					}
 					type="button"
 				>
 					<span className="truncate">{websiteId}</span>
-					{copiedBlockId === "website-id" ? (
+					{copiedBlockId === "client-id" ? (
 						<CheckIcon className="size-3 text-success" weight="bold" />
 					) : (
 						<ClipboardIcon

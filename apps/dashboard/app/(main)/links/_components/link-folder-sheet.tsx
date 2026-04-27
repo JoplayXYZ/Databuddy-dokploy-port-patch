@@ -42,7 +42,7 @@ export function LinkFolderSheet({
 				<Sheet.Header>
 					<Sheet.Title>Create Folder</Sheet.Title>
 					<Sheet.Description>
-						Name the folder for this workspace.
+						Name the folder for this organization.
 					</Sheet.Description>
 				</Sheet.Header>
 				<form

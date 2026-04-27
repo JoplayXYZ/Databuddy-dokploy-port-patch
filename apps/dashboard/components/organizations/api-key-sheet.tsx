@@ -727,7 +727,7 @@ export function ApiKeySheet({
 											<div className="space-y-3">
 												<Text tone="muted" variant="caption">
 													Select websites to scope this key. Leaving all
-													unselected grants workspace-wide access using the
+													unselected grants organization-wide access using the
 													permissions above.
 												</Text>
 
@@ -805,7 +805,7 @@ export function ApiKeySheet({
 															weight="duotone"
 														/>
 														<Text tone="muted" variant="caption">
-															No websites in this workspace yet.
+															No websites in this organization yet.
 														</Text>
 													</div>
 												)}
@@ -846,7 +846,7 @@ export function ApiKeySheet({
 															}
 														/>
 													}
-													description="Apply your workspace plan limits to this key."
+													description="Apply your organization plan limits to this key."
 													label="Rate limiting"
 												/>
 												<Divider />

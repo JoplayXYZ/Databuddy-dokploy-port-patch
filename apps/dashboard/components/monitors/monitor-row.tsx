@@ -194,7 +194,7 @@ function MonitorActions({
 							onClick={() => setIsTransferOpen(true)}
 						>
 							<ArrowSquareOutIcon className="size-4" weight="duotone" />
-							Transfer to Workspace
+							Transfer to Organization
 						</DropdownMenu.Item>
 					) : null}
 					<DropdownMenu.Separator />
@@ -213,7 +213,7 @@ function MonitorActions({
 			{schedule.organizationId ? (
 				<TransferToOrgDialog
 					currentOrganizationId={schedule.organizationId}
-					description="Move this monitor to a different workspace."
+					description="Move this monitor to a different organization."
 					isPending={transferMutation.isPending}
 					onOpenChangeAction={setIsTransferOpen}
 					onTransferAction={handleTransfer}

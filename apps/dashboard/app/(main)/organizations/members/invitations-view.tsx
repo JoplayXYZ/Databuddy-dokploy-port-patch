@@ -74,7 +74,7 @@ export function InvitationsView({
 						<Card.Title>Invitations</Card.Title>
 						<Card.Description>
 							{totalCount === 0
-								? "Invite people to join this workspace"
+								? "Invite people to join this organization"
 								: `${pendingCount} pending of ${totalCount} total`}
 						</Card.Description>
 					</div>

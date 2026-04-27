@@ -107,7 +107,7 @@ export function TransferAssets({ organizationId }: { organizationId: string }) {
 	if (organizationWebsites.length === 0) {
 		return (
 			<EmptyState
-				description="This workspace has no websites to transfer"
+				description="This organization has no websites to transfer"
 				icon={<ArrowsLeftRightIcon weight="duotone" />}
 				title="No websites"
 			/>
@@ -161,7 +161,7 @@ export function TransferAssets({ organizationId }: { organizationId: string }) {
 								))
 							) : (
 								<Select.Item disabled value="none">
-									No other workspaces
+									No other organizations
 								</Select.Item>
 							)}
 						</Select.Content>

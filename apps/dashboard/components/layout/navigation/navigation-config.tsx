@@ -181,7 +181,7 @@ export const websiteNavigation: NavigationGroup[] = [
 export const settingsNavigation: NavigationGroup[] = [
 	{
 		back: { href: "/home", label: "Home" },
-		label: "Workspace",
+		label: "Organization",
 		items: [
 			createNavItem("General", GearIcon, "/organizations/settings"),
 			createNavItem("Members", UserIcon, "/organizations/members"),

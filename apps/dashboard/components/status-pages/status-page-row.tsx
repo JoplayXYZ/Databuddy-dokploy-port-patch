@@ -135,7 +135,7 @@ function StatusPageActions({
 						onClick={() => setIsTransferOpen(true)}
 					>
 						<ArrowSquareOutIcon className="size-4" weight="duotone" />
-						Transfer to Workspace
+						Transfer to Organization
 					</DropdownMenu.Item>
 					<DropdownMenu.Separator />
 					<DropdownMenu.Item
@@ -151,7 +151,7 @@ function StatusPageActions({
 
 			<TransferToOrgDialog
 				currentOrganizationId={statusPage.organizationId}
-				description={`Move "${statusPage.name}" to a different workspace.`}
+				description={`Move "${statusPage.name}" to a different organization.`}
 				isPending={transferMutation.isPending}
 				onOpenChangeAction={setIsTransferOpen}
 				onTransferAction={handleTransfer}

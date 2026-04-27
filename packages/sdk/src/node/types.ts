@@ -31,7 +31,7 @@ export interface DatabuddyConfig {
 	namespace?: string;
 	/** Origin identifier (e.g. `'backend'`, `'webhook'`, `'cli'`) */
 	source?: string;
-	/** Default website ID to scope events to */
+	/** Default Databuddy Client ID to scope events to */
 	websiteId?: string;
 }
 

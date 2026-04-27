@@ -722,7 +722,7 @@ export default function MonitorDetailsPage() {
 
 			<TransferToOrgDialog
 				currentOrganizationId={schedule.organizationId}
-				description={`Move "${displayName}" to a different workspace.`}
+				description={`Move "${displayName}" to a different organization.`}
 				isPending={transferMutation.isPending}
 				onOpenChangeAction={setIsTransferOpen}
 				onTransferAction={handleTransfer}

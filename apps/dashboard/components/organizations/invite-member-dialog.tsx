@@ -65,7 +65,7 @@ export function InviteMemberDialog({
 						<div>
 							<Dialog.Title>Invite Member</Dialog.Title>
 							<Dialog.Description>
-								Send an invitation to join this workspace
+								Send an invitation to join this organization
 							</Dialog.Description>
 						</div>
 					</div>

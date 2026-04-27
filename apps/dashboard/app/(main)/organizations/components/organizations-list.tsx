@@ -143,18 +143,18 @@ export function OrganizationsList({
 				organizationId: orgId,
 			});
 			if (error) {
-				toast.error(error.message ?? "Failed to switch workspace");
+				toast.error(error.message ?? "Failed to switch organization");
 			} else {
 				await queryClient.invalidateQueries({
 					queryKey: AUTH_QUERY_KEYS.activeOrganization,
 				});
 				queryClient.invalidateQueries();
-				toast.success("Workspace updated");
+				toast.success("Organization updated");
 				await new Promise((resolve) => setTimeout(resolve, 300));
 				router.push("/organizations/settings");
 			}
 		} catch {
-			toast.error("Failed to switch workspace");
+			toast.error("Failed to switch organization");
 		} finally {
 			setProcessingId(null);
 		}
