@@ -2,14 +2,10 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { DeleteDialog } from "@/components/ds/delete-dialog";
 import { Button } from "@/components/ds/button";
+import { DeleteDialog } from "@/components/ds/delete-dialog";
 import { Input } from "@/components/ds/input";
-import {
-	Popover,
-	PopoverContent,
-	PopoverTrigger,
-} from "@/components/ui/popover";
+import { Popover } from "@/components/ds/popover";
 import { useChatSafe } from "@/contexts/chat-context";
 import { dayjs } from "@databuddy/ui";
 import { cn } from "@/lib/utils";
@@ -25,7 +21,17 @@ import {
 
 type Chat = ReturnType<typeof useChatList>["chats"][number];
 
-export function ChatHistory() {
+interface ChatHistoryProps {
+	onCurrentChatDeleted?: (nextChatId: string | null) => void;
+	onSelectChat?: (chatId: string) => void;
+	websiteId?: string | null;
+}
+
+export function ChatHistory({
+	onCurrentChatDeleted,
+	onSelectChat,
+	websiteId,
+}: ChatHistoryProps = {}) {
 	const [open, setOpen] = useState(false);
 	const [query, setQuery] = useState("");
 	const [editingId, setEditingId] = useState<string | null>(null);
@@ -35,9 +41,11 @@ export function ChatHistory() {
 	} | null>(null);
 	const params = useParams();
 	const router = useRouter();
-	const websiteId = params.id as string;
+	const routeWebsiteId = typeof params.id === "string" ? params.id : null;
+	const resolvedWebsiteId = websiteId ?? routeWebsiteId;
 	const currentChatId = useChatSafe()?.id ?? null;
-	const { chats, isLoading, removeChat, renameChat } = useChatList(websiteId);
+	const { chats, isLoading, removeChat, renameChat } =
+		useChatList(resolvedWebsiteId);
 
 	const filtered = useMemo(() => {
 		const q = query.trim().toLowerCase();
@@ -56,11 +64,21 @@ export function ChatHistory() {
 
 	const handleSelectChat = (chatId: string) => {
 		setOpen(false);
-		router.push(`/websites/${websiteId}/agent/${chatId}`);
+		if (onSelectChat) {
+			onSelectChat(chatId);
+			return;
+		}
+		if (resolvedWebsiteId) {
+			router.push(`/websites/${resolvedWebsiteId}/agent/${chatId}`);
+		}
 	};
 
 	const handleConfirmDelete = () => {
 		if (!pendingDelete) {
+			return;
+		}
+		if (!resolvedWebsiteId) {
+			setPendingDelete(null);
 			return;
 		}
 		const chatId = pendingDelete.id;
@@ -69,11 +87,20 @@ export function ChatHistory() {
 
 		if (chatId === currentChatId) {
 			const nextChat = chats.find((c) => c.id !== chatId);
-			if (nextChat) {
-				router.push(`/websites/${websiteId}/agent/${nextChat.id}`);
+			const nextChatId = nextChat?.id ?? null;
+			if (nextChatId) {
+				if (onCurrentChatDeleted) {
+					onCurrentChatDeleted(nextChatId);
+				} else {
+					router.push(`/websites/${resolvedWebsiteId}/agent/${nextChatId}`);
+				}
 			} else {
-				clearLastChatId(websiteId);
-				router.push(`/websites/${websiteId}/agent`);
+				clearLastChatId(resolvedWebsiteId);
+				if (onCurrentChatDeleted) {
+					onCurrentChatDeleted(null);
+				} else {
+					router.push(`/websites/${resolvedWebsiteId}/agent`);
+				}
 			}
 		}
 	};
@@ -89,12 +116,14 @@ export function ChatHistory() {
 	return (
 		<>
 			<Popover onOpenChange={setOpen} open={open}>
-				<PopoverTrigger asChild>
-					<Button aria-label="Chat history" size="sm" variant="ghost">
-						<ClockCounterClockwiseIcon className="size-4" weight="duotone" />
-					</Button>
-				</PopoverTrigger>
-				<PopoverContent align="end" className="w-80 p-0" sideOffset={8}>
+				<Popover.Trigger
+					render={
+						<Button aria-label="Chat history" size="sm" variant="ghost">
+							<ClockCounterClockwiseIcon className="size-4" weight="duotone" />
+						</Button>
+					}
+				/>
+				<Popover.Content align="end" className="w-80 p-0" sideOffset={8}>
 					<div className="border-b p-2">
 						<div className="relative">
 							<MagnifyingGlassIcon
@@ -111,6 +140,13 @@ export function ChatHistory() {
 					</div>
 					<div className="max-h-72 overflow-y-auto">
 						{(() => {
+							if (!resolvedWebsiteId) {
+								return (
+									<div className="p-4 text-center text-muted-foreground text-xs">
+										Open a website to view chats
+									</div>
+								);
+							}
 							if (isLoading) {
 								return (
 									<div className="p-4 text-center text-muted-foreground text-xs">
@@ -155,7 +191,7 @@ export function ChatHistory() {
 							));
 						})()}
 					</div>
-				</PopoverContent>
+				</Popover.Content>
 			</Popover>
 
 			<DeleteDialog
@@ -225,22 +261,24 @@ function ChatRow({
 					ref={inputRef}
 					value={draft}
 				/>
-				<button
+				<Button
 					aria-label="Save title"
-					className="shrink-0 rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
+					className="size-7 shrink-0"
 					onClick={() => onRenameSave(draft)}
-					type="button"
+					size="icon-sm"
+					variant="ghost"
 				>
 					<CheckIcon className="size-3.5" weight="bold" />
-				</button>
-				<button
+				</Button>
+				<Button
 					aria-label="Cancel rename"
-					className="shrink-0 rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
+					className="size-7 shrink-0"
 					onClick={onRenameCancel}
-					type="button"
+					size="icon-sm"
+					variant="ghost"
 				>
 					<XIcon className="size-3.5" />
-				</button>
+				</Button>
 			</div>
 		);
 	}
@@ -252,33 +290,37 @@ function ChatRow({
 				isActive && "bg-accent"
 			)}
 		>
-			<button
-				className="min-w-0 flex-1 px-3 py-2 text-left focus-visible:bg-accent/40 focus-visible:outline-none"
+			<Button
+				className="h-auto min-w-0 flex-1 justify-start whitespace-normal rounded-none px-3 py-2 text-left focus-visible:bg-accent/40"
 				onClick={onSelect}
-				type="button"
+				variant="ghost"
 			>
-				<p className="truncate text-sm">{chat.title}</p>
-				<p className="text-muted-foreground text-xs tabular-nums">
-					{dayjs(chat.updatedAt).fromNow()}
-				</p>
-			</button>
+				<span className="min-w-0">
+					<span className="block truncate text-sm">{chat.title}</span>
+					<span className="block text-muted-foreground text-xs tabular-nums">
+						{dayjs(chat.updatedAt).fromNow()}
+					</span>
+				</span>
+			</Button>
 			<div className="mr-2 flex shrink-0 items-center opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100">
-				<button
+				<Button
 					aria-label={`Rename conversation: ${chat.title}`}
-					className="rounded p-1 hover:bg-accent hover:text-foreground"
+					className="size-7"
 					onClick={onRenameStart}
-					type="button"
+					size="icon-sm"
+					variant="ghost"
 				>
 					<PencilSimpleIcon className="size-3.5" weight="duotone" />
-				</button>
-				<button
+				</Button>
+				<Button
 					aria-label={`Delete conversation: ${chat.title}`}
-					className="rounded p-1 hover:bg-destructive/10 hover:text-destructive"
 					onClick={onDelete}
-					type="button"
+					size="icon-sm"
+					tone="destructive"
+					variant="ghost"
 				>
 					<TrashIcon className="size-3.5" weight="duotone" />
-				</button>
+				</Button>
 			</div>
 		</div>
 	);

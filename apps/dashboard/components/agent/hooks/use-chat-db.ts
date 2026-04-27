@@ -49,14 +49,21 @@ export function clearLastChatId(websiteId: string): void {
 	safeRemoveItem(lastChatKey(websiteId));
 }
 
-export function useChatList(websiteId: string) {
+export function useChatList(websiteId: string | null | undefined) {
 	const queryClient = useQueryClient();
+	const queryWebsiteId = websiteId ?? "";
 
 	const { data, isLoading } = useQuery({
-		...orpc.agentChats.list.queryOptions({ input: { websiteId } }),
+		...orpc.agentChats.list.queryOptions({
+			input: { websiteId: queryWebsiteId },
+		}),
+		enabled: Boolean(websiteId),
 	});
 
 	const invalidate = useCallback(() => {
+		if (!websiteId) {
+			return;
+		}
 		queryClient.invalidateQueries({
 			queryKey: orpc.agentChats.list.key({ input: { websiteId } }),
 		});

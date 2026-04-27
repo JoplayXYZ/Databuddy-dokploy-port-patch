@@ -3,10 +3,11 @@
 import { useAtom } from "jotai";
 import { useMemo, useState } from "react";
 import {
-	UnicodeSpinner,
-	useRandomThinkingVariant,
-} from "@/components/ai-elements/unicode-spinner";
+	DotMatrixLoader,
+	useRandomDotMatrixLoader,
+} from "@/components/ai-elements/dotmatrix-loader";
 import { Button } from "@/components/ds/button";
+import { Input } from "@/components/ds/input";
 import { Textarea } from "@/components/ds/textarea";
 import { Tooltip } from "@databuddy/ui";
 import { useChat, usePendingQueue } from "@/contexts/chat-context";
@@ -28,7 +29,11 @@ import {
 } from "@phosphor-icons/react/dist/ssr";
 import { ClockCountdownIcon } from "@databuddy/ui/icons";
 
-export function AgentInput() {
+interface AgentInputProps {
+	variant?: "page" | "dock";
+}
+
+export function AgentInput({ variant = "page" }: AgentInputProps) {
 	const { sendMessage, stop, status } = useChat();
 	const { messages: pendingMessages, removeAction } = usePendingQueue();
 	const isLoading = status === "streaming" || status === "submitted";
@@ -68,8 +73,8 @@ export function AgentInput() {
 		setCommandsDismissed(true);
 	};
 
-	const handleTextareaKeyDown = (
-		event: React.KeyboardEvent<HTMLTextAreaElement>
+	const handleMessageKeyDown = (
+		event: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>
 	) => {
 		if (showCommands) {
 			if (event.key === "ArrowDown") {
@@ -122,6 +127,81 @@ export function AgentInput() {
 		setSelectedCommandIndex(0);
 	};
 
+	const isDock = variant === "dock";
+
+	if (isDock) {
+		return (
+			<form
+				className="relative z-10 mt-auto"
+				onSubmit={handleSubmit}
+				ref={formRef}
+			>
+				{pendingMessages.length > 0 ? (
+					<PendingPill
+						messages={pendingMessages}
+						onClear={stop}
+						onRemove={removeAction}
+					/>
+				) : null}
+
+				<AgentCommandMenu
+					anchor={
+						<div
+							className={cn(
+								"rounded border border-border bg-background p-1 shadow-xs transition-colors",
+								"focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/50"
+							)}
+						>
+							<div className="flex items-center gap-1">
+								<Input
+									className={cn(
+										"h-8 min-w-0 flex-1 bg-transparent px-2 text-[13px] hover:bg-transparent",
+										"focus-visible:ring-0"
+									)}
+									disabled={isLoading}
+									onChange={(e) => handleInputChange(e.target.value)}
+									onKeyDown={handleMessageKeyDown}
+									placeholder="Ask anything..."
+									value={input}
+									variant="ghost"
+								/>
+								<ThinkingControl iconOnly />
+								{isLoading ? (
+									<Button
+										aria-label="Stop generation"
+										onClick={stop}
+										size="icon-sm"
+										type="button"
+										variant="secondary"
+									>
+										<StopIcon className="size-3.5" weight="fill" />
+									</Button>
+								) : (
+									<Button
+										aria-label="Send message"
+										disabled={!input.trim()}
+										size="icon-sm"
+										type="submit"
+									>
+										<PaperPlaneRightIcon
+											className="size-3.5"
+											weight={input.trim() ? "fill" : "duotone"}
+										/>
+									</Button>
+								)}
+							</div>
+						</div>
+					}
+					commands={filteredCommands}
+					onHover={setSelectedCommandIndex}
+					onSelect={selectCommand}
+					open={showCommands}
+					selectedIndex={safeCommandIndex}
+				/>
+			</form>
+		);
+	}
+
 	return (
 		<form
 			className="sticky z-10 mt-auto"
@@ -147,13 +227,14 @@ export function AgentInput() {
 					>
 						<Textarea
 							className={cn(
-								"min-h-0 resize-none border-0 bg-transparent px-3 pt-3 pb-2 text-sm shadow-none",
-								"focus-visible:border-0 focus-visible:bg-transparent focus-visible:shadow-none focus-visible:ring-0"
+								"min-h-0 resize-none border-0 bg-transparent text-sm shadow-none",
+								"focus-visible:border-0 focus-visible:bg-transparent focus-visible:shadow-none focus-visible:ring-0",
+								"px-3 pt-3 pb-2"
 							)}
 							maxRows={8}
 							minRows={1}
 							onChange={(e) => handleInputChange(e.target.value)}
-							onKeyDown={handleTextareaKeyDown}
+							onKeyDown={handleMessageKeyDown}
 							placeholder="Ask Databunny anything about your analytics…"
 							showFocusIndicator={false}
 							value={input}
@@ -194,7 +275,6 @@ export function AgentInput() {
 					</div>
 				}
 				commands={filteredCommands}
-				onDismiss={() => setCommandsDismissed(true)}
 				onHover={setSelectedCommandIndex}
 				onSelect={selectCommand}
 				open={showCommands}
@@ -218,7 +298,13 @@ const THINKING_DESCRIPTIONS: Record<AgentThinking, string> = {
 	high: "Extended reasoning",
 };
 
-function ThinkingControl() {
+function ThinkingControl({
+	compact = false,
+	iconOnly = false,
+}: {
+	compact?: boolean;
+	iconOnly?: boolean;
+}) {
 	const [thinking, setThinking] = useAtom(agentThinkingAtom);
 	const isOn = thinking !== "off";
 
@@ -246,20 +332,25 @@ function ThinkingControl() {
 			delay={250}
 			side="top"
 		>
-			<button
+			<Button
 				aria-label={`Thinking effort: ${THINKING_LABELS[thinking]}. Click to cycle.`}
 				className={cn(
-					"flex h-7 items-center gap-1 rounded border px-2 text-xs transition-colors",
+					iconOnly ? "border-transparent" : "h-7 gap-1 border px-2 text-xs",
+					!iconOnly && compact && "h-7 px-1.5 text-[11px]",
 					isOn
 						? "border-border bg-accent text-foreground"
-						: "border-transparent text-muted-foreground hover:border-border/60 hover:bg-accent/40 hover:text-foreground"
+						: "text-muted-foreground hover:bg-accent/40 hover:text-foreground",
+					!(isOn || iconOnly) && "border-transparent hover:border-border/60"
 				)}
 				onClick={cycleThinking}
-				type="button"
+				size={iconOnly ? "icon-sm" : "sm"}
+				variant="ghost"
 			>
 				<BrainIcon className="size-3.5" weight={isOn ? "fill" : "duotone"} />
-				<span className="font-medium">{THINKING_LABELS[thinking]}</span>
-			</button>
+				{iconOnly ? null : (
+					<span className="font-medium">{THINKING_LABELS[thinking]}</span>
+				)}
+			</Button>
 		</Tooltip>
 	);
 }
@@ -273,10 +364,16 @@ function Kbd({ children }: { children: React.ReactNode }) {
 }
 
 function GeneratingHint() {
-	const variant = useRandomThinkingVariant();
+	const loader = useRandomDotMatrixLoader();
 	return (
 		<div className="flex min-w-0 items-center gap-1.5 text-muted-foreground text-xs">
-			<UnicodeSpinner label="Generating" variant={variant} />
+			<DotMatrixLoader
+				className="text-primary"
+				dotSize={2}
+				label="Generating"
+				loader={loader}
+				size={14}
+			/>
 			<span>Generating…</span>
 		</div>
 	);
@@ -323,22 +420,24 @@ function PendingPill({
 			<span className="min-w-0 flex-1 truncate text-foreground/70">
 				{preview}
 			</span>
-			<button
+			<Button
 				aria-label="Remove latest queued message"
-				className="shrink-0 rounded p-0.5 text-muted-foreground hover:bg-accent hover:text-foreground"
+				className="size-6 shrink-0"
 				onClick={() => onRemove(latestIndex)}
-				type="button"
+				size="icon-sm"
+				variant="ghost"
 			>
 				<XIcon className="size-3.5" />
-			</button>
+			</Button>
 			{count > 1 ? (
-				<button
-					className="shrink-0 text-muted-foreground hover:text-foreground"
+				<Button
+					className="h-6 shrink-0 px-1.5 text-xs"
 					onClick={onClear}
-					type="button"
+					size="sm"
+					variant="ghost"
 				>
 					Clear all
-				</button>
+				</Button>
 			) : null}
 		</div>
 	);

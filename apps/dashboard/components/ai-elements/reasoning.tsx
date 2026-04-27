@@ -10,9 +10,9 @@ import { useControllableState } from "@radix-ui/react-use-controllable-state";
 import type { ComponentProps, ReactNode } from "react";
 import { createContext, memo, useContext, useEffect, useState } from "react";
 import { Streamdown } from "streamdown";
+import { DotMatrixLoader, useRandomDotMatrixLoader } from "./dotmatrix-loader";
 import { Shimmer } from "./shimmer";
 import { useThinkingPhrase } from "./thinking-phrases";
-import { UnicodeSpinner, useRandomThinkingVariant } from "./unicode-spinner";
 import { CaretDownIcon } from "@databuddy/ui/icons";
 
 interface ReasoningContextValue {
@@ -150,7 +150,7 @@ export const ReasoningTrigger = memo(
 		...props
 	}: ReasoningTriggerProps) => {
 		const { isStreaming, isOpen, duration } = useReasoning();
-		const variant = useRandomThinkingVariant();
+		const loader = useRandomDotMatrixLoader();
 
 		return (
 			<CollapsibleTrigger
@@ -164,10 +164,12 @@ export const ReasoningTrigger = memo(
 					<>
 						<span className="flex items-center gap-2">
 							{isStreaming ? (
-								<UnicodeSpinner
-									className="text-[13px] opacity-80"
+								<DotMatrixLoader
+									className="text-primary"
+									dotSize={2}
 									label="Thinking"
-									variant={variant}
+									loader={loader}
+									size={14}
 								/>
 							) : null}
 							<span>{getThinkingMessage(isStreaming, duration)}</span>

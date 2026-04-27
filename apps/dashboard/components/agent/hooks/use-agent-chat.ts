@@ -2,15 +2,12 @@
 
 import { DefaultChatTransport } from "ai";
 import { useAtomValue } from "jotai";
-import { useParams } from "next/navigation";
 import { useMemo, useRef } from "react";
 import { agentThinkingAtom } from "../agent-atoms";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
 
-export function useAgentChatTransport(chatId: string) {
-	const params = useParams();
-	const websiteId = params.id as string;
+export function useAgentChatTransport(chatId: string, websiteId: string) {
 	const thinking = useAtomValue(agentThinkingAtom);
 	const thinkingRef = useRef(thinking);
 	thinkingRef.current = thinking;

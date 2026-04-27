@@ -85,8 +85,12 @@ export function makeQueryClient() {
 			},
 		}),
 		mutationCache: new MutationCache({
-			onError: (error) => {
-				if (isAbortError(error) || isSilencedError(error)) {
+			onError: (error, _variables, _context, mutation) => {
+				if (
+					isAbortError(error) ||
+					isSilencedError(error) ||
+					mutation.meta?.suppressGlobalErrorToast
+				) {
 					return;
 				}
 				reportError(error);

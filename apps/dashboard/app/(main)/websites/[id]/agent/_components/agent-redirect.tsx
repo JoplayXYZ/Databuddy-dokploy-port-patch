@@ -3,7 +3,10 @@
 import { generateId } from "ai";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { getLastChatId, setLastChatId } from "./hooks/use-chat-db";
+import {
+	getLastChatId,
+	setLastChatId,
+} from "@/components/agent/hooks/use-chat-db";
 
 export function AgentRedirect() {
 	const router = useRouter();
