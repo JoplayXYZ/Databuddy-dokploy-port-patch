@@ -31,6 +31,7 @@ import type { NavigationGroup, NavigationItem } from "./navigation/types";
 import { OrganizationSelector } from "./organization-selector";
 import { SidebarPanel, useSidebarLayout } from "./sidebar-layout";
 import { useSidebarNavigation } from "./sidebar-navigation-provider";
+import { SidebarUtilities } from "./sidebar-utilities";
 
 const P = {
 	outer: "px-2",
@@ -500,6 +501,7 @@ export function Sidebar() {
 						))}
 					</div>
 				)}
+				<SidebarUtilities collapsed={collapsed} />
 			</SidebarPanel>
 			<MobileSidebar />
 		</>
