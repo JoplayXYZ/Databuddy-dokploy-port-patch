@@ -68,42 +68,39 @@ interface BillingProviderProps {
 	websiteId?: string;
 }
 
-const FREE_PLAN_VALUE: BillingContextValue = {
+const DEMO_BILLING_VALUE: BillingContextValue = {
 	customer: null,
 	plans: [],
 	isLoading: false,
-	hasActiveSubscription: false,
-	currentPlanId: PLAN_IDS.FREE,
-	isFree: true,
+	hasActiveSubscription: true,
+	currentPlanId: PLAN_IDS.SCALE,
+	isFree: false,
 	isOrganizationBilling: false,
-	// Demo visitors should see upgrade CTAs that lead to signup.
 	canUserUpgrade: true,
-	canUse: () => false,
+	canUse: () => true,
 	getBalance: () => null,
 	getUsage: () => ({
-		allowed: false,
+		allowed: true,
 		balance: 0,
 		limit: 0,
-		unlimited: false,
+		unlimited: true,
 		usagePercent: null,
 	}),
-	isFeatureEnabled: (feature) => isPlanFeatureEnabled(PLAN_IDS.FREE, feature),
-	getGatedFeatureAccess: (feature) => ({
-		allowed: isPlanFeatureEnabled(PLAN_IDS.FREE, feature),
-		minPlan: getMinimumPlanForFeature(feature),
-		upgradeMessage: FEATURE_METADATA[feature]?.upgradeMessage ?? null,
+	isFeatureEnabled: () => true,
+	getGatedFeatureAccess: () => ({
+		allowed: true,
+		minPlan: null,
+		upgradeMessage: null,
 	}),
-	getUpgradeMessage: (id) =>
-		FEATURE_METADATA[id as FeatureId | GatedFeatureId]?.upgradeMessage ?? null,
-	isAiCapabilityEnabled: (capability) =>
-		isPlanAiCapabilityEnabled(PLAN_IDS.FREE, capability),
-	getPlanCapabilities: () => getPlanCapabilitiesForPlan(PLAN_IDS.FREE),
+	getUpgradeMessage: () => null,
+	isAiCapabilityEnabled: () => true,
+	getPlanCapabilities: () => getPlanCapabilitiesForPlan(PLAN_IDS.SCALE),
 	refetch: () => {},
 };
 
 function PublicBillingProvider({ children }: { children: ReactNode }) {
 	return (
-		<BillingContext.Provider value={FREE_PLAN_VALUE}>
+		<BillingContext.Provider value={DEMO_BILLING_VALUE}>
 			{children}
 		</BillingContext.Provider>
 	);
