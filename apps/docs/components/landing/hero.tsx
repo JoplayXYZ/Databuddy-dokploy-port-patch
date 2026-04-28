@@ -33,7 +33,6 @@ export default function Hero({
 	stars?: number | null;
 }) {
 	const [activeTab, setActiveTab] = useState<string>(tabs[0].id);
-	const [prevTabIndex, setPrevTabIndex] = useState(0);
 	const [loadedTabIds, setLoadedTabIds] = useState<Set<string>>(
 		() => new Set([tabs[0].id])
 	);
@@ -51,10 +50,8 @@ export default function Hero({
 	}, []);
 
 	const activeIndex = tabs.findIndex((t) => t.id === activeTab);
-	const direction = activeIndex >= prevTabIndex ? 1 : -1;
 
 	const selectTab = (id: string) => {
-		setPrevTabIndex(activeIndex);
 		setActiveTab(id);
 		setLoadedTabIds((prev) => new Set(prev).add(id));
 	};
@@ -172,14 +169,11 @@ export default function Hero({
 							<div className="relative min-h-[400px] overflow-hidden rounded bg-muted sm:min-h-[500px] lg:min-h-[600px]">
 								{tabs.map((tab, i) => {
 									const isActive = activeTab === tab.id;
-									const tabIndex = i;
-									let translateX = "0%";
-									if (!isActive) {
-										translateX =
-											tabIndex > activeIndex
-												? `${100 * direction}%`
-												: `${-100 * direction}%`;
-									}
+									const translateX = isActive
+										? "0%"
+										: i > activeIndex
+											? "100%"
+											: "-100%";
 									const src = loadedTabIds.has(tab.id)
 										? `${demoEmbedBaseUrl}${tab.path}?embed=true`
 										: "about:blank";
