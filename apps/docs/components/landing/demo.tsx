@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowsOutSimpleIcon } from "@phosphor-icons/react";
+import { ArrowsOutSimpleIcon } from "@databuddy/ui/icons";
 import { useRef } from "react";
 import { getDemoEmbedBaseUrl } from "@/lib/demo-embed-url";
 
@@ -119,10 +119,7 @@ export default function DemoContainer({
 					type="button"
 				>
 					<div className="flex cursor-pointer items-center gap-2 rounded border border-border bg-card/90 px-4 py-2 font-medium text-sm shadow-lg backdrop-blur-sm duration-300 hover:bg-background/10">
-						<ArrowsOutSimpleIcon
-							className="size-4 text-foreground"
-							weight="fill"
-						/>
+						<ArrowsOutSimpleIcon className="size-4 text-foreground" />
 						<span className="text-foreground">Click to view fullscreen</span>
 					</div>
 				</button>
