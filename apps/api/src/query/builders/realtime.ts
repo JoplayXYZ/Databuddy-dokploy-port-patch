@@ -1,0 +1,268 @@
+import { Analytics } from "../../types/tables";
+import type { Filter, SimpleQueryConfig, TimeUnit } from "../types";
+
+export const RealtimeBuilders: Record<string, SimpleQueryConfig> = {
+	realtime_pages: {
+		meta: {
+			title: "Realtime Top Pages",
+			description:
+				"Top pages being viewed right now, ranked by active viewers in the last 5 minutes.",
+			category: "Realtime",
+			tags: ["realtime", "pages", "live", "top"],
+			output_fields: [
+				{
+					name: "path",
+					type: "string",
+					label: "Page",
+					description: "Page path",
+				},
+				{
+					name: "visitors",
+					type: "number",
+					label: "Active Visitors",
+					description: "Unique visitors on this page in the last 5 minutes",
+				},
+				{
+					name: "pageviews",
+					type: "number",
+					label: "Pageviews",
+					description: "Total pageviews in the last 5 minutes",
+				},
+			],
+			default_visualization: "table",
+			supports_granularity: [],
+			version: "1.0",
+		},
+		table: Analytics.events,
+		fields: ["path", "count() as pageviews", "uniq(anonymous_id) as visitors"],
+		where: [
+			"event_name = 'screen_view'",
+			"time >= now() - INTERVAL 5 MINUTE",
+			"path != ''",
+		],
+		groupBy: ["path"],
+		orderBy: "visitors DESC",
+		limit: 10,
+		timeField: "time",
+		skipDateFilter: true,
+		customizable: false,
+	},
+
+	realtime_referrers: {
+		meta: {
+			title: "Realtime Top Referrers",
+			description:
+				"Top traffic sources right now, ranked by active visitors in the last 5 minutes.",
+			category: "Realtime",
+			tags: ["realtime", "referrers", "live", "sources"],
+			output_fields: [
+				{
+					name: "referrer",
+					type: "string",
+					label: "Referrer",
+					description: "Referring domain",
+				},
+				{
+					name: "visitors",
+					type: "number",
+					label: "Active Visitors",
+					description:
+						"Unique visitors from this referrer in the last 5 minutes",
+				},
+			],
+			default_visualization: "table",
+			supports_granularity: [],
+			version: "1.0",
+		},
+		table: Analytics.events,
+		fields: [
+			"if(referrer_domain = '', 'Direct', referrer_domain) as referrer",
+			"uniq(anonymous_id) as visitors",
+		],
+		where: ["event_name = 'screen_view'", "time >= now() - INTERVAL 5 MINUTE"],
+		groupBy: ["referrer"],
+		orderBy: "visitors DESC",
+		limit: 10,
+		timeField: "time",
+		skipDateFilter: true,
+		customizable: false,
+	},
+
+	realtime_countries: {
+		meta: {
+			title: "Realtime Countries",
+			description:
+				"Geographic distribution of active visitors in the last 5 minutes.",
+			category: "Realtime",
+			tags: ["realtime", "countries", "geography", "live"],
+			output_fields: [
+				{
+					name: "country",
+					type: "string",
+					label: "Country",
+					description: "Country code",
+				},
+				{
+					name: "visitors",
+					type: "number",
+					label: "Active Visitors",
+					description: "Unique visitors from this country",
+				},
+				{
+					name: "latitude",
+					type: "number",
+					label: "Latitude",
+					description: "Country centroid latitude",
+				},
+				{
+					name: "longitude",
+					type: "number",
+					label: "Longitude",
+					description: "Country centroid longitude",
+				},
+			],
+			default_visualization: "table",
+			supports_granularity: [],
+			version: "1.0",
+		},
+		table: Analytics.events,
+		fields: [
+			"country as name",
+			"uniq(anonymous_id) as visitors",
+		],
+		where: [
+			"event_name = 'screen_view'",
+			"time >= now() - INTERVAL 5 MINUTE",
+			"country != ''",
+		],
+		groupBy: ["country"],
+		orderBy: "visitors DESC",
+		limit: 50,
+		timeField: "time",
+		skipDateFilter: true,
+		customizable: false,
+		plugins: { normalizeGeo: true, deduplicateGeo: true },
+	},
+
+	realtime_feed: {
+		meta: {
+			title: "Realtime Live Feed",
+			description:
+				"Live stream of the most recent events happening on the website.",
+			category: "Realtime",
+			tags: ["realtime", "feed", "live", "stream", "events"],
+			output_fields: [
+				{
+					name: "event_name",
+					type: "string",
+					label: "Event",
+					description: "Event name",
+				},
+				{
+					name: "path",
+					type: "string",
+					label: "Page",
+					description: "Page path",
+				},
+				{
+					name: "country",
+					type: "string",
+					label: "Country",
+					description: "Visitor country",
+				},
+				{
+					name: "browser_name",
+					type: "string",
+					label: "Browser",
+					description: "Browser name",
+				},
+				{
+					name: "timestamp",
+					type: "datetime",
+					label: "Time",
+					description: "Event timestamp",
+				},
+			],
+			default_visualization: "table",
+			supports_granularity: [],
+			version: "1.0",
+		},
+		table: Analytics.events,
+		fields: [
+			"event_name",
+			"path",
+			"country",
+			"browser_name",
+			"time as timestamp",
+		],
+		where: ["time >= now() - INTERVAL 2 MINUTE", "session_id != ''"],
+		orderBy: "time DESC",
+		limit: 30,
+		timeField: "time",
+		skipDateFilter: true,
+		customizable: false,
+	},
+
+	realtime_velocity: {
+		meta: {
+			title: "Realtime Velocity",
+			description:
+				"Per-minute breakdown of pageviews and events over the last 60 minutes for sparkline display.",
+			category: "Realtime",
+			tags: ["realtime", "velocity", "sparkline", "trend"],
+			output_fields: [
+				{
+					name: "minute",
+					type: "datetime",
+					label: "Minute",
+					description: "Start of minute bucket",
+				},
+				{
+					name: "pageviews",
+					type: "number",
+					label: "Pageviews",
+					description: "Pageviews in this minute",
+				},
+				{
+					name: "events",
+					type: "number",
+					label: "Events",
+					description: "Custom events in this minute",
+				},
+				{
+					name: "visitors",
+					type: "number",
+					label: "Visitors",
+					description: "Unique visitors in this minute",
+				},
+			],
+			default_visualization: "timeseries",
+			supports_granularity: [],
+			version: "1.0",
+		},
+		customSql: (
+			websiteId: string,
+			_startDate: string,
+			_endDate: string,
+			_filters?: Filter[],
+			_granularity?: TimeUnit
+		) => ({
+			sql: `
+				SELECT
+					toStartOfMinute(time) as minute,
+					countIf(event_name = 'screen_view') as pageviews,
+					countIf(event_name != 'screen_view' AND event_name != 'page_exit') as events,
+					uniq(anonymous_id) as visitors
+				FROM analytics.events
+				WHERE client_id = {websiteId:String}
+					AND time >= now() - INTERVAL 60 MINUTE
+					AND session_id != ''
+				GROUP BY minute
+				ORDER BY minute ASC`,
+			params: { websiteId },
+		}),
+		timeField: "time",
+		skipDateFilter: true,
+		customizable: false,
+	},
+};

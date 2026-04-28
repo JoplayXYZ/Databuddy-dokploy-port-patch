@@ -191,6 +191,11 @@ interface GenericParameterRow {
 export interface ParameterDataMap {
 	// Real-time
 	active_stats: GenericParameterRow;
+	realtime_pages: GenericParameterRow;
+	realtime_referrers: GenericParameterRow;
+	realtime_countries: GenericParameterRow;
+	realtime_feed: GenericParameterRow;
+	realtime_velocity: GenericParameterRow;
 	browser_name: GenericParameterRow;
 	browser_versions: GenericParameterRow;
 	browsers_grouped: GenericParameterRow;
