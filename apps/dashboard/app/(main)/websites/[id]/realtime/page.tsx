@@ -6,6 +6,8 @@ import { useMemo } from "react";
 import { useDynamicQuery } from "@/hooks/use-dynamic-query";
 import { Skeleton } from "@databuddy/ui";
 import { Silkscreen } from "next/font/google";
+import { VelocityBars } from "./_components/velocity-bars";
+import { SessionList } from "./_components/session-list";
 
 const pixel = Silkscreen({ weight: ["400", "700"], subsets: ["latin"] });
 
@@ -40,7 +42,15 @@ export default function RealtimePage() {
 	const { data } = useDynamicQuery(
 		websiteId,
 		dateRange,
-		{ id: "realtime-countries", parameters: ["realtime_countries"] },
+		{
+			id: "realtime-all",
+			parameters: [
+				"realtime_countries",
+				"active_stats",
+				"realtime_velocity",
+				"realtime_sessions",
+			],
+		},
 		{ refetchInterval: 5000, staleTime: 0, gcTime: 10_000 }
 	);
 
@@ -50,53 +60,106 @@ export default function RealtimePage() {
 		visitors: number;
 	}>;
 
-	const totalVisitors = countries.reduce((sum, c) => sum + c.visitors, 0);
+	const stats = (data as any)?.active_stats?.[0];
+	const activeUsers: number = stats?.active_users || 0;
+
+	const velocity = ((data as any)?.realtime_velocity || []) as Array<{
+		minute: string;
+		pageviews: number;
+		events: number;
+	}>;
+	const lastMinute = velocity.length > 0 ? velocity.at(-1) : null;
+	const viewsPerMin = lastMinute?.pageviews || 0;
+	const eventsPerMin = lastMinute?.events || 0;
+
+	const sessions = ((data as any)?.realtime_sessions || []) as Array<{
+		session_id: string;
+		current_page: string;
+		country: string;
+		device_type: string;
+		pages_viewed: number;
+		last_seen: string;
+	}>;
 
 	return (
-		<div className={`${pixel.className} p-4`}>
-			<div className="overflow-hidden rounded-lg border border-border/60 bg-card">
-				<div className="flex items-center justify-between border-border/40 border-b px-4 py-3">
-					<div className="flex items-center gap-3">
-						<div className="flex items-center gap-2">
-							<span className="relative flex size-2">
-								<span className="absolute inline-flex size-full animate-ping rounded-full bg-green-500/60" />
-								<span className="relative inline-flex size-2 rounded-full bg-green-500" />
+		<div className={`${pixel.className} flex h-full flex-col`}>
+			<div className="flex min-h-0 flex-1">
+				{/* Map — takes most of the space */}
+				<div className="relative min-w-0 flex-1">
+					<RealtimeMap countries={countries} />
+
+					<div className="pointer-events-none absolute top-4 left-4 flex items-center gap-2">
+						<span className="relative flex size-2">
+							<span className="absolute inline-flex size-full animate-ping rounded-full bg-[var(--chart-4)]/60" />
+							<span className="relative inline-flex size-2 rounded-full bg-[var(--chart-4)]" />
+						</span>
+						<span className="text-[10px] text-foreground/60 uppercase tracking-widest">
+							Realtime
+						</span>
+					</div>
+
+					<div className="pointer-events-none absolute top-4 right-4 flex items-baseline gap-6">
+						<div className="text-right">
+							<span className="font-bold text-3xl text-foreground tabular-nums">
+								{activeUsers}
 							</span>
-							<span className="text-muted-foreground text-xs uppercase tracking-widest">
-								Live
+							<span className="ml-1 text-[10px] text-foreground/50">users</span>
+						</div>
+						<div className="text-right">
+							<span className="font-bold text-foreground text-xl tabular-nums">
+								{viewsPerMin}
+							</span>
+							<span className="ml-1 text-[10px] text-foreground/50">
+								views/m
 							</span>
 						</div>
-						<span className="text-muted-foreground text-xs">·</span>
-						<span className="text-muted-foreground text-xs">
-							{countries.length} regions
-						</span>
-					</div>
-					<div className="flex items-center gap-2">
-						<span className="font-bold text-2xl text-foreground tabular-nums">
-							{totalVisitors}
-						</span>
-						<span className="text-muted-foreground text-xs">active</span>
-					</div>
-				</div>
-				<div className="h-[600px]">
-					<RealtimeMap countries={countries} />
-				</div>
-				{countries.length > 0 && (
-					<div className="flex flex-wrap gap-x-4 gap-y-1 border-border/40 border-t px-4 py-3">
-						{countries.slice(0, 8).map((c) => (
-							<span
-								className="flex items-center gap-1.5 text-muted-foreground text-xs"
-								key={c.country_code}
-							>
-								<span className="size-1.5 rounded-sm bg-success" />
-								{c.country_name || c.country_code}
-								<span className="text-foreground tabular-nums">
-									{c.visitors}
-								</span>
+						<div className="text-right">
+							<span className="font-bold text-foreground text-xl tabular-nums">
+								{eventsPerMin}
 							</span>
-						))}
+							<span className="ml-1 text-[10px] text-foreground/50">
+								events/m
+							</span>
+						</div>
 					</div>
-				)}
+
+					{countries.length > 0 && (
+						<div className="pointer-events-none absolute right-4 bottom-4 left-4 flex flex-wrap justify-end gap-x-3 gap-y-1">
+							{countries.slice(0, 6).map((c) => (
+								<span
+									className="flex items-center gap-1.5 text-[10px] text-foreground/50"
+									key={c.country_code}
+								>
+									<span className="size-1.5 bg-[var(--chart-4)]" />
+									{c.country_name || c.country_code}
+									<span className="text-foreground/80 tabular-nums">
+										{c.visitors}
+									</span>
+								</span>
+							))}
+						</div>
+					)}
+
+					{/* Velocity bar chart — bottom edge of map */}
+					<div className="absolute right-0 bottom-0 left-0 h-16 border-border/20 border-t bg-background/60 backdrop-blur-sm">
+						<VelocityBars data={velocity} />
+					</div>
+				</div>
+
+				{/* Session sidebar */}
+				<div className="flex w-64 shrink-0 flex-col border-border/40 border-l">
+					<div className="border-border/20 border-b px-3 py-2">
+						<span className="text-[10px] text-foreground/50 uppercase tracking-widest">
+							Active Sessions
+						</span>
+						<span className="ml-2 text-[10px] text-foreground/80 tabular-nums">
+							{sessions.length}
+						</span>
+					</div>
+					<div className="min-h-0 flex-1 overflow-hidden">
+						<SessionList sessions={sessions} />
+					</div>
+				</div>
 			</div>
 		</div>
 	);

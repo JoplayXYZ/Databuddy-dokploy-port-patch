@@ -196,6 +196,7 @@ export interface ParameterDataMap {
 	realtime_cities: GenericParameterRow;
 	realtime_countries: GenericParameterRow;
 	realtime_feed: GenericParameterRow;
+	realtime_sessions: GenericParameterRow;
 	realtime_velocity: GenericParameterRow;
 	browser_name: GenericParameterRow;
 	browser_versions: GenericParameterRow;

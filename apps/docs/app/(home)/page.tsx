@@ -30,29 +30,8 @@ export const metadata: Metadata = {
 
 const container = "mx-auto w-full max-w-400 px-4 sm:px-14 lg:px-20";
 
-async function getGithubStars(): Promise<number | null> {
-	try {
-		const response = await fetch(
-			"https://api.github.com/repos/databuddy-analytics/databuddy",
-			{
-				headers: { Accept: "application/vnd.github+json" },
-				next: { revalidate: 3600 },
-			}
-		);
-		if (!response.ok) {
-			return null;
-		}
-		const data = (await response.json()) as { stargazers_count?: number };
-		return typeof data.stargazers_count === "number"
-			? data.stargazers_count
-			: null;
-	} catch {
-		return null;
-	}
-}
-
 export default async function HomePage() {
-	const [headerList, stars] = await Promise.all([headers(), getGithubStars()]);
+	const headerList = await headers();
 	const demoEmbedBaseUrl = getDemoEmbedBaseUrl(hostFromNextHeaders(headerList));
 
 	return (
@@ -73,7 +52,7 @@ export default async function HomePage() {
 			/>
 			<div className="overflow-hidden">
 				<Section className="overflow-hidden" customPaddings id="hero">
-					<Hero demoEmbedBaseUrl={demoEmbedBaseUrl} stars={stars} />
+					<Hero demoEmbedBaseUrl={demoEmbedBaseUrl} />
 				</Section>
 
 				<Section className="border-border border-t" customPaddings id="stats">

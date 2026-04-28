@@ -253,6 +253,54 @@ export const RealtimeBuilders: Record<string, SimpleQueryConfig> = {
 		customizable: false,
 	},
 
+	realtime_sessions: {
+		meta: {
+			title: "Realtime Active Sessions",
+			description:
+				"Individual sessions active in the last 5 minutes with their current page and metadata.",
+			category: "Realtime",
+			tags: ["realtime", "sessions", "live", "active"],
+			output_fields: [
+				{ name: "session_id", type: "string", label: "Session", description: "Session identifier" },
+				{ name: "current_page", type: "string", label: "Page", description: "Last visited page" },
+				{ name: "country", type: "string", label: "Country", description: "Visitor country" },
+				{ name: "device_type", type: "string", label: "Device", description: "Device type" },
+				{ name: "pages_viewed", type: "number", label: "Pages", description: "Pages viewed in session" },
+				{ name: "last_seen", type: "datetime", label: "Last Seen", description: "Last activity timestamp" },
+			],
+			default_visualization: "table",
+			supports_granularity: [],
+			version: "1.0",
+		},
+		customSql: (
+			websiteId: string,
+			_startDate: string,
+			_endDate: string,
+			_filters?: Filter[],
+			_granularity?: TimeUnit,
+		) => ({
+			sql: `
+				SELECT
+					session_id,
+					argMax(path, time) as current_page,
+					any(country) as country,
+					any(device_type) as device_type,
+					countIf(event_name = 'screen_view') as pages_viewed,
+					max(time) as last_seen
+				FROM analytics.events
+				WHERE client_id = {websiteId:String}
+					AND time >= now() - INTERVAL 5 MINUTE
+					AND session_id != ''
+				GROUP BY session_id
+				ORDER BY last_seen DESC
+				LIMIT 20`,
+			params: { websiteId },
+		}),
+		timeField: "time",
+		skipDateFilter: true,
+		customizable: false,
+	},
+
 	realtime_velocity: {
 		meta: {
 			title: "Realtime Velocity",

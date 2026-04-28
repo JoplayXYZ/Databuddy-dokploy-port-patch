@@ -204,7 +204,6 @@ const RealTimeFeature = () => {
 				const nextValue = 40 + Math.random() * 50;
 				const next = [...prev.slice(1), { value: nextValue }];
 
-				// Update live users count based on the new data point with some smoothing
 				setLiveUsers(Math.floor(100 + nextValue * 0.8));
 
 				return next;
@@ -353,9 +352,7 @@ const SessionsFeature = () => {
 	useEffect(() => {
 		const interval = setInterval(() => {
 			setSessions((prev) => {
-				// Move first item to end and update time
 				const [first, ...rest] = prev;
-				// Generate a new random ID to force re-render/animation if needed
 				return [
 					...rest,
 					{ ...first, time: "Just now", id: Math.random().toString() },
@@ -457,7 +454,6 @@ const ErrorTrackingFeature = () => (
 				<span>Last 24 hours</span>
 				<span>12 Affected</span>
 			</div>
-			{/* Abstract impact graph */}
 			<div className="mt-6 flex h-14 items-end gap-1 opacity-60">
 				{[40, 70, 30, 80, 50, 90, 60, 40, 65, 85, 45, 75].map((h, i) => (
 					<motion.div
@@ -549,7 +545,6 @@ const WebVitalsFeature = () => {
 					<div className="relative flex size-14 items-center justify-center">
 						<svg className="h-full w-full -rotate-90" viewBox="0 0 36 36">
 							<title>Score indicator</title>
-							{/* Background track */}
 							<circle
 								className="stroke-secondary"
 								cx="18"
@@ -620,7 +615,6 @@ const CustomEventsFeature = () => {
 		const interval = setInterval(() => {
 			setEvents((prev) => {
 				const [first, ...rest] = prev;
-				// Generate new count and ID for cycling effect
 				const newCount = `${(Math.random() * 20).toFixed(1)}k`;
 				return [
 					...rest,
@@ -674,7 +668,6 @@ const CustomEventsFeature = () => {
 export default function Bento() {
 	return (
 		<div className="grid h-full w-full grid-cols-1 gap-4 p-1 md:grid-cols-12">
-			{/* Funnels - Large Card */}
 			<BentoCard
 				className="h-full md:col-span-4 md:row-span-2"
 				description="Track user journeys through your app"
@@ -684,7 +677,6 @@ export default function Bento() {
 				<FunnelsFeature />
 			</BentoCard>
 
-			{/* Real-time - Medium Card */}
 			<BentoCard
 				className="h-full md:col-span-4 md:row-span-1"
 				contentClassName="px-0 pb-0"
@@ -695,7 +687,6 @@ export default function Bento() {
 				<RealTimeFeature />
 			</BentoCard>
 
-			{/* Sessions - Medium Card */}
 			<BentoCard
 				className="h-full md:col-span-4 md:row-span-2"
 				description="Watch real user sessions"
@@ -705,7 +696,6 @@ export default function Bento() {
 				<SessionsFeature />
 			</BentoCard>
 
-			{/* Web Vitals - Small Card */}
 			<BentoCard
 				className="h-full md:col-span-4 md:row-span-1"
 				contentClassName="pb-0"
@@ -717,7 +707,6 @@ export default function Bento() {
 				<WebVitalsFeature />
 			</BentoCard>
 
-			{/* Error Tracking - Medium Card */}
 			<BentoCard
 				className="h-full md:col-span-4 md:row-span-1"
 				contentClassName="pb-0"
@@ -729,7 +718,6 @@ export default function Bento() {
 				<ErrorTrackingFeature />
 			</BentoCard>
 
-			{/* Feature Flags - Small Card */}
 			<BentoCard
 				className="h-full md:col-span-4 md:row-span-1"
 				description="Roll out features safely"
@@ -740,7 +728,6 @@ export default function Bento() {
 				<FeatureFlagsFeature />
 			</BentoCard>
 
-			{/* Custom Events - Small Card */}
 			<BentoCard
 				className="h-full md:col-span-4 md:row-span-1"
 				description="Track what matters to you"

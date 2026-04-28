@@ -27,6 +27,7 @@ const G = 3;
 
 export function RealtimeMap({ countries }: RealtimeMapProps) {
 	const canvasRef = useRef<HTMLCanvasElement>(null);
+	const wrapperRef = useRef<HTMLDivElement>(null);
 	const rafRef = useRef<number | null>(null);
 	const countriesRef = useRef<Country[]>(countries);
 	const [tooltip, setTooltip] = useState<{
@@ -37,13 +38,19 @@ export function RealtimeMap({ countries }: RealtimeMapProps) {
 	} | null>(null);
 	countriesRef.current = countries;
 
-	const countryByPixelRef = useRef<Uint16Array | null>(null);
 	const numericToCountryRef = useRef<Map<number, Country>>(new Map());
-	const dimensionsRef = useRef({ w: 0, h: 0 });
+	const viewRef = useRef({ scale: 1, x: 0, y: 0 });
+	const dragRef = useRef<{
+		startX: number;
+		startY: number;
+		ox: number;
+		oy: number;
+	} | null>(null);
 
 	useEffect(() => {
 		const canvas = canvasRef.current;
-		if (!canvas) {
+		const wrapper = wrapperRef.current;
+		if (!(canvas && wrapper)) {
 			return;
 		}
 		const ctx = canvas.getContext("2d");
@@ -53,16 +60,17 @@ export function RealtimeMap({ countries }: RealtimeMapProps) {
 
 		let destroyed = false;
 
-		const logW = canvas.offsetWidth || 800;
-		const logH = canvas.offsetHeight || 700;
+		const logW = wrapper.offsetWidth || 800;
+		const logH = wrapper.offsetHeight || 700;
 		canvas.width = logW;
 		canvas.height = logH;
-		dimensionsRef.current = { w: logW, h: logH };
+		canvas.style.width = `${logW}px`;
+		canvas.style.height = `${logH}px`;
 
 		const rootStyle = getComputedStyle(document.documentElement);
 		const BG = rootStyle.getPropertyValue("--background").trim() || "#19191D";
 		const BORDER = rootStyle.getPropertyValue("--border").trim() || "#33333B";
-		const ACCENT = rootStyle.getPropertyValue("--success").trim() || "#22c55e";
+		const ACCENT = rootStyle.getPropertyValue("--chart-4").trim() || "#2d9cdb";
 
 		const projection = geoNaturalEarth1().fitExtent(
 			[
@@ -97,7 +105,6 @@ export function RealtimeMap({ countries }: RealtimeMapProps) {
 			bx.stroke();
 		}
 
-		// Build per-country pixel lists + hit-test map
 		const countryPixels = new Map<number, number[]>();
 		const hitMap = new Uint16Array(logW * logH);
 
@@ -127,7 +134,6 @@ export function RealtimeMap({ countries }: RealtimeMapProps) {
 			if (pixels.length > 0) {
 				countryPixels.set(id, pixels);
 			}
-			// Fill hit-test map at full pixel resolution
 			for (let y = 0; y < logH; y++) {
 				for (let x = 0; x < logW; x++) {
 					if ((data[(y * logW + x) * 4] ?? 0) > 100) {
@@ -136,12 +142,17 @@ export function RealtimeMap({ countries }: RealtimeMapProps) {
 				}
 			}
 		}
-		countryByPixelRef.current = hitMap;
 
 		const brightness = new Map<number, { value: number; target: number }>();
 		let hoveredId: number | null = null;
-
 		let last = performance.now();
+
+		function applyTransform() {
+			if (!canvas) return;
+			const { scale, x, y } = viewRef.current;
+			canvas.style.transform = `scale(${scale}) translate(${x}px, ${y}px)`;
+			canvas.style.imageRendering = scale > 1.5 ? "pixelated" : "auto";
+		}
 
 		function draw(ts: number) {
 			if (!ctx || destroyed) {
@@ -156,7 +167,6 @@ export function RealtimeMap({ countries }: RealtimeMapProps) {
 				1
 			);
 
-			// Update numeric lookup
 			numericToCountryRef.current.clear();
 			for (const c of activeCountries) {
 				const numId = COUNTRY_NAME_TO_ISO_NUMERIC[c.country_code];
@@ -197,9 +207,7 @@ export function RealtimeMap({ countries }: RealtimeMapProps) {
 					continue;
 				}
 
-				const isHovered = id === hoveredId;
-				ctx.fillStyle = isHovered ? "#fff" : ACCENT;
-
+				ctx.fillStyle = id === hoveredId ? "#fff" : ACCENT;
 				for (let i = 0; i < pixels.length; i += 2) {
 					const x = pixels[i];
 					const y = pixels[i + 1];
@@ -211,10 +219,9 @@ export function RealtimeMap({ countries }: RealtimeMapProps) {
 				}
 			}
 
-			// Hovered country outline highlight
-			if (hoveredId !== null) {
+			if (hoveredId !== null && !numericToCountryRef.current.has(hoveredId)) {
 				const pixels = countryPixels.get(hoveredId);
-				if (pixels && !brightness.has(hoveredId)) {
+				if (pixels) {
 					ctx.fillStyle = "rgba(255, 255, 255, 0.15)";
 					for (let i = 0; i < pixels.length; i += 2) {
 						ctx.fillRect(pixels[i], pixels[i + 1], 2, 2);
@@ -225,10 +232,50 @@ export function RealtimeMap({ countries }: RealtimeMapProps) {
 			rafRef.current = requestAnimationFrame(draw);
 		}
 
+		const handleWheel = (e: WheelEvent) => {
+			e.preventDefault();
+			const view = viewRef.current;
+			const oldScale = view.scale;
+			const zoom = e.deltaY > 0 ? 0.9 : 1.1;
+			view.scale = Math.min(5, Math.max(1, oldScale * zoom));
+
+			if (view.scale === 1) {
+				view.x = 0;
+				view.y = 0;
+			}
+
+			applyTransform();
+		};
+
+		const handleMouseDown = (e: MouseEvent) => {
+			if (viewRef.current.scale <= 1) {
+				return;
+			}
+			dragRef.current = {
+				startX: e.clientX,
+				startY: e.clientY,
+				ox: viewRef.current.x,
+				oy: viewRef.current.y,
+			};
+			wrapper.style.cursor = "grabbing";
+		};
+
 		const handleMouseMove = (e: MouseEvent) => {
+			if (dragRef.current) {
+				const scale = viewRef.current.scale;
+				viewRef.current.x =
+					dragRef.current.ox + (e.clientX - dragRef.current.startX) / scale;
+				viewRef.current.y =
+					dragRef.current.oy + (e.clientY - dragRef.current.startY) / scale;
+				applyTransform();
+				return;
+			}
+
 			const rect = canvas.getBoundingClientRect();
-			const x = Math.floor(((e.clientX - rect.left) / rect.width) * logW);
-			const y = Math.floor(((e.clientY - rect.top) / rect.height) * logH);
+			const scaleX = logW / rect.width;
+			const scaleY = logH / rect.height;
+			const x = Math.floor((e.clientX - rect.left) * scaleX);
+			const y = Math.floor((e.clientY - rect.top) * scaleY);
 
 			if (x < 0 || x >= logW || y < 0 || y >= logH) {
 				hoveredId = null;
@@ -242,8 +289,8 @@ export function RealtimeMap({ countries }: RealtimeMapProps) {
 				const country = numericToCountryRef.current.get(id);
 				if (country) {
 					setTooltip({
-						x: e.clientX - rect.left,
-						y: e.clientY - rect.top,
+						x: e.clientX - wrapper.getBoundingClientRect().left,
+						y: e.clientY - wrapper.getBoundingClientRect().top,
 						name: country.country_name || country.country_code,
 						visitors: country.visitors,
 					});
@@ -256,26 +303,50 @@ export function RealtimeMap({ countries }: RealtimeMapProps) {
 			} else if (id === hoveredId) {
 				setTooltip((prev) =>
 					prev
-						? { ...prev, x: e.clientX - rect.left, y: e.clientY - rect.top }
+						? {
+								...prev,
+								x: e.clientX - wrapper.getBoundingClientRect().left,
+								y: e.clientY - wrapper.getBoundingClientRect().top,
+							}
 						: null
 				);
 			}
 		};
 
-		const handleMouseLeave = () => {
-			hoveredId = null;
-			setTooltip(null);
+		const handleMouseUp = () => {
+			dragRef.current = null;
+			wrapper.style.cursor = viewRef.current.scale > 1 ? "grab" : "";
 		};
 
-		canvas.addEventListener("mousemove", handleMouseMove);
-		canvas.addEventListener("mouseleave", handleMouseLeave);
+		const handleMouseLeave = () => {
+			hoveredId = null;
+			dragRef.current = null;
+			setTooltip(null);
+			wrapper.style.cursor = "";
+		};
+
+		const handleDblClick = () => {
+			viewRef.current = { scale: 1, x: 0, y: 0 };
+			applyTransform();
+		};
+
+		wrapper.addEventListener("wheel", handleWheel, { passive: false });
+		wrapper.addEventListener("mousedown", handleMouseDown);
+		wrapper.addEventListener("mousemove", handleMouseMove);
+		wrapper.addEventListener("mouseup", handleMouseUp);
+		wrapper.addEventListener("mouseleave", handleMouseLeave);
+		wrapper.addEventListener("dblclick", handleDblClick);
 
 		rafRef.current = requestAnimationFrame(draw);
 
 		return () => {
 			destroyed = true;
-			canvas.removeEventListener("mousemove", handleMouseMove);
-			canvas.removeEventListener("mouseleave", handleMouseLeave);
+			wrapper.removeEventListener("wheel", handleWheel);
+			wrapper.removeEventListener("mousedown", handleMouseDown);
+			wrapper.removeEventListener("mousemove", handleMouseMove);
+			wrapper.removeEventListener("mouseup", handleMouseUp);
+			wrapper.removeEventListener("mouseleave", handleMouseLeave);
+			wrapper.removeEventListener("dblclick", handleDblClick);
 			if (rafRef.current) {
 				cancelAnimationFrame(rafRef.current);
 			}
@@ -283,8 +354,8 @@ export function RealtimeMap({ countries }: RealtimeMapProps) {
 	}, []);
 
 	return (
-		<div className="relative h-full w-full">
-			<canvas className="block h-full w-full" ref={canvasRef} />
+		<div className="relative h-full w-full overflow-hidden" ref={wrapperRef}>
+			<canvas className="origin-center" ref={canvasRef} />
 			{tooltip && (
 				<div
 					className="pointer-events-none absolute z-10 rounded border border-border/60 bg-popover px-2.5 py-1.5 text-xs shadow-md"

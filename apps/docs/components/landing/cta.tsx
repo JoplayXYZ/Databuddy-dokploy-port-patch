@@ -32,8 +32,7 @@ function CTAContent() {
 	return (
 		<div className="relative mx-auto rounded-none border-border bg-background/95 -pr-2 md:w-10/12 md:border-[1.2px] md:border-b-0 md:border-l-0">
 			<div className="w-full md:mx-0">
-				{/* CTA grid */}
-				<div className="relative grid grid-cols-1 border-border border-t-[1.2px] md:grid-cols-3 md:grid-rows-1">
+	<div className="relative grid grid-cols-1 border-border border-t-[1.2px] md:grid-cols-3 md:grid-rows-1">
 					<div className="pointer-events-none absolute top-1/2 left-0 z-10 hidden w-full -translate-y-1/2 select-none grid-cols-3 md:grid">
 						<Plus className="ml-auto size-8 translate-x-[16.5px] translate-y-[.5px] text-muted-foreground" />
 						<Plus className="ml-auto size-8 translate-x-[16.5px] translate-y-[.5px] text-muted-foreground" />
@@ -96,10 +95,8 @@ function CTAContent() {
 					})}
 				</div>
 
-				{/* Liquid Chrome CTA Section */}
-				<div className="relative min-h-[400px] overflow-hidden border-border border-t-[1.2px] border-l-[1.2px]">
-					{/* Liquid Chrome Background */}
-					<div className="absolute inset-0 opacity-30">
+<div className="relative min-h-[400px] overflow-hidden border-border border-t-[1.2px] border-l-[1.2px]">
+<div className="absolute inset-0 opacity-30">
 						<LiquidChrome
 							amplitude={0.4}
 							frequencyX={2.5}
@@ -109,8 +106,7 @@ function CTAContent() {
 						/>
 					</div>
 
-					{/* Gradient overlays for edge fading - theme aware */}
-					<div className="absolute inset-0 bg-linear-to-r from-background/80 via-transparent to-background/80" />
+<div className="absolute inset-0 bg-linear-to-r from-background/80 via-transparent to-background/80" />
 					<div className="absolute inset-0 bg-gradient-to-b from-background/60 via-transparent to-background/60" />
 					<div className="absolute inset-0 bg-gradient-to-tr from-background/40 via-transparent to-transparent" />
 					<div className="absolute inset-0 bg-gradient-to-bl from-transparent via-transparent to-background/40" />

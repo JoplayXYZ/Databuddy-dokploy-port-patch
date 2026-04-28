@@ -1,11 +1,11 @@
 "use client";
 
+import { cn } from "@/lib/utils";
 import { ArrowsOutSimpleIcon } from "@phosphor-icons/react";
 import { motion } from "motion/react";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { cn } from "@/lib/utils";
 import BackgroundFlow from "./backgroundFlow";
 import { SciFiButton } from "./scifi-btn";
 
@@ -30,7 +30,6 @@ export default function Hero({
 	demoEmbedBaseUrl,
 }: {
 	demoEmbedBaseUrl: string;
-	stars?: number | null;
 }) {
 	const [activeTab, setActiveTab] = useState<string>(tabs[0].id);
 	const [loadedTabIds, setLoadedTabIds] = useState<Set<string>>(
@@ -85,35 +84,19 @@ export default function Hero({
 
 	return (
 		<section className="relative mx-auto flex w-full max-w-500 flex-col items-center">
-			{/* <Spotlight transform="translateX(-60%) translateY(-50%)" /> */}
 			<BackgroundFlow />
 			<div className="mx-auto w-full max-w-400 px-4 pt-26 pb-8 sm:px-14 sm:pt-20 lg:px-20 lg:pt-38">
 				<div className="mx-auto flex max-w-360 flex-col items-start space-y-2 text-left">
-					<motion.h1
-						animate={{ opacity: 1, y: 0 }}
-						className="z-10 text-balance font-semibold text-3xl sm:text-5xl md:text-6xl"
-						initial={{ opacity: 0, y: 20 }}
-						transition={{ duration: 0.4, delay: 0 }}
-					>
+					<h1 className="z-10 text-balance font-semibold text-3xl sm:text-5xl md:text-6xl">
 						Privacy-first analytics. One script, no cookies, no consent banners.
-					</motion.h1>
+					</h1>
 
-					<motion.p
-						animate={{ opacity: 1, y: 0 }}
-						className="z-10 max-w-2xl text-muted-foreground text-sm sm:text-base lg:text-lg"
-						initial={{ opacity: 0, y: 20 }}
-						transition={{ duration: 0.4, delay: 0.15 }}
-					>
+					<p className="z-10 max-w-2xl text-muted-foreground text-sm sm:text-base lg:text-lg">
 						Web analytics, error tracking, and feature flags in a single script
 						under 30 KB. GDPR compliant out of the box.
-					</motion.p>
+					</p>
 
-					<motion.div
-						animate={{ opacity: 1, y: 0 }}
-						className="flex items-center gap-3 pt-2"
-						initial={{ opacity: 0, y: 20 }}
-						transition={{ duration: 0.4, delay: 0.3 }}
-					>
+					<div className="flex items-center gap-3 pt-2">
 						<SciFiButton asChild className="px-6 py-5">
 							<a href="https://app.databuddy.cc/login">
 								See your analytics in 5 minutes
@@ -123,7 +106,7 @@ export default function Hero({
 						<SciFiButton asChild className="px-6 py-5">
 							<Link href="/demo">Live demo</Link>
 						</SciFiButton>
-					</motion.div>
+					</div>
 				</div>
 
 				<div className="z-10 mt-5 space-y-0">

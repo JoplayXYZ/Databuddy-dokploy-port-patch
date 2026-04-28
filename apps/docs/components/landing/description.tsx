@@ -84,22 +84,19 @@ export const Description = () => {
 
 	return (
 		<div className="w-full">
-			{/* Mobile Layout */}
-			<div className="block lg:hidden">
+<div className="block lg:hidden">
 				<div className="mb-8 text-center">
 					<h2 className="mb-8 font-medium text-2xl leading-tight sm:text-3xl">
 						Most Analytics Tools are
 					</h2>
 				</div>
 
-				{/* Mobile Active Title */}
 				<div className="mb-6 text-center">
 					<h3 className="font-medium text-foreground text-xl">
 						{data[currentIndex].title}
 					</h3>
 				</div>
 
-				{/* Mobile Content */}
 				<div className="flex min-h-[100px] items-center justify-center">
 					<AnimatePresence mode="wait">
 						<motion.div
@@ -126,10 +123,8 @@ export const Description = () => {
 				</motion.p>
 			</div>
 
-			{/* Desktop Layout */}
 			<div className="hidden w-full justify-center lg:flex">
 				<div className="flex w-full max-w-7xl items-stretch justify-center px-8">
-					{/* Left Column - Titles */}
 					<div className="flex flex-1 flex-col justify-center py-12 pr-12 xl:py-16">
 						<h2 className="mb-4 font-medium text-2xl leading-tight xl:mb-6 xl:text-3xl">
 							Most Analytics Tools are
@@ -160,10 +155,8 @@ export const Description = () => {
 						</motion.p>
 					</div>
 
-					{/* Divider */}
 					<div className="-mt-8 w-px shrink-0 self-stretch bg-border lg:-mt-12" />
 
-					{/* Right Column - Content */}
 					<div className="flex flex-1 flex-col justify-center py-12 pl-12 xl:py-16">
 						<div className="flex items-center">
 							<AnimatePresence mode="wait">

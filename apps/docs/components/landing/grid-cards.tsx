@@ -73,7 +73,6 @@ export const GridCards = () => {
 				</p>
 			</div>
 
-			{/* Grid Section */}
 			<div className="grid grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-8 lg:grid-cols-3 lg:gap-10 xl:gap-12">
 				{cards.map((card) => (
 					<div className="flex" key={card.id}>
