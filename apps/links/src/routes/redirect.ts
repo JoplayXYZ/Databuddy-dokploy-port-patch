@@ -330,11 +330,23 @@ async function recordClick(
 	});
 }
 
+const IGNORED_SLUGS = new Set([
+	"robots.txt",
+	"favicon.ico",
+	"sitemap.xml",
+	".well-known",
+]);
+
 export const redirectRoute = new Elysia().get(
 	"/:slug",
 	async function handleRedirect({ params, request, set }) {
 		const t0 = performance.now();
 		const { slug } = params;
+
+		if (IGNORED_SLUGS.has(slug)) {
+			set.status = 404;
+			return;
+		}
 		const ip = extractIp(request);
 		const ipHash = hashIp(ip);
 		const ev: Record<string, string | number | boolean> = { link_slug: slug };
