@@ -1,8 +1,10 @@
 "use client";
 
-import { Button } from "@databuddy/ui";
-import { Input } from "@databuddy/ui";
-import { CheckIcon, PaperPlaneTiltIcon } from "@phosphor-icons/react";
+import { Button, Input } from "@databuddy/ui";
+import {
+	CheckIcon,
+	EnvelopeSimpleIcon,
+} from "@databuddy/ui/icons";
 import { useRef, useState } from "react";
 
 type FormStatus = "idle" | "loading" | "success" | "error";
@@ -50,7 +52,7 @@ export function NewsletterForm() {
 	if (status === "success") {
 		return (
 			<div className="flex items-center gap-2 text-foreground text-sm">
-				<CheckIcon className="size-4" weight="bold" />
+				<CheckIcon className="size-4" />
 				<span>You're in. Watch your inbox.</span>
 			</div>
 		);
@@ -60,7 +62,7 @@ export function NewsletterForm() {
 		<div className="space-y-2">
 			<form className="flex gap-2" onSubmit={handleSubmit}>
 				<Input
-					className="h-10 w-full min-w-0 sm:w-80"
+					className="h-9 w-full min-w-0"
 					disabled={status === "loading"}
 					placeholder="you@company.com"
 					ref={inputRef}
@@ -68,14 +70,13 @@ export function NewsletterForm() {
 					type="email"
 				/>
 				<Button
-					className="shrink-0"
+					aria-label="Subscribe to newsletter"
 					disabled={status === "loading"}
 					loading={status === "loading"}
-					size="lg"
+					size="icon"
 					type="submit"
 				>
-					Subscribe
-					<PaperPlaneTiltIcon className="size-3.5" weight="fill" />
+					<EnvelopeSimpleIcon className="size-4" />
 				</Button>
 			</form>
 			{status === "error" && errorMessage ? (
