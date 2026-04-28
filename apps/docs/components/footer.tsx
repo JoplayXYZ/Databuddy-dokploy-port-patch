@@ -15,7 +15,6 @@ export function Footer() {
 	return (
 		<footer className="border-border border-t bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
 			<div className="mx-auto flex w-full max-w-400 flex-col gap-8 px-4 pt-10 sm:px-14 lg:px-20">
-				{/* CTA Section */}
 				<div
 					className="relative flex h-70 w-full items-start overflow-hidden rounded-lg bg-center bg-cover md:h-80"
 					style={{
@@ -246,7 +245,6 @@ export function Footer() {
 					</div>
 				</div>
 
-				{/* Copyright Row */}
 				<div className="mt-4 flex items-start justify-between gap-4 border-border border-t pt-4">
 					<p className="text-muted-foreground text-sm sm:text-base">
 						© {new Date().getFullYear()} Databuddy Analytics, Inc.

@@ -1,6 +1,5 @@
 "use client";
 
-// Credits to better-auth for the inspiration
 
 import { XLogoIcon } from "@phosphor-icons/react";
 import Link from "next/link";
@@ -162,24 +161,6 @@ function TestimonialCardContent({
 				) : null}
 			</div>
 
-			{/* <div className="pointer-events-none absolute inset-0">
-				<div className="absolute top-0 left-0 size-2">
-					<div className="absolute top-0 left-0.5 h-0.5 w-1.5 origin-left bg-foreground" />
-					<div className="absolute top-0 left-0 h-2 w-0.5 origin-top bg-foreground" />
-				</div>
-				<div className="absolute top-0 right-0 size-2 -scale-x-[1]">
-					<div className="absolute top-0 left-0.5 h-0.5 w-1.5 origin-left bg-foreground" />
-					<div className="absolute top-0 left-0 h-2 w-0.5 origin-top bg-foreground" />
-				</div>
-				<div className="absolute bottom-0 left-0 size-2 -scale-y-[1]">
-					<div className="absolute top-0 left-0.5 h-0.5 w-1.5 origin-left bg-foreground" />
-					<div className="absolute top-0 left-0 h-2 w-0.5 origin-top bg-foreground" />
-				</div>
-				<div className="absolute right-0 bottom-0 size-2 -scale-[1]">
-					<div className="absolute top-0 left-0.5 h-0.5 w-1.5 origin-left bg-foreground" />
-					<div className="absolute top-0 left-0 h-2 w-0.5 origin-top bg-foreground" />
-				</div>
-			</div> */}
 		</div>
 	);
 }
@@ -236,7 +217,6 @@ function SlidingTestimonials({
 export default function Testimonials(): ReactElement {
 	return (
 		<div className="relative max-w-full">
-			{/* Header Section */}
 			<div className="mb-10 flex gap-2 px-4 text-start sm:mb-12 sm:px-6 md:px-0 lg:mb-16">
 				<span className="mt-2">
 					<SectionBullet color="#714075" />
@@ -252,7 +232,6 @@ export default function Testimonials(): ReactElement {
 				</div>
 			</div>
 
-			{/* Testimonials Marquee */}
 			<div className="max-w-full overflow-x-hidden">
 				<div className="flex flex-col gap-4 sm:gap-6 lg:gap-8">
 					<SlidingTestimonials
