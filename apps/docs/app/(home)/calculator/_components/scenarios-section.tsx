@@ -21,7 +21,7 @@ export function ScenariosSection() {
 				</h2>
 				<p className="mx-auto max-w-2xl text-balance text-muted-foreground text-sm">
 					Modeled unattributed revenue at realistic visitor data loss and
-					visitor-to-paid assumptions — not literal profit-and-loss impact. Your
+					visitor-to-paid assumptions - not literal profit-and-loss impact. Your
 					mileage will vary.
 				</p>
 			</div>

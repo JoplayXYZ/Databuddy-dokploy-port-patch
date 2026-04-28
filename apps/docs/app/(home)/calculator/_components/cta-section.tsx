@@ -18,7 +18,7 @@ export function CtaSection() {
 					<p className="mx-auto mb-6 max-w-xl text-pretty text-muted-foreground text-sm sm:text-base">
 						Databuddy is privacy-first analytics with no cookies and no consent
 						banners. Under 30 KB. You get visibility into traffic cookie stacks
-						often miss — cookieless scripts can still be blocked, but you skip
+						often miss - cookieless scripts can still be blocked, but you skip
 						consent loss on measurement.
 					</p>
 
@@ -32,7 +32,7 @@ export function CtaSection() {
 							title="Under 30 KB"
 						/>
 						<ValueProp
-							description="Starts at $10/mo — compare to modeled gap above"
+							description="Starts at $10/mo - compare to modeled gap above"
 							title="Predictable pricing"
 						/>
 					</div>

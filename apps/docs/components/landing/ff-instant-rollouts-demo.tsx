@@ -22,7 +22,9 @@ export function FFInstantRolloutsDemo() {
 
 	// Auto-toggle first item after rows animate in
 	useEffect(() => {
-		if (!visible) return;
+		if (!visible) {
+			return;
+		}
 		const t = window.setTimeout(() => {
 			setToggled(true);
 			setToast(true);
@@ -31,7 +33,9 @@ export function FFInstantRolloutsDemo() {
 	}, [visible]);
 
 	useEffect(() => {
-		if (!toast) return;
+		if (!toast) {
+			return;
+		}
 		const t = window.setTimeout(() => setToast(false), 1500);
 		return () => window.clearTimeout(t);
 	}, [toast]);

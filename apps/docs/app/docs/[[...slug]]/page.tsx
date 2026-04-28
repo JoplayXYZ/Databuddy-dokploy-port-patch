@@ -118,7 +118,7 @@ export async function generateMetadata(props: {
 					url: ogImage,
 					width: 1200,
 					height: 630,
-					alt: `${pageTitle} — Databuddy Docs`,
+					alt: `${pageTitle} - Databuddy Docs`,
 				},
 			],
 		},

@@ -6,7 +6,7 @@ export function CalculatorSources() {
 			</p>
 			<p className="mb-4 text-pretty text-muted-foreground text-xs leading-relaxed sm:text-sm">
 				<span className="text-foreground/90">Visitor data loss</span> means
-				visits that do not send consent to cookie-based analytics — a
+				visits that do not send consent to cookie-based analytics - a
 				measurement gap, not customers who left your site.
 			</p>
 			<div className="space-y-4 text-pretty text-muted-foreground text-xs leading-relaxed sm:text-sm">
@@ -24,7 +24,7 @@ export function CalculatorSources() {
 							>
 								Advance Metrics (2024)
 							</a>
-							: 1.2M+ interactions — 25.4% accept all; 68.9% close or ignore (no
+							: 1.2M+ interactions - 25.4% accept all; 68.9% close or ignore (no
 							consent / no analytics).
 						</li>
 						<li>
@@ -47,7 +47,7 @@ export function CalculatorSources() {
 							>
 								Utz et al. (ACM CCS 2019)
 							</a>
-							: 80k+ real visitors — up to 45% reject with fair opt-out; without
+							: 80k+ real visitors - up to 45% reject with fair opt-out; without
 							nudging, &lt;0.1% consent.
 						</li>
 						<li>

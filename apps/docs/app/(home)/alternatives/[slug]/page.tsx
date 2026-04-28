@@ -82,7 +82,7 @@ export default async function AlternativeToPage({ params }: PageProps) {
 			]}
 			competitor={competitor}
 			faqs={faqs}
-			featureSectionSubtitle={`Databuddy vs ${competitor.name} — same comparison as our main review, tuned for “alternative to ${competitor.name}” searches`}
+			featureSectionSubtitle={`Databuddy vs ${competitor.name} - same comparison as our main review, tuned for “alternative to ${competitor.name}” searches`}
 			features={features}
 			featuresWin={featuresWin}
 			heroCta={hero.cta}

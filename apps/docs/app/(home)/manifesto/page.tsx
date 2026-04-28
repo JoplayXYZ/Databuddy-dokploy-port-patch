@@ -10,7 +10,7 @@ import { ManifestoSignature } from "./manifesto-signature";
 
 const title = "The Databuddy Manifesto | Databuddy";
 const description =
-	"Why we built Databuddy: analytics that respects users, connects context, and answers in plain language — without enterprise bloat or cookie theater.";
+	"Why we built Databuddy: analytics that respects users, connects context, and answers in plain language - without enterprise bloat or cookie theater.";
 const url = "https://www.databuddy.cc/manifesto";
 
 export const metadata: Metadata = {

@@ -4,8 +4,8 @@ type Tone = "danger" | "warning" | "success";
 
 interface AlertCardRow {
 	id: string;
-	title: string;
 	meta: string;
+	title: string;
 	tone: Tone;
 }
 

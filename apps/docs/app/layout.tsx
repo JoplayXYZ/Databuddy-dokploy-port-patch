@@ -37,7 +37,7 @@ export const metadata: Metadata = {
 	title: {
 		template: "%s | Databuddy",
 		default:
-			"Databuddy — Privacy-first analytics, error tracking & feature flags",
+			"Databuddy - Privacy-first analytics, error tracking & feature flags",
 	},
 	description:
 		"One lightweight layer for analytics, error tracking, and feature flags. Under 30 KB, no cookies, GDPR compliant by default. Open-source Google Analytics alternative.",

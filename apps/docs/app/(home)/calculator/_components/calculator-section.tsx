@@ -58,7 +58,7 @@ export function CalculatorSection() {
 					Model the measurement gap
 				</h2>
 				<p className="mx-auto max-w-2xl text-balance text-muted-foreground text-sm">
-					Labels say unmeasured and unattributed — not money walking out the
+					Labels say unmeasured and unattributed - not money walking out the
 					door. Adjust inputs; outputs update live.
 				</p>
 			</div>
@@ -179,14 +179,14 @@ export function CalculatorSection() {
 											{formatCurrencyFull(results.lostRevenueYearlyRangeLow)} –{" "}
 											{formatCurrencyFull(results.lostRevenueYearlyRangeHigh)}
 										</span>
-										/year. Not literal profit-and-loss impact — assumes
+										/year. Not literal profit-and-loss impact - assumes
 										conversions scale with traffic.
 									</p>
 								</div>
 
 								<div className="space-y-2 rounded border border-border bg-card/40 p-3">
 									<p className="text-muted-foreground text-xs">
-										Side-by-side (no ratio — compare yourself)
+										Side-by-side (no ratio - compare yourself)
 									</p>
 									<div className="flex flex-col gap-1.5 text-sm">
 										<div className="flex justify-between gap-2">

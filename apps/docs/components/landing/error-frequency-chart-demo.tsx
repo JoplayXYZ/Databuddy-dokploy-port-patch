@@ -44,11 +44,15 @@ export function ErrorFrequencyChartDemo() {
 
 	useEffect(() => {
 		const el = ref.current;
-		if (!el) return;
+		if (!el) {
+			return;
+		}
 		const observer = new IntersectionObserver(
 			(entries) => {
 				const entry = entries[0];
-				if (!entry?.isIntersecting || el.dataset.animated === "true") return;
+				if (!entry?.isIntersecting || el.dataset.animated === "true") {
+					return;
+				}
 				el.dataset.animated = "true";
 				setVisible(true);
 			},

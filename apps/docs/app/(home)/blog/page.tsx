@@ -21,7 +21,7 @@ export const revalidate = 3600;
 
 const WORD_SPLIT_REGEX = /\s+/;
 
-const blogTitle = "Blog — Privacy-First Analytics Guides & Updates";
+const blogTitle = "Blog - Privacy-First Analytics Guides & Updates";
 const blogDescription =
 	"Practical articles on instrumentation, GDPR compliance, Core Web Vitals, and developer-first analytics from the Databuddy team.";
 const blogUrl = "https://www.databuddy.cc/blog";

@@ -10,7 +10,7 @@ import type { Metadata } from "next";
 import { Footer } from "@/components/footer";
 import { StructuredData } from "@/components/structured-data";
 
-const title = "Terms of Service — Usage Policies & Legal Agreement | Databuddy";
+const title = "Terms of Service - Usage Policies & Legal Agreement | Databuddy";
 const url = "https://www.databuddy.cc/terms";
 
 export const metadata: Metadata = {
@@ -58,7 +58,7 @@ export default function TermsPage() {
 					{/* TL;DR */}
 					<div className="mx-auto mb-6 max-w-2xl rounded border border-accent bg-accent/50 p-4 text-left">
 						<p className="text-foreground text-sm">
-							<strong>TL;DR</strong> — Be fair and lawful, keep your account
+							<strong>TL;DR</strong> - Be fair and lawful, keep your account
 							secure, don’t abuse the service, and you can cancel anytime. We’ll
 							notify you about material changes.
 						</p>

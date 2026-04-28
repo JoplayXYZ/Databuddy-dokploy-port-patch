@@ -35,14 +35,20 @@ export function UptimeRegionsHubDiagram() {
 
 	useEffect(() => {
 		const canvas = canvasRef.current;
-		if (!canvas) return;
+		if (!canvas) {
+			return;
+		}
 		const ctx = canvas.getContext("2d");
-		if (!ctx) return;
+		if (!ctx) {
+			return;
+		}
 
 		let destroyed = false;
 
 		async function init() {
-			if (!(canvas && ctx) || destroyed) return;
+			if (!(canvas && ctx) || destroyed) {
+				return;
+			}
 
 			const logW = canvas.offsetWidth || 800;
 			const logH = canvas.offsetHeight || 220;
@@ -62,7 +68,9 @@ export function UptimeRegionsHubDiagram() {
 				{ type: "Sphere" } as GeoPermissibleObjects
 			);
 
-			if (destroyed) return;
+			if (destroyed) {
+				return;
+			}
 
 			// biome-ignore lint/suspicious/noExplicitAny: topojson types
 			const features = (
@@ -77,7 +85,9 @@ export function UptimeRegionsHubDiagram() {
 			baseC.width = logW;
 			baseC.height = logH;
 			const bx = baseC.getContext("2d");
-			if (!bx) return;
+			if (!bx) {
+				return;
+			}
 			const bPath = geoPath(projection, bx);
 			bx.fillStyle = BG;
 			bx.fillRect(0, 0, logW, logH);
@@ -98,7 +108,9 @@ export function UptimeRegionsHubDiagram() {
 				off.width = logW;
 				off.height = logH;
 				const ox = off.getContext("2d");
-				if (!ox) return null;
+				if (!ox) {
+					return null;
+				}
 				const oPath = geoPath(projection, ox);
 				for (const f of features) {
 					if (def.ids.has(+(f.id ?? -1))) {
@@ -110,9 +122,13 @@ export function UptimeRegionsHubDiagram() {
 				}
 				const data = ox.getImageData(0, 0, logW, logH).data;
 				const pixels: number[] = [];
-				for (let y = 0; y < logH; y += G)
-					for (let x = 0; x < logW; x += G)
-						if ((data[(y * logW + x) * 4] ?? 0) > 100) pixels.push(x, y);
+				for (let y = 0; y < logH; y += G) {
+					for (let x = 0; x < logW; x += G) {
+						if ((data[(y * logW + x) * 4] ?? 0) > 100) {
+							pixels.push(x, y);
+						}
+					}
+				}
 				return {
 					pixels,
 					fill: FG,
@@ -132,7 +148,9 @@ export function UptimeRegionsHubDiagram() {
 			const DECAY_MS = 1800;
 
 			function fireNext() {
-				if (destroyed) return;
+				if (destroyed) {
+					return;
+				}
 				for (const z of zones) {
 					z.brightness = 0;
 					z.rampUp = false;
@@ -150,7 +168,9 @@ export function UptimeRegionsHubDiagram() {
 			let last = performance.now();
 
 			function draw(ts: number) {
-				if (!ctx || destroyed) return;
+				if (!ctx || destroyed) {
+					return;
+				}
 				const dt = Math.min(ts - last, 50);
 				last = ts;
 
@@ -161,11 +181,15 @@ export function UptimeRegionsHubDiagram() {
 				for (const zone of zones) {
 					if (zone.rampUp) {
 						zone.brightness = Math.min(1, zone.brightness + dt / 700);
-						if (zone.brightness >= 1) zone.rampUp = false;
+						if (zone.brightness >= 1) {
+							zone.rampUp = false;
+						}
 					} else {
 						zone.brightness = Math.max(0, zone.brightness - dt / 1800);
 					}
-					if (zone.brightness <= 0) continue;
+					if (zone.brightness <= 0) {
+						continue;
+					}
 
 					ctx.fillStyle = zone.fill;
 					for (let i = 0; i < zone.pixels.length; i += 2) {
@@ -173,7 +197,9 @@ export function UptimeRegionsHubDiagram() {
 						const y = zone.pixels[i + 1];
 						const bayer =
 							(BAYER[Math.floor(y / G) % 4]?.[Math.floor(x / G) % 4] ?? 0) / 16;
-						if (zone.brightness > bayer) ctx.fillRect(x, y, 2, 2);
+						if (zone.brightness > bayer) {
+							ctx.fillRect(x, y, 2, 2);
+						}
 					}
 				}
 
@@ -187,7 +213,9 @@ export function UptimeRegionsHubDiagram() {
 
 		return () => {
 			destroyed = true;
-			if (rafRef.current) cancelAnimationFrame(rafRef.current);
+			if (rafRef.current) {
+				cancelAnimationFrame(rafRef.current);
+			}
 		};
 	}, []);
 
@@ -273,27 +301,30 @@ function rowStyles(pos: number): {
 	border: string;
 	bg: string;
 } {
-	if (pos === 0)
+	if (pos === 0) {
 		return {
 			opacity: 1,
 			filter: "none",
 			border: "border-white/[0.18]",
 			bg: "bg-white/[0.05]",
 		};
-	if (pos === 1)
+	}
+	if (pos === 1) {
 		return {
 			opacity: 0.42,
 			filter: "blur(2px)",
 			border: "border-white/[0.06]",
 			bg: "bg-white/[0.02]",
 		};
-	if (pos === 2)
+	}
+	if (pos === 2) {
 		return {
 			opacity: 0.6,
 			filter: "blur(2px)",
 			border: "border-transparent",
 			bg: "bg-transparent",
 		};
+	}
 	return {
 		opacity: 0,
 		filter: "none",
@@ -310,7 +341,9 @@ export function UptimeAlertsStackVisual() {
 	const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
 	const step = useCallback(() => {
-		if (busyRef.current) return;
+		if (busyRef.current) {
+			return;
+		}
 		busyRef.current = true;
 
 		const next = activeRef.current + 1;
@@ -344,7 +377,9 @@ export function UptimeAlertsStackVisual() {
 		};
 		sched();
 		return () => {
-			if (timerRef.current) clearTimeout(timerRef.current);
+			if (timerRef.current) {
+				clearTimeout(timerRef.current);
+			}
 		};
 	}, [step]);
 
@@ -446,7 +481,9 @@ const DEMO_MONITORS = [
 
 function seededColor(index: number, seed: number): string {
 	const hash = Math.abs(((index + 1) * 31 + seed * 17) % 1000);
-	if (hash < 10) return "bg-amber-400";
+	if (hash < 10) {
+		return "bg-amber-400";
+	}
 	return "bg-emerald-500";
 }
 

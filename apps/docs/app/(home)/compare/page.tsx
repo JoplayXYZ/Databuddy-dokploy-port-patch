@@ -9,7 +9,7 @@ import { StructuredData } from "@/components/structured-data";
 import { competitors } from "@/lib/comparison-config";
 
 const compareTitle =
-	"Databuddy vs Other Analytics Platforms — Feature Comparisons";
+	"Databuddy vs Other Analytics Platforms - Feature Comparisons";
 const compareDescription =
 	"Side-by-side comparisons of Databuddy against Google Analytics, Plausible, Fathom, and more. See which privacy-first analytics platform fits your stack.";
 const compareUrl = "https://www.databuddy.cc/compare";
@@ -94,7 +94,7 @@ export default function ComparePage() {
 									rel="noopener noreferrer"
 									target="_blank"
 								>
-									Start Free — No Credit Card
+									Start Free - No Credit Card
 								</Link>
 							</SciFiButton>
 							<Link

@@ -264,7 +264,7 @@ export default function BrandingContent() {
 								Headlines
 							</p>
 							<p className="text-pretty text-muted-foreground text-xs">
-								Same pairing — larger size and weight provide sufficient
+								Same pairing - larger size and weight provide sufficient
 								contrast on their own.
 							</p>
 						</div>
@@ -313,7 +313,7 @@ export default function BrandingContent() {
 			{/* Typography */}
 			<section className="mb-16 sm:mb-24" id="typography">
 				<SectionHeader
-					description="Two typefaces form the Databuddy type system — LT Superior for display and body, and LT Superior Mono for code and technical content."
+					description="Two typefaces form the Databuddy type system - LT Superior for display and body, and LT Superior Mono for code and technical content."
 					title="Typography"
 				/>
 
@@ -444,7 +444,7 @@ export default function BrandingContent() {
 			{/* 8-bit Bunny */}
 			<section className="mb-16 sm:mb-24" id="graphic-assets">
 				<SectionHeader
-					description="The 8-bit bunny adds personality and digital charm. It should live in the background or play a secondary role — never replace the main logomark."
+					description="The 8-bit bunny adds personality and digital charm. It should live in the background or play a secondary role - never replace the main logomark."
 					title="Graphic assets"
 				/>
 

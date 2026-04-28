@@ -19,7 +19,9 @@ export function FFPercentageRolloutsDemo() {
 
 	const setFromClientX = useCallback((clientX: number) => {
 		const track = trackRef.current;
-		if (!track) return;
+		if (!track) {
+			return;
+		}
 		const rect = track.getBoundingClientRect();
 		const x = Math.min(Math.max(clientX - rect.left, 0), rect.width);
 		setPercent(Math.round((x / rect.width) * 100));
@@ -36,8 +38,12 @@ export function FFPercentageRolloutsDemo() {
 
 	const onPointerMove = useCallback(
 		(e: React.PointerEvent<HTMLDivElement>) => {
-			if (!draggingRef.current) return;
-			if (rafRef.current) cancelAnimationFrame(rafRef.current);
+			if (!draggingRef.current) {
+				return;
+			}
+			if (rafRef.current) {
+				cancelAnimationFrame(rafRef.current);
+			}
 			rafRef.current = requestAnimationFrame(() => setFromClientX(e.clientX));
 		},
 		[setFromClientX]
@@ -52,11 +58,14 @@ export function FFPercentageRolloutsDemo() {
 		}
 	}, []);
 
-	useEffect(() => {
-		return () => {
-			if (rafRef.current) cancelAnimationFrame(rafRef.current);
-		};
-	}, []);
+	useEffect(
+		() => () => {
+			if (rafRef.current) {
+				cancelAnimationFrame(rafRef.current);
+			}
+		},
+		[]
+	);
 
 	return (
 		<div className="relative w-full" ref={ref}>
@@ -92,7 +101,7 @@ export function FFPercentageRolloutsDemo() {
 					onPointerMove={onPointerMove}
 					onPointerUp={onPointerUp}
 					ref={trackRef}
-					role="slider"
+					role="slider" tabIndex={0}
 					style={{ height: `${BAR_H}px` }}
 				>
 					{/* Inactive ticks — full width, short, dim */}

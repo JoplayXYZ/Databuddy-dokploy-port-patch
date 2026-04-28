@@ -13,18 +13,18 @@ import { cn } from "@/lib/utils";
 type VitalStatus = "good" | "needs-improvement" | "poor" | "neutral";
 
 interface VitalMetric {
-	value: string;
 	status: VitalStatus;
+	value: string;
 }
 
 interface BreakdownRow {
+	cls: VitalMetric;
+	fcp: VitalMetric;
+	inp: VitalMetric;
 	label: string;
+	lcp: VitalMetric;
 	samples: string;
 	visitors?: string;
-	lcp: VitalMetric;
-	fcp: VitalMetric;
-	cls: VitalMetric;
-	inp: VitalMetric;
 }
 
 const PAGE_ROWS: BreakdownRow[] = [
@@ -87,12 +87,12 @@ type BrowserGlyphKind =
 	| "x";
 
 interface BrowserBreakdownRow {
-	id: string;
-	name: string;
-	glyphKind: BrowserGlyphKind;
-	visitors: string;
-	lcp: VitalMetric;
 	fcp: VitalMetric;
+	glyphKind: BrowserGlyphKind;
+	id: string;
+	lcp: VitalMetric;
+	name: string;
+	visitors: string;
 }
 
 const BROWSER_ROWS: BrowserBreakdownRow[] = [

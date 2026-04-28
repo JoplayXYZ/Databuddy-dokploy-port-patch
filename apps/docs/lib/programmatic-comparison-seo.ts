@@ -34,7 +34,7 @@ export function getProgrammaticComparisonSeo(
 		`Switch from ${name} to Databuddy (${YEAR}). Compare features, pricing, AI insights, and migration steps before you move.`
 	);
 	return {
-		title: `Switch from ${name} to Databuddy (${YEAR}) — Migration & Comparison`,
+		title: `Switch from ${name} to Databuddy (${YEAR}) - Migration & Comparison`,
 		description,
 	};
 }
@@ -47,5 +47,5 @@ export function getProgrammaticIntroText(
 	if (variant === "alternative") {
 		return `Searching for an alternative to ${name}? Below is the same side-by-side breakdown teams use to compare privacy-first analytics, pricing, and features before they choose Databuddy.`;
 	}
-	return `Planning to move off ${name}? This page mirrors our full comparison — pricing tiers, feature parity, and FAQs — framed for teams actively switching tools.`;
+	return `Planning to move off ${name}? This page mirrors our full comparison - pricing tiers, feature parity, and FAQs - framed for teams actively switching tools.`;
 }

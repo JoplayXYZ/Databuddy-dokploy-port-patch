@@ -5,14 +5,14 @@ import { cn } from "@/lib/utils";
 type TrendKind = "down-good" | "up-bad" | "flat";
 
 interface TrendRow {
-	id: string;
-	label: string;
-	route: string;
-	before: string;
 	after: string;
+	before: string;
+	id: string;
 	kind: TrendKind;
-	strokeClass: string;
+	label: string;
 	polylinePoints: string;
+	route: string;
+	strokeClass: string;
 }
 
 const ROWS: TrendRow[] = [
@@ -61,7 +61,7 @@ const ROWS: TrendRow[] = [
 function Sparkline({ row }: { row: TrendRow }) {
 	return (
 		<svg
-			aria-hidden
+			aria-hidden role="img"
 			className="h-6 w-20 shrink-0 overflow-visible sm:w-24"
 			viewBox="0 0 80 24"
 		>

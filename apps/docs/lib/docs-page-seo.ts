@@ -60,10 +60,10 @@ function contextKeywordsForUrl(url: string): string[] {
 export function getDocsPageSeo(page: DocPage): DocsPageSeoModel {
 	const pageTitle = page.data.title ?? "Documentation";
 	const url = `https://www.databuddy.cc${page.url}`;
-	const title = `${pageTitle} — Docs`;
+	const title = `${pageTitle} - Docs`;
 	const description =
 		page.data.description ??
-		`${pageTitle} — guides and reference for Databuddy, the privacy-first analytics platform.`;
+		`${pageTitle} - guides and reference for Databuddy, the privacy-first analytics platform.`;
 	const ogImage = `https://www.databuddy.cc${getPageImage(page).url}`;
 	const sectionLabel = sectionLabelForUrl(page.url);
 
