@@ -10,7 +10,7 @@ import type { Metadata } from "next";
 import { Footer } from "@/components/footer";
 import { StructuredData } from "@/components/structured-data";
 
-const title = "Data Processing Agreement — GDPR Article 28 DPA | Databuddy";
+const title = "Data Processing Agreement - GDPR Article 28 DPA | Databuddy";
 const description =
 	"Our data processing agreement under Article 28 of the GDPR, covering our role as data processor when you use our analytics service.";
 const url = "https://www.databuddy.cc/dpa";
@@ -65,7 +65,7 @@ export default function DPAPage() {
 					{/* TL;DR */}
 					<div className="mx-auto mb-6 max-w-2xl rounded border border-accent bg-accent/50 p-4 text-left">
 						<p className="text-foreground text-sm">
-							<strong>TL;DR</strong> — Our data processing agreement under
+							<strong>TL;DR</strong> - Our data processing agreement under
 							Article 28 of the GDPR, covering our role as data processor when
 							you use our analytics service. By using our service, you
 							automatically agree to this DPA.

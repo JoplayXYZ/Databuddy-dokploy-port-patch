@@ -9,7 +9,7 @@ export const pricingFaqItems = [
 	{
 		question: "Is there a free trial?",
 		answer:
-			"The Free plan is forever free — no trial period, no credit card required. You get 10,000 events per month and 10 agent credits to explore the AI assistant. Upgrade any time if you need more, or buy credit top-ups as you go.",
+			"The Free plan is forever free - no trial period, no credit card required. You get 10,000 events per month and 10 agent credits to explore the AI assistant. Upgrade any time if you need more, or buy credit top-ups as you go.",
 	},
 	{
 		question: "Can I switch plans?",
@@ -29,7 +29,7 @@ export const pricingFaqItems = [
 	{
 		question: "What payment methods do you accept?",
 		answer:
-			"We accept all major credit and debit cards via Stripe. All payments are processed securely — we never see or store your card details.",
+			"We accept all major credit and debit cards via Stripe. All payments are processed securely - we never see or store your card details.",
 	},
 	{
 		question: "Can I self-host instead?",

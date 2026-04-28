@@ -32,12 +32,13 @@ export function Footer() {
 					/>
 					<div className="relative max-w-5xl px-8 pt-8 sm:px-16 md:pt-16">
 						<h2 className="mb-2 text-left font-medium text-2xl text-white leading-tight sm:text-4xl">
-							All the analytics you need. One click away
+							Every day without Databuddy is a day of data you'll never get
+							back.
 						</h2>
 
 						<p className="mb-6 text-lg text-white/70">
-							Events, errors, and feature flags in a single privacy-first
-							script.
+							No credit card. No commitment. Set up in 5 minutes and see what
+							you've been missing.
 						</p>
 						<div className="flex gap-3">
 							<Button
@@ -53,7 +54,7 @@ export function Footer() {
 								size="sm"
 								variant="secondary"
 							>
-								<Link href="/contact">Contact us</Link>
+								<Link href="/demo">Try the live demo</Link>
 							</Button>
 						</div>
 					</div>

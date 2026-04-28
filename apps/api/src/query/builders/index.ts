@@ -8,6 +8,7 @@ import { LLMAnalyticsBuilders } from "./llm-analytics";
 import { PagesBuilders } from "./pages";
 import { PerformanceBuilders } from "./performance";
 import { ProfilesBuilders } from "./profiles";
+import { RealtimeBuilders } from "./realtime";
 import { RevenueBuilders } from "./revenue";
 import { SessionsBuilders } from "./sessions";
 import { SummaryBuilders } from "./summary";
@@ -33,6 +34,7 @@ export const QueryBuilders = {
 	...UptimeBuilders,
 	...LLMAnalyticsBuilders,
 	...RevenueBuilders,
+	...RealtimeBuilders,
 };
 
 export type QueryType = keyof typeof QueryBuilders;

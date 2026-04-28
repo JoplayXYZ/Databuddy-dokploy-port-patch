@@ -12,7 +12,7 @@ import { competitors } from "@/lib/comparison-config";
 const alternativesTitle =
 	"Alternative to Google Analytics, Plausible & More (2026) | Databuddy";
 const alternativesDescription =
-	"Find a privacy-first analytics alternative for your stack. Compare pricing, features, and migration for every major platform — one page per tool.";
+	"Find a privacy-first analytics alternative for your stack. Compare pricing, features, and migration for every major platform - one page per tool.";
 const alternativesUrl = `${SITE_URL}/alternatives`;
 
 export const metadata: Metadata = {
@@ -107,7 +107,7 @@ export default function AlternativesHubPage() {
 							Ready to try Databuddy?
 						</h3>
 						<p className="mb-5 text-pretty text-muted-foreground text-sm">
-							Start free with 10K monthly pageviews — no credit card.
+							Start free with 10K monthly pageviews - no credit card.
 						</p>
 						<div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
 							<SciFiButton asChild>
@@ -116,7 +116,7 @@ export default function AlternativesHubPage() {
 									rel="noopener noreferrer"
 									target="_blank"
 								>
-									Start Free — No Credit Card
+									Start Free - No Credit Card
 								</Link>
 							</SciFiButton>
 							<Link

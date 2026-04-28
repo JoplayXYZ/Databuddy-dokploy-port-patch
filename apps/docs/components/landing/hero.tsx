@@ -28,7 +28,6 @@ type FullscreenElement = HTMLIFrameElement & {
 
 export default function Hero({
 	demoEmbedBaseUrl,
-	stars,
 }: {
 	demoEmbedBaseUrl: string;
 	stars?: number | null;
@@ -49,6 +48,8 @@ export default function Hero({
 		const id = window.setTimeout(run, 300);
 		return () => clearTimeout(id);
 	}, []);
+
+	const activeIndex = tabs.findIndex((t) => t.id === activeTab);
 
 	const selectTab = (id: string) => {
 		setActiveTab(id);
@@ -114,7 +115,9 @@ export default function Hero({
 						transition={{ duration: 0.4, delay: 0.3 }}
 					>
 						<SciFiButton asChild className="px-6 py-5">
-							<a href="https://app.databuddy.cc/login">Start free</a>
+							<a href="https://app.databuddy.cc/login">
+								See your analytics in 5 minutes
+							</a>
 						</SciFiButton>
 
 						<SciFiButton asChild className="px-6 py-5">
@@ -142,7 +145,11 @@ export default function Hero({
 									>
 										{tab.label}
 										{isActive ? (
-											<div className="absolute right-0 bottom-0 left-0 h-0.5 bg-foreground" />
+											<motion.div
+												className="absolute right-0 bottom-0 left-0 h-0.5 bg-foreground"
+												layoutId="hero-tab-indicator"
+												transition={{ type: "spring", stiffness: 500, damping: 35 }}
+											/>
 										) : null}
 									</button>
 								);
@@ -160,8 +167,13 @@ export default function Hero({
 						/>
 						<div className="group relative rounded-sm border border-border/50 bg-card p-1.5 shadow-2xl backdrop-blur-sm sm:p-2">
 							<div className="relative min-h-[400px] overflow-hidden rounded bg-muted sm:min-h-[500px] lg:min-h-[600px]">
-								{tabs.map((tab) => {
+								{tabs.map((tab, i) => {
 									const isActive = activeTab === tab.id;
+									const translateX = isActive
+										? "0%"
+										: i > activeIndex
+											? "100%"
+											: "-100%";
 									const src = loadedTabIds.has(tab.id)
 										? `${demoEmbedBaseUrl}${tab.path}?embed=true`
 										: "about:blank";
@@ -170,10 +182,10 @@ export default function Hero({
 											allowFullScreen
 											aria-hidden={!isActive}
 											className={cn(
-												"h-[400px] w-full rounded border-0 bg-muted shadow-inner sm:h-[500px] lg:h-[600px]",
+												"absolute inset-0 h-[400px] w-full rounded border-0 bg-muted shadow-inner transition-[transform,opacity] duration-300 ease-out sm:h-[500px] lg:h-[600px]",
 												isActive
-													? "relative z-10"
-													: "pointer-events-none absolute inset-0 z-0 opacity-0"
+													? "z-10 opacity-100"
+													: "pointer-events-none z-0 opacity-0"
 											)}
 											key={tab.id}
 											onLoad={(e) => {
@@ -186,6 +198,7 @@ export default function Hero({
 												iframeRefs.current[tab.id] = el;
 											}}
 											src={src}
+											style={{ transform: `translateX(${translateX})` }}
 											tabIndex={isActive ? 0 : -1}
 											title={`Databuddy ${tab.label} Demo`}
 										/>

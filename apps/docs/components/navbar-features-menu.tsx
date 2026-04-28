@@ -13,10 +13,10 @@ import { useCallback, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
 interface FeatureItem {
-	title: string;
 	description: string;
 	href: string;
 	icon: ComponentType<SVGProps<SVGSVGElement>>;
+	title: string;
 }
 
 const FEATURE_ITEMS: FeatureItem[] = [
@@ -29,7 +29,7 @@ const FEATURE_ITEMS: FeatureItem[] = [
 	{
 		title: "Error Tracking",
 		description: "Stack traces, context, and real-time alerts",
-		href: "/error-tracking",
+		href: "/errors",
 		icon: BugIcon,
 	},
 	{
@@ -91,7 +91,7 @@ export function NavbarFeaturesMenu({
 					"flex items-center gap-1.5 rounded-md px-3 py-1.5 font-medium text-sm transition-colors",
 					open
 						? "text-foreground"
-						: "text-muted-foreground hover:text-foreground",
+						: "text-muted-foreground hover:text-foreground"
 				)}
 				onClick={() => setOpen((prev) => !prev)}
 				onKeyDown={handleKeyDown}
@@ -107,7 +107,7 @@ export function NavbarFeaturesMenu({
 				<CaretDownIcon
 					className={cn(
 						"size-3 transition-transform duration-200",
-						open && "rotate-180",
+						open && "rotate-180"
 					)}
 					weight="bold"
 				/>
@@ -115,10 +115,10 @@ export function NavbarFeaturesMenu({
 
 			<div
 				className={cn(
-					"absolute top-full left-1/2 z-50 pt-2 -translate-x-1/2 transition-all duration-200",
+					"absolute top-full left-1/2 z-50 -translate-x-1/2 pt-2 transition-all duration-200",
 					open
 						? "pointer-events-auto translate-y-0 opacity-100"
-						: "pointer-events-none -translate-y-2 opacity-0",
+						: "pointer-events-none -translate-y-2 opacity-0"
 				)}
 				onKeyDown={handleKeyDown}
 				onMouseEnter={() => {
@@ -178,9 +178,7 @@ export function NavbarFeaturesMobileMenu({
 			<button
 				className={cn(
 					"flex w-full items-center justify-between rounded-md px-3 py-2 font-medium text-sm transition-all duration-200 hover:bg-muted",
-					isMenuOpen
-						? "translate-x-0 opacity-100"
-						: "-translate-x-4 opacity-0",
+					isMenuOpen ? "translate-x-0 opacity-100" : "-translate-x-4 opacity-0"
 				)}
 				onClick={() => setExpanded((prev) => !prev)}
 				style={{
@@ -192,7 +190,7 @@ export function NavbarFeaturesMobileMenu({
 				<CaretDownIcon
 					className={cn(
 						"size-3 text-muted-foreground transition-transform duration-200",
-						expanded && "rotate-180",
+						expanded && "rotate-180"
 					)}
 					weight="bold"
 				/>
@@ -201,7 +199,7 @@ export function NavbarFeaturesMobileMenu({
 			<div
 				className={cn(
 					"overflow-hidden transition-all duration-200 ease-out",
-					expanded ? "max-h-64 opacity-100" : "max-h-0 opacity-0",
+					expanded ? "max-h-64 opacity-100" : "max-h-0 opacity-0"
 				)}
 			>
 				<div className="space-y-0.5 py-1 pl-3">

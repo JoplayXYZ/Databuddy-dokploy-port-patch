@@ -243,11 +243,11 @@ export default function Testimonials(): ReactElement {
 				</span>
 				<div>
 					<h2 className="mb-2 font-semibold text-3xl leading-tight tracking-tight sm:mb-2 sm:text-3xl md:text-4xl lg:text-5xl">
-						What developers are saying
+						Why developers are switching
 					</h2>
 					<p className="max-w-2xl px-2 text-base text-muted-foreground sm:px-0 sm:text-lg lg:text-xl">
-						Join thousands of developers who trust Databuddy for their analytics
-						needs.
+						2,000+ developers and 500+ websites already made the move from GA4,
+						PostHog, and Plausible.
 					</p>
 				</div>
 			</div>

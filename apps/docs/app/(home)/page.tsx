@@ -8,6 +8,7 @@ import FAQ from "@/components/landing/faq";
 import { GridCards } from "@/components/landing/grid-cards";
 import Hero from "@/components/landing/hero";
 import Section from "@/components/landing/section";
+import { Stats } from "@/components/landing/stats";
 import Testimonials from "@/components/landing/testimonials";
 import { TrustedBy } from "@/components/landing/trusted-by";
 import { StructuredData } from "@/components/structured-data";
@@ -73,6 +74,12 @@ export default async function HomePage() {
 			<div className="overflow-hidden">
 				<Section className="overflow-hidden" customPaddings id="hero">
 					<Hero demoEmbedBaseUrl={demoEmbedBaseUrl} stars={stars} />
+				</Section>
+
+				<Section className="border-border border-t" customPaddings id="stats">
+					<div className={container}>
+						<Stats />
+					</div>
 				</Section>
 
 				<Section

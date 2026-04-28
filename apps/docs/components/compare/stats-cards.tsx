@@ -54,7 +54,7 @@ export function StatsCards({
 						rel="noopener noreferrer"
 						target="_blank"
 					>
-						Start Free — No Credit Card
+						Start Free - No Credit Card
 					</Link>
 				</SciFiButton>
 			</div>

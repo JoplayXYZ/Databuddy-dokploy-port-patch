@@ -1,17 +1,16 @@
 import { GATED_FEATURES } from "@databuddy/shared/types/features";
 import {
+	OpenExternalIcon as ArrowSquareOutIcon,
 	BellIcon,
-	BoltLightningIcon as LightningIcon,
 	BugIcon,
-	ChartActivityIcon as PulseIcon,
 	ChartPieIcon as ChartPieSliceIcon,
 	CodeIcon,
 	CreditCardIcon,
 	CurrencyDollarIcon,
 	EyeIcon,
 	FileDownloadIcon as FileArrowDownIcon,
-	FilterIcon as FunnelIcon,
 	FlagIcon,
+	FilterIcon as FunnelIcon,
 	GaugeIcon,
 	GearIcon,
 	GlobeIcon,
@@ -20,17 +19,19 @@ import {
 	HouseIcon,
 	IdBadge2Icon as IdentificationBadgeIcon,
 	LightbulbIcon,
+	BoltLightningIcon as LightningIcon,
 	LinkIcon,
 	LockIcon,
 	MapPinIcon,
-	OpenExternalIcon as ArrowSquareOutIcon,
+	ChartActivityIcon as PulseIcon,
 	ReceiptIcon,
 	RobotIcon,
+	SignalIcon,
 	TargetIcon,
-	TriangleWarningIcon as WarningIcon,
 	UserIcon,
 	UserSettingsIcon,
 	Users3Icon as UsersThreeIcon,
+	TriangleWarningIcon as WarningIcon,
 } from "@databuddy/ui/icons";
 import type { NavigationGroup, NavigationItem } from "./types";
 
@@ -60,7 +61,7 @@ export const mainNavigation: NavigationGroup[] = [
 		label: "Tracking",
 		items: [
 			createNavItem("Links", LinkIcon, "/links"),
-			createNavItem("Custom Events", LightningIcon, "/events"),
+			createNavItem("Events", LightningIcon, "/events"),
 		],
 	},
 	{
@@ -84,6 +85,11 @@ export const websiteNavigation: NavigationGroup[] = [
 		label: "",
 		items: [
 			createNavItem("Dashboard", ChartPieSliceIcon, "", { rootLevel: false }),
+			createNavItem("Realtime", SignalIcon, "/realtime", {
+				rootLevel: false,
+				flag: "realtime",
+				alpha: true,
+			}),
 			createNavItem("Audience", UsersThreeIcon, "/audience", {
 				rootLevel: false,
 			}),

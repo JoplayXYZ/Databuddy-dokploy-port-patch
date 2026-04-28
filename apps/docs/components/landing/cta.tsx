@@ -12,13 +12,14 @@ const ctaItems = [
 	{
 		title: "Get started",
 		description:
-			"Drop your site in and see what your users are doing in seconds",
+			"No credit card. No setup wizard. Your first dashboard in under 5 minutes.",
 		href: "https://app.databuddy.cc/login",
 		primary: true,
 	},
 	{
 		title: "Read Documentation",
-		description: "Learn how to integrate Databuddy with your tech stack.",
+		description:
+			"Guides for Next.js, React, Vue, and vanilla JS. Ship in minutes.",
 		href: "/docs",
 		primary: false,
 	},
@@ -118,11 +119,11 @@ function CTAContent() {
 						<div className="flex h-full w-full flex-col items-center justify-center gap-8 text-center">
 							<div className="space-y-4">
 								<h2 className="font-bold text-4xl text-foreground tracking-tight md:text-5xl">
-									Ready to get started?
+									Drop your site in. See what users are doing in seconds.
 								</h2>
 								<p className="mx-auto max-w-md text-lg text-muted-foreground">
-									Join developers who've ditched Google Analytics for something
-									better.
+									Keep your current setup running. Add Databuddy in 5 minutes.
+									Compare for a week. Then decide.
 								</p>
 							</div>
 
@@ -139,12 +140,12 @@ function CTAContent() {
 											: "https://app.databuddy.cc/login"
 									}
 								>
-									Get started
+									Start free
 									<ArrowRight className="ml-2 size-4" />
 								</Link>
 							</div>
 
-							<div className="flex items-center gap-8 text-muted-foreground text-sm opacity-60">
+							<div className="flex items-center gap-8 text-muted-foreground text-sm">
 								<span>Rivo.gg</span>
 								<span>Better-auth</span>
 								<span>Confinity</span>

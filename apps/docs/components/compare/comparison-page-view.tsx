@@ -153,7 +153,7 @@ export function ComparisonPageView({
 					<FeatureTable competitorName={competitor.name} features={features} />
 
 					<p className="mt-4 text-center text-muted-foreground text-xs">
-						All Databuddy features available on the free plan — up to 10,000
+						All Databuddy features available on the free plan - up to 10,000
 						monthly pageviews
 					</p>
 
@@ -207,7 +207,7 @@ export function ComparisonPageView({
 								rel="noopener noreferrer"
 								target="_blank"
 							>
-								Start Free — No Credit Card
+								Start Free - No Credit Card
 							</Link>
 						</SciFiButton>
 						<Link

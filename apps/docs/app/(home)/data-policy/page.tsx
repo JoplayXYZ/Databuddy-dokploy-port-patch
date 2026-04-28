@@ -13,7 +13,7 @@ import type { Metadata } from "next";
 import { Footer } from "@/components/footer";
 import { StructuredData } from "@/components/structured-data";
 
-const title = "Data Policy — How Your Data Flows Through Databuddy";
+const title = "Data Policy - How Your Data Flows Through Databuddy";
 const description =
 	"How data flows through our system, what we collect, how we process it, and the steps we've taken to protect your visitors' privacy.";
 const url = "https://www.databuddy.cc/data-policy";
@@ -66,7 +66,7 @@ export default function DataPolicyPage() {
 					{/* TL;DR */}
 					<div className="mx-auto mb-6 max-w-2xl rounded border border-accent bg-accent/50 p-4 text-left">
 						<p className="text-foreground text-sm">
-							<strong>TL;DR</strong> — We don't use cookies, we don't track
+							<strong>TL;DR</strong> - We don't use cookies, we don't track
 							people across websites, and we can't identify individual visitors.
 							Privacy-first by design.
 						</p>

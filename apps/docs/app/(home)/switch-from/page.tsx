@@ -114,7 +114,7 @@ export default function SwitchFromHubPage() {
 									rel="noopener noreferrer"
 									target="_blank"
 								>
-									Start Free — No Credit Card
+									Start Free - No Credit Card
 								</Link>
 							</SciFiButton>
 							<Link

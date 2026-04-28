@@ -9,7 +9,7 @@ import { Spinner } from "./spinner";
 const button = cva(
   [
     "inline-flex items-center justify-center gap-2",
-    "select-none whitespace-nowrap font-semibold",
+    "cursor-pointer select-none whitespace-nowrap font-semibold",
     "rounded-md",
     "transition-[background-color,color,opacity,transform,filter,box-shadow] duration-(--duration-quick) ease-(--ease-smooth)",
     "motion-reduce:transition-none",

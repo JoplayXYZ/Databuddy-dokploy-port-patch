@@ -145,7 +145,7 @@ export function BrandingAssetCard({ item }: BrandingAssetCardProps) {
 				)}
 			>
 				<img
-					alt={`Databuddy ${item.label} — ${item.variant}`}
+					alt={`Databuddy ${item.label} - ${item.variant}`}
 					className="max-h-full max-w-[80%] object-contain"
 					height={80}
 					src={item.path}

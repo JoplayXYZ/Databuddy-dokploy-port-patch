@@ -40,7 +40,7 @@ export const Navbar = ({ stars }: NavbarProps) => {
 				"fixed inset-x-0 top-0 z-40 pt-[env(safe-area-inset-top,0px)] transition-[background-color,border-color,backdrop-filter] duration-200",
 				isScrolled
 					? "border-border border-b bg-background backdrop-blur-xl"
-					: "bg-transparent",
+					: "bg-transparent"
 			)}
 		>
 			<nav className="mx-auto flex h-14 w-full max-w-400 items-center gap-4 px-4 sm:px-14 lg:px-20">
@@ -91,9 +91,7 @@ export const Navbar = ({ stars }: NavbarProps) => {
 			<div
 				className={cn(
 					"overflow-hidden transition-all duration-300 ease-out md:hidden",
-					isMobileMenuOpen
-						? "max-h-[80vh] opacity-100"
-						: "max-h-0 opacity-0",
+					isMobileMenuOpen ? "max-h-[80vh] opacity-100" : "max-h-0 opacity-0"
 				)}
 			>
 				<div className="border-border border-t bg-background backdrop-blur-xl">
@@ -109,7 +107,7 @@ export const Navbar = ({ stars }: NavbarProps) => {
 									"block rounded-md px-3 py-2 font-medium text-sm transition-all duration-200 hover:bg-muted",
 									isMobileMenuOpen
 										? "translate-x-0 opacity-100"
-										: "-translate-x-4 opacity-0",
+										: "-translate-x-4 opacity-0"
 								)}
 								href={menu.path}
 								key={menu.path}
@@ -129,7 +127,7 @@ export const Navbar = ({ stars }: NavbarProps) => {
 								"flex items-center gap-2 rounded-md px-3 py-2 font-medium text-sm transition-all duration-200 hover:bg-muted",
 								isMobileMenuOpen
 									? "translate-x-0 opacity-100"
-									: "-translate-x-4 opacity-0",
+									: "-translate-x-4 opacity-0"
 							)}
 							href={githubRepoUrl}
 							onClick={() => setIsMobileMenuOpen(false)}

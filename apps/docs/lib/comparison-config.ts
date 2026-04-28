@@ -85,7 +85,7 @@ export const competitors: Record<string, ComparisonData> = {
 				databuddy: true,
 				competitor: false,
 				benefit:
-					"No consent banners — many EU sites lose 30–40% of visits to consent friction; cookieless keeps that traffic",
+					"No consent banners - many EU sites lose 30–40% of visits to consent friction; cookieless keeps that traffic",
 				category: "privacy",
 			},
 			{
@@ -101,14 +101,14 @@ export const competitors: Record<string, ComparisonData> = {
 				databuddy: true,
 				competitor: false,
 				benefit:
-					"Full data at any volume; GA4 UI caps retention at 14 months (25 max) — year-over-year analysis needs BigQuery",
+					"Full data at any volume; GA4 UI caps retention at 14 months (25 max) - year-over-year analysis needs BigQuery",
 				category: "features",
 			},
 			{
 				name: "Data ownership",
 				databuddy: true,
 				competitor: false,
-				benefit: "Your data stays yours — not shared with ad networks",
+				benefit: "Your data stays yours - not shared with ad networks",
 				category: "privacy",
 			},
 			{
@@ -138,7 +138,7 @@ export const competitors: Record<string, ComparisonData> = {
 				databuddy: true,
 				competitor: false,
 				benefit:
-					"3KB vs 45KB+ (gtag + GTM) — lighter JS and better Core Web Vitals",
+					"3KB vs 45KB+ (gtag + GTM) - lighter JS and better Core Web Vitals",
 				category: "performance",
 			},
 			{
@@ -152,7 +152,7 @@ export const competitors: Record<string, ComparisonData> = {
 				name: "Real-time analytics",
 				databuddy: true,
 				competitor: true,
-				benefit: "Both offer real-time — Databuddy's is simpler to read",
+				benefit: "Both offer real-time - Databuddy's is simpler to read",
 				category: "features",
 			},
 			{
@@ -195,7 +195,7 @@ export const competitors: Record<string, ComparisonData> = {
 			{
 				question: "Is Google Analytics GDPR compliant?",
 				answer:
-					"GA4 has been ruled illegal by multiple EU data protection authorities (Austria, France, Italy, Denmark) without extensive configuration. Databuddy is GDPR compliant by default — no cookies, no personal data collection, no configuration needed.",
+					"GA4 has been ruled illegal by multiple EU data protection authorities (Austria, France, Italy, Denmark) without extensive configuration. Databuddy is GDPR compliant by default - no cookies, no personal data collection, no configuration needed.",
 			},
 			{
 				question: "Does Google Analytics work without cookies?",
@@ -215,7 +215,7 @@ export const competitors: Record<string, ComparisonData> = {
 			{
 				question: "Is there a free Google Analytics alternative?",
 				answer:
-					"Yes. Databuddy's free plan includes up to 10,000 pageviews/month with all features — AI insights, custom events, real-time analytics — with no hidden costs like BigQuery or consent platform fees.",
+					"Yes. Databuddy's free plan includes up to 10,000 pageviews/month with all features - AI insights, custom events, real-time analytics - with no hidden costs like BigQuery or consent platform fees.",
 			},
 		],
 		pricingTiers: [
@@ -250,8 +250,8 @@ export const competitors: Record<string, ComparisonData> = {
 			steps: [
 				"Add one async script tag (~3KB)",
 				"No GTM configuration required",
-				"Page views and events flow automatically — no Enhanced Measurement setup",
-				"GDPR-friendly by default — you can remove your analytics consent banner",
+				"Page views and events flow automatically - no Enhanced Measurement setup",
+				"GDPR-friendly by default - you can remove your analytics consent banner",
 			],
 			guideHref: "/docs/getting-started",
 			guideLabel: "Read the Migration Guide",
@@ -273,8 +273,8 @@ export const competitors: Record<string, ComparisonData> = {
 		hero: {
 			title: "Databuddy vs Plausible",
 			description:
-				"Plausible shows you the numbers. Databuddy tells you what they mean. Same privacy values, dramatically more signal — with AI insights, product analytics, and a free plan.",
-			cta: "Everything Plausible does, free — plus AI",
+				"Plausible shows you the numbers. Databuddy tells you what they mean. Same privacy values, dramatically more signal - with AI insights, product analytics, and a free plan.",
+			cta: "Everything Plausible does, free - plus AI",
 		},
 		seo: {
 			title: "Databuddy vs Plausible: Complete Analytics Comparison 2026",
@@ -307,7 +307,7 @@ export const competitors: Record<string, ComparisonData> = {
 				name: "Free plan forever",
 				databuddy: true,
 				competitor: false,
-				benefit: "10K pageviews at $0/mo — Plausible starts at $9/mo",
+				benefit: "10K pageviews at $0/mo - Plausible starts at $9/mo",
 				category: "pricing",
 			},
 			{
@@ -342,7 +342,7 @@ export const competitors: Record<string, ComparisonData> = {
 				name: "Uptime monitoring",
 				databuddy: true,
 				competitor: false,
-				benefit: "Know when your site goes down — no extra tool needed",
+				benefit: "Know when your site goes down - no extra tool needed",
 				category: "features",
 			},
 			{
@@ -407,12 +407,12 @@ export const competitors: Record<string, ComparisonData> = {
 			{
 				question: "Is Databuddy open source?",
 				answer:
-					"Yes. Databuddy is AGPL-3.0 licensed — the same license Plausible uses. You can inspect the source code, self-host, and contribute.",
+					"Yes. Databuddy is AGPL-3.0 licensed - the same license Plausible uses. You can inspect the source code, self-host, and contribute.",
 			},
 			{
 				question: "Can I switch from Plausible to Databuddy?",
 				answer:
-					"Yes. Add the 3KB Databuddy script to your site and start tracking immediately. No migration needed — you'll see data from the first visit.",
+					"Yes. Add the 3KB Databuddy script to your site and start tracking immediately. No migration needed - you'll see data from the first visit.",
 			},
 		],
 		pricingTiers: [
@@ -465,7 +465,7 @@ export const competitors: Record<string, ComparisonData> = {
 		hero: {
 			title: "Databuddy vs Fathom Analytics",
 			description:
-				"Fathom is great for simple traffic stats. When you need to understand your users, you need Databuddy — product analytics, AI-powered insights, and a free plan. Same privacy values, dramatically more signal.",
+				"Fathom is great for simple traffic stats. When you need to understand your users, you need Databuddy - product analytics, AI-powered insights, and a free plan. Same privacy values, dramatically more signal.",
 			cta: "Get more for less",
 		},
 		seo: {
@@ -479,7 +479,7 @@ export const competitors: Record<string, ComparisonData> = {
 				databuddy: true,
 				competitor: false,
 				benefit:
-					'Ask "why did traffic drop last Tuesday?" in plain English — Fathom has no NLP assistant',
+					'Ask "why did traffic drop last Tuesday?" in plain English - Fathom has no NLP assistant',
 				category: "features",
 			},
 			{
@@ -508,7 +508,7 @@ export const competitors: Record<string, ComparisonData> = {
 				name: "Funnels & goals",
 				databuddy: true,
 				competitor: false,
-				benefit: "Track conversion paths — Fathom has no funnel builder",
+				benefit: "Track conversion paths - Fathom has no funnel builder",
 				category: "features",
 			},
 			{
@@ -516,14 +516,14 @@ export const competitors: Record<string, ComparisonData> = {
 				databuddy: true,
 				competitor: false,
 				benefit:
-					"Know when your site goes down without a separate tool — Fathom removed uptime monitoring in Oct 2023",
+					"Know when your site goes down without a separate tool - Fathom removed uptime monitoring in Oct 2023",
 				category: "features",
 			},
 			{
 				name: "Free tier included",
 				databuddy: true,
 				competitor: false,
-				benefit: "10K pageviews at $0/mo — Fathom minimum is $15/mo",
+				benefit: "10K pageviews at $0/mo - Fathom minimum is $15/mo",
 				category: "pricing",
 			},
 			{
@@ -551,21 +551,21 @@ export const competitors: Record<string, ComparisonData> = {
 				name: "Event tracking",
 				databuddy: true,
 				competitor: true,
-				benefit: "Both track custom events — Databuddy adds richer properties",
+				benefit: "Both track custom events - Databuddy adds richer properties",
 				category: "features",
 			},
 			{
 				name: "Data export",
 				databuddy: true,
 				competitor: true,
-				benefit: "Both offer CSV export — Databuddy adds raw data API access",
+				benefit: "Both offer CSV export - Databuddy adds raw data API access",
 				category: "features",
 			},
 			{
 				name: "Data ownership",
 				databuddy: true,
 				competitor: true,
-				benefit: "Both let you own your data — Databuddy adds self-hosting",
+				benefit: "Both let you own your data - Databuddy adds self-hosting",
 				category: "privacy",
 			},
 			{
@@ -672,7 +672,7 @@ export const competitors: Record<string, ComparisonData> = {
 		hero: {
 			title: "Databuddy vs PostHog",
 			description:
-				"PostHog is 10+ products. You're probably only using 2. Databuddy gives you what matters — analytics and AI insights — at 1/17th the script size.",
+				"PostHog is 10+ products. You're probably only using 2. Databuddy gives you what matters - analytics and AI insights - at 1/17th the script size.",
 			cta: "Lighter, faster, AI-native analytics",
 		},
 		seo: {
@@ -692,7 +692,7 @@ export const competitors: Record<string, ComparisonData> = {
 				name: "Lightweight script (3KB)",
 				databuddy: true,
 				competitor: false,
-				benefit: "3KB vs 52KB+ — better Core Web Vitals",
+				benefit: "3KB vs 52KB+ - better Core Web Vitals",
 				category: "performance",
 			},
 			{
@@ -727,7 +727,7 @@ export const competitors: Record<string, ComparisonData> = {
 				name: "Uptime monitoring",
 				databuddy: true,
 				competitor: false,
-				benefit: "Know when your site goes down — no extra tool needed",
+				benefit: "Know when your site goes down - no extra tool needed",
 				category: "features",
 			},
 			{
@@ -769,21 +769,21 @@ export const competitors: Record<string, ComparisonData> = {
 				name: "Session replay",
 				databuddy: false,
 				competitor: true,
-				benefit: "PostHog includes session replay — Databuddy doesn't",
+				benefit: "PostHog includes session replay - Databuddy doesn't",
 				category: "features",
 			},
 			{
 				name: "A/B testing",
 				databuddy: false,
 				competitor: true,
-				benefit: "PostHog includes experiments — Databuddy doesn't yet",
+				benefit: "PostHog includes experiments - Databuddy doesn't yet",
 				category: "features",
 			},
 			{
 				name: "Surveys",
 				databuddy: false,
 				competitor: true,
-				benefit: "PostHog includes in-app surveys — Databuddy doesn't",
+				benefit: "PostHog includes in-app surveys - Databuddy doesn't",
 				category: "features",
 			},
 		],
@@ -801,7 +801,7 @@ export const competitors: Record<string, ComparisonData> = {
 			{
 				question: "How does Databuddy compare to PostHog's self-hosting?",
 				answer:
-					"PostHog self-hosting requires ClickHouse, Kafka, Redis, and PostgreSQL — a complex infrastructure stack. Databuddy is significantly simpler to self-host.",
+					"PostHog self-hosting requires ClickHouse, Kafka, Redis, and PostgreSQL - a complex infrastructure stack. Databuddy is significantly simpler to self-host.",
 			},
 			{
 				question: "Does Databuddy have session replay?",
@@ -811,7 +811,7 @@ export const competitors: Record<string, ComparisonData> = {
 			{
 				question: "Why choose Databuddy over PostHog?",
 				answer:
-					"If you need fast, lightweight, privacy-first analytics with AI insights and don't need session replay or A/B testing, Databuddy is the leaner choice — 3KB script vs 52KB+, simpler pricing, and GDPR compliant by default.",
+					"If you need fast, lightweight, privacy-first analytics with AI insights and don't need session replay or A/B testing, Databuddy is the leaner choice - 3KB script vs 52KB+, simpler pricing, and GDPR compliant by default.",
 			},
 		],
 		pricingTiers: [
@@ -853,7 +853,7 @@ export const competitors: Record<string, ComparisonData> = {
 		hero: {
 			title: "Databuddy vs Umami",
 			description:
-				"Same privacy values, dramatically more signal. Umami shows numbers — Databuddy shows what they mean with AI insights, product analytics, and user identification.",
+				"Same privacy values, dramatically more signal. Umami shows numbers - Databuddy shows what they mean with AI insights, product analytics, and user identification.",
 			cta: "Beyond basic analytics",
 		},
 		seo: {
@@ -880,7 +880,7 @@ export const competitors: Record<string, ComparisonData> = {
 				name: "User identification",
 				databuddy: true,
 				competitor: false,
-				benefit: "Know who your users are — Umami only does anonymous hashing",
+				benefit: "Know who your users are - Umami only does anonymous hashing",
 				category: "features",
 			},
 			{
@@ -894,7 +894,7 @@ export const competitors: Record<string, ComparisonData> = {
 				name: "Uptime monitoring",
 				databuddy: true,
 				competitor: false,
-				benefit: "Know when your site goes down — no extra tool needed",
+				benefit: "Know when your site goes down - no extra tool needed",
 				category: "features",
 			},
 			{
@@ -1027,13 +1027,13 @@ export const competitors: Record<string, ComparisonData> = {
 		hero: {
 			title: "Databuddy vs Mixpanel",
 			description:
-				"Mixpanel needs a data team to set up and maintain. Databunny IS your data team — AI-native analytics that answers your questions without complex instrumentation.",
+				"Mixpanel needs a data team to set up and maintain. Databunny IS your data team - AI-native analytics that answers your questions without complex instrumentation.",
 			cta: "Product analytics without the complexity",
 		},
 		seo: {
 			title: "Databuddy vs Mixpanel: Simpler Product Analytics 2026",
 			description:
-				"Compare Databuddy and Mixpanel. Databuddy unifies web and product analytics with AI insights, simpler setup, and a free plan — no data team required.",
+				"Compare Databuddy and Mixpanel. Databuddy unifies web and product analytics with AI insights, simpler setup, and a free plan - no data team required.",
 		},
 		features: [
 			{
@@ -1047,7 +1047,7 @@ export const competitors: Record<string, ComparisonData> = {
 				name: "Web + product analytics unified",
 				databuddy: true,
 				competitor: false,
-				benefit: "Mixpanel is product-only — no web traffic analytics",
+				benefit: "Mixpanel is product-only - no web traffic analytics",
 				category: "features",
 			},
 			{
@@ -1068,7 +1068,7 @@ export const competitors: Record<string, ComparisonData> = {
 				name: "GDPR compliant by default",
 				databuddy: true,
 				competitor: false,
-				benefit: "No configuration needed — Mixpanel collects PII by default",
+				benefit: "No configuration needed - Mixpanel collects PII by default",
 				category: "privacy",
 			},
 			{
@@ -1089,14 +1089,14 @@ export const competitors: Record<string, ComparisonData> = {
 				name: "Uptime monitoring",
 				databuddy: true,
 				competitor: false,
-				benefit: "Know when your site goes down — no extra tool needed",
+				benefit: "Know when your site goes down - no extra tool needed",
 				category: "features",
 			},
 			{
 				name: "Funnels & retention",
 				databuddy: true,
 				competitor: true,
-				benefit: "Both track conversion paths — Mixpanel's is more mature",
+				benefit: "Both track conversion paths - Mixpanel's is more mature",
 				category: "features",
 			},
 			{
@@ -1110,7 +1110,7 @@ export const competitors: Record<string, ComparisonData> = {
 				name: "User identification",
 				databuddy: true,
 				competitor: true,
-				benefit: "Both identify users — Databuddy does it privacy-first",
+				benefit: "Both identify users - Databuddy does it privacy-first",
 				category: "features",
 			},
 			{
@@ -1125,7 +1125,7 @@ export const competitors: Record<string, ComparisonData> = {
 				databuddy: false,
 				competitor: true,
 				benefit:
-					"Mixpanel has deep cohort analysis — Databuddy uses AI instead",
+					"Mixpanel has deep cohort analysis - Databuddy uses AI instead",
 				category: "features",
 			},
 		],
@@ -1143,12 +1143,12 @@ export const competitors: Record<string, ComparisonData> = {
 			{
 				question: "Does Mixpanel have web analytics?",
 				answer:
-					"No. Mixpanel is product analytics only — it doesn't track web traffic, pageviews, or referrers. Databuddy unifies web and product analytics in one platform.",
+					"No. Mixpanel is product analytics only - it doesn't track web traffic, pageviews, or referrers. Databuddy unifies web and product analytics in one platform.",
 			},
 			{
 				question: "Is Mixpanel GDPR compliant?",
 				answer:
-					"Mixpanel requires configuration for GDPR compliance and collects PII by default. Databuddy is GDPR compliant out of the box — cookieless, no personal data collection.",
+					"Mixpanel requires configuration for GDPR compliance and collects PII by default. Databuddy is GDPR compliant out of the box - cookieless, no personal data collection.",
 			},
 			{
 				question: "Can I switch from Mixpanel to Databuddy?",
@@ -1206,7 +1206,7 @@ export const competitors: Record<string, ComparisonData> = {
 		seo: {
 			title: "Databuddy vs Amplitude: Analytics for Startups 2026",
 			description:
-				"Compare Databuddy and Amplitude. Databuddy offers AI-native product analytics for startups — simpler setup, transparent pricing, and no data team required.",
+				"Compare Databuddy and Amplitude. Databuddy offers AI-native product analytics for startups - simpler setup, transparent pricing, and no data team required.",
 		},
 		features: [
 			{
@@ -1235,7 +1235,7 @@ export const competitors: Record<string, ComparisonData> = {
 				name: "GDPR compliant by default",
 				databuddy: true,
 				competitor: false,
-				benefit: "No configuration needed — Amplitude requires setup",
+				benefit: "No configuration needed - Amplitude requires setup",
 				category: "privacy",
 			},
 			{
@@ -1256,14 +1256,14 @@ export const competitors: Record<string, ComparisonData> = {
 				name: "Uptime monitoring",
 				databuddy: true,
 				competitor: false,
-				benefit: "Know when your site goes down — no extra tool needed",
+				benefit: "Know when your site goes down - no extra tool needed",
 				category: "features",
 			},
 			{
 				name: "Web + product analytics",
 				databuddy: true,
 				competitor: true,
-				benefit: "Both track product usage — Databuddy adds web traffic",
+				benefit: "Both track product usage - Databuddy adds web traffic",
 				category: "features",
 			},
 			{
@@ -1277,7 +1277,7 @@ export const competitors: Record<string, ComparisonData> = {
 				name: "Retention analysis",
 				databuddy: true,
 				competitor: true,
-				benefit: "Both track retention — Amplitude's is best-in-class",
+				benefit: "Both track retention - Amplitude's is best-in-class",
 				category: "features",
 			},
 			{
@@ -1299,14 +1299,14 @@ export const competitors: Record<string, ComparisonData> = {
 				databuddy: false,
 				competitor: true,
 				benefit:
-					"Amplitude has deep cohort analysis — Databuddy uses AI instead",
+					"Amplitude has deep cohort analysis - Databuddy uses AI instead",
 				category: "features",
 			},
 			{
 				name: "Session replay",
 				databuddy: false,
 				competitor: true,
-				benefit: "Amplitude includes session replay — Databuddy doesn't yet",
+				benefit: "Amplitude includes session replay - Databuddy doesn't yet",
 				category: "features",
 			},
 		],
@@ -1319,7 +1319,7 @@ export const competitors: Record<string, ComparisonData> = {
 			{
 				question: "Do I need a data team for Amplitude?",
 				answer:
-					"Most teams that get real value from Amplitude have dedicated analysts or data engineers. Databuddy's AI agent (Databunny) replaces that need — ask questions in plain English, get instant answers.",
+					"Most teams that get real value from Amplitude have dedicated analysts or data engineers. Databuddy's AI agent (Databunny) replaces that need - ask questions in plain English, get instant answers.",
 			},
 			{
 				question: "Is Amplitude overkill for startups?",
@@ -1329,7 +1329,7 @@ export const competitors: Record<string, ComparisonData> = {
 			{
 				question: "How does pricing compare at scale?",
 				answer:
-					"Amplitude's pricing is opaque at scale — Growth and Enterprise plans require sales calls. Databuddy has transparent pricing with a free tier and simple paid plans.",
+					"Amplitude's pricing is opaque at scale - Growth and Enterprise plans require sales calls. Databuddy has transparent pricing with a free tier and simple paid plans.",
 			},
 		],
 		pricingTiers: [
@@ -1396,14 +1396,14 @@ export const competitors: Record<string, ComparisonData> = {
 				name: "Product analytics (user-level)",
 				databuddy: true,
 				competitor: false,
-				benefit: "Track user journeys and retention — Rybbit is web-only",
+				benefit: "Track user journeys and retention - Rybbit is web-only",
 				category: "features",
 			},
 			{
 				name: "User identification",
 				databuddy: true,
 				competitor: false,
-				benefit: "Know who your users are — Rybbit is anonymous only",
+				benefit: "Know who your users are - Rybbit is anonymous only",
 				category: "features",
 			},
 			{
@@ -1417,7 +1417,7 @@ export const competitors: Record<string, ComparisonData> = {
 				name: "Uptime monitoring",
 				databuddy: true,
 				competitor: false,
-				benefit: "Know when your site goes down — no extra tool needed",
+				benefit: "Know when your site goes down - no extra tool needed",
 				category: "features",
 			},
 			{
@@ -1431,14 +1431,14 @@ export const competitors: Record<string, ComparisonData> = {
 				name: "Managed cloud (free tier)",
 				databuddy: true,
 				competitor: false,
-				benefit: "Free hosted plan — Rybbit cloud is early/limited",
+				benefit: "Free hosted plan - Rybbit cloud is early/limited",
 				category: "pricing",
 			},
 			{
 				name: "Lightweight script",
 				databuddy: true,
 				competitor: true,
-				benefit: "Databuddy: 3KB / Rybbit: ~9KB — both fast",
+				benefit: "Databuddy: 3KB / Rybbit: ~9KB - both fast",
 				category: "performance",
 			},
 			{
@@ -1486,7 +1486,7 @@ export const competitors: Record<string, ComparisonData> = {
 			{
 				question: "Does Rybbit have AI analytics?",
 				answer:
-					"No. Rybbit's founder has publicly stated that NLP-powered analytics insights are unnecessary. Databuddy's users disagree — Databunny is one of the most requested features.",
+					"No. Rybbit's founder has publicly stated that NLP-powered analytics insights are unnecessary. Databuddy's users disagree - Databunny is one of the most requested features.",
 			},
 			{
 				question: "Is Rybbit free?",
@@ -1496,7 +1496,7 @@ export const competitors: Record<string, ComparisonData> = {
 			{
 				question: "Which has better privacy?",
 				answer:
-					"Both are excellent on privacy — cookieless, GDPR compliant, open-source. Neither collects personal data. The choice comes down to whether you want AI insights and product analytics.",
+					"Both are excellent on privacy - cookieless, GDPR compliant, open-source. Neither collects personal data. The choice comes down to whether you want AI insights and product analytics.",
 			},
 		],
 		pricingTiers: [
@@ -1538,7 +1538,7 @@ export const competitors: Record<string, ComparisonData> = {
 		hero: {
 			title: "Databuddy vs Matomo",
 			description:
-				"Matomo has been the privacy-first standard since 2007, and the UX shows. Databuddy was built for how modern startup teams actually work — with AI insights out of the box.",
+				"Matomo has been the privacy-first standard since 2007, and the UX shows. Databuddy was built for how modern startup teams actually work - with AI insights out of the box.",
 			cta: "Modern analytics, same privacy values",
 		},
 		seo: {
@@ -1586,14 +1586,14 @@ export const competitors: Record<string, ComparisonData> = {
 				name: "Feature flags",
 				databuddy: true,
 				competitor: false,
-				benefit: "Roll out features gradually — Matomo doesn't have this",
+				benefit: "Roll out features gradually - Matomo doesn't have this",
 				category: "features",
 			},
 			{
 				name: "Uptime monitoring",
 				databuddy: true,
 				competitor: false,
-				benefit: "Know when your site goes down — no extra tool needed",
+				benefit: "Know when your site goes down - no extra tool needed",
 				category: "features",
 			},
 			{
@@ -1667,7 +1667,7 @@ export const competitors: Record<string, ComparisonData> = {
 			{
 				question: "Is Matomo hard to self-host?",
 				answer:
-					"Matomo requires PHP, MySQL, and cron job configuration — a traditional LAMP stack. Databuddy uses a modern stack that's simpler to deploy and maintain.",
+					"Matomo requires PHP, MySQL, and cron job configuration - a traditional LAMP stack. Databuddy uses a modern stack that's simpler to deploy and maintain.",
 			},
 			{
 				question: "Does Matomo have AI analytics?",

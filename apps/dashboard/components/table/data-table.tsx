@@ -56,7 +56,7 @@ const SKELETON_ROW_WIDTHS = ["60%", "45%", "55%", "35%", "50%"] as const;
 function TableSkeleton({ minHeight }: { minHeight: string | number }) {
 	return (
 		<div style={{ height: minHeight }}>
-			<div className="flex h-10 items-center gap-2 border-b px-5">
+			<div className="flex h-8 items-center gap-2 border-b px-3">
 				<Skeleton className="h-3 w-20 rounded" />
 				<div className="flex-1" />
 				<Skeleton className="h-3 w-14 rounded" />
@@ -64,12 +64,12 @@ function TableSkeleton({ minHeight }: { minHeight: string | number }) {
 			</div>
 			{SKELETON_ROW_WIDTHS.map((width, i) => (
 				<div
-					className="flex h-14 items-center gap-3 border-border/70 border-b px-5 last:border-b-0"
+					className="flex h-9 items-center gap-3 border-border/70 border-b px-3 last:border-b-0"
 					key={`skeleton-row-${i}`}
 				>
-					<Skeleton className="h-3.5 rounded" style={{ width }} />
+					<Skeleton className="h-3 rounded" style={{ width }} />
 					<div className="flex-1" />
-					<Skeleton className="h-3.5 w-10 rounded" />
+					<Skeleton className="h-3 w-10 rounded" />
 				</div>
 			))}
 		</div>

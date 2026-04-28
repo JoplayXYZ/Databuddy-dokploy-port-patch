@@ -144,7 +144,7 @@ const SCENARIO_CONFIGS: Omit<Scenario, "outputs">[] = [
 	},
 	{
 		name: "Growing SaaS",
-		description: "B2B — conservative visitor-to-paid (many visitors never buy)",
+		description: "B2B - conservative visitor-to-paid (many visitors never buy)",
 		inputs: {
 			monthlyVisitors: 25_000,
 			visitorDataLossRate: 0.52,

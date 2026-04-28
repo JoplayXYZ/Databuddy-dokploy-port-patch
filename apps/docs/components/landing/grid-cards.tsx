@@ -64,12 +64,12 @@ export const GridCards = () => {
 						<SectionBullet color="#B24A7E" />
 					</span>
 					<span className="flex items-center gap-4 text-foreground">
-						Set up once, understand everything{" "}
+						One install. Six tools replaced.
 					</span>
 				</h2>
 				<p className="mt-3 max-w-2xl text-pretty text-muted-foreground text-sm sm:px-0 sm:text-base lg:text-lg">
-					Simple analytics you don't have to fight with. Add one script and get
-					the full picture in minutes, not weeks.
+					Analytics, errors, vitals, funnels, and feature flags. Add one script,
+					skip the integration marathon.
 				</p>
 			</div>
 

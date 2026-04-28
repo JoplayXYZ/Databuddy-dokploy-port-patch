@@ -9,7 +9,7 @@ import type { Metadata } from "next";
 import { Footer } from "@/components/footer";
 import { StructuredData } from "@/components/structured-data";
 
-const title = "Privacy Policy — Cookie-less, GDPR by default | Databuddy";
+const title = "Privacy Policy - Cookie-less, GDPR by default | Databuddy";
 const description =
 	"Databuddy's comprehensive privacy policy for our privacy-first analytics service. Learn how we protect both customer and end user data with GDPR compliance and no user identification.";
 const url = "https://www.databuddy.cc/privacy";
@@ -64,7 +64,7 @@ export default function PrivacyPage() {
 					{/* TL;DR */}
 					<div className="mx-auto mb-6 max-w-2xl rounded border border-accent bg-accent/50 p-4 text-left">
 						<p className="text-foreground text-sm">
-							<strong>TL;DR</strong> — We don’t use cookies, we don’t identify
+							<strong>TL;DR</strong> - We don’t use cookies, we don’t identify
 							users, we anonymize IPs, and we only collect minimal, aggregated
 							data so you get insights without tracking people.
 						</p>

@@ -10,7 +10,7 @@ const TITLE = "Cookie Banner Cost Calculator";
 const DESCRIPTION =
 	"Model unattributed revenue from the cookie-consent measurement gap: traffic, visitor-to-paid, revenue per conversion, and a 40–70% band. Not P&L impact.";
 
-/** Matches defaults: 50k visitors, 55% data loss, 1.5% visitor-to-paid, $50 — ~$248k/yr; ~$11/mo Databuddy at this volume */
+/** Matches defaults: 50k visitors, 55% data loss, 1.5% visitor-to-paid, $50 - ~$248k/yr; ~$11/mo Databuddy at this volume */
 const DEFAULT_OG_PARAMS = "revenue=247500&visitors=50000&cost=11";
 
 interface PageProps {
@@ -34,7 +34,7 @@ export async function generateMetadata({
 	const ogImageUrl = `${SITE_URL}/calculator/og?${ogParams}`;
 
 	const personalizedDescription = hasPersonalizedParams
-		? `Modeled unattributed revenue ~$${Number(revenue).toLocaleString()}/year (measurement gap) vs Databuddy ~$${Number(cost).toLocaleString()}/month — not literal loss.`
+		? `Modeled unattributed revenue ~$${Number(revenue).toLocaleString()}/year (measurement gap) vs Databuddy ~$${Number(cost).toLocaleString()}/month - not literal loss.`
 		: DESCRIPTION;
 
 	return {
@@ -75,7 +75,7 @@ export default function CalculatorPage() {
 					</h1>
 					<p className="mx-auto max-w-2xl text-balance text-pretty text-muted-foreground text-sm sm:text-base">
 						Without consent, visits often do not show up in cookie-based
-						analytics — a measurement gap, not people abandoning your site. The
+						analytics - a measurement gap, not people abandoning your site. The
 						model estimates unattributed revenue if conversions scale with
 						traffic the same way across measured and unmeasured visits (default
 						55% unmeasured; 40–70% band on the yearly figure). Popular scripts

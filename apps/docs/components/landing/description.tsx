@@ -114,6 +114,16 @@ export const Description = () => {
 						</motion.div>
 					</AnimatePresence>
 				</div>
+
+				<motion.p
+					animate={{ opacity: 1, y: 0 }}
+					className="mt-10 text-center font-medium text-base text-foreground sm:text-lg"
+					initial={{ opacity: 0, y: 10 }}
+					transition={{ duration: 0.4, delay: 0.2 }}
+				>
+					Databuddy is the opposite. One script. One dashboard. Five minutes to
+					set up. Nothing to configure, nothing to maintain.
+				</motion.p>
 			</div>
 
 			{/* Desktop Layout */}
@@ -138,6 +148,16 @@ export const Description = () => {
 								</motion.div>
 							))}
 						</div>
+
+						<motion.p
+							animate={{ opacity: 1, y: 0 }}
+							className="mt-8 max-w-md font-medium text-base text-foreground xl:text-lg"
+							initial={{ opacity: 0, y: 10 }}
+							transition={{ duration: 0.4, delay: 0.2 }}
+						>
+							Databuddy is the opposite. One script. One dashboard. Five minutes
+							to set up. Nothing to configure, nothing to maintain.
+						</motion.p>
 					</div>
 
 					{/* Divider */}
