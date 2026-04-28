@@ -56,6 +56,11 @@ const companies = [
 		url: "https://inth.com",
 		logo: "/social/inth.svg",
 	},
+	{
+		name: "Orchid",
+		url: "https://orchid.ai",
+		logo: "/social/orchid.png",
+	},
 ];
 
 const devTeams = [
