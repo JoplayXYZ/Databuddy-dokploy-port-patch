@@ -10,10 +10,10 @@ interface GithubNavMarkProps {
 export function GithubNavMark({ className }: GithubNavMarkProps) {
 	return (
 		<svg
+			aria-hidden
 			className={className}
-			height="1.2em"
+			fill="currentColor"
 			viewBox="0 0 496 512"
-			width="1.2em"
 			xmlns="http://www.w3.org/2000/svg"
 		>
 			<title>GitHub</title>
@@ -29,7 +29,7 @@ export interface GithubStarsBadgeProps {
 export function GithubStarsBadge({ stars }: GithubStarsBadgeProps) {
 	return (
 		<span
-			className="rounded-full px-1 py-1 font-medium text-base text-foreground"
+			className="font-medium text-xs text-foreground"
 			title="GitHub stars"
 		>
 			{stars.toLocaleString()} ★

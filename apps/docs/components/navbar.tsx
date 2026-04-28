@@ -1,18 +1,23 @@
 "use client";
 
+import { Button } from "@databuddy/ui";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { cn } from "@/lib/utils";
 import { BrandContextMenu } from "@/components/brand-context-menu";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { Logo } from "./logo";
-import { NavLink } from "./nav-link";
 import {
 	NavbarFeaturesMenu,
 	NavbarFeaturesMobileMenu,
 } from "./navbar-features-menu";
-import { NavbarGithubDesktopLink } from "./navbar-github-desktop-link";
-import { NavbarGithubMobileLink } from "./navbar-github-mobile-link";
+import { GithubNavMark, githubRepoUrl } from "./github-nav-mark";
 import { NavbarMobileMenuButton } from "./navbar-mobile-menu-button";
+
+const navLink =
+	"rounded-md px-3 py-1.5 font-medium text-muted-foreground text-sm transition-colors hover:text-foreground";
+
+const iconBtn =
+	"inline-flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground";
 
 export interface NavbarProps {
 	stars?: number | null;
@@ -23,144 +28,150 @@ export const Navbar = ({ stars }: NavbarProps) => {
 	const [isScrolled, setIsScrolled] = useState(false);
 
 	useEffect(() => {
-		const onScroll = () => {
-			setIsScrolled(window.scrollY > 8);
-		};
-
+		const onScroll = () => setIsScrolled(window.scrollY > 8);
 		onScroll();
 		window.addEventListener("scroll", onScroll, { passive: true });
-
-		return () => {
-			window.removeEventListener("scroll", onScroll);
-		};
+		return () => window.removeEventListener("scroll", onScroll);
 	}, []);
 
 	return (
-		<>
-			<header
-				className={`fixed inset-x-0 top-0 z-40 flex flex-col pt-[env(safe-area-inset-top,0px)] transition-colors duration-200 ${
-					isScrolled ? "bg-background" : "bg-transparent"
-				}`}
-			>
-				<nav>
-					<div className="mx-auto w-full px-2 md:px-6 lg:px-8">
-						<div className="relative flex h-20 items-center">
-							<BrandContextMenu>
-								<div className="shrink-0 transition-opacity hover:opacity-90">
-									<Logo />
-								</div>
-							</BrandContextMenu>
-
-							<div className="pointer-events-none absolute inset-x-0 hidden justify-center md:flex">
-								<ul className="pointer-events-auto flex h-16 items-center gap-6">
-									<NavbarFeaturesMenu />
-									{navMenu.map((menu) => (
-										<NavLink
-											external={menu.external}
-											href={menu.path}
-											key={menu.path}
-										>
-											{menu.name}
-										</NavLink>
-									))}
-								</ul>
-							</div>
-
-							<div className="ml-auto hidden md:block">
-								<ul className="flex items-center gap-1">
-									<NavbarGithubDesktopLink stars={stars} />
-									<li className="ml-2">
-										<ThemeToggle />
-									</li>
-									<li className="ml-2">
-										<a
-											className="inline-flex items-center rounded bg-primary px-6 py-2 font-semibold text-base text-primary-foreground shadow-[inset_0_-2px_3px_rgba(0,0,0,0.25),inset_0_1px_0_rgba(255,255,255,0.2)] transition-opacity hover:opacity-90"
-											href="https://app.databuddy.cc/login"
-										>
-											Start free
-										</a>
-									</li>
-								</ul>
-							</div>
-
-							<div className="ml-auto md:hidden">
-								<NavbarMobileMenuButton
-									isOpen={isMobileMenuOpen}
-									onToggleAction={() => setIsMobileMenuOpen((open) => !open)}
-								/>
-							</div>
-						</div>
+		<header
+			className={cn(
+				"fixed inset-x-0 top-0 z-40 pt-[env(safe-area-inset-top,0px)] transition-[background-color,border-color,backdrop-filter] duration-200",
+				isScrolled
+					? "border-border border-b bg-background backdrop-blur-xl"
+					: "bg-transparent",
+			)}
+		>
+			<nav className="mx-auto flex h-14 w-full max-w-400 items-center gap-4 px-4 sm:px-14 lg:px-20">
+				<BrandContextMenu>
+					<div className="shrink-0">
+						<Logo />
 					</div>
-				</nav>
+				</BrandContextMenu>
 
-				<div
-					className={`overflow-hidden transition-all duration-300 ease-out md:hidden ${
-						isMobileMenuOpen
-							? "max-h-128 border-border/50 border-b opacity-100"
-							: "max-h-0 opacity-0"
-					}`}
-				>
-					<div className="bg-background/95 backdrop-blur-sm">
-						<div className="mx-auto max-w-7xl space-y-1 px-4 py-4 sm:px-6 lg:px-8">
-							<NavbarFeaturesMobileMenu
-								baseDelayIndex={0}
-								isMenuOpen={isMobileMenuOpen}
-								onCloseAction={() => setIsMobileMenuOpen(false)}
-							/>
-							{navMenu.map((menu, index) => (
-								<Link
-									className={`block transform rounded px-4 py-3 font-medium text-base transition-all duration-200 hover:translate-x-1 hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/20 active:bg-muted/70 ${
-										isMobileMenuOpen
-											? "translate-x-0 opacity-100"
-											: "-translate-x-4 opacity-0"
-									}`}
-									href={menu.path}
-									key={menu.path}
-									onClick={() => setIsMobileMenuOpen(false)}
-									style={{
-										transitionDelay: isMobileMenuOpen
-											? `${(index + 1) * 50}ms`
-											: "0ms",
-									}}
-									{...(menu.external && {
-										target: "_blank",
-										rel: "noopener noreferrer",
-									})}
-								>
-									{menu.name}
-								</Link>
-							))}
-							<NavbarGithubMobileLink
-								isMenuOpen={isMobileMenuOpen}
-								onCloseAction={() => setIsMobileMenuOpen(false)}
-								stars={stars}
-								transitionDelayMs={(navMenu.length + 1) * 50}
-							/>
-							<div className="px-4 pt-2">
-								<a
-									className="block w-full rounded bg-primary px-4 py-3 text-center font-medium text-base text-primary-foreground"
-									href="https://app.databuddy.cc/login"
-									onClick={() => setIsMobileMenuOpen(false)}
-								>
-									Start free
-								</a>
-							</div>
+				<div className="hidden flex-1 justify-center md:flex">
+					<div className="flex items-center gap-0.5">
+						<NavbarFeaturesMenu />
+						{navMenu.map((menu) => (
+							<Link className={navLink} href={menu.path} key={menu.path}>
+								{menu.name}
+							</Link>
+						))}
+					</div>
+				</div>
+
+				<div className="ml-auto flex items-center gap-1 md:ml-0">
+					<a
+						className="hidden h-8 items-center gap-1.5 rounded-md px-2 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground md:inline-flex"
+						href={githubRepoUrl}
+						rel="noopener noreferrer"
+						target="_blank"
+					>
+						<GithubNavMark className="size-4" />
+						{typeof stars === "number" && (
+							<span className="font-medium text-xs tabular-nums">
+								{stars.toLocaleString()}
+							</span>
+						)}
+					</a>
+
+					<Button asChild className="hidden md:inline-flex" size="sm">
+						<a href="https://app.databuddy.cc/login">Start free</a>
+					</Button>
+
+					<NavbarMobileMenuButton
+						className={cn(iconBtn, "md:hidden")}
+						isOpen={isMobileMenuOpen}
+						onToggleAction={() => setIsMobileMenuOpen((o) => !o)}
+					/>
+				</div>
+			</nav>
+
+			<div
+				className={cn(
+					"overflow-hidden transition-all duration-300 ease-out md:hidden",
+					isMobileMenuOpen
+						? "max-h-[80vh] opacity-100"
+						: "max-h-0 opacity-0",
+				)}
+			>
+				<div className="border-border border-t bg-background backdrop-blur-xl">
+					<div className="mx-auto max-w-7xl space-y-1 px-4 py-3 sm:px-6">
+						<NavbarFeaturesMobileMenu
+							baseDelayIndex={0}
+							isMenuOpen={isMobileMenuOpen}
+							onCloseAction={() => setIsMobileMenuOpen(false)}
+						/>
+						{navMenu.map((menu, i) => (
+							<Link
+								className={cn(
+									"block rounded-md px-3 py-2 font-medium text-sm transition-all duration-200 hover:bg-muted",
+									isMobileMenuOpen
+										? "translate-x-0 opacity-100"
+										: "-translate-x-4 opacity-0",
+								)}
+								href={menu.path}
+								key={menu.path}
+								onClick={() => setIsMobileMenuOpen(false)}
+								style={{
+									transitionDelay: isMobileMenuOpen
+										? `${(i + 1) * 40}ms`
+										: "0ms",
+								}}
+							>
+								{menu.name}
+							</Link>
+						))}
+
+						<a
+							className={cn(
+								"flex items-center gap-2 rounded-md px-3 py-2 font-medium text-sm transition-all duration-200 hover:bg-muted",
+								isMobileMenuOpen
+									? "translate-x-0 opacity-100"
+									: "-translate-x-4 opacity-0",
+							)}
+							href={githubRepoUrl}
+							onClick={() => setIsMobileMenuOpen(false)}
+							rel="noopener noreferrer"
+							style={{
+								transitionDelay: isMobileMenuOpen
+									? `${(navMenu.length + 1) * 40}ms`
+									: "0ms",
+							}}
+							target="_blank"
+						>
+							<GithubNavMark className="size-4" />
+							GitHub
+							{typeof stars === "number" && (
+								<span className="text-muted-foreground tabular-nums">
+									{stars.toLocaleString()}
+								</span>
+							)}
+						</a>
+
+						<div className="pt-2">
+							<Button
+								asChild
+								className="w-full"
+								onClick={() => setIsMobileMenuOpen(false)}
+								size="sm"
+							>
+								<a href="https://app.databuddy.cc/login">Start free</a>
+							</Button>
 						</div>
 					</div>
 				</div>
-			</header>
-			{/* <div
-				aria-hidden
-				className="h-[calc(4rem+env(safe-area-inset-top,0px))] shrink-0"
-			/> */}
-		</>
+			</div>
+		</header>
 	);
 };
+
+export { iconBtn as navIconBtn };
 
 export interface NavMenuItem {
 	name: string;
 	path: string;
-	external?: boolean;
 }
 
 export const navMenu: NavMenuItem[] = [
@@ -168,9 +179,4 @@ export const navMenu: NavMenuItem[] = [
 	{ name: "Pricing", path: "/pricing" },
 	{ name: "Compare", path: "/compare" },
 	{ name: "Changelog", path: "/changelog" },
-	{
-		name: "Log in",
-		path: "https://app.databuddy.cc/login",
-		external: true,
-	},
 ];

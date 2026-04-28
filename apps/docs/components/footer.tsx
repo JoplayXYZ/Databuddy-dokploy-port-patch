@@ -49,26 +49,18 @@ export function Footer() {
 						</div>
 					</div>
 				</div>
-				<div className="mb-10 flex flex-col items-start justify-between gap-4 rounded-lg border border-border bg-card/30 p-5 sm:flex-row sm:items-center sm:p-6">
-					<div className="space-y-1">
-						<p className="font-medium text-2xl text-foreground">
-							Get product updates
-						</p>
-						<p className="text-base text-muted-foreground">
-							New features, tips, and privacy-first analytics insights. No spam.
-						</p>
-					</div>
-					<div className="w-full sm:w-auto">
-						<NewsletterForm />
-					</div>
-				</div>
-
 				<div className="grid grid-cols-2 gap-8 sm:gap-10 md:grid-cols-4">
 					<div className="col-span-2 space-y-4 md:col-span-1">
 						<LogoContent />
 						<p className="text-muted-foreground text-sm sm:text-base">
 							Privacy-first web analytics without compromising user data.
 						</p>
+						<div className="pt-2 space-y-2">
+							<p className="font-medium text-sm text-foreground">
+								Get product updates
+							</p>
+							<NewsletterForm />
+						</div>
 					</div>
 
 					<div className="space-y-4">
@@ -245,9 +237,9 @@ export function Footer() {
 				</div>
 
 				{/* Copyright Row */}
-				<div className="mt-4 flex flex-row flex-col items-start justify-between gap-4 border-border border-t pt-4">
+				<div className="mt-4 flex items-start justify-between gap-4 border-border border-t pt-4">
 					<p className="text-muted-foreground text-sm sm:text-base">
-						© {new Date().getFullYear()} Databuddy
+						© {new Date().getFullYear()} Databuddy Analytics, Inc.
 					</p>
 					<div className="flex flex-col items-center gap-3 sm:flex-row sm:gap-4">
 						<p className="text-muted-foreground text-sm sm:text-base">

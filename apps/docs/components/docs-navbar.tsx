@@ -1,17 +1,15 @@
 "use client";
 
+import { Branding } from "@/components/logo";
+import { cn } from "@/lib/utils";
 import { CaretDownIcon } from "@databuddy/ui/icons";
 import { AnimatePresence, motion } from "motion/react";
 import Link from "next/link";
 import { useState } from "react";
-import { Branding } from "@/components/logo";
-import { ThemeToggle } from "@/components/theme-toggle";
-import { NavLink } from "./nav-link";
 import { navMenu } from "./navbar";
 import { NavbarGithubDesktopLink } from "./navbar-github-desktop-link";
 import { NavbarGithubMobileLink } from "./navbar-github-mobile-link";
 import { NavbarMobileMenuButton } from "./navbar-mobile-menu-button";
-import { cn } from "@/lib/utils";
 import { contents, type SidebarItem } from "./sidebar-content";
 
 export interface DocsNavbarProps {
@@ -31,7 +29,7 @@ export const DocsNavbar = ({ stars }: DocsNavbarProps) => {
 	const githubDelayMs = (contents.length * 5 + docsSecondaryNav.length) * 30;
 
 	return (
-		<div className="sticky top-0 z-30 flex flex-col border-b bg-background/60 backdrop-blur-xl">
+		<div className="sticky top-0 z-30 flex flex-col border-b bg-background">
 			<nav>
 				<div className="mx-auto w-full px-2 md:px-6 lg:px-8">
 					<div className="flex h-16 items-center justify-between">
@@ -43,21 +41,18 @@ export const DocsNavbar = ({ stars }: DocsNavbarProps) => {
 						</Link>
 
 						<div className="hidden md:block">
-							<ul className="flex items-center gap-1">
+							<div className="flex items-center gap-1">
 								{navMenu.map((menu) => (
-									<NavLink
-										external={menu.external}
+									<Link
+										className="inline-flex items-center rounded-md px-3 py-1.5 font-medium text-muted-foreground text-sm transition-colors hover:text-foreground"
 										href={menu.path}
 										key={menu.path}
 									>
 										{menu.name}
-									</NavLink>
+									</Link>
 								))}
 								<NavbarGithubDesktopLink stars={stars} />
-								<li className="ml-2">
-									<ThemeToggle />
-								</li>
-							</ul>
+							</div>
 						</div>
 
 						<NavbarMobileMenuButton
@@ -157,10 +152,6 @@ export const DocsNavbar = ({ stars }: DocsNavbarProps) => {
 											? `${(contents.length * 5 + index) * 30}ms`
 											: "0ms",
 									}}
-									{...(menu.external && {
-										target: "_blank",
-										rel: "noopener noreferrer",
-									})}
 								>
 									{menu.name}
 								</Link>

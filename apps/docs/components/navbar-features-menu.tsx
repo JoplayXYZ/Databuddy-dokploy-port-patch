@@ -1,15 +1,14 @@
 "use client";
 
-import type { IconProps } from "@phosphor-icons/react";
+import { CaretDownIcon } from "@phosphor-icons/react";
 import {
 	BugIcon,
-	CaretDownIcon,
 	FlagIcon,
 	GaugeIcon,
 	HeartbeatIcon,
-} from "@phosphor-icons/react";
+} from "@databuddy/ui/icons";
 import Link from "next/link";
-import type { ComponentType } from "react";
+import type { ComponentType, SVGProps } from "react";
 import { useCallback, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
@@ -17,7 +16,7 @@ interface FeatureItem {
 	title: string;
 	description: string;
 	href: string;
-	icon: ComponentType<IconProps>;
+	icon: ComponentType<SVGProps<SVGSVGElement>>;
 }
 
 const FEATURE_ITEMS: FeatureItem[] = [
@@ -35,7 +34,7 @@ const FEATURE_ITEMS: FeatureItem[] = [
 	},
 	{
 		title: "Web Vitals",
-		description: "LCP, FID, CLS — Core Web Vitals monitoring",
+		description: "LCP, FID, CLS scoring and monitoring",
 		href: "/web-vitals",
 		icon: GaugeIcon,
 	},
@@ -84,13 +83,15 @@ export function NavbarFeaturesMenu({
 	}, [onNavigateAction]);
 
 	return (
-		<li className="relative">
+		<div className="relative">
 			<button
 				aria-expanded={open}
 				aria-haspopup="true"
 				className={cn(
-					"flex items-center gap-2 px-4 py-5 font-medium text-md transition-colors",
-					open ? "text-foreground" : "text-foreground/70 hover:text-foreground"
+					"flex items-center gap-1.5 rounded-md px-3 py-1.5 font-medium text-sm transition-colors",
+					open
+						? "text-foreground"
+						: "text-muted-foreground hover:text-foreground",
 				)}
 				onClick={() => setOpen((prev) => !prev)}
 				onKeyDown={handleKeyDown}
@@ -106,7 +107,7 @@ export function NavbarFeaturesMenu({
 				<CaretDownIcon
 					className={cn(
 						"size-3 transition-transform duration-200",
-						open && "rotate-180"
+						open && "rotate-180",
 					)}
 					weight="bold"
 				/>
@@ -114,10 +115,10 @@ export function NavbarFeaturesMenu({
 
 			<div
 				className={cn(
-					"absolute top-full left-0 pt-1 transition-all duration-200",
+					"absolute top-full left-1/2 z-50 pt-2 -translate-x-1/2 transition-all duration-200",
 					open
 						? "pointer-events-auto translate-y-0 opacity-100"
-						: "pointer-events-none -translate-y-1 opacity-0"
+						: "pointer-events-none -translate-y-2 opacity-0",
 				)}
 				onKeyDown={handleKeyDown}
 				onMouseEnter={() => {
@@ -128,32 +129,36 @@ export function NavbarFeaturesMenu({
 				ref={panelRef}
 				role="menu"
 			>
-				<div className="w-80 rounded border border-border bg-background/95 p-1 shadow-lg backdrop-blur-xl">
-					{FEATURE_ITEMS.map((item) => (
-						<Link
-							className="group flex items-start gap-3 rounded p-3 transition-colors hover:bg-muted/50"
-							href={item.href}
-							key={item.href}
-							onClick={handleItemClick}
-							role="menuitem"
-						>
-							<item.icon
-								className="mt-0.5 size-5 shrink-0 text-muted-foreground transition-colors group-hover:text-foreground"
-								weight="duotone"
-							/>
-							<div className="min-w-0">
-								<p className="font-medium text-foreground text-sm">
-									{item.title}
-								</p>
-								<p className="text-muted-foreground text-xs leading-relaxed">
-									{item.description}
-								</p>
-							</div>
-						</Link>
-					))}
+				<div className="w-[34rem] rounded-xl border border-border bg-secondary p-1.5 shadow-2xl">
+					<div className="grid grid-cols-2 gap-1.5">
+						{FEATURE_ITEMS.map((item) => (
+							<Link
+								className="group flex items-start gap-3 rounded-lg bg-background p-3.5 transition-colors hover:bg-muted"
+								href={item.href}
+								key={item.href}
+								onClick={handleItemClick}
+								role="menuitem"
+							>
+								<div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-secondary transition-colors group-hover:bg-background">
+									<item.icon
+										aria-hidden
+										className="size-4 text-muted-foreground transition-colors group-hover:text-foreground"
+									/>
+								</div>
+								<div className="min-w-0 pt-0.5">
+									<p className="font-medium text-foreground text-sm">
+										{item.title}
+									</p>
+									<p className="mt-0.5 text-muted-foreground text-xs leading-relaxed">
+										{item.description}
+									</p>
+								</div>
+							</Link>
+						))}
+					</div>
 				</div>
 			</div>
-		</li>
+		</div>
 	);
 }
 
@@ -171,20 +176,23 @@ export function NavbarFeaturesMobileMenu({
 	return (
 		<div>
 			<button
-				className={`flex w-full items-center justify-between rounded px-4 py-3 font-medium text-base transition-all duration-200 hover:translate-x-1 hover:bg-muted/50 active:bg-muted/70 ${
-					isMenuOpen ? "translate-x-0 opacity-100" : "-translate-x-4 opacity-0"
-				}`}
+				className={cn(
+					"flex w-full items-center justify-between rounded-md px-3 py-2 font-medium text-sm transition-all duration-200 hover:bg-muted",
+					isMenuOpen
+						? "translate-x-0 opacity-100"
+						: "-translate-x-4 opacity-0",
+				)}
 				onClick={() => setExpanded((prev) => !prev)}
 				style={{
-					transitionDelay: isMenuOpen ? `${baseDelayIndex * 50}ms` : "0ms",
+					transitionDelay: isMenuOpen ? `${baseDelayIndex * 40}ms` : "0ms",
 				}}
 				type="button"
 			>
 				Features
 				<CaretDownIcon
 					className={cn(
-						"size-3.5 text-muted-foreground transition-transform duration-200",
-						expanded && "rotate-180"
+						"size-3 text-muted-foreground transition-transform duration-200",
+						expanded && "rotate-180",
 					)}
 					weight="bold"
 				/>
@@ -193,18 +201,17 @@ export function NavbarFeaturesMobileMenu({
 			<div
 				className={cn(
 					"overflow-hidden transition-all duration-200 ease-out",
-					expanded ? "max-h-64 opacity-100" : "max-h-0 opacity-0"
+					expanded ? "max-h-64 opacity-100" : "max-h-0 opacity-0",
 				)}
 			>
-				<div className="space-y-1 py-1 pl-4">
+				<div className="space-y-0.5 py-1 pl-3">
 					{FEATURE_ITEMS.map((item) => (
 						<Link
-							className="flex items-center gap-3 rounded px-4 py-2.5 text-muted-foreground text-sm transition-colors hover:bg-muted/50 hover:text-foreground"
+							className="block rounded-md px-3 py-2 text-muted-foreground text-sm transition-colors hover:bg-muted hover:text-foreground"
 							href={item.href}
 							key={item.href}
 							onClick={onCloseAction}
 						>
-							<item.icon className="size-4 shrink-0" weight="duotone" />
 							{item.title}
 						</Link>
 					))}
