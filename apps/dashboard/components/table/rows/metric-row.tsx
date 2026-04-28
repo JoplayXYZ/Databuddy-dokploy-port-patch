@@ -48,15 +48,9 @@ export function createMetricColumns({
 		id: "visitors",
 		accessorKey: "visitors",
 		header: visitorsLabel,
-		cell: (info: CellContext<MetricEntry, any>) => {
-			const value = info.getValue() as number;
-			return (
-				<div>
-					<div className="font-medium">{formatNumber(value)}</div>
-					<div className="text-muted-foreground text-xs">unique users</div>
-				</div>
-			);
-		},
+		cell: (info: CellContext<MetricEntry, any>) => (
+			<span className="font-medium">{formatNumber(info.getValue() as number)}</span>
+		),
 	});
 
 	if (includePageviews) {
@@ -64,15 +58,9 @@ export function createMetricColumns({
 			id: "pageviews",
 			accessorKey: "pageviews",
 			header: pageviewsLabel,
-			cell: (info: CellContext<MetricEntry, any>) => {
-				const value = info.getValue() as number;
-				return (
-					<div>
-						<div className="font-medium">{formatNumber(value)}</div>
-						<div className="text-muted-foreground text-xs">total views</div>
-					</div>
-				);
-			},
+			cell: (info: CellContext<MetricEntry, any>) => (
+				<span className="font-medium">{formatNumber(info.getValue() as number)}</span>
+			),
 		});
 	}
 

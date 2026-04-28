@@ -244,7 +244,7 @@ function TableContentInner<TData extends { name: string | number }>({
 								return (
 									<TableHead
 										className={cn(
-											"h-10 px-5 font-medium text-muted-foreground text-xs",
+											"h-8 px-3 font-medium text-muted-foreground text-xs",
 											isCompactColumn && "px-3 text-right",
 											(header.column.columnDef.meta as any)?.className
 										)}
@@ -336,7 +336,7 @@ function TableContentInner<TData extends { name: string | number }>({
 										return (
 											<TableCell
 												className={cn(
-													"h-14 px-5 py-2.5 text-[15px] text-foreground leading-5 transition-colors first:pl-4 last:pr-5",
+													"h-9 px-3 py-1.5 text-sm text-foreground leading-5 transition-colors first:pl-3 last:pr-3",
 													cellIndex === 0 && "font-medium",
 													isCompactColumn && "px-3 text-right tabular-nums",
 													(cell.column.columnDef.meta as any)?.className
@@ -346,10 +346,10 @@ function TableContentInner<TData extends { name: string | number }>({
 											>
 												<div
 													className={cn(
-														"flex min-h-10 items-center gap-2.5",
+														"flex items-center gap-2",
 														isCompactColumn && "justify-end",
 														cellIndex === 0 &&
-															"min-w-0 [&_img]:size-[18px] [&_svg]:size-[18px]"
+															"min-w-0 [&_img]:size-4 [&_svg]:size-4"
 													)}
 												>
 													{cellIndex === 0 && hasSubRows && (
@@ -421,8 +421,8 @@ function TableContentInner<TData extends { name: string | number }>({
 													return (
 														<TableCell
 															className={cn(
-																"py-2.5 text-muted-foreground text-sm",
-																cellIndex === 0 ? "pl-12" : "px-5",
+																"py-1.5 text-muted-foreground text-sm",
+																cellIndex === 0 ? "pl-10" : "px-3",
 																isCompactColumn &&
 																	"px-3 text-right tabular-nums"
 															)}
