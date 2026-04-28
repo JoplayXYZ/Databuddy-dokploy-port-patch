@@ -160,9 +160,9 @@ export function startUptimeWorker() {
 		(job) => processUptimeJob(job),
 		{
 			connection: getBullMQWorkerConnectionOptions(),
-			concurrency: Number(process.env.UPTIME_WORKER_CONCURRENCY ?? 200),
-			lockDuration: UPTIME_JOB_TIMEOUT_MS + 5000,
-			stalledInterval: UPTIME_JOB_TIMEOUT_MS + 10_000,
+			concurrency: Number(process.env.UPTIME_WORKER_CONCURRENCY ?? 10_000),
+			lockDuration: UPTIME_JOB_TIMEOUT_MS * 3,
+			stalledInterval: UPTIME_JOB_TIMEOUT_MS * 4,
 		}
 	);
 
