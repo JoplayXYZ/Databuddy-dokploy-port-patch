@@ -2,6 +2,7 @@
 
 import {
 	ActivityIcon,
+	ArrowRightIcon,
 	Bug,
 	CursorClick,
 	Flag,
@@ -11,6 +12,7 @@ import {
 	WarningCircle,
 } from "@phosphor-icons/react";
 import { AnimatePresence, motion } from "motion/react";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import {
 	Area,
@@ -34,6 +36,7 @@ const BentoCard = ({
 	className,
 	headerClassName,
 	contentClassName,
+	href,
 }: {
 	title: string;
 	description?: string;
@@ -42,6 +45,7 @@ const BentoCard = ({
 	className?: string;
 	headerClassName?: string;
 	contentClassName?: string;
+	href?: string;
 }) => (
 	<motion.div
 		className={cn(
@@ -54,20 +58,31 @@ const BentoCard = ({
 		whileInView={{ opacity: 1, y: 0 }}
 	>
 		<CardHeader className={cn("relative z-20 px-6 py-4", headerClassName)}>
-			<div className="flex items-center gap-3">
-				<div className="flex size-8 items-center justify-center bg-secondary/40 ring-1 ring-border">
-					<Icon className="size-4 text-muted-foreground" weight="duotone" />
+			<div className="flex items-start justify-between gap-3">
+				<div className="flex items-center gap-3">
+					<div className="flex size-8 items-center justify-center bg-secondary/40 ring-1 ring-border">
+						<Icon className="size-4 text-muted-foreground" weight="duotone" />
+					</div>
+					<div className="flex flex-col gap-0.5">
+						<CardTitle className="font-medium font-mono text-foreground text-sm">
+							{title}
+						</CardTitle>
+						{description && (
+							<p className="font-mono text-muted-foreground text-xs">
+								{description}
+							</p>
+						)}
+					</div>
 				</div>
-				<div className="flex flex-col gap-0.5">
-					<CardTitle className="font-medium font-mono text-foreground text-sm">
-						{title}
-					</CardTitle>
-					{description && (
-						<p className="font-mono text-muted-foreground text-xs">
-							{description}
-						</p>
-					)}
-				</div>
+				{href && (
+					<Link
+						aria-label={`Learn more about ${title}`}
+						className="z-30 flex size-10 shrink-0 items-center justify-center rounded border border-border/50 bg-card text-muted-foreground shadow-[inset_0_1px_3px_rgba(0,0,0,0.06)] transition-all duration-300 hover:border-border hover:text-foreground"
+						href={href}
+					>
+						<ArrowRightIcon className="size-5" weight="fill" />
+					</Link>
+				)}
 			</div>
 		</CardHeader>
 		<CardContent className={cn("relative z-10 p-6 pt-0", contentClassName)}>
@@ -695,6 +710,7 @@ export default function Bento() {
 				className="h-full md:col-span-4 md:row-span-1"
 				contentClassName="pb-0"
 				description="Monitor core performance metrics"
+				href="/web-vitals"
 				icon={Gauge}
 				title="Web Vitals"
 			>
@@ -706,6 +722,7 @@ export default function Bento() {
 				className="h-full md:col-span-4 md:row-span-1"
 				contentClassName="pb-0"
 				description="Catch and fix bugs fast"
+				href="/errors"
 				icon={Bug}
 				title="Error Tracking"
 			>
@@ -716,6 +733,7 @@ export default function Bento() {
 			<BentoCard
 				className="h-full md:col-span-4 md:row-span-1"
 				description="Roll out features safely"
+				href="/feature-flags"
 				icon={Flag}
 				title="Feature Flags"
 			>
