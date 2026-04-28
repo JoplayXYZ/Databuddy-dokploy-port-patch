@@ -87,8 +87,12 @@ export default function Hero({
 			<BackgroundFlow />
 			<div className="mx-auto w-full max-w-400 px-4 pt-26 pb-8 sm:px-14 sm:pt-20 lg:px-20 lg:pt-38">
 				<div className="mx-auto flex max-w-360 flex-col items-start space-y-2 text-left">
-					<h1 className="z-10 text-balance font-semibold text-3xl sm:text-5xl md:text-6xl">
-						Stop reading dashboards. Start asking questions.
+					<h1 className="z-10 font-semibold text-3xl sm:text-5xl md:text-6xl">
+						Stop reading dashboards.
+						<br />
+						<span className="text-muted-foreground">
+							Start asking questions.
+						</span>
 					</h1>
 
 					<p className="z-10 max-w-2xl text-muted-foreground text-sm sm:text-base lg:text-lg">
