@@ -287,14 +287,14 @@ export function RealtimeMap({ countries }: RealtimeMapProps) {
 			<canvas className="block h-full w-full" ref={canvasRef} />
 			{tooltip && (
 				<div
-					className="pointer-events-none absolute z-10 rounded-md border bg-popover px-3 py-1.5 text-sm shadow-md"
+					className="pointer-events-none absolute z-10 rounded border border-border/60 bg-popover px-2.5 py-1.5 text-xs shadow-md"
 					style={{
 						left: tooltip.x,
-						top: tooltip.y - 40,
+						top: tooltip.y - 36,
 						transform: "translateX(-50%)",
 					}}
 				>
-					<span className="font-medium">{tooltip.name}</span>
+					<span className="font-bold">{tooltip.name}</span>
 					<span className="text-muted-foreground">
 						{" "}
 						· {tooltip.visitors} active

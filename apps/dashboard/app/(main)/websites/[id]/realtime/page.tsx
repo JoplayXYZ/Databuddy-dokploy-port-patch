@@ -4,7 +4,10 @@ import dynamic from "next/dynamic";
 import { useParams } from "next/navigation";
 import { useMemo } from "react";
 import { useDynamicQuery } from "@/hooks/use-dynamic-query";
-import { Card, Skeleton } from "@databuddy/ui";
+import { Skeleton } from "@databuddy/ui";
+import { Silkscreen } from "next/font/google";
+
+const pixel = Silkscreen({ weight: ["400", "700"], subsets: ["latin"] });
 
 const RealtimeMap = dynamic(
 	() =>
@@ -47,13 +50,54 @@ export default function RealtimePage() {
 		visitors: number;
 	}>;
 
+	const totalVisitors = countries.reduce((sum, c) => sum + c.visitors, 0);
+
 	return (
-		<div className="p-4">
-			<Card>
-				<Card.Content className="h-[700px] p-0">
+		<div className={`${pixel.className} p-4`}>
+			<div className="overflow-hidden rounded-lg border border-border/60 bg-card">
+				<div className="flex items-center justify-between border-border/40 border-b px-4 py-3">
+					<div className="flex items-center gap-3">
+						<div className="flex items-center gap-2">
+							<span className="relative flex size-2">
+								<span className="absolute inline-flex size-full animate-ping rounded-full bg-green-500/60" />
+								<span className="relative inline-flex size-2 rounded-full bg-green-500" />
+							</span>
+							<span className="text-muted-foreground text-xs uppercase tracking-widest">
+								Live
+							</span>
+						</div>
+						<span className="text-muted-foreground text-xs">·</span>
+						<span className="text-muted-foreground text-xs">
+							{countries.length} regions
+						</span>
+					</div>
+					<div className="flex items-center gap-2">
+						<span className="font-bold text-2xl text-foreground tabular-nums">
+							{totalVisitors}
+						</span>
+						<span className="text-muted-foreground text-xs">active</span>
+					</div>
+				</div>
+				<div className="h-[600px]">
 					<RealtimeMap countries={countries} />
-				</Card.Content>
-			</Card>
+				</div>
+				{countries.length > 0 && (
+					<div className="flex flex-wrap gap-x-4 gap-y-1 border-border/40 border-t px-4 py-3">
+						{countries.slice(0, 8).map((c) => (
+							<span
+								className="flex items-center gap-1.5 text-muted-foreground text-xs"
+								key={c.country_code}
+							>
+								<span className="size-1.5 rounded-sm bg-success" />
+								{c.country_name || c.country_code}
+								<span className="text-foreground tabular-nums">
+									{c.visitors}
+								</span>
+							</span>
+						))}
+					</div>
+				)}
+			</div>
 		</div>
 	);
 }
