@@ -7,6 +7,7 @@ import {
 	GaugeIcon,
 	HeartbeatIcon,
 	LinkIcon,
+	RobotIcon,
 } from "@databuddy/ui/icons";
 import Link from "next/link";
 import type { ComponentType, SVGProps } from "react";
@@ -50,6 +51,12 @@ const FEATURE_ITEMS: FeatureItem[] = [
 		description: "Branded links with click analytics",
 		href: "/links",
 		icon: LinkIcon,
+	},
+	{
+		title: "Databunny",
+		description: "AI agent, insights, and anomaly detection",
+		href: "/databunny",
+		icon: RobotIcon,
 	},
 ];
 
@@ -204,7 +211,7 @@ export function NavbarFeaturesMobileMenu({
 			<div
 				className={cn(
 					"overflow-hidden transition-all duration-200 ease-out",
-					expanded ? "max-h-64 opacity-100" : "max-h-0 opacity-0"
+					expanded ? "max-h-80 opacity-100" : "max-h-0 opacity-0"
 				)}
 			>
 				<div className="space-y-0.5 py-1 pl-3">
