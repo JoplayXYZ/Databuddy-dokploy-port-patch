@@ -213,7 +213,7 @@ export function Estimator({
 												className="px-3 py-2 text-foreground text-xs"
 												scope="col"
 											>
-												Rate / event
+												Rate / 1,000 events
 											</th>
 										</tr>
 									</thead>
@@ -236,7 +236,7 @@ export function Estimator({
 														{to}
 													</td>
 													<td className="px-3 py-2 text-foreground text-xs">
-														${tier.amount.toFixed(6)}
+														${(tier.amount * 1000).toFixed(2)}
 													</td>
 												</tr>
 											);
