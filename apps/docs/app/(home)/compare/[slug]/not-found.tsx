@@ -53,7 +53,7 @@ export default function NotFound() {
 								</Link>
 								<SciFiButton asChild>
 									<Link
-										href="https://app.databuddy.cc/login"
+										href="https://app.databuddy.cc/register"
 										rel="noopener noreferrer"
 										target="_blank"
 									>

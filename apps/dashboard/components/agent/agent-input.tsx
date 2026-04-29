@@ -2,10 +2,7 @@
 
 import { useAtom } from "jotai";
 import { useMemo, useState } from "react";
-import {
-	DotMatrixLoader,
-	useRandomDotMatrixLoader,
-} from "@/components/ai-elements/dotmatrix-loader";
+import { CircleNotchIcon } from "@databuddy/ui/icons";
 import { useChat, usePendingQueue } from "@/contexts/chat-context";
 import { cn } from "@/lib/utils";
 import {
@@ -139,7 +136,7 @@ export function AgentInput() {
 				anchor={
 					<div
 						className={cn(
-							"rounded border border-border bg-background shadow-xs transition-colors",
+							"rounded-xl border border-border/60 bg-background shadow-sm transition-colors",
 							"focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/50"
 						)}
 					>
@@ -158,7 +155,7 @@ export function AgentInput() {
 							value={input}
 						/>
 
-						<div className="flex items-center justify-between gap-3 rounded-b border-border/60 border-t bg-muted/30 px-3 py-1.5">
+						<div className="flex items-center justify-between gap-3 rounded-b-xl border-border/40 border-t bg-muted/20 px-3 py-1.5">
 							<KeyboardHints isLoading={isLoading} />
 
 							<div className="flex shrink-0 items-center gap-1">
@@ -282,17 +279,10 @@ function Kbd({ children }: { children: React.ReactNode }) {
 }
 
 function GeneratingHint() {
-	const loader = useRandomDotMatrixLoader();
 	return (
 		<div className="flex min-w-0 items-center gap-1.5 text-muted-foreground text-xs">
-			<DotMatrixLoader
-				className="text-primary"
-				dotSize={2}
-				label="Generating"
-				loader={loader}
-				size={14}
-			/>
-			<span>Generating…</span>
+			<CircleNotchIcon className="size-3.5 animate-spin text-primary" />
+			<span>Generating...</span>
 		</div>
 	);
 }

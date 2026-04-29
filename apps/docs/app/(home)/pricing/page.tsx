@@ -44,11 +44,12 @@ export default function PricingPage() {
 			<div className="mx-auto w-full max-w-7xl">
 				<header className="mb-8 text-center sm:mb-10">
 					<h1 className="mb-2 font-bold text-3xl tracking-tight sm:text-4xl">
-						One price. Every feature.
+						Every feature, every plan.
 					</h1>
 					<p className="mx-auto max-w-2xl text-muted-foreground text-sm sm:text-base">
-						Analytics, errors, vitals, and flags - all included. Simple plans,
-						fair tiered overage, and you only pay for what you use.
+						Analytics, errors, vitals, and flags included at every tier. Pick a
+						plan based on volume, not features. Fair tiered overage, and you
+						only pay for what you use.
 					</p>
 				</header>
 
