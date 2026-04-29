@@ -22,6 +22,7 @@ import {
 } from "@/stores/jotai/filterAtoms";
 import { AnalyticsToolbar } from "./_components/analytics-toolbar";
 import { AddFilterForm } from "./_components/filters/add-filters";
+import { SavedFiltersToolbar } from "./_components/filters/saved-filters-toolbar";
 import { WebsiteTrackingSetupTab } from "./_components/tabs/tracking-setup-tab";
 import { useTrackingSetup } from "./hooks/use-tracking-setup";
 import { ArrowClockwiseIcon } from "@databuddy/ui/icons";
@@ -121,6 +122,7 @@ export default function WebsiteLayout({ children }: WebsiteLayoutProps) {
 							buttonText="Filter"
 							disabled={isToolbarDisabled}
 						/>
+						<SavedFiltersToolbar />
 						<LiveUserIndicator websiteId={websiteId} />
 						<Button
 							aria-label="Refresh data"

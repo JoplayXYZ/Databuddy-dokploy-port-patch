@@ -88,24 +88,26 @@ export function SaveFilterDialog({
 		<Dialog onOpenChange={handleClose} open={isOpen}>
 			<Dialog.Content className="w-[95vw] max-w-sm sm:w-full">
 				<Dialog.Close />
-				<div className="mb-4 flex items-center gap-3">
-					<div className="flex size-10 shrink-0 items-center justify-center rounded border bg-secondary">
-						<FloppyDiskIcon
-							className="size-5 text-accent-foreground"
-							weight="duotone"
-						/>
+				<Dialog.Header>
+					<div className="flex items-center gap-2">
+						<div className="flex size-7 shrink-0 items-center justify-center rounded-md bg-primary/10">
+							<FloppyDiskIcon
+								className="size-3.5 text-primary"
+								weight="duotone"
+							/>
+						</div>
+						<div>
+							<Dialog.Title>
+								{isEditing ? "Rename Filter" : "Save Filter"}
+							</Dialog.Title>
+							<Dialog.Description>
+								{isEditing
+									? `Update the name for "${editingFilter?.name}"`
+									: `Save ${filters.length} filter${filters.length === 1 ? "" : "s"} for later`}
+							</Dialog.Description>
+						</div>
 					</div>
-					<div className="flex-1">
-						<Dialog.Title className="font-semibold text-base text-foreground leading-none">
-							{isEditing ? "Rename Filter" : "Save Filter"}
-						</Dialog.Title>
-						<Dialog.Description className="mt-1.5 text-muted-foreground text-sm">
-							{isEditing
-								? `Update the name for "${editingFilter?.name}"`
-								: `Save ${filters.length} filter${filters.length === 1 ? "" : "s"} for later`}
-						</Dialog.Description>
-					</div>
-				</div>
+				</Dialog.Header>
 
 				<Dialog.Body>
 					<fieldset className="space-y-4" disabled={isLoading}>

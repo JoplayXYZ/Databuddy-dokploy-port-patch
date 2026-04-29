@@ -112,7 +112,7 @@ export function AnalyticsToolbar({
 
 	return (
 		<div className="flex shrink-0 flex-col border-b">
-			<div className="flex items-center gap-2 px-3 py-2">
+			<div className="flex items-center gap-2 p-2">
 				<SegmentedControl
 					disabled={isDisabled || isHourlyDisabled}
 					onChange={(v) => setCurrentGranularityAtomState(v)}
@@ -121,14 +121,14 @@ export function AnalyticsToolbar({
 					value={currentGranularity}
 				/>
 
-				<div className="flex items-center gap-0.5">
+				<div className="flex h-8 items-center gap-0.5 rounded-md bg-secondary p-0.5">
 					{QUICK_RANGES.map((range) => {
 						const isActive = isQuickRangeActive(range);
 						return (
 							<Button
 								className={cn(
 									"h-6 px-2 text-[11px]",
-									isActive && "bg-accent text-accent-foreground hover:bg-accent"
+									isActive && "bg-background text-foreground shadow-xs hover:bg-background"
 								)}
 								disabled={isDisabled}
 								key={range.label}
