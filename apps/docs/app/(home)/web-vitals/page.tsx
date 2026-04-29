@@ -88,37 +88,37 @@ export default function WebVitalsPage() {
 							title="Performance,"
 							titleMuted="broken down."
 						/>
+
+						<TwoColumnGrid>
+							<GridCell>
+								<h3 className={CELL_TITLE_CLASS}>
+									Every vital, measured from real users.
+								</h3>
+								<WebVitalsGraphsDemo />
+							</GridCell>
+							<GridCell>
+								<h3 className={CELL_TITLE_CLASS}>
+									Find out which environments are making users wait.
+								</h3>
+								<WebVitalsBreakdownDemo compact variant="browser" />
+							</GridCell>
+						</TwoColumnGrid>
+
+						<TwoColumnGrid>
+							<GridCell>
+								<h3 className={CELL_TITLE_CLASS}>
+									Pinpoint the pages hurting your score before users notice.
+								</h3>
+								<WebVitalsBreakdownDemo compact />
+							</GridCell>
+							<GridCell>
+								<h3 className={CELL_TITLE_CLASS}>
+									Optimize for the threshold Google actually uses to rank you.
+								</h3>
+								<WebVitalsPercentileCycleDemo />
+							</GridCell>
+						</TwoColumnGrid>
 					</div>
-
-					<TwoColumnGrid>
-						<GridCell>
-							<h3 className={CELL_TITLE_CLASS}>
-								Every vital, measured from real users.
-							</h3>
-							<WebVitalsGraphsDemo />
-						</GridCell>
-						<GridCell>
-							<h3 className={CELL_TITLE_CLASS}>
-								Find out which environments are making users wait.
-							</h3>
-							<WebVitalsBreakdownDemo compact variant="browser" />
-						</GridCell>
-					</TwoColumnGrid>
-
-					<TwoColumnGrid>
-						<GridCell>
-							<h3 className={CELL_TITLE_CLASS}>
-								Pinpoint the pages hurting your score before users notice.
-							</h3>
-							<WebVitalsBreakdownDemo compact />
-						</GridCell>
-						<GridCell>
-							<h3 className={CELL_TITLE_CLASS}>
-								Optimize for the threshold Google actually uses to rank you.
-							</h3>
-							<WebVitalsPercentileCycleDemo />
-						</GridCell>
-					</TwoColumnGrid>
 				</Section>
 
 				<Section className="border-border border-b" id="monitoring">
@@ -128,22 +128,22 @@ export default function WebVitalsPage() {
 							title="Signal,"
 							titleMuted="not noise."
 						/>
-					</div>
 
-					<TwoColumnGrid>
-						<GridCell>
-							<h3 className={CELL_TITLE_CLASS}>
-								Know the moment something breaks.
-							</h3>
-							<WebVitalsAlertCycleDemo />
-						</GridCell>
-						<GridCell>
-							<h3 className={CELL_TITLE_CLASS}>
-								Confirm the fix actually held.
-							</h3>
-							<WebVitalsTrendsSparklinesDemo />
-						</GridCell>
-					</TwoColumnGrid>
+						<TwoColumnGrid>
+							<GridCell>
+								<h3 className={CELL_TITLE_CLASS}>
+									Know the moment something breaks.
+								</h3>
+								<WebVitalsAlertCycleDemo />
+							</GridCell>
+							<GridCell>
+								<h3 className={CELL_TITLE_CLASS}>
+									Confirm the fix actually held.
+								</h3>
+								<WebVitalsTrendsSparklinesDemo />
+							</GridCell>
+						</TwoColumnGrid>
+					</div>
 				</Section>
 
 				<Section className="border-border border-b" id="faq">

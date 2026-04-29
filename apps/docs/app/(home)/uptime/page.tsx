@@ -101,37 +101,37 @@ export default function UptimePage() {
 							title="Catch issues"
 							titleMuted="before your users do."
 						/>
+
+						<TwoColumnGrid>
+							<GridCell>
+								<h3 className={CELL_TITLE_CLASS}>
+									HTTP monitoring every 60 seconds, from 6 regions.
+								</h3>
+								<UptimeRegionsHubDiagram />
+							</GridCell>
+							<GridCell>
+								<h3 className={CELL_TITLE_CLASS}>
+									Slack, email, or webhook in under 30 seconds.
+								</h3>
+								<UptimeAlertsStackVisual />
+							</GridCell>
+						</TwoColumnGrid>
+
+						<TwoColumnGrid>
+							<GridCell>
+								<h3 className={CELL_TITLE_CLASS}>
+									Share a status page transparently with your users.
+								</h3>
+								<UptimeStatusPageMiniVisual />
+							</GridCell>
+							<GridCell>
+								<h3 className={CELL_TITLE_CLASS}>
+									Every incident, documented automatically.
+								</h3>
+								<UptimeIncidentTimelineVisual />
+							</GridCell>
+						</TwoColumnGrid>
 					</div>
-
-					<TwoColumnGrid>
-						<GridCell>
-							<h3 className={CELL_TITLE_CLASS}>
-								HTTP monitoring every 60 seconds, from 6 regions.
-							</h3>
-							<UptimeRegionsHubDiagram />
-						</GridCell>
-						<GridCell>
-							<h3 className={CELL_TITLE_CLASS}>
-								Slack, email, or webhook in under 30 seconds.
-							</h3>
-							<UptimeAlertsStackVisual />
-						</GridCell>
-					</TwoColumnGrid>
-
-					<TwoColumnGrid>
-						<GridCell>
-							<h3 className={CELL_TITLE_CLASS}>
-								Share a status page transparently with your users.
-							</h3>
-							<UptimeStatusPageMiniVisual />
-						</GridCell>
-						<GridCell>
-							<h3 className={CELL_TITLE_CLASS}>
-								Every incident, documented automatically.
-							</h3>
-							<UptimeIncidentTimelineVisual />
-						</GridCell>
-					</TwoColumnGrid>
 				</Section>
 
 				<Section className="border-border border-b" id="faq">

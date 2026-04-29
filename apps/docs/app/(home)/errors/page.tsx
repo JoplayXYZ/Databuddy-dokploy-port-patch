@@ -88,38 +88,38 @@ export default function ErrorsPage() {
 							title="Prioritize by"
 							titleMuted="real impact."
 						/>
+
+						<TwoColumnGrid>
+							<GridCell>
+								<h3 className={CELL_TITLE_CLASS}>
+									Find the one page generating all the errors.
+								</h3>
+								<ErrorPerPageBreakdownDemo />
+							</GridCell>
+							<GridCell>
+								<h3 className={CELL_TITLE_CLASS}>
+									Know about errors before your users report them.
+								</h3>
+								<ErrorAutoCaptureAlertsStackDemo />
+							</GridCell>
+						</TwoColumnGrid>
+
+						<TwoColumnGrid>
+							<GridCell>
+								<h3 className={CELL_TITLE_CLASS}>
+									An error hitting 500 users matters more than one hitting 1 user
+									500 times.
+								</h3>
+								<ErrorImpactTableArtifact />
+							</GridCell>
+							<GridCell>
+								<h3 className={CELL_TITLE_CLASS}>
+									See when the error stops hitting users.
+								</h3>
+								<ErrorFrequencyChartDemo />
+							</GridCell>
+						</TwoColumnGrid>
 					</div>
-
-					<TwoColumnGrid>
-						<GridCell>
-							<h3 className={CELL_TITLE_CLASS}>
-								Find the one page generating all the errors.
-							</h3>
-							<ErrorPerPageBreakdownDemo />
-						</GridCell>
-						<GridCell>
-							<h3 className={CELL_TITLE_CLASS}>
-								Know about errors before your users report them.
-							</h3>
-							<ErrorAutoCaptureAlertsStackDemo />
-						</GridCell>
-					</TwoColumnGrid>
-
-					<TwoColumnGrid>
-						<GridCell>
-							<h3 className={CELL_TITLE_CLASS}>
-								An error hitting 500 users matters more than one hitting 1 user
-								500 times.
-							</h3>
-							<ErrorImpactTableArtifact />
-						</GridCell>
-						<GridCell>
-							<h3 className={CELL_TITLE_CLASS}>
-								See when the error stops hitting users.
-							</h3>
-							<ErrorFrequencyChartDemo />
-						</GridCell>
-					</TwoColumnGrid>
 				</Section>
 
 				<Section className="border-border border-b" id="faq">

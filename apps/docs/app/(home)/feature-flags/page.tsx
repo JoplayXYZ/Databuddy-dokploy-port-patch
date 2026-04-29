@@ -89,20 +89,20 @@ export default function FeatureFlagsPage() {
 							title="One dashboard,"
 							titleMuted="zero deploys."
 						/>
-					</div>
 
-					<TwoColumnGrid>
-						<GridCell>
-							<h3 className={CELL_TITLE_CLASS}>Every flag, one place.</h3>
-							<FFCompactFlagsDashboardDemo />
-						</GridCell>
-						<GridCell>
-							<h3 className={CELL_TITLE_CLASS}>
-								Start from a template or build from scratch.
-							</h3>
-							<FFTemplatesMiniGridDemo />
-						</GridCell>
-					</TwoColumnGrid>
+						<TwoColumnGrid>
+							<GridCell>
+								<h3 className={CELL_TITLE_CLASS}>Every flag, one place.</h3>
+								<FFCompactFlagsDashboardDemo />
+							</GridCell>
+							<GridCell>
+								<h3 className={CELL_TITLE_CLASS}>
+									Start from a template or build from scratch.
+								</h3>
+								<FFTemplatesMiniGridDemo />
+							</GridCell>
+						</TwoColumnGrid>
+					</div>
 				</Section>
 
 				<Section className="border-border border-b" id="capabilities">
@@ -112,37 +112,37 @@ export default function FeatureFlagsPage() {
 							title="Deploy once,"
 							titleMuted="control everything."
 						/>
+
+						<TwoColumnGrid>
+							<GridCell>
+								<h3 className={CELL_TITLE_CLASS}>
+									Toggle any feature on or off without deploying.
+								</h3>
+								<FFInstantRolloutsDemo />
+							</GridCell>
+							<GridCell>
+								<h3 className={CELL_TITLE_CLASS}>
+									Ramp up gradually. Roll back instantly.
+								</h3>
+								<FFPercentageRolloutsDemo />
+							</GridCell>
+						</TwoColumnGrid>
+
+						<TwoColumnGrid>
+							<GridCell>
+								<h3 className={CELL_TITLE_CLASS}>
+									Run experiments with consistent assignments.
+								</h3>
+								<FFAbTestingDemo />
+							</GridCell>
+							<GridCell>
+								<h3 className={CELL_TITLE_CLASS}>
+									Target by user, team, plan, or any property.
+								</h3>
+								<FFUserTargetingDemo />
+							</GridCell>
+						</TwoColumnGrid>
 					</div>
-
-					<TwoColumnGrid>
-						<GridCell>
-							<h3 className={CELL_TITLE_CLASS}>
-								Toggle any feature on or off without deploying.
-							</h3>
-							<FFInstantRolloutsDemo />
-						</GridCell>
-						<GridCell>
-							<h3 className={CELL_TITLE_CLASS}>
-								Ramp up gradually. Roll back instantly.
-							</h3>
-							<FFPercentageRolloutsDemo />
-						</GridCell>
-					</TwoColumnGrid>
-
-					<TwoColumnGrid>
-						<GridCell>
-							<h3 className={CELL_TITLE_CLASS}>
-								Run experiments with consistent assignments.
-							</h3>
-							<FFAbTestingDemo />
-						</GridCell>
-						<GridCell>
-							<h3 className={CELL_TITLE_CLASS}>
-								Target by user, team, plan, or any property.
-							</h3>
-							<FFUserTargetingDemo />
-						</GridCell>
-					</TwoColumnGrid>
 				</Section>
 
 				<Section className="border-border border-b" id="faq">
