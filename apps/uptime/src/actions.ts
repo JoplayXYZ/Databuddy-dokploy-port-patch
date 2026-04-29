@@ -1,4 +1,3 @@
-import { createHash } from "node:crypto";
 import { connect } from "node:tls";
 import { db, eq } from "@databuddy/db";
 import { uptimeSchedules } from "@databuddy/db/schema";
@@ -346,7 +345,7 @@ export async function checkUptime(
 			failure_streak: 0,
 			response_bytes: pingResult.ok ? pingResult.bytes : 0,
 			content_hash: pingResult.ok
-				? createHash("sha256").update(pingResult.content).digest("hex")
+				? new Bun.CryptoHasher("sha256").update(pingResult.content).digest("hex")
 				: "",
 			redirect_count: pingResult.ok ? pingResult.redirects : 0,
 			probe_region: probe.region,
