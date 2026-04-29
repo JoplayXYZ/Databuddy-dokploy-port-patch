@@ -20,14 +20,14 @@ import Section from "@/components/landing/section";
 import { StructuredData } from "@/components/structured-data";
 
 export const metadata: Metadata = {
-	title: "Databunny: AI Analytics Agent | Databuddy",
+	title: "Databunny: AI Analytics Agent",
 	description:
 		"Ask questions about your data in plain English. Databunny is your AI analytics agent with automated insights, anomaly detection, and proactive alerts built into your dashboard.",
 	alternates: {
 		canonical: "https://www.databuddy.cc/databunny",
 	},
 	openGraph: {
-		title: "Databunny: AI Analytics Agent | Databuddy",
+		title: "Databunny: AI Analytics Agent",
 		description:
 			"Ask questions about your data in plain English. Databunny is your AI analytics agent with automated insights, anomaly detection, and proactive alerts built into your dashboard.",
 		url: "https://www.databuddy.cc/databunny",
@@ -71,7 +71,7 @@ export default function DatabunnyPage() {
 			<StructuredData
 				elements={[{ type: "faq", items: [...FAQ_ITEMS] }]}
 				page={{
-					title: "Databunny: AI Analytics Agent | Databuddy",
+					title: "Databunny: AI Analytics Agent",
 					description:
 						"Ask questions about your data in plain English. Automated insights, anomaly detection, and proactive alerts.",
 					url: "https://www.databuddy.cc/databunny",

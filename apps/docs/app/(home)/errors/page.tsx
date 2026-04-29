@@ -16,14 +16,14 @@ import Section from "@/components/landing/section";
 import { StructuredData } from "@/components/structured-data";
 
 export const metadata: Metadata = {
-	title: "Error Tracking | Databuddy",
+	title: "Error Tracking",
 	description:
 		"Catch, group, and fix errors before your users notice. Stack traces, user impact, release tracking, and instant alerts - built into your analytics stack.",
 	alternates: {
 		canonical: "https://www.databuddy.cc/errors",
 	},
 	openGraph: {
-		title: "Error Tracking | Databuddy",
+		title: "Error Tracking",
 		description:
 			"Catch, group, and fix errors before your users notice. Stack traces, user impact, release tracking, and instant alerts - built into your analytics stack.",
 		url: "https://www.databuddy.cc/errors",
@@ -67,7 +67,7 @@ export default function ErrorsPage() {
 			<StructuredData
 				elements={[{ type: "faq", items: [...FAQ_ITEMS] }]}
 				page={{
-					title: "Error Tracking | Databuddy",
+					title: "Error Tracking",
 					description:
 						"Catch, group, and fix errors before your users notice. Stack traces, user impact, release tracking, and instant alerts.",
 					url: "https://www.databuddy.cc/errors",

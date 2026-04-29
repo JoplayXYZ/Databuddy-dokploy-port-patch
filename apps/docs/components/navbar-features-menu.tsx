@@ -36,7 +36,7 @@ const FEATURE_ITEMS: FeatureItem[] = [
 	},
 	{
 		title: "Web Vitals",
-		description: "LCP, FID, CLS scoring and monitoring",
+		description: "LCP, INP, CLS scoring and monitoring",
 		href: "/web-vitals",
 		icon: GaugeIcon,
 	},

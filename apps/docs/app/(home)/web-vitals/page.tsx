@@ -17,14 +17,14 @@ import { WebVitalsTrendsSparklinesDemo } from "@/components/landing/web-vitals-t
 import { StructuredData } from "@/components/structured-data";
 
 export const metadata: Metadata = {
-	title: "Core Web Vitals Monitoring | Databuddy",
+	title: "Core Web Vitals Monitoring",
 	description:
 		"Monitor LCP, CLS, FID, INP, and TTFB from real users in production. Percentile breakdowns, page-level analysis, and device segmentation - built into your analytics.",
 	alternates: {
 		canonical: "https://www.databuddy.cc/web-vitals",
 	},
 	openGraph: {
-		title: "Core Web Vitals Monitoring | Databuddy",
+		title: "Core Web Vitals Monitoring",
 		description:
 			"Monitor LCP, CLS, FID, INP, and TTFB from real users in production. Percentile breakdowns, page-level analysis, and device segmentation - built into your analytics.",
 		url: "https://www.databuddy.cc/web-vitals",
@@ -68,7 +68,7 @@ export default function WebVitalsPage() {
 			<StructuredData
 				elements={[{ type: "faq", items: [...FAQ_ITEMS] }]}
 				page={{
-					title: "Core Web Vitals Monitoring | Databuddy",
+					title: "Core Web Vitals Monitoring",
 					description:
 						"Monitor LCP, CLS, FID, INP, and TTFB from real users in production. Percentile breakdowns, page-level analysis, and device segmentation.",
 					url: "https://www.databuddy.cc/web-vitals",

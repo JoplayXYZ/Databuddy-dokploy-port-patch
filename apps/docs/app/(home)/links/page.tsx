@@ -19,14 +19,14 @@ import Section from "@/components/landing/section";
 import { StructuredData } from "@/components/structured-data";
 
 export const metadata: Metadata = {
-	title: "Short Links & Click Analytics | Databuddy",
+	title: "Short Links & Click Analytics",
 	description:
 		"Create branded short links with built-in click analytics, UTM tagging, QR codes, deep linking, and referrer tracking. Every click tracked inside your analytics dashboard.",
 	alternates: {
 		canonical: "https://www.databuddy.cc/links",
 	},
 	openGraph: {
-		title: "Short Links & Click Analytics | Databuddy",
+		title: "Short Links & Click Analytics",
 		description:
 			"Create branded short links with built-in click analytics, UTM tagging, QR codes, deep linking, and referrer tracking. Every click tracked inside your analytics dashboard.",
 		url: "https://www.databuddy.cc/links",
@@ -70,7 +70,7 @@ export default function LinksPage() {
 			<StructuredData
 				elements={[{ type: "faq", items: [...FAQ_ITEMS] }]}
 				page={{
-					title: "Short Links & Click Analytics | Databuddy",
+					title: "Short Links & Click Analytics",
 					description:
 						"Create branded short links with built-in click analytics, UTM tagging, QR codes, and deep linking.",
 					url: "https://www.databuddy.cc/links",
@@ -113,7 +113,7 @@ export default function LinksPage() {
 							</GridCell>
 							<GridCell>
 								<h3 className={CELL_TITLE_CLASS}>
-									Paste a link, open the native app. Nine platforms supported.
+									Paste a link, open the native app.
 								</h3>
 								<DeepLinkDemo />
 							</GridCell>

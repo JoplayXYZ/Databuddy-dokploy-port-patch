@@ -18,14 +18,14 @@ import {
 import { StructuredData } from "@/components/structured-data";
 
 export const metadata: Metadata = {
-	title: "Uptime Monitoring (coming Q3 2026) | Databuddy",
+	title: "Uptime Monitoring (coming Q3 2026)",
 	description:
 		"1-minute checks from six regions, instant alerts, and public status pages - included with Databuddy. Launching Q3 2026. Join the waitlist for early access.",
 	alternates: {
 		canonical: "https://www.databuddy.cc/uptime",
 	},
 	openGraph: {
-		title: "Uptime Monitoring (coming Q3 2026) | Databuddy",
+		title: "Uptime Monitoring (coming Q3 2026)",
 		description:
 			"1-minute checks from six regions, instant alerts, and public status pages - included with Databuddy. Launching Q3 2026.",
 		url: "https://www.databuddy.cc/uptime",
@@ -69,7 +69,7 @@ export default function UptimePage() {
 			<StructuredData
 				elements={[{ type: "faq", items: [...FAQ_ITEMS] }]}
 				page={{
-					title: "Uptime Monitoring | Databuddy",
+					title: "Uptime Monitoring",
 					description:
 						"1-minute checks, status pages, and instant alerts - coming to Databuddy Q3 2026.",
 					url: "https://www.databuddy.cc/uptime",
@@ -88,7 +88,7 @@ export default function UptimePage() {
 							</span>
 						</span>
 					}
-					docsHref="/roadmap"
+					docsHref="/docs"
 					primaryLabel="Join Waitlist"
 					subtitle="Status pages, 1-minute checks, and instant alerts so you find out before your users tweet about it."
 					title="Be the first to know when your site goes down."
