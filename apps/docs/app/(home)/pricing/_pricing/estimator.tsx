@@ -171,7 +171,7 @@ export function Estimator({
 									<div className="mt-4 flex justify-end">
 										<SciFiButton asChild>
 											<Link
-												href="https://app.databuddy.cc/login"
+												href="https://app.databuddy.cc/register"
 												rel="noopener noreferrer"
 												target="_blank"
 											>

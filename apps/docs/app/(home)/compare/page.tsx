@@ -77,7 +77,7 @@ export default function ComparePage() {
 						<div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
 							<SciFiButton asChild>
 								<Link
-									href="https://app.databuddy.cc/login"
+									href="https://app.databuddy.cc/register"
 									rel="noopener noreferrer"
 									target="_blank"
 								>
