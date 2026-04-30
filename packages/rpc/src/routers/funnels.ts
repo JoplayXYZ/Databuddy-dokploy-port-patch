@@ -11,7 +11,8 @@ import {
 	processFunnelAnalyticsByReferrer,
 	queryLinkVisitorIds,
 } from "../lib/analytics-utils";
-import { protectedProcedure, publicProcedure } from "../orpc";
+import { setTrackProperties } from "../middleware/track-mutation";
+import { protectedProcedure, publicProcedure, trackedProcedure } from "../orpc";
 import { withWebsiteRead, withWorkspace } from "../procedures/with-workspace";
 import { requireFeatureWithLimit } from "../types/billing";
 
@@ -265,7 +266,7 @@ export const funnelsRouter = {
 			})
 		),
 
-	create: protectedProcedure
+	create: trackedProcedure
 		.route({
 			description:
 				"Creates a new funnel. Requires funnels feature and website update permission.",
@@ -286,6 +287,7 @@ export const funnelsRouter = {
 		)
 		.output(funnelOutputSchema)
 		.handler(async ({ context, input }) => {
+			setTrackProperties({ step_count: input.steps.length });
 			const workspace = await withWorkspace(context, {
 				websiteId: input.websiteId,
 				permissions: ["update"],
@@ -327,7 +329,7 @@ export const funnelsRouter = {
 			return newFunnel;
 		}),
 
-	update: protectedProcedure
+	update: trackedProcedure
 		.route({
 			description:
 				"Updates an existing funnel. Requires website update permission.",
@@ -382,7 +384,7 @@ export const funnelsRouter = {
 			return updatedFunnel;
 		}),
 
-	delete: protectedProcedure
+	delete: trackedProcedure
 		.route({
 			description: "Soft-deletes a funnel. Requires website delete permission.",
 			method: "POST",

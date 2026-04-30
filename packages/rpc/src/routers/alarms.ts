@@ -10,7 +10,8 @@ import { randomUUIDv7 } from "bun";
 import { z } from "zod";
 import { rpcError } from "../errors";
 import { toNotificationConfig } from "../lib/alarm-notifications";
-import { protectedProcedure } from "../orpc";
+import { setTrackProperties } from "../middleware/track-mutation";
+import { protectedProcedure, trackedProcedure } from "../orpc";
 import { withWorkspace } from "../procedures/with-workspace";
 
 const destinationSchema = z.object({
@@ -89,7 +90,7 @@ export const alarmsRouter = {
 			getAlarmAndAuthorize(input.alarmId, context)
 		),
 
-	create: protectedProcedure
+	create: trackedProcedure
 		.route({
 			method: "POST",
 			path: "/alarms/create",
@@ -113,6 +114,7 @@ export const alarmsRouter = {
 		)
 		.output(alarmOutputSchema)
 		.handler(async ({ context, input }) => {
+			setTrackProperties({ trigger_type: input.triggerType, destination_count: input.destinations.length });
 			await withWorkspace(context, {
 				organizationId: input.organizationId,
 				resource: "organization",
@@ -154,7 +156,7 @@ export const alarmsRouter = {
 			return getAlarmAndAuthorize(alarmId, context);
 		}),
 
-	update: protectedProcedure
+	update: trackedProcedure
 		.route({
 			method: "POST",
 			path: "/alarms/update",
@@ -214,7 +216,7 @@ export const alarmsRouter = {
 			return getAlarmAndAuthorize(input.alarmId, context);
 		}),
 
-	delete: protectedProcedure
+	delete: trackedProcedure
 		.route({
 			method: "POST",
 			path: "/alarms/delete",
@@ -230,7 +232,7 @@ export const alarmsRouter = {
 			return { success: true };
 		}),
 
-	test: protectedProcedure
+	test: trackedProcedure
 		.route({
 			method: "POST",
 			path: "/alarms/test",

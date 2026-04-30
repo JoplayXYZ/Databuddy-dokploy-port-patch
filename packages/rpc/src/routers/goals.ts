@@ -10,7 +10,8 @@ import {
 	getTotalWebsiteUsers,
 	processGoalAnalytics,
 } from "../lib/analytics-utils";
-import { protectedProcedure, publicProcedure } from "../orpc";
+import { setTrackProperties } from "../middleware/track-mutation";
+import { protectedProcedure, publicProcedure, trackedProcedure } from "../orpc";
 import { withWebsiteRead, withWorkspace } from "../procedures/with-workspace";
 import { requireFeatureWithLimit } from "../types/billing";
 
@@ -173,7 +174,7 @@ export const goalsRouter = {
 			return goal;
 		}),
 
-	create: protectedProcedure
+	create: trackedProcedure
 		.route({
 			method: "POST",
 			path: "/goals/create",
@@ -195,6 +196,7 @@ export const goalsRouter = {
 		)
 		.output(goalOutputSchema)
 		.handler(async ({ context, input }) => {
+			setTrackProperties({ type: input.type });
 			const workspace = await withWorkspace(context, {
 				websiteId: input.websiteId,
 				permissions: ["update"],
@@ -234,7 +236,7 @@ export const goalsRouter = {
 			return newGoal;
 		}),
 
-	update: protectedProcedure
+	update: trackedProcedure
 		.route({
 			method: "POST",
 			path: "/goals/update",
@@ -282,7 +284,7 @@ export const goalsRouter = {
 			return updatedGoal;
 		}),
 
-	delete: protectedProcedure
+	delete: trackedProcedure
 		.route({
 			method: "POST",
 			path: "/goals/delete",
