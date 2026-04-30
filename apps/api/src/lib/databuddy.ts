@@ -20,6 +20,17 @@ const client =
 			})
 		: null;
 
+const mutationClient =
+	apiKey && websiteId
+		? new Databuddy({
+				apiKey,
+				websiteId,
+				source: "dashboard",
+				enableBatching: true,
+				debug: process.env.NODE_ENV === "development",
+			})
+		: null;
+
 export type AgentEventProperties = Record<string, unknown>;
 
 /**
@@ -39,7 +50,29 @@ export function trackAgentEvent(
 			name,
 			properties: properties ?? undefined,
 		})
-		.catch(() => {
-			// Silently ignore tracking failures - don't break agent flow
-		});
+		.catch(() => {});
+}
+
+export function trackMutationEvent(
+	name: string,
+	opts: {
+		namespace: string;
+		sessionId?: string | null;
+		anonymousId?: string | null;
+		properties?: Record<string, unknown>;
+	}
+): void {
+	if (!mutationClient) {
+		return;
+	}
+
+	mutationClient
+		.track({
+			name,
+			namespace: opts.namespace,
+			sessionId: opts.sessionId ?? undefined,
+			anonymousId: opts.anonymousId ?? undefined,
+			properties: opts.properties ?? undefined,
+		})
+		.catch(() => {});
 }
