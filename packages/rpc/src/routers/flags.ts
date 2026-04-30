@@ -752,10 +752,11 @@ export const flagsRouter = {
 		.input(updateFlagSchema)
 		.output(flagOutputSchema)
 		.handler(async ({ context, input }) => {
-			const props: Record<string, unknown> = {};
-			if (input.type) props.type = input.type;
-			if (input.status) props.status = input.status;
-			if (Object.keys(props).length > 0) setTrackProperties(props);
+			if (input.type || input.status)
+				setTrackProperties({
+					...(input.type && { type: input.type }),
+					...(input.status && { status: input.status }),
+				});
 			const existingFlag = await context.db
 				.select()
 				.from(flags)

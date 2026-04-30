@@ -1,3 +1,5 @@
+import { AsyncLocalStorage } from "node:async_hooks";
+
 type TrackFn = (
 	name: string,
 	opts: {
@@ -9,20 +11,18 @@ type TrackFn = (
 ) => void;
 
 let _trackFn: TrackFn | null = null;
-let _trackProperties: Record<string, unknown> | null = null;
+
+const trackingStore = new AsyncLocalStorage<{
+	properties: Record<string, unknown> | null;
+}>();
 
 export function setTrackingFn(fn: TrackFn) {
 	_trackFn = fn;
 }
 
 export function setTrackProperties(props: Record<string, unknown>) {
-	_trackProperties = props;
-}
-
-function getAndClearTrackProperties(): Record<string, unknown> | null {
-	const props = _trackProperties;
-	_trackProperties = null;
-	return props;
+	const store = trackingStore.getStore();
+	if (store) store.properties = props;
 }
 
 const NAME_OVERRIDES: Record<string, string> = {
@@ -66,28 +66,35 @@ const NAME_OVERRIDES: Record<string, string> = {
 	"feedback.redeemCredits": "credits_redeemed",
 };
 
+const VERB_MAP: Record<string, string> = {
+	create: "created",
+	add: "created",
+	update: "updated",
+	edit: "updated",
+	delete: "deleted",
+	remove: "deleted",
+	revoke: "revoked",
+	transfer: "transferred",
+	rotate: "rotated",
+	test: "tested",
+	rename: "renamed",
+};
+
 function deriveEventName(path: string): string {
-	if (NAME_OVERRIDES[path]) {
-		return NAME_OVERRIDES[path];
-	}
+	if (NAME_OVERRIDES[path]) return NAME_OVERRIDES[path];
 
 	const [router, method] = path.split(".");
 	if (!router || !method) return path;
 
-	const singular = router.replace(/s$/, "");
+	const singular = toSnakeCase(router.replace(/s$/, ""));
+	const verb = VERB_MAP[method];
 
-	const verb = method
-		.replace(/^(create|add)$/, "created")
-		.replace(/^(update|edit)$/, "updated")
-		.replace(/^(delete|remove)$/, "deleted")
-		.replace(/^toggle(.+)$/, (_, flag) => `toggled_${toSnakeCase(flag)}`)
-		.replace(/^(revoke)$/, "revoked")
-		.replace(/^(transfer)$/, "transferred")
-		.replace(/^(rotate)$/, "rotated")
-		.replace(/^(test)$/, "tested")
-		.replace(/^(rename)$/, "renamed");
+	if (verb) return `${singular}_${verb}`;
 
-	return `${toSnakeCase(singular)}_${verb}`;
+	const toggleMatch = method.match(/^toggle(.+)$/);
+	if (toggleMatch) return `${singular}_toggled_${toSnakeCase(toggleMatch[1])}`;
+
+	return `${singular}_${method}`;
 }
 
 function toSnakeCase(str: string): string {
@@ -98,20 +105,38 @@ function deriveNamespace(path: string): string {
 	return toSnakeCase(path.split(".")[0] ?? path);
 }
 
-export function fireTrackingEvent(
+export function runTracked<T>(
+	path: string,
+	context: { anonymousId?: string | null; sessionId?: string | null },
+	fn: () => T
+): T {
+	const store = { properties: null as Record<string, unknown> | null };
+	return trackingStore.run(store, () => {
+		const result = fn();
+		const maybeThenable = result as { then?: (cb: (v: unknown) => unknown) => unknown };
+
+		if (maybeThenable && typeof maybeThenable.then === "function") {
+			return maybeThenable.then((resolved) => {
+				fireAfterSuccess(store, path, context);
+				return resolved;
+			}) as T;
+		}
+
+		fireAfterSuccess(store, path, context);
+		return result;
+	});
+}
+
+function fireAfterSuccess(
+	store: { properties: Record<string, unknown> | null },
 	path: string,
 	context: { anonymousId?: string | null; sessionId?: string | null }
 ) {
 	if (!_trackFn) return;
-
-	const eventName = deriveEventName(path);
-	const namespace = deriveNamespace(path);
-	const enrichedProps = getAndClearTrackProperties();
-
-	_trackFn(eventName, {
-		namespace,
+	_trackFn(deriveEventName(path), {
+		namespace: deriveNamespace(path),
 		sessionId: context.sessionId,
 		anonymousId: context.anonymousId,
-		properties: enrichedProps ?? undefined,
+		properties: store.properties ?? undefined,
 	});
 }
