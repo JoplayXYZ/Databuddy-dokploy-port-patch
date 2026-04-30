@@ -20,7 +20,8 @@ import {
 import { z } from "zod";
 import { rpcError } from "../errors";
 import { logger, record } from "../lib/logger";
-import { protectedProcedure, publicProcedure } from "../orpc";
+import { protectedProcedure, publicProcedure, trackedProcedure } from "../orpc";
+import { setTrackProperties } from "../middleware/track-mutation";
 import { withWorkspace } from "../procedures/with-workspace";
 import {
 	generateExport,
@@ -419,7 +420,7 @@ export const websitesRouter = {
 			return site;
 		}),
 
-	create: protectedProcedure
+	create: trackedProcedure
 		.route({
 			description: "Creates a website. Requires workspace create permission.",
 			method: "POST",
@@ -452,7 +453,7 @@ export const websitesRouter = {
 			}
 		}),
 
-	update: protectedProcedure
+	update: trackedProcedure
 		.route({
 			description: "Updates a website. Requires update permission.",
 			method: "POST",
@@ -506,7 +507,7 @@ export const websitesRouter = {
 			return updatedWebsite;
 		}),
 
-	togglePublic: protectedProcedure
+	togglePublic: trackedProcedure
 		.route({
 			description:
 				"Toggles website public/private. Requires update permission.",
@@ -518,6 +519,7 @@ export const websitesRouter = {
 		.input(togglePublicWebsiteSchema)
 		.output(websiteOutputSchema)
 		.handler(async ({ context, input }) => {
+			setTrackProperties({ is_public: input.isPublic });
 			const { website } = await withWorkspace(context, {
 				websiteId: input.id,
 				permissions: ["update"],
@@ -545,7 +547,7 @@ export const websitesRouter = {
 			return updatedWebsite;
 		}),
 
-	delete: protectedProcedure
+	delete: trackedProcedure
 		.route({
 			description: "Deletes a website. Requires delete permission.",
 			method: "POST",
@@ -581,7 +583,7 @@ export const websitesRouter = {
 			return { success: true };
 		}),
 
-	transfer: protectedProcedure
+	transfer: trackedProcedure
 		.route({
 			description: "Transfers website to another workspace.",
 			method: "POST",
@@ -616,7 +618,7 @@ export const websitesRouter = {
 			}
 		}),
 
-	transferToOrganization: protectedProcedure
+	transferToOrganization: trackedProcedure
 		.route({
 			description: "Transfers website to target organization.",
 			method: "POST",
@@ -676,7 +678,7 @@ export const websitesRouter = {
 			};
 		}),
 
-	updateSettings: protectedProcedure
+	updateSettings: trackedProcedure
 		.route({
 			description: "Updates website settings. Requires update permission.",
 			method: "POST",
