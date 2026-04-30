@@ -43,3 +43,7 @@ export const ANTHROPIC_CACHE_1H = {
 } as const;
 
 export const AI_MODEL_MAX_RETRIES = 3;
+
+export function createModelFromId(modelId: string) {
+	return gateway.chat(modelId);
+}

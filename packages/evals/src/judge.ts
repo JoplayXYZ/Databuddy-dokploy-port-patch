@@ -79,7 +79,7 @@ export async function judgeQuality(
 			model: gateway.chat(model),
 			system: JUDGE_PROMPT,
 			prompt: `**User query:** ${evalCase.query}\n\n**Agent response:**\n${responseText}`,
-			maxOutputTokens: 300,
+			maxOutputTokens: 4096,
 			temperature: 0,
 		});
 

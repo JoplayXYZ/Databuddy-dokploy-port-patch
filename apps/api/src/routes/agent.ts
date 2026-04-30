@@ -462,6 +462,11 @@ export const agent = new Elysia({ prefix: "/v1/agent" })
 									),
 								]);
 
+					const modelOverride =
+						process.env.NODE_ENV === "development"
+							? request.headers.get("x-model-override")
+							: null;
+
 					const config = createAgentConfig(
 						{
 							userId,
@@ -473,7 +478,8 @@ export const agent = new Elysia({ prefix: "/v1/agent" })
 							thinking: body.thinking,
 							billingCustomerId,
 						},
-						modelKey
+						modelKey,
+						modelOverride
 					);
 
 					const extras = [

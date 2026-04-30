@@ -3,6 +3,7 @@ import type { AppContext } from "../config/context";
 import {
 	type AgentModelKey,
 	ANTHROPIC_CACHE_1H,
+	createModelFromId,
 	modelNames,
 	models,
 } from "../config/models";
@@ -60,7 +61,8 @@ function thinkingProviderOptions(
 
 export function createConfig(
 	context: AgentContext,
-	modelKey: AgentModelKey = "balanced"
+	modelKey: AgentModelKey = "balanced",
+	modelOverride?: string | null
 ): AgentConfig {
 	const appContext: AppContext = {
 		userId: context.userId,
@@ -74,10 +76,12 @@ export function createConfig(
 	};
 
 	const isGreeter = modelKey === "greeter";
-	const anthropic = isAnthropicModel(modelKey);
+	const anthropic = modelOverride
+		? modelOverride.startsWith("anthropic/")
+		: isAnthropicModel(modelKey);
 
 	return {
-		model: models[modelKey],
+		model: modelOverride ? createModelFromId(modelOverride) : models[modelKey],
 		system: {
 			role: "system",
 			content: isGreeter
