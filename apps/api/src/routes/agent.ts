@@ -210,9 +210,7 @@ const AgentRequestSchema = t.Object({
 	thinking: t.Optional(
 		t.Union(AGENT_THINKING_LEVELS.map((level) => t.Literal(level)))
 	),
-	tier: t.Optional(
-		t.Union(AGENT_TIERS.map((tier) => t.Literal(tier)))
-	),
+	tier: t.Optional(t.Union(AGENT_TIERS.map((tier) => t.Literal(tier)))),
 });
 
 const AGENT_TYPE = "analytics";
@@ -240,7 +238,12 @@ function createToolLoopAgent(
 			}
 			const last = messages.at(-1);
 			const isAnthropic = config.system.providerOptions != null;
-			if (isAnthropic && last && last.role === "user" && !last.providerOptions) {
+			if (
+				isAnthropic &&
+				last &&
+				last.role === "user" &&
+				!last.providerOptions
+			) {
 				return {
 					messages: [
 						...messages.slice(0, -1),

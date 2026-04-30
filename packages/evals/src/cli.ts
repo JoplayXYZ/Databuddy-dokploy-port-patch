@@ -74,7 +74,11 @@ function parseArgs(): {
 	};
 }
 
-function computeCost(modelId: string, inputTokens: number, outputTokens: number): number {
+function computeCost(
+	modelId: string,
+	inputTokens: number,
+	outputTokens: number
+): number {
 	try {
 		const result = costFromUsage({
 			id: modelId,
@@ -106,7 +110,11 @@ async function runSingleCase(
 				: 0;
 		const passed = failures.length === 0 && avgScore >= 60;
 
-		const costUsd = computeCost(modelId, response.inputTokens, response.outputTokens);
+		const costUsd = computeCost(
+			modelId,
+			response.inputTokens,
+			response.outputTokens
+		);
 
 		return {
 			id: evalCase.id,
@@ -311,7 +319,10 @@ async function cmdRun() {
 					? "\x1b[31mERROR\x1b[0m"
 					: `\x1b[31mFAIL\x1b[0m (${result.failures.length})`;
 			const time = `${(result.metrics.latencyMs / 1000).toFixed(1)}s`;
-			const cost = result.metrics.costUsd > 0 ? ` $${result.metrics.costUsd.toFixed(4)}` : "";
+			const cost =
+				result.metrics.costUsd > 0
+					? ` $${result.metrics.costUsd.toFixed(4)}`
+					: "";
 			console.log(
 				`  [${completed}/${cases.length}] ${evalCase.id} ${status} ${time}${cost}`
 			);
@@ -374,7 +385,8 @@ async function cmdJudge() {
 			const alreadyJudged =
 				existingScore !== undefined &&
 				existingScore > 0 &&
-				(c as unknown as { qualityDetail?: JudgeScores }).qualityDetail !== undefined;
+				(c as unknown as { qualityDetail?: JudgeScores }).qualityDetail !==
+					undefined;
 
 			if (alreadyJudged) {
 				console.log(`  ${c.id}: already judged (${existingScore}), skipping`);
@@ -391,15 +403,15 @@ async function cmdJudge() {
 			}
 
 			const scores = await judgeQuality(evalCase, c.response, config);
-			if (scores !== null) {
+			if (scores === null) {
+				console.log(`  ${c.id}: judge failed`);
+			} else {
 				c.scores.quality = scores.average;
 				(c as unknown as { qualityDetail: JudgeScores }).qualityDetail = scores;
 				judged++;
 				console.log(
 					`  ${c.id}: quality=${scores.average} (dg=${scores.dataGrounding} ad=${scores.analyticalDepth} ac=${scores.actionability} co=${scores.completeness} cm=${scores.communication})`
 				);
-			} else {
-				console.log(`  ${c.id}: judge failed`);
 			}
 		}
 
@@ -472,7 +484,8 @@ function cmdCompare() {
 				c.scores.quality !== undefined && c.scores.quality > 0
 					? `q${c.scores.quality}`
 					: "";
-			const cost = c.metrics.costUsd > 0 ? `$${c.metrics.costUsd.toFixed(3)}` : "";
+			const cost =
+				c.metrics.costUsd > 0 ? `$${c.metrics.costUsd.toFixed(3)}` : "";
 			cellValues.push(pad(`${status} ${t} ${q} ${cost}`.trim(), COL));
 		}
 
@@ -501,7 +514,10 @@ function cmdCompare() {
 				.reduce((a, c) => a + c.metrics.latencyMs, 0) /
 			(s.passed || 1) /
 			1000;
-		const totalCost = run.cases.reduce((a, c) => a + (c.metrics.costUsd ?? 0), 0);
+		const totalCost = run.cases.reduce(
+			(a, c) => a + (c.metrics.costUsd ?? 0),
+			0
+		);
 		const costStr = totalCost > 0 ? ` $${totalCost.toFixed(3)}` : "";
 		const q = d.quality > 0 ? ` q${d.quality}` : "";
 		summaryRow += ` ${pad(`${s.passed}/${s.total} ${avgLat.toFixed(0)}s${q}${costStr}`, COL)} |`;

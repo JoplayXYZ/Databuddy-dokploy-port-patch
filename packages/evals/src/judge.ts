@@ -65,8 +65,12 @@ export async function judgeQuality(
 	responseText: string,
 	config: EvalConfig
 ): Promise<JudgeScores | null> {
-	if (config.skipJudge) return null;
-	if (!responseText.trim()) return null;
+	if (config.skipJudge) {
+		return null;
+	}
+	if (!responseText.trim()) {
+		return null;
+	}
 
 	const model = config.judgeModel ?? "zai/glm-5-turbo";
 
@@ -80,7 +84,9 @@ export async function judgeQuality(
 		});
 
 		const jsonMatch = result.text.match(JSON_OBJECT_RE);
-		if (!jsonMatch) return null;
+		if (!jsonMatch) {
+			return null;
+		}
 
 		const parsed = JSON.parse(jsonMatch[0]) as {
 			data_grounding: number;

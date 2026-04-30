@@ -74,8 +74,8 @@ export interface EvalRun {
 }
 
 export interface JudgeScores {
-	analyticalDepth: number;
 	actionability: number;
+	analyticalDepth: number;
 	average: number;
 	communication: number;
 	completeness: number;

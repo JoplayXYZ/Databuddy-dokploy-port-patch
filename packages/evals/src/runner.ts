@@ -59,9 +59,13 @@ function parseSSE(raw: string, latencyMs: number): ParsedAgentResponse {
 	const events: SSEEvent[] = [];
 
 	for (const line of lines) {
-		if (!line.startsWith("data: ")) continue;
+		if (!line.startsWith("data: ")) {
+			continue;
+		}
 		const payload = line.slice(6).trim();
-		if (payload === "[DONE]") break;
+		if (payload === "[DONE]") {
+			break;
+		}
 		try {
 			events.push(JSON.parse(payload) as SSEEvent);
 		} catch {}
@@ -87,7 +91,9 @@ function parseSSE(raw: string, latencyMs: number): ParsedAgentResponse {
 			typeof evt.toolCallId === "string"
 		) {
 			const tc = toolCalls.find((t) => t.output === null);
-			if (tc) tc.output = evt.output ?? null;
+			if (tc) {
+				tc.output = evt.output ?? null;
+			}
 		}
 	}
 
@@ -111,8 +117,12 @@ function parseSSE(raw: string, latencyMs: number): ParsedAgentResponse {
 		}
 		if (evt.type === "finish" && evt.usage) {
 			const u = evt.usage as Record<string, number>;
-			if (inputTokens === 0) inputTokens = u.inputTokens ?? u.prompt_tokens ?? 0;
-			if (outputTokens === 0) outputTokens = u.outputTokens ?? u.completion_tokens ?? 0;
+			if (inputTokens === 0) {
+				inputTokens = u.inputTokens ?? u.prompt_tokens ?? 0;
+			}
+			if (outputTokens === 0) {
+				outputTokens = u.outputTokens ?? u.completion_tokens ?? 0;
+			}
 		}
 	}
 
@@ -122,19 +132,27 @@ function parseSSE(raw: string, latencyMs: number): ParsedAgentResponse {
 	let searchIdx = 0;
 	while (searchIdx < textContent.length) {
 		const start = textContent.indexOf('{"type":"', searchIdx);
-		if (start === -1) break;
+		if (start === -1) {
+			break;
+		}
 
 		let depth = 0;
 		let end = -1;
 		for (let i = start; i < textContent.length; i++) {
-			if (textContent[i] === "{") depth++;
-			else if (textContent[i] === "}") {
+			if (textContent[i] === "{") {
+				depth++;
+			} else if (textContent[i] === "}") {
 				depth--;
-				if (depth === 0) { end = i; break; }
+				if (depth === 0) {
+					end = i;
+					break;
+				}
 			}
 		}
 
-		if (end === -1) break;
+		if (end === -1) {
+			break;
+		}
 
 		const jsonStr = textContent.slice(start, end + 1);
 		try {
