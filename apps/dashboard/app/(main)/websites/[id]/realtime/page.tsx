@@ -5,9 +5,7 @@ import { useParams } from "next/navigation";
 import { useMemo } from "react";
 import { useDynamicQuery } from "@/hooks/use-dynamic-query";
 import { Skeleton } from "@databuddy/ui";
-import { Silkscreen } from "next/font/google";
-
-const pixel = Silkscreen({ weight: ["400", "700"], subsets: ["latin"] });
+import { GeistPixelSquare } from "geist/font/pixel";
 
 const RealtimeMap = dynamic(
 	() =>
@@ -66,7 +64,7 @@ export default function RealtimePage() {
 	const eventsPerMin = lastMinute?.events || 0;
 
 	return (
-		<div className={`${pixel.className} flex h-full flex-col`}>
+		<div className={`${GeistPixelSquare.className} flex h-full flex-col`}>
 			<div className="relative min-h-0 flex-1">
 				<RealtimeMap countries={countries} />
 
