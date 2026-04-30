@@ -11,7 +11,8 @@ import { z } from "zod";
 import { rpcError } from "../errors";
 import { getAutumn } from "../lib/autumn-client";
 import { logger } from "../lib/logger";
-import { protectedProcedure, sessionProcedure } from "../orpc";
+import { setTrackProperties } from "../middleware/track-mutation";
+import { protectedProcedure, sessionProcedure, trackedSessionProcedure } from "../orpc";
 import { withWorkspace } from "../procedures/with-workspace";
 import { getBillingOwner } from "../utils/billing";
 
@@ -238,7 +239,7 @@ interface SpendLimitEntry {
 }
 
 export const billingRouter = {
-	setAutoTopup: sessionProcedure
+	setAutoTopup: trackedSessionProcedure
 		.route({
 			description:
 				"Configures auto top-up for agent credits on the current billing customer.",
@@ -250,6 +251,7 @@ export const billingRouter = {
 		.input(autoTopupConfigSchema)
 		.output(autoTopupConfigSchema)
 		.handler(async ({ context, input }) => {
+			setTrackProperties({ enabled: input.enabled });
 			const { customerId, canUserUpgrade } = await getBillingOwner(
 				context.user.id,
 				context.organizationId
@@ -295,7 +297,7 @@ export const billingRouter = {
 			}
 		}),
 
-	setUsageAlert: sessionProcedure
+	setUsageAlert: trackedSessionProcedure
 		.route({
 			description:
 				"Configures a usage alert (percentage of included events consumed) for the events feature.",
@@ -307,6 +309,7 @@ export const billingRouter = {
 		.input(usageAlertConfigSchema)
 		.output(usageAlertConfigSchema)
 		.handler(async ({ context, input }) => {
+			setTrackProperties({ enabled: input.enabled });
 			const { customerId, canUserUpgrade } = await getBillingOwner(
 				context.user.id,
 				context.organizationId
@@ -351,7 +354,7 @@ export const billingRouter = {
 			}
 		}),
 
-	setSpendLimit: sessionProcedure
+	setSpendLimit: trackedSessionProcedure
 		.route({
 			description:
 				"Configures a spend limit (maximum overage in USD) for agent credits.",
@@ -363,6 +366,7 @@ export const billingRouter = {
 		.input(spendLimitConfigSchema)
 		.output(spendLimitConfigSchema)
 		.handler(async ({ context, input }) => {
+			setTrackProperties({ enabled: input.enabled });
 			const { customerId, canUserUpgrade } = await getBillingOwner(
 				context.user.id,
 				context.organizationId

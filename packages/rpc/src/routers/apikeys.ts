@@ -18,8 +18,9 @@ import {
 } from "keypal";
 import { z } from "zod";
 import { rpcError } from "../errors";
+import { setTrackProperties } from "../middleware/track-mutation";
 import type { Context } from "../orpc";
-import { protectedProcedure, publicProcedure, sessionProcedure } from "../orpc";
+import { protectedProcedure, publicProcedure, sessionProcedure, trackedProcedure } from "../orpc";
 
 type ApiKey = ApiKeyRow;
 interface Metadata {
@@ -269,7 +270,7 @@ export const apikeysRouter = {
 			mapKey(await getKeyWithAuth(context, input.id), true)
 		),
 
-	create: protectedProcedure
+	create: trackedProcedure
 		.route({
 			method: "POST",
 			path: "/apikeys/create",
@@ -293,6 +294,7 @@ export const apikeysRouter = {
 		)
 		.output(apiKeyCreateOutputSchema)
 		.handler(async ({ context, input }) => {
+			setTrackProperties({ type: input.type, has_expiry: !!input.expiresAt });
 			await verifyOrganizationAccess(context, input.organizationId);
 
 			if (input.scopes.length > 0) {
@@ -344,7 +346,7 @@ export const apikeysRouter = {
 			};
 		}),
 
-	update: protectedProcedure
+	update: trackedProcedure
 		.route({
 			method: "POST",
 			path: "/apikeys/update",
@@ -418,7 +420,7 @@ export const apikeysRouter = {
 			return mapKey(updated);
 		}),
 
-	revoke: protectedProcedure
+	revoke: trackedProcedure
 		.route({
 			method: "POST",
 			path: "/apikeys/revoke",
@@ -444,7 +446,7 @@ export const apikeysRouter = {
 			return { success: true };
 		}),
 
-	rotate: protectedProcedure
+	rotate: trackedProcedure
 		.route({
 			method: "POST",
 			path: "/apikeys/rotate",
@@ -498,7 +500,7 @@ export const apikeysRouter = {
 			};
 		}),
 
-	delete: protectedProcedure
+	delete: trackedProcedure
 		.route({
 			method: "POST",
 			path: "/apikeys/delete",

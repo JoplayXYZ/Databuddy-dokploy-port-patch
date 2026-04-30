@@ -3,7 +3,7 @@ import { agentChats, analyticsInsights } from "@databuddy/db/schema";
 import { getActiveStream } from "@databuddy/redis/stream-buffer";
 import { z } from "zod";
 import { rpcError } from "../errors";
-import { sessionProcedure } from "../orpc";
+import { sessionProcedure, trackedSessionProcedure } from "../orpc";
 import { withWorkspace } from "../procedures/with-workspace";
 
 const chatListItemSchema = z.object({
@@ -129,7 +129,7 @@ export const agentChatsRouter = {
 			};
 		}),
 
-	rename: sessionProcedure
+	rename: trackedSessionProcedure
 		.route({
 			method: "POST",
 			path: "/agent-chats/rename",
@@ -169,7 +169,7 @@ export const agentChatsRouter = {
 			return { success: true };
 		}),
 
-	delete: sessionProcedure
+	delete: trackedSessionProcedure
 		.route({
 			method: "POST",
 			path: "/agent-chats/delete",

@@ -11,7 +11,7 @@ import { GATED_FEATURES } from "@databuddy/shared/types/features";
 import { randomUUIDv7 } from "bun";
 import { z } from "zod";
 import { rpcError } from "../errors";
-import { protectedProcedure, publicProcedure } from "../orpc";
+import { protectedProcedure, publicProcedure, trackedProcedure } from "../orpc";
 import {
 	isFullyAuthorized,
 	withWebsiteRead,
@@ -185,7 +185,7 @@ export const targetGroupsRouter = {
 			});
 		}),
 
-	create: protectedProcedure
+	create: trackedProcedure
 		.route({
 			description:
 				"Creates a new target group. Requires target groups feature and website update permission.",
@@ -238,7 +238,7 @@ export const targetGroupsRouter = {
 			return newGroup;
 		}),
 
-	update: protectedProcedure
+	update: trackedProcedure
 		.route({
 			description:
 				"Updates an existing target group. Requires website update permission.",
@@ -287,7 +287,7 @@ export const targetGroupsRouter = {
 			return updatedGroup;
 		}),
 
-	delete: protectedProcedure
+	delete: trackedProcedure
 		.route({
 			description:
 				"Soft-deletes a target group. Requires website delete permission.",

@@ -8,7 +8,7 @@ import { z } from "zod";
 import { rpcError } from "../errors";
 import { getAutumn } from "../lib/autumn-client";
 import { logger, record } from "../lib/logger";
-import { protectedProcedure, publicProcedure, sessionProcedure } from "../orpc";
+import { protectedProcedure, publicProcedure, sessionProcedure, trackedProcedure } from "../orpc";
 import { withWorkspace } from "../procedures/with-workspace";
 
 const updateAvatarSeedSchema = z.object({
@@ -19,7 +19,7 @@ const updateAvatarSeedSchema = z.object({
 const orgOutputSchema = z.record(z.string(), z.unknown());
 
 export const organizationsRouter = {
-	updateAvatarSeed: protectedProcedure
+	updateAvatarSeed: trackedProcedure
 		.route({
 			description:
 				"Updates organization avatar seed. Requires org update permission.",
@@ -163,7 +163,7 @@ export const organizationsRouter = {
 			return pendingInvitations;
 		}),
 
-	clearExpiredInvitations: protectedProcedure
+	clearExpiredInvitations: trackedProcedure
 		.route({
 			description:
 				"Deletes expired and accepted invitations for an organization.",

@@ -22,11 +22,13 @@ import { cacheable, invalidateCacheableWithArgs } from "@databuddy/redis";
 import { randomUUIDv7 } from "bun";
 import { z } from "zod";
 import { rpcError } from "../errors";
-import { protectedProcedure, publicProcedure } from "../orpc";
+import { setTrackProperties } from "../middleware/track-mutation";
+import { protectedProcedure, publicProcedure, trackedProcedure } from "../orpc";
 import { withFeatureAccess } from "../procedures/with-feature-access";
 import { withWorkspace } from "../procedures/with-workspace";
 
 const monitorsProcedure = protectedProcedure.use(withFeatureAccess("monitors"));
+const trackedMonitorsProcedure = trackedProcedure.use(withFeatureAccess("monitors"));
 
 const UPTIME_TABLE = "uptime.uptime_monitor";
 
@@ -670,7 +672,7 @@ export const statusPageRouter = {
 			};
 		}),
 
-	create: monitorsProcedure
+	create: trackedMonitorsProcedure
 		.route({
 			method: "POST",
 			path: "/statusPage/create",
@@ -693,6 +695,7 @@ export const statusPageRouter = {
 			})
 		)
 		.handler(async ({ context, input }) => {
+			setTrackProperties({ theme: input.theme ?? "default" });
 			await withWorkspace(context, {
 				organizationId: input.organizationId,
 				resource: "website",
@@ -729,7 +732,7 @@ export const statusPageRouter = {
 			});
 		}),
 
-	update: monitorsProcedure
+	update: trackedMonitorsProcedure
 		.route({
 			method: "POST",
 			path: "/statusPage/update",
@@ -813,7 +816,7 @@ export const statusPageRouter = {
 			});
 		}),
 
-	delete: monitorsProcedure
+	delete: trackedMonitorsProcedure
 		.route({
 			method: "POST",
 			path: "/statusPage/delete",
@@ -849,7 +852,7 @@ export const statusPageRouter = {
 			return { success: true };
 		}),
 
-	transfer: monitorsProcedure
+	transfer: trackedMonitorsProcedure
 		.route({
 			method: "POST",
 			path: "/statusPage/transfer",
@@ -927,7 +930,7 @@ export const statusPageRouter = {
 			return { success: true };
 		}),
 
-	addMonitor: monitorsProcedure
+	addMonitor: trackedMonitorsProcedure
 		.route({
 			method: "POST",
 			path: "/statusPage/addMonitor",
@@ -981,7 +984,7 @@ export const statusPageRouter = {
 			});
 		}),
 
-	removeMonitor: monitorsProcedure
+	removeMonitor: trackedMonitorsProcedure
 		.route({
 			method: "POST",
 			path: "/statusPage/removeMonitor",
@@ -1023,7 +1026,7 @@ export const statusPageRouter = {
 			return { success: true };
 		}),
 
-	updateMonitorSettings: monitorsProcedure
+	updateMonitorSettings: trackedMonitorsProcedure
 		.route({
 			method: "POST",
 			path: "/statusPage/updateMonitorSettings",
@@ -1085,7 +1088,7 @@ export const statusPageRouter = {
 			});
 		}),
 
-	createIncident: monitorsProcedure
+	createIncident: trackedMonitorsProcedure
 		.route({
 			method: "POST",
 			path: "/statusPage/createIncident",
@@ -1110,6 +1113,7 @@ export const statusPageRouter = {
 			})
 		)
 		.handler(async ({ context, input }) => {
+			setTrackProperties({ severity: input.severity ?? "minor" });
 			const statusPage = await db.query.statusPages.findFirst({
 				where: eq(statusPages.id, input.statusPageId),
 			});
@@ -1163,7 +1167,7 @@ export const statusPageRouter = {
 			});
 		}),
 
-	updateIncident: monitorsProcedure
+	updateIncident: trackedMonitorsProcedure
 		.route({
 			method: "POST",
 			path: "/statusPage/updateIncident",
@@ -1178,6 +1182,7 @@ export const statusPageRouter = {
 			})
 		)
 		.handler(async ({ context, input }) => {
+			setTrackProperties({ status: input.status });
 			const incident = await db.query.incidents.findFirst({
 				where: eq(incidents.id, input.incidentId),
 				with: { statusPage: true },
@@ -1220,7 +1225,7 @@ export const statusPageRouter = {
 			});
 		}),
 
-	deleteIncident: monitorsProcedure
+	deleteIncident: trackedMonitorsProcedure
 		.route({
 			method: "POST",
 			path: "/statusPage/deleteIncident",

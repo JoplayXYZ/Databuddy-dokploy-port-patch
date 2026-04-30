@@ -5,7 +5,8 @@ import { randomUUIDv7 } from "bun";
 import { z } from "zod";
 import { rpcError } from "../errors";
 import { logger } from "../lib/logger";
-import { sessionProcedure } from "../orpc";
+import { setTrackProperties } from "../middleware/track-mutation";
+import { sessionProcedure, trackedSessionProcedure } from "../orpc";
 import { getBillingCustomerId } from "../utils/billing";
 
 const SLACK_WEBHOOK_URL = process.env.SLACK_WEBHOOK_URL ?? "";
@@ -171,7 +172,7 @@ const computeCreditsBalance = async (
 };
 
 export const feedbackRouter = {
-	submit: sessionProcedure
+	submit: trackedSessionProcedure
 		.route({
 			method: "POST",
 			path: "/feedback/submit",
@@ -188,6 +189,7 @@ export const feedbackRouter = {
 		)
 		.output(feedbackOutputSchema)
 		.handler(async ({ context, input }) => {
+			setTrackProperties({ category: input.category });
 			if (!context.organizationId) {
 				throw rpcError.badRequest("Organization context is required");
 			}
@@ -297,7 +299,7 @@ export const feedbackRouter = {
 		)
 		.handler(() => [...REWARD_TIERS]),
 
-	redeemCredits: sessionProcedure
+	redeemCredits: trackedSessionProcedure
 		.route({
 			method: "POST",
 			path: "/feedback/redeemCredits",

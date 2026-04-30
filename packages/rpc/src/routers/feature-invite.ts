@@ -6,7 +6,7 @@ import { randomUUIDv7 } from "bun";
 import { z } from "zod";
 import { rpcError } from "../errors";
 import { logger } from "../lib/logger";
-import { type Context, sessionProcedure } from "../orpc";
+import { type Context, sessionProcedure, trackedSessionProcedure } from "../orpc";
 import { resolveFeatureAccess } from "../procedures/with-feature-access";
 
 const MAX_LINKS_PER_FLAG = 5;
@@ -142,7 +142,7 @@ export const featureInviteRouter = {
 			return { flagKey: invite.flagKey, status: invite.status };
 		}),
 
-	generateLinks: sessionProcedure
+	generateLinks: trackedSessionProcedure
 		.route({
 			description:
 				"Auto-generates invite links for a feature flag, up to 5 per user.",
@@ -209,7 +209,7 @@ export const featureInviteRouter = {
 			});
 		}),
 
-	revokeLink: sessionProcedure
+	revokeLink: trackedSessionProcedure
 		.route({
 			description:
 				"Revokes an invite link. Only the creator can revoke their own links.",
@@ -246,7 +246,7 @@ export const featureInviteRouter = {
 			return updated;
 		}),
 
-	redeemLink: sessionProcedure
+	redeemLink: trackedSessionProcedure
 		.route({
 			description:
 				"Redeems an invite link by token. Any authenticated user can redeem an active link.",

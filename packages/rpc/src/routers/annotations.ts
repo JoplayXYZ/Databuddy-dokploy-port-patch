@@ -4,7 +4,8 @@ import { createDrizzleCache, redis } from "@databuddy/redis";
 import { randomUUIDv7 } from "bun";
 import { z } from "zod";
 import { rpcError } from "../errors";
-import { protectedProcedure, publicProcedure } from "../orpc";
+import { setTrackProperties } from "../middleware/track-mutation";
+import { protectedProcedure, publicProcedure, trackedProcedure } from "../orpc";
 import { isFullyAuthorized, withWorkspace } from "../procedures/with-workspace";
 import { getCacheAuthContext } from "../utils/cache-keys";
 
@@ -208,7 +209,7 @@ export const annotationsRouter = {
 			});
 		}),
 
-	create: protectedProcedure
+	create: trackedProcedure
 		.route({
 			description:
 				"Creates a new annotation. Requires website update permission.",
@@ -234,6 +235,7 @@ export const annotationsRouter = {
 		)
 		.output(annotationOutputSchema)
 		.handler(async ({ context, input }) => {
+			setTrackProperties({ type: input.annotationType });
 			const workspace = await withWorkspace(context, {
 				websiteId: input.websiteId,
 				permissions: ["update"],
@@ -266,7 +268,7 @@ export const annotationsRouter = {
 			return newAnnotation;
 		}),
 
-	update: protectedProcedure
+	update: trackedProcedure
 		.route({
 			description:
 				"Updates an annotation. Users can only update their own unless they own the website.",
@@ -347,7 +349,7 @@ export const annotationsRouter = {
 			return updatedAnnotation;
 		}),
 
-	delete: protectedProcedure
+	delete: trackedProcedure
 		.route({
 			description:
 				"Soft-deletes an annotation. Users can only delete their own unless they own the website.",

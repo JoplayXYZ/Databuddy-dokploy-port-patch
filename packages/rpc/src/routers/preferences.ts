@@ -3,7 +3,7 @@ import { userPreferences } from "@databuddy/db/schema";
 import { randomUUIDv7 } from "bun";
 import { z } from "zod";
 import { rpcError } from "..";
-import { protectedProcedure } from "../orpc";
+import { protectedProcedure, trackedProcedure } from "../orpc";
 
 const defaultPreferences = {
 	timezone: "auto",
@@ -46,7 +46,7 @@ export const preferencesRouter = {
 			return preferences;
 		}),
 
-	updateUserPreferences: protectedProcedure
+	updateUserPreferences: trackedProcedure
 		.route({
 			description: "Updates user preferences.",
 			method: "POST",
