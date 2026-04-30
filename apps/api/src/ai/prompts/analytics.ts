@@ -1,5 +1,6 @@
 import type { AppContext } from "../config/context";
 import { formatContextForLLM } from "../config/context";
+import { CLICKHOUSE_SCHEMA_DOCS } from "./clickhouse-schema";
 import { COMMON_AGENT_RULES } from "./shared";
 
 const ANALYTICS_BODY = `<agent-specific-rules>
@@ -41,8 +42,8 @@ Rules: series lists metric names, rows are [xLabel, v1, v2, …] in series order
 <glossary>
 - session: events sharing session_id
 - unique visitors: uniq(anonymous_id) — one per browser, not per person
-- bounce: single-pageview session (is_bounce=1 on summary_metrics only)
-- bounce rate: site-level only via summary_metrics; per-page bounce does not exist
+- bounce: single-pageview session. No is_bounce column exists. Compute via: sessions with count() = 1 pageview.
+- bounce rate: site-level only via summary_metrics builder or manual session counting. Per-page bounce does not exist.
 - time on page: seconds between pageview and next event or page_exit
 - conversion: completing a goal target (page view or custom event)
 </glossary>`;
@@ -82,6 +83,8 @@ ${formatContextForLLM(ctx)}
 ${COMMON_AGENT_RULES}
 
 ${ANALYTICS_BODY}
+
+${CLICKHOUSE_SCHEMA_DOCS}
 
 ${ANALYTICS_EXAMPLES}`;
 }
