@@ -7,11 +7,21 @@ import { isAbortError } from "@/lib/is-abort-error";
 
 const link = new RPCLink({
 	url: `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/rpc`,
-	fetch: (url, options) =>
-		fetch(url, {
-			...options,
+	fetch: (request, init) => {
+		const headers = new Headers(request.headers);
+
+		if (typeof window !== "undefined") {
+			const anonId = localStorage.getItem("did");
+			const sessionId = sessionStorage.getItem("did_session");
+			if (anonId) headers.set("x-databuddy-anonymous-id", anonId);
+			if (sessionId) headers.set("x-databuddy-session-id", sessionId);
+		}
+
+		return fetch(new Request(request, { headers }), {
+			...init,
 			credentials: "include",
-		}),
+		});
+	},
 	interceptors: [
 		onError((error) => {
 			if (isAbortError(error)) {
