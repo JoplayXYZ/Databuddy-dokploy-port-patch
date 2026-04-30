@@ -7,15 +7,11 @@ const RESET = "\x1b[0m";
 const BOLD = "\x1b[1m";
 
 function pad(str: string, len: number): string {
-	return str.length >= len
-		? str.slice(0, len)
-		: str + " ".repeat(len - str.length);
+	return str.length >= len ? str.slice(0, len) : str + " ".repeat(len - str.length);
 }
 
 function padNum(n: number | undefined, len = 5): string {
-	if (n === undefined || n < 0) {
-		return pad("--", len);
-	}
+	if (n === undefined || n < 0) return pad("--", len);
 	return pad(String(n), len);
 }
 
@@ -27,20 +23,20 @@ export function printReport(run: EvalRun): void {
 	console.log(`Duration: ${(run.duration / 1000).toFixed(1)}s`);
 	console.log("");
 
-	// Header
-	const header = ` # | ${pad("Case", 28)} | Pass | Tools | Behav | Qual  | Fmt   | Perf  | Time`;
+	const header = ` # | ${pad("Case", 28)} | Pass | Tools | Behav | Qual  | Fmt   | Perf  | Cost    | Time`;
 	console.log(header);
 	console.log("-".repeat(header.length));
 
-	// Rows
+	let totalCost = 0;
 	for (let i = 0; i < run.cases.length; i++) {
 		const c = run.cases[i];
 		const status = c.passed ? PASS : FAIL;
 		const time = `${(c.metrics.latencyMs / 1000).toFixed(1)}s`;
-		const row = `${pad(String(i + 1), 2)} | ${pad(c.id, 28)} | ${status} | ${padNum(c.scores.tool_routing)} | ${padNum(c.scores.behavioral)} | ${padNum(c.scores.quality)} | ${padNum(c.scores.format)} | ${padNum(c.scores.performance)} | ${time}`;
+		const cost = c.metrics.costUsd > 0 ? `$${c.metrics.costUsd.toFixed(4)}` : pad("--", 7);
+		totalCost += c.metrics.costUsd;
+		const row = `${pad(String(i + 1), 2)} | ${pad(c.id, 28)} | ${status} | ${padNum(c.scores.tool_routing)} | ${padNum(c.scores.behavioral)} | ${padNum(c.scores.quality)} | ${padNum(c.scores.format)} | ${padNum(c.scores.performance)} | ${pad(cost, 7)} | ${time}`;
 		console.log(row);
 
-		// Print failures inline
 		if (c.failures.length > 0) {
 			for (const f of c.failures) {
 				console.log(`${DIM}     -> ${f}${RESET}`);
@@ -51,8 +47,9 @@ export function printReport(run: EvalRun): void {
 	console.log("");
 	const s = run.summary;
 	const d = run.dimensions;
+	const costStr = totalCost > 0 ? ` | Cost: $${totalCost.toFixed(4)}` : "";
 	console.log(
-		`${BOLD}Summary:${RESET} ${s.passed}/${s.total} passed (${s.score}%) | Tools: ${d.tool_routing} | Behavioral: ${d.behavioral} | Quality: ${d.quality} | Format: ${d.format} | Perf: ${d.performance}`
+		`${BOLD}Summary:${RESET} ${s.passed}/${s.total} passed (${s.score}%) | Tools: ${d.tool_routing} | Behavioral: ${d.behavioral} | Quality: ${d.quality} | Format: ${d.format} | Perf: ${d.performance}${costStr}`
 	);
 	console.log("");
 }
