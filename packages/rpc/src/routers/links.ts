@@ -163,16 +163,16 @@ function getTargetDomain(targetUrl: string): string | null {
 	}
 }
 
-async function assertFolderBelongsToOrganization(
+async function resolveFolderId(
 	db: Context["db"],
 	folderId: string | null | undefined,
-	organizationId: string
-): Promise<void> {
-	if (!folderId) {
-		return;
-	}
+	organizationId: string,
+	linkName: string,
+	createdBy: string
+): Promise<string | null> {
+	if (!folderId) return null;
 
-	const folder = await db
+	const existing = await db
 		.select({ id: linkFolders.id })
 		.from(linkFolders)
 		.where(
@@ -183,9 +183,28 @@ async function assertFolderBelongsToOrganization(
 		)
 		.limit(1);
 
-	if (folder.length === 0) {
-		throw rpcError.badRequest("Folder does not belong to this organization");
-	}
+	if (existing.length > 0) return folderId;
+
+	const folderName = linkName.trim() || "Untitled";
+	const baseSlug = folderName
+		.toLowerCase()
+		.replace(/[^a-z0-9\s_-]/g, "")
+		.replace(/[\s_]+/g, "-")
+		.replace(/-+/g, "-")
+		.replace(/^-|-$/g, "") || "folder";
+
+	const [folder] = await db
+		.insert(linkFolders)
+		.values({
+			id: randomUUIDv7(),
+			organizationId,
+			createdBy,
+			name: folderName,
+			slug: `${baseSlug.slice(0, 59)}-${randomUUIDv7().slice(0, 4)}`,
+		})
+		.returning({ id: linkFolders.id });
+
+	return folder.id;
 }
 
 function toCachedLink(link: {
@@ -333,12 +352,14 @@ export const linksRouter = {
 			});
 
 			validateHttpUrl(input.targetUrl);
-			await assertFolderBelongsToOrganization(
+			const createdBy = await workspace.getCreatedBy();
+			const resolvedFolderId = await resolveFolderId(
 				context.db,
 				input.folderId,
-				organizationId
+				organizationId,
+				input.name,
+				createdBy
 			);
-			const createdBy = await workspace.getCreatedBy();
 			const targetDomain =
 				normalizeTargetDomain(input.targetDomain) ??
 				getTargetDomain(input.targetUrl);
@@ -356,7 +377,7 @@ export const linksRouter = {
 							slug,
 							organizationId,
 							createdBy,
-							folderId: input.folderId ?? null,
+							folderId: resolvedFolderId,
 							name: input.name,
 							targetUrl: input.targetUrl,
 							targetDomain,
@@ -429,11 +450,14 @@ export const linksRouter = {
 				validateHttpUrl(input.targetUrl);
 			}
 
+			let resolvedFolderId: string | null | undefined;
 			if (input.folderId !== undefined) {
-				await assertFolderBelongsToOrganization(
+				resolvedFolderId = await resolveFolderId(
 					context.db,
 					input.folderId,
-					link.organizationId
+					link.organizationId,
+					input.name ?? link.name,
+					context.user?.id ?? link.createdBy
 				);
 			}
 
@@ -460,7 +484,7 @@ export const linksRouter = {
 					.update(links)
 					.set({
 						...updates,
-						folderId: folderId === undefined ? undefined : folderId,
+						folderId: resolvedFolderId === undefined ? undefined : resolvedFolderId,
 						sourceType:
 							sourceType === undefined
 								? undefined
