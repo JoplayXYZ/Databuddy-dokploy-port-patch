@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -12,12 +12,11 @@ import { SlackLogoIcon } from "@phosphor-icons/react/dist/ssr";
 import {
 	EnvelopeSimpleIcon,
 	GlobeSimpleIcon,
-	HeartbeatIcon,
 	PlusIcon,
 	XMarkIcon,
 } from "@databuddy/ui/icons";
-import { Badge, Button, Divider, Field, Input, Text } from "@databuddy/ui";
-import { Accordion, Checkbox, Sheet, Switch } from "@databuddy/ui/client";
+import { Button, Divider, Field, Input, Text } from "@databuddy/ui";
+import { Accordion, Sheet, Switch } from "@databuddy/ui/client";
 
 type DestType = "slack" | "email" | "webhook";
 
@@ -60,7 +59,6 @@ const alarmFormSchema = z.object({
 	name: z.string().min(1, "Name is required"),
 	description: z.string().optional(),
 	enabled: z.boolean(),
-	monitorIds: z.array(z.string()),
 	destinations: z
 		.array(destinationSchema)
 		.min(1, "At least one destination is required"),
@@ -94,14 +92,10 @@ interface AlarmSheetProps {
 }
 
 function buildDefaults(alarm: AlarmData | null | undefined): AlarmFormData {
-	const monitorIds = Array.isArray(alarm?.triggerConditions?.monitorIds)
-		? (alarm.triggerConditions.monitorIds as string[])
-		: [];
 	return {
 		name: alarm?.name ?? "",
 		description: alarm?.description ?? "",
 		enabled: alarm?.enabled ?? true,
-		monitorIds,
 		destinations: alarm?.destinations?.map((d) => ({
 			type: d.type as DestType,
 			identifier: d.identifier ?? "",
@@ -213,18 +207,6 @@ export function AlarmSheet({
 		}
 	}, [open, alarm, form.reset]);
 
-	const monitorsQuery = useQuery({
-		...orpc.uptime.listSchedules.queryOptions({ input: {} }),
-		enabled: open,
-	});
-
-	const monitors = (monitorsQuery.data ?? []) as Array<{
-		id: string;
-		name: string | null;
-		url: string | null;
-		website: { domain: string; name: string | null } | null;
-	}>;
-
 	const { fields, append, remove } = useFieldArray({
 		control: form.control,
 		name: "destinations",
@@ -246,11 +228,6 @@ export function AlarmSheet({
 			return;
 		}
 
-		const triggerConditions: Record<string, unknown> = {
-			...(alarm?.triggerConditions ?? {}),
-			monitorIds: data.monitorIds,
-		};
-
 		try {
 			if (isEditing && alarm) {
 				await updateMutation.mutateAsync({
@@ -265,7 +242,6 @@ export function AlarmSheet({
 						| "error_rate"
 						| "goal"
 						| "custom",
-					triggerConditions,
 					destinations: data.destinations,
 				});
 				toast.success("Alert updated");
@@ -276,7 +252,7 @@ export function AlarmSheet({
 					description: data.description,
 					enabled: data.enabled,
 					triggerType: "uptime",
-					triggerConditions,
+					triggerConditions: {},
 					destinations: data.destinations,
 				});
 				toast.success("Alert created");
@@ -302,7 +278,7 @@ export function AlarmSheet({
 					<Sheet.Description>
 						{isEditing
 							? "Update this alert's destinations and settings."
-							: "Configure where notifications are sent and which monitors trigger them."}
+							: "Configure where notifications are sent. Attach this alert to monitors later."}
 					</Sheet.Description>
 				</Sheet.Header>
 
@@ -362,94 +338,6 @@ export function AlarmSheet({
 								)}
 							/>
 						)}
-
-						<div className="space-y-3">
-							<Text variant="label">Monitors</Text>
-							<Text tone="muted" variant="caption">
-								Which monitors should trigger this alert?
-							</Text>
-							{monitors.length === 0 ? (
-								<div className="rounded-md border border-dashed border-border/60 p-4 text-center">
-									<HeartbeatIcon
-										className="mx-auto mb-2 size-5 text-muted-foreground"
-										weight="duotone"
-									/>
-									<Text tone="muted" variant="caption">
-										{monitorsQuery.isLoading
-											? "Loading monitors\u2026"
-											: "No monitors yet. Create one first."}
-									</Text>
-								</div>
-							) : (
-								<Controller
-									control={form.control}
-									name="monitorIds"
-									render={({ field }) => {
-										const allSelected =
-											field.value.length === monitors.length &&
-											monitors.length > 0;
-										const toggleAll = () => {
-											if (allSelected) {
-												field.onChange([]);
-											} else {
-												field.onChange(monitors.map((m) => m.id));
-											}
-										};
-										const toggle = (id: string) => {
-											if (field.value.includes(id)) {
-												field.onChange(
-													field.value.filter((v: string) => v !== id),
-												);
-											} else {
-												field.onChange([...field.value, id]);
-											}
-										};
-										return (
-											<div className="space-y-1 rounded-md border border-border/60">
-												<div className="flex items-center justify-between border-b border-border/60 px-3 py-2">
-													<Checkbox
-														checked={allSelected}
-														label={
-															<span className="text-muted-foreground">
-																All monitors
-															</span>
-														}
-														onCheckedChange={toggleAll}
-													/>
-													{field.value.length > 0 && (
-														<Badge size="sm" variant="muted">
-															{field.value.length}
-														</Badge>
-													)}
-												</div>
-												<div className="max-h-48 overflow-y-auto px-1 py-1">
-													{monitors.map((m) => {
-														const label =
-															m.name ||
-															m.website?.name ||
-															m.website?.domain ||
-															m.url ||
-															"Unknown";
-														return (
-															<div
-																className="rounded px-2 py-1.5 hover:bg-interactive-hover"
-																key={m.id}
-															>
-																<Checkbox
-																	checked={field.value.includes(m.id)}
-																	label={label}
-																	onCheckedChange={() => toggle(m.id)}
-																/>
-															</div>
-														);
-													})}
-												</div>
-											</div>
-										);
-									}}
-								/>
-							)}
-						</div>
 
 						<Divider />
 
