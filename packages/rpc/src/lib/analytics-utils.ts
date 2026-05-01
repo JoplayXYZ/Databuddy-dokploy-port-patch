@@ -472,58 +472,6 @@ export const queryLinkVisitorIds = async (
 };
 
 // Build chained step CTEs + visitor summary for ClickHouse-side funnel computation
-const buildFunnelSQL = (
-	stepQueries: string[],
-	totalSteps: number,
-	opts: {
-		visitorFilterClause?: string;
-		includeReferrer?: boolean;
-	} = {}
-): {
-	cteSql: string;
-	maxStepExpr: string;
-	timeCols: string[];
-	joinClause: string;
-} => {
-	const stepCTEs = [
-		`s1 AS (
-		SELECT vid, MIN(ts) as ts${opts.includeReferrer ? ", any(ref) as ref" : ""}
-		FROM step_events WHERE step = 1${opts.visitorFilterClause ?? ""} GROUP BY vid
-	)`,
-	];
-	for (let i = 2; i <= totalSteps; i++) {
-		stepCTEs.push(`s${i} AS (
-		SELECT se.vid, MIN(se.ts) as ts FROM step_events se
-		INNER JOIN s${i - 1} ON se.vid = s${i - 1}.vid
-		WHERE se.step = ${i} AND se.ts >= s${i - 1}.ts GROUP BY se.vid
-	)`);
-	}
-
-	const joins: string[] = [];
-	const maxStepParts = ["toUInt8(1)"];
-	const timeCols = ["toFloat64(toUnixTimestamp(s1.ts)) as t1"];
-	for (let i = 2; i <= totalSteps; i++) {
-		joins.push(`LEFT JOIN s${i} ON s1.vid = s${i}.vid`);
-		maxStepParts.push(`if(s${i}.vid != '', toUInt8(1), toUInt8(0))`);
-		timeCols.push(`toFloat64(toUnixTimestamp(s${i}.ts)) as t${i}`);
-	}
-
-	const eventsCols = opts.includeReferrer
-		? "SELECT DISTINCT step, vid, ts, ref FROM events"
-		: "SELECT DISTINCT step, vid, ts FROM events";
-
-	const cteSql = `WITH events AS (${stepQueries.join("\nUNION ALL\n")}),
-step_events AS (${eventsCols}),
-${stepCTEs.join(",\n")}`;
-
-	return {
-		cteSql,
-		maxStepExpr: maxStepParts.join(" + "),
-		timeCols,
-		joinClause: joins.join(" "),
-	};
-};
-
 // Aggregate per-step error insights from the error query results
 const buildStepErrorInsights = (
 	errorsByPath: Map<string, ErrorRow[]>,
@@ -589,47 +537,37 @@ export const processFunnelAnalytics = async (
 		visitorFilterClause = " AND vid IN {visitorFilterIds:Array(String)}";
 	}
 
-	const { cteSql, maxStepExpr, timeCols, joinClause } = buildFunnelSQL(
-		stepQueries,
-		totalSteps,
-		{ visitorFilterClause }
-	);
+	const stepConditions = steps
+		.map((_, i) => `step = ${i + 1}`)
+		.join(", ");
 
-	// Per-step metrics
-	const stepMetrics = [
-		"SELECT toUInt8(1) as step_num, '' as date, count() as users, toFloat64(0) as avg_time, toUInt64(0) as conversions FROM visitor_summary",
-	];
-	for (let i = 2; i <= totalSteps; i++) {
-		stepMetrics.push(
-			`SELECT toUInt8(${i}), '', countIf(max_step >= ${i}), avgIf(t${i} - t${i - 1}, max_step >= ${i} AND t${i} - t${i - 1} < 86400), toUInt64(0) FROM visitor_summary`
-		);
-	}
-
-	// Overall avg completion time (sentinel row)
-	const sentinelStep = totalSteps + 1;
-	stepMetrics.push(
-		`SELECT toUInt8(${sentinelStep}), '', toUInt64(0), avgIf(t${totalSteps} - t1, max_step >= ${totalSteps} AND t${totalSteps} - t1 < 86400), toUInt64(0) FROM visitor_summary`
-	);
-
-	// Time series bucketed by step-1 entry date
-	const tsQuery = `SELECT toUInt8(0), toString(entry_date), count(), avgIf(t${totalSteps} - t1, max_step >= ${totalSteps} AND t${totalSteps} - t1 < 86400), countIf(max_step >= ${totalSteps}) FROM visitor_summary GROUP BY entry_date`;
-
-	const fullQuery = `${cteSql},
-visitor_summary AS (
-	SELECT s1.vid, toDate(s1.ts) as entry_date,
-		${maxStepExpr} as max_step,
-		${timeCols.join(", ")}
-	FROM s1 ${joinClause}
+	const fullQuery = `WITH events AS (${stepQueries.join("\nUNION ALL\n")}),
+step_events AS (SELECT DISTINCT step, vid, ts FROM events${visitorFilterClause ? ` WHERE 1=1${visitorFilterClause}` : ""}),
+visitor_funnel AS (
+	SELECT
+		vid,
+		windowFunnel(86400)(ts, ${stepConditions}) as max_step,
+		min(ts) as first_ts
+	FROM step_events
+	GROUP BY vid
+	HAVING max_step >= 1
 )
-${stepMetrics.join("\nUNION ALL\n")}
-UNION ALL
-${tsQuery}
+SELECT step_num, date, users, avg_time, conversions FROM (
+	${Array.from({ length: totalSteps }, (_, i) => {
+		const stepNum = i + 1;
+		return `SELECT toUInt8(${stepNum}) as step_num, '' as date, countIf(max_step >= ${stepNum}) as users, toFloat64(0) as avg_time, toUInt64(0) as conversions FROM visitor_funnel`;
+	}).join("\nUNION ALL\n")}
+	UNION ALL
+	SELECT toUInt8(${totalSteps + 1}), '', toUInt64(0), toFloat64(0), toUInt64(0) FROM visitor_funnel
+	UNION ALL
+	SELECT toUInt8(0), toString(toDate(first_ts)), count(), toFloat64(0), countIf(max_step >= ${totalSteps}) FROM visitor_funnel GROUP BY toDate(first_ts)
+)
 ORDER BY 1, 2`;
 
+	const sentinelStep = totalSteps + 1;
+
 	const [aggRows, errorData] = await Promise.all([
-		chQuery<FunnelAggRow>(fullQuery, params, {
-			clickhouse_settings: { query_plan_max_optimizations_to_apply: 50000 },
-		}),
+		chQuery<FunnelAggRow>(fullQuery, params),
 		queryFunnelErrors(steps, true, params),
 	]);
 
@@ -797,20 +735,21 @@ export const processFunnelAnalyticsByReferrer = async (
 		buildStepQuery(s, i, filterSQL, params, true)
 	);
 
-	const { cteSql, maxStepExpr, joinClause } = buildFunnelSQL(
-		stepQueries,
-		totalSteps,
-		{ includeReferrer: true }
-	);
+	const stepConditions = steps
+		.map((_, i) => `step = ${i + 1}`)
+		.join(", ");
 
-	const fullQuery = `${cteSql}
-SELECT s1.vid, s1.ref as referrer,
-	${maxStepExpr} as max_step
-FROM s1 ${joinClause}`;
+	const fullQuery = `WITH events AS (${stepQueries.join("\nUNION ALL\n")}),
+step_events AS (SELECT DISTINCT step, vid, ts, ref FROM events)
+SELECT
+	vid,
+	windowFunnel(86400)(ts, ${stepConditions}) as max_step,
+	any(ref) as referrer
+FROM step_events
+GROUP BY vid
+HAVING max_step >= 1`;
 
-	const rows = await chQuery<ReferrerRow>(fullQuery, params, {
-		clickhouse_settings: { query_plan_max_optimizations_to_apply: 50000 },
-	});
+	const rows = await chQuery<ReferrerRow>(fullQuery, params);
 
 	const groups = new Map<
 		string,
