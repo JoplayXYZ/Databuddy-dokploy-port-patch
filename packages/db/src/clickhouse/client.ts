@@ -104,6 +104,7 @@ export const clickHouse = new Proxy(clickHouseOG, {
 });
 
 export interface ChQueryOptions {
+	clickhouse_settings?: Record<string, string | number>;
 	readonly?: boolean;
 }
 
@@ -113,11 +114,15 @@ export async function chQueryWithMeta<T extends Record<string, any>>(
 	options?: ChQueryOptions
 ): Promise<ResponseJSON<T>> {
 	const json = await traced("ch.query", async () => {
+		const settings: Record<string, string | number> = {
+			...(options?.readonly && { readonly: "1" }),
+			...options?.clickhouse_settings,
+		};
 		const res = await clickHouse.query({
 			query,
 			query_params: params,
-			...(options?.readonly && {
-				clickhouse_settings: { readonly: "1" },
+			...(Object.keys(settings).length > 0 && {
+				clickhouse_settings: settings,
 			}),
 		});
 		return res.json<T>();

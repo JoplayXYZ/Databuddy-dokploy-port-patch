@@ -627,7 +627,9 @@ ${tsQuery}
 ORDER BY 1, 2`;
 
 	const [aggRows, errorData] = await Promise.all([
-		chQuery<FunnelAggRow>(fullQuery, params),
+		chQuery<FunnelAggRow>(fullQuery, params, {
+			clickhouse_settings: { max_query_plan_optimizations: 50000 },
+		}),
 		queryFunnelErrors(steps, true, params),
 	]);
 
@@ -806,7 +808,9 @@ SELECT s1.vid, s1.ref as referrer,
 	${maxStepExpr} as max_step
 FROM s1 ${joinClause}`;
 
-	const rows = await chQuery<ReferrerRow>(fullQuery, params);
+	const rows = await chQuery<ReferrerRow>(fullQuery, params, {
+		clickhouse_settings: { max_query_plan_optimizations: 50000 },
+	});
 
 	const groups = new Map<
 		string,
