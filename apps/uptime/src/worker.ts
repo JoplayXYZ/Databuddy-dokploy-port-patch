@@ -47,7 +47,7 @@ export interface UptimeWorkerDeps {
 		previousStatus?: number;
 	}) => Promise<{
 		transition_kind: "down" | "recovered" | null;
-		emails_sent: number;
+		alarms_fired: number;
 	}>;
 }
 
@@ -191,7 +191,7 @@ export async function processUptimeCheck(
 			if (transition.transition_kind) {
 				log.set({
 					transition_kind: transition.transition_kind,
-					emails_sent: transition.emails_sent,
+					alarms_fired: transition.alarms_fired,
 				});
 			}
 		} catch (error) {

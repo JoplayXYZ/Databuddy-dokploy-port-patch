@@ -1,14 +1,39 @@
-import { and, db, eq, withTransaction } from "@databuddy/db";
-import { member, uptimeSchedules, user } from "@databuddy/db/schema";
+import { db, eq, withTransaction } from "@databuddy/db";
+import { alarms, uptimeSchedules } from "@databuddy/db/schema";
 import { chQuery } from "@databuddy/db/clickhouse";
-import { render, UptimeAlertEmail } from "@databuddy/email";
-import { Resend } from "resend";
+import {
+	NotificationClient,
+	type NotificationChannel,
+} from "@databuddy/notifications";
 import type { ScheduleData } from "./actions";
 import { UPTIME_ENV } from "./lib/env";
 import { captureError } from "./lib/tracing";
 import { MonitorStatus, type UptimeData } from "./types";
 
 const TRAILING_SLASH = /\/$/;
+
+function toNotificationConfig(
+	destinations: Array<{ type: string; identifier: string; config: unknown }>,
+) {
+	const clientConfig: Record<string, Record<string, unknown>> = {};
+	const channels: NotificationChannel[] = [];
+
+	for (const dest of destinations) {
+		const cfg = (dest.config ?? {}) as Record<string, unknown>;
+		if (dest.type === "slack") {
+			clientConfig.slack = { webhookUrl: dest.identifier };
+			channels.push("slack");
+		} else if (dest.type === "webhook") {
+			clientConfig.webhook = {
+				url: dest.identifier,
+				headers: cfg.headers as Record<string, string> | undefined,
+			};
+			channels.push("webhook");
+		}
+	}
+
+	return { clientConfig, channels };
+}
 
 function buildSiteLabel(schedule: ScheduleData): string {
 	const w = schedule.website;
@@ -30,7 +55,7 @@ function buildSiteLabel(schedule: ScheduleData): string {
 
 export function resolveTransitionKind(
 	previous: number | undefined,
-	current: number
+	current: number,
 ): "down" | "recovered" | null {
 	if (current === MonitorStatus.UP) {
 		if (previous === MonitorStatus.DOWN) {
@@ -47,30 +72,9 @@ export function resolveTransitionKind(
 	return null;
 }
 
-async function getOrgOwnerEmails(organizationId: string): Promise<string[]> {
-	const rows = await db
-		.select({ email: user.email })
-		.from(member)
-		.innerJoin(user, eq(member.userId, user.id))
-		.where(
-			and(
-				eq(member.organizationId, organizationId),
-				eq(member.role, "owner"),
-				eq(user.emailVerified, true)
-			)
-		);
-	const set = new Set<string>();
-	for (const r of rows) {
-		if (r.email.includes("@")) {
-			set.add(r.email);
-		}
-	}
-	return [...set];
-}
-
 async function claimTransition(
 	scheduleId: string,
-	currentStatus: number
+	currentStatus: number,
 ): Promise<"down" | "recovered" | null> {
 	try {
 		return await withTransaction(async (tx) => {
@@ -102,8 +106,26 @@ async function claimTransition(
 	}
 }
 
+async function getLinkedAlarms(scheduleId: string, organizationId: string) {
+	const rows = await db.query.alarms.findMany({
+		where: eq(alarms.organizationId, organizationId),
+		with: { destinations: true },
+	});
+
+	return rows.filter((alarm) => {
+		if (!alarm.enabled) {
+			return false;
+		}
+		const tc = alarm.triggerConditions as Record<string, unknown> | null;
+		if (!tc || !Array.isArray(tc.monitorIds)) {
+			return false;
+		}
+		return (tc.monitorIds as string[]).includes(scheduleId);
+	});
+}
+
 export async function getPreviousMonitorStatus(
-	siteId: string
+	siteId: string,
 ): Promise<number | undefined> {
 	if (!process.env.CLICKHOUSE_URL) {
 		return;
@@ -115,7 +137,7 @@ export async function getPreviousMonitorStatus(
        WHERE site_id = {siteId:String}
        ORDER BY timestamp DESC
        LIMIT 1`,
-			{ siteId }
+			{ siteId },
 		);
 		const row = rows[0];
 		if (row === undefined) {
@@ -129,7 +151,7 @@ export async function getPreviousMonitorStatus(
 }
 
 export interface TransitionResult {
-	emails_sent: number;
+	alarms_fired: number;
 	transition_kind: "down" | "recovered" | null;
 }
 
@@ -138,14 +160,9 @@ export async function sendUptimeTransitionEmailsIfNeeded(options: {
 	data: UptimeData;
 	previousStatus?: number;
 }): Promise<TransitionResult> {
-	const none: TransitionResult = { emails_sent: 0, transition_kind: null };
+	const none: TransitionResult = { alarms_fired: 0, transition_kind: null };
 
 	if (!UPTIME_ENV.isProduction) {
-		return none;
-	}
-
-	const apiKey = process.env.RESEND_API_KEY;
-	if (!apiKey) {
 		return none;
 	}
 
@@ -161,47 +178,72 @@ export async function sendUptimeTransitionEmailsIfNeeded(options: {
 		return none;
 	}
 
-	const emails = await getOrgOwnerEmails(options.schedule.organizationId);
-	if (emails.length === 0) {
-		return { emails_sent: 0, transition_kind: kind };
+	const linkedAlarms = await getLinkedAlarms(
+		options.schedule.id,
+		options.schedule.organizationId,
+	);
+	if (linkedAlarms.length === 0) {
+		return { alarms_fired: 0, transition_kind: kind };
 	}
 
 	const siteLabel = buildSiteLabel(options.schedule);
 	const baseUrl = process.env.DASHBOARD_APP_URL ?? "https://app.databuddy.cc";
 	const dashboardUrl = `${baseUrl.replace(TRAILING_SLASH, "")}/monitors/${options.schedule.id}`;
 
-	const resend = new Resend(apiKey);
-	const sslExpiry =
-		options.data.ssl_expiry > 0 ? options.data.ssl_expiry : undefined;
+	let fired = 0;
 
-	const html = await render(
-		UptimeAlertEmail({
-			kind,
-			siteLabel,
-			url: options.data.url,
-			checkedAt: options.data.timestamp,
-			httpCode: options.data.http_code,
-			error: options.data.error ?? "",
-			probeRegion: options.data.probe_region,
-			totalMs: options.data.total_ms,
-			ttfbMs: options.data.ttfb_ms,
-			sslValid: options.data.ssl_valid === 1,
-			sslExpiryMs: sslExpiry,
-			dashboardUrl,
-		})
-	);
-	const result = await resend.emails.send({
-		from: "Databuddy <alerts@databuddy.cc>",
-		to: emails,
-		subject:
-			kind === "down"
-				? `[DOWN] ${siteLabel} is unreachable (HTTP ${options.data.http_code || "timeout"})`
-				: `[Recovered] ${siteLabel} is back up`,
-		html,
-	});
-	if (result.error) {
-		throw new Error(result.error.message);
+	for (const alarm of linkedAlarms) {
+		if (!alarm.destinations || alarm.destinations.length === 0) {
+			continue;
+		}
+
+		try {
+			const { clientConfig, channels } = toNotificationConfig(
+				alarm.destinations,
+			);
+			if (channels.length === 0) {
+				continue;
+			}
+
+			const client = new NotificationClient(clientConfig);
+			const title =
+				kind === "down"
+					? `[DOWN] ${siteLabel} is unreachable`
+					: `[Recovered] ${siteLabel} is back up`;
+
+			const httpInfo = options.data.http_code
+				? ` (HTTP ${options.data.http_code})`
+				: "";
+			const errorInfo = options.data.error ? ` - ${options.data.error}` : "";
+
+			await client.send(
+				{
+					title,
+					message:
+						kind === "down"
+							? `${siteLabel} is down${httpInfo}${errorInfo}. View details: ${dashboardUrl}`
+							: `${siteLabel} has recovered and is operational again. Response time: ${options.data.total_ms}ms. View details: ${dashboardUrl}`,
+					priority: kind === "down" ? "high" : "normal",
+					metadata: {
+						template: "uptime-transition",
+						monitorId: options.schedule.id,
+						monitorName: siteLabel,
+						url: options.data.url,
+						kind,
+						httpCode: options.data.http_code,
+						dashboardUrl,
+					},
+				},
+				{ channels },
+			);
+			fired++;
+		} catch (error) {
+			captureError(error, {
+				error_step: "alarm_notification",
+				alarm_id: alarm.id,
+			});
+		}
 	}
 
-	return { emails_sent: emails.length, transition_kind: kind };
+	return { alarms_fired: fired, transition_kind: kind };
 }

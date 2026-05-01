@@ -8,7 +8,7 @@
   },
   "dependencies": {
     "@databuddy/db": "workspace:*",
-    "@databuddy/email": "workspace:*",
+    "@databuddy/notifications": "workspace:*",
     "@databuddy/redis": "workspace:*",
     "@databuddy/shared": "workspace:*",
     "bullmq": "^5.66.5",
@@ -17,7 +17,6 @@
     "kafkajs": "^2.2.4",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "resend": "^4.0.1",
     "zod": "^4.2.0"
   }
 }

@@ -112,7 +112,7 @@ function deps(): UptimeWorkerDeps {
 		},
 		sendUptimeTransitionEmailsIfNeeded: async (payload) => {
 			calls.email.push(payload);
-			return { transition_kind: null, emails_sent: 0 };
+			return { transition_kind: null, alarms_fired: 0 };
 		},
 	};
 }
