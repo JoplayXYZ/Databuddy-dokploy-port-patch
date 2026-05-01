@@ -5,7 +5,15 @@ import {
 	NotificationClient,
 	type NotificationChannel,
 } from "@databuddy/notifications";
-import { Data, Effect, Option } from "effect";
+import {
+	Cache,
+	Context,
+	Data,
+	Duration,
+	Effect,
+	Layer,
+	Option,
+} from "effect";
 import type { ScheduleData } from "./actions";
 import { UPTIME_ENV } from "./lib/env";
 import { captureError } from "./lib/tracing";
@@ -91,6 +99,51 @@ function toNotificationChannels(
 	return { clientConfig, channels };
 }
 
+const AlarmCache = Context.Service<
+	Cache.Cache<string, LinkedAlarm[], AlarmLookupError>
+>("AlarmCache");
+
+const AlarmCacheLive = Layer.effect(
+	AlarmCache,
+	Cache.make({
+		capacity: 256,
+		timeToLive: Duration.seconds(30),
+		lookup: (key: string) => {
+			const [organizationId, scheduleId] = key.split(":", 2);
+			return Effect.tryPromise({
+				try: async () => {
+					const rows = await db.query.alarms.findMany({
+						where: and(
+							eq(alarms.organizationId, organizationId!),
+							eq(alarms.enabled, true),
+						),
+						with: { destinations: true },
+					});
+
+					return rows.filter((alarm) => {
+						const tc = alarm.triggerConditions as Record<
+							string,
+							unknown
+						> | null;
+						return (
+							tc &&
+							Array.isArray(tc.monitorIds) &&
+							(tc.monitorIds as string[]).includes(scheduleId!)
+						);
+					}) as LinkedAlarm[];
+				},
+				catch: (cause) => new AlarmLookupError({ cause }),
+			});
+		},
+	}),
+);
+
+const lookupLinkedAlarms = (scheduleId: string, organizationId: string) =>
+	Effect.gen(function* () {
+		const cache = yield* AlarmCache;
+		return yield* Cache.get(cache, `${organizationId}:${scheduleId}`);
+	});
+
 const claimTransition = (scheduleId: string, currentStatus: number) =>
 	Effect.tryPromise({
 		try: () =>
@@ -118,42 +171,6 @@ const claimTransition = (scheduleId: string, currentStatus: number) =>
 			}),
 		catch: (cause) => new TransitionClaimError({ cause }),
 	});
-
-const ALARM_CACHE_TTL = 30_000;
-const alarmCache = new Map<string, { ts: number; data: LinkedAlarm[] }>();
-
-const lookupLinkedAlarms = (scheduleId: string, organizationId: string) => {
-	const key = `${organizationId}:${scheduleId}`;
-	const cached = alarmCache.get(key);
-	if (cached && Date.now() - cached.ts < ALARM_CACHE_TTL) {
-		return Effect.succeed(cached.data);
-	}
-
-	return Effect.tryPromise({
-		try: async () => {
-			const rows = await db.query.alarms.findMany({
-				where: and(
-					eq(alarms.organizationId, organizationId),
-					eq(alarms.enabled, true),
-				),
-				with: { destinations: true },
-			});
-
-			const linked: LinkedAlarm[] = rows.filter((alarm) => {
-				const tc = alarm.triggerConditions as Record<string, unknown> | null;
-				return (
-					tc &&
-					Array.isArray(tc.monitorIds) &&
-					(tc.monitorIds as string[]).includes(scheduleId)
-				);
-			});
-
-			alarmCache.set(key, { ts: Date.now(), data: linked });
-			return linked;
-		},
-		catch: (cause) => new AlarmLookupError({ cause }),
-	});
-};
 
 const sendToAlarm = (
 	alarm: LinkedAlarm,
@@ -290,6 +307,8 @@ const handleTransition = (options: {
 		return { alarms_fired: fired, transition_kind: kind };
 	});
 
+const TransitionLive = AlarmCacheLive;
+
 export async function getPreviousMonitorStatus(
 	siteId: string,
 ): Promise<number | undefined> {
@@ -302,7 +321,9 @@ export async function fireTransitionAlerts(options: {
 	data: UptimeData;
 	previousStatus?: number;
 }): Promise<TransitionResult> {
-	return Effect.runPromise(handleTransition(options));
+	return Effect.runPromise(
+		handleTransition(options).pipe(Effect.provide(TransitionLive)),
+	);
 }
 
 /** @deprecated Use fireTransitionAlerts */
