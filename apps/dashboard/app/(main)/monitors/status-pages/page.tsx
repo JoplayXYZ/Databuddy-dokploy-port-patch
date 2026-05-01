@@ -35,9 +35,8 @@ export default function StatusPagesListPage() {
 	const [search, setSearch] = useState("");
 	const [sort, setSort] = useState<SortOption>("newest");
 	const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
-	const [editingStatusPage, setEditingStatusPage] = useState<StatusPage | null>(
-		null
-	);
+	const [editingStatusPage, setEditingStatusPage] =
+		useState<StatusPage | null>(null);
 	const [statusPageToDelete, setStatusPageToDelete] =
 		useState<StatusPage | null>(null);
 
@@ -88,7 +87,7 @@ export default function StatusPagesListPage() {
 		statusPages,
 		search,
 		sort,
-		statusFilter
+		statusFilter,
 	);
 	const isLoading = statusPagesQuery.isLoading;
 	const hasEmpty = statusPages.some((p) => p.monitorCount === 0);
@@ -129,7 +128,7 @@ export default function StatusPagesListPage() {
 											"size-3.5",
 											(statusPagesQuery.isLoading ||
 												statusPagesQuery.isFetching) &&
-												"animate-spin"
+												"animate-spin",
 										)}
 									/>
 								</Button>
@@ -160,7 +159,7 @@ export default function StatusPagesListPage() {
 								</div>
 							)}
 
-							{!(isLoading || hasPages) && (
+							{!isLoading && !hasPages && (
 								<div className="px-5 py-12">
 									<EmptyState
 										action={
