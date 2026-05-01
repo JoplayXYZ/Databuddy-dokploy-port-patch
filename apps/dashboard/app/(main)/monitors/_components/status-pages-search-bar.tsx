@@ -1,9 +1,6 @@
 "use client";
 
-import type {
-	SortOption,
-	StatusFilter,
-} from "./use-filtered-status-pages";
+import type { SortOption, StatusFilter } from "./use-filtered-status-pages";
 import { SortAscendingIcon, XIcon } from "@phosphor-icons/react/dist/ssr";
 import { FunnelIcon, MagnifyingGlassIcon } from "@databuddy/ui/icons";
 import { Input } from "@databuddy/ui";

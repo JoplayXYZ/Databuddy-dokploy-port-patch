@@ -103,127 +103,126 @@ export default function MonitorsPage() {
 		<ErrorBoundary>
 			<div className="flex-1 overflow-y-auto">
 				<div className="mx-auto max-w-2xl space-y-6 p-5">
-						<Card>
-							<Card.Header className="flex-row items-start justify-between gap-4">
-								<div>
-									<div className="flex items-center gap-2">
+					<Card>
+						<Card.Header className="flex-row items-start justify-between gap-4">
+							<div>
+								<div className="flex items-center gap-2">
 									<Card.Title>Monitors</Card.Title>
 									<Badge variant="muted">Beta</Badge>
 								</div>
-									<Card.Description>
-										{isLoading
-											? "Loading monitors…"
-											: monitors.length === 0
-												? "Track availability and receive alerts. Free while in beta."
-												: `${monitors.length} monitor${monitors.length === 1 ? "" : "s"} · Free while in beta`}
-									</Card.Description>
-								</div>
-								<div className="flex items-center gap-2">
-									<Button
-										aria-label="Refresh monitors"
-										disabled={
-											schedulesQuery.isLoading || schedulesQuery.isFetching
-										}
-										onClick={() => schedulesQuery.refetch()}
-										size="sm"
-										variant="ghost"
-									>
-										<ArrowClockwiseIcon
-											className={cn(
-												"size-3.5",
-												(schedulesQuery.isLoading ||
-													schedulesQuery.isFetching) &&
-													"animate-spin"
-											)}
-										/>
-									</Button>
-									<Button onClick={handleCreate} size="sm">
-										<PlusIcon className="size-3.5" />
-										Create Monitor
-									</Button>
-								</div>
-							</Card.Header>
-							<Card.Content className="p-0">
-								{isLoading && (
-									<div className="divide-y">
-										{Array.from({ length: 3 }).map((_, i) => (
-											<div
-												className="flex items-center gap-4 px-5 py-3"
-												key={`skel-${i + 1}`}
-											>
-												<Skeleton className="size-10 shrink-0 rounded-lg" />
-												<div className="min-w-0 flex-1 space-y-2">
-													<div className="flex items-center gap-2">
-														<Skeleton className="h-4 w-40" />
-														<Skeleton className="h-4 w-16 rounded-full" />
-													</div>
-													<Skeleton className="h-3.5 w-56" />
+								<Card.Description>
+									{isLoading
+										? "Loading monitors\u2026"
+										: monitors.length === 0
+											? "Track availability and receive alerts. Free while in beta."
+											: `${monitors.length} monitor${monitors.length === 1 ? "" : "s"} \u00b7 Free while in beta`}
+								</Card.Description>
+							</div>
+							<div className="flex items-center gap-2">
+								<Button
+									aria-label="Refresh monitors"
+									disabled={
+										schedulesQuery.isLoading || schedulesQuery.isFetching
+									}
+									onClick={() => schedulesQuery.refetch()}
+									size="sm"
+									variant="ghost"
+								>
+									<ArrowClockwiseIcon
+										className={cn(
+											"size-3.5",
+											(schedulesQuery.isLoading || schedulesQuery.isFetching) &&
+												"animate-spin"
+										)}
+									/>
+								</Button>
+								<Button onClick={handleCreate} size="sm">
+									<PlusIcon className="size-3.5" />
+									Create Monitor
+								</Button>
+							</div>
+						</Card.Header>
+						<Card.Content className="p-0">
+							{isLoading && (
+								<div className="divide-y">
+									{Array.from({ length: 3 }).map((_, i) => (
+										<div
+											className="flex items-center gap-4 px-5 py-3"
+											key={`skel-${i + 1}`}
+										>
+											<Skeleton className="size-10 shrink-0 rounded-lg" />
+											<div className="min-w-0 flex-1 space-y-2">
+												<div className="flex items-center gap-2">
+													<Skeleton className="h-4 w-40" />
+													<Skeleton className="h-4 w-16 rounded-full" />
 												</div>
+												<Skeleton className="h-3.5 w-56" />
 											</div>
-										))}
-									</div>
-								)}
+										</div>
+									))}
+								</div>
+							)}
 
-								{!isLoading && !hasMonitors && (
-									<div className="px-5 py-12">
-										<EmptyState
-											action={
-												<Button
-													onClick={handleCreate}
-													size="sm"
-													variant="secondary"
-												>
-													<PlusIcon className="size-3.5" />
-													Create Monitor
-												</Button>
-											}
-											description="Create your first uptime monitor to start tracking availability and receive alerts when services go down."
-											icon={<HeartbeatIcon weight="duotone" />}
-											title="No monitors yet"
+							{!(isLoading || hasMonitors) && (
+								<div className="px-5 py-12">
+									<EmptyState
+										action={
+											<Button
+												onClick={handleCreate}
+												size="sm"
+												variant="secondary"
+											>
+												<PlusIcon className="size-3.5" />
+												Create Monitor
+											</Button>
+										}
+										description="Create your first uptime monitor to start tracking availability and receive alerts when services go down."
+										icon={<HeartbeatIcon weight="duotone" />}
+										title="No monitors yet"
+									/>
+								</div>
+							)}
+
+							{!isLoading && hasMonitors && (
+								<>
+									<div className="border-b px-4 py-2">
+										<MonitorsSearchBar
+											hasPaused={hasPaused}
+											onSearchQueryChangeAction={setSearch}
+											onSortByChangeAction={setSort}
+											onStatusFilterChangeAction={setStatusFilter}
+											searchQuery={search}
+											sortBy={sort}
+											statusFilter={statusFilter}
 										/>
 									</div>
-								)}
-
-								{!isLoading && hasMonitors && (
-									<>
-										<div className="border-b px-4 py-2">
-											<MonitorsSearchBar
-												hasPaused={hasPaused}
-												onSearchQueryChangeAction={setSearch}
-												onSortByChangeAction={setSort}
-												onStatusFilterChangeAction={setStatusFilter}
-												searchQuery={search}
-												sortBy={sort}
-												statusFilter={statusFilter}
+									{noResults ? (
+										<div className="px-5 py-12">
+											<EmptyState
+												description={`No monitors match \u201c${search}\u201d`}
+												icon={<MagnifyingGlassIcon weight="duotone" />}
+												title="No results"
+												variant="minimal"
 											/>
 										</div>
-										{noResults ? (
-											<div className="px-5 py-12">
-												<EmptyState
-													description={`No monitors match \u201c${search}\u201d`}
-													icon={<MagnifyingGlassIcon weight="duotone" />}
-													title="No results"
-													variant="minimal"
+									) : (
+										<div className="divide-y">
+											{filtered.map((monitor) => (
+												<MonitorRow
+													key={monitor.id}
+													onDeleteAction={handleDelete}
+													onEditAction={() => handleEdit(monitor)}
+													onRefetchAction={schedulesQuery.refetch}
+													schedule={monitor}
 												/>
-											</div>
-										) : (
-											<div className="divide-y">
-												{filtered.map((monitor) => (
-													<MonitorRow
-														key={monitor.id}
-														onDeleteAction={handleDelete}
-														onEditAction={() => handleEdit(monitor)}
-														onRefetchAction={schedulesQuery.refetch}
-														schedule={monitor}
-													/>
-												))}
-											</div>
-										)}
-									</>
-								)}
-							</Card.Content>
-						</Card>
-					</div>
+											))}
+										</div>
+									)}
+								</>
+							)}
+						</Card.Content>
+					</Card>
+				</div>
 
 				{isSheetOpen && (
 					<Suspense fallback={null}>

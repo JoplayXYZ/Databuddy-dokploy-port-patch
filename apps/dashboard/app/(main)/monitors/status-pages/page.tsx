@@ -84,7 +84,12 @@ export default function StatusPagesListPage() {
 	};
 
 	const statusPages = statusPagesQuery.data ?? [];
-	const filtered = useFilteredStatusPages(statusPages, search, sort, statusFilter);
+	const filtered = useFilteredStatusPages(
+		statusPages,
+		search,
+		sort,
+		statusFilter
+	);
 	const isLoading = statusPagesQuery.isLoading;
 	const hasEmpty = statusPages.some((p) => p.monitorCount === 0);
 	const hasPages = statusPages.length > 0;
@@ -94,125 +99,129 @@ export default function StatusPagesListPage() {
 		<ErrorBoundary>
 			<div className="flex-1 overflow-y-auto">
 				<div className="mx-auto max-w-2xl space-y-6 p-5">
-						<Card>
-							<Card.Header className="flex-row items-start justify-between gap-4">
-								<div>
-									<Card.Title>Status Pages</Card.Title>
-									<Card.Description>
-										{isLoading
-											? "Loading status pages…"
-											: statusPages.length === 0
-												? "Create and manage public status pages"
-												: `${statusPages.length} status page${statusPages.length === 1 ? "" : "s"}`}
-									</Card.Description>
-								</div>
+					<Card>
+						<Card.Header className="flex-row items-start justify-between gap-4">
+							<div>
 								<div className="flex items-center gap-2">
-									<Button
-										aria-label="Refresh status pages"
-										disabled={
-											statusPagesQuery.isLoading ||
-											statusPagesQuery.isFetching
-										}
-										onClick={() => statusPagesQuery.refetch()}
-										size="sm"
-										variant="ghost"
-									>
-										<ArrowClockwiseIcon
-											className={cn(
-												"size-3.5",
-												(statusPagesQuery.isLoading ||
-													statusPagesQuery.isFetching) &&
-													"animate-spin"
-											)}
-										/>
-									</Button>
-									<Button onClick={handleCreate} size="sm">
-										<PlusIcon className="size-3.5" />
-										Create Status Page
-									</Button>
+									<Card.Title>Status Pages</Card.Title>
+									<Badge variant="muted">Beta</Badge>
 								</div>
-							</Card.Header>
-							<Card.Content className="p-0">
-								{isLoading && (
-									<div className="divide-y">
-										{Array.from({ length: 3 }).map((_, i) => (
-											<div
-												className="flex items-center gap-4 px-5 py-3"
-												key={`skel-${i + 1}`}
-											>
-												<Skeleton className="size-10 shrink-0 rounded-lg" />
-												<div className="min-w-0 flex-1 space-y-2">
-													<div className="flex items-center gap-2">
-														<Skeleton className="h-4 w-40" />
-														<Skeleton className="h-4 w-16 rounded-full" />
-													</div>
-													<Skeleton className="h-3.5 w-56" />
+								<Card.Description>
+									{isLoading
+										? "Loading status pages\u2026"
+										: statusPages.length === 0
+											? "Create and manage public status pages. Free while in beta."
+											: `${statusPages.length} status page${statusPages.length === 1 ? "" : "s"} \u00b7 Free while in beta`}
+								</Card.Description>
+							</div>
+							<div className="flex items-center gap-2">
+								<Button
+									aria-label="Refresh status pages"
+									disabled={
+										statusPagesQuery.isLoading || statusPagesQuery.isFetching
+									}
+									onClick={() => statusPagesQuery.refetch()}
+									size="sm"
+									variant="ghost"
+								>
+									<ArrowClockwiseIcon
+										className={cn(
+											"size-3.5",
+											(statusPagesQuery.isLoading ||
+												statusPagesQuery.isFetching) &&
+												"animate-spin"
+										)}
+									/>
+								</Button>
+								<Button onClick={handleCreate} size="sm">
+									<PlusIcon className="size-3.5" />
+									Create Status Page
+								</Button>
+							</div>
+						</Card.Header>
+						<Card.Content className="p-0">
+							{isLoading && (
+								<div className="divide-y">
+									{Array.from({ length: 3 }).map((_, i) => (
+										<div
+											className="flex items-center gap-4 px-5 py-3"
+											key={`skel-${i + 1}`}
+										>
+											<Skeleton className="size-10 shrink-0 rounded-lg" />
+											<div className="min-w-0 flex-1 space-y-2">
+												<div className="flex items-center gap-2">
+													<Skeleton className="h-4 w-40" />
+													<Skeleton className="h-4 w-16 rounded-full" />
 												</div>
+												<Skeleton className="h-3.5 w-56" />
 											</div>
-										))}
-									</div>
-								)}
+										</div>
+									))}
+								</div>
+							)}
 
-								{!isLoading && !hasPages && (
-									<div className="px-5 py-12">
-										<EmptyState
-											action={
-												<Button
-													onClick={handleCreate}
-													size="sm"
-													variant="secondary"
-												>
-													<PlusIcon className="size-3.5" />
-													Create Status Page
-												</Button>
-											}
-											description="Create a public status page to keep your users informed about system availability."
-											icon={<BrowserIcon weight="duotone" />}
-											title="No status pages yet"
+							{!(isLoading || hasPages) && (
+								<div className="px-5 py-12">
+									<EmptyState
+										action={
+											<Button
+												onClick={handleCreate}
+												size="sm"
+												variant="secondary"
+											>
+												<PlusIcon className="size-3.5" />
+												Create Status Page
+											</Button>
+										}
+										description="Create a public status page to keep your users informed about system availability."
+										icon={<BrowserIcon weight="duotone" />}
+										title="No status pages yet"
+									/>
+								</div>
+							)}
+
+							{!isLoading && hasPages && (
+								<>
+									<div className="border-b px-4 py-2">
+										<StatusPagesSearchBar
+											hasEmpty={hasEmpty}
+											onSearchQueryChangeAction={setSearch}
+											onSortByChangeAction={setSort}
+											onStatusFilterChangeAction={setStatusFilter}
+											searchQuery={search}
+											sortBy={sort}
+											statusFilter={statusFilter}
 										/>
 									</div>
-								)}
-
-								{!isLoading && hasPages && (
-									<>
-										<div className="border-b px-4 py-2">
-											<StatusPagesSearchBar
-												hasEmpty={hasEmpty}
-												onSearchQueryChangeAction={setSearch}
-												onSortByChangeAction={setSort}
-												onStatusFilterChangeAction={setStatusFilter}
-												searchQuery={search}
-												sortBy={sort}
-												statusFilter={statusFilter}
+									{noResults ? (
+										<div className="px-5 py-12">
+											<EmptyState
+												description={`No status pages match \u201c${search}\u201d`}
+												icon={<MagnifyingGlassIcon weight="duotone" />}
+												title="No results"
+												variant="minimal"
 											/>
 										</div>
-										{noResults ? (
-											<div className="px-5 py-12">
-												<EmptyState
-													description={`No status pages match \u201c${search}\u201d`}
-													icon={<MagnifyingGlassIcon weight="duotone" />}
-													title="No results"
-													variant="minimal"
+									) : (
+										<div className="divide-y">
+											{filtered.map((statusPage) => (
+												<StatusPageRow
+													key={statusPage.id}
+													onDeleteAction={() =>
+														setStatusPageToDelete(statusPage)
+													}
+													onEditAction={() => handleEdit(statusPage)}
+													onTransferSuccessAction={statusPagesQuery.refetch}
+													statusPage={statusPage}
 												/>
-											</div>
-										) : (
-											<div className="divide-y">
-												{filtered.map((statusPage) => (
-													<StatusPageRow
-														key={statusPage.id}
-														onDeleteAction={() => setStatusPageToDelete(statusPage)}
-														onEditAction={() => handleEdit(statusPage)}
-														onTransferSuccessAction={statusPagesQuery.refetch}
-														statusPage={statusPage}
-													/>
-												))}
-											</div>
-										)}
-									</>
-								)}
-							</Card.Content>
-						</Card>
-					</div>
+											))}
+										</div>
+									)}
+								</>
+							)}
+						</Card.Content>
+					</Card>
+				</div>
 
 				{isSheetOpen && (
 					<Suspense fallback={null}>

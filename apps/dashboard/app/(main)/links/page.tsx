@@ -35,7 +35,7 @@ import {
 	PlusIcon,
 	RocketIcon,
 } from "@databuddy/ui/icons";
-import { Button, Card, EmptyState } from "@databuddy/ui";
+import { Badge, Button, Card, EmptyState } from "@databuddy/ui";
 import { DeleteDialog, DropdownMenu } from "@databuddy/ui/client";
 
 export default function LinksPage() {
@@ -112,11 +112,14 @@ export default function LinksPage() {
 					<Card>
 						<Card.Header className="flex-row items-start justify-between gap-4">
 							<div>
-								<Card.Title>Links</Card.Title>
+								<div className="flex items-center gap-2">
+									<Card.Title>Links</Card.Title>
+									<Badge variant="muted">Beta</Badge>
+								</div>
 								<Card.Description>
 									{hasLinks
-										? `${links.length} link${links.length === 1 ? "" : "s"}`
-										: "Create and manage short links with analytics"}
+										? `${links.length} link${links.length === 1 ? "" : "s"} · Free while in beta`
+										: "Create and manage short links with analytics. Free while in beta."}
 								</Card.Description>
 							</div>
 							<div className="flex shrink-0 items-center gap-2">

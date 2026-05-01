@@ -6,7 +6,6 @@ import { rpcError } from "../errors";
 import { logger } from "../lib/logger";
 import { protectedProcedure, trackedProcedure } from "../orpc";
 import { setTrackProperties } from "../middleware/track-mutation";
-import { withFeatureAccess } from "../procedures/with-feature-access";
 import { withWorkspace } from "../procedures/with-workspace";
 import {
 	createScheduleWithScheduler,
@@ -22,10 +21,8 @@ import {
 	hasUptimeSchedule,
 } from "../services/uptime-scheduler";
 
-const monitorsProcedure = protectedProcedure.use(withFeatureAccess("monitors"));
-const trackedMonitorsProcedure = trackedProcedure.use(
-	withFeatureAccess("monitors")
-);
+const monitorsProcedure = protectedProcedure;
+const trackedMonitorsProcedure = trackedProcedure;
 
 const granularityEnum = z.enum([
 	"minute",

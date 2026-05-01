@@ -8,13 +8,7 @@ import { buildUptimeHeatmapDays } from "@databuddy/ui/uptime";
 import { UptimeHeatmapStrip } from "@databuddy/ui/uptime";
 import { cn } from "@/lib/utils";
 import { HeartbeatIcon, PlusIcon } from "@databuddy/ui/icons";
-import {
-	Button,
-	Card,
-	Skeleton,
-	dayjs,
-	formatDateOnly,
-} from "@databuddy/ui";
+import { Button, Card, Skeleton, dayjs, formatDateOnly } from "@databuddy/ui";
 
 interface MonitorsSectionProps {
 	activeMonitors: number;

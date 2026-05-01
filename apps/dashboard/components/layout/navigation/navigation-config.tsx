@@ -60,16 +60,17 @@ export const mainNavigation: NavigationGroup[] = [
 	{
 		label: "Tracking",
 		items: [
-			createNavItem("Links", LinkIcon, "/links"),
+			createNavItem("Links", LinkIcon, "/links", { tag: "BETA" }),
 			createNavItem("Events", LightningIcon, "/events"),
 		],
 	},
 	{
 		label: "Monitoring",
-		flag: "monitors",
 		items: [
-			createNavItem("Monitors", HeartbeatIcon, "/monitors"),
-			createNavItem("Status Pages", GlobeSimpleIcon, "/monitors/status-pages"),
+			createNavItem("Monitors", HeartbeatIcon, "/monitors", { tag: "BETA" }),
+			createNavItem("Status Pages", GlobeSimpleIcon, "/monitors/status-pages", {
+				tag: "BETA",
+			}),
 		],
 	},
 	{

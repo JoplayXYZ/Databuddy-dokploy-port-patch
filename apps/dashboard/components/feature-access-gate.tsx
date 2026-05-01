@@ -31,11 +31,11 @@ export function FeatureLockedPanel({ flagKey }: { flagKey: string }) {
 				<div className="space-y-3 text-balance">
 					<h2 className="font-medium text-foreground text-xl">{label}</h2>
 					<p className="text-muted-foreground text-sm">{description}</p>
-					<Badge variant="muted">Coming soon</Badge>
+					<Badge variant="muted">Beta</Badge>
 				</div>
 
 				<p className="text-muted-foreground text-xs">
-					You need an invite to access this feature.
+					Free while in beta. Request an invite to get started.
 				</p>
 			</div>
 		</div>

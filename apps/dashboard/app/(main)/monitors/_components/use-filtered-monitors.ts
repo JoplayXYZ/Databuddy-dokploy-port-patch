@@ -9,7 +9,7 @@ export function useFilteredMonitors(
 	monitors: Monitor[],
 	searchQuery: string,
 	sortBy: SortOption,
-	statusFilter: StatusFilter = "all"
+	statusFilter: StatusFilter = "all",
 ): Monitor[] {
 	const [debouncedSearch] = useDebouncedValue(searchQuery, { wait: 200 });
 
@@ -29,7 +29,7 @@ export function useFilteredMonitors(
 					(m.name?.toLowerCase().includes(query) ?? false) ||
 					(m.url?.toLowerCase().includes(query) ?? false) ||
 					(m.website?.name?.toLowerCase().includes(query) ?? false) ||
-					(m.website?.domain?.toLowerCase().includes(query) ?? false)
+					(m.website?.domain?.toLowerCase().includes(query) ?? false),
 			);
 		}
 
@@ -37,13 +37,13 @@ export function useFilteredMonitors(
 			case "newest":
 				result.sort(
 					(a, b) =>
-						new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+						new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
 				);
 				break;
 			case "oldest":
 				result.sort(
 					(a, b) =>
-						new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+						new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
 				);
 				break;
 			case "name-asc":

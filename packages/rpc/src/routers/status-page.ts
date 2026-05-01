@@ -24,13 +24,10 @@ import { z } from "zod";
 import { rpcError } from "../errors";
 import { setTrackProperties } from "../middleware/track-mutation";
 import { protectedProcedure, publicProcedure, trackedProcedure } from "../orpc";
-import { withFeatureAccess } from "../procedures/with-feature-access";
 import { withWorkspace } from "../procedures/with-workspace";
 
-const monitorsProcedure = protectedProcedure.use(withFeatureAccess("monitors"));
-const trackedMonitorsProcedure = trackedProcedure.use(
-	withFeatureAccess("monitors")
-);
+const monitorsProcedure = protectedProcedure;
+const trackedMonitorsProcedure = trackedProcedure;
 
 const UPTIME_TABLE = "uptime.uptime_monitor";
 
