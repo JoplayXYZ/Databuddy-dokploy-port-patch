@@ -260,9 +260,6 @@ export interface ParameterDataMap {
 	recent_transactions: GenericParameterRow;
 	referrer: GenericParameterRow;
 	region: GenericParameterRow;
-	// Retention
-	retention_cohorts: GenericParameterRow;
-	retention_rate: GenericParameterRow;
 	revenue_by_product: GenericParameterRow;
 	revenue_by_provider: GenericParameterRow;
 	// Revenue parameters

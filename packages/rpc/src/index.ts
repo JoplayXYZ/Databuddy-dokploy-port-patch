@@ -42,10 +42,7 @@ export {
 } from "./services/export-service";
 export {
 	type BillingContext,
-	canAccessFeature,
 	getFeatureLimit,
-	getUsageRemaining,
-	getUserCapabilities,
 	hasPlan,
 	isFreePlan,
 	isUsageWithinLimit,

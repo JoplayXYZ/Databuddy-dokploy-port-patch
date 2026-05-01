@@ -56,7 +56,6 @@ import {
 	StackIcon,
 	SunIcon,
 	TrashIcon,
-	UsersIcon,
 	WarningCircleIcon,
 } from "@databuddy/ui/icons";
 
@@ -722,7 +721,6 @@ const LOCATION_ICONS: Record<ChartLocation, NavIcon> = {
 	"overview-stats": SquaresFourIcon,
 	"overview-main": PresentationChartIcon,
 	funnels: FunnelIcon,
-	retention: UsersIcon,
 	"website-list": ChartLineIcon,
 	events: ChartBarIcon,
 };

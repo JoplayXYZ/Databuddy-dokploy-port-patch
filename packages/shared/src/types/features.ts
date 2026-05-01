@@ -24,7 +24,6 @@ export type FeatureId = (typeof FEATURE_IDS)[keyof typeof FEATURE_IDS];
 export const GATED_FEATURES = {
 	FUNNELS: "funnels",
 	GOALS: "goals",
-	RETENTION: "retention",
 	USERS: "users",
 	FEATURE_FLAGS: "feature_flags",
 	WEB_VITALS: "web_vitals",
@@ -38,7 +37,6 @@ export type GatedFeatureId =
 	(typeof GATED_FEATURES)[keyof typeof GATED_FEATURES];
 
 export const HIDDEN_PRICING_FEATURES: GatedFeatureId[] = [
-	GATED_FEATURES.RETENTION,
 	GATED_FEATURES.ERROR_TRACKING,
 	GATED_FEATURES.TEAM_ROLES,
 	GATED_FEATURES.TARGET_GROUPS,
@@ -53,7 +51,6 @@ export const PLAN_FEATURE_LIMITS: Record<
 	[PLAN_IDS.FREE]: {
 		[GATED_FEATURES.FUNNELS]: 1, // 1 funnel to try it out
 		[GATED_FEATURES.GOALS]: 2, // 2 goals
-		[GATED_FEATURES.RETENTION]: false, // Hobby+
 		[GATED_FEATURES.USERS]: "unlimited", // unlimited user tracking
 		[GATED_FEATURES.FEATURE_FLAGS]: 3, // 3 flags for testing
 		[GATED_FEATURES.WEB_VITALS]: "unlimited",
@@ -65,7 +62,6 @@ export const PLAN_FEATURE_LIMITS: Record<
 	[PLAN_IDS.HOBBY]: {
 		[GATED_FEATURES.FUNNELS]: 5, // 5 funnels
 		[GATED_FEATURES.GOALS]: 10, // 10 goals
-		[GATED_FEATURES.RETENTION]: "unlimited",
 		[GATED_FEATURES.USERS]: "unlimited",
 		[GATED_FEATURES.FEATURE_FLAGS]: 10, // 10 flags
 		[GATED_FEATURES.WEB_VITALS]: "unlimited",
@@ -77,7 +73,6 @@ export const PLAN_FEATURE_LIMITS: Record<
 	[PLAN_IDS.PRO]: {
 		[GATED_FEATURES.FUNNELS]: 50, // 50 funnels
 		[GATED_FEATURES.GOALS]: "unlimited",
-		[GATED_FEATURES.RETENTION]: "unlimited",
 		[GATED_FEATURES.USERS]: "unlimited",
 		[GATED_FEATURES.FEATURE_FLAGS]: 100, // 100 flags
 		[GATED_FEATURES.WEB_VITALS]: "unlimited",
@@ -89,7 +84,6 @@ export const PLAN_FEATURE_LIMITS: Record<
 	[PLAN_IDS.SCALE]: {
 		[GATED_FEATURES.FUNNELS]: "unlimited",
 		[GATED_FEATURES.GOALS]: "unlimited",
-		[GATED_FEATURES.RETENTION]: "unlimited",
 		[GATED_FEATURES.USERS]: "unlimited",
 		[GATED_FEATURES.FEATURE_FLAGS]: "unlimited",
 		[GATED_FEATURES.WEB_VITALS]: "unlimited",
@@ -173,12 +167,6 @@ export const FEATURE_METADATA: Record<FeatureId | GatedFeatureId, FeatureMeta> =
 			upgradeMessage: "Upgrade for more goals",
 			unit: "goals",
 		},
-		[GATED_FEATURES.RETENTION]: {
-			name: "Retention",
-			description: "Analyze user retention over time",
-			upgradeMessage: "Upgrade to Hobby for retention analysis",
-			minPlan: PLAN_IDS.HOBBY,
-		},
 		[GATED_FEATURES.USERS]: {
 			name: "Users",
 			description: "Track individual user behavior and sessions",
@@ -236,13 +224,6 @@ export function getPlanFeatureLimit(
 	return PLAN_FEATURE_LIMITS[plan]?.[feature] ?? false;
 }
 
-export function isFeatureUnlimited(
-	planId: PlanId | string | null,
-	feature: GatedFeatureId
-): boolean {
-	return getPlanFeatureLimit(planId, feature) === "unlimited";
-}
-
 export function isFeatureAvailable(
 	planId: PlanId | string | null,
 	feature: GatedFeatureId
@@ -264,21 +245,6 @@ export function isWithinLimit(
 		return false;
 	}
 	return currentUsage < limit;
-}
-
-export function getRemainingUsage(
-	planId: PlanId | string | null,
-	feature: GatedFeatureId,
-	currentUsage: number
-): number | "unlimited" {
-	const limit = getPlanFeatureLimit(planId, feature);
-	if (limit === "unlimited") {
-		return "unlimited";
-	}
-	if (limit === false) {
-		return 0;
-	}
-	return Math.max(0, limit - currentUsage);
 }
 
 export function getNextPlanForFeature(

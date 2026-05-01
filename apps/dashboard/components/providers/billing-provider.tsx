@@ -312,14 +312,3 @@ export function useUsageFeature(featureId: FeatureId) {
 		isFree,
 	};
 }
-
-export function useGatedFeature(feature: GatedFeatureId) {
-	const { isFeatureEnabled, getGatedFeatureAccess, currentPlanId, isFree } =
-		useBillingContext();
-	return {
-		...getGatedFeatureAccess(feature),
-		isEnabled: isFeatureEnabled(feature),
-		currentPlanId,
-		isFree,
-	};
-}

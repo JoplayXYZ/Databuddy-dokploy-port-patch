@@ -5,11 +5,8 @@ import type {
 } from "@databuddy/shared/types/features";
 import {
 	getNextPlanForFeature,
-	getPlanCapabilities,
 	getPlanFeatureLimit,
-	getRemainingUsage,
 	isFeatureAvailable,
-	isPlanFeatureEnabled,
 	isWithinLimit,
 	PLAN_HIERARCHY,
 	PLAN_IDS,
@@ -74,23 +71,6 @@ export function isFreePlan(planId: string | undefined): boolean {
 }
 
 /**
- * Check if a feature is enabled for the user's plan
- *
- * @example
- * ```ts
- * if (!canAccessFeature((await context.getBilling())?.planId, GATED_FEATURES.FUNNELS)) {
- *   throw errors.FEATURE_UNAVAILABLE({ data: { feature: "funnels", requiredPlan: "pro" } });
- * }
- * ```
- */
-export function canAccessFeature(
-	planId: string | undefined,
-	feature: GatedFeatureId
-): boolean {
-	return isPlanFeatureEnabled(planId ?? null, feature);
-}
-
-/**
  * Get the feature limit for the user's plan
  *
  * @example
@@ -125,25 +105,6 @@ export function isUsageWithinLimit(
 	currentUsage: number
 ): boolean {
 	return isWithinLimit(planId ?? null, feature, currentUsage);
-}
-
-/**
- * Get how much usage is remaining for a feature
- *
- * @example
- * ```ts
- * const remaining = getUsageRemaining((await context.getBilling())?.planId, GATED_FEATURES.GOALS, currentGoalCount);
- * if (remaining === 0) {
- *   throw errors.PLAN_LIMIT_EXCEEDED({ data: { limit: 3, current: currentGoalCount } });
- * }
- * ```
- */
-export function getUsageRemaining(
-	planId: string | undefined,
-	feature: GatedFeatureId,
-	currentUsage: number
-): number | "unlimited" {
-	return getRemainingUsage(planId ?? null, feature, currentUsage);
 }
 
 /**
@@ -225,17 +186,4 @@ export function requireUsageWithinLimit(
 			data: { limit, current: currentUsage, nextPlan: nextPlan ?? undefined },
 		});
 	}
-}
-
-/**
- * Get all capabilities for the user's plan
- *
- * @example
- * ```ts
- * const capabilities = getUserCapabilities((await context.getBilling())?.planId);
- * console.log(capabilities.features, capabilities.limits);
- * ```
- */
-export function getUserCapabilities(planId: string | undefined) {
-	return getPlanCapabilities(planId ?? null);
 }
