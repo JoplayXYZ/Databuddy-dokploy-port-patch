@@ -75,8 +75,10 @@ const _getOrganizationRole = async (
 };
 
 const getOrganizationRole = cacheable(_getOrganizationRole, {
-	expireInSec: 120,
+	expireInSec: 300,
 	prefix: "rpc:org_role",
+	staleWhileRevalidate: true,
+	staleTime: 60,
 });
 
 const ROLE_PERMISSIONS: Record<string, Record<string, readonly string[]>> = {

@@ -3,20 +3,23 @@
 import { useQuery } from "@tanstack/react-query";
 import { Suspense, useState } from "react";
 import { ErrorBoundary } from "@/components/error-boundary";
-import { FeatureLockedPanel } from "@/components/feature-access-gate";
 import { MonitorRow } from "@/components/monitors/monitor-row";
 import { MonitorSheet } from "@/components/monitors/monitor-sheet";
-import { FeatureInviteDialog } from "@/components/organizations/feature-invite-dialog";
-import { useFeatureAccess } from "@/hooks/use-feature-access";
 import { orpc } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
 import {
 	ArrowClockwiseIcon,
 	HeartbeatIcon,
+	MagnifyingGlassIcon,
 	PlusIcon,
-	UserPlusIcon,
 } from "@databuddy/ui/icons";
-import { Button, Card, EmptyState, Skeleton } from "@databuddy/ui";
+import { Badge, Button, Card, EmptyState, Skeleton } from "@databuddy/ui";
+import { MonitorsSearchBar } from "./_components/monitors-search-bar";
+import {
+	type SortOption,
+	type StatusFilter,
+	useFilteredMonitors,
+} from "./_components/use-filtered-monitors";
 
 export interface Monitor {
 	cacheBust: boolean;
@@ -42,10 +45,10 @@ export interface Monitor {
 }
 
 export default function MonitorsPage() {
-	const { hasAccess, isLoading: isAccessLoading } =
-		useFeatureAccess("monitors");
 	const [isSheetOpen, setIsSheetOpen] = useState(false);
-	const [showInviteDialog, setShowInviteDialog] = useState(false);
+	const [search, setSearch] = useState("");
+	const [sort, setSort] = useState<SortOption>("newest");
+	const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
 	const [editingSchedule, setEditingSchedule] = useState<{
 		id: string;
 		url: string;
@@ -60,7 +63,6 @@ export default function MonitorsPage() {
 
 	const schedulesQuery = useQuery({
 		...orpc.uptime.listSchedules.queryOptions({ input: {} }),
-		enabled: hasAccess,
 	});
 
 	const handleCreate = () => {
@@ -91,59 +93,55 @@ export default function MonitorsPage() {
 	};
 
 	const monitors = (schedulesQuery.data ?? []) as Monitor[];
-	const isLoading = isAccessLoading || (hasAccess && schedulesQuery.isLoading);
+	const filtered = useFilteredMonitors(monitors, search, sort, statusFilter);
+	const isLoading = schedulesQuery.isLoading;
+	const hasPaused = monitors.some((m) => m.isPaused);
+	const hasMonitors = monitors.length > 0;
+	const noResults = !isLoading && hasMonitors && filtered.length === 0;
 
 	return (
 		<ErrorBoundary>
 			<div className="flex-1 overflow-y-auto">
-				{isAccessLoading || hasAccess ? (
-					<div className="mx-auto max-w-2xl space-y-6 p-5">
+				<div className="mx-auto max-w-2xl space-y-6 p-5">
 						<Card>
 							<Card.Header className="flex-row items-start justify-between gap-4">
 								<div>
+									<div className="flex items-center gap-2">
 									<Card.Title>Monitors</Card.Title>
+									<Badge variant="muted">Beta</Badge>
+								</div>
 									<Card.Description>
 										{isLoading
 											? "Loading monitors…"
 											: monitors.length === 0
-												? "Track availability and receive alerts"
-												: `${monitors.length} monitor${monitors.length === 1 ? "" : "s"}`}
+												? "Track availability and receive alerts. Free while in beta."
+												: `${monitors.length} monitor${monitors.length === 1 ? "" : "s"} · Free while in beta`}
 									</Card.Description>
 								</div>
-								{hasAccess && (
-									<div className="flex items-center gap-2">
-										<Button
-											onClick={() => setShowInviteDialog(true)}
-											size="sm"
-											variant="secondary"
-										>
-											<UserPlusIcon className="size-3.5" weight="duotone" />
-											Invite
-										</Button>
-										<Button
-											aria-label="Refresh monitors"
-											disabled={
-												schedulesQuery.isLoading || schedulesQuery.isFetching
-											}
-											onClick={() => schedulesQuery.refetch()}
-											size="sm"
-											variant="ghost"
-										>
-											<ArrowClockwiseIcon
-												className={cn(
-													"size-3.5",
-													(schedulesQuery.isLoading ||
-														schedulesQuery.isFetching) &&
-														"animate-spin"
-												)}
-											/>
-										</Button>
-										<Button onClick={handleCreate} size="sm">
-											<PlusIcon className="size-3.5" />
-											Create Monitor
-										</Button>
-									</div>
-								)}
+								<div className="flex items-center gap-2">
+									<Button
+										aria-label="Refresh monitors"
+										disabled={
+											schedulesQuery.isLoading || schedulesQuery.isFetching
+										}
+										onClick={() => schedulesQuery.refetch()}
+										size="sm"
+										variant="ghost"
+									>
+										<ArrowClockwiseIcon
+											className={cn(
+												"size-3.5",
+												(schedulesQuery.isLoading ||
+													schedulesQuery.isFetching) &&
+													"animate-spin"
+											)}
+										/>
+									</Button>
+									<Button onClick={handleCreate} size="sm">
+										<PlusIcon className="size-3.5" />
+										Create Monitor
+									</Button>
+								</div>
 							</Card.Header>
 							<Card.Content className="p-0">
 								{isLoading && (
@@ -166,7 +164,7 @@ export default function MonitorsPage() {
 									</div>
 								)}
 
-								{!isLoading && monitors.length === 0 && (
+								{!isLoading && !hasMonitors && (
 									<div className="px-5 py-12">
 										<EmptyState
 											action={
@@ -186,25 +184,46 @@ export default function MonitorsPage() {
 									</div>
 								)}
 
-								{!isLoading && monitors.length > 0 && (
-									<div className="divide-y">
-										{monitors.map((monitor) => (
-											<MonitorRow
-												key={monitor.id}
-												onDeleteAction={handleDelete}
-												onEditAction={() => handleEdit(monitor)}
-												onRefetchAction={schedulesQuery.refetch}
-												schedule={monitor}
+								{!isLoading && hasMonitors && (
+									<>
+										<div className="border-b px-4 py-2">
+											<MonitorsSearchBar
+												hasPaused={hasPaused}
+												onSearchQueryChangeAction={setSearch}
+												onSortByChangeAction={setSort}
+												onStatusFilterChangeAction={setStatusFilter}
+												searchQuery={search}
+												sortBy={sort}
+												statusFilter={statusFilter}
 											/>
-										))}
-									</div>
+										</div>
+										{noResults ? (
+											<div className="px-5 py-12">
+												<EmptyState
+													description={`No monitors match \u201c${search}\u201d`}
+													icon={<MagnifyingGlassIcon weight="duotone" />}
+													title="No results"
+													variant="minimal"
+												/>
+											</div>
+										) : (
+											<div className="divide-y">
+												{filtered.map((monitor) => (
+													<MonitorRow
+														key={monitor.id}
+														onDeleteAction={handleDelete}
+														onEditAction={() => handleEdit(monitor)}
+														onRefetchAction={schedulesQuery.refetch}
+														schedule={monitor}
+													/>
+												))}
+											</div>
+										)}
+									</>
 								)}
 							</Card.Content>
 						</Card>
 					</div>
-				) : (
-					<FeatureLockedPanel flagKey="monitors" />
-				)}
 
 				{isSheetOpen && (
 					<Suspense fallback={null}>
@@ -215,13 +234,6 @@ export default function MonitorsPage() {
 							schedule={editingSchedule}
 						/>
 					</Suspense>
-				)}
-				{showInviteDialog && (
-					<FeatureInviteDialog
-						flagKey="monitors"
-						onOpenChangeAction={setShowInviteDialog}
-						open={showInviteDialog}
-					/>
 				)}
 			</div>
 		</ErrorBoundary>

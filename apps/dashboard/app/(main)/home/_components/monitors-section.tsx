@@ -7,9 +7,8 @@ import { useBatchDynamicQuery } from "@/hooks/use-dynamic-query";
 import { buildUptimeHeatmapDays } from "@databuddy/ui/uptime";
 import { UptimeHeatmapStrip } from "@databuddy/ui/uptime";
 import { cn } from "@/lib/utils";
-import { HeartbeatIcon, LockIcon, PlusIcon } from "@databuddy/ui/icons";
+import { HeartbeatIcon, PlusIcon } from "@databuddy/ui/icons";
 import {
-	Badge,
 	Button,
 	Card,
 	Skeleton,
@@ -19,7 +18,6 @@ import {
 
 interface MonitorsSectionProps {
 	activeMonitors: number;
-	hasAccess: boolean;
 	isLoading: boolean;
 	monitors: Array<{
 		id: string;
@@ -190,39 +188,10 @@ function MonitorsEmptyState({ onAdd }: { onAdd: () => void }) {
 	);
 }
 
-function LockedCard() {
-	return (
-		<Card>
-			<Card.Header className="flex-row items-center justify-between gap-3">
-				<div className="flex items-center gap-2">
-					<HeartbeatIcon className="size-4 text-primary" weight="duotone" />
-					<Card.Title className="text-sm">Monitors</Card.Title>
-				</div>
-				<Badge variant="muted">Coming soon</Badge>
-			</Card.Header>
-			<Card.Content className="flex flex-col items-center gap-3 text-center">
-				<div className="flex size-10 items-center justify-center rounded border bg-secondary">
-					<LockIcon className="size-5 text-muted-foreground" weight="duotone" />
-				</div>
-				<div className="space-y-1 text-balance">
-					<p className="font-medium text-foreground text-sm">
-						Uptime Monitoring
-					</p>
-					<p className="text-muted-foreground text-xs">
-						Track availability and get alerts when your services go down. You
-						need an invite to access this feature.
-					</p>
-				</div>
-			</Card.Content>
-		</Card>
-	);
-}
-
 export function MonitorsSection({
 	monitors,
 	totalMonitors,
 	activeMonitors,
-	hasAccess,
 	isLoading,
 	onCreateMonitorAction,
 }: MonitorsSectionProps) {
@@ -249,10 +218,6 @@ export function MonitorsSection({
 				</div>
 			</Card>
 		);
-	}
-
-	if (!hasAccess) {
-		return <LockedCard />;
 	}
 
 	const hasIssues = activeMonitors < totalMonitors;

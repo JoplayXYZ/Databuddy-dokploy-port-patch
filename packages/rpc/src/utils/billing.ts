@@ -35,6 +35,8 @@ const _getOrganizationOwnerId = async (
 export const getOrganizationOwnerId = cacheable(_getOrganizationOwnerId, {
 	expireInSec: 300,
 	prefix: "rpc:org_owner",
+	staleWhileRevalidate: true,
+	staleTime: 60,
 });
 
 export async function getBillingCustomerId(
@@ -59,7 +61,7 @@ const getMemberRole = cacheable(
 		});
 		return row?.role ?? null;
 	},
-	{ expireInSec: 120, prefix: "rpc:member_role" }
+	{ expireInSec: 300, prefix: "rpc:member_role", staleWhileRevalidate: true, staleTime: 60 }
 );
 
 export const getBillingOwner = cacheable(
@@ -104,5 +106,5 @@ export const getBillingOwner = cacheable(
 
 		return { customerId, isOrganization, canUserUpgrade, planId };
 	},
-	{ expireInSec: 60, prefix: "rpc:billing_owner" }
+	{ expireInSec: 300, prefix: "rpc:billing_owner", staleWhileRevalidate: true, staleTime: 60 }
 );

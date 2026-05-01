@@ -14,7 +14,6 @@ import { orpc } from "@/lib/orpc";
 import {
 	ArrowRightIcon,
 	CheckCircleIcon,
-	HeartbeatIcon,
 	LightbulbFilamentIcon,
 	LightningIcon,
 	ProhibitIcon,
@@ -31,7 +30,6 @@ type PhosphorIcon = ForwardRefExoticComponent<
 >;
 
 const FLAG_KEY_ICONS: Record<string, PhosphorIcon> = {
-	monitors: HeartbeatIcon,
 	insights: LightbulbFilamentIcon,
 	revenue: TrendUpIcon,
 	anomalies: WaveformIcon,

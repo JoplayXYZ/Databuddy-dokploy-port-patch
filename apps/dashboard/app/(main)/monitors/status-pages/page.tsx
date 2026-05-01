@@ -4,34 +4,37 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Suspense, useState } from "react";
 import { toast } from "sonner";
 import { ErrorBoundary } from "@/components/error-boundary";
-import { FeatureLockedPanel } from "@/components/feature-access-gate";
-import { FeatureInviteDialog } from "@/components/organizations/feature-invite-dialog";
 import { useOrganizationsContext } from "@/components/providers/organizations-provider";
 import {
 	type StatusPage,
 	StatusPageRow,
 } from "@/components/status-pages/status-page-row";
 import { StatusPageSheet } from "@/components/status-pages/status-page-sheet";
-import { useFeatureAccess } from "@/hooks/use-feature-access";
 import { orpc } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
 import { BrowserIcon } from "@phosphor-icons/react/dist/ssr";
 import {
 	ArrowClockwiseIcon,
+	MagnifyingGlassIcon,
 	PlusIcon,
-	UserPlusIcon,
 } from "@databuddy/ui/icons";
 import { DeleteDialog } from "@databuddy/ui/client";
-import { Button, Card, EmptyState, Skeleton } from "@databuddy/ui";
+import { Badge, Button, Card, EmptyState, Skeleton } from "@databuddy/ui";
+import { StatusPagesSearchBar } from "../_components/status-pages-search-bar";
+import {
+	type SortOption,
+	type StatusFilter,
+	useFilteredStatusPages,
+} from "../_components/use-filtered-status-pages";
 
 export default function StatusPagesListPage() {
-	const { hasAccess, isLoading: isAccessLoading } =
-		useFeatureAccess("monitors");
 	const { activeOrganizationId, activeOrganization } =
 		useOrganizationsContext();
 	const queryClient = useQueryClient();
 	const [isSheetOpen, setIsSheetOpen] = useState(false);
-	const [showInviteDialog, setShowInviteDialog] = useState(false);
+	const [search, setSearch] = useState("");
+	const [sort, setSort] = useState<SortOption>("newest");
+	const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
 	const [editingStatusPage, setEditingStatusPage] = useState<StatusPage | null>(
 		null
 	);
@@ -44,7 +47,7 @@ export default function StatusPagesListPage() {
 		...orpc.statusPage.list.queryOptions({
 			input: { organizationId: resolvedOrgId },
 		}),
-		enabled: hasAccess && !!resolvedOrgId,
+		enabled: !!resolvedOrgId,
 	});
 
 	const deleteMutation = useMutation({
@@ -80,15 +83,17 @@ export default function StatusPagesListPage() {
 		setEditingStatusPage(null);
 	};
 
-	const statusPages = statusPagesQuery.data;
-	const isLoading =
-		isAccessLoading || (hasAccess && statusPagesQuery.isLoading);
+	const statusPages = statusPagesQuery.data ?? [];
+	const filtered = useFilteredStatusPages(statusPages, search, sort, statusFilter);
+	const isLoading = statusPagesQuery.isLoading;
+	const hasEmpty = statusPages.some((p) => p.monitorCount === 0);
+	const hasPages = statusPages.length > 0;
+	const noResults = !isLoading && hasPages && filtered.length === 0;
 
 	return (
 		<ErrorBoundary>
 			<div className="flex-1 overflow-y-auto">
-				{isAccessLoading || hasAccess ? (
-					<div className="mx-auto max-w-2xl space-y-6 p-5">
+				<div className="mx-auto max-w-2xl space-y-6 p-5">
 						<Card>
 							<Card.Header className="flex-row items-start justify-between gap-4">
 								<div>
@@ -96,46 +101,36 @@ export default function StatusPagesListPage() {
 									<Card.Description>
 										{isLoading
 											? "Loading status pages…"
-											: statusPages && statusPages.length === 0
+											: statusPages.length === 0
 												? "Create and manage public status pages"
-												: `${statusPages?.length ?? 0} status page${statusPages?.length === 1 ? "" : "s"}`}
+												: `${statusPages.length} status page${statusPages.length === 1 ? "" : "s"}`}
 									</Card.Description>
 								</div>
-								{hasAccess && (
-									<div className="flex items-center gap-2">
-										<Button
-											onClick={() => setShowInviteDialog(true)}
-											size="sm"
-											variant="secondary"
-										>
-											<UserPlusIcon className="size-3.5" weight="duotone" />
-											Invite
-										</Button>
-										<Button
-											aria-label="Refresh status pages"
-											disabled={
-												statusPagesQuery.isLoading ||
-												statusPagesQuery.isFetching
-											}
-											onClick={() => statusPagesQuery.refetch()}
-											size="sm"
-											variant="ghost"
-										>
-											<ArrowClockwiseIcon
-												className={cn(
-													"size-3.5",
-													(statusPagesQuery.isLoading ||
-														statusPagesQuery.isFetching) &&
-														"animate-spin"
-												)}
-											/>
-										</Button>
-										<Button onClick={handleCreate} size="sm">
-											<PlusIcon className="size-3.5" />
-											Create Status Page
-										</Button>
-									</div>
-								)}
+								<div className="flex items-center gap-2">
+									<Button
+										aria-label="Refresh status pages"
+										disabled={
+											statusPagesQuery.isLoading ||
+											statusPagesQuery.isFetching
+										}
+										onClick={() => statusPagesQuery.refetch()}
+										size="sm"
+										variant="ghost"
+									>
+										<ArrowClockwiseIcon
+											className={cn(
+												"size-3.5",
+												(statusPagesQuery.isLoading ||
+													statusPagesQuery.isFetching) &&
+													"animate-spin"
+											)}
+										/>
+									</Button>
+									<Button onClick={handleCreate} size="sm">
+										<PlusIcon className="size-3.5" />
+										Create Status Page
+									</Button>
+								</div>
 							</Card.Header>
 							<Card.Content className="p-0">
 								{isLoading && (
@@ -158,7 +153,7 @@ export default function StatusPagesListPage() {
 									</div>
 								)}
 
-								{!isLoading && statusPages && statusPages.length === 0 && (
+								{!isLoading && !hasPages && (
 									<div className="px-5 py-12">
 										<EmptyState
 											action={
@@ -178,25 +173,46 @@ export default function StatusPagesListPage() {
 									</div>
 								)}
 
-								{!isLoading && statusPages && statusPages.length > 0 && (
-									<div className="divide-y">
-										{statusPages.map((statusPage) => (
-											<StatusPageRow
-												key={statusPage.id}
-												onDeleteAction={() => setStatusPageToDelete(statusPage)}
-												onEditAction={() => handleEdit(statusPage)}
-												onTransferSuccessAction={statusPagesQuery.refetch}
-												statusPage={statusPage}
+								{!isLoading && hasPages && (
+									<>
+										<div className="border-b px-4 py-2">
+											<StatusPagesSearchBar
+												hasEmpty={hasEmpty}
+												onSearchQueryChangeAction={setSearch}
+												onSortByChangeAction={setSort}
+												onStatusFilterChangeAction={setStatusFilter}
+												searchQuery={search}
+												sortBy={sort}
+												statusFilter={statusFilter}
 											/>
-										))}
-									</div>
+										</div>
+										{noResults ? (
+											<div className="px-5 py-12">
+												<EmptyState
+													description={`No status pages match \u201c${search}\u201d`}
+													icon={<MagnifyingGlassIcon weight="duotone" />}
+													title="No results"
+													variant="minimal"
+												/>
+											</div>
+										) : (
+											<div className="divide-y">
+												{filtered.map((statusPage) => (
+													<StatusPageRow
+														key={statusPage.id}
+														onDeleteAction={() => setStatusPageToDelete(statusPage)}
+														onEditAction={() => handleEdit(statusPage)}
+														onTransferSuccessAction={statusPagesQuery.refetch}
+														statusPage={statusPage}
+													/>
+												))}
+											</div>
+										)}
+									</>
 								)}
 							</Card.Content>
 						</Card>
 					</div>
-				) : (
-					<FeatureLockedPanel flagKey="monitors" />
-				)}
 
 				{isSheetOpen && (
 					<Suspense fallback={null}>
@@ -207,14 +223,6 @@ export default function StatusPagesListPage() {
 							statusPage={editingStatusPage}
 						/>
 					</Suspense>
-				)}
-
-				{showInviteDialog && (
-					<FeatureInviteDialog
-						flagKey="monitors"
-						onOpenChangeAction={setShowInviteDialog}
-						open={showInviteDialog}
-					/>
 				)}
 
 				<DeleteDialog
