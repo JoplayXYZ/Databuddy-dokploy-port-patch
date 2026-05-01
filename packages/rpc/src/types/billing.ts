@@ -1,17 +1,14 @@
 import type {
-	AiCapabilityId,
 	FeatureLimit,
 	GatedFeatureId,
 	PlanId,
 } from "@databuddy/shared/types/features";
 import {
-	getMinimumPlanForAiCapability,
 	getNextPlanForFeature,
 	getPlanCapabilities,
 	getPlanFeatureLimit,
 	getRemainingUsage,
 	isFeatureAvailable,
-	isPlanAiCapabilityEnabled,
 	isPlanFeatureEnabled,
 	isWithinLimit,
 	PLAN_HIERARCHY,
@@ -81,8 +78,8 @@ export function isFreePlan(planId: string | undefined): boolean {
  *
  * @example
  * ```ts
- * if (!canAccessFeature((await context.getBilling())?.planId, GATED_FEATURES.AI_AGENT)) {
- *   throw errors.FEATURE_UNAVAILABLE({ data: { feature: "ai_agent", requiredPlan: "pro" } });
+ * if (!canAccessFeature((await context.getBilling())?.planId, GATED_FEATURES.FUNNELS)) {
+ *   throw errors.FEATURE_UNAVAILABLE({ data: { feature: "funnels", requiredPlan: "pro" } });
  * }
  * ```
  */
@@ -91,23 +88,6 @@ export function canAccessFeature(
 	feature: GatedFeatureId
 ): boolean {
 	return isPlanFeatureEnabled(planId ?? null, feature);
-}
-
-/**
- * Check if an AI capability is enabled for the user's plan
- *
- * @example
- * ```ts
- * if (!canAccessAiCapability((await context.getBilling())?.planId, AI_CAPABILITIES.AUTO_INSIGHTS)) {
- *   throw errors.FEATURE_UNAVAILABLE({ data: { feature: "auto_insights", requiredPlan: "pro" } });
- * }
- * ```
- */
-export function canAccessAiCapability(
-	planId: string | undefined,
-	capability: AiCapabilityId
-): boolean {
-	return isPlanAiCapabilityEnabled(planId ?? null, capability);
 }
 
 /**
@@ -172,7 +152,7 @@ export function getUsageRemaining(
  *
  * @example
  * ```ts
- * requireFeature((await context.getBilling())?.planId, GATED_FEATURES.AI_AGENT);
+ * requireFeature((await context.getBilling())?.planId, GATED_FEATURES.FUNNELS);
  * // Throws if user doesn't have access
  * ```
  */
@@ -253,33 +233,9 @@ export function requireUsageWithinLimit(
  * @example
  * ```ts
  * const capabilities = getUserCapabilities((await context.getBilling())?.planId);
- * console.log(capabilities.features, capabilities.limits, capabilities.ai);
+ * console.log(capabilities.features, capabilities.limits);
  * ```
  */
 export function getUserCapabilities(planId: string | undefined) {
 	return getPlanCapabilities(planId ?? null);
-}
-
-/**
- * Throws an error if the AI capability is not available.
- * Uses FEATURE_UNAVAILABLE error code for type-safe client handling.
- *
- * @example
- * ```ts
- * requireAiCapability((await context.getBilling())?.planId, AI_CAPABILITIES.AUTO_INSIGHTS);
- * ```
- */
-export function requireAiCapability(
-	planId: string | undefined,
-	capability: AiCapabilityId
-): void {
-	if (!isPlanAiCapabilityEnabled(planId ?? null, capability)) {
-		const minPlan = getMinimumPlanForAiCapability(capability);
-		throw new ORPCError("FEATURE_UNAVAILABLE", {
-			message: minPlan
-				? `This AI capability requires ${minPlan} plan or higher`
-				: "This AI capability is not available on your current plan",
-			data: { feature: capability, requiredPlan: minPlan ?? undefined },
-		});
-	}
 }

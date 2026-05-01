@@ -30,8 +30,6 @@ export const GATED_FEATURES = {
 	WEB_VITALS: "web_vitals",
 	ERROR_TRACKING: "error_tracking",
 	GEOGRAPHIC: "geographic",
-	AI_ASSISTANT: "ai_assistant",
-	AI_AGENT: "ai_agent",
 	TEAM_ROLES: "team_roles",
 	TARGET_GROUPS: "target_groups",
 } as const;
@@ -42,7 +40,6 @@ export type GatedFeatureId =
 export const HIDDEN_PRICING_FEATURES: GatedFeatureId[] = [
 	GATED_FEATURES.RETENTION,
 	GATED_FEATURES.ERROR_TRACKING,
-	GATED_FEATURES.AI_AGENT,
 	GATED_FEATURES.TEAM_ROLES,
 	GATED_FEATURES.TARGET_GROUPS,
 ];
@@ -62,8 +59,6 @@ export const PLAN_FEATURE_LIMITS: Record<
 		[GATED_FEATURES.WEB_VITALS]: "unlimited",
 		[GATED_FEATURES.ERROR_TRACKING]: false, // Hobby+
 		[GATED_FEATURES.GEOGRAPHIC]: "unlimited",
-		[GATED_FEATURES.AI_ASSISTANT]: "unlimited",
-		[GATED_FEATURES.AI_AGENT]: "unlimited", // gated by agent_credits budget, not a hard lock
 		[GATED_FEATURES.TEAM_ROLES]: "unlimited",
 		[GATED_FEATURES.TARGET_GROUPS]: false, // Hobby+
 	},
@@ -76,8 +71,6 @@ export const PLAN_FEATURE_LIMITS: Record<
 		[GATED_FEATURES.WEB_VITALS]: "unlimited",
 		[GATED_FEATURES.ERROR_TRACKING]: "unlimited",
 		[GATED_FEATURES.GEOGRAPHIC]: "unlimited",
-		[GATED_FEATURES.AI_ASSISTANT]: "unlimited",
-		[GATED_FEATURES.AI_AGENT]: "unlimited", // gated by agent_credits budget, not a hard lock
 		[GATED_FEATURES.TEAM_ROLES]: "unlimited",
 		[GATED_FEATURES.TARGET_GROUPS]: 5, // 5 target groups
 	},
@@ -90,8 +83,6 @@ export const PLAN_FEATURE_LIMITS: Record<
 		[GATED_FEATURES.WEB_VITALS]: "unlimited",
 		[GATED_FEATURES.ERROR_TRACKING]: "unlimited",
 		[GATED_FEATURES.GEOGRAPHIC]: "unlimited",
-		[GATED_FEATURES.AI_ASSISTANT]: "unlimited",
-		[GATED_FEATURES.AI_AGENT]: "unlimited",
 		[GATED_FEATURES.TEAM_ROLES]: "unlimited",
 		[GATED_FEATURES.TARGET_GROUPS]: 25, // 25 target groups
 	},
@@ -104,8 +95,6 @@ export const PLAN_FEATURE_LIMITS: Record<
 		[GATED_FEATURES.WEB_VITALS]: "unlimited",
 		[GATED_FEATURES.ERROR_TRACKING]: "unlimited",
 		[GATED_FEATURES.GEOGRAPHIC]: "unlimited",
-		[GATED_FEATURES.AI_ASSISTANT]: "unlimited",
-		[GATED_FEATURES.AI_AGENT]: "unlimited",
 		[GATED_FEATURES.TEAM_ROLES]: "unlimited",
 		[GATED_FEATURES.TARGET_GROUPS]: "unlimited",
 	},
@@ -126,23 +115,7 @@ const PLAN_FEATURES: Record<
 	])
 ) as Record<PlanId, Record<GatedFeatureId, boolean>>;
 
-export const AI_CAPABILITIES = {
-	SUMMARIZATION: "summarization",
-	WORKSPACE_QA: "workspace_qa",
-	GLOBAL_SEARCH: "global_search",
-	AUTO_INSIGHTS: "auto_insights",
-	ANOMALY_DETECTION: "anomaly_detection",
-	CORRELATION_ENGINE: "correlation_engine",
-	SQL_TOOLING: "sql_tooling",
-} as const;
-
-export type AiCapabilityId =
-	(typeof AI_CAPABILITIES)[keyof typeof AI_CAPABILITIES];
-
-export type PlanAiCapabilities = Record<AiCapabilityId, boolean>;
-
 export interface PlanCapabilities {
-	ai: PlanAiCapabilities;
 	features: Record<GatedFeatureId, boolean>;
 	limits: Record<GatedFeatureId, FeatureLimit>;
 }
@@ -151,54 +124,18 @@ export const PLAN_CAPABILITIES: Record<PlanId, PlanCapabilities> = {
 	[PLAN_IDS.FREE]: {
 		features: PLAN_FEATURES[PLAN_IDS.FREE],
 		limits: PLAN_FEATURE_LIMITS[PLAN_IDS.FREE],
-		ai: {
-			[AI_CAPABILITIES.SUMMARIZATION]: true,
-			[AI_CAPABILITIES.WORKSPACE_QA]: true,
-			[AI_CAPABILITIES.GLOBAL_SEARCH]: false,
-			[AI_CAPABILITIES.AUTO_INSIGHTS]: false,
-			[AI_CAPABILITIES.ANOMALY_DETECTION]: false,
-			[AI_CAPABILITIES.CORRELATION_ENGINE]: false,
-			[AI_CAPABILITIES.SQL_TOOLING]: false,
-		},
 	},
 	[PLAN_IDS.HOBBY]: {
 		features: PLAN_FEATURES[PLAN_IDS.HOBBY],
 		limits: PLAN_FEATURE_LIMITS[PLAN_IDS.HOBBY],
-		ai: {
-			[AI_CAPABILITIES.SUMMARIZATION]: true,
-			[AI_CAPABILITIES.WORKSPACE_QA]: true,
-			[AI_CAPABILITIES.GLOBAL_SEARCH]: true,
-			[AI_CAPABILITIES.AUTO_INSIGHTS]: false,
-			[AI_CAPABILITIES.ANOMALY_DETECTION]: false,
-			[AI_CAPABILITIES.CORRELATION_ENGINE]: false,
-			[AI_CAPABILITIES.SQL_TOOLING]: false,
-		},
 	},
 	[PLAN_IDS.PRO]: {
 		features: PLAN_FEATURES[PLAN_IDS.PRO],
 		limits: PLAN_FEATURE_LIMITS[PLAN_IDS.PRO],
-		ai: {
-			[AI_CAPABILITIES.SUMMARIZATION]: true,
-			[AI_CAPABILITIES.WORKSPACE_QA]: true,
-			[AI_CAPABILITIES.GLOBAL_SEARCH]: true,
-			[AI_CAPABILITIES.AUTO_INSIGHTS]: true,
-			[AI_CAPABILITIES.ANOMALY_DETECTION]: true,
-			[AI_CAPABILITIES.CORRELATION_ENGINE]: false,
-			[AI_CAPABILITIES.SQL_TOOLING]: true,
-		},
 	},
 	[PLAN_IDS.SCALE]: {
 		features: PLAN_FEATURES[PLAN_IDS.SCALE],
 		limits: PLAN_FEATURE_LIMITS[PLAN_IDS.SCALE],
-		ai: {
-			[AI_CAPABILITIES.SUMMARIZATION]: true,
-			[AI_CAPABILITIES.WORKSPACE_QA]: true,
-			[AI_CAPABILITIES.GLOBAL_SEARCH]: true,
-			[AI_CAPABILITIES.AUTO_INSIGHTS]: true,
-			[AI_CAPABILITIES.ANOMALY_DETECTION]: true,
-			[AI_CAPABILITIES.CORRELATION_ENGINE]: true,
-			[AI_CAPABILITIES.SQL_TOOLING]: true,
-		},
 	},
 };
 
@@ -274,16 +211,6 @@ export const FEATURE_METADATA: Record<FeatureId | GatedFeatureId, FeatureMeta> =
 			name: "Geographic",
 			description: "View visitor locations on a map",
 			upgradeMessage: "Geographic is available on all plans",
-		},
-		[GATED_FEATURES.AI_ASSISTANT]: {
-			name: "AI Assistant",
-			description: "Chat-based analytics assistant",
-			upgradeMessage: "AI Assistant is available on all plans",
-		},
-		[GATED_FEATURES.AI_AGENT]: {
-			name: "AI Agent",
-			description: "Autonomous AI agent for advanced analytics insights",
-			upgradeMessage: "Upgrade for more agent credits",
 		},
 		[GATED_FEATURES.TEAM_ROLES]: {
 			name: "Team Roles",
@@ -389,25 +316,6 @@ export function getMinimumPlanForFeature(
 ): PlanId | null {
 	for (const plan of PLAN_HIERARCHY) {
 		if (PLAN_FEATURES[plan][feature]) {
-			return plan;
-		}
-	}
-	return null;
-}
-
-export function isPlanAiCapabilityEnabled(
-	planId: PlanId | string | null,
-	capability: AiCapabilityId
-): boolean {
-	const plan = (planId ?? PLAN_IDS.FREE) as PlanId;
-	return PLAN_CAPABILITIES[plan]?.ai[capability] ?? false;
-}
-
-export function getMinimumPlanForAiCapability(
-	capability: AiCapabilityId
-): PlanId | null {
-	for (const plan of PLAN_HIERARCHY) {
-		if (PLAN_CAPABILITIES[plan]?.ai[capability]) {
 			return plan;
 		}
 	}

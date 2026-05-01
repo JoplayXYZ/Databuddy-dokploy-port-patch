@@ -42,7 +42,6 @@ export {
 } from "./services/export-service";
 export {
 	type BillingContext,
-	canAccessAiCapability,
 	canAccessFeature,
 	getFeatureLimit,
 	getUsageRemaining,
@@ -50,7 +49,6 @@ export {
 	hasPlan,
 	isFreePlan,
 	isUsageWithinLimit,
-	requireAiCapability,
 	requireFeature,
 	requireFeatureWithLimit,
 	requireUsageWithinLimit,

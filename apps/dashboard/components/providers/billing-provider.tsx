@@ -1,14 +1,11 @@
 "use client";
 
 import {
-	type AiCapabilityId,
 	FEATURE_METADATA,
 	type FeatureId,
 	type GatedFeatureId,
-	getMinimumPlanForAiCapability,
 	getMinimumPlanForFeature,
 	getPlanCapabilities as getPlanCapabilitiesForPlan,
-	isPlanAiCapabilityEnabled,
 	isPlanFeatureEnabled,
 	PLAN_IDS,
 	type PlanCapabilities,
@@ -51,7 +48,6 @@ export interface BillingContextValue {
 	) => string | null;
 	getUsage: (featureId: FeatureId | string) => FeatureAccess;
 	hasActiveSubscription: boolean;
-	isAiCapabilityEnabled: (capability: AiCapabilityId) => boolean;
 	isFeatureEnabled: (feature: GatedFeatureId) => boolean;
 	isFree: boolean;
 	isLoading: boolean;
@@ -93,7 +89,6 @@ const DEMO_BILLING_VALUE: BillingContextValue = {
 		upgradeMessage: null,
 	}),
 	getUpgradeMessage: () => null,
-	isAiCapabilityEnabled: () => true,
 	getPlanCapabilities: () => getPlanCapabilitiesForPlan(PLAN_IDS.SCALE),
 	refetch: () => {},
 };
@@ -256,9 +251,6 @@ function AuthenticatedBillingProvider({
 			FEATURE_METADATA[id as FeatureId | GatedFeatureId]?.upgradeMessage ??
 			null;
 
-		const isAiCapabilityEnabled = (capability: AiCapabilityId): boolean =>
-			isPlanAiCapabilityEnabled(currentPlanId, capability);
-
 		const getPlanCapabilities = (): PlanCapabilities =>
 			getPlanCapabilitiesForPlan(currentPlanId);
 
@@ -283,7 +275,6 @@ function AuthenticatedBillingProvider({
 			isFeatureEnabled,
 			getGatedFeatureAccess,
 			getUpgradeMessage,
-			isAiCapabilityEnabled,
 			getPlanCapabilities,
 			refetch,
 		};
@@ -330,20 +321,5 @@ export function useGatedFeature(feature: GatedFeatureId) {
 		isEnabled: isFeatureEnabled(feature),
 		currentPlanId,
 		isFree,
-	};
-}
-
-export function useAiCapability(capability: AiCapabilityId) {
-	const { isAiCapabilityEnabled, currentPlanId, isFree, canUserUpgrade } =
-		useBillingContext();
-	const isEnabled = isAiCapabilityEnabled(capability);
-	const minPlan = getMinimumPlanForAiCapability(capability);
-
-	return {
-		isEnabled,
-		currentPlanId,
-		isFree,
-		minPlan,
-		canUserUpgrade,
 	};
 }
