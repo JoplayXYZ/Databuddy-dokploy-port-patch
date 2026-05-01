@@ -3,7 +3,7 @@ import type { Filter, SimpleQueryConfig, TimeUnit } from "../types";
 
 const ATTRIBUTION_CTE = `
 	revenue_base AS (
-		SELECT 
+		SELECT
 			r.transaction_id,
 			r.amount,
 			r.type,
@@ -15,7 +15,7 @@ const ATTRIBUTION_CTE = `
 			r.provider,
 			r.created
 		FROM ${Analytics.revenue} r
-		WHERE 
+		WHERE
 			(r.owner_id = {websiteId:String} OR r.website_id = {websiteId:String})
 			AND r.created >= toDateTime({startDate:String})
 			AND r.created <= toDateTime(concat({endDate:String}, ' 23:59:59'))
@@ -26,25 +26,20 @@ const ATTRIBUTION_CTE = `
 		FROM revenue_base
 		WHERE r_customer_id IS NOT NULL AND r_customer_id != ''
 	),
-	customer_identity_map AS (
-		SELECT 
+	customer_session_map AS (
+		SELECT
 			r.customer_id as customer_id,
-			argMin(r.anonymous_id, r.created) as mapped_anonymous_id,
 			argMin(r.session_id, r.created) as mapped_session_id
 		FROM ${Analytics.revenue} r
 		INNER JOIN active_customers ac ON r.customer_id = ac.customer_id
 		WHERE (r.owner_id = {websiteId:String} OR r.website_id = {websiteId:String})
 			AND r.customer_id IS NOT NULL AND r.customer_id != ''
-			AND (
-				(r.anonymous_id IS NOT NULL AND r.anonymous_id != '')
-				OR (r.session_id IS NOT NULL AND r.session_id != '')
-			)
+			AND r.session_id IS NOT NULL AND r.session_id != ''
 		GROUP BY r.customer_id
 	),
-	first_touch AS (
-		SELECT 
+	first_touch_by_session AS (
+		SELECT
 			session_id,
-			anonymous_id,
 			argMin(country, time) as first_country,
 			argMin(region, time) as first_region,
 			argMin(city, time) as first_city,
@@ -58,49 +53,13 @@ const ATTRIBUTION_CTE = `
 			argMin(path, time) as first_path
 		FROM ${Analytics.events}
 		WHERE client_id = {websiteId:String}
-			AND (session_id != '' OR anonymous_id != '')
+			AND session_id != ''
 			AND time >= toDateTime({startDate:String}) - INTERVAL 90 DAY
 			AND time <= toDateTime(concat({endDate:String}, ' 23:59:59'))
-		GROUP BY session_id, anonymous_id
-	),
-	first_touch_by_session AS (
-		SELECT 
-			session_id,
-			any(first_country) as first_country,
-			any(first_region) as first_region,
-			any(first_city) as first_city,
-			any(first_browser) as first_browser,
-			any(first_device) as first_device,
-			any(first_os) as first_os,
-			any(first_referrer) as first_referrer,
-			any(first_utm_source) as first_utm_source,
-			any(first_utm_medium) as first_utm_medium,
-			any(first_utm_campaign) as first_utm_campaign,
-			any(first_path) as first_path
-		FROM first_touch
-		WHERE session_id != ''
 		GROUP BY session_id
 	),
-	first_touch_by_anon AS (
-		SELECT 
-			anonymous_id,
-			any(first_country) as first_country,
-			any(first_region) as first_region,
-			any(first_city) as first_city,
-			any(first_browser) as first_browser,
-			any(first_device) as first_device,
-			any(first_os) as first_os,
-			any(first_referrer) as first_referrer,
-			any(first_utm_source) as first_utm_source,
-			any(first_utm_medium) as first_utm_medium,
-			any(first_utm_campaign) as first_utm_campaign,
-			any(first_path) as first_path
-		FROM first_touch
-		WHERE anonymous_id != ''
-		GROUP BY anonymous_id
-	),
 	revenue_attributed AS (
-		SELECT 
+		SELECT
 			rb.transaction_id,
 			rb.amount,
 			rb.type,
@@ -112,110 +71,35 @@ const ATTRIBUTION_CTE = `
 			rb.provider,
 			rb.created,
 			CASE
-				WHEN rb.r_session_id IS NOT NULL AND rb.r_session_id != '' AND ft_session.session_id IS NOT NULL
-					THEN 1
-				WHEN rb.r_anonymous_id IS NOT NULL AND rb.r_anonymous_id != '' AND ft_anon.anonymous_id IS NOT NULL
-					THEN 1
-				WHEN rb.r_customer_id IS NOT NULL AND rb.r_customer_id != ''
-					AND cim.customer_id IS NOT NULL
-					AND (
-						(cim.mapped_session_id IS NOT NULL AND cim.mapped_session_id != '' AND ft_customer_session.session_id IS NOT NULL)
-						OR (cim.mapped_anonymous_id IS NOT NULL AND cim.mapped_anonymous_id != '' AND ft_customer_anon.anonymous_id IS NOT NULL)
-					)
-					THEN 1
+				WHEN ft_direct.session_id != '' THEN 1
+				WHEN ft_customer.session_id != '' THEN 1
 				ELSE 0
 			END as is_attributed,
-			coalesce(
-				ft_session.first_country,
-				ft_anon.first_country,
-				ft_customer_session.first_country,
-				ft_customer_anon.first_country
-			) as country,
-			coalesce(
-				ft_session.first_region,
-				ft_anon.first_region,
-				ft_customer_session.first_region,
-				ft_customer_anon.first_region
-			) as region,
-			coalesce(
-				ft_session.first_city,
-				ft_anon.first_city,
-				ft_customer_session.first_city,
-				ft_customer_anon.first_city
-			) as city,
-			coalesce(
-				ft_session.first_browser,
-				ft_anon.first_browser,
-				ft_customer_session.first_browser,
-				ft_customer_anon.first_browser
-			) as browser_name,
-			coalesce(
-				ft_session.first_device,
-				ft_anon.first_device,
-				ft_customer_session.first_device,
-				ft_customer_anon.first_device
-			) as device_type,
-			coalesce(
-				ft_session.first_os,
-				ft_anon.first_os,
-				ft_customer_session.first_os,
-				ft_customer_anon.first_os
-			) as os_name,
-			coalesce(
-				ft_session.first_referrer,
-				ft_anon.first_referrer,
-				ft_customer_session.first_referrer,
-				ft_customer_anon.first_referrer
-			) as referrer_domain,
-			coalesce(
-				ft_session.first_utm_source,
-				ft_anon.first_utm_source,
-				ft_customer_session.first_utm_source,
-				ft_customer_anon.first_utm_source
-			) as utm_source,
-			coalesce(
-				ft_session.first_utm_medium,
-				ft_anon.first_utm_medium,
-				ft_customer_session.first_utm_medium,
-				ft_customer_anon.first_utm_medium
-			) as utm_medium,
-			coalesce(
-				ft_session.first_utm_campaign,
-				ft_anon.first_utm_campaign,
-				ft_customer_session.first_utm_campaign,
-				ft_customer_anon.first_utm_campaign
-			) as utm_campaign,
-			coalesce(
-				ft_session.first_path,
-				ft_anon.first_path,
-				ft_customer_session.first_path,
-				ft_customer_anon.first_path
-			) as entry_path
+			coalesce(ft_direct.first_country, ft_customer.first_country) as country,
+			coalesce(ft_direct.first_region, ft_customer.first_region) as region,
+			coalesce(ft_direct.first_city, ft_customer.first_city) as city,
+			coalesce(ft_direct.first_browser, ft_customer.first_browser) as browser_name,
+			coalesce(ft_direct.first_device, ft_customer.first_device) as device_type,
+			coalesce(ft_direct.first_os, ft_customer.first_os) as os_name,
+			coalesce(ft_direct.first_referrer, ft_customer.first_referrer) as referrer_domain,
+			coalesce(ft_direct.first_utm_source, ft_customer.first_utm_source) as utm_source,
+			coalesce(ft_direct.first_utm_medium, ft_customer.first_utm_medium) as utm_medium,
+			coalesce(ft_direct.first_utm_campaign, ft_customer.first_utm_campaign) as utm_campaign,
+			coalesce(ft_direct.first_path, ft_customer.first_path) as entry_path
 		FROM revenue_base rb
-		LEFT JOIN first_touch_by_session ft_session 
-			ON rb.r_session_id = ft_session.session_id 
-			AND rb.r_session_id IS NOT NULL 
+		LEFT JOIN first_touch_by_session ft_direct
+			ON rb.r_session_id = ft_direct.session_id
+			AND rb.r_session_id IS NOT NULL
 			AND rb.r_session_id != ''
-		LEFT JOIN first_touch_by_anon ft_anon 
-			ON rb.r_anonymous_id = ft_anon.anonymous_id 
-			AND rb.r_anonymous_id IS NOT NULL 
-			AND rb.r_anonymous_id != ''
-			AND ft_session.session_id IS NULL
-		LEFT JOIN customer_identity_map cim 
-			ON rb.r_customer_id = cim.customer_id 
-			AND rb.r_customer_id IS NOT NULL 
+		LEFT JOIN customer_session_map csm
+			ON rb.r_customer_id = csm.customer_id
+			AND rb.r_customer_id IS NOT NULL
 			AND rb.r_customer_id != ''
-			AND ft_session.session_id IS NULL
-			AND ft_anon.anonymous_id IS NULL
-		LEFT JOIN first_touch_by_session ft_customer_session 
-			ON cim.mapped_session_id = ft_customer_session.session_id 
-			AND cim.mapped_session_id IS NOT NULL 
-			AND cim.mapped_session_id != ''
-		LEFT JOIN first_touch_by_anon ft_customer_anon 
-			ON cim.mapped_anonymous_id = ft_customer_anon.anonymous_id 
-			AND cim.mapped_anonymous_id IS NOT NULL 
-			AND cim.mapped_anonymous_id != ''
-			AND ft_customer_session.session_id IS NULL
+			AND ft_direct.session_id = ''
+		LEFT JOIN first_touch_by_session ft_customer
+			ON csm.mapped_session_id = ft_customer.session_id
+			AND csm.mapped_session_id IS NOT NULL
+			AND csm.mapped_session_id != ''
 	)
 `;
 
