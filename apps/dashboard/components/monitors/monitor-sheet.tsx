@@ -1,13 +1,14 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useOrganizationsContext } from "@/components/providers/organizations-provider";
 import { useWebsite } from "@/hooks/use-websites";
 import { orpc } from "@/lib/orpc";
-import { BellIcon, InfoIcon, PlusIcon, XMarkIcon } from "@databuddy/ui/icons";
-import { Checkbox, Sheet, Switch } from "@databuddy/ui/client";
+import { BellIcon, InfoIcon } from "@databuddy/ui/icons";
+import { Sheet, Switch } from "@databuddy/ui/client";
 import {
 	Badge,
 	Button,
@@ -35,6 +36,12 @@ const granularityOptions: { label: string; value: GranularityValue }[] = [
 	{ value: "hour", label: "1h" },
 	{ value: "six_hours", label: "6h" },
 ];
+
+const DEST_LABELS: Record<string, string> = {
+	slack: "Slack",
+	email: "Email",
+	webhook: "Webhook",
+};
 
 interface MonitorSheetProps {
 	onCloseAction: (open: boolean) => void;
@@ -86,6 +93,82 @@ function isValidUrl(value: string): boolean {
 	}
 }
 
+interface ParsedAlarm {
+	destinations: Array<{ id: string; type: string }>;
+	enabled: boolean;
+	id: string;
+	linkedIds: string[];
+	name: string;
+	triggerConditions: Record<string, unknown>;
+}
+
+function parseAlarms(
+	rows: readonly Record<string, unknown>[],
+): ParsedAlarm[] {
+	return rows.map((row) => {
+		const r = row as Record<string, unknown>;
+		const tc =
+			typeof r.triggerConditions === "object" && r.triggerConditions
+				? (r.triggerConditions as Record<string, unknown>)
+				: {};
+		return {
+			id: r.id as string,
+			name: r.name as string,
+			enabled: r.enabled as boolean,
+			triggerConditions: tc,
+			linkedIds: Array.isArray(tc.monitorIds)
+				? (tc.monitorIds as string[])
+				: [],
+			destinations: Array.isArray(r.destinations)
+				? (r.destinations as Array<{ id: string; type: string }>)
+				: [],
+		};
+	});
+}
+
+function AlarmRow({
+	alarm,
+	isLinked,
+	onToggle,
+	isPending,
+}: {
+	alarm: ParsedAlarm;
+	isLinked: boolean;
+	isPending: boolean;
+	onToggle: () => void;
+}) {
+	const destSummary = alarm.destinations
+		.map((d) => DEST_LABELS[d.type] ?? d.type)
+		.join(", ");
+
+	return (
+		<div className="flex items-center justify-between gap-4">
+			<div className="min-w-0 flex-1">
+				<div className="flex items-center gap-1.5">
+					<p className="truncate font-medium text-sm">{alarm.name}</p>
+					{!alarm.enabled && (
+						<Badge size="sm" variant="muted">
+							Paused
+						</Badge>
+					)}
+				</div>
+				{destSummary && (
+					<p className="truncate text-muted-foreground text-xs">
+						{destSummary}
+					</p>
+				)}
+			</div>
+			<div className="shrink-0">
+				<Switch
+					checked={isLinked}
+					disabled={isPending}
+					onCheckedChange={onToggle}
+				/>
+			</div>
+		</div>
+	);
+}
+
 export function MonitorSheet({
 	open,
 	onCloseAction,
@@ -98,6 +181,7 @@ export function MonitorSheet({
 	const { data: website } = useWebsite(websiteId || "");
 	const { activeOrganization, activeOrganizationId } =
 		useOrganizationsContext();
+	const queryClient = useQueryClient();
 
 	const [name, setName] = useState("");
 	const [url, setUrl] = useState("");
@@ -107,8 +191,6 @@ export function MonitorSheet({
 	const [cacheBust, setCacheBust] = useState(false);
 	const [jsonParsingEnabled, setJsonParsingEnabled] = useState(true);
 	const [urlError, setUrlError] = useState<string | null>(null);
-
-	const queryClient = useQueryClient();
 
 	const createMutation = useMutation({
 		...orpc.uptime.createSchedule.mutationOptions(),
@@ -125,41 +207,15 @@ export function MonitorSheet({
 		enabled: open && isEditing,
 	});
 
-	const alarms = (rawAlarms ?? []).map((row) => {
-		const r = row as Record<string, unknown>;
-		const tc =
-			typeof r.triggerConditions === "object" && r.triggerConditions
-				? (r.triggerConditions as Record<string, unknown>)
-				: {};
-		const linkedIds = Array.isArray(tc.monitorIds)
-			? (tc.monitorIds as string[])
-			: [];
-		return {
-			id: r.id as string,
-			name: r.name as string,
-			enabled: r.enabled as boolean,
-			triggerConditions: tc,
-			linkedIds,
-			destinations: Array.isArray(r.destinations)
-				? (r.destinations as Array<{ id: string; type: string }>)
-				: [],
-		};
-	});
-
-	const attachedAlarms = alarms.filter((a) =>
-		a.linkedIds.includes(schedule?.id ?? ""),
-	);
-	const availableAlarms = alarms.filter(
-		(a) => !a.linkedIds.includes(schedule?.id ?? ""),
+	const alarms = parseAlarms(
+		(rawAlarms ?? []) as readonly Record<string, unknown>[],
 	);
 
-	const toggleAlarm = async (
-		alarm: (typeof alarms)[number],
-		attach: boolean,
-	) => {
-		const nextIds = attach
-			? [...alarm.linkedIds, schedule!.id]
-			: alarm.linkedIds.filter((id) => id !== schedule!.id);
+	const toggleAlarm = async (alarm: ParsedAlarm) => {
+		const isLinked = alarm.linkedIds.includes(schedule!.id);
+		const nextIds = isLinked
+			? alarm.linkedIds.filter((id) => id !== schedule!.id)
+			: [...alarm.linkedIds, schedule!.id];
 		try {
 			await alarmUpdateMutation.mutateAsync({
 				alarmId: alarm.id,
@@ -172,7 +228,7 @@ export function MonitorSheet({
 				queryKey: orpc.alarms.list.key(),
 			});
 		} catch {
-			toast.error(attach ? "Failed to attach alert" : "Failed to detach alert");
+			toast.error("Failed to update alert");
 		}
 	};
 
@@ -197,7 +253,7 @@ export function MonitorSheet({
 		setName(initialName);
 		setUrl(initialUrl);
 		setGranularity(
-			(schedule?.granularity as GranularityValue) ?? "ten_minutes"
+			(schedule?.granularity as GranularityValue) ?? "ten_minutes",
 		);
 		setTimeoutMs(schedule?.timeout ?? null);
 		setCacheBust(schedule?.cacheBust ?? false);
@@ -215,7 +271,7 @@ export function MonitorSheet({
 		setUrlError(
 			isValidUrl(url)
 				? null
-				: "Please enter a valid URL (e.g. https://example.com)"
+				: "Please enter a valid URL (e.g. https://example.com)",
 		);
 	}, [url]);
 
@@ -264,7 +320,6 @@ export function MonitorSheet({
 			onSaveAction?.();
 			onCloseAction(false);
 		} catch {
-			// Error handled by global MutationCache
 		}
 	};
 
@@ -391,44 +446,44 @@ export function MonitorSheet({
 						{isEditing && (
 							<>
 								<Divider />
-								<div className="space-y-3">
-									<Field.Label>Alerts</Field.Label>
+
+								<div className="space-y-4">
+									<div className="space-y-0.5">
+										<p className="font-medium text-sm">Alerts</p>
+										<p className="text-muted-foreground text-xs">
+											Choose which alerts fire when this monitor goes down
+										</p>
+									</div>
+
 									{alarms.length === 0 ? (
-										<Text tone="muted" variant="caption">
-											No alerts configured.{" "}
-											<a
-												className="text-primary hover:underline"
-												href="/settings/notifications"
-											>
-												Create one
-											</a>
-										</Text>
+										<div className="flex items-center gap-3 rounded-md border border-dashed border-border/60 p-3">
+											<BellIcon
+												className="size-4 shrink-0 text-muted-foreground"
+												weight="duotone"
+											/>
+											<Text tone="muted" variant="caption">
+												No alerts configured.{" "}
+												<Link
+													className="text-primary hover:underline"
+													href="/settings/notifications"
+												>
+													Create one
+												</Link>
+											</Text>
+										</div>
 									) : (
-										<div className="space-y-1">
-											{alarms.map((alarm) => {
-												const isAttached = attachedAlarms.some(
-													(a) => a.id === alarm.id,
-												);
-												return (
-													<Checkbox
-														checked={isAttached}
-														key={alarm.id}
-														label={
-															<span className="flex items-center gap-1.5">
-																{alarm.name}
-																{!alarm.enabled && (
-																	<Badge size="sm" variant="muted">
-																		Paused
-																	</Badge>
-																)}
-															</span>
-														}
-														onCheckedChange={() =>
-															toggleAlarm(alarm, !isAttached)
-														}
-													/>
-												);
-											})}
+										<div className="space-y-4">
+											{alarms.map((alarm) => (
+												<AlarmRow
+													alarm={alarm}
+													isLinked={alarm.linkedIds.includes(
+														schedule?.id ?? "",
+													)}
+													isPending={alarmUpdateMutation.isPending}
+													key={alarm.id}
+													onToggle={() => toggleAlarm(alarm)}
+												/>
+											))}
 										</div>
 									)}
 								</div>
