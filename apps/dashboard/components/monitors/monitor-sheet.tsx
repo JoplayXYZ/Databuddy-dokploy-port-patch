@@ -7,8 +7,13 @@ import { toast } from "sonner";
 import { useOrganizationsContext } from "@/components/providers/organizations-provider";
 import { useWebsite } from "@/hooks/use-websites";
 import { orpc } from "@/lib/orpc";
-import { BellIcon, InfoIcon } from "@databuddy/ui/icons";
-import { Sheet, Switch } from "@databuddy/ui/client";
+import {
+	BellIcon,
+	GearIcon,
+	InfoIcon,
+	TimerIcon,
+} from "@databuddy/ui/icons";
+import { Accordion, Sheet, Switch } from "@databuddy/ui/client";
 import {
 	Badge,
 	Button,
@@ -126,49 +131,6 @@ function parseAlarms(
 	});
 }
 
-function AlarmRow({
-	alarm,
-	isLinked,
-	onToggle,
-	isPending,
-}: {
-	alarm: ParsedAlarm;
-	isLinked: boolean;
-	isPending: boolean;
-	onToggle: () => void;
-}) {
-	const destSummary = alarm.destinations
-		.map((d) => DEST_LABELS[d.type] ?? d.type)
-		.join(", ");
-
-	return (
-		<div className="flex items-center justify-between gap-4">
-			<div className="min-w-0 flex-1">
-				<div className="flex items-center gap-1.5">
-					<p className="truncate font-medium text-sm">{alarm.name}</p>
-					{!alarm.enabled && (
-						<Badge size="sm" variant="muted">
-							Paused
-						</Badge>
-					)}
-				</div>
-				{destSummary && (
-					<p className="truncate text-muted-foreground text-xs">
-						{destSummary}
-					</p>
-				)}
-			</div>
-			<div className="shrink-0">
-				<Switch
-					checked={isLinked}
-					disabled={isPending}
-					onCheckedChange={onToggle}
-				/>
-			</div>
-		</div>
-	);
-}
-
 export function MonitorSheet({
 	open,
 	onCloseAction,
@@ -210,6 +172,10 @@ export function MonitorSheet({
 	const alarms = parseAlarms(
 		(rawAlarms ?? []) as readonly Record<string, unknown>[],
 	);
+
+	const linkedAlarmCount = alarms.filter((a) =>
+		a.linkedIds.includes(schedule?.id ?? ""),
+	).length;
 
 	const toggleAlarm = async (alarm: ParsedAlarm) => {
 		const isLinked = alarm.linkedIds.includes(schedule!.id);
@@ -323,6 +289,9 @@ export function MonitorSheet({
 		}
 	};
 
+	const advancedCount =
+		(timeoutMs ? 1 : 0) + (cacheBust ? 1 : 0) + (jsonParsingEnabled ? 0 : 1);
+
 	return (
 		<Sheet onOpenChange={onCloseAction} open={open}>
 			<Sheet.Content className="w-full sm:max-w-md">
@@ -401,94 +370,141 @@ export function MonitorSheet({
 
 						<Divider />
 
-						<div className="space-y-4">
-							<SettingsRow
-								description="Max wait time before timing out"
-								label="Timeout"
-							>
-								<Input
-									className="w-24"
-									max={120}
-									min={1}
-									onChange={(e) => {
-										const val = e.target.value;
-										setTimeoutMs(val ? Number(val) * 1000 : null);
-									}}
-									placeholder="30"
-									suffix="sec"
-									type="number"
-									value={timeoutMs ? timeoutMs / 1000 : ""}
-								/>
-							</SettingsRow>
+						<div className="space-y-2">
+							<div className="overflow-hidden rounded-md border border-border/60">
+								<Accordion>
+									<Accordion.Trigger>
+										<GearIcon
+											className="size-4 shrink-0 text-muted-foreground"
+											weight="duotone"
+										/>
+										<Text variant="label">Advanced Settings</Text>
+										{advancedCount > 0 && (
+											<span className="ml-auto flex size-5 items-center justify-center rounded-full bg-primary font-medium text-primary-foreground text-xs">
+												{advancedCount}
+											</span>
+										)}
+									</Accordion.Trigger>
+									<Accordion.Content>
+										<div className="space-y-4">
+											<SettingsRow
+												description="Max wait time before timing out"
+												label="Timeout"
+											>
+												<Input
+													className="w-24"
+													max={120}
+													min={1}
+													onChange={(e) => {
+														const val = e.target.value;
+														setTimeoutMs(
+															val ? Number(val) * 1000 : null,
+														);
+													}}
+													placeholder="30"
+													suffix="sec"
+													type="number"
+													value={timeoutMs ? timeoutMs / 1000 : ""}
+												/>
+											</SettingsRow>
 
-							<Divider />
+											<SettingsRow
+												description="Bypass CDN caches with a random query parameter"
+												label="Cache busting"
+											>
+												<Switch
+													checked={cacheBust}
+													onCheckedChange={setCacheBust}
+												/>
+											</SettingsRow>
 
-							<SettingsRow
-								description="Bypass CDN caches with a random query parameter"
-								label="Cache busting"
-							>
-								<Switch checked={cacheBust} onCheckedChange={setCacheBust} />
-							</SettingsRow>
+											<SettingsRow
+												description="Parse JSON responses for status and latency"
+												label="Capture service latency"
+											>
+												<Switch
+													checked={jsonParsingEnabled}
+													onCheckedChange={setJsonParsingEnabled}
+												/>
+											</SettingsRow>
+										</div>
+									</Accordion.Content>
+								</Accordion>
+							</div>
 
-							<Divider />
-
-							<SettingsRow
-								description="Parse JSON responses for status and latency"
-								label="Capture service latency"
-							>
-								<Switch
-									checked={jsonParsingEnabled}
-									onCheckedChange={setJsonParsingEnabled}
-								/>
-							</SettingsRow>
-						</div>
-
-						{isEditing && (
-							<>
-								<Divider />
-
-								<div className="space-y-4">
-									<div className="space-y-0.5">
-										<p className="font-medium text-sm">Alerts</p>
-										<p className="text-muted-foreground text-xs">
-											Choose which alerts fire when this monitor goes down
-										</p>
-									</div>
-
-									{alarms.length === 0 ? (
-										<div className="flex items-center gap-3 rounded-md border border-dashed border-border/60 p-3">
+							{isEditing && (
+								<div className="overflow-hidden rounded-md border border-border/60">
+									<Accordion>
+										<Accordion.Trigger>
 											<BellIcon
 												className="size-4 shrink-0 text-muted-foreground"
 												weight="duotone"
 											/>
-											<Text tone="muted" variant="caption">
-												No alerts configured.{" "}
-												<Link
-													className="text-primary hover:underline"
-													href="/settings/notifications"
-												>
-													Create one
-												</Link>
-											</Text>
-										</div>
-									) : (
-										<div className="space-y-4">
-											{alarms.map((alarm) => (
-												<AlarmRow
-													alarm={alarm}
-													isLinked={alarm.linkedIds.includes(
-														schedule?.id ?? "",
-													)}
-													isPending={alarmUpdateMutation.isPending}
-													key={alarm.id}
-													onToggle={() => toggleAlarm(alarm)}
-												/>
-											))}
-										</div>
-									)}
+											<Text variant="label">Alerts</Text>
+											{linkedAlarmCount > 0 && (
+												<span className="ml-auto flex size-5 items-center justify-center rounded-full bg-primary font-medium text-primary-foreground text-xs">
+													{linkedAlarmCount}
+												</span>
+											)}
+										</Accordion.Trigger>
+										<Accordion.Content>
+											{alarms.length === 0 ? (
+												<Text tone="muted" variant="caption">
+													No alerts configured.{" "}
+													<Link
+														className="text-primary hover:underline"
+														href="/settings/notifications"
+													>
+														Create one
+													</Link>
+												</Text>
+											) : (
+												<div className="space-y-4">
+													{alarms.map((alarm) => {
+														const isLinked = alarm.linkedIds.includes(
+															schedule?.id ?? "",
+														);
+														const destSummary = alarm.destinations
+															.map(
+																(d) => DEST_LABELS[d.type] ?? d.type,
+															)
+															.join(", ");
+
+														return (
+															<SettingsRow
+																description={destSummary}
+																key={alarm.id}
+																label={alarm.name}
+															>
+																<div className="flex items-center gap-2">
+																	{!alarm.enabled && (
+																		<Badge
+																			size="sm"
+																			variant="muted"
+																		>
+																			Paused
+																		</Badge>
+																	)}
+																	<Switch
+																		checked={isLinked}
+																		disabled={
+																			alarmUpdateMutation.isPending
+																		}
+																		onCheckedChange={() =>
+																			toggleAlarm(alarm)
+																		}
+																	/>
+																</div>
+															</SettingsRow>
+														);
+													})}
+												</div>
+											)}
+										</Accordion.Content>
+									</Accordion>
 								</div>
-							</>
-						)}
+							)}
+						</div>
 					</Sheet.Body>
 
 					<Sheet.Footer>
