@@ -4,7 +4,9 @@ const apiKey = process.env.DATABUDDY_API_KEY;
 const websiteId = process.env.DATABUDDY_WEBSITE_ID;
 
 function createClient(source: string, namespace?: string) {
-	if (!apiKey || !websiteId) return null;
+	if (!(apiKey && websiteId)) {
+		return null;
+	}
 	return new Databuddy({
 		apiKey,
 		websiteId,
@@ -22,9 +24,7 @@ export function trackAgentEvent(
 	name: string,
 	properties?: Record<string, unknown>
 ): void {
-	agentClient
-		?.track({ name, properties })
-		.catch(() => {});
+	agentClient?.track({ name, properties }).catch(() => {});
 }
 
 export function trackMutationEvent(

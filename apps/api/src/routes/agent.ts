@@ -316,7 +316,7 @@ export const agent = new Elysia({ prefix: "/v1/agent" })
 					const { website } = websiteValidation;
 					organizationId = website.organizationId ?? null;
 
-const resolvePermission = (): Promise<boolean> => {
+					const resolvePermission = (): Promise<boolean> => {
 						if (apiKey) {
 							if (hasGlobalAccess(apiKey)) {
 								return Promise.resolve(
