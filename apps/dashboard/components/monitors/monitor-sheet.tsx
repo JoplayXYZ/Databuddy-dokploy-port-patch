@@ -1,19 +1,21 @@
 "use client";
 
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useOrganizationsContext } from "@/components/providers/organizations-provider";
 import { useWebsite } from "@/hooks/use-websites";
 import { orpc } from "@/lib/orpc";
-import { InfoIcon } from "@databuddy/ui/icons";
-import { Sheet, Switch } from "@databuddy/ui/client";
+import { BellIcon, InfoIcon, PlusIcon, XMarkIcon } from "@databuddy/ui/icons";
+import { Checkbox, Sheet, Switch } from "@databuddy/ui/client";
 import {
+	Badge,
 	Button,
 	Divider,
 	Field,
 	Input,
 	SegmentedControl,
+	Text,
 	Tooltip,
 } from "@databuddy/ui";
 
@@ -106,12 +108,73 @@ export function MonitorSheet({
 	const [jsonParsingEnabled, setJsonParsingEnabled] = useState(true);
 	const [urlError, setUrlError] = useState<string | null>(null);
 
+	const queryClient = useQueryClient();
+
 	const createMutation = useMutation({
 		...orpc.uptime.createSchedule.mutationOptions(),
 	});
 	const updateMutation = useMutation({
 		...orpc.uptime.updateSchedule.mutationOptions(),
 	});
+	const alarmUpdateMutation = useMutation({
+		...orpc.alarms.update.mutationOptions(),
+	});
+
+	const { data: rawAlarms } = useQuery({
+		...orpc.alarms.list.queryOptions({ input: {} }),
+		enabled: open && isEditing,
+	});
+
+	const alarms = (rawAlarms ?? []).map((row) => {
+		const r = row as Record<string, unknown>;
+		const tc =
+			typeof r.triggerConditions === "object" && r.triggerConditions
+				? (r.triggerConditions as Record<string, unknown>)
+				: {};
+		const linkedIds = Array.isArray(tc.monitorIds)
+			? (tc.monitorIds as string[])
+			: [];
+		return {
+			id: r.id as string,
+			name: r.name as string,
+			enabled: r.enabled as boolean,
+			triggerConditions: tc,
+			linkedIds,
+			destinations: Array.isArray(r.destinations)
+				? (r.destinations as Array<{ id: string; type: string }>)
+				: [],
+		};
+	});
+
+	const attachedAlarms = alarms.filter((a) =>
+		a.linkedIds.includes(schedule?.id ?? ""),
+	);
+	const availableAlarms = alarms.filter(
+		(a) => !a.linkedIds.includes(schedule?.id ?? ""),
+	);
+
+	const toggleAlarm = async (
+		alarm: (typeof alarms)[number],
+		attach: boolean,
+	) => {
+		const nextIds = attach
+			? [...alarm.linkedIds, schedule!.id]
+			: alarm.linkedIds.filter((id) => id !== schedule!.id);
+		try {
+			await alarmUpdateMutation.mutateAsync({
+				alarmId: alarm.id,
+				triggerConditions: {
+					...alarm.triggerConditions,
+					monitorIds: nextIds,
+				},
+			});
+			await queryClient.invalidateQueries({
+				queryKey: orpc.alarms.list.key(),
+			});
+		} catch {
+			toast.error(attach ? "Failed to attach alert" : "Failed to detach alert");
+		}
+	};
 
 	useEffect(() => {
 		if (!open) {
@@ -324,6 +387,53 @@ export function MonitorSheet({
 								/>
 							</SettingsRow>
 						</div>
+
+						{isEditing && (
+							<>
+								<Divider />
+								<div className="space-y-3">
+									<Field.Label>Alerts</Field.Label>
+									{alarms.length === 0 ? (
+										<Text tone="muted" variant="caption">
+											No alerts configured.{" "}
+											<a
+												className="text-primary hover:underline"
+												href="/settings/notifications"
+											>
+												Create one
+											</a>
+										</Text>
+									) : (
+										<div className="space-y-1">
+											{alarms.map((alarm) => {
+												const isAttached = attachedAlarms.some(
+													(a) => a.id === alarm.id,
+												);
+												return (
+													<Checkbox
+														checked={isAttached}
+														key={alarm.id}
+														label={
+															<span className="flex items-center gap-1.5">
+																{alarm.name}
+																{!alarm.enabled && (
+																	<Badge size="sm" variant="muted">
+																		Paused
+																	</Badge>
+																)}
+															</span>
+														}
+														onCheckedChange={() =>
+															toggleAlarm(alarm, !isAttached)
+														}
+													/>
+												);
+											})}
+										</div>
+									)}
+								</div>
+							</>
+						)}
 					</Sheet.Body>
 
 					<Sheet.Footer>
