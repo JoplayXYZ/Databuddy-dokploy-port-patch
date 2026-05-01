@@ -20,7 +20,7 @@ export const modelNames = {
 	tiny: "openai/gpt-oss-120b",
 	greeter: "anthropic/claude-haiku-4.5",
 	quick: "xai/grok-4.20-non-reasoning-beta",
-	balanced: "google/gemini-3.1-pro-preview",
+	balanced: "anthropic/claude-sonnet-4.6",
 	deep: "openai/gpt-5.5",
 	perplexity: "perplexity/sonar-pro",
 } as const;
