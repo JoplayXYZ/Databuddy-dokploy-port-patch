@@ -302,7 +302,7 @@ export function AlarmSheet({
 					<Sheet.Description>
 						{isEditing
 							? "Update this alert's destinations and settings."
-							: "Configure where notifications are sent. Attach this alert to monitors and rules later."}
+							: "Configure where notifications are sent and which monitors trigger them."}
 					</Sheet.Description>
 				</Sheet.Header>
 
@@ -369,7 +369,7 @@ export function AlarmSheet({
 								Which monitors should trigger this alert?
 							</Text>
 							{monitors.length === 0 ? (
-								<div className="rounded-md border border-border/60 border-dashed p-4 text-center">
+								<div className="rounded-md border border-dashed border-border/60 p-4 text-center">
 									<HeartbeatIcon
 										className="mx-auto mb-2 size-5 text-muted-foreground"
 										weight="duotone"
@@ -398,7 +398,7 @@ export function AlarmSheet({
 										const toggle = (id: string) => {
 											if (field.value.includes(id)) {
 												field.onChange(
-													field.value.filter((v: string) => v !== id)
+													field.value.filter((v: string) => v !== id),
 												);
 											} else {
 												field.onChange([...field.value, id]);
@@ -406,7 +406,7 @@ export function AlarmSheet({
 										};
 										return (
 											<div className="space-y-1 rounded-md border border-border/60">
-												<div className="flex items-center justify-between border-border/60 border-b px-3 py-2">
+												<div className="flex items-center justify-between border-b border-border/60 px-3 py-2">
 													<Checkbox
 														checked={allSelected}
 														label={
@@ -465,12 +465,12 @@ export function AlarmSheet({
 							<div className="space-y-2">
 								{fields.map((field, index) => {
 									const destType = form.watch(
-										`destinations.${index}.type`
+										`destinations.${index}.type`,
 									) as DestType;
 									const channel = CHANNELS[destType];
 									const Icon = channel?.icon ?? GlobeSimpleIcon;
 									const identifier = form.watch(
-										`destinations.${index}.identifier`
+										`destinations.${index}.identifier`,
 									);
 
 									return (
@@ -534,12 +534,12 @@ export function AlarmSheet({
 													{destType === "webhook" && (
 														<WebhookHeaders
 															config={form.watch(
-																`destinations.${index}.config`
+																`destinations.${index}.config`,
 															)}
 															onChange={(headers) =>
 																form.setValue(`destinations.${index}.config`, {
 																	...form.getValues(
-																		`destinations.${index}.config`
+																		`destinations.${index}.config`,
 																	),
 																	headers,
 																})
