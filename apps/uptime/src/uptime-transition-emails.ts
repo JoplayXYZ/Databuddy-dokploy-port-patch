@@ -1,4 +1,4 @@
-import { and, db, eq, sql, withTransaction } from "@databuddy/db";
+import { and, db, eq, withTransaction } from "@databuddy/db";
 import { alarms, uptimeSchedules } from "@databuddy/db/schema";
 import { chQuery } from "@databuddy/db/clickhouse";
 import {
@@ -116,13 +116,19 @@ async function fetchLinkedAlarms(
 	scheduleId: string,
 	organizationId: string,
 ) {
-	return db.query.alarms.findMany({
+	const rows = await db.query.alarms.findMany({
 		where: and(
 			eq(alarms.organizationId, organizationId),
 			eq(alarms.enabled, true),
-			sql`${alarms.triggerConditions}->'monitorIds' @> ${JSON.stringify([scheduleId])}::jsonb`,
 		),
 		with: { destinations: true },
+	});
+
+	return rows.filter((alarm) => {
+		const tc = alarm.triggerConditions as Record<string, unknown> | null;
+		return (
+			tc && Array.isArray(tc.monitorIds) && (tc.monitorIds as string[]).includes(scheduleId)
+		);
 	});
 }
 
