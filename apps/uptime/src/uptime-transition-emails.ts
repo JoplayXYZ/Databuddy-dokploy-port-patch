@@ -1,4 +1,4 @@
-import { db, eq, withTransaction } from "@databuddy/db";
+import { and, db, eq, sql, withTransaction } from "@databuddy/db";
 import { alarms, uptimeSchedules } from "@databuddy/db/schema";
 import { chQuery } from "@databuddy/db/clickhouse";
 import {
@@ -106,22 +106,35 @@ async function claimTransition(
 	}
 }
 
-async function getLinkedAlarms(scheduleId: string, organizationId: string) {
-	const rows = await db.query.alarms.findMany({
-		where: eq(alarms.organizationId, organizationId),
+const ALARM_CACHE_TTL = 30_000;
+const alarmCache = new Map<
+	string,
+	{ ts: number; data: Awaited<ReturnType<typeof fetchLinkedAlarms>> }
+>();
+
+async function fetchLinkedAlarms(
+	scheduleId: string,
+	organizationId: string,
+) {
+	return db.query.alarms.findMany({
+		where: and(
+			eq(alarms.organizationId, organizationId),
+			eq(alarms.enabled, true),
+			sql`${alarms.triggerConditions}->'monitorIds' @> ${JSON.stringify([scheduleId])}::jsonb`,
+		),
 		with: { destinations: true },
 	});
+}
 
-	return rows.filter((alarm) => {
-		if (!alarm.enabled) {
-			return false;
-		}
-		const tc = alarm.triggerConditions as Record<string, unknown> | null;
-		if (!tc || !Array.isArray(tc.monitorIds)) {
-			return false;
-		}
-		return (tc.monitorIds as string[]).includes(scheduleId);
-	});
+async function getLinkedAlarms(scheduleId: string, organizationId: string) {
+	const key = `${organizationId}:${scheduleId}`;
+	const cached = alarmCache.get(key);
+	if (cached && Date.now() - cached.ts < ALARM_CACHE_TTL) {
+		return cached.data;
+	}
+	const data = await fetchLinkedAlarms(scheduleId, organizationId);
+	alarmCache.set(key, { ts: Date.now(), data });
+	return data;
 }
 
 export async function getPreviousMonitorStatus(
@@ -190,60 +203,60 @@ export async function sendUptimeTransitionEmailsIfNeeded(options: {
 	const baseUrl = process.env.DASHBOARD_APP_URL ?? "https://app.databuddy.cc";
 	const dashboardUrl = `${baseUrl.replace(TRAILING_SLASH, "")}/monitors/${options.schedule.id}`;
 
-	let fired = 0;
+	const title =
+		kind === "down"
+			? `[DOWN] ${siteLabel} is unreachable`
+			: `[Recovered] ${siteLabel} is back up`;
 
-	for (const alarm of linkedAlarms) {
-		if (!alarm.destinations || alarm.destinations.length === 0) {
-			continue;
-		}
+	const httpInfo = options.data.http_code
+		? ` (HTTP ${options.data.http_code})`
+		: "";
+	const errorInfo = options.data.error ? ` - ${options.data.error}` : "";
 
-		try {
+	const message =
+		kind === "down"
+			? `${siteLabel} is down${httpInfo}${errorInfo}. View details: ${dashboardUrl}`
+			: `${siteLabel} has recovered and is operational again. Response time: ${options.data.total_ms}ms. View details: ${dashboardUrl}`;
+
+	const payload = {
+		title,
+		message,
+		priority: kind === "down" ? ("high" as const) : ("normal" as const),
+		metadata: {
+			template: "uptime-transition",
+			monitorId: options.schedule.id,
+			monitorName: siteLabel,
+			url: options.data.url,
+			kind,
+			httpCode: options.data.http_code,
+			dashboardUrl,
+		},
+	};
+
+	const sendable = linkedAlarms
+		.filter((a) => a.destinations && a.destinations.length > 0)
+		.map((alarm) => {
 			const { clientConfig, channels } = toNotificationConfig(
 				alarm.destinations,
 			);
-			if (channels.length === 0) {
-				continue;
-			}
+			return { alarm, clientConfig, channels };
+		})
+		.filter((s) => s.channels.length > 0);
 
-			const client = new NotificationClient(clientConfig);
-			const title =
-				kind === "down"
-					? `[DOWN] ${siteLabel} is unreachable`
-					: `[Recovered] ${siteLabel} is back up`;
+	const results = await Promise.allSettled(
+		sendable.map(({ alarm, clientConfig, channels }) =>
+			new NotificationClient(clientConfig)
+				.send(payload, { channels })
+				.catch((error) => {
+					captureError(error, {
+						error_step: "alarm_notification",
+						alarm_id: alarm.id,
+					});
+					throw error;
+				}),
+		),
+	);
 
-			const httpInfo = options.data.http_code
-				? ` (HTTP ${options.data.http_code})`
-				: "";
-			const errorInfo = options.data.error ? ` - ${options.data.error}` : "";
-
-			await client.send(
-				{
-					title,
-					message:
-						kind === "down"
-							? `${siteLabel} is down${httpInfo}${errorInfo}. View details: ${dashboardUrl}`
-							: `${siteLabel} has recovered and is operational again. Response time: ${options.data.total_ms}ms. View details: ${dashboardUrl}`,
-					priority: kind === "down" ? "high" : "normal",
-					metadata: {
-						template: "uptime-transition",
-						monitorId: options.schedule.id,
-						monitorName: siteLabel,
-						url: options.data.url,
-						kind,
-						httpCode: options.data.http_code,
-						dashboardUrl,
-					},
-				},
-				{ channels },
-			);
-			fired++;
-		} catch (error) {
-			captureError(error, {
-				error_step: "alarm_notification",
-				alarm_id: alarm.id,
-			});
-		}
-	}
-
+	const fired = results.filter((r) => r.status === "fulfilled").length;
 	return { alarms_fired: fired, transition_kind: kind };
 }
