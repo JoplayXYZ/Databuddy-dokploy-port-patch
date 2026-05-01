@@ -19,9 +19,9 @@ import { sendUptimeEvent } from "./lib/producer";
 import { captureError } from "./lib/tracing";
 import { MonitorStatus, type ActionResult, type UptimeData } from "./types";
 import {
+	fireTransitionAlerts,
 	getPreviousMonitorStatus,
-	sendUptimeTransitionEmailsIfNeeded,
-} from "./uptime-transition-emails";
+} from "./uptime-transition-alerts";
 
 export interface UptimeWorkerDeps {
 	captureError: (
@@ -41,7 +41,7 @@ export interface UptimeWorkerDeps {
 	isHealthExtractionEnabled: (config: unknown) => boolean;
 	lookupSchedule: (scheduleId: string) => Promise<ActionResult<ScheduleData>>;
 	sendUptimeEvent: (data: UptimeData, monitorId: string) => Promise<void>;
-	sendUptimeTransitionEmailsIfNeeded: (options: {
+	fireTransitionAlerts: (options: {
 		schedule: ScheduleData;
 		data: UptimeData;
 		previousStatus?: number;
@@ -59,7 +59,7 @@ const uptimeWorkerDeps: UptimeWorkerDeps = {
 	isHealthExtractionEnabled,
 	lookupSchedule,
 	sendUptimeEvent,
-	sendUptimeTransitionEmailsIfNeeded,
+	fireTransitionAlerts,
 };
 
 export interface UptimeWorkerJob {
@@ -183,7 +183,7 @@ export async function processUptimeCheck(
 
 		const t4 = performance.now();
 		try {
-			const transition = await deps.sendUptimeTransitionEmailsIfNeeded({
+			const transition = await deps.fireTransitionAlerts({
 				schedule: schedule.data,
 				data: result.data,
 				previousStatus,

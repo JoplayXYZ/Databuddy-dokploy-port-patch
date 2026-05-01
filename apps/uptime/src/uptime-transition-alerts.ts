@@ -5,13 +5,11 @@ import {
 	NotificationClient,
 	type NotificationChannel,
 } from "@databuddy/notifications";
-import { Data, Effect } from "effect";
+import { Data, Effect, Option } from "effect";
 import type { ScheduleData } from "./actions";
 import { UPTIME_ENV } from "./lib/env";
 import { captureError } from "./lib/tracing";
 import { MonitorStatus, type UptimeData } from "./types";
-
-const TRAILING_SLASH = /\/$/;
 
 class TransitionClaimError extends Data.TaggedError("TransitionClaimError")<{
 	cause: unknown;
@@ -28,11 +26,49 @@ class NotificationSendError extends Data.TaggedError(
 	cause: unknown;
 }> {}
 
-class ClickHouseQueryError extends Data.TaggedError("ClickHouseQueryError")<{
-	cause: unknown;
-}> {}
+type LinkedAlarm = {
+	id: string;
+	destinations: Array<{ type: string; identifier: string; config: unknown }>;
+};
 
-function toNotificationConfig(
+export interface TransitionResult {
+	alarms_fired: number;
+	transition_kind: "down" | "recovered" | null;
+}
+
+const NO_TRANSITION: TransitionResult = {
+	alarms_fired: 0,
+	transition_kind: null,
+};
+
+export function resolveTransitionKind(
+	previous: number | undefined,
+	current: number,
+): "down" | "recovered" | null {
+	if (current === MonitorStatus.UP) {
+		if (previous === MonitorStatus.DOWN) return "recovered";
+		return null;
+	}
+	if (current === MonitorStatus.DOWN) {
+		if (previous === MonitorStatus.DOWN) return null;
+		return "down";
+	}
+	return null;
+}
+
+function buildSiteLabel(schedule: ScheduleData): string {
+	const w = schedule.website;
+	if (w?.name) return w.name;
+	if (w?.domain) return w.domain;
+	if (schedule.name) return schedule.name;
+	try {
+		return new URL(schedule.url).hostname;
+	} catch {
+		return schedule.url;
+	}
+}
+
+function toNotificationChannels(
 	destinations: Array<{ type: string; identifier: string; config: unknown }>,
 ) {
 	const clientConfig: Record<string, Record<string, unknown>> = {};
@@ -53,33 +89,6 @@ function toNotificationConfig(
 	}
 
 	return { clientConfig, channels };
-}
-
-function buildSiteLabel(schedule: ScheduleData): string {
-	const w = schedule.website;
-	if (w?.name) return w.name;
-	if (w?.domain) return w.domain;
-	if (schedule.name) return schedule.name;
-	try {
-		return new URL(schedule.url).hostname;
-	} catch {
-		return schedule.url;
-	}
-}
-
-export function resolveTransitionKind(
-	previous: number | undefined,
-	current: number,
-): "down" | "recovered" | null {
-	if (current === MonitorStatus.UP) {
-		if (previous === MonitorStatus.DOWN) return "recovered";
-		return null;
-	}
-	if (current === MonitorStatus.DOWN) {
-		if (previous === MonitorStatus.DOWN) return null;
-		return "down";
-	}
-	return null;
 }
 
 const claimTransition = (scheduleId: string, currentStatus: number) =>
@@ -111,123 +120,92 @@ const claimTransition = (scheduleId: string, currentStatus: number) =>
 	});
 
 const ALARM_CACHE_TTL = 30_000;
-const alarmCache = new Map<
-	string,
-	{ ts: number; data: Awaited<ReturnType<typeof fetchLinkedAlarmsRaw>> }
->();
+const alarmCache = new Map<string, { ts: number; data: LinkedAlarm[] }>();
 
-async function fetchLinkedAlarmsRaw(
-	scheduleId: string,
-	organizationId: string,
-) {
-	const rows = await db.query.alarms.findMany({
-		where: and(
-			eq(alarms.organizationId, organizationId),
-			eq(alarms.enabled, true),
-		),
-		with: { destinations: true },
-	});
-
-	return rows.filter((alarm) => {
-		const tc = alarm.triggerConditions as Record<string, unknown> | null;
-		return (
-			tc &&
-			Array.isArray(tc.monitorIds) &&
-			(tc.monitorIds as string[]).includes(scheduleId)
-		);
-	});
-}
-
-const getLinkedAlarms = (scheduleId: string, organizationId: string) =>
-	Effect.tryPromise({
-		try: async () => {
-			const key = `${organizationId}:${scheduleId}`;
-			const cached = alarmCache.get(key);
-			if (cached && Date.now() - cached.ts < ALARM_CACHE_TTL) {
-				return cached.data;
-			}
-			const data = await fetchLinkedAlarmsRaw(scheduleId, organizationId);
-			alarmCache.set(key, { ts: Date.now(), data });
-			return data;
-		},
-		catch: (cause) => new AlarmLookupError({ cause }),
-	});
-
-const sendAlarmNotification = (
-	alarm: { id: string; destinations: Array<{ type: string; identifier: string; config: unknown }> },
-	payload: Parameters<NotificationClient["send"]>[0],
-) =>
-	Effect.tryPromise({
-		try: () => {
-			const { clientConfig, channels } = toNotificationConfig(
-				alarm.destinations,
-			);
-			if (channels.length === 0) return Promise.resolve(false);
-			return new NotificationClient(clientConfig)
-				.send(payload, { channels })
-				.then(() => true);
-		},
-		catch: (cause) => new NotificationSendError({ alarmId: alarm.id, cause }),
-	});
-
-const queryPreviousStatus = (siteId: string) => {
-	if (!process.env.CLICKHOUSE_URL) {
-		return Effect.succeed(undefined as number | undefined);
+const lookupLinkedAlarms = (scheduleId: string, organizationId: string) => {
+	const key = `${organizationId}:${scheduleId}`;
+	const cached = alarmCache.get(key);
+	if (cached && Date.now() - cached.ts < ALARM_CACHE_TTL) {
+		return Effect.succeed(cached.data);
 	}
 
 	return Effect.tryPromise({
 		try: async () => {
-			const rows = await chQuery<{ status: number }>(
+			const rows = await db.query.alarms.findMany({
+				where: and(
+					eq(alarms.organizationId, organizationId),
+					eq(alarms.enabled, true),
+				),
+				with: { destinations: true },
+			});
+
+			const linked: LinkedAlarm[] = rows.filter((alarm) => {
+				const tc = alarm.triggerConditions as Record<string, unknown> | null;
+				return (
+					tc &&
+					Array.isArray(tc.monitorIds) &&
+					(tc.monitorIds as string[]).includes(scheduleId)
+				);
+			});
+
+			alarmCache.set(key, { ts: Date.now(), data: linked });
+			return linked;
+		},
+		catch: (cause) => new AlarmLookupError({ cause }),
+	});
+};
+
+const sendToAlarm = (
+	alarm: LinkedAlarm,
+	payload: Parameters<NotificationClient["send"]>[0],
+) => {
+	const { clientConfig, channels } = toNotificationChannels(
+		alarm.destinations,
+	);
+	if (channels.length === 0) return Effect.succeed(false);
+
+	return Effect.tryPromise({
+		try: () =>
+			new NotificationClient(clientConfig)
+				.send(payload, { channels })
+				.then(() => true),
+		catch: (cause) => new NotificationSendError({ alarmId: alarm.id, cause }),
+	});
+};
+
+export const queryPreviousStatus = (siteId: string) =>
+	Effect.gen(function* () {
+		if (!process.env.CLICKHOUSE_URL) return Option.none<number>();
+
+		const rows = yield* Effect.tryPromise(() =>
+			chQuery<{ status: number }>(
 				`SELECT status
        FROM uptime.uptime_monitor
        WHERE site_id = {siteId:String}
        ORDER BY timestamp DESC
        LIMIT 1`,
 				{ siteId },
-			);
-			return rows[0]?.status;
-		},
-		catch: (cause) => new ClickHouseQueryError({ cause }),
+			),
+		).pipe(Effect.orElseSucceed(() => [] as { status: number }[]));
+
+		const first = rows[0];
+		return first ? Option.some(first.status) : Option.none<number>();
 	});
-};
 
-export async function getPreviousMonitorStatus(
-	siteId: string,
-): Promise<number | undefined> {
-	return Effect.runPromise(
-		queryPreviousStatus(siteId).pipe(
-			Effect.catchTag("ClickHouseQueryError", (e) => {
-				captureError(e.cause, { error_step: "clickhouse_previous_status" });
-				return Effect.succeed(undefined as number | undefined);
-			}),
-		),
-	);
-}
-
-export interface TransitionResult {
-	alarms_fired: number;
-	transition_kind: "down" | "recovered" | null;
-}
-
-const noTransition: TransitionResult = {
-	alarms_fired: 0,
-	transition_kind: null,
-};
-
-const processTransition = (options: {
+const handleTransition = (options: {
 	schedule: ScheduleData;
 	data: UptimeData;
 	previousStatus?: number;
 }) =>
 	Effect.gen(function* () {
-		if (!UPTIME_ENV.isProduction) return noTransition;
+		if (!UPTIME_ENV.isProduction) return NO_TRANSITION;
 
 		if (
 			options.previousStatus !== undefined &&
 			resolveTransitionKind(options.previousStatus, options.data.status) ===
 				null
 		) {
-			return noTransition;
+			return NO_TRANSITION;
 		}
 
 		const kind = yield* claimTransition(
@@ -240,15 +218,15 @@ const processTransition = (options: {
 			}),
 		);
 
-		if (kind === null) return noTransition;
+		if (kind === null) return NO_TRANSITION;
 
-		const linkedAlarms = yield* getLinkedAlarms(
+		const linkedAlarms = yield* lookupLinkedAlarms(
 			options.schedule.id,
 			options.schedule.organizationId,
 		).pipe(
 			Effect.catchTag("AlarmLookupError", (e) => {
 				captureError(e.cause, { error_step: "alarm_lookup" });
-				return Effect.succeed([] as Awaited<ReturnType<typeof fetchLinkedAlarmsRaw>>);
+				return Effect.succeed([] as LinkedAlarm[]);
 			}),
 		);
 
@@ -259,7 +237,7 @@ const processTransition = (options: {
 		const siteLabel = buildSiteLabel(options.schedule);
 		const baseUrl =
 			process.env.DASHBOARD_APP_URL ?? "https://app.databuddy.cc";
-		const dashboardUrl = `${baseUrl.replace(TRAILING_SLASH, "")}/monitors/${options.schedule.id}`;
+		const dashboardUrl = `${baseUrl.replace(/\/$/, "")}/monitors/${options.schedule.id}`;
 
 		const httpInfo = options.data.http_code
 			? ` (HTTP ${options.data.http_code})`
@@ -290,12 +268,12 @@ const processTransition = (options: {
 		};
 
 		const sendable = linkedAlarms.filter(
-			(a) => a.destinations && a.destinations.length > 0,
+			(a) => a.destinations.length > 0,
 		);
 
 		const results = yield* Effect.all(
 			sendable.map((alarm) =>
-				sendAlarmNotification(alarm, payload).pipe(
+				sendToAlarm(alarm, payload).pipe(
 					Effect.catchTag("NotificationSendError", (e) => {
 						captureError(e.cause, {
 							error_step: "alarm_notification",
@@ -308,15 +286,24 @@ const processTransition = (options: {
 			{ concurrency: "unbounded" },
 		);
 
-		const fired = results.filter((sent) => sent === true).length;
-
-		return { alarms_fired: fired, transition_kind: kind } as TransitionResult;
+		const fired = results.filter(Boolean).length;
+		return { alarms_fired: fired, transition_kind: kind };
 	});
 
-export async function sendUptimeTransitionEmailsIfNeeded(options: {
+export async function getPreviousMonitorStatus(
+	siteId: string,
+): Promise<number | undefined> {
+	const option = await Effect.runPromise(queryPreviousStatus(siteId));
+	return Option.getOrUndefined(option);
+}
+
+export async function fireTransitionAlerts(options: {
 	schedule: ScheduleData;
 	data: UptimeData;
 	previousStatus?: number;
 }): Promise<TransitionResult> {
-	return Effect.runPromise(processTransition(options));
+	return Effect.runPromise(handleTransition(options));
 }
+
+/** @deprecated Use fireTransitionAlerts */
+export const sendUptimeTransitionEmailsIfNeeded = fireTransitionAlerts;
