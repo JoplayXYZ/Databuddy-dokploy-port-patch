@@ -8,7 +8,12 @@ import { z } from "zod";
 import { rpcError } from "../errors";
 import { getAutumn } from "../lib/autumn-client";
 import { logger, record } from "../lib/logger";
-import { protectedProcedure, publicProcedure, sessionProcedure, trackedProcedure } from "../orpc";
+import {
+	protectedProcedure,
+	publicProcedure,
+	sessionProcedure,
+	trackedProcedure,
+} from "../orpc";
 import { withWorkspace } from "../procedures/with-workspace";
 
 const updateAvatarSeedSchema = z.object({

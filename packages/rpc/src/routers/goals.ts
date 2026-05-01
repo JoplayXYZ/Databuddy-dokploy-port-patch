@@ -11,7 +11,7 @@ import {
 	processGoalAnalytics,
 } from "../lib/analytics-utils";
 import { setTrackProperties } from "../middleware/track-mutation";
-import { protectedProcedure, publicProcedure, trackedProcedure } from "../orpc";
+import { publicProcedure, trackedProcedure } from "../orpc";
 import { withWebsiteRead, withWorkspace } from "../procedures/with-workspace";
 import { requireFeatureWithLimit } from "../types/billing";
 

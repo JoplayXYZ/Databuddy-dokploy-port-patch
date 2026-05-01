@@ -114,7 +114,10 @@ export const alarmsRouter = {
 		)
 		.output(alarmOutputSchema)
 		.handler(async ({ context, input }) => {
-			setTrackProperties({ trigger_type: input.triggerType, destination_count: input.destinations.length });
+			setTrackProperties({
+				trigger_type: input.triggerType,
+				destination_count: input.destinations.length,
+			});
 			await withWorkspace(context, {
 				organizationId: input.organizationId,
 				resource: "organization",

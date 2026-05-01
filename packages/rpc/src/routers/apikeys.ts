@@ -20,7 +20,12 @@ import { z } from "zod";
 import { rpcError } from "../errors";
 import { setTrackProperties } from "../middleware/track-mutation";
 import type { Context } from "../orpc";
-import { protectedProcedure, publicProcedure, sessionProcedure, trackedProcedure } from "../orpc";
+import {
+	protectedProcedure,
+	publicProcedure,
+	sessionProcedure,
+	trackedProcedure,
+} from "../orpc";
 
 type ApiKey = ApiKeyRow;
 interface Metadata {

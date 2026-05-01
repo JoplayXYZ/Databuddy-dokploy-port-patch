@@ -22,7 +22,9 @@ export function setTrackingFn(fn: TrackFn) {
 
 export function setTrackProperties(props: Record<string, unknown>) {
 	const store = trackingStore.getStore();
-	if (store) store.properties = props;
+	if (store) {
+		store.properties = props;
+	}
 }
 
 const NAME_OVERRIDES: Record<string, string> = {
@@ -81,18 +83,26 @@ const VERB_MAP: Record<string, string> = {
 };
 
 function deriveEventName(path: string): string {
-	if (NAME_OVERRIDES[path]) return NAME_OVERRIDES[path];
+	if (NAME_OVERRIDES[path]) {
+		return NAME_OVERRIDES[path];
+	}
 
 	const [router, method] = path.split(".");
-	if (!router || !method) return path;
+	if (!(router && method)) {
+		return path;
+	}
 
 	const singular = toSnakeCase(router.replace(/s$/, ""));
 	const verb = VERB_MAP[method];
 
-	if (verb) return `${singular}_${verb}`;
+	if (verb) {
+		return `${singular}_${verb}`;
+	}
 
 	const toggleMatch = method.match(/^toggle(.+)$/);
-	if (toggleMatch) return `${singular}_toggled_${toSnakeCase(toggleMatch[1])}`;
+	if (toggleMatch) {
+		return `${singular}_toggled_${toSnakeCase(toggleMatch[1])}`;
+	}
 
 	return `${singular}_${method}`;
 }
@@ -113,7 +123,9 @@ export function runTracked<T>(
 	const store = { properties: null as Record<string, unknown> | null };
 	return trackingStore.run(store, () => {
 		const result = fn();
-		const maybeThenable = result as { then?: (cb: (v: unknown) => unknown) => unknown };
+		const maybeThenable = result as {
+			then?: (cb: (v: unknown) => unknown) => unknown;
+		};
 
 		if (maybeThenable && typeof maybeThenable.then === "function") {
 			return maybeThenable.then((resolved) => {
@@ -132,7 +144,9 @@ function fireAfterSuccess(
 	path: string,
 	context: { anonymousId?: string | null; sessionId?: string | null }
 ) {
-	if (!_trackFn) return;
+	if (!_trackFn) {
+		return;
+	}
 	_trackFn(deriveEventName(path), {
 		namespace: deriveNamespace(path),
 		sessionId: context.sessionId,

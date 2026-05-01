@@ -317,7 +317,10 @@ export const linksRouter = {
 		.input(createLinkSchema)
 		.output(linkOutputSchema)
 		.handler(async ({ context, input }) => {
-			setTrackProperties({ has_expiry: !!input.expiresAt, has_og: !!(input.ogTitle || input.ogImageUrl) });
+			setTrackProperties({
+				has_expiry: !!input.expiresAt,
+				has_og: !!(input.ogTitle || input.ogImageUrl),
+			});
 			const organizationId =
 				input.organizationId?.trim() || context.organizationId || null;
 			if (!organizationId) {

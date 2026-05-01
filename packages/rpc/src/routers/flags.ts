@@ -31,7 +31,7 @@ import { randomUUIDv7 } from "bun";
 import { z } from "zod";
 import { rpcError } from "../errors";
 import type { Context } from "../orpc";
-import { protectedProcedure, publicProcedure, trackedProcedure } from "../orpc";
+import { publicProcedure, trackedProcedure } from "../orpc";
 import { setTrackProperties } from "../middleware/track-mutation";
 import {
 	isFullyAuthorized,
@@ -752,11 +752,12 @@ export const flagsRouter = {
 		.input(updateFlagSchema)
 		.output(flagOutputSchema)
 		.handler(async ({ context, input }) => {
-			if (input.type || input.status)
+			if (input.type || input.status) {
 				setTrackProperties({
 					...(input.type && { type: input.type }),
 					...(input.status && { status: input.status }),
 				});
+			}
 			const existingFlag = await context.db
 				.select()
 				.from(flags)

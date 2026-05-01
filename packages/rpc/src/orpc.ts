@@ -123,12 +123,12 @@ export const sessionProcedure = protectedProcedure.use(
 	}
 );
 
-export const trackedProcedure = protectedProcedure.use(({ context, next, path }) =>
-	runTracked(path.join("."), context, next)
+export const trackedProcedure = protectedProcedure.use(
+	({ context, next, path }) => runTracked(path.join("."), context, next)
 );
 
-export const trackedSessionProcedure = sessionProcedure.use(({ context, next, path }) =>
-	runTracked(path.join("."), context, next)
+export const trackedSessionProcedure = sessionProcedure.use(
+	({ context, next, path }) => runTracked(path.join("."), context, next)
 );
 
 export { os };

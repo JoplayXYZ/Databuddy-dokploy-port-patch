@@ -6,7 +6,11 @@ import { randomUUIDv7 } from "bun";
 import { z } from "zod";
 import { rpcError } from "../errors";
 import { logger } from "../lib/logger";
-import { type Context, sessionProcedure, trackedSessionProcedure } from "../orpc";
+import {
+	type Context,
+	sessionProcedure,
+	trackedSessionProcedure,
+} from "../orpc";
 import { resolveFeatureAccess } from "../procedures/with-feature-access";
 
 const MAX_LINKS_PER_FLAG = 5;

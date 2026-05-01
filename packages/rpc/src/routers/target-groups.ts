@@ -11,7 +11,7 @@ import { GATED_FEATURES } from "@databuddy/shared/types/features";
 import { randomUUIDv7 } from "bun";
 import { z } from "zod";
 import { rpcError } from "../errors";
-import { protectedProcedure, publicProcedure, trackedProcedure } from "../orpc";
+import { publicProcedure, trackedProcedure } from "../orpc";
 import {
 	isFullyAuthorized,
 	withWebsiteRead,

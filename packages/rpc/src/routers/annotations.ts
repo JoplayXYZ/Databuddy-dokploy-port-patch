@@ -5,7 +5,7 @@ import { randomUUIDv7 } from "bun";
 import { z } from "zod";
 import { rpcError } from "../errors";
 import { setTrackProperties } from "../middleware/track-mutation";
-import { protectedProcedure, publicProcedure, trackedProcedure } from "../orpc";
+import { publicProcedure, trackedProcedure } from "../orpc";
 import { isFullyAuthorized, withWorkspace } from "../procedures/with-workspace";
 import { getCacheAuthContext } from "../utils/cache-keys";
 

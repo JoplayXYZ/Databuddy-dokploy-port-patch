@@ -23,7 +23,9 @@ import {
 } from "../services/uptime-scheduler";
 
 const monitorsProcedure = protectedProcedure.use(withFeatureAccess("monitors"));
-const trackedMonitorsProcedure = trackedProcedure.use(withFeatureAccess("monitors"));
+const trackedMonitorsProcedure = trackedProcedure.use(
+	withFeatureAccess("monitors")
+);
 
 const granularityEnum = z.enum([
 	"minute",
