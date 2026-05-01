@@ -57,7 +57,6 @@ export const alarms = pgTable(
 			.$onUpdate(() => new Date()),
 	},
 	(table) => [
-		index("alarms_organization_id_idx").on(table.organizationId),
 		index("alarms_website_id_idx").on(table.websiteId),
 		index("alarms_org_enabled_idx").on(table.organizationId, table.enabled),
 		foreignKey({
