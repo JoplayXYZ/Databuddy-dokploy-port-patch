@@ -325,6 +325,3 @@ export async function fireTransitionAlerts(options: {
 		handleTransition(options).pipe(Effect.provide(TransitionLive)),
 	);
 }
-
-/** @deprecated Use fireTransitionAlerts */
-export const sendUptimeTransitionEmailsIfNeeded = fireTransitionAlerts;

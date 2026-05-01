@@ -15,9 +15,6 @@
     "effect": "^4.0.0-beta.59",
     "elysia": "catalog:",
     "evlog": "catalog:",
-    "kafkajs": "^2.2.4",
-    "react": "catalog:",
-    "react-dom": "catalog:",
-    "zod": "^4.2.0"
+    "kafkajs": "^2.2.4"
   }
 }
