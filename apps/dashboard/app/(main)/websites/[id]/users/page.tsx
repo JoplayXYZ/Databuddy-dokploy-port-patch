@@ -632,11 +632,7 @@ export default function UsersPage() {
 		);
 	}
 
-	if (
-		!isReplacing &&
-		!isInitialLoad &&
-		(!allUsers || allUsers.length === 0)
-	) {
+	if (!(isReplacing || isInitialLoad) && (!allUsers || allUsers.length === 0)) {
 		return (
 			<div className="flex h-full flex-col">
 				<TopBar.Title>

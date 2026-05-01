@@ -41,11 +41,12 @@ export function useProfilesData(
 	);
 
 	const profiles = useMemo(() => {
-		const rows: ProfileData[] =
-			(queryResult.data as any)?.profile_list ?? [];
+		const rows: ProfileData[] = (queryResult.data as any)?.profile_list ?? [];
 		const seen = new Set<string>();
 		return rows.filter((p) => {
-			if (!p.visitor_id || seen.has(p.visitor_id)) return false;
+			if (!p.visitor_id || seen.has(p.visitor_id)) {
+				return false;
+			}
 			seen.add(p.visitor_id);
 			return true;
 		});
