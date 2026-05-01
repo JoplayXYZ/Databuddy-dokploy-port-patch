@@ -546,7 +546,7 @@ step_events AS (SELECT DISTINCT step, vid, ts FROM events${visitorFilterClause ?
 visitor_funnel AS (
 	SELECT
 		vid,
-		windowFunnel(86400)(ts, ${stepConditions}) as max_step,
+		windowFunnel(86400)(toDateTime(ts), ${stepConditions}) as max_step,
 		min(ts) as first_ts
 	FROM step_events
 	GROUP BY vid
@@ -743,7 +743,7 @@ export const processFunnelAnalyticsByReferrer = async (
 step_events AS (SELECT DISTINCT step, vid, ts, ref FROM events)
 SELECT
 	vid,
-	windowFunnel(86400)(ts, ${stepConditions}) as max_step,
+	windowFunnel(86400)(toDateTime(ts), ${stepConditions}) as max_step,
 	any(ref) as referrer
 FROM step_events
 GROUP BY vid
