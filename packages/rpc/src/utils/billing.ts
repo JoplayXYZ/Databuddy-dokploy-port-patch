@@ -61,7 +61,12 @@ const getMemberRole = cacheable(
 		});
 		return row?.role ?? null;
 	},
-	{ expireInSec: 300, prefix: "rpc:member_role", staleWhileRevalidate: true, staleTime: 60 }
+	{
+		expireInSec: 300,
+		prefix: "rpc:member_role",
+		staleWhileRevalidate: true,
+		staleTime: 60,
+	}
 );
 
 export const getBillingOwner = cacheable(
@@ -106,5 +111,10 @@ export const getBillingOwner = cacheable(
 
 		return { customerId, isOrganization, canUserUpgrade, planId };
 	},
-	{ expireInSec: 300, prefix: "rpc:billing_owner", staleWhileRevalidate: true, staleTime: 60 }
+	{
+		expireInSec: 300,
+		prefix: "rpc:billing_owner",
+		staleWhileRevalidate: true,
+		staleTime: 60,
+	}
 );

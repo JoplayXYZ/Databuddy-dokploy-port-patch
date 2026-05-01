@@ -9,7 +9,6 @@ const DEFAULT_PRODUCT_LIMIT = 5;
 export const PRODUCT_INSIGHT_QUERY_TYPES = [
 	"goals_summary",
 	"funnels_summary",
-	"retention_summary",
 	"custom_events_summary",
 ] as const;
 
@@ -159,22 +158,6 @@ function runQuery(
 	);
 }
 
-async function getRetentionSummary(
-	appContext: AppContext,
-	range: { from: string; to: string },
-	limit: number
-) {
-	const [retentionRate, cohorts] = await Promise.all([
-		runQuery("retention_rate", appContext, range, limit),
-		runQuery("retention_cohorts", appContext, range, limit),
-	]);
-
-	return {
-		retention_rate: Array.isArray(retentionRate) ? retentionRate : [],
-		retention_cohorts: Array.isArray(cohorts) ? cohorts : [],
-	};
-}
-
 async function getCustomEventsSummary(
 	appContext: AppContext,
 	range: { from: string; to: string },
@@ -216,12 +199,6 @@ export async function fetchProductMetrics(
 				results.push({
 					type: query.type,
 					...(await getFunnelsSummary(appContext, range, limit)),
-				});
-				break;
-			case "retention_summary":
-				results.push({
-					type: query.type,
-					...(await getRetentionSummary(appContext, range, limit)),
 				});
 				break;
 			case "custom_events_summary":

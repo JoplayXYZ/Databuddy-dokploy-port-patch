@@ -110,7 +110,9 @@ export function AnalyticsToolbar({
 	);
 
 	return (
-		<div className={cn("flex shrink-0 items-center gap-2 border-b p-2", className)}>
+		<div
+			className={cn("flex shrink-0 items-center gap-2 border-b p-2", className)}
+		>
 			<SegmentedControl
 				disabled={isDisabled || isHourlyDisabled}
 				onChange={(v) => setCurrentGranularityAtomState(v)}

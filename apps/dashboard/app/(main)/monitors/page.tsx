@@ -13,7 +13,7 @@ import {
 	MagnifyingGlassIcon,
 	PlusIcon,
 } from "@databuddy/ui/icons";
-import { Badge, Button, Card, EmptyState, Skeleton } from "@databuddy/ui";
+import { Button, Card, EmptyState, Skeleton } from "@databuddy/ui";
 import { MonitorsSearchBar } from "./_components/monitors-search-bar";
 import {
 	type SortOption,
@@ -106,16 +106,13 @@ export default function MonitorsPage() {
 					<Card>
 						<Card.Header className="flex-row items-start justify-between gap-4">
 							<div>
-								<div className="flex items-center gap-2">
-									<Card.Title>Monitors</Card.Title>
-									<Badge variant="muted">Beta</Badge>
-								</div>
+								<Card.Title>Monitors</Card.Title>
 								<Card.Description>
 									{isLoading
 										? "Loading monitors\u2026"
 										: monitors.length === 0
-											? "Track availability and receive alerts. Free while in beta."
-											: `${monitors.length} monitor${monitors.length === 1 ? "" : "s"} \u00b7 Free while in beta`}
+											? "Track availability and receive alerts"
+											: `${monitors.length} monitor${monitors.length === 1 ? "" : "s"}`}
 								</Card.Description>
 							</div>
 							<div className="flex items-center gap-2">
@@ -131,8 +128,9 @@ export default function MonitorsPage() {
 									<ArrowClockwiseIcon
 										className={cn(
 											"size-3.5",
-											(schedulesQuery.isLoading || schedulesQuery.isFetching) &&
-												"animate-spin"
+											(schedulesQuery.isLoading ||
+												schedulesQuery.isFetching) &&
+												"animate-spin",
 										)}
 									/>
 								</Button>
@@ -163,7 +161,7 @@ export default function MonitorsPage() {
 								</div>
 							)}
 
-							{!(isLoading || hasMonitors) && (
+							{!isLoading && !hasMonitors && (
 								<div className="px-5 py-12">
 									<EmptyState
 										action={

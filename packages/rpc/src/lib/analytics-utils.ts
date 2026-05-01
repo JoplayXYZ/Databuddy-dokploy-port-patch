@@ -537,9 +537,7 @@ export const processFunnelAnalytics = async (
 		visitorFilterClause = " AND vid IN {visitorFilterIds:Array(String)}";
 	}
 
-	const stepConditions = steps
-		.map((_, i) => `step = ${i + 1}`)
-		.join(", ");
+	const stepConditions = steps.map((_, i) => `step = ${i + 1}`).join(", ");
 
 	const fullQuery = `WITH events AS (${stepQueries.join("\nUNION ALL\n")}),
 step_events AS (SELECT DISTINCT step, vid, ts FROM events${visitorFilterClause ? ` WHERE 1=1${visitorFilterClause}` : ""}),
@@ -735,9 +733,7 @@ export const processFunnelAnalyticsByReferrer = async (
 		buildStepQuery(s, i, filterSQL, params, true)
 	);
 
-	const stepConditions = steps
-		.map((_, i) => `step = ${i + 1}`)
-		.join(", ");
+	const stepConditions = steps.map((_, i) => `step = ${i + 1}`).join(", ");
 
 	const fullQuery = `WITH events AS (${stepQueries.join("\nUNION ALL\n")}),
 step_events AS (SELECT DISTINCT step, vid, ts, ref FROM events)

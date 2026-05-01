@@ -170,7 +170,9 @@ async function resolveFolderId(
 	linkName: string,
 	createdBy: string
 ): Promise<string | null> {
-	if (!folderId) return null;
+	if (!folderId) {
+		return null;
+	}
 
 	const existing = await db
 		.select({ id: linkFolders.id })
@@ -183,15 +185,18 @@ async function resolveFolderId(
 		)
 		.limit(1);
 
-	if (existing.length > 0) return folderId;
+	if (existing.length > 0) {
+		return folderId;
+	}
 
 	const folderName = linkName.trim() || "Untitled";
-	const baseSlug = folderName
-		.toLowerCase()
-		.replace(/[^a-z0-9\s_-]/g, "")
-		.replace(/[\s_]+/g, "-")
-		.replace(/-+/g, "-")
-		.replace(/^-|-$/g, "") || "folder";
+	const baseSlug =
+		folderName
+			.toLowerCase()
+			.replace(/[^a-z0-9\s_-]/g, "")
+			.replace(/[\s_]+/g, "-")
+			.replace(/-+/g, "-")
+			.replace(/^-|-$/g, "") || "folder";
 
 	const [folder] = await db
 		.insert(linkFolders)
@@ -484,7 +489,8 @@ export const linksRouter = {
 					.update(links)
 					.set({
 						...updates,
-						folderId: resolvedFolderId === undefined ? undefined : resolvedFolderId,
+						folderId:
+							resolvedFolderId === undefined ? undefined : resolvedFolderId,
 						sourceType:
 							sourceType === undefined
 								? undefined
