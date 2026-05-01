@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { useCallback } from "react";
 import type { DateRange as DayPickerRange } from "react-day-picker";
 import { useHotkeys } from "react-hotkeys-hook";
@@ -41,11 +42,15 @@ const getStartDateForRange = (range: QuickRange) => {
 };
 
 interface AnalyticsToolbarProps {
+	actions?: ReactNode;
+	className?: string;
 	isDisabled?: boolean;
 }
 
 export function AnalyticsToolbar({
 	isDisabled = false,
+	actions,
+	className,
 }: AnalyticsToolbarProps) {
 	const {
 		currentDateRange,
@@ -105,7 +110,7 @@ export function AnalyticsToolbar({
 	);
 
 	return (
-		<div className="flex shrink-0 items-center gap-2 border-b p-2">
+		<div className={cn("flex shrink-0 items-center gap-2 border-b p-2", className)}>
 			<SegmentedControl
 				disabled={isDisabled || isHourlyDisabled}
 				onChange={(v) => setCurrentGranularityAtomState(v)}
@@ -152,6 +157,13 @@ export function AnalyticsToolbar({
 				}}
 				value={selectedRange}
 			/>
+
+			{actions && (
+				<>
+					<div className="flex-1" />
+					<div className="flex items-center gap-1.5">{actions}</div>
+				</>
+			)}
 		</div>
 	);
 }

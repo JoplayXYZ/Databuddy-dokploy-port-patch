@@ -16,6 +16,7 @@ import {
 	addDynamicFilterAtom,
 	dynamicQueryFiltersAtom,
 } from "@/stores/jotai/filterAtoms";
+import { TopBar } from "@/components/layout/top-bar";
 import { RevenueAttributionTables } from "./revenue-attribution-tables";
 import { RevenueChart } from "./revenue-chart";
 import { StripeLogoIcon } from "@phosphor-icons/react/dist/ssr";
@@ -688,6 +689,20 @@ export function RevenueContent({ websiteId }: RevenueContentProps) {
 
 	return (
 		<>
+			<TopBar.Title>
+				<h1 className="font-semibold text-sm">Revenue</h1>
+			</TopBar.Title>
+			<TopBar.Actions>
+				<Button
+					onClick={() => setSettingsOpen(true)}
+					size="sm"
+					variant="secondary"
+				>
+					<GearIcon className="size-4 shrink-0" weight="duotone" />
+					Configure
+				</Button>
+			</TopBar.Actions>
+
 			{isLoading || hasData ? (
 				<div className="space-y-3 p-4 sm:space-y-4">
 					<div className="grid grid-cols-1 gap-1.5 rounded-xl bg-secondary p-1.5 sm:grid-cols-2 lg:grid-cols-5">
@@ -757,14 +772,6 @@ export function RevenueContent({ websiteId }: RevenueContentProps) {
 									Revenue, transactions, customers, and refunds over time
 								</Card.Description>
 							</div>
-							<Button
-								onClick={() => setSettingsOpen(true)}
-								size="sm"
-								variant="secondary"
-							>
-								<GearIcon className="size-4 shrink-0" weight="duotone" />
-								Configure
-							</Button>
 						</Card.Header>
 						<div className="overflow-x-auto">
 							<RevenueChart
