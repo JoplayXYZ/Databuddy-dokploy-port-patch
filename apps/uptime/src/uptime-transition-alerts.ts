@@ -3,7 +3,7 @@ import { alarms, uptimeSchedules } from "@databuddy/db/schema";
 import { chQuery } from "@databuddy/db/clickhouse";
 import {
 	NotificationClient,
-	type NotificationChannel,
+	buildAlarmNotificationConfig,
 } from "@databuddy/notifications";
 import {
 	Cache,
@@ -76,28 +76,6 @@ function buildSiteLabel(schedule: ScheduleData): string {
 	}
 }
 
-function toNotificationChannels(
-	destinations: Array<{ type: string; identifier: string; config: unknown }>,
-) {
-	const clientConfig: Record<string, Record<string, unknown>> = {};
-	const channels: NotificationChannel[] = [];
-
-	for (const dest of destinations) {
-		const cfg = (dest.config ?? {}) as Record<string, unknown>;
-		if (dest.type === "slack") {
-			clientConfig.slack = { webhookUrl: dest.identifier };
-			channels.push("slack");
-		} else if (dest.type === "webhook") {
-			clientConfig.webhook = {
-				url: dest.identifier,
-				headers: cfg.headers as Record<string, string> | undefined,
-			};
-			channels.push("webhook");
-		}
-	}
-
-	return { clientConfig, channels };
-}
 
 const AlarmCache = Context.Service<
 	Cache.Cache<string, LinkedAlarm[], AlarmLookupError>
@@ -176,7 +154,7 @@ const sendToAlarm = (
 	alarm: LinkedAlarm,
 	payload: Parameters<NotificationClient["send"]>[0],
 ) => {
-	const { clientConfig, channels } = toNotificationChannels(
+	const { clientConfig, channels } = buildAlarmNotificationConfig(
 		alarm.destinations,
 	);
 	if (channels.length === 0) return Effect.succeed(false);

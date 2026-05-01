@@ -543,6 +543,7 @@
       "version": "0.0.1",
       "dependencies": {
         "@databuddy/shared": "workspace:*",
+        "resend": "^4.0.1",
       },
       "devDependencies": {
         "@types/node": "^24.10.4",
