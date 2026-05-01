@@ -13,8 +13,12 @@ const link = new RPCLink({
 		if (typeof window !== "undefined") {
 			const anonId = localStorage.getItem("did");
 			const sessionId = sessionStorage.getItem("did_session");
-			if (anonId) headers.set("x-databuddy-anonymous-id", anonId);
-			if (sessionId) headers.set("x-databuddy-session-id", sessionId);
+			if (anonId) {
+				headers.set("x-databuddy-anonymous-id", anonId);
+			}
+			if (sessionId) {
+				headers.set("x-databuddy-session-id", sessionId);
+			}
 		}
 
 		return fetch(new Request(request, { headers }), {
