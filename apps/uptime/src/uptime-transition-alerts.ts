@@ -1,19 +1,11 @@
-import { and, db, eq, withTransaction } from "@databuddy/db";
-import { alarms, uptimeSchedules } from "@databuddy/db/schema";
+import { db, eq, withTransaction } from "@databuddy/db";
+import { uptimeSchedules } from "@databuddy/db/schema";
 import { chQuery } from "@databuddy/db/clickhouse";
 import {
 	NotificationClient,
 	buildAlarmNotificationConfig,
 } from "@databuddy/notifications";
-import {
-	Cache,
-	Context,
-	Data,
-	Duration,
-	Effect,
-	Layer,
-	Option,
-} from "effect";
+import { Cache, Context, Data, Duration, Effect, Layer, Option } from "effect";
 import type { ScheduleData } from "./actions";
 import { UPTIME_ENV } from "./lib/env";
 import { captureError } from "./lib/tracing";
@@ -27,9 +19,7 @@ class AlarmLookupError extends Data.TaggedError("AlarmLookupError")<{
 	cause: unknown;
 }> {}
 
-class NotificationSendError extends Data.TaggedError(
-	"NotificationSendError",
-)<{
+class NotificationSendError extends Data.TaggedError("NotificationSendError")<{
 	alarmId: string;
 	cause: unknown;
 }> {}
@@ -51,14 +41,18 @@ const NO_TRANSITION: TransitionResult = {
 
 export function resolveTransitionKind(
 	previous: number | undefined,
-	current: number,
+	current: number
 ): "down" | "recovered" | null {
 	if (current === MonitorStatus.UP) {
-		if (previous === MonitorStatus.DOWN) return "recovered";
+		if (previous === MonitorStatus.DOWN) {
+			return "recovered";
+		}
 		return null;
 	}
 	if (current === MonitorStatus.DOWN) {
-		if (previous === MonitorStatus.DOWN) return null;
+		if (previous === MonitorStatus.DOWN) {
+			return null;
+		}
 		return "down";
 	}
 	return null;
@@ -66,9 +60,15 @@ export function resolveTransitionKind(
 
 function buildSiteLabel(schedule: ScheduleData): string {
 	const w = schedule.website;
-	if (w?.name) return w.name;
-	if (w?.domain) return w.domain;
-	if (schedule.name) return schedule.name;
+	if (w?.name) {
+		return w.name;
+	}
+	if (w?.domain) {
+		return w.domain;
+	}
+	if (schedule.name) {
+		return schedule.name;
+	}
 	try {
 		return new URL(schedule.url).hostname;
 	} catch {
@@ -76,10 +76,10 @@ function buildSiteLabel(schedule: ScheduleData): string {
 	}
 }
 
-
-const AlarmCache = Context.Service<
-	Cache.Cache<string, LinkedAlarm[], AlarmLookupError>
->("AlarmCache");
+const AlarmCache =
+	Context.Service<Cache.Cache<string, LinkedAlarm[], AlarmLookupError>>(
+		"AlarmCache"
+	);
 
 const AlarmCacheLive = Layer.effect(
 	AlarmCache,
@@ -91,10 +91,7 @@ const AlarmCacheLive = Layer.effect(
 			return Effect.tryPromise({
 				try: async () => {
 					const rows = await db.query.alarms.findMany({
-						where: and(
-							eq(alarms.organizationId, organizationId!),
-							eq(alarms.enabled, true),
-						),
+						where: { organizationId: organizationId!, enabled: true },
 						with: { destinations: true },
 					});
 
@@ -113,7 +110,7 @@ const AlarmCacheLive = Layer.effect(
 				catch: (cause) => new AlarmLookupError({ cause }),
 			});
 		},
-	}),
+	})
 );
 
 const lookupLinkedAlarms = (scheduleId: string, organizationId: string) =>
@@ -132,13 +129,17 @@ const claimTransition = (scheduleId: string, currentStatus: number) =>
 					.where(eq(uptimeSchedules.id, scheduleId))
 					.for("update");
 
-				if (!row) return null;
+				if (!row) {
+					return null;
+				}
 
 				const kind = resolveTransitionKind(
 					row.last ?? undefined,
-					currentStatus,
+					currentStatus
 				);
-				if (kind === null) return null;
+				if (kind === null) {
+					return null;
+				}
 
 				await tx
 					.update(uptimeSchedules)
@@ -152,12 +153,14 @@ const claimTransition = (scheduleId: string, currentStatus: number) =>
 
 const sendToAlarm = (
 	alarm: LinkedAlarm,
-	payload: Parameters<NotificationClient["send"]>[0],
+	payload: Parameters<NotificationClient["send"]>[0]
 ) => {
 	const { clientConfig, channels } = buildAlarmNotificationConfig(
-		alarm.destinations,
+		alarm.destinations
 	);
-	if (channels.length === 0) return Effect.succeed(false);
+	if (channels.length === 0) {
+		return Effect.succeed(false);
+	}
 
 	return Effect.tryPromise({
 		try: () =>
@@ -170,7 +173,9 @@ const sendToAlarm = (
 
 export const queryPreviousStatus = (siteId: string) =>
 	Effect.gen(function* () {
-		if (!process.env.CLICKHOUSE_URL) return Option.none<number>();
+		if (!process.env.CLICKHOUSE_URL) {
+			return Option.none<number>();
+		}
 
 		const rows = yield* Effect.tryPromise(() =>
 			chQuery<{ status: number }>(
@@ -179,8 +184,8 @@ export const queryPreviousStatus = (siteId: string) =>
        WHERE site_id = {siteId:String}
        ORDER BY timestamp DESC
        LIMIT 1`,
-				{ siteId },
-			),
+				{ siteId }
+			)
 		).pipe(Effect.orElseSucceed(() => [] as { status: number }[]));
 
 		const first = rows[0];
@@ -193,7 +198,9 @@ const handleTransition = (options: {
 	previousStatus?: number;
 }) =>
 	Effect.gen(function* () {
-		if (!UPTIME_ENV.isProduction) return NO_TRANSITION;
+		if (!UPTIME_ENV.isProduction) {
+			return NO_TRANSITION;
+		}
 
 		if (
 			options.previousStatus !== undefined &&
@@ -205,24 +212,26 @@ const handleTransition = (options: {
 
 		const kind = yield* claimTransition(
 			options.schedule.id,
-			options.data.status,
+			options.data.status
 		).pipe(
 			Effect.catchTag("TransitionClaimError", (e) => {
 				captureError(e.cause, { error_step: "transition_claim" });
 				return Effect.succeed(null);
-			}),
+			})
 		);
 
-		if (kind === null) return NO_TRANSITION;
+		if (kind === null) {
+			return NO_TRANSITION;
+		}
 
 		const linkedAlarms = yield* lookupLinkedAlarms(
 			options.schedule.id,
-			options.schedule.organizationId,
+			options.schedule.organizationId
 		).pipe(
 			Effect.catchTag("AlarmLookupError", (e) => {
 				captureError(e.cause, { error_step: "alarm_lookup" });
 				return Effect.succeed([] as LinkedAlarm[]);
-			}),
+			})
 		);
 
 		if (linkedAlarms.length === 0) {
@@ -230,16 +239,13 @@ const handleTransition = (options: {
 		}
 
 		const siteLabel = buildSiteLabel(options.schedule);
-		const baseUrl =
-			process.env.DASHBOARD_APP_URL ?? "https://app.databuddy.cc";
+		const baseUrl = process.env.DASHBOARD_APP_URL ?? "https://app.databuddy.cc";
 		const dashboardUrl = `${baseUrl.replace(/\/$/, "")}/monitors/${options.schedule.id}`;
 
 		const httpInfo = options.data.http_code
 			? ` (HTTP ${options.data.http_code})`
 			: "";
-		const errorInfo = options.data.error
-			? ` - ${options.data.error}`
-			: "";
+		const errorInfo = options.data.error ? ` - ${options.data.error}` : "";
 
 		const payload = {
 			title:
@@ -262,9 +268,7 @@ const handleTransition = (options: {
 			},
 		};
 
-		const sendable = linkedAlarms.filter(
-			(a) => a.destinations.length > 0,
-		);
+		const sendable = linkedAlarms.filter((a) => a.destinations.length > 0);
 
 		const results = yield* Effect.all(
 			sendable.map((alarm) =>
@@ -275,10 +279,10 @@ const handleTransition = (options: {
 							alarm_id: e.alarmId,
 						});
 						return Effect.succeed(false);
-					}),
-				),
+					})
+				)
 			),
-			{ concurrency: "unbounded" },
+			{ concurrency: "unbounded" }
 		);
 
 		const fired = results.filter(Boolean).length;
@@ -288,7 +292,7 @@ const handleTransition = (options: {
 const TransitionLive = AlarmCacheLive;
 
 export async function getPreviousMonitorStatus(
-	siteId: string,
+	siteId: string
 ): Promise<number | undefined> {
 	const option = await Effect.runPromise(queryPreviousStatus(siteId));
 	return Option.getOrUndefined(option);
@@ -300,6 +304,6 @@ export async function fireTransitionAlerts(options: {
 	previousStatus?: number;
 }): Promise<TransitionResult> {
 	return Effect.runPromise(
-		handleTransition(options).pipe(Effect.provide(TransitionLive)),
+		handleTransition(options).pipe(Effect.provide(TransitionLive))
 	);
 }

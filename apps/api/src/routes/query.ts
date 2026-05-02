@@ -7,8 +7,7 @@ import {
 	hasKeyScope,
 	isApiKeyPresent,
 } from "@databuddy/api-keys/resolve";
-import { and, db, eq, isNull } from "@databuddy/db";
-import { links, member, uptimeSchedules, websites } from "@databuddy/db/schema";
+import { db } from "@databuddy/db";
 import { ratelimit } from "@databuddy/redis/rate-limit";
 import { filterOptions } from "@databuddy/shared/lists/filters";
 import type { CustomQueryRequest } from "@databuddy/shared/types/custom-query";
@@ -312,7 +311,7 @@ function createValidationErrorResponse(
 
 async function getWebsiteOwnerId(websiteId: string): Promise<string | null> {
 	const website = await db.query.websites.findFirst({
-		where: eq(websites.id, websiteId),
+		where: { id: websiteId },
 		columns: {
 			organizationId: true,
 		},
@@ -333,7 +332,7 @@ function verifyWebsiteAccess(
 		mergeWideEvent({ access_check_type: "website", website_id: websiteId });
 
 		const website = await db.query.websites.findFirst({
-			where: eq(websites.id, websiteId),
+			where: { id: websiteId },
 			columns: {
 				id: true,
 				isPublic: true,
@@ -384,10 +383,7 @@ function verifyWebsiteAccess(
 
 		if (ctx.user) {
 			const membership = await db.query.member.findFirst({
-				where: and(
-					eq(member.userId, ctx.user.id),
-					eq(member.organizationId, website.organizationId)
-				),
+				where: { userId: ctx.user.id, organizationId: website.organizationId },
 				columns: {
 					id: true,
 				},
@@ -412,7 +408,7 @@ function verifyScheduleAccess(
 		mergeWideEvent({ access_check_type: "schedule", schedule_id: scheduleId });
 
 		const schedule = await db.query.uptimeSchedules.findFirst({
-			where: eq(uptimeSchedules.id, scheduleId),
+			where: { id: scheduleId },
 			columns: {
 				id: true,
 				organizationId: true,
@@ -432,10 +428,7 @@ function verifyScheduleAccess(
 
 		if (ctx.user) {
 			const membership = await db.query.member.findFirst({
-				where: and(
-					eq(member.userId, ctx.user.id),
-					eq(member.organizationId, schedule.organizationId)
-				),
+				where: { userId: ctx.user.id, organizationId: schedule.organizationId },
 				columns: { id: true },
 			});
 			mergeWideEvent({
@@ -477,7 +470,7 @@ function verifyLinkAccess(ctx: AuthContext, linkId: string): Promise<boolean> {
 		mergeWideEvent({ access_check_type: "link", link_id: linkId });
 
 		const link = await db.query.links.findFirst({
-			where: and(eq(links.id, linkId), isNull(links.deletedAt)),
+			where: { id: linkId, deletedAt: { isNull: true } },
 			columns: {
 				id: true,
 				organizationId: true,
@@ -497,10 +490,7 @@ function verifyLinkAccess(ctx: AuthContext, linkId: string): Promise<boolean> {
 
 		if (ctx.user && link.organizationId) {
 			const membership = await db.query.member.findFirst({
-				where: and(
-					eq(member.userId, ctx.user.id),
-					eq(member.organizationId, link.organizationId)
-				),
+				where: { userId: ctx.user.id, organizationId: link.organizationId },
 				columns: { id: true },
 			});
 			mergeWideEvent({
@@ -550,10 +540,7 @@ function verifyOrganizationAccess(
 
 		if (ctx.user) {
 			const membership = await db.query.member.findFirst({
-				where: and(
-					eq(member.userId, ctx.user.id),
-					eq(member.organizationId, organizationId)
-				),
+				where: { userId: ctx.user.id, organizationId },
 				columns: { id: true },
 			});
 			mergeWideEvent({

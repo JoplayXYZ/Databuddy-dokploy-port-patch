@@ -4,8 +4,7 @@ import {
 	isApiKeyPresent,
 } from "@databuddy/api-keys/resolve";
 import { auth } from "@databuddy/auth";
-import { and, db, eq } from "@databuddy/db";
-import { member } from "@databuddy/db/schema";
+import { db } from "@databuddy/db";
 import { Elysia } from "elysia";
 import { getResolvedAuth } from "../lib/auth-wide-event";
 import { record } from "../lib/tracing";
@@ -51,9 +50,7 @@ export function websiteAuth() {
 					"getAuthContext",
 					() =>
 						Promise.all([
-							apiKeyPresent
-								? getApiKeyFromHeader(request.headers)
-								: null,
+							apiKeyPresent ? getApiKeyFromHeader(request.headers) : null,
 							auth.api.getSession({ headers: request.headers }),
 						])
 				);
@@ -63,9 +60,7 @@ export function websiteAuth() {
 			}
 
 			const website = websiteId
-				? await record("getCachedWebsite", () =>
-						getCachedWebsite(websiteId)
-					)
+				? await record("getCachedWebsite", () => getCachedWebsite(websiteId))
 				: undefined;
 
 			const timezone = session?.user
@@ -145,10 +140,7 @@ async function checkWebsiteAuth(
 		}
 
 		const membership = await db.query.member.findFirst({
-			where: and(
-				eq(member.userId, sessionUser.id),
-				eq(member.organizationId, website.organizationId)
-			),
+			where: { userId: sessionUser.id, organizationId: website.organizationId },
 			columns: {
 				id: true,
 			},

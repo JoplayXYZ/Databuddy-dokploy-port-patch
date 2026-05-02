@@ -1,6 +1,6 @@
 import { captureError, mergeWideEvent } from "@/lib/tracing";
-import { db, eq } from "@databuddy/db";
-import { agentInstallTelemetry, websites } from "@databuddy/db/schema";
+import { db } from "@databuddy/db";
+import { agentInstallTelemetry } from "@databuddy/db/schema";
 import { cacheable } from "@databuddy/redis";
 import { getRateLimitHeaders, ratelimit } from "@databuddy/redis/rate-limit";
 import { randomUUIDv7 } from "bun";
@@ -11,7 +11,7 @@ import { Elysia, t } from "elysia";
 const checkWebsiteExists = cacheable(
 	async function checkWebsiteExists(websiteId: string): Promise<boolean> {
 		const row = await db.query.websites.findFirst({
-			where: eq(websites.id, websiteId),
+			where: { id: websiteId },
 			columns: { id: true },
 		});
 		return !!row;

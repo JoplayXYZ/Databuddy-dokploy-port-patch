@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { and, db, eq, isUniqueViolationFor } from "@databuddy/db";
+import { db, eq, isUniqueViolationFor } from "@databuddy/db";
 import {
 	type WebsiteInsert,
 	type Website,
@@ -59,7 +59,7 @@ export class WebsiteService {
 	private async getByIdFromDb(id: string): Promise<Website | null> {
 		try {
 			const website = await this.database.query.websites.findFirst({
-				where: eq(websites.id, id),
+				where: { id },
 			});
 			return website ?? null;
 		} catch (error) {
@@ -78,7 +78,7 @@ export class WebsiteService {
 
 		try {
 			const website = await this.database.query.websites.findFirst({
-				where: eq(websites.id, id),
+				where: { id },
 			});
 			if (website) {
 				await this.cache?.setWebsite(website);
@@ -113,10 +113,7 @@ export class WebsiteService {
 
 			const website =
 				(await this.database.query.websites.findFirst({
-					where: and(
-						eq(websites.domain, normalizedDomain),
-						eq(websites.organizationId, organizationId)
-					),
+					where: { domain: normalizedDomain, organizationId },
 				})) ?? null;
 
 			if (website) {
@@ -145,7 +142,7 @@ export class WebsiteService {
 			}
 
 			const rows = await this.database.query.websites.findMany({
-				where: eq(websites.organizationId, organizationId),
+				where: { organizationId },
 				limit: 1000,
 			});
 			await this.cache?.setList(organizationId, rows);

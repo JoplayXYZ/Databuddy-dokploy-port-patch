@@ -11,8 +11,7 @@ import {
 } from "@databuddy/api-keys/resolve";
 import { getCachedWebsite, validateWebsite } from "@/lib/website-utils";
 import { websitesApi } from "@databuddy/auth";
-import { db, eq } from "@databuddy/db";
-import { member } from "@databuddy/db/schema";
+import { db } from "@databuddy/db";
 import { getRedisCache } from "@databuddy/redis";
 import type { AppContext } from "../config/context";
 
@@ -212,7 +211,7 @@ export async function resolveOrganizationIds(
 	}
 	if (principal.userId) {
 		const memberships = await db.query.member.findMany({
-			where: eq(member.userId, principal.userId),
+			where: { userId: principal.userId },
 			columns: { organizationId: true },
 		});
 		if (memberships.length === 0) {

@@ -6,7 +6,7 @@ import {
 	isApiKeyPresent,
 } from "@databuddy/api-keys/resolve";
 import { auth } from "@databuddy/auth";
-import { and, db, eq } from "@databuddy/db";
+import { db, eq } from "@databuddy/db";
 import { agentChats } from "@databuddy/db/schema";
 import {
 	appendStreamChunk,
@@ -407,11 +407,7 @@ export const agent = new Elysia({ prefix: "/v1/agent" })
 					const [hasCredits, memoryCtx, enrichment] = await Promise.all([
 						creditsCheck,
 						getMemoryContextCached(lastMessage, userId, body.websiteId),
-						enrichAgentContextCached(
-							userId,
-							body.websiteId,
-							organizationId
-						),
+						enrichAgentContextCached(userId, body.websiteId, organizationId),
 					]);
 
 					if (!hasCredits) {
@@ -756,10 +752,7 @@ export const agent = new Elysia({ prefix: "/v1/agent" })
 			return jsonError(401, "AUTH_REQUIRED", "Authentication required");
 		}
 		const chat = await db.query.agentChats.findFirst({
-			where: and(
-				eq(agentChats.id, params.chatId),
-				eq(agentChats.userId, user.id)
-			),
+			where: { id: params.chatId, userId: user.id },
 			columns: { id: true, websiteId: true },
 		});
 		if (!chat) {

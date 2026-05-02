@@ -112,23 +112,19 @@ const bulkFlagQuerySchema = t.Object({
 
 const getCachedFlag = cacheable(
 	async (key: string, clientId: string, environment?: string) => {
-		const scopeCondition = or(
-			eq(flags.websiteId, clientId),
-			eq(flags.organizationId, clientId)
-		);
-
-		const environmentCondition = environment
-			? eq(flags.environment, environment)
-			: isNull(flags.environment);
-
 		const flag = await db.query.flags.findFirst({
-			where: and(
-				eq(flags.key, key),
-				environmentCondition,
-				isNull(flags.deletedAt),
-				eq(flags.status, "active"),
-				scopeCondition
-			),
+			where: {
+				RAW: (t) =>
+					and(
+						eq(t.key, key),
+						environment
+							? eq(t.environment, environment)
+							: isNull(t.environment),
+						isNull(t.deletedAt),
+						eq(t.status, "active"),
+						or(eq(t.websiteId, clientId), eq(t.organizationId, clientId))
+					),
+			},
 			with: {
 				flagsToTargetGroups: {
 					with: {
@@ -164,22 +160,18 @@ const getCachedFlag = cacheable(
 
 const getCachedFlagsForClient = cacheable(
 	async (clientId: string, environment?: string) => {
-		const scopeCondition = or(
-			eq(flags.websiteId, clientId),
-			eq(flags.organizationId, clientId)
-		);
-
-		const environmentCondition = environment
-			? eq(flags.environment, environment)
-			: isNull(flags.environment);
-
 		const flagsList = await db.query.flags.findMany({
-			where: and(
-				isNull(flags.deletedAt),
-				eq(flags.status, "active"),
-				environmentCondition,
-				scopeCondition
-			),
+			where: {
+				RAW: (t) =>
+					and(
+						isNull(t.deletedAt),
+						eq(t.status, "active"),
+						environment
+							? eq(t.environment, environment)
+							: isNull(t.environment),
+						or(eq(t.websiteId, clientId), eq(t.organizationId, clientId))
+					),
+			},
 			with: {
 				flagsToTargetGroups: {
 					with: {
@@ -213,23 +205,19 @@ const getCachedFlagsForClient = cacheable(
 
 const getCachedFlagsForUser = cacheable(
 	async (userId: string, clientId: string, environment?: string) => {
-		const scopeCondition = or(
-			eq(flags.websiteId, clientId),
-			eq(flags.organizationId, clientId)
-		);
-
-		const environmentCondition = environment
-			? eq(flags.environment, environment)
-			: isNull(flags.environment);
-
 		const flagsList = await db.query.flags.findMany({
-			where: and(
-				isNull(flags.deletedAt),
-				eq(flags.status, "active"),
-				environmentCondition,
-				eq(flags.userId, userId),
-				scopeCondition
-			),
+			where: {
+				RAW: (t) =>
+					and(
+						isNull(t.deletedAt),
+						eq(t.status, "active"),
+						environment
+							? eq(t.environment, environment)
+							: isNull(t.environment),
+						eq(t.userId, userId),
+						or(eq(t.websiteId, clientId), eq(t.organizationId, clientId))
+					),
+			},
 			with: {
 				flagsToTargetGroups: {
 					with: {

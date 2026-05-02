@@ -4,7 +4,7 @@ import {
 	hasGlobalAccess,
 } from "@databuddy/api-keys/resolve";
 import { db, eq, inArray } from "@databuddy/db";
-import { member, websites } from "@databuddy/db/schema";
+import { websites } from "@databuddy/db/schema";
 
 export interface WebsiteSummary {
 	createdAt: Date | null;
@@ -32,7 +32,7 @@ export async function getAccessibleWebsites(
 
 	if (authCtx.user) {
 		const userMemberships = await db.query.member.findMany({
-			where: eq(member.userId, authCtx.user.id),
+			where: { userId: authCtx.user.id },
 			columns: { organizationId: true },
 		});
 		const orgIds = userMemberships.map((m) => m.organizationId);

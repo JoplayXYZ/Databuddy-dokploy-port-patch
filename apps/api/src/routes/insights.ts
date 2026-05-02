@@ -4,7 +4,6 @@ import {
 	analyticsInsights,
 	annotations,
 	insightUserFeedback,
-	member,
 	websites,
 } from "@databuddy/db/schema";
 import { cacheable, getRedisCache } from "@databuddy/redis";
@@ -14,7 +13,7 @@ import dayjs from "dayjs";
 import { Elysia, t } from "elysia";
 import { useLogger } from "evlog/elysia";
 import type { AppContext } from "../ai/config/context";
-import { models } from "../ai/config/models";
+import { ANTHROPIC_CACHE_1H, models } from "../ai/config/models";
 import {
 	fetchInsightDedupeKeyToIdMap,
 	insightDedupeKey,
@@ -68,19 +67,10 @@ interface OrgWebsiteRow {
 	name: string | null;
 }
 
-type DedupeKeyable = Pick<
-	WebsiteInsight,
-	"websiteId" | "type" | "sentiment" | "changePercent" | "subjectKey" | "title"
->;
-
-function dedupeKeyFor(insight: DedupeKeyable): string {
+function dedupeKeyFor(insight: WebsiteInsight): string {
 	return insightDedupeKey({
-		websiteId: insight.websiteId,
-		type: insight.type,
-		sentiment: insight.sentiment,
+		...insight,
 		changePercent: insight.changePercent ?? null,
-		subjectKey: insight.subjectKey,
-		title: insight.title,
 	});
 }
 
@@ -112,7 +102,7 @@ async function userHasOrgAccess(
 	organizationId: string
 ): Promise<boolean> {
 	const memberships = await db.query.member.findMany({
-		where: eq(member.userId, userId),
+		where: { userId },
 		columns: { organizationId: true },
 	});
 	return memberships.some((m) => m.organizationId === organizationId);
@@ -399,8 +389,14 @@ async function analyzeWebsiteLegacy(
 		const result = await generateText({
 			model: ai.wrap(models.balanced),
 			output: Output.object({ schema: insightsOutputSchema }),
-			system: INSIGHTS_SYSTEM_PROMPT,
-			prompt,
+			messages: [
+				{
+					role: "system",
+					content: INSIGHTS_SYSTEM_PROMPT,
+					providerOptions: ANTHROPIC_CACHE_1H,
+				},
+				{ role: "user", content: prompt },
+			],
 			temperature: 0.2,
 			maxOutputTokens: 8192,
 			abortSignal: AbortSignal.timeout(TIMEOUT_MS),
@@ -499,7 +495,11 @@ ${orgContext}${annotationContext}${recentInsightsBlock}`;
 		const ai = getAILogger();
 		const agent = new ToolLoopAgent({
 			model: ai.wrap(models.balanced),
-			instructions: INSIGHTS_SYSTEM_PROMPT,
+			instructions: {
+				role: "system",
+				content: INSIGHTS_SYSTEM_PROMPT,
+				providerOptions: ANTHROPIC_CACHE_1H,
+			},
 			output: Output.object({ schema: insightsOutputSchema }),
 			tools,
 			stopWhen: stepCountIs(INSIGHTS_AGENT_MAX_STEPS),
@@ -709,14 +709,14 @@ const NARRATIVE_RATE_WINDOW_SECS = 3600;
 const NARRATIVE_CACHE_TTL_SECS = 3600;
 const NARRATIVE_INSIGHTS_LIMIT = 5;
 
+const RANGE_WORDS: Record<string, string> = {
+	"7d": "week",
+	"30d": "month",
+	"90d": "quarter",
+};
+
 function rangeWord(range: "7d" | "30d" | "90d"): string {
-	if (range === "7d") {
-		return "week";
-	}
-	if (range === "30d") {
-		return "month";
-	}
-	return "quarter";
+	return RANGE_WORDS[range] ?? "quarter";
 }
 
 function buildDeterministicNarrative(
@@ -1135,10 +1135,7 @@ export const insights = new Elysia({ prefix: "/v1/insights" })
 			}
 
 			const orgSites = await db.query.websites.findMany({
-				where: and(
-					eq(websites.organizationId, organizationId),
-					isNull(websites.deletedAt)
-				),
+				where: { organizationId, deletedAt: { isNull: true } },
 				columns: { id: true, name: true, domain: true },
 			});
 
