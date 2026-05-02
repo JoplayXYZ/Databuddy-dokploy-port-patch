@@ -673,6 +673,7 @@
         "web-vitals": "^5.1.0",
       },
       "devDependencies": {
+        "@databuddy/db": "workspace:*",
         "@inquirer/prompts": "^8.0.1",
         "@playwright/test": "^1.56.1",
         "@types/bun": "latest",
