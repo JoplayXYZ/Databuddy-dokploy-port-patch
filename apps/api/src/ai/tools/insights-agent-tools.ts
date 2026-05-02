@@ -16,6 +16,7 @@ import { getAppContext } from "./utils";
 import { executeQuery } from "../../query";
 import { QueryBuilders } from "../../query/builders";
 import type { QueryRequest } from "../../query/types";
+import type { WeekOverWeekPeriod } from "../insights/types";
 
 const QUERY_FETCH_TIMEOUT_MS = 45_000;
 const MAX_TOOL_RESPONSE_CHARS = 48_000;
@@ -71,14 +72,16 @@ function runQueryWithTimeout<T>(
 	]);
 }
 
-export interface InsightsAgentPeriodBounds {
-	current: { from: string; to: string };
-	previous: { from: string; to: string };
+function truncatePayload(obj: unknown): string {
+	const payload = JSON.stringify(obj, null, 0);
+	return payload.length > MAX_TOOL_RESPONSE_CHARS
+		? `${payload.slice(0, MAX_TOOL_RESPONSE_CHARS)}\n…[truncated]`
+		: payload;
 }
 
 export interface CreateInsightsAgentToolsParams {
 	domain: string;
-	periodBounds: InsightsAgentPeriodBounds;
+	periodBounds: WeekOverWeekPeriod;
 	timezone: string;
 	websiteId: string;
 }
@@ -162,20 +165,7 @@ export function createInsightsAgentTools(
 				}
 			}
 
-			let payload = JSON.stringify(
-				{
-					period,
-					range,
-					results,
-				},
-				null,
-				0
-			);
-			if (payload.length > MAX_TOOL_RESPONSE_CHARS) {
-				payload = `${payload.slice(0, MAX_TOOL_RESPONSE_CHARS)}\n…[truncated]`;
-			}
-
-			return payload;
+			return truncatePayload({ period, range, results });
 		},
 	});
 
@@ -209,23 +199,14 @@ export function createInsightsAgentTools(
 		}),
 		execute: async ({ period, queries }, options) => {
 			const appContext = getAppContext(options);
-
-			let payload = JSON.stringify(
+			return truncatePayload(
 				await fetchProductMetrics(
 					appContext,
 					params.periodBounds,
 					period,
 					queries
-				),
-				null,
-				0
+				)
 			);
-
-			if (payload.length > MAX_TOOL_RESPONSE_CHARS) {
-				payload = `${payload.slice(0, MAX_TOOL_RESPONSE_CHARS)}\n…[truncated]`;
-			}
-
-			return payload;
 		},
 	});
 
@@ -252,18 +233,9 @@ export function createInsightsAgentTools(
 		}),
 		execute: async ({ period, queries }, options) => {
 			const appContext = getAppContext(options);
-
-			let payload = JSON.stringify(
-				await fetchOpsMetrics(appContext, params.periodBounds, period, queries),
-				null,
-				0
+			return truncatePayload(
+				await fetchOpsMetrics(appContext, params.periodBounds, period, queries)
 			);
-
-			if (payload.length > MAX_TOOL_RESPONSE_CHARS) {
-				payload = `${payload.slice(0, MAX_TOOL_RESPONSE_CHARS)}\n…[truncated]`;
-			}
-
-			return payload;
 		},
 	});
 
@@ -296,22 +268,14 @@ export function createInsightsAgentTools(
 		execute: async ({ period, queries }, options) => {
 			const appContext = getAppContext(options);
 
-			let payload = JSON.stringify(
+			return truncatePayload(
 				await fetchBusinessMetrics(
 					appContext,
 					params.periodBounds,
 					period,
 					queries
-				),
-				null,
-				0
+				)
 			);
-
-			if (payload.length > MAX_TOOL_RESPONSE_CHARS) {
-				payload = `${payload.slice(0, MAX_TOOL_RESPONSE_CHARS)}\n…[truncated]`;
-			}
-
-			return payload;
 		},
 	});
 

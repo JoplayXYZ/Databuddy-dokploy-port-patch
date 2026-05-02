@@ -422,7 +422,10 @@ const app = new Elysia({ precompile: true })
 const BUN_IDLE_TIMEOUT_SECONDS = 255;
 
 warmPool().catch((err) =>
-	log.error({ lifecycle: "poolWarm", error_message: err instanceof Error ? err.message : String(err) })
+	log.error({
+		lifecycle: "poolWarm",
+		error_message: err instanceof Error ? err.message : String(err),
+	})
 );
 
 export default {

@@ -3,8 +3,8 @@ import type { AgentThinking } from "../agents/types";
 
 interface TierConfig {
 	maxSteps: number;
-	supportsThinking: boolean;
 	promptCaching: boolean;
+	supportsThinking: boolean;
 	temperature: number;
 	thinkingBudgets: Record<Exclude<AgentThinking, "off">, number> | null;
 }
