@@ -53,10 +53,10 @@ export function AITrafficSection({
 				</div>
 			</div>
 
-			<div className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto px-1">
+			<div className="flex min-w-0 flex-1 items-center gap-4 overflow-x-auto px-2">
 				{aiReferrers.map((r) => (
 					<div
-						className="flex shrink-0 items-center gap-1.5 rounded-lg bg-background px-2.5 py-1.5"
+						className="flex shrink-0 items-center gap-1.5"
 						key={r.name}
 					>
 						{r.domain ? (
@@ -68,7 +68,7 @@ export function AITrafficSection({
 							/>
 						) : null}
 						<span className="text-muted-foreground text-xs">{r.name}</span>
-						<span className="font-medium text-foreground text-xs tabular-nums">
+						<span className="font-semibold text-foreground text-xs tabular-nums">
 							{formatNumber(r.visitors)}
 						</span>
 					</div>
