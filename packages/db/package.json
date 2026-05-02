@@ -6,6 +6,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./schema": "./src/drizzle/schema/index.ts",
+    "./schema/relations": "./src/drizzle/schema/relations.ts",
     "./clickhouse": "./src/clickhouse/index.ts",
     "./clickhouse/schema": "./src/clickhouse/schema.ts"
   },
@@ -22,7 +23,7 @@
   },
   "devDependencies": {
     "@types/pg": "^8.16.0",
-    "drizzle-kit": "^0.31.8",
+    "drizzle-kit": "^1.0.0-rc.1",
     "tsx": "^4.21.0"
   },
   "scripts": {

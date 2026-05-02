@@ -7,7 +7,6 @@ export * from "./billing";
 export * from "./feedback";
 export * from "./flags";
 export * from "./links";
-export * from "./relations";
 export * from "./uptime";
 export * from "./tracker";
 export * from "./websites";

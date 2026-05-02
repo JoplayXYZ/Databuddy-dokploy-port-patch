@@ -107,7 +107,7 @@
       "bun-types": "latest",
       "ultracite": "^7.4.3",
       "turbo": "^2.5.2",
-      "drizzle-orm": "^0.45.2",
+      "drizzle-orm": "1.0.0-rc.1",
       "nanoid": "^5.1.6",
       "ua-parser-js": "^2.0.8",
       "evlog": "^2.11.1",
@@ -117,6 +117,7 @@
   },
   "dependencies": {
     "d3-geo": "^3.1.1",
+    "drizzle-orm": "^1.0.0-rc.1",
     "topojson-client": "^3.1.0",
     "world-atlas": "^2.0.2"
   }
