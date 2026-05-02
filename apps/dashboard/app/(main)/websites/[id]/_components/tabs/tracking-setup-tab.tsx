@@ -8,6 +8,7 @@ import { createJavaScriptRegexEngine } from "shiki/engine/javascript";
 import bash from "shiki/langs/bash.mjs";
 import html from "shiki/langs/html.mjs";
 import tsx from "shiki/langs/tsx.mjs";
+import vue from "shiki/langs/vue.mjs";
 import vesper from "shiki/themes/vesper.mjs";
 import { toast } from "sonner";
 import { orpc } from "@/lib/orpc";
@@ -24,6 +25,7 @@ import {
 import {
 	generateNpmCode,
 	generateScriptTag,
+	generateVueCode,
 	type VersionedScript,
 } from "../utils/code-generators";
 import type { TrackingOptionConfig, TrackingOptions } from "../utils/types";
@@ -34,6 +36,7 @@ import {
 	CheckIcon,
 	ClipboardIcon,
 	CodeIcon,
+	GlobeIcon,
 	LightningIcon,
 	PackageIcon,
 	PulseIcon,
@@ -49,11 +52,13 @@ interface TrackingSetupTabProps {
 
 const highlighter = createHighlighterCoreSync({
 	themes: [vesper],
-	langs: [tsx, html, bash],
+	langs: [tsx, html, bash, vue],
 	engine: createJavaScriptRegexEngine(),
 });
 
-function getLanguage(code: string): "bash" | "html" | "tsx" {
+type Lang = "bash" | "html" | "tsx" | "vue";
+
+function getLanguage(code: string): Lang {
 	if (
 		code.includes("npm install") ||
 		code.includes("yarn add") ||
@@ -61,6 +66,9 @@ function getLanguage(code: string): "bash" | "html" | "tsx" {
 		code.includes("bun add")
 	) {
 		return "bash";
+	}
+	if (code.includes("<script setup>")) {
+		return "vue";
 	}
 	if (code.includes("<script")) {
 		return "html";
@@ -183,6 +191,21 @@ const TROUBLESHOOTING_ITEMS = [
 	},
 ];
 
+function VueLogo({ className }: { className?: string }) {
+	return (
+		<svg
+			className={className}
+			fill="currentColor"
+			viewBox="0 0 256 221"
+			xmlns="http://www.w3.org/2000/svg"
+		>
+			<path d="M204.8 0H256L128 220.8L0 0h97.92L128 51.2L157.44 0h47.36Z" opacity="0.5" />
+			<path d="m0 0 128 220.8L256 0h-51.2L128 132.48 51.2 0H0Z" opacity="0.25" />
+			<path d="M50.56 0 128 133.12 204.8 0h-47.36L128 51.2 97.92 0H50.56Z" />
+		</svg>
+	);
+}
+
 export function WebsiteTrackingSetupTab({ websiteId }: TrackingSetupTabProps) {
 	const [copiedBlockId, setCopiedBlockId] = useState<string | null>(null);
 	const [isRefreshing, setIsRefreshing] = useState(false);
@@ -216,6 +239,7 @@ export function WebsiteTrackingSetupTab({ websiteId }: TrackingSetupTabProps) {
 		? generateScriptTag(websiteId, trackingOptions, activeVersionedScript)
 		: null;
 	const npmCode = generateNpmCode(websiteId, trackingOptions);
+	const vueCode = generateVueCode(websiteId, trackingOptions);
 
 	const activeCode =
 		usePinnedVersion && pinnedTrackingCode ? pinnedTrackingCode : trackingCode;
@@ -299,9 +323,13 @@ export function WebsiteTrackingSetupTab({ websiteId }: TrackingSetupTabProps) {
 									<CodeIcon className="size-3.5" weight="duotone" />
 									Script Tag
 								</Tabs.Tab>
-								<Tabs.Tab value="npm">
+								<Tabs.Tab value="react">
 									<PackageIcon className="size-3.5" weight="duotone" />
-									SDK Package
+									React
+								</Tabs.Tab>
+								<Tabs.Tab value="vue">
+									<VueLogo className="size-3.5" />
+									Vue
 								</Tabs.Tab>
 							</Tabs.List>
 
@@ -427,7 +455,7 @@ export function WebsiteTrackingSetupTab({ websiteId }: TrackingSetupTabProps) {
 							</div>
 						</Tabs.Panel>
 
-						<Tabs.Panel className="mt-4 space-y-4" value="npm">
+						<Tabs.Panel className="mt-4 space-y-4" value="react">
 							<div className="space-y-3">
 								<p className="text-muted-foreground text-sm">
 									Install the SDK:
@@ -454,12 +482,12 @@ export function WebsiteTrackingSetupTab({ websiteId }: TrackingSetupTabProps) {
 												<CodeBlock
 													code={command}
 													copied={
-														copiedBlockId === `${manager}-install`
+														copiedBlockId === `react-${manager}-install`
 													}
 													onCopy={() =>
 														handleCopy(
 															command,
-															`${manager}-install`,
+															`react-${manager}-install`,
 															"Command copied!",
 														)
 													}
@@ -476,11 +504,72 @@ export function WebsiteTrackingSetupTab({ websiteId }: TrackingSetupTabProps) {
 								</p>
 								<CodeBlock
 									code={npmCode}
-									copied={copiedBlockId === "npm-code"}
+									copied={copiedBlockId === "react-code"}
 									onCopy={() =>
 										handleCopy(
 											npmCode,
-											"npm-code",
+											"react-code",
+											"Code copied!",
+										)
+									}
+								/>
+							</div>
+						</Tabs.Panel>
+
+						<Tabs.Panel className="mt-4 space-y-4" value="vue">
+							<div className="space-y-3">
+								<p className="text-muted-foreground text-sm">
+									Install the SDK:
+								</p>
+								<Tabs className="w-full" defaultValue="bun">
+									<Tabs.List>
+										{Object.keys(INSTALL_COMMANDS).map((manager) => (
+											<Tabs.Tab
+												className="text-xs"
+												key={manager}
+												value={manager}
+											>
+												{manager}
+											</Tabs.Tab>
+										))}
+									</Tabs.List>
+									{Object.entries(INSTALL_COMMANDS).map(
+										([manager, command]) => (
+											<Tabs.Panel
+												className="mt-3"
+												key={manager}
+												value={manager}
+											>
+												<CodeBlock
+													code={command}
+													copied={
+														copiedBlockId === `vue-${manager}-install`
+													}
+													onCopy={() =>
+														handleCopy(
+															command,
+															`vue-${manager}-install`,
+															"Command copied!",
+														)
+													}
+												/>
+											</Tabs.Panel>
+										),
+									)}
+								</Tabs>
+							</div>
+
+							<div className="space-y-3">
+								<p className="text-muted-foreground text-sm">
+									Add the component to your root layout:
+								</p>
+								<CodeBlock
+									code={vueCode}
+									copied={copiedBlockId === "vue-code"}
+									onCopy={() =>
+										handleCopy(
+											vueCode,
+											"vue-code",
 											"Code copied!",
 										)
 									}

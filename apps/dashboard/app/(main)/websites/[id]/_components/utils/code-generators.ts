@@ -98,38 +98,45 @@ function AppLayout({ children }) {
 }`;
 }
 
-/**
- * Generate just the NPM component code (for copying)
- */
-export function generateNpmComponentCode(
+export function generateVueCode(
 	websiteId: string,
-	trackingOptions: TrackingOptions
+	trackingOptions: TrackingOptions,
 ): string {
 	const meaningfulProps = Object.entries(trackingOptions)
 		.filter(([key, value]) => {
 			const actualDefault =
 				ACTUAL_LIBRARY_DEFAULTS[key as keyof TrackingOptions];
-			if (value === actualDefault) {
-				return false;
-			}
-			if (typeof value === "boolean" && !value && !actualDefault) {
-				return false;
-			}
+			if (value === actualDefault) return false;
+			if (typeof value === "boolean" && !value && !actualDefault) return false;
 			return true;
 		})
 		.map(([key, value]) => {
 			if (typeof value === "boolean") {
-				return `  ${key}={${value}}`;
+				return `      :${kebabCase(key)}="${value}"`;
 			}
 			if (typeof value === "string") {
-				return `  ${key}="${value}"`;
+				return `      ${kebabCase(key)}="${value}"`;
 			}
-			return `  ${key}={${value}}`;
+			return `      :${kebabCase(key)}="${value}"`;
 		});
 
 	const propsString =
-		meaningfulProps.length > 0 ? `\n${meaningfulProps.join("\n")}\n` : "";
+		meaningfulProps.length > 0 ? `\n${meaningfulProps.join("\n")}` : "";
 
-	return `<Databuddy
-  clientId="${websiteId}"${propsString}/>`;
+	return `<script setup>
+import { Databuddy } from '@databuddy/sdk/vue';
+</script>
+
+<template>
+  <div>
+    <router-view />
+    <Databuddy
+      client-id="${websiteId}"${propsString}
+    />
+  </div>
+</template>`;
+}
+
+function kebabCase(str: string): string {
+	return str.replace(/([A-Z])/g, "-$1").toLowerCase();
 }
