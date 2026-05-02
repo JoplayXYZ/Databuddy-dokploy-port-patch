@@ -58,7 +58,13 @@ function formatUrl(url: string, maxLen = 40): string {
 	}
 }
 
-function ExpirationBadge({ date, className }: { date: string | null; className?: string }) {
+function ExpirationBadge({
+	date,
+	className,
+}: {
+	date: string | null;
+	className?: string;
+}) {
 	if (!date) {
 		return null;
 	}
@@ -129,7 +135,10 @@ function LinkRow({
 			<div className="min-w-0 flex-1">
 				<div className="flex items-center gap-2">
 					<p className="truncate font-medium text-sm">{link.name}</p>
-					<ExpirationBadge date={link.expiresAt ?? null} className="rounded py-px px-1.5" />
+					<ExpirationBadge
+						className="rounded px-1.5 py-px"
+						date={link.expiresAt ?? null}
+					/>
 				</div>
 				<div className="mt-1 flex items-center gap-2">
 					<button

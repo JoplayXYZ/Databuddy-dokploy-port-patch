@@ -164,7 +164,7 @@ export function GoalPreviewRenderer({
 							<div>
 								<p className="text-muted-foreground text-xs">Target</p>
 								<pre className="mt-1 overflow-x-auto text-pretty break-all rounded bg-muted p-1.5 px-2 font-mono text-xs">
-									<code className="text-ring font-semibold">{goal.target}</code>
+									<code className="font-semibold text-ring">{goal.target}</code>
 								</pre>
 							</div>
 							{goal.ignoreHistoricData && (

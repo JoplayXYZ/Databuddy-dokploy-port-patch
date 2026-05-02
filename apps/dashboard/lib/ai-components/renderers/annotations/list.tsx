@@ -39,10 +39,8 @@ function AnnotationTypeLabel({ type }: { type: string }) {
 		range: "Range",
 	};
 	return (
-		<Badge className="text-[10px] py-0.5! rounded" variant="muted">
-			<span className="mt-px">
-			{labels[type] ?? type}
-			</span>
+		<Badge className="rounded py-0.5! text-[10px]" variant="muted">
+			<span className="mt-px">{labels[type] ?? type}</span>
 		</Badge>
 	);
 }
@@ -97,14 +95,14 @@ function AnnotationRow({
 						<CalendarIcon className="size-3 shrink-0" weight="duotone" />
 						{metaLine}
 						<span className="pl-1">
-						<AnnotationTypeLabel type={annotation.annotationType} />
+							<AnnotationTypeLabel type={annotation.annotationType} />
 						</span>
 					</span>
 				</p>
 			</div>
 
 			{annotation.createdAt && (
-				<span className="hidden shrink-0 text-[11px] text-muted-foreground sm:block pt-0.5">
+				<span className="hidden shrink-0 pt-0.5 text-[11px] text-muted-foreground sm:block">
 					{fromNow(annotation.createdAt)}
 				</span>
 			)}
