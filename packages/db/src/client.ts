@@ -84,7 +84,6 @@ function getDb(): DB {
 			new Pool({
 				connectionString: connectionStringForNodePg(databaseUrl),
 				max: Number.parseInt(process.env.DB_POOL_MAX ?? "20", 10) || 20,
-				min: Number.parseInt(process.env.DB_POOL_MIN ?? "4", 10) || 4,
 				idleTimeoutMillis: 30_000,
 				connectionTimeoutMillis: 5000,
 				application_name: process.env.SERVICE_NAME || "databuddy",
@@ -101,13 +100,8 @@ export async function warmPool(): Promise<void> {
 	if (!_pool) {
 		return;
 	}
-	const min = Number.parseInt(process.env.DB_POOL_MIN ?? "4", 10) || 4;
-	const clients = await Promise.all(
-		Array.from({ length: min }, () => _pool!.connect())
-	);
-	for (const client of clients) {
-		client.release();
-	}
+	const client = await _pool.connect();
+	client.release();
 }
 
 export const db = new Proxy({} as DB, {
