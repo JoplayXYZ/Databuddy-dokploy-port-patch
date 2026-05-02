@@ -202,12 +202,15 @@ export async function generateSitemapEntries(): Promise<MetadataRoute.Sitemap> {
 		// Add blog posts and blog index
 		const blogData = await getPosts();
 		if (!("error" in blogData) && blogData?.posts) {
-			const blogEntries = blogData.posts.map((post) => ({
-				url: `${SITE_URL}/blog/${post.slug}`,
-				lastModified: new Date(post.publishedAt),
-				changeFrequency: "monthly" as const,
-				priority: 0.7,
-			}));
+			const now = new Date();
+			const blogEntries = blogData.posts
+				.filter((post) => new Date(post.publishedAt) <= now)
+				.map((post) => ({
+					url: `${SITE_URL}/blog/${post.slug}`,
+					lastModified: new Date(post.publishedAt),
+					changeFrequency: "monthly" as const,
+					priority: 0.7,
+				}));
 			entries.push(...blogEntries);
 
 			// Add blog index with latest post date
