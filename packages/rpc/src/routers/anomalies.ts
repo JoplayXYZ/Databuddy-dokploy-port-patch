@@ -1,5 +1,4 @@
-import { and, db, eq } from "@databuddy/db";
-import { alarms } from "@databuddy/db/schema";
+import { db } from "@databuddy/db";
 import {
 	buildAnomalyNotificationPayload,
 	NotificationClient,
@@ -133,7 +132,7 @@ export const anomaliesRouter = {
 			}
 
 			const matchingAlarms = await db.query.alarms.findMany({
-				where: and(eq(alarms.organizationId, orgId), eq(alarms.enabled, true)),
+				where: { organizationId: orgId, enabled: true },
 				with: { destinations: true },
 			});
 

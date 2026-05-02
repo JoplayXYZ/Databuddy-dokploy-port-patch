@@ -28,7 +28,7 @@ async function getAlarmAndAuthorize(
 	permissions: ("read" | "update" | "delete")[] = ["read"]
 ) {
 	const alarm = await db.query.alarms.findFirst({
-		where: eq(alarms.id, alarmId),
+		where: { id: alarmId },
 		with: { destinations: true },
 	});
 
@@ -69,8 +69,8 @@ export const alarmsRouter = {
 			});
 
 			return db.query.alarms.findMany({
-				where: eq(alarms.organizationId, orgId),
-				orderBy: (table, { desc }) => [desc(table.createdAt)],
+				where: { organizationId: orgId },
+				orderBy: { createdAt: "desc" },
 				with: { destinations: true },
 				limit: 100,
 			});

@@ -1,6 +1,4 @@
-import { eq } from "@databuddy/db";
 import { chQuery } from "@databuddy/db/clickhouse";
-import { websites } from "@databuddy/db/schema";
 import type {
 	DailyUsageByTypeRow,
 	DailyUsageRow,
@@ -449,7 +447,7 @@ export const billingRouter = {
 
 			try {
 				const userWebsites = await context.db.query.websites.findMany({
-					where: eq(websites.organizationId, resolvedOrgId),
+					where: { organizationId: resolvedOrgId },
 					columns: { id: true },
 				});
 				const websiteIds = userWebsites.map((site) => site.id);

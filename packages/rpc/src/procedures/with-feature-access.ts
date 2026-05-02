@@ -1,5 +1,5 @@
-import { and, db, eq } from "@databuddy/db";
-import { featureAccessLog, featureInvite, flags } from "@databuddy/db/schema";
+import { db } from "@databuddy/db";
+import { featureAccessLog } from "@databuddy/db/schema";
 import { randomUUIDv7 } from "bun";
 import { logger } from "../lib/logger";
 import { type Context, os } from "../orpc";
@@ -9,10 +9,7 @@ export async function isFlagGloballyEnabled(
 	organizationId: string
 ): Promise<boolean> {
 	const flag = await db.query.flags.findFirst({
-		where: and(
-			eq(flags.key, flagKey),
-			eq(flags.organizationId, organizationId)
-		),
+		where: { key: flagKey, organizationId },
 		columns: { defaultValue: true, status: true },
 	});
 
@@ -28,11 +25,7 @@ export async function hasRedeemedInvite(
 	userId: string
 ): Promise<boolean> {
 	const invite = await db.query.featureInvite.findFirst({
-		where: and(
-			eq(featureInvite.flagKey, flagKey),
-			eq(featureInvite.redeemedById, userId),
-			eq(featureInvite.status, "redeemed")
-		),
+		where: { flagKey, redeemedById: userId, status: "redeemed" },
 		columns: { id: true },
 	});
 

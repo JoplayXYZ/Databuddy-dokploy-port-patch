@@ -1,6 +1,5 @@
 import {
 	and,
-	desc,
 	eq,
 	inArray,
 	isNull,
@@ -313,18 +312,25 @@ export const flagsRouter = {
 						true
 					);
 
-					const conditions = [
-						isNull(flags.deletedAt),
-						getScopeCondition(input.websiteId, input.organizationId),
-					];
-
-					if (input.status) {
-						conditions.push(eq(flags.status, input.status));
-					}
-
 					const flagsList = await context.db.query.flags.findMany({
-						where: and(...conditions),
-						orderBy: desc(flags.createdAt),
+						where: {
+							RAW: (t) => {
+								const conditions = [
+									isNull(t.deletedAt),
+									getScopeCondition(
+										input.websiteId,
+										input.organizationId,
+										undefined,
+										t
+									),
+								];
+								if (input.status) {
+									conditions.push(eq(t.status, input.status));
+								}
+								return and(...conditions)!;
+							},
+						},
+						orderBy: { createdAt: "desc" },
 						limit: 200,
 						with: {
 							flagsToTargetGroups: {
@@ -339,8 +345,10 @@ export const flagsRouter = {
 					const mappedFlags = flagsList.map((flag) => ({
 						...flag,
 						targetGroups: flag.flagsToTargetGroups
-							.filter((ftg) => ftg.targetGroup && !ftg.targetGroup.deletedAt)
-							.map((ftg) => ftg.targetGroup),
+							.map((ftg) => ftg.targetGroup)
+							.filter(
+								(tg): tg is NonNullable<typeof tg> => !!tg && !tg.deletedAt
+							),
 					}));
 
 					// Check if user is fully authorized
@@ -392,11 +400,19 @@ export const flagsRouter = {
 					);
 
 					const flag = await context.db.query.flags.findFirst({
-						where: and(
-							eq(flags.id, input.id),
-							getScopeCondition(input.websiteId, input.organizationId),
-							isNull(flags.deletedAt)
-						),
+						where: {
+							RAW: (t) =>
+								and(
+									eq(t.id, input.id),
+									getScopeCondition(
+										input.websiteId,
+										input.organizationId,
+										undefined,
+										t
+									),
+									isNull(t.deletedAt)
+								)!,
+						},
 						with: {
 							flagsToTargetGroups: {
 								with: {
@@ -413,8 +429,10 @@ export const flagsRouter = {
 					const mappedFlag = {
 						...flag,
 						targetGroups: flag.flagsToTargetGroups
-							.filter((ftg) => ftg.targetGroup && !ftg.targetGroup.deletedAt)
-							.map((ftg) => ftg.targetGroup),
+							.map((ftg) => ftg.targetGroup)
+							.filter(
+								(tg): tg is NonNullable<typeof tg> => !!tg && !tg.deletedAt
+							),
 					};
 
 					// Check if user is fully authorized
@@ -466,12 +484,20 @@ export const flagsRouter = {
 					);
 
 					const flag = await context.db.query.flags.findFirst({
-						where: and(
-							eq(flags.key, input.key),
-							getScopeCondition(input.websiteId, input.organizationId),
-							eq(flags.status, "active"),
-							isNull(flags.deletedAt)
-						),
+						where: {
+							RAW: (t) =>
+								and(
+									eq(t.key, input.key),
+									getScopeCondition(
+										input.websiteId,
+										input.organizationId,
+										undefined,
+										t
+									),
+									eq(t.status, "active"),
+									isNull(t.deletedAt)
+								)!,
+						},
 						with: {
 							flagsToTargetGroups: {
 								with: {
@@ -488,8 +514,10 @@ export const flagsRouter = {
 					const mappedFlag = {
 						...flag,
 						targetGroups: flag.flagsToTargetGroups
-							.filter((ftg) => ftg.targetGroup && !ftg.targetGroup.deletedAt)
-							.map((ftg) => ftg.targetGroup),
+							.map((ftg) => ftg.targetGroup)
+							.filter(
+								(tg): tg is NonNullable<typeof tg> => !!tg && !tg.deletedAt
+							),
 					};
 
 					// Check if user is fully authorized
@@ -693,13 +721,16 @@ export const flagsRouter = {
 
 				// Insert target group associations within the same transaction
 				if (input.targetGroupIds && input.targetGroupIds.length > 0) {
-					// Validate that all target groups exist and belong to the same website
+					const ids = input.targetGroupIds;
 					const validGroups = await tx.query.targetGroups.findMany({
-						where: and(
-							inArray(targetGroups.id, input.targetGroupIds),
-							eq(targetGroups.websiteId, input.websiteId || ""),
-							notDeleted(targetGroups)
-						),
+						where: {
+							RAW: (t) =>
+								and(
+									inArray(t.id, ids),
+									eq(t.websiteId, input.websiteId || ""),
+									isNull(t.deletedAt)
+								)!,
+						},
 					});
 
 					if (validGroups.length !== input.targetGroupIds.length) {
@@ -872,11 +903,14 @@ export const flagsRouter = {
 					// Validate that all target groups exist and belong to the same website
 					if (targetGroupIds.length > 0) {
 						const validGroups = await tx.query.targetGroups.findMany({
-							where: and(
-								inArray(targetGroups.id, targetGroupIds),
-								eq(targetGroups.websiteId, flag.websiteId || ""),
-								notDeleted(targetGroups)
-							),
+							where: {
+								RAW: (t) =>
+									and(
+										inArray(t.id, targetGroupIds),
+										eq(t.websiteId, flag.websiteId || ""),
+										isNull(t.deletedAt)
+									)!,
+							},
 						});
 
 						if (validGroups.length !== targetGroupIds.length) {

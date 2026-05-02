@@ -101,10 +101,7 @@ export const agentChatsRouter = {
 		.output(chatDetailSchema.nullable())
 		.handler(async ({ context, input }) => {
 			const row = await context.db.query.agentChats.findFirst({
-				where: and(
-					eq(agentChats.id, input.id),
-					eq(agentChats.userId, context.user.id)
-				),
+				where: { id: input.id, userId: context.user.id },
 			});
 
 			if (!row) {
@@ -145,10 +142,7 @@ export const agentChatsRouter = {
 		.output(successOutputSchema)
 		.handler(async ({ context, input }) => {
 			const row = await context.db.query.agentChats.findFirst({
-				where: and(
-					eq(agentChats.id, input.id),
-					eq(agentChats.userId, context.user.id)
-				),
+				where: { id: input.id, userId: context.user.id },
 				columns: { id: true, websiteId: true },
 			});
 
@@ -180,10 +174,7 @@ export const agentChatsRouter = {
 		.output(successOutputSchema)
 		.handler(async ({ context, input }) => {
 			const row = await context.db.query.agentChats.findFirst({
-				where: and(
-					eq(agentChats.id, input.id),
-					eq(agentChats.userId, context.user.id)
-				),
+				where: { id: input.id, userId: context.user.id },
 				columns: { id: true, websiteId: true },
 			});
 

@@ -6,8 +6,8 @@ import {
 } from "@databuddy/api-keys/resolve";
 import { API_SCOPES } from "@databuddy/api-keys/scopes";
 import { websitesApi } from "@databuddy/auth";
-import { and, desc, eq } from "@databuddy/db";
-import { apikey, member } from "@databuddy/db/schema";
+import { desc, eq } from "@databuddy/db";
+import { apikey } from "@databuddy/db/schema";
 import { invalidateCacheableKey } from "@databuddy/redis";
 import {
 	ApiKeyErrorCode,
@@ -154,10 +154,7 @@ async function assertOrgAdminForScopeChange(
 		);
 	}
 	const callerMember = await ctx.db.query.member.findFirst({
-		where: and(
-			eq(member.organizationId, organizationId),
-			eq(member.userId, ctx.user.id)
-		),
+		where: { organizationId, userId: ctx.user.id },
 		columns: { role: true },
 	});
 	if (callerMember?.role !== "owner" && callerMember?.role !== "admin") {
@@ -168,7 +165,7 @@ async function assertOrgAdminForScopeChange(
 }
 
 async function getKeyWithAuth(ctx: Context, id: string) {
-	const key = await ctx.db.query.apikey.findFirst({ where: eq(apikey.id, id) });
+	const key = await ctx.db.query.apikey.findFirst({ where: { id } });
 	if (!key) {
 		throw rpcError.notFound("API key", id);
 	}
@@ -226,10 +223,10 @@ export const apikeysRouter = {
 		.output(myRoleOutputSchema)
 		.handler(async ({ context, input }) => {
 			const m = await context.db.query.member.findFirst({
-				where: and(
-					eq(member.organizationId, input.organizationId),
-					eq(member.userId, context.user.id)
-				),
+				where: {
+					organizationId: input.organizationId,
+					userId: context.user.id,
+				},
 				columns: { role: true },
 			});
 			const role = (m?.role ?? null) as "owner" | "admin" | "member" | null;
@@ -559,7 +556,7 @@ export const apikeysRouter = {
 			}
 
 			const key = await context.db.query.apikey.findFirst({
-				where: eq(apikey.keyHash, keys.hashKey(secret)),
+				where: { keyHash: keys.hashKey(secret) },
 			});
 			if (!key) {
 				return {

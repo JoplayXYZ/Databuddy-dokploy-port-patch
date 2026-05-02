@@ -1,4 +1,3 @@
-import { eq } from "@databuddy/db";
 import { userPreferences } from "@databuddy/db/schema";
 import { randomUUIDv7 } from "bun";
 import { z } from "zod";
@@ -28,7 +27,7 @@ export const preferencesRouter = {
 				throw rpcError.unauthorized("User not authenticated");
 			}
 			let preferences = await context.db.query.userPreferences.findFirst({
-				where: eq(userPreferences.userId, context.user.id),
+				where: { userId: context.user.id },
 			});
 
 			if (!preferences) {

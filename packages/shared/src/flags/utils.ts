@@ -52,18 +52,19 @@ export const invalidateFlagCache = async (
 export const getScopeCondition = (
 	websiteId?: string | null,
 	organizationId?: string | null,
-	userId?: string
+	userId?: string,
+	table: typeof flags = flags
 ) => {
 	if (websiteId) {
-		return eq(flags.websiteId, websiteId);
+		return eq(table.websiteId, websiteId);
 	}
 	if (organizationId) {
-		return eq(flags.organizationId, organizationId);
+		return eq(table.organizationId, organizationId);
 	}
 	if (userId) {
-		return eq(flags.userId, userId);
+		return eq(table.userId, userId);
 	}
-	return eq(flags.organizationId, "");
+	return eq(table.organizationId, "");
 };
 
 function buildFlagChangeSnapshot(flag: {

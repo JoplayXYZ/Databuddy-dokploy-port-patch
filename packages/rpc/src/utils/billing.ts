@@ -1,5 +1,4 @@
-import { and, db, eq } from "@databuddy/db";
-import { member } from "@databuddy/db/schema";
+import { db } from "@databuddy/db";
 import { cacheable } from "@databuddy/redis";
 import { getAutumn } from "../lib/autumn-client";
 import { logger, record } from "../lib/logger";
@@ -19,10 +18,7 @@ const _getOrganizationOwnerId = async (
 	}
 	try {
 		const orgMember = await db.query.member.findFirst({
-			where: and(
-				eq(member.organizationId, organizationId),
-				eq(member.role, "owner")
-			),
+			where: { organizationId, role: "owner" },
 			columns: { userId: true },
 		});
 		return orgMember?.userId ?? null;
@@ -53,10 +49,7 @@ export async function getBillingCustomerId(
 const getMemberRole = cacheable(
 	async (userId: string, organizationId: string): Promise<string | null> => {
 		const row = await db.query.member.findFirst({
-			where: and(
-				eq(member.organizationId, organizationId),
-				eq(member.userId, userId)
-			),
+			where: { organizationId, userId },
 			columns: { role: true },
 		});
 		return row?.role ?? null;

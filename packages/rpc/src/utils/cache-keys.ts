@@ -1,5 +1,3 @@
-import { eq } from "@databuddy/db";
-import { websites } from "@databuddy/db/schema";
 import type { Context } from "../orpc";
 
 /**
@@ -22,7 +20,7 @@ export async function getCacheAuthContext(
 
 	if (websiteId) {
 		const website = await context.db.query.websites.findFirst({
-			where: eq(websites.id, websiteId),
+			where: { id: websiteId },
 			columns: { isPublic: true },
 		});
 
