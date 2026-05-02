@@ -72,25 +72,20 @@ function buildEntitlements(): Record<
 	PlanId,
 	{
 		limits: (typeof PLAN_CAPABILITIES)[PlanId]["limits"];
-		ai: (typeof PLAN_CAPABILITIES)[PlanId]["ai"];
 	}
 > {
 	return {
 		[PLAN_IDS.FREE]: {
 			limits: PLAN_CAPABILITIES[PLAN_IDS.FREE].limits,
-			ai: PLAN_CAPABILITIES[PLAN_IDS.FREE].ai,
 		},
 		[PLAN_IDS.HOBBY]: {
 			limits: PLAN_CAPABILITIES[PLAN_IDS.HOBBY].limits,
-			ai: PLAN_CAPABILITIES[PLAN_IDS.HOBBY].ai,
 		},
 		[PLAN_IDS.PRO]: {
 			limits: PLAN_CAPABILITIES[PLAN_IDS.PRO].limits,
-			ai: PLAN_CAPABILITIES[PLAN_IDS.PRO].ai,
 		},
 		[PLAN_IDS.SCALE]: {
 			limits: PLAN_CAPABILITIES[PLAN_IDS.SCALE].limits,
-			ai: PLAN_CAPABILITIES[PLAN_IDS.SCALE].ai,
 		},
 	};
 }
