@@ -1,7 +1,7 @@
 import { timingSafeEqual } from "node:crypto";
 import { clickHouse } from "@databuddy/db/clickhouse";
 import { Elysia } from "elysia";
-import { useLogger } from "evlog/elysia";
+import { evlog, useLogger } from "evlog/elysia";
 import { getDailySalt, saltAnonymousId } from "@lib/security";
 import { formatDate, getWebhookConfig, resolveWebsiteId } from "./shared";
 
@@ -139,7 +139,7 @@ async function handleTransaction(
 	});
 }
 
-export const paddleWebhook = new Elysia().post(
+export const paddleWebhook = new Elysia().use(evlog()).post(
 	"/webhooks/paddle/:hash",
 	async ({ params, request, set }) => {
 		const log = useLogger();
