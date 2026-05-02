@@ -40,7 +40,7 @@ const config: NextConfig = {
 				headers: [
 					{
 						key: "Cache-Control",
-						value: "public, max-age=3600, stale-while-revalidate=86400",
+						value: "public, max-age=3600, must-revalidate",
 					},
 				],
 			},
@@ -84,6 +84,21 @@ const config: NextConfig = {
 			{
 				source: "/docs/docs/:path*",
 				destination: "/docs/:path*",
+				permanent: true,
+			},
+			{
+				source: "/twitter",
+				destination: "https://x.com/trydatabuddy",
+				permanent: true,
+			},
+			{
+				source: "/x",
+				destination: "https://x.com/trydatabuddy",
+				permanent: true,
+			},
+			{
+				source: "/discord",
+				destination: "https://discord.gg/JTk7a38tCZ",
 				permanent: true,
 			},
 		];
