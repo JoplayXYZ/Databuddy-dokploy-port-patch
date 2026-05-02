@@ -127,13 +127,13 @@ export function LinkPreviewRenderer({
 							</div>
 							<div>
 								<p className="text-muted-foreground text-xs">Target URL</p>
-								<pre className="mt-1 overflow-x-auto text-pretty break-all rounded  bg-muted p-1.5 px-2 font-mono text-xs">
+								<pre className="mt-1 overflow-x-auto text-pretty break-all rounded bg-muted p-1.5 px-2 font-mono text-xs">
 									<code className="text-ring font-semibold">{link.targetUrl}</code>
 								</pre>
 							</div>
 							<div>
 								<p className="text-muted-foreground text-xs">Short URL</p>
-								<pre className="mt-1 overflow-x-auto rounded  border-border bg-muted p-1.5 px-2 font-mono text-ring text-xs">
+								<pre className="mt-1 overflow-x-auto rounded bg-muted p-1.5 px-2 font-mono text-ring text-xs">
 									<code className="text-ring font-semibold">
 										{link.slug === "(auto-generated)"
 											? "Will be auto-generated"

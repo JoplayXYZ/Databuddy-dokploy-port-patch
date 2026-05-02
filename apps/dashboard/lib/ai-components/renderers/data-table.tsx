@@ -2,7 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import type { BaseComponentProps } from "../types";
-import { FunnelIcon, TableIcon } from "@databuddy/ui/icons";
+import { TableIcon } from "@databuddy/ui/icons";
 import { Badge, Card } from "@databuddy/ui";
 
 export interface DataTableColumn {
@@ -65,9 +65,8 @@ function DataTableHeaderBlock({
 	return (
 		<div className="flex items-center gap-2.5 rounded-md bg-background px-2 py-2">
 			<div className="flex size-6 shrink-0 items-center justify-center rounded bg-accent mb-auto">
-				<FunnelIcon
+				<TableIcon
 					className="size-3.5 text-muted-foreground"
-					weight="duotone"
 				/>
 			</div>
 			<div className="min-w-0 flex-1">

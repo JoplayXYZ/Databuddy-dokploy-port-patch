@@ -110,7 +110,7 @@ function LinkRow({
 		<div
 			className={cn(
 				"group/link-row flex w-full cursor-pointer gap-3 rounded-sm bg-muted/30 px-2 py-2.5 text-left transition-colors hover:bg-muted",
-				isExpired && "opacity-60 pointer-events-none"
+				isExpired && "opacity-60"
 			)}
 			onClick={onNavigate}
 			onKeyDown={(e) => {

@@ -251,18 +251,11 @@ export function MiniMapRenderer({ title, countries, className }: MiniMapProps) {
 					</div>
 				</div>
 
-				<div
-					className={cn(
-						chartLegendPillRowClassName,
-						" flex w-full items-center justify-start rounded-md bg-background px-2.5 py-2.5"
-					)}
-				>
-						<div className="">
-				<p className="text-muted-foreground text-xs">
-					{countries.length} {countries.length === 1 ? "country" : "countries"}
-				</p>
-			</div>
-					</div>
+				<div className="flex w-full items-center justify-start rounded-md bg-background px-2.5 py-2.5">
+					<p className="text-muted-foreground text-xs">
+						{countries.length} {countries.length === 1 ? "country" : "countries"}
+					</p>
+				</div>
 			</div>
 		</Card>
 	);
