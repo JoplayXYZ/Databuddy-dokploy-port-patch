@@ -29,4 +29,10 @@ export const agentTierAtom = atomWithStorage<AgentTier>(
 	"balanced"
 );
 
+export const TIER_SUPPORTS_THINKING: Record<AgentTier, boolean> = {
+	quick: false,
+	balanced: true,
+	deep: false,
+};
+
 export const agentCreditShakeNonceAtom = atom(0);

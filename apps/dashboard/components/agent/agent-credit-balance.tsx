@@ -10,7 +10,7 @@ import {
 } from "@/components/providers/billing-provider";
 import { useChatSafe } from "@/contexts/chat-context";
 import { cn } from "@/lib/utils";
-import { CoinsIcon } from "@phosphor-icons/react/dist/ssr";
+import { CoinsIcon } from "@databuddy/ui/icons";
 import { Button, Skeleton, Tooltip } from "@databuddy/ui";
 import { agentCreditShakeNonceAtom } from "./agent-atoms";
 
@@ -65,7 +65,7 @@ export function AgentCreditBalance({
 					size="sm"
 					variant="secondary"
 				>
-					<CoinsIcon className="size-3" weight="duotone" />
+					<CoinsIcon className="size-3" />
 					<span className="font-medium tabular-nums">Unlimited</span>
 				</Button>
 			</Tooltip>
@@ -112,7 +112,7 @@ export function AgentCreditBalance({
 					variant="secondary"
 				>
 					{variant === "compact" ? null : (
-						<CoinsIcon className="size-3" weight="duotone" />
+						<CoinsIcon className="size-3" />
 					)}
 					<span className="font-medium tabular-nums">{label}</span>
 				</Button>

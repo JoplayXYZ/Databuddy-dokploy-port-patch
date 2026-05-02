@@ -12,9 +12,9 @@ import { useChat, useChatLoading } from "@/contexts/chat-context";
 import { useWebsite } from "@/hooks/use-websites";
 import { orpc } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
-import { BrainIcon } from "@phosphor-icons/react/dist/ssr";
 import {
 	ArrowRightIcon,
+	BrainIcon,
 	ChartBarIcon,
 	LightbulbIcon,
 	LightningIcon,

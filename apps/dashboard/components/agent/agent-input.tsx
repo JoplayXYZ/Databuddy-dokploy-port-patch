@@ -1,6 +1,6 @@
 "use client";
 
-import { useAtom, useSetAtom } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import {
 	useCallback,
 	useEffect,
@@ -10,7 +10,18 @@ import {
 	useState,
 } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { CircleNotchIcon } from "@databuddy/ui/icons";
+import {
+	BrainIcon,
+	CaretDownIcon,
+	CircleNotchIcon,
+	ClockCountdownIcon,
+	GaugeIcon,
+	LightningIcon,
+	MediaStopIcon,
+	PaperclipIcon,
+	PaperPlaneIcon,
+	XMarkIcon,
+} from "@databuddy/ui/icons";
 import { useChat, usePendingQueue } from "@/contexts/chat-context";
 import { cn } from "@/lib/utils";
 import {
@@ -20,6 +31,7 @@ import {
 import {
 	AGENT_TIERS,
 	AGENT_THINKING_LEVELS,
+	TIER_SUPPORTS_THINKING,
 	type AgentTier,
 	type AgentThinking,
 	agentCreditShakeNonceAtom,
@@ -34,16 +46,6 @@ import {
 	AGENT_INPUT_PLACEHOLDER_PHRASES,
 } from "./agent-text-switch";
 import { useEnterSubmit } from "./hooks/use-enter-submit";
-import {
-	BrainIcon,
-	GaugeIcon,
-	LightningIcon,
-	PaperPlaneRightIcon,
-	PaperclipIcon,
-	StopIcon,
-	XIcon,
-} from "@phosphor-icons/react/dist/ssr";
-import { CaretDownIcon, ClockCountdownIcon } from "@databuddy/ui/icons";
 import { DropdownMenu } from "@databuddy/ui/client";
 import { Button, Skeleton, Textarea, Tooltip } from "@databuddy/ui";
 
@@ -243,23 +245,26 @@ export function AgentInput() {
 							/>
 						</section>
 
-						<div className="flex items-center justify-between gap-3  border-border/60 bg-background px-1.5 py-1.5 rounded">
+						<div className="flex items-center justify-between gap-3 border-border/60 bg-background px-1.5 py-1.5 rounded">
 							<div className="flex gap-1">
+								<Tooltip content="Attach file (coming soon)" side="top">
 									<Button
 										variant="secondary"
-										aria-label="Add"
+										aria-label="Attach file"
 										className="size-7"
+										disabled
 										size="icon"
 										type="button"
 									>
 										<PaperclipIcon className="size-3.5" />
 									</Button>
-									<ThinkingControl />
-									<TierControl />
+								</Tooltip>
+								<TierControl />
+								<ThinkingControl />
 							</div>
 
 							<div className="flex shrink-0 items-center gap-3 ml-auto">
-							<KeyboardHints isLoading={isLoading} />
+								<KeyboardHints isLoading={isLoading} />
 								{isLoading ? (
 									<Button
 										aria-label="Stop generation"
@@ -269,7 +274,7 @@ export function AgentInput() {
 										type="button"
 										variant="default"
 									>
-										<StopIcon className="size-3.5" weight="fill" />
+										<MediaStopIcon className="size-3.5" />
 									</Button>
 								) : (
 									<Button
@@ -279,10 +284,7 @@ export function AgentInput() {
 										size="icon"
 										type="submit"
 									>
-										<PaperPlaneRightIcon
-											className="size-3.5"
-											weight={input.trim() ? "fill" : "duotone"}
-										/>
+										<PaperPlaneIcon className="size-3.5" />
 									</Button>
 								)}
 							</div>
@@ -333,12 +335,12 @@ function TierIcon({
 	className?: string;
 }) {
 	if (tier === "quick") {
-		return <LightningIcon className={className} weight="fill" />;
+		return <LightningIcon className={className} />;
 	}
 	if (tier === "deep") {
-		return <BrainIcon className={className} weight="duotone" />;
+		return <BrainIcon className={className} />;
 	}
-	return <GaugeIcon className={className} weight="duotone" />;
+	return <GaugeIcon className={className} />;
 }
 
 const THINKING_LABEL_TRANSITION = {
@@ -354,9 +356,14 @@ const ThinkingControl = memo(function ThinkingControl({
 	iconOnly?: boolean;
 }) {
 	const [thinking, setThinking] = useAtom(agentThinkingAtom);
-	const isOn = thinking !== "off";
+	const tier = useAtomValue(agentTierAtom);
+	const supportsThinking = TIER_SUPPORTS_THINKING[tier];
+	const isOn = supportsThinking && thinking !== "off";
 
 	const cycleThinking = () => {
+		if (!supportsThinking) {
+			return;
+		}
 		const currentIndex = AGENT_THINKING_LEVELS.indexOf(thinking);
 		const nextIndex = (currentIndex + 1) % AGENT_THINKING_LEVELS.length;
 		const next = AGENT_THINKING_LEVELS[nextIndex];
@@ -365,18 +372,20 @@ const ThinkingControl = memo(function ThinkingControl({
 		}
 	};
 
+	const tooltipContent = supportsThinking ? (
+		<div className="flex flex-col gap-0.5">
+			<span className="font-medium">
+				Thinking · {THINKING_LABELS[thinking]}
+			</span>
+			<span className="text-muted-foreground">
+				{THINKING_DESCRIPTIONS[thinking]}
+			</span>
+		</div>
+	) : "Not available for this model";
+
 	return (
 		<Tooltip
-			content={
-				<div className="flex flex-col gap-0.5">
-					<span className="font-medium">
-						Thinking · {THINKING_LABELS[thinking]}
-					</span>
-					<span className="text-muted-foreground">
-						{THINKING_DESCRIPTIONS[thinking]}
-					</span>
-				</div>
-			}
+			content={tooltipContent}
 			delay={250}
 			side="top"
 		>
@@ -390,11 +399,12 @@ const ThinkingControl = memo(function ThinkingControl({
 						: "",
 					!(isOn || iconOnly) && "border-transparent hover:border-border/60"
 				)}
+				disabled={!supportsThinking}
 				onClick={cycleThinking}
 				size={iconOnly ? "icon-sm" : "sm"}
 				variant="secondary"
 			>
-				<BrainIcon className="size-3.5" weight={isOn ? "fill" : "duotone"} />
+				<BrainIcon className="size-3.5" />
 				{iconOnly ? null : (
 					<AnimatePresence initial={false} mode="popLayout">
 						<motion.span
@@ -416,8 +426,19 @@ const ThinkingControl = memo(function ThinkingControl({
 
 const TierControl = memo(function TierControl() {
 	const [tier, setTier] = useAtom(agentTierAtom);
+	const setThinking = useSetAtom(agentThinkingAtom);
 	const [isTierHydrated, setIsTierHydrated] = useState(false);
 	const [tierMenuOpen, setTierMenuOpen] = useState(false);
+
+	const selectTier = useCallback(
+		(next: AgentTier) => {
+			setTier(next);
+			if (!TIER_SUPPORTS_THINKING[next]) {
+				setThinking("off");
+			}
+		},
+		[setTier, setThinking]
+	);
 
 	useEffect(() => {
 		setIsTierHydrated(true);
@@ -455,7 +476,6 @@ const TierControl = memo(function TierControl() {
 							"size-3 -mt-px transition-transform duration-150 ease-out motion-reduce:transition-none",
 							tierMenuOpen && "rotate-180"
 						)}
-						weight="fill"
 					/>
 				</DropdownMenu.Trigger>
 			</Tooltip>
@@ -463,11 +483,11 @@ const TierControl = memo(function TierControl() {
 				{AGENT_TIERS.map((optionTier) => (
 					<DropdownMenu.Item
 						key={optionTier}
-						onClick={() => setTier(optionTier)}
+						onClick={() => selectTier(optionTier)}
 						className="h-10"
 					>
-						<div className="flex min-w-0 items-start  gap-2">
-							<TierIcon className="mt-0.5 size-3.5 shrink-0" tier={optionTier} />
+						<div className="flex min-w-0 items-start gap-2">
+							<TierIcon className="mt-0.5 size-4 shrink-0" tier={optionTier} />
 							<div className="flex min-w-0 flex-col">
 							<span className="font-medium text-xs">
 								{TIER_LABELS[optionTier]}
@@ -511,12 +531,11 @@ const KeyboardHints = memo(function KeyboardHints({
 		return <GeneratingHint />;
 	}
 	return (
-		<div className="flex min-w-0 items-center gap-1.5 text-muted-foreground text-xs h-full">
-			<Kbd>Enter</Kbd>
-			<span>send</span>
-			<span className="h-4 w-px bg-accent"></span>
-			<Kbd>⇧Enter</Kbd>
-			<span className="hidden sm:inline">newline</span>
+		<div className="hidden min-w-0 items-center gap-1 text-muted-foreground/60 text-[10px] sm:flex">
+			<Kbd>↵</Kbd>
+			<span className="mr-1">send</span>
+			<Kbd>⇧↵</Kbd>
+			<span>newline</span>
 		</div>
 	);
 });
@@ -554,7 +573,7 @@ function PendingPill({
 				size="icon-sm"
 				variant="ghost"
 			>
-				<XIcon className="size-3.5" />
+				<XMarkIcon className="size-3.5" />
 			</Button>
 			{count > 1 ? (
 				<Button
