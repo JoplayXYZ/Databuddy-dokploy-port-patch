@@ -16,9 +16,11 @@ import { memo, useCallback, useState } from "react";
 import { toast } from "sonner";
 import { FaviconImage } from "@/components/analytics/favicon-image";
 import {
-	ContextMenu,
-	ContextMenuContent,
 	ContextMenuItem,
+	ContextMenuPopup,
+	ContextMenuPositioner,
+	ContextMenuPortal,
+	ContextMenuRoot,
 	ContextMenuSeparator,
 	ContextMenuTrigger,
 } from "@/components/ui/context-menu";
@@ -152,11 +154,10 @@ export const WebsiteCard = memo(
 
 		return (
 			<>
-				<ContextMenu>
-					{/* Wrapper trigger: avoid merging Radix handlers onto Link (fixes stray click on RMB). */}
-					<ContextMenuTrigger asChild>
+				<ContextMenuRoot>
+					<ContextMenuTrigger className="block h-full rounded outline-none focus-visible:outline-none">
 						<PrefetchZone
-							className="block h-full rounded outline-none focus-visible:outline-none"
+							className="block h-full"
 							href={`/websites/${website.id}`}
 						>
 							<Link
@@ -254,61 +255,64 @@ export const WebsiteCard = memo(
 							</Link>
 						</PrefetchZone>
 					</ContextMenuTrigger>
-					<ContextMenuContent className="min-w-48 rounded border-border/50 bg-popover/95 p-0 shadow-lg backdrop-blur-sm">
-						<ContextMenuItem
-							className="w-full rounded-none px-3 py-2"
-							onSelect={handleOpen}
-						>
-							<EyeIcon className="size-4" weight="duotone" />
-							Open
-						</ContextMenuItem>
-						<ContextMenuItem
-							className="w-full rounded-none px-3 py-2"
-							onSelect={handleOpenNewTab}
-						>
-							<ArrowSquareOutIcon className="size-4" weight="duotone" />
-							Open in new tab
-						</ContextMenuItem>
-						<ContextMenuItem
-							className="w-full rounded-none px-3 py-2"
-							onSelect={handleCopyLink}
-						>
-							<CopyIcon className="size-4" weight="duotone" />
-							Copy link
-						</ContextMenuItem>
-						<ContextMenuSeparator className="my-0" />
-						<ContextMenuItem
-							className="w-full rounded-none px-3 py-2"
-							onSelect={handleEdit}
-						>
-							<PencilSimpleIcon className="size-4" weight="duotone" />
-							Edit
-						</ContextMenuItem>
-						<ContextMenuItem
-							className="w-full rounded-none px-3 py-2"
-							onSelect={handleSettings}
-						>
-							<GearIcon className="size-4" weight="duotone" />
-							Settings
-						</ContextMenuItem>
-						<ContextMenuItem
-							className="w-full rounded-none px-3 py-2"
-							onSelect={handleTransfer}
-						>
-							<ArrowsLeftRightIcon className="size-4" weight="duotone" />
-							Transfer…
-						</ContextMenuItem>
-						<ContextMenuSeparator className="my-0" />
-						<ContextMenuItem
-							className="w-full rounded-none px-3 py-2"
-							onSelect={handleDelete}
-							variant="destructive"
-						>
-							<TrashIcon className="size-4" weight="duotone" />
-							Delete
-						</ContextMenuItem>
-					</ContextMenuContent>
-				</ContextMenu>
+					<ContextMenuPortal>
+						<ContextMenuPositioner className="z-50">
+							<ContextMenuPopup className="min-w-48 rounded border border-border/50 bg-popover/95 p-0 shadow-lg backdrop-blur-sm">
+								<ContextMenuItem
+									className="flex w-full cursor-default items-center gap-2 rounded-none px-3 py-2 text-sm outline-none select-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground"
+									onClick={handleOpen}
+								>
+									<EyeIcon className="size-4" weight="duotone" />
+									Open
+								</ContextMenuItem>
+								<ContextMenuItem
+									className="flex w-full cursor-default items-center gap-2 rounded-none px-3 py-2 text-sm outline-none select-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground"
+									onClick={handleOpenNewTab}
+								>
+									<ArrowSquareOutIcon className="size-4" weight="duotone" />
+									Open in new tab
+								</ContextMenuItem>
+								<ContextMenuItem
+									className="flex w-full cursor-default items-center gap-2 rounded-none px-3 py-2 text-sm outline-none select-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground"
+									onClick={handleCopyLink}
+								>
+									<CopyIcon className="size-4" weight="duotone" />
+									Copy link
+								</ContextMenuItem>
+								<ContextMenuSeparator className="h-px bg-border" />
+								<ContextMenuItem
+									className="flex w-full cursor-default items-center gap-2 rounded-none px-3 py-2 text-sm outline-none select-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground"
+									onClick={handleEdit}
+								>
+									<PencilSimpleIcon className="size-4" weight="duotone" />
+									Edit
+								</ContextMenuItem>
+								<ContextMenuItem
+									className="flex w-full cursor-default items-center gap-2 rounded-none px-3 py-2 text-sm outline-none select-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground"
+									onClick={handleSettings}
+								>
+									<GearIcon className="size-4" weight="duotone" />
+									Settings
+								</ContextMenuItem>
+								<ContextMenuItem
+									className="flex w-full cursor-default items-center gap-2 rounded-none px-3 py-2 text-sm outline-none select-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground"
+									onClick={handleTransfer}
+								>
+									<ArrowsLeftRightIcon className="size-4" weight="duotone" />
+									Transfer…
+								</ContextMenuItem>
+								<ContextMenuSeparator className="h-px bg-border" />
+								<ContextMenuItem
+									className="flex w-full cursor-default items-center gap-2 rounded-none px-3 py-2 text-sm text-destructive outline-none select-none data-[highlighted]:bg-destructive/10 data-[highlighted]:text-destructive"
+									onClick={handleDelete}
+								>
+									<TrashIcon className="size-4" weight="duotone" />
+									Delete
+								</ContextMenuItem>
+							</ContextMenuPopup>
+						</ContextMenuPositioner>
+					</ContextMenuPortal>
+				</ContextMenuRoot>
 
 				<WebsiteDialog
 					onOpenChange={setShowEditDialog}
