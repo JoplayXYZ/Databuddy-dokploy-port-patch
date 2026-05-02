@@ -104,6 +104,8 @@ export function categorizeReferrer(referrerInfo: ReferrerInfo): string {
 			return "Email";
 		case "ads":
 			return "Advertising";
+		case "ai":
+			return "AI";
 		case "direct":
 			return "Direct";
 		default:
