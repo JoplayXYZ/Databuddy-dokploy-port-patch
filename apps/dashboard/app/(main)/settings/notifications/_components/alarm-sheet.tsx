@@ -351,12 +351,12 @@ export function AlarmSheet({
 							<div className="space-y-2">
 								{fields.map((field, index) => {
 									const destType = form.watch(
-										`destinations.${index}.type`,
+										`destinations.${index}.type`
 									) as DestType;
 									const channel = CHANNELS[destType];
 									const Icon = channel?.icon ?? GlobeSimpleIcon;
 									const identifier = form.watch(
-										`destinations.${index}.identifier`,
+										`destinations.${index}.identifier`
 									);
 
 									return (
@@ -420,12 +420,12 @@ export function AlarmSheet({
 													{destType === "webhook" && (
 														<WebhookHeaders
 															config={form.watch(
-																`destinations.${index}.config`,
+																`destinations.${index}.config`
 															)}
 															onChange={(headers) =>
 																form.setValue(`destinations.${index}.config`, {
 																	...form.getValues(
-																		`destinations.${index}.config`,
+																		`destinations.${index}.config`
 																	),
 																	headers,
 																})

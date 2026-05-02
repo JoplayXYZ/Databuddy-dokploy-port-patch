@@ -2,9 +2,9 @@ import { ACTUAL_LIBRARY_DEFAULTS } from "./tracking-defaults";
 import type { TrackingOptions } from "./types";
 
 export interface VersionedScript {
-	version: number;
 	filename: string;
 	sriHash: string;
+	version: number;
 }
 
 export function generateScriptTag(
@@ -100,14 +100,18 @@ function AppLayout({ children }) {
 
 export function generateVueCode(
 	websiteId: string,
-	trackingOptions: TrackingOptions,
+	trackingOptions: TrackingOptions
 ): string {
 	const meaningfulProps = Object.entries(trackingOptions)
 		.filter(([key, value]) => {
 			const actualDefault =
 				ACTUAL_LIBRARY_DEFAULTS[key as keyof TrackingOptions];
-			if (value === actualDefault) return false;
-			if (typeof value === "boolean" && !value && !actualDefault) return false;
+			if (value === actualDefault) {
+				return false;
+			}
+			if (typeof value === "boolean" && !value && !actualDefault) {
+				return false;
+			}
 			return true;
 		})
 		.map(([key, value]) => {

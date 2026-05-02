@@ -35,14 +35,13 @@ export function buildAlarmNotificationConfig(destinations: AlarmDestination[]) {
 				}) => {
 					const { Resend } = await import("resend");
 					const apiKey = process.env.RESEND_API_KEY;
-					if (!apiKey) return;
+					if (!apiKey) {
+						return;
+					}
 					const resend = new Resend(apiKey);
 					await resend.emails.send({
-						from:
-							payload.from || "Databuddy <alerts@databuddy.cc>",
-						to: Array.isArray(payload.to)
-							? payload.to
-							: [payload.to],
+						from: payload.from || "Databuddy <alerts@databuddy.cc>",
+						to: Array.isArray(payload.to) ? payload.to : [payload.to],
 						subject: payload.subject,
 						html: payload.html || payload.text || "",
 					});

@@ -178,9 +178,13 @@ async function fetchRecentHours(
 		ORDER BY period_start DESC
 	`;
 
-	return await chQuery<RecentHourRow>(query, { clientId }, {
-		clickhouse_settings: { max_execution_time: 10 },
-	});
+	return await chQuery<RecentHourRow>(
+		query,
+		{ clientId },
+		{
+			clickhouse_settings: { max_execution_time: 10 },
+		}
+	);
 }
 
 function buildAnomaly(
