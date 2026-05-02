@@ -28,6 +28,11 @@ const config: NextConfig = {
 						key: "Referrer-Policy",
 						value: "strict-origin-when-cross-origin",
 					},
+					{
+						key: "X-Robots-Tag",
+						value:
+							"index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+					},
 				],
 			},
 			{
@@ -36,11 +41,6 @@ const config: NextConfig = {
 					{
 						key: "Cache-Control",
 						value: "public, max-age=3600, stale-while-revalidate=86400",
-					},
-					{
-						key: "X-Robots-Tag",
-						value:
-							"index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
 					},
 				],
 			},
