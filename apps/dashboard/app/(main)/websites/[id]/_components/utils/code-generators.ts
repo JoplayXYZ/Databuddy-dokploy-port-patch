@@ -1,22 +1,28 @@
 import { ACTUAL_LIBRARY_DEFAULTS } from "./tracking-defaults";
 import type { TrackingOptions } from "./types";
 
-/**
- * Generate HTML script tag for tracking
- */
+export interface VersionedScript {
+	version: number;
+	filename: string;
+	sriHash: string;
+}
+
 export function generateScriptTag(
 	websiteId: string,
-	trackingOptions: TrackingOptions
+	trackingOptions: TrackingOptions,
+	versionedScript?: VersionedScript
 ): string {
 	const isLocalhost = process.env.NODE_ENV === "development";
-	const scriptUrl = isLocalhost
-		? "http://localhost:3000/databuddy.js"
-		: "https://cdn.databuddy.cc/databuddy.js";
-	const _apiUrl = isLocalhost
-		? "http://localhost:4000"
-		: "https://basket.databuddy.cc";
+	const cdnBase = isLocalhost
+		? "http://localhost:3000"
+		: "https://cdn.databuddy.cc";
 
-	const options = Object.entries(trackingOptions)
+	const scriptFile = versionedScript
+		? versionedScript.filename
+		: "databuddy.js";
+	const scriptUrl = `${cdnBase}/${scriptFile}`;
+
+	const dataAttrs = Object.entries(trackingOptions)
 		.filter(([key, value]) => {
 			const actualDefault =
 				ACTUAL_LIBRARY_DEFAULTS[key as keyof TrackingOptions];
@@ -34,12 +40,15 @@ export function generateScriptTag(
 		)
 		.join("\n    ");
 
-	const optionsLine = options ? `    ${options}\n` : "";
+	const optionsLine = dataAttrs ? `    ${dataAttrs}\n` : "";
+	const integrityLine = versionedScript
+		? `    integrity="${versionedScript.sriHash}"\n`
+		: "";
 
 	return `<script
     src="${scriptUrl}"
     data-client-id="${websiteId}"
-${optionsLine}    crossorigin="anonymous"
+${optionsLine}${integrityLine}    crossorigin="anonymous"
     async
   ></script>`;
 }
