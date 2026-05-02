@@ -48,12 +48,18 @@ const DRAIN_TIMEOUT_MS = 10_000;
 const drainAll = (worker: ReturnType<typeof startUptimeWorker> | null) =>
 	Effect.all(
 		[
-			Effect.tryPromise({ try: () => worker?.close() ?? Promise.resolve(), catch: (c) => c }),
+			Effect.tryPromise({
+				try: () => worker?.close() ?? Promise.resolve(),
+				catch: (c) => c,
+			}),
 			Effect.tryPromise({ try: () => closeUptimeQueue(), catch: (c) => c }),
-			Effect.tryPromise({ try: () => flushBatchedUptimeDrain(), catch: (c) => c }),
+			Effect.tryPromise({
+				try: () => flushBatchedUptimeDrain(),
+				catch: (c) => c,
+			}),
 			Effect.tryPromise({ try: () => disconnectProducer(), catch: (c) => c }),
 		],
-		{ concurrency: "unbounded" },
+		{ concurrency: "unbounded" }
 	).pipe(
 		Effect.timeout(`${DRAIN_TIMEOUT_MS} millis`),
 		Effect.catch(() =>
@@ -62,9 +68,9 @@ const drainAll = (worker: ReturnType<typeof startUptimeWorker> | null) =>
 					lifecycle: "shutdown",
 					error_step: "drain_timeout",
 					drain_timeout_ms: DRAIN_TIMEOUT_MS,
-				}),
-			),
-		),
+				})
+			)
+		)
 	);
 
 async function shutdown(signal: string) {
@@ -82,7 +88,7 @@ let uptimeWorker: ReturnType<typeof startUptimeWorker> | null = null;
 	} else {
 		log.info(
 			"lifecycle",
-			`${UPTIME_ENV.environment} mode — worker and scheduler sync disabled`,
+			`${UPTIME_ENV.environment} mode — worker and scheduler sync disabled`
 		);
 	}
 })();
@@ -105,7 +111,7 @@ const probe = (name: string, fn: () => Promise<void>) =>
 				(): ProbeResult => ({
 					status: "ok",
 					latency_ms: Math.round(performance.now() - start),
-				}),
+				})
 			),
 			Effect.catch(
 				(err): Effect.Effect<ProbeResult> =>
@@ -113,8 +119,8 @@ const probe = (name: string, fn: () => Promise<void>) =>
 						status: "error",
 						latency_ms: Math.round(performance.now() - start),
 						error: err instanceof Error ? err.message : "unknown",
-					}),
-			),
+					})
+			)
 		);
 		return result;
 	});
@@ -133,7 +139,9 @@ const healthCheck = Effect.gen(function* () {
 			}),
 			probe("redpanda", async () => {
 				const broker = process.env.REDPANDA_BROKER;
-				if (!broker) throw new Error("not configured");
+				if (!broker) {
+					throw new Error("not configured");
+				}
 				const kafka = new Kafka({
 					clientId: "health",
 					brokers: [broker],
@@ -156,7 +164,7 @@ const healthCheck = Effect.gen(function* () {
 				}
 			}),
 		],
-		{ concurrency: "unbounded" },
+		{ concurrency: "unbounded" }
 	);
 
 	const services = { postgres, bullmqRedis, redpanda };
@@ -170,7 +178,7 @@ const app = new Elysia()
 	.use(
 		evlog({
 			enrich: enrichUptimeWideEvent,
-		}),
+		})
 	)
 	.onError(function handleError({ error, code }) {
 		captureError(error, {
@@ -180,10 +188,9 @@ const app = new Elysia()
 	})
 	.get("/health/status", async () => {
 		const result = await Effect.runPromise(healthCheck);
-		return Response.json(
-			result,
-			{ status: result.status === "ok" ? 200 : 503 },
-		);
+		return Response.json(result, {
+			status: result.status === "ok" ? 200 : 503,
+		});
 	})
 	.get("/health", () => ({ status: "ok" }));
 
