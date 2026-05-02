@@ -88,7 +88,7 @@ function getDb(): DB {
 			})
 		);
 
-		_db = drizzle({ client: _pool, relations });
+		_db = drizzle({ client: _pool, relations, jit: true });
 	}
 	return _db;
 }
