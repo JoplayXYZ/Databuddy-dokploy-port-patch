@@ -89,6 +89,7 @@ interface AnalyticsRowData {
 	pageviews: number;
 	percentage: number;
 	referrer?: string;
+	referrer_type?: string;
 	visitors: number;
 }
 
@@ -260,6 +261,14 @@ export function WebsiteOverviewTab({
 		return <PercentageBadge percentage={percentage} />;
 	};
 
+	const aiReferrers = useMemo(
+		() =>
+			(analytics.top_referrers || []).filter(
+				(r: AnalyticsRowData) => r.referrer_type === "ai"
+			),
+		[analytics.top_referrers]
+	);
+
 	const referrerTabs = useMemo(
 		() => [
 			{
@@ -275,6 +284,23 @@ export function WebsiteOverviewTab({
 					value: row.referrer || "",
 				}),
 			},
+			...(aiReferrers.length > 0
+				? [
+						{
+							id: "ai_sources",
+							label: "AI Sources",
+							data: aiReferrers,
+							columns: createReferrerColumns() as ColumnDef<
+								AnalyticsRowData,
+								unknown
+							>[],
+							getFilter: (row: AnalyticsRowData) => ({
+								field: "referrer",
+								value: row.referrer || "",
+							}),
+						},
+					]
+				: []),
 			{
 				id: "utm_sources",
 				label: "UTM Sources",
@@ -323,6 +349,7 @@ export function WebsiteOverviewTab({
 		],
 		[
 			analytics.top_referrers,
+			aiReferrers,
 			analytics.utm_sources,
 			analytics.utm_mediums,
 			analytics.utm_campaigns,
