@@ -27,6 +27,7 @@
     "tsx": "^4.21.0"
   },
   "scripts": {
+    "build": "tsc --build",
     "check-types": "tsc --build",
     "db:push": "dotenv -- drizzle-kit push",
     "db:studio": "dotenv -- drizzle-kit studio",

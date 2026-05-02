@@ -4,6 +4,10 @@
   "exports": {
     "./websites": "./src/websites.ts"
   },
+  "scripts": {
+    "build": "tsc --build",
+    "check-types": "tsc --build"
+  },
   "dependencies": {
     "@databuddy/db": "workspace:*"
   },

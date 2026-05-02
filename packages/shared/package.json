@@ -37,6 +37,7 @@
     "./constants/deep-link-apps": "./src/constants/deep-link-apps.ts"
   },
   "scripts": {
+    "build": "tsc --build",
     "check-types": "tsc --build"
   },
   "dependencies": {
