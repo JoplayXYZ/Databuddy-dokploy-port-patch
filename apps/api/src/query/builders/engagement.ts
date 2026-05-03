@@ -30,11 +30,11 @@ export const EngagementBuilders: Record<string, SimpleQueryConfig> = {
 		},
 		table: Analytics.events,
 		fields: [
-			"ROUND(AVG(CASE WHEN scroll_depth > 0 THEN scroll_depth * 100 ELSE NULL END), 1) as avg_scroll_depth",
+			"ROUND(AVG(CASE WHEN scroll_depth > 0 THEN scroll_depth ELSE NULL END), 1) as avg_scroll_depth",
 			"COUNT(DISTINCT session_id) as total_sessions",
 			"COUNT(DISTINCT anonymous_id) as visitors",
 		],
-		where: ["event_name = 'screen_view'", "scroll_depth > 0"],
+		where: ["event_name = 'page_exit'", "scroll_depth > 0"],
 		timeField: "time",
 		customizable: true,
 	},
@@ -80,17 +80,17 @@ export const EngagementBuilders: Record<string, SimpleQueryConfig> = {
 		table: Analytics.events,
 		fields: [
 			"CASE " +
-				"WHEN scroll_depth < 0.25 THEN '0-25%' " +
-				"WHEN scroll_depth < 0.5 THEN '25-50%' " +
-				"WHEN scroll_depth < 0.75 THEN '50-75%' " +
-				"WHEN scroll_depth < 1.0 THEN '75-100%' " +
+				"WHEN scroll_depth < 25 THEN '0-25%' " +
+				"WHEN scroll_depth < 50 THEN '25-50%' " +
+				"WHEN scroll_depth < 75 THEN '50-75%' " +
+				"WHEN scroll_depth < 100 THEN '75-100%' " +
 				"ELSE '100%' " +
 				"END as depth_range",
 			"COUNT(DISTINCT anonymous_id) as visitors",
 			"COUNT(DISTINCT session_id) as sessions",
 			"ROUND((COUNT(DISTINCT session_id) / SUM(COUNT(DISTINCT session_id)) OVER()) * 100, 2) as percentage",
 		],
-		where: ["event_name = 'screen_view'", "scroll_depth > 0"],
+		where: ["event_name = 'page_exit'", "scroll_depth > 0"],
 		groupBy: ["depth_range"],
 		orderBy:
 			"CASE depth_range WHEN '0-25%' THEN 1 WHEN '25-50%' THEN 2 WHEN '50-75%' THEN 3 WHEN '75-100%' THEN 4 ELSE 5 END",
@@ -139,12 +139,12 @@ export const EngagementBuilders: Record<string, SimpleQueryConfig> = {
 		table: Analytics.events,
 		fields: [
 			"trimRight(path(path), '/') as name",
-			"ROUND(AVG(CASE WHEN scroll_depth > 0 THEN scroll_depth * 100 ELSE NULL END), 1) as avg_scroll_depth",
+			"ROUND(AVG(CASE WHEN scroll_depth > 0 THEN scroll_depth ELSE NULL END), 1) as avg_scroll_depth",
 			"COUNT(DISTINCT anonymous_id) as visitors",
 			"COUNT(DISTINCT session_id) as sessions",
 			"COUNT(*) as pageviews",
 		],
-		where: ["event_name = 'screen_view'", "path != ''", "scroll_depth > 0"],
+		where: ["event_name = 'page_exit'", "path != ''", "scroll_depth > 0"],
 		groupBy: ["trimRight(path(path), '/')"],
 		orderBy: "avg_scroll_depth DESC",
 		limit: 100,

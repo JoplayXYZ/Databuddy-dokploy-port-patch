@@ -450,6 +450,7 @@ export const TrafficBuilders: Record<string, SimpleQueryConfig> = {
 		],
 		customizable: true,
 		plugins: {
+			deduplicateReferrers: true,
 			parseReferrers: true,
 			sessionAttribution: true,
 		},

@@ -51,6 +51,25 @@ export function applyPlugins(
 		});
 	}
 
+	if (config.plugins?.deduplicateReferrers) {
+		result = aggregateRows(result, {
+			getKey: (row) => {
+				const type = str(row.referrer_type).toLowerCase();
+				if (type === "direct") {
+					return "direct";
+				}
+				return (
+					str(row.name).toLowerCase() ||
+					str(row.domain).toLowerCase() ||
+					str(row.referrer).toLowerCase()
+				);
+			},
+			getName: (row, key) => str(row.name) || key,
+			sumFields: ["pageviews", "visitors"],
+			sortBy: "visitors",
+		});
+	}
+
 	if (config.plugins?.normalizeUrls) {
 		result = result.map((row) => {
 			const original = str(row.name);

@@ -2,6 +2,7 @@ import { describe, expect, it } from "bun:test";
 import { QueryBuilders } from "./builders";
 import { SimpleQueryBuilder } from "./simple-builder";
 import type { Filter, QueryRequest, SimpleQueryConfig } from "./types";
+import { applyPlugins } from "./utils";
 
 function makeRequest(overrides: Partial<QueryRequest> = {}): QueryRequest {
 	return {
@@ -311,10 +312,80 @@ describe("SimpleQueryBuilder.compile", () => {
 		expect(sql).toContain("session_attribution AS");
 		expect(sql).toContain("e.* REPLACE(");
 		expect(sql).toContain("WHEN referrer = '' OR referrer IS NULL");
+		expect(sql).toContain("domain(referrer) = ''");
 		expect(sql).toContain("domain(referrer) = 'example.com'");
 		expect(sql).toContain("as name");
 		expect(sql).toContain("as percentage");
 		expect(sql).not.toContain("referrer != ''");
+	});
+
+	it("deduplicates parsed traffic source display rows", () => {
+		const rows = applyPlugins(
+			[
+				{ name: "direct", pageviews: 10, visitors: 5, percentage: 50 },
+				{ name: "https://", pageviews: 6, visitors: 3, percentage: 30 },
+				{
+					name: "https://google.com",
+					pageviews: 4,
+					visitors: 2,
+					percentage: 20,
+				},
+			],
+			{
+				plugins: {
+					deduplicateReferrers: true,
+					parseReferrers: true,
+				},
+			}
+		);
+
+		expect(rows).toHaveLength(2);
+		expect(rows[0]).toMatchObject({
+			name: "Direct",
+			pageviews: 16,
+			visitors: 8,
+			percentage: 80,
+		});
+		expect(rows[1]).toMatchObject({
+			name: "Google",
+			pageviews: 4,
+			visitors: 2,
+			percentage: 20,
+		});
+	});
+
+	it("builds scroll depth queries from page_exit percent values", () => {
+		const summaryConfig = QueryBuilders.scroll_depth_summary;
+		const distributionConfig = QueryBuilders.scroll_depth_distribution;
+		const pageConfig = QueryBuilders.page_scroll_performance;
+		if (!(summaryConfig && distributionConfig && pageConfig)) {
+			throw new Error("scroll depth builders are missing");
+		}
+
+		const summarySql = new SimpleQueryBuilder(
+			summaryConfig,
+			makeRequest({ type: "scroll_depth_summary" })
+		).compile().sql;
+		const distributionSql = new SimpleQueryBuilder(
+			distributionConfig,
+			makeRequest({ type: "scroll_depth_distribution" })
+		).compile().sql;
+		const pageSql = new SimpleQueryBuilder(
+			pageConfig,
+			makeRequest({ type: "page_scroll_performance" })
+		).compile().sql;
+
+		for (const sql of [summarySql, distributionSql, pageSql]) {
+			expect(sql).toContain("event_name = 'page_exit'");
+			expect(sql).not.toContain("event_name = 'screen_view'");
+		}
+		expect(summarySql).toContain("scroll_depth ELSE NULL");
+		expect(summarySql).not.toContain("scroll_depth * 100");
+		expect(pageSql).toContain("scroll_depth ELSE NULL");
+		expect(pageSql).not.toContain("scroll_depth * 100");
+		expect(distributionSql).toContain("WHEN scroll_depth < 25");
+		expect(distributionSql).toContain("WHEN scroll_depth < 100");
+		expect(distributionSql).not.toContain("WHEN scroll_depth < 0.25");
 	});
 
 	it("applies request limit override", () => {
