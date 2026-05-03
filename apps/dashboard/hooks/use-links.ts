@@ -35,6 +35,8 @@ interface ReferrerEntry {
 	name: string;
 	percentage: number;
 	referrer: string;
+	referrer_type?: string;
+	source?: string;
 }
 
 interface TimeSeriesEntry {
@@ -222,7 +224,14 @@ export function useLinkStats(linkId: string, dateRange: DateRange) {
 		const topReferrersData = getDataForQuery(
 			"link-stats",
 			"link_top_referrers"
-		) as Array<{ name: string; referrer: string; clicks: number }>;
+		) as Array<{
+			name: string;
+			referrer: string;
+			domain?: string;
+			referrer_type?: string;
+			source?: string;
+			clicks: number;
+		}>;
 		const topCountriesData = getDataForQuery(
 			"link-stats",
 			"link_top_countries"

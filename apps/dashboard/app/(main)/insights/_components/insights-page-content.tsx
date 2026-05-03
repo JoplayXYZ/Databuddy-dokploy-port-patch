@@ -1,6 +1,4 @@
 "use client";
-
-import type { ColumnDef } from "@tanstack/react-table";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAtom, useAtomValue } from "jotai";
 import { atomWithStorage } from "jotai/utils";
@@ -221,15 +219,11 @@ export function InsightsPageContent() {
 		[])[0] as SummaryRow | undefined;
 	const eventsByDate = (getDataForQuery("cockpit-summary", "events_by_date") ??
 		[]) as Record<string, unknown>[];
-	// DataTable requires name as a string or number, but ReferrerEntry inherits
-	// an optional name from ReferrerSourceCellData. The analytics pipeline
-	// always populates name, so narrow it here for the cockpit tables.
-	type CockpitReferrerEntry = ReferrerEntry & { name: string };
 
 	const topPages = (getDataForQuery("cockpit-pages", "top_pages") ??
 		[]) as PageEntry[];
 	const topReferrers = (getDataForQuery("cockpit-referrers", "top_referrers") ??
-		[]) as CockpitReferrerEntry[];
+		[]) as ReferrerEntry[];
 	const topCountries = (getDataForQuery("cockpit-geo", "country") ??
 		[]) as GeoEntry[];
 
@@ -251,10 +245,7 @@ export function InsightsPageContent() {
 	}, [eventsByDate]);
 
 	const pageColumns = useMemo(() => createPageColumns(), []);
-	const referrerColumns = useMemo(
-		() => createReferrerColumns() as ColumnDef<CockpitReferrerEntry>[],
-		[]
-	);
+	const referrerColumns = useMemo(() => createReferrerColumns(), []);
 	const countryColumns = useMemo(
 		() => createGeoColumns({ type: "country" }),
 		[]

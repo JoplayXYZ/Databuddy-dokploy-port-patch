@@ -1,5 +1,6 @@
 "use client";
 
+import { parseReferrer } from "@databuddy/shared/utils/referrer";
 import type React from "react";
 import { cn } from "@/lib/utils";
 import { FaviconImage } from "../analytics/favicon-image";
@@ -11,6 +12,7 @@ export interface ReferrerSourceCellData {
 	name?: string;
 	referrer?: string;
 	referrer_type?: string;
+	source?: string;
 }
 
 type ReferrerSourceCellProps = ReferrerSourceCellData & {
@@ -23,15 +25,23 @@ export const ReferrerSourceCell: React.FC<ReferrerSourceCellProps> = ({
 	referrer,
 	domain,
 	referrer_type,
+	source,
 	className,
 }) => {
-	const displayName = name || referrer || "Direct";
+	const rawSource = getRawSource({ name, referrer, source });
+	const parsedSource = parseReferrer(rawSource || name);
+	const isDirectType = referrer_type === "direct";
+	const displayName = isDirectType
+		? "Direct"
+		: getDisplayName(name, parsedSource.name, rawSource);
+	const displayDomain = isDirectType ? "" : domain || parsedSource.domain;
 	const textClassName = className
 		? `${className} font-medium text-[15px]`
 		: "font-medium text-[15px]";
 	const isAI = referrer_type === "ai";
+	const isDirect = displayName.toLowerCase() === "direct";
 
-	if (displayName === "Direct" || !domain) {
+	if (isDirect || !displayDomain) {
 		return (
 			<TruncatedText
 				className={cn("truncate", textClassName)}
@@ -47,7 +57,7 @@ export const ReferrerSourceCell: React.FC<ReferrerSourceCellProps> = ({
 				"flex min-w-0 cursor-pointer items-center gap-2 hover:text-foreground hover:underline",
 				className
 			)}
-			href={`https://${domain.trim()}`}
+			href={`https://${displayDomain.trim()}`}
 			id={id}
 			onClick={(e) => {
 				e.stopPropagation();
@@ -58,7 +68,7 @@ export const ReferrerSourceCell: React.FC<ReferrerSourceCellProps> = ({
 			<FaviconImage
 				altText={`${displayName} favicon`}
 				className="shrink-0 rounded-sm"
-				domain={domain}
+				domain={displayDomain}
 				size={18}
 			/>
 			<TruncatedText
@@ -73,3 +83,42 @@ export const ReferrerSourceCell: React.FC<ReferrerSourceCellProps> = ({
 		</a>
 	);
 };
+
+function getRawSource({
+	name,
+	referrer,
+	source,
+}: Pick<ReferrerSourceCellData, "name" | "referrer" | "source">): string {
+	if (source) {
+		return source;
+	}
+	if (referrer) {
+		return referrer;
+	}
+	if (name && isRawReferrerValue(name)) {
+		return name;
+	}
+	return "";
+}
+
+function getDisplayName(
+	name: string | undefined,
+	parsedName: string,
+	rawSource: string
+): string {
+	if (name && !isRawReferrerValue(name)) {
+		return name;
+	}
+	return parsedName || rawSource || "Direct";
+}
+
+function isRawReferrerValue(value: string): boolean {
+	const normalized = value.trim().toLowerCase();
+	return (
+		normalized === "" ||
+		normalized === "direct" ||
+		normalized.startsWith("http://") ||
+		normalized.startsWith("https://") ||
+		(normalized.includes(".") && !normalized.includes(" "))
+	);
+}

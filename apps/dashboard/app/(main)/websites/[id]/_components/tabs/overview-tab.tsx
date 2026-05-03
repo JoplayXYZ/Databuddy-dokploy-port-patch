@@ -18,6 +18,7 @@ import {
 	createPageColumns,
 	createPageTimeColumns,
 	createReferrerColumns,
+	getReferrerFilterValue,
 } from "@/components/table/rows";
 import { useChartPreferences } from "@/hooks/use-chart-preferences";
 import { useDateFilters } from "@/hooks/use-date-filters";
@@ -91,6 +92,7 @@ interface AnalyticsRowData {
 	percentage: number;
 	referrer?: string;
 	referrer_type?: string;
+	source?: string;
 	visitors: number;
 }
 
@@ -277,7 +279,7 @@ export function WebsiteOverviewTab({
 				>[],
 				getFilter: (row: AnalyticsRowData) => ({
 					field: "referrer",
-					value: row.referrer || row.name || "",
+					value: getReferrerFilterValue(row),
 				}),
 			},
 			{
@@ -290,7 +292,7 @@ export function WebsiteOverviewTab({
 				>[],
 				getFilter: (row: AnalyticsRowData) => ({
 					field: "referrer",
-					value: row.referrer || "",
+					value: getReferrerFilterValue(row),
 				}),
 			},
 			{

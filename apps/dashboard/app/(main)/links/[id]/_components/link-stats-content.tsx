@@ -4,6 +4,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useMemo } from "react";
 import { StatCard } from "@/components/analytics";
 import { DataTable } from "@/components/table/data-table";
+import { createReferrerColumns as createReferrerSourceColumns } from "@/components/table/rows/referrer-row";
 import { useDateFilters } from "@/hooks/use-date-filters";
 import { useLink, useLinkStats } from "@/hooks/use-links";
 import { useMediaQuery } from "@/hooks/use-media-query";
@@ -12,7 +13,6 @@ import { type ChartDataPoint, ClicksChart } from "./clicks-chart";
 import {
 	createDeviceColumns,
 	createGeoColumns,
-	createReferrerColumns,
 	type GeoEntry,
 	type SourceEntry,
 } from "./link-stats-columns";
@@ -80,11 +80,17 @@ export function LinkStatsContent() {
 		return todayData?.clicks ?? 0;
 	}, [chartData]);
 
-	const referrerColumns = createReferrerColumns();
-	const countryColumns = createGeoColumns("country");
-	const regionColumns = createGeoColumns("region");
-	const cityColumns = createGeoColumns("city");
-	const deviceColumns = createDeviceColumns();
+	const referrerColumns = useMemo(
+		() =>
+			createReferrerSourceColumns<SourceEntry>({
+				metrics: [{ id: "clicks", header: "Clicks" }],
+			}),
+		[]
+	);
+	const countryColumns = useMemo(() => createGeoColumns("country"), []);
+	const regionColumns = useMemo(() => createGeoColumns("region"), []);
+	const cityColumns = useMemo(() => createGeoColumns("city"), []);
+	const deviceColumns = useMemo(() => createDeviceColumns(), []);
 
 	const sourceTabs = useMemo(
 		() => [
