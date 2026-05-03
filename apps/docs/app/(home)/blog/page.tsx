@@ -4,7 +4,6 @@ import {
 	TagIcon,
 	UserIcon,
 } from "@phosphor-icons/react/ssr";
-import type { Post } from "@usemarble/core";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
@@ -15,7 +14,7 @@ import Section from "@/components/landing/section";
 import { SciFiCard } from "@/components/scifi-card";
 import { StructuredData } from "@/components/structured-data";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { getPosts, isPublished } from "@/lib/blog-query";
+import { getPosts, isPublished, type Post } from "@/lib/blog-query";
 
 export const revalidate = 3600;
 
@@ -40,7 +39,7 @@ export const metadata: Metadata = {
 };
 
 function BlogPostCard({ post }: { post: Post }) {
-	const formatDate = (date: Date) =>
+	const formatDate = (date: Date | string) =>
 		new Date(date).toLocaleDateString("en-US", {
 			year: "numeric",
 			month: "short",
