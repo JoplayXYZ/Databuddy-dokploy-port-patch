@@ -57,10 +57,34 @@ export const RealtimeBuilders: Record<string, SimpleQueryConfig> = {
 			tags: ["realtime", "referrers", "live", "sources"],
 			output_fields: [
 				{
+					name: "name",
+					type: "string",
+					label: "Source",
+					description: "Parsed display name for the referrer",
+				},
+				{
 					name: "referrer",
 					type: "string",
 					label: "Referrer",
-					description: "Referring domain",
+					description: "Canonical raw referrer value",
+				},
+				{
+					name: "source",
+					type: "string",
+					label: "Source",
+					description: "Alias for the canonical raw referrer value",
+				},
+				{
+					name: "domain",
+					type: "string",
+					label: "Domain",
+					description: "Parsed referring domain",
+				},
+				{
+					name: "referrer_type",
+					type: "string",
+					label: "Referrer Type",
+					description: "Parsed source category",
 				},
 				{
 					name: "visitors",
@@ -108,6 +132,7 @@ export const RealtimeBuilders: Record<string, SimpleQueryConfig> = {
 		timeField: "time",
 		skipDateFilter: true,
 		customizable: false,
+		plugins: { deduplicateReferrers: true, parseReferrers: true },
 	},
 
 	realtime_countries: {

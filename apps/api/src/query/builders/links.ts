@@ -163,6 +163,24 @@ export const LinkShortenerBuilders: Record<string, SimpleQueryConfig> = {
 					description: "The referring source URL",
 				},
 				{
+					name: "source",
+					type: "string",
+					label: "Source",
+					description: "Alias for the canonical raw referrer value",
+				},
+				{
+					name: "domain",
+					type: "string",
+					label: "Domain",
+					description: "The parsed referring domain",
+				},
+				{
+					name: "referrer_type",
+					type: "string",
+					label: "Referrer Type",
+					description: "The parsed source category",
+				},
+				{
 					name: "clicks",
 					type: "number",
 					label: "Clicks",
@@ -185,7 +203,7 @@ export const LinkShortenerBuilders: Record<string, SimpleQueryConfig> = {
 		timeField: "timestamp",
 		idField: "link_id",
 		customizable: false,
-		plugins: { parseReferrers: true },
+		plugins: { deduplicateReferrers: true, parseReferrers: true },
 	},
 
 	link_top_countries: {

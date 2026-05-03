@@ -187,6 +187,20 @@ describe("SimpleQueryBuilder.compile", () => {
 		expect(params.f0).toBe("https://google.com");
 	});
 
+	it("normalizes common referrer aliases for filters", () => {
+		const xFilter: Filter[] = [{ field: "referrer", op: "eq", value: "x.com" }];
+		const linkedinFilter: Filter[] = [
+			{ field: "referrer", op: "eq", value: "linkedin" },
+		];
+
+		expect(compile({}, { filters: xFilter }).params.f0).toBe(
+			"https://twitter.com"
+		);
+		expect(compile({}, { filters: linkedinFilter }).params.f0).toBe(
+			"https://linkedin.com"
+		);
+	});
+
 	it("uses custom idField when configured", () => {
 		const { sql } = compile({ idField: "owner_id" });
 		expect(sql).toContain("owner_id = {websiteId:String}");
@@ -314,18 +328,26 @@ describe("SimpleQueryBuilder.compile", () => {
 		expect(sql).toContain("WHEN referrer = '' OR referrer IS NULL");
 		expect(sql).toContain("domain(referrer) = ''");
 		expect(sql).toContain("domain(referrer) = 'example.com'");
+		expect(sql).toContain("domain(referrer) LIKE 'x.com%'");
+		expect(sql).toContain("https://linkedin.com");
 		expect(sql).toContain("as name");
 		expect(sql).toContain("as percentage");
 		expect(sql).not.toContain("referrer != ''");
 	});
 
-	it("deduplicates parsed traffic source display rows", () => {
+	it("canonicalizes and deduplicates parsed traffic source display rows", () => {
 		const rows = applyPlugins(
 			[
-				{ name: "direct", pageviews: 10, visitors: 5, percentage: 50 },
-				{ name: "https://", pageviews: 6, visitors: 3, percentage: 30 },
+				{ source: "direct", pageviews: 10, visitors: 5, percentage: 50 },
 				{
-					name: "https://google.com",
+					source: "https://app.example.com",
+					pageviews: 6,
+					visitors: 3,
+					percentage: 30,
+				},
+				{ name: "https://", pageviews: 1, visitors: 1, percentage: 5 },
+				{
+					source: "https://google.com",
 					pageviews: 4,
 					visitors: 2,
 					percentage: 20,
@@ -336,21 +358,53 @@ describe("SimpleQueryBuilder.compile", () => {
 					deduplicateReferrers: true,
 					parseReferrers: true,
 				},
-			}
+			},
+			"example.com"
 		);
 
 		expect(rows).toHaveLength(2);
 		expect(rows[0]).toMatchObject({
 			name: "Direct",
-			pageviews: 16,
-			visitors: 8,
-			percentage: 80,
+			referrer: "direct",
+			source: "direct",
+			domain: "",
+			referrer_type: "direct",
+			pageviews: 17,
+			visitors: 9,
+			percentage: 81.82,
 		});
 		expect(rows[1]).toMatchObject({
 			name: "Google",
+			referrer: "https://google.com",
+			source: "https://google.com",
+			domain: "google.com",
+			referrer_type: "search",
 			pageviews: 4,
 			visitors: 2,
-			percentage: 20,
+			percentage: 18.18,
+		});
+	});
+
+	it("deduplicates parsed click-based referrer rows", () => {
+		const rows = applyPlugins(
+			[
+				{ referrer: "https://twitter.com", clicks: 7, percentage: 70 },
+				{ referrer: "https://x.com", clicks: 3, percentage: 30 },
+			],
+			{
+				plugins: {
+					deduplicateReferrers: true,
+					parseReferrers: true,
+				},
+			}
+		);
+
+		expect(rows).toHaveLength(1);
+		expect(rows[0]).toMatchObject({
+			name: "Twitter",
+			clicks: 10,
+			percentage: 100,
+			referrer_type: "social",
 		});
 	});
 

@@ -103,10 +103,17 @@ const REFERRER_MAPPINGS: Record<string, string> = {
 	"twitter.com": "https://twitter.com",
 	"www.twitter.com": "https://twitter.com",
 	"t.co": "https://twitter.com",
+	x: "https://twitter.com",
+	"x.com": "https://twitter.com",
+	"www.x.com": "https://twitter.com",
 	instagram: "https://instagram.com",
 	"instagram.com": "https://instagram.com",
 	"www.instagram.com": "https://instagram.com",
 	"l.instagram.com": "https://instagram.com",
+	linkedin: "https://linkedin.com",
+	"linkedin.com": "https://linkedin.com",
+	"www.linkedin.com": "https://linkedin.com",
+	"l.linkedin.com": "https://linkedin.com",
 };
 
 const DATE_PARAM_NAMES = new Set(["from", "to", "startDate", "endDate"]);

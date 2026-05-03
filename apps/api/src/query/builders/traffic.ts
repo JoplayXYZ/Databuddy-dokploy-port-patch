@@ -18,6 +18,30 @@ export const TrafficBuilders: Record<string, SimpleQueryConfig> = {
 					description: "The referring domain or website",
 				},
 				{
+					name: "referrer",
+					type: "string",
+					label: "Referrer",
+					description: "Canonical raw referrer value",
+				},
+				{
+					name: "source",
+					type: "string",
+					label: "Source",
+					description: "Alias for the canonical raw referrer value",
+				},
+				{
+					name: "domain",
+					type: "string",
+					label: "Domain",
+					description: "Parsed referring domain",
+				},
+				{
+					name: "referrer_type",
+					type: "string",
+					label: "Referrer Type",
+					description: "Parsed source category",
+				},
+				{
 					name: "pageviews",
 					type: "number",
 					label: "Pageviews",
@@ -74,6 +98,7 @@ export const TrafficBuilders: Record<string, SimpleQueryConfig> = {
 		],
 		customizable: true,
 		plugins: {
+			deduplicateReferrers: true,
 			parseReferrers: true,
 			sessionAttribution: true,
 		},
@@ -399,6 +424,30 @@ export const TrafficBuilders: Record<string, SimpleQueryConfig> = {
 					type: "string",
 					label: "Source",
 					description: "The traffic source name or referrer domain",
+				},
+				{
+					name: "referrer",
+					type: "string",
+					label: "Referrer",
+					description: "Canonical raw referrer value",
+				},
+				{
+					name: "source",
+					type: "string",
+					label: "Source",
+					description: "Alias for the canonical raw referrer value",
+				},
+				{
+					name: "domain",
+					type: "string",
+					label: "Domain",
+					description: "Parsed referring domain",
+				},
+				{
+					name: "referrer_type",
+					type: "string",
+					label: "Referrer Type",
+					description: "Parsed source category",
 				},
 				{
 					name: "pageviews",
