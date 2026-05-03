@@ -171,10 +171,11 @@ export function MonitorSheet({
 	).length;
 
 	const toggleAlarm = async (alarm: ParsedAlarm) => {
-		const isLinked = alarm.linkedIds.includes(schedule?.id);
+		const scheduleId = schedule?.id ?? "";
+		const isLinked = alarm.linkedIds.includes(scheduleId);
 		const nextIds = isLinked
-			? alarm.linkedIds.filter((id) => id !== schedule?.id)
-			: [...alarm.linkedIds, schedule?.id];
+			? alarm.linkedIds.filter((id) => id !== scheduleId)
+			: [...alarm.linkedIds, scheduleId];
 		try {
 			await alarmUpdateMutation.mutateAsync({
 				alarmId: alarm.id,
