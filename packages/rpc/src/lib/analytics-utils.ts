@@ -1,5 +1,5 @@
 import { chQuery } from "@databuddy/db/clickhouse";
-import { referrers } from "@databuddy/shared/lists/referrers";
+import { parseReferrer } from "@databuddy/shared/utils/referrer";
 
 export interface AnalyticsStep {
 	name: string;
@@ -102,8 +102,6 @@ interface ReferrerRow {
 // Helpers
 const ESCAPE_BACKSLASH_REGEX = /\\/g;
 const ESCAPE_LIKE_WILDCARDS_REGEX = /[%_]/g;
-const WWW_PREFIX_REGEX = /^www\./;
-
 const escapeClickhouseString = (value: string): string =>
 	value
 		.replace(ESCAPE_BACKSLASH_REGEX, "\\\\")
@@ -141,24 +139,6 @@ function toFiniteNumber(value: unknown, fallback = 0): number {
 	const n = Number(value);
 	return Number.isFinite(n) ? n : fallback;
 }
-
-const parseReferrer = (ref: string): ParsedReferrer => {
-	if (!ref || ref === "Direct" || ref.toLowerCase() === "(direct)") {
-		return { name: "Direct", type: "direct", domain: "" };
-	}
-
-	try {
-		const url = new URL(ref.includes("://") ? ref : `https://${ref}`);
-		const host = url.hostname.replace(WWW_PREFIX_REGEX, "").toLowerCase();
-		const known = referrers[url.hostname] || referrers[host];
-
-		return known
-			? { name: known.name, type: known.type, domain: host }
-			: { name: host, type: "referrer", domain: host };
-	} catch {
-		return { name: ref, type: "referrer", domain: "" };
-	}
-};
 
 // Filter building
 const FIELDS = new Set([

@@ -12,6 +12,11 @@ import {
 } from "@/components/charts/metrics-constants";
 import { RangeSelectionPopup } from "@/components/charts/range-selection-popup";
 import { useDynamicDasharray } from "@/components/charts/use-dynamic-dasharray";
+import {
+	buildAnnotationRenderItems,
+	TrafficTrendsAnnotationRail,
+	type TrafficTrendsGranularity,
+} from "./traffic-trends-annotation-rail";
 
 import {
 	Chart,
@@ -19,11 +24,7 @@ import {
 	mergeChartInteractiveFeatures,
 } from "@/components/ui/composables/chart";
 import { useChartPreferences } from "@/hooks/use-chart-preferences";
-import {
-	ANNOTATION_STORAGE_KEYS,
-	CHART_ANNOTATION_STYLES,
-} from "@/lib/annotation-constants";
-import { isSingleDayAnnotation } from "@/lib/annotation-utils";
+import { ANNOTATION_STORAGE_KEYS } from "@/lib/annotation-constants";
 import {
 	chartAxisTickDefault,
 	chartCartesianGridDefault,
@@ -63,7 +64,6 @@ const {
 	Customized,
 	Legend,
 	ReferenceArea,
-	ReferenceLine,
 	ResponsiveContainer,
 	Tooltip,
 	XAxis,
@@ -163,12 +163,14 @@ interface TrafficTrendsRechartsPlotProps {
 	data: ChartDataRow[];
 	dateRange: {
 		endDate: Date;
-		granularity: "hourly" | "daily" | "weekly" | "monthly";
+		granularity: TrafficTrendsGranularity;
 		startDate: Date;
 	};
 	features?: ChartInteractiveFeatures;
 	height: number;
 	onCreateAnnotation: (annotation: CreateAnnotationInput) => Promise<void>;
+	onEditAnnotation: (annotation: Annotation) => void;
+	onOpenAnnotationsPanel: () => void;
 	onRangeSelect?: (dateRange: DateRangeState) => void;
 	showAnnotations: boolean;
 	websiteId: string;
@@ -210,6 +212,15 @@ const LEGEND_WRAPPER_STYLE = {
 	paddingBottom: "4px",
 } as const;
 
+const CHART_MARGIN = {
+	top: 20,
+	right: 20,
+	left: 10,
+	bottom: 10,
+} as const;
+const CHART_Y_AXIS_WIDTH = 45;
+const CHART_PLOT_LEFT_OFFSET = CHART_MARGIN.left + CHART_Y_AXIS_WIDTH;
+
 function TrafficTrendsRechartsPlot({
 	annotations,
 	className,
@@ -218,6 +229,8 @@ function TrafficTrendsRechartsPlot({
 	features: featuresProp,
 	height,
 	onCreateAnnotation,
+	onEditAnnotation,
+	onOpenAnnotationsPanel,
 	onRangeSelect,
 	showAnnotations,
 	websiteId,
@@ -342,12 +355,23 @@ function TrafficTrendsRechartsPlot({
 		setShowAnnotationModal(false);
 	};
 
+	const annotationRenderItems = useMemo(
+		() =>
+			buildAnnotationRenderItems({
+				annotations,
+				chartData,
+				granularity,
+			}),
+		[annotations, chartData, granularity]
+	);
+	const shouldSuppressChartTooltip = suppressTooltip;
+
 	if (!chartData.length) {
 		return null;
 	}
 
 	return (
-		<div className={cn("w-full overflow-hidden", className)}>
+		<div className={cn("w-full", className)}>
 			<div
 				className="relative select-none"
 				style={{
@@ -373,26 +397,23 @@ function TrafficTrendsRechartsPlot({
 					annotations.length === 0 &&
 					!tipDismissed && (
 						<div className="absolute top-2 right-3 z-10">
-							<button
-								className="flex items-center gap-1.5 rounded border bg-card/90 px-2 py-1 text-muted-foreground text-xs shadow-sm backdrop-blur-sm hover:text-foreground"
+							<Button
+								className="h-6 gap-1.5 border bg-card/90 px-2 text-muted-foreground text-xs shadow-sm backdrop-blur-sm hover:text-foreground"
 								onClick={() => setTipDismissed(true)}
+								size="sm"
 								type="button"
+								variant="secondary"
 							>
 								<NoteIcon className="size-3" weight="duotone" />
 								<span>Drag to annotate</span>
 								<XIcon className="size-2.5" />
-							</button>
+							</Button>
 						</div>
 					)}
 				<ResponsiveContainer height="100%" width="100%">
 					<ComposedChart
 						data={chartData}
-						margin={{
-							top: 20,
-							right: 20,
-							left: 10,
-							bottom: 10,
-						}}
+						margin={CHART_MARGIN}
 						onMouseDown={
 							mergedFeatures.rangeSelection ? handleMouseDown : undefined
 						}
@@ -440,7 +461,7 @@ function TrafficTrendsRechartsPlot({
 							axisLine={false}
 							tick={chartAxisTickDefault}
 							tickLine={false}
-							width={45}
+							width={CHART_Y_AXIS_WIDTH}
 						/>
 						<Tooltip
 							content={
@@ -450,7 +471,7 @@ function TrafficTrendsRechartsPlot({
 								/>
 							}
 							cursor={
-								suppressTooltip
+								shouldSuppressChartTooltip
 									? false
 									: {
 											stroke: "var(--color-chart-1)",
@@ -475,163 +496,6 @@ function TrafficTrendsRechartsPlot({
 									x2={refAreaRight}
 								/>
 							)}
-
-						{mergedFeatures.annotations &&
-							showAnnotations === true &&
-							annotations.map((annotation, index) => {
-								if (!chartData.length) {
-									return null;
-								}
-
-								const chartFirst = chartData[0];
-								const chartLast = chartData.at(-1);
-								if (!(chartFirst && chartLast)) {
-									return null;
-								}
-
-								const isHourlyBucket = granularity === "hourly";
-
-								const rangeStart = isHourlyBucket
-									? dayjs(annotation.xValue).toDate()
-									: dayjs(annotation.xValue).startOf("day").toDate();
-								const rangeEnd = isHourlyBucket
-									? dayjs(annotation.xEndValue || annotation.xValue).toDate()
-									: dayjs(annotation.xEndValue || annotation.xValue)
-											.endOf("day")
-											.toDate();
-
-								const chartFirstD = dayjs(
-									(chartFirst as ChartDataRow & { rawDate?: string }).rawDate ||
-										chartFirst.date
-								);
-								const chartLastD = dayjs(
-									(chartLast as ChartDataRow & { rawDate?: string }).rawDate ||
-										chartLast.date
-								);
-
-								const chartDomainStart = isHourlyBucket
-									? chartFirstD.toDate()
-									: chartFirstD.startOf("day").toDate();
-								const chartDomainEnd = isHourlyBucket
-									? chartLastD.toDate()
-									: chartLastD.endOf("day").toDate();
-
-								if (
-									rangeEnd < chartDomainStart ||
-									rangeStart > chartDomainEnd
-								) {
-									return null;
-								}
-
-								let clampedStart = chartFirst.xKey;
-								for (const point of chartData) {
-									const pointDate = dayjs(
-										(point as ChartDataRow & { rawDate?: string }).rawDate ||
-											point.date
-									).toDate();
-									const pointCompare = isHourlyBucket
-										? pointDate
-										: dayjs(pointDate).startOf("day").toDate();
-									const startCompare = isHourlyBucket
-										? rangeStart
-										: dayjs(rangeStart).startOf("day").toDate();
-									if (pointCompare >= startCompare) {
-										clampedStart = point.xKey;
-										break;
-									}
-								}
-
-								let clampedEnd = chartLast.xKey;
-								for (let i = chartData.length - 1; i >= 0; i--) {
-									const point = chartData[i];
-									if (!point) {
-										continue;
-									}
-									const pointDate = dayjs(
-										(point as ChartDataRow & { rawDate?: string }).rawDate ||
-											point.date
-									).toDate();
-									const pointCompare = isHourlyBucket
-										? pointDate
-										: dayjs(pointDate).startOf("day").toDate();
-									const endCompare = isHourlyBucket
-										? rangeEnd
-										: dayjs(rangeEnd).startOf("day").toDate();
-									if (pointCompare <= endCompare) {
-										clampedEnd = point.xKey;
-										break;
-									}
-								}
-
-								if (
-									annotation.annotationType === "range" &&
-									annotation.xEndValue
-								) {
-									const isSingleDay = isSingleDayAnnotation(annotation);
-
-									if (isSingleDay) {
-										return (
-											<ReferenceLine
-												key={annotation.id}
-												label={{
-													value: annotation.text,
-													position: index % 2 === 0 ? "top" : "insideTopLeft",
-													fill: annotation.color,
-													fontSize: CHART_ANNOTATION_STYLES.fontSize,
-													fontWeight: CHART_ANNOTATION_STYLES.fontWeight,
-													offset: CHART_ANNOTATION_STYLES.offset,
-												}}
-												stroke={annotation.color}
-												strokeDasharray={
-													CHART_ANNOTATION_STYLES.strokeDasharray
-												}
-												strokeWidth={CHART_ANNOTATION_STYLES.strokeWidth}
-												x={clampedStart}
-											/>
-										);
-									}
-
-									return (
-										<ReferenceArea
-											fill={annotation.color}
-											fillOpacity={CHART_ANNOTATION_STYLES.fillOpacity}
-											key={annotation.id}
-											label={{
-												value: annotation.text,
-												position: index % 2 === 0 ? "top" : "insideTop",
-												fill: annotation.color,
-												fontSize: CHART_ANNOTATION_STYLES.fontSize,
-												fontWeight: CHART_ANNOTATION_STYLES.fontWeight,
-												offset: CHART_ANNOTATION_STYLES.offset,
-											}}
-											stroke={annotation.color}
-											strokeDasharray="3 3"
-											strokeOpacity={CHART_ANNOTATION_STYLES.strokeOpacity}
-											strokeWidth={2}
-											x1={clampedStart}
-											x2={clampedEnd}
-										/>
-									);
-								}
-
-								return (
-									<ReferenceLine
-										key={annotation.id}
-										label={{
-											value: annotation.text,
-											position: index % 2 === 0 ? "top" : "insideTopLeft",
-											fill: annotation.color,
-											fontSize: CHART_ANNOTATION_STYLES.fontSize,
-											fontWeight: CHART_ANNOTATION_STYLES.fontWeight,
-											offset: CHART_ANNOTATION_STYLES.offset,
-										}}
-										stroke={annotation.color}
-										strokeDasharray={CHART_ANNOTATION_STYLES.strokeDasharray}
-										strokeWidth={CHART_ANNOTATION_STYLES.strokeWidth}
-										x={clampedStart}
-									/>
-								);
-							})}
 
 						<Legend
 							align="center"
@@ -662,7 +526,7 @@ function TrafficTrendsRechartsPlot({
 						{metrics.map((metric) => (
 							<Area
 								activeDot={
-									suppressTooltip
+									shouldSuppressChartTooltip
 										? false
 										: { r: 4, stroke: metric.color, strokeWidth: 2 }
 								}
@@ -688,6 +552,20 @@ function TrafficTrendsRechartsPlot({
 					</ComposedChart>
 				</ResponsiveContainer>
 			</div>
+
+			{mergedFeatures.annotations &&
+			showAnnotations === true &&
+			annotationRenderItems.length > 0 ? (
+				<TrafficTrendsAnnotationRail
+					granularity={granularity}
+					items={annotationRenderItems}
+					onEditAnnotation={onEditAnnotation}
+					onOpenAnnotationsPanel={onOpenAnnotationsPanel}
+					plotLeftOffset={CHART_PLOT_LEFT_OFFSET}
+					plotRightOffset={CHART_MARGIN.right}
+					pointCount={chartData.length}
+				/>
+			) : null}
 
 			{mergedFeatures.rangeSelection &&
 				showRangePopup === true &&
@@ -759,6 +637,7 @@ export function TrafficTrendsChart({
 	const [editingAnnotation, setEditingAnnotation] = useState<Annotation | null>(
 		null
 	);
+	const [isAnnotationsPanelOpen, setIsAnnotationsPanelOpen] = useState(false);
 
 	const [showAnnotations, setShowAnnotations] = usePersistentState(
 		ANNOTATION_STORAGE_KEYS.visibility(websiteId),
@@ -809,14 +688,20 @@ export function TrafficTrendsChart({
 		const startDate = new Date(dateRange.start_date);
 		const endDate = dayjs(dateRange.end_date).endOf("day").toDate();
 
-		return allAnnotations.filter((annotation) => {
-			const annotationStart = new Date(annotation.xValue);
-			const annotationEnd = annotation.xEndValue
-				? new Date(annotation.xEndValue)
-				: annotationStart;
+		return allAnnotations
+			.filter((annotation) => {
+				const annotationStart = new Date(annotation.xValue);
+				const annotationEnd = annotation.xEndValue
+					? new Date(annotation.xEndValue)
+					: annotationStart;
 
-			return annotationStart <= endDate && annotationEnd >= startDate;
-		});
+				return annotationStart <= endDate && annotationEnd >= startDate;
+			})
+			.sort(
+				(a, b) =>
+					new Date(a.xValue).getTime() - new Date(b.xValue).getTime() ||
+					new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+			);
 	}, [allAnnotations, dateRange]) as Annotation[];
 
 	const handleCreateAnnotation = async (annotation: CreateAnnotationInput) => {
@@ -885,11 +770,16 @@ export function TrafficTrendsChart({
 		await promise;
 	};
 
-	const granularity = (dateRange.granularity ?? "daily") as
-		| "hourly"
-		| "daily"
-		| "weekly"
-		| "monthly";
+	const granularity = (dateRange.granularity ??
+		"daily") as TrafficTrendsGranularity;
+	const plotDateRange = useMemo(
+		() => ({
+			startDate: new Date(dateRange.start_date),
+			endDate: new Date(dateRange.end_date),
+			granularity,
+		}),
+		[dateRange.start_date, dateRange.end_date, granularity]
+	);
 
 	return (
 		<div className="rounded-xl bg-secondary p-1.5">
@@ -942,6 +832,8 @@ export function TrafficTrendsChart({
 								granularity={granularity}
 								onDelete={handleDeleteAnnotation}
 								onEdit={setEditingAnnotation}
+								onOpenChange={setIsAnnotationsPanelOpen}
+								open={isAnnotationsPanelOpen}
 							/>
 						</div>
 					)}
@@ -979,13 +871,11 @@ export function TrafficTrendsChart({
 								annotations={annotations}
 								className="rounded-none border-0"
 								data={series}
-								dateRange={{
-									startDate: new Date(dateRange.start_date),
-									endDate: new Date(dateRange.end_date),
-									granularity,
-								}}
+								dateRange={plotDateRange}
 								height={plotHeight}
 								onCreateAnnotation={handleCreateAnnotation}
+								onEditAnnotation={setEditingAnnotation}
+								onOpenAnnotationsPanel={() => setIsAnnotationsPanelOpen(true)}
 								onRangeSelect={onRangeSelect}
 								showAnnotations={showAnnotations}
 								websiteId={websiteId}

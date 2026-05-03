@@ -2,10 +2,11 @@ import {
 	getCountryCode,
 	getCountryName,
 } from "@databuddy/shared/country-codes";
-import { referrers } from "@databuddy/shared/lists/referrers";
+import { parseReferrer } from "@databuddy/shared/utils/referrer";
 import type { SimpleQueryConfig } from "./types";
 
 interface DataRow {
+	clicks?: number;
 	country_code?: string;
 	country_name?: string;
 	customers?: number;
@@ -15,6 +16,7 @@ interface DataRow {
 	percentage?: number;
 	referrer?: string;
 	revenue?: number;
+	source?: string;
 	transactions?: number;
 	visitors?: number;
 	[key: string]: unknown;
@@ -22,6 +24,7 @@ interface DataRow {
 
 const toNumber = (v: unknown): number => (typeof v === "number" ? v : 0);
 const str = (v: unknown): string => (typeof v === "string" ? v : "");
+const DIRECT_SOURCE = "direct";
 
 function shouldParseReferrers(config: SimpleQueryConfig): boolean {
 	return config.plugins?.parseReferrers === true;
@@ -36,18 +39,41 @@ export function applyPlugins(
 
 	if (shouldParseReferrers(config)) {
 		result = result.map((row) => {
-			const url = str(row.name) || str(row.referrer);
+			const url = getReferrerInput(row);
 			if (!url) {
 				return row;
 			}
 			const parsed = parseReferrer(url, websiteDomain);
+			const source = canonicalReferrerSource(parsed.type, parsed.url || url);
 			return {
 				...row,
 				name: parsed.name,
-				referrer: url,
+				referrer: source,
+				source,
 				domain: parsed.domain,
 				referrer_type: parsed.type,
 			};
+		});
+	}
+
+	if (config.plugins?.deduplicateReferrers) {
+		const aggregate = getReferrerAggregateOptions(result);
+		result = aggregateRows(result, {
+			getKey: (row) => {
+				const type = str(row.referrer_type).toLowerCase();
+				if (type === "direct") {
+					return "direct";
+				}
+				return (
+					str(row.name).toLowerCase() ||
+					str(row.domain).toLowerCase() ||
+					str(row.referrer).toLowerCase() ||
+					str(row.source).toLowerCase()
+				);
+			},
+			getName: (row, key) => str(row.name) || key,
+			sumFields: aggregate.sumFields,
+			sortBy: aggregate.sortBy,
 		});
 	}
 
@@ -95,6 +121,36 @@ export function applyPlugins(
 	return result;
 }
 
+function getReferrerInput(row: DataRow): string {
+	return str(row.referrer) || str(row.source) || str(row.name);
+}
+
+function canonicalReferrerSource(type: string, rawSource: string): string {
+	return type === "direct" ? DIRECT_SOURCE : rawSource;
+}
+
+function getReferrerAggregateOptions(rows: DataRow[]): {
+	sortBy: keyof DataRow;
+	sumFields: (keyof DataRow)[];
+} {
+	if (rows.some((row) => row.clicks !== undefined)) {
+		return { sumFields: ["clicks"], sortBy: "clicks" };
+	}
+	const hasVisitors = rows.some((row) => row.visitors !== undefined);
+	const hasPageviews = rows.some((row) => row.pageviews !== undefined);
+	const sumFields: (keyof DataRow)[] = [];
+	if (hasPageviews) {
+		sumFields.push("pageviews");
+	}
+	if (hasVisitors) {
+		sumFields.push("visitors");
+	}
+	return {
+		sumFields,
+		sortBy: hasVisitors ? "visitors" : "pageviews",
+	};
+}
+
 interface AggregateOptions {
 	getKey: (row: DataRow) => string;
 	getName?: (row: DataRow, key: string) => string;
@@ -136,60 +192,6 @@ function aggregateRows(rows: DataRow[], opts: AggregateOptions): DataRow[] {
 	return result.sort(
 		(a, b) => toNumber(b[opts.sortBy]) - toNumber(a[opts.sortBy])
 	);
-}
-
-function parseReferrer(referrerUrl: string, currentDomain?: string | null) {
-	const direct = { type: "direct", name: "Direct", url: "", domain: "" };
-
-	try {
-		const url = new URL(referrerUrl);
-		const hostname = url.hostname;
-
-		if (
-			currentDomain &&
-			(hostname === currentDomain || hostname.endsWith(`.${currentDomain}`))
-		) {
-			return direct;
-		}
-
-		const match = lookupReferrer(hostname);
-		if (match) {
-			return {
-				type: match.type,
-				name: match.name,
-				url: referrerUrl,
-				domain: hostname,
-			};
-		}
-
-		const hasSearchParam =
-			url.searchParams.has("q") ||
-			url.searchParams.has("query") ||
-			url.searchParams.has("search");
-		return {
-			type: hasSearchParam ? "search" : "unknown",
-			name: hostname,
-			url: referrerUrl,
-			domain: hostname,
-		};
-	} catch {
-		return { ...direct, url: referrerUrl };
-	}
-}
-
-function lookupReferrer(domain: string): { type: string; name: string } | null {
-	if (domain in referrers) {
-		return referrers[domain] || null;
-	}
-
-	const parts = domain.split(".");
-	for (let i = 1; i < parts.length - 1; i++) {
-		const partial = parts.slice(i).join(".");
-		if (partial in referrers) {
-			return referrers[partial] || null;
-		}
-	}
-	return null;
 }
 
 function normalizeUrl(original: string): string {

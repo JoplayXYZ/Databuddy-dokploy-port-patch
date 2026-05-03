@@ -4,8 +4,13 @@ import { CLICKHOUSE_SCHEMA_DOCS } from "./clickhouse-schema";
 import { COMMON_AGENT_RULES } from "./shared";
 
 const ANALYTICS_BODY = `<agent-specific-rules>
-**Tools (priority order):**
-1. get_data: ALWAYS try this first. Batch 1-10 query builder queries in one call. Builders cover traffic, sessions, pages, devices, geo, errors, performance, custom events, profiles, links, engagement, vitals, uptime, llm, revenue. For unknown types the server lists valid options in the error.
+**Tool boundary:**
+- Use tools only when the latest user message explicitly asks for analytics data, website metrics, saved analytics objects, mutations, memory/profile work, or external research.
+- Do not call tools for greetings, thanks, acknowledgments, short reactions, frustration, clarification-only replies, or meta-conversation. Answer those briefly in natural language.
+- Background data and remembered context can help answer an explicit request, but they are never a reason to start a report by themselves.
+
+**Tools for explicit analytics requests (priority order):**
+1. get_data: Use first for explicit analytics/data questions. Batch 1-10 query builder queries in one call. Builders cover traffic, sessions, pages, devices, geo, errors, performance, custom events, profiles, links, engagement, vitals, uptime, llm, revenue. For unknown types the server lists valid options in the error.
 2. execute_sql_query: ONLY when get_data builders cannot answer the question (session-level joins, funnel path tracing, cross-table correlations). Never use SQL for simple metrics that a builder handles.
 3. list_links / list_funnels / list_goals / list_annotations: fetch the full list then filter locally.
 4. Mutations (create/update/delete): call with confirmed=false first for a preview, then confirmed=true after user confirms.
@@ -28,22 +33,37 @@ const ANALYTICS_BODY = `<agent-specific-rules>
 - Large numbers with commas, tables ≤5 columns, include units.
 - Ambiguous timeframe? Ask: "last week (Mon-Sun) or last 7 days?"
 
-**Charts (JSON on its own line):**
-- area-chart: default for time-series (traffic, pageviews over time)
-- bar-chart: categorical comparisons (top pages)
-- stacked-bar-chart: proportional breakdowns over time
-- line-chart: multi-metric overlays
-- donut-chart: part-of-whole distributions
+**Charts — output JSON on its own line, never in code fences.**
 
-Time-series: {"type":"area-chart","title":"…","series":["pageviews","visitors"],"rows":[["Mon",100,80]]}
-Distribution: {"type":"donut-chart","title":"…","rows":[["Desktop",650],["Mobile",280]]}
-Table: {"type":"data-table","title":"…","columns":["Page","Visitors"],"rows":[["/",1500]]}
-Referrers: {"type":"referrers-list","title":"…","referrers":[{"name":"Google","domain":"google.com","visitors":500,"percentage":45.5}]}
-Geo: {"type":"mini-map","title":"…","countries":[{"name":"USA","country_code":"US","visitors":1200,"percentage":40}]}
-Links: {"type":"links-list","title":"…","links":[{"id":"1","name":"…","slug":"…","targetUrl":"…","createdAt":"…","expiresAt":null}]}
-Link preview: {"type":"link-preview","mode":"create","link":{"name":"…","targetUrl":"…","slug":"…","expiresAt":"Never"}}
+When to use each type:
+- area-chart: time-series with 1-3 metrics (traffic over days/weeks)
+- line-chart: comparing 2+ overlaid trends (this week vs last week)
+- bar-chart: ranked categorical data (top 10 pages, top browsers)
+- stacked-bar-chart: proportional breakdowns over time (traffic sources by day)
+- donut-chart: part-of-whole distributions (device split, source split)
+- data-table: detailed multi-column data (page list with metrics, error details)
 
-Rules: series lists metric names, rows are [xLabel, v1, v2, …] in series order. For distribution, rows are [label, value]. Pick JSON component OR markdown table for the same data, never both. NEVER wrap JSON components in code fences (no \`\`\`json blocks). Output the raw JSON directly on its own line with no surrounding markup.
+Time-series format (area-chart, line-chart, bar-chart, stacked-bar-chart):
+- "series": array of metric names, e.g. ["pageviews","visitors"] — labels for columns after the x-axis
+- "rows": array of [xLabel, value1, value2, ...] — values in same order as series
+- Example: {"type":"area-chart","title":"Daily Traffic","series":["pageviews","visitors"],"rows":[["May 1",1200,480],["May 2",1350,520]]}
+
+Distribution format (donut-chart):
+- "rows": array of [label, value] pairs, e.g. [["Desktop",650],["Mobile",280]]
+- Example: {"type":"donut-chart","title":"Device Split","rows":[["Desktop",650],["Mobile",280],["Tablet",70]]}
+
+Table format (data-table):
+- "columns": array of column headers
+- "rows": array of row arrays matching column order. Max 20 rows.
+- Example: {"type":"data-table","title":"Top Pages","columns":["Page","Visitors","Bounce Rate"],"rows":[["/",1500,"38%"],["/pricing",820,"42%"]]}
+
+Other types:
+- referrers-list: {"type":"referrers-list","title":"…","referrers":[{"name":"Google","domain":"google.com","visitors":500,"percentage":45.5}]} — percentage is 0-100
+- mini-map: {"type":"mini-map","title":"…","countries":[{"name":"USA","country_code":"US","visitors":1200,"percentage":40}]} — percentage is 0-100
+- links-list: {"type":"links-list","title":"…","links":[{"id":"…","name":"…","slug":"…","targetUrl":"…","createdAt":"…","expiresAt":null}]}
+- link-preview: {"type":"link-preview","mode":"create","link":{"name":"…","targetUrl":"…","slug":"…","expiresAt":"Never"}}
+
+Rules: Pick JSON component OR markdown table for the same data, never both. Output the raw JSON directly on its own line with no surrounding markup. NEVER wrap in \`\`\`json code fences.
 </agent-specific-rules>
 
 <glossary>
@@ -56,6 +76,27 @@ Rules: series lists metric names, rows are [xLabel, v1, v2, …] in series order
 </glossary>`;
 
 const ANALYTICS_EXAMPLES = `<examples>
+<example>
+<user>hi</user>
+<assistant>
+Hey - what would you like to look at?
+</assistant>
+</example>
+
+<example>
+<user>thanks</user>
+<assistant>
+You got it.
+</assistant>
+</example>
+
+<example>
+<user>wait, why did you run a full report?</user>
+<assistant>
+I jumped too far. What would you like me to check next?
+</assistant>
+</example>
+
 <example>
 <user>Give me a 30-day overview</user>
 <assistant>[calls get_data with queries: summary_metrics, top_pages, top_referrers, device_type, country — preset last_30d]</assistant>
@@ -111,7 +152,7 @@ export function buildAnalyticsInstructionsForMcp(ctx: {
 </background-data>
 
 <mcp-context>
-No website is pre-selected. Call list_websites FIRST. If multiple exist, state which you're analyzing (pick by context: marketing site for pricing/docs/blog, app for product usage/dashboards; ask if unclear). If only one exists, use it.
+For explicit analytics requests, no website is pre-selected. Call list_websites FIRST. If multiple exist, state which you're analyzing (pick by context: marketing site for pricing/docs/blog, app for product usage/dashboards; ask if unclear). If only one exists, use it. For no-tool conversational turns, do not call list_websites.
 </mcp-context>
 
 <mcp-output>

@@ -417,7 +417,7 @@ export const DevicesBuilders: Record<string, SimpleQueryConfig> = {
 			"viewport_size",
 			"COUNT(DISTINCT anonymous_id) as visitors",
 			"COUNT(*) as pageviews",
-			"any(device_type) as device_type",
+			"device_type",
 		],
 		where: [
 			"event_name = 'screen_view'",

@@ -67,6 +67,7 @@ Read [codebase-map.md](./references/codebase-map.md) when you need deeper routin
 - Insights merged feed (`use-insights-feed`) collapses history + AI by `insightSignalDedupeKey` in `apps/dashboard/lib/insight-signal-key.ts` so the list is one row per signal (latest wins).
 - Theme: `apps/dashboard/app/globals.css`. **`--border` is intentionally subtle**; do not crank it darker for “contrast” unless **iza** asks—prefer text tokens or layout for readability.
 - Dashboard UI must use `apps/dashboard/components/ds` primitives exactly; feature code must not use raw form/control elements (`button`, `input`, `select`, `textarea`, native dialogs), Base UI/Radix primitives, or ad hoc styled controls directly. If a variant is missing, add or extend the DS component first. For menu-style folder/status/filter/sort/action pickers, use `components/ds/dropdown-menu.tsx`; use `Select` only when the established pattern is explicitly a select/combobox. Read `apps/dashboard/components/ds/README.md` before creating new dashboard UI.
+- Traffic Trends chart annotations should use a chart-adjacent annotation rail for dense data; avoid in-plot labels, tall lines, or floating dots that compete with the chart tooltip/data layer.
 - Flags list rows (`app/(main)/websites/[id]/flags/_components/flags-list.tsx`) are clickable containers with nested controls; mark nested controls with `data-row-interactive="true"` and have the row ignore those targets instead of relying on broad cell-level `stopPropagation`.
 - For data loading and mutations, inspect `apps/dashboard/lib/orpc.ts` and the corresponding hooks/components
 - Many changes require matching edits in `packages/rpc`
@@ -140,6 +141,8 @@ Read [codebase-map.md](./references/codebase-map.md) when you need deeper routin
 - **User-scoped flags**: The public flags API loads user-scoped flags (where `flags.userId` is set) via `getCachedFlagsForUser` and merges them with client/org-scoped flags. Client-scoped cache is shared; user-scoped cache is keyed per `userId`.
 - **Detail page stats**: Use compact inline `flex` bars at `min-h-10`/`py-2.5` (40px) — not `<dl>` grids with large padding. Heights must be multiples of 10px to align with sidebar item sizing. Status uses a colored dot + text, not `Badge`.
 - **User profile detail**: show web vitals as profile/sidebar context, not inside expanded session event rows.
+- **Referrer rows**: query builders with `parseReferrers` should return canonical `name`, `referrer`, `source`, `domain`, and `referrer_type`; dashboard tables should render/filter from those fields instead of reparsing source labels.
+- **Referrer cell fallback**: `ReferrerSourceCell` must also parse URL/domain-looking `source`, `referrer`, or `name` values, because cached/legacy query rows may reach the table before all builders return canonical fields.
 - **`apps/docs` marketing copy:** Do not explain pages as “keyword-focused,” “programmatic,” “intent,” or “meta” in UI—users care about tasks (compare tools, replace X, migrate). Keep internal SEO rationale out of hero and body copy.
 
 ## Search Hints

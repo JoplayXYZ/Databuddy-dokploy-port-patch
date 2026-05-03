@@ -103,10 +103,17 @@ const REFERRER_MAPPINGS: Record<string, string> = {
 	"twitter.com": "https://twitter.com",
 	"www.twitter.com": "https://twitter.com",
 	"t.co": "https://twitter.com",
+	x: "https://twitter.com",
+	"x.com": "https://twitter.com",
+	"www.x.com": "https://twitter.com",
 	instagram: "https://instagram.com",
 	"instagram.com": "https://instagram.com",
 	"www.instagram.com": "https://instagram.com",
 	"l.instagram.com": "https://instagram.com",
+	linkedin: "https://linkedin.com",
+	"linkedin.com": "https://linkedin.com",
+	"www.linkedin.com": "https://linkedin.com",
+	"l.linkedin.com": "https://linkedin.com",
 };
 
 const DATE_PARAM_NAMES = new Set(["from", "to", "startDate", "endDate"]);
@@ -314,6 +321,28 @@ export class SimpleQueryBuilder {
 		return this.config.idField || "client_id";
 	}
 
+	private validateRequiredFilters(): void {
+		if (!this.config.requiredFilters?.length) {
+			return;
+		}
+
+		const requestFilters = this.request.filters ?? [];
+		const missingFilters = this.config.requiredFilters.filter(
+			(requiredField) =>
+				!requestFilters.some(
+					(filter) => filter.field === requiredField && !filter.having
+				)
+		);
+
+		if (missingFilters.length > 0) {
+			throw new Error(
+				`Missing required filter${missingFilters.length > 1 ? "s" : ""}: ${missingFilters
+					.map((field) => `'${field}'`)
+					.join(", ")}.`
+			);
+		}
+	}
+
 	private generateSessionAttributionCTE(
 		timeField: string,
 		table: string,
@@ -346,7 +375,8 @@ export class SimpleQueryBuilder {
 				.replace(
 					/domain\(referrer\) NOT IN \('localhost', '127\.0\.0\.1'\)/g,
 					"1=1"
-				);
+				)
+				.replace(/\{websiteDomain\}/g, "__databuddy_no_domain__");
 		}
 		return sql
 			.replace(/\{websiteDomain\}/g, this.websiteDomain)
@@ -414,6 +444,8 @@ export class SimpleQueryBuilder {
 	}
 
 	compile(): CompiledQuery {
+		this.validateRequiredFilters();
+
 		if (this.config.customSql) {
 			const whereClauseParams: Record<string, Filter["value"]> = {};
 			const whereClause = this.buildWhereClauseFromFilters(whereClauseParams);
@@ -689,8 +721,9 @@ export class SimpleQueryBuilder {
 		WITH ${this.generateSessionAttributionCTE(timeField, table, "from", "to")},
 		attributed_events AS (
 			SELECT 
-				e.*,
-				${sessionAttribution.joinSelectFields("sa").join(",\n\t\t\t\t")}
+				e.* REPLACE(
+					${sessionAttribution.joinSelectFields("sa").join(",\n\t\t\t\t\t")}
+				)
 			FROM ${table} e
 			${this.generateSessionAttributionJoin("e")}
 			WHERE e.${idField} = {websiteId:String}

@@ -3,14 +3,32 @@ import type { Filter, SimpleQueryConfig, TimeUnit } from "../types";
 
 export const SessionsBuilders: Record<string, SimpleQueryConfig> = {
 	session_metrics: {
-		table: Analytics.events,
-		fields: [
-			"COUNT(DISTINCT session_id) as total_sessions",
-			"AVG(CASE WHEN time_on_page > 0 THEN time_on_page / 1000 ELSE NULL END) as avg_session_duration",
-			"AVG(CASE WHEN is_bounce = 1 THEN 100 ELSE 0 END) as bounce_rate",
-			"COUNT(*) as total_events",
-		],
-		where: ["event_name = 'screen_view'"],
+		customSql: (websiteId: string, startDate: string, endDate: string) => ({
+			sql: `
+				WITH session_rollup AS (
+					SELECT
+						session_id,
+						count() as total_events,
+						countIf(event_name = 'screen_view') as page_views,
+						countIf(event_name NOT IN ('screen_view', 'page_exit')) as engagement_events,
+						sumIf(ifNull(time_on_page, 0), event_name = 'page_exit' AND ifNull(time_on_page, 0) > 0) as duration
+					FROM ${Analytics.events}
+					WHERE
+						client_id = {websiteId:String}
+						AND time >= toDateTime({startDate:String})
+						AND time <= toDateTime(concat({endDate:String}, ' 23:59:59'))
+						AND session_id != ''
+					GROUP BY session_id
+				)
+				SELECT
+					count() as total_sessions,
+					round(avgIf(duration, duration > 0), 2) as avg_session_duration,
+					round((countIf(page_views <= 1 AND duration < 10 AND engagement_events = 0) / nullIf(count(), 0)) * 100, 2) as bounce_rate,
+					sum(total_events) as total_events
+				FROM session_rollup
+			`,
+			params: { websiteId, startDate, endDate },
+		}),
 		timeField: "time",
 		customizable: true,
 	} satisfies SimpleQueryConfig,
@@ -228,7 +246,7 @@ export const SessionsBuilders: Record<string, SimpleQueryConfig> = {
 		table: Analytics.events,
 		fields: [
 			"session_id",
-			"event_id",
+			"toString(id) as event_id",
 			"time",
 			"event_name",
 			"path",
@@ -237,9 +255,12 @@ export const SessionsBuilders: Record<string, SimpleQueryConfig> = {
 			"browser_name",
 			"country",
 		],
-		where: ["session_id = ?"],
+		where: ["session_id != ''"],
 		orderBy: "time ASC",
+		limit: 500,
 		timeField: "time",
+		allowedFilters: ["session_id"],
+		requiredFilters: ["session_id"],
 		customizable: true,
 	} satisfies SimpleQueryConfig,
 };

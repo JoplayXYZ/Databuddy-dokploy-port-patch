@@ -19,6 +19,8 @@ Score the response on 5 criteria (0-100 each). Be harsh. Most responses should s
    - Missing obvious correlations or patterns in the data
    - Not comparing to relevant baselines (prior period, industry standard)
    - No segmentation (treating all traffic as one bucket)
+   - For attribution questions: failing to state the attribution model, lookback window, denominator, identity/session coverage, and what revenue/conversions are unattributable
+   - For causal/incrementality questions: claiming causality from observational data without a holdout, geo split, randomized experiment, or clearly labeled quasi-experimental assumption
    Score 90+ only if the analysis reveals non-obvious insights
 
 3. **Actionability (0-100)**: Are the recommendations specific and implementable? Deduct for:
@@ -26,6 +28,7 @@ Score the response on 5 criteria (0-100 each). Be harsh. Most responses should s
    - Recommendations not tied to specific data findings
    - No prioritization (everything presented as equally important)
    - No estimated impact or effort level
+   - For attribution questions: recommending channel investment from raw volume, single-touch attribution, or fabricated attribution coverage instead of defensible model comparisons
    Score 90+ only if a marketer could execute the recommendations TODAY
 
 4. **Completeness (0-100)**: Did it fully answer what was asked? Deduct for:
@@ -49,6 +52,30 @@ Score the response on 5 criteria (0-100 each). Be harsh. Most responses should s
 - 30-49: Poor. Significant gaps in analysis or misleading conclusions.
 - 0-29: Bad. Wrong data, hallucinated numbers, or completely missed the point.
 
+**Attribution and causality guardrails:**
+- Deduct heavily if the agent allocates unattributed revenue/conversions to channels without observed identity/session/path evidence.
+- Deduct heavily if first-touch, last-touch, assisted, multi-touch, incrementality, and contribution are used interchangeably.
+- Deduct heavily if the agent hides missing session_id, anonymous_id, UTM, referrer, entry page, or revenue identity coverage.
+- Deduct heavily if the agent presents observational attribution as proof of incrementality.
+- Reward answers that separate "observed attribution," "assisted influence," "incrementality hypothesis," and "not answerable from current tracking."
+
+**Scoring examples:**
+
+Data Grounding:
+- 90: "Visitors rose from 4,102 to 4,891 (+19.2%)" — exact numbers from tool output with precise delta
+- 60: "Traffic went up about 20%" — roughly right but imprecise, no source numbers
+- 30: "Traffic doubled this week" — not supported by any tool output
+
+Analytical Depth:
+- 85: "The 30% pageview increase with only 5% unique visitor growth means existing users are viewing more pages — likely driven by the new recommended articles widget launched March 1st. Check session depth for confirmation."
+- 50: "Pageviews are up 30% and visitors are up 5%. The site is getting more traffic."
+- 25: "Here are your pageview numbers for the month." (just restates data)
+
+Actionability:
+- 85: "Mobile bounce rate is 68% vs 42% desktop. Top exit page on mobile is /pricing — the pricing table overflows on screens under 400px. Fix: make the comparison table horizontally scrollable. Expected impact: ~15% mobile bounce reduction."
+- 50: "Mobile bounce rate is high. Consider optimizing for mobile."
+- 20: "You should improve your mobile experience."
+
 Respond with a JSON object containing scores AND a brief explanation of your reasoning:
 {"data_grounding": N, "analytical_depth": N, "actionability": N, "completeness": N, "communication": N, "explanation": "2-3 sentences on the biggest strengths and weaknesses"}`;
 
@@ -62,6 +89,8 @@ const gateway = createGateway({
 
 const JSON_OBJECT_RE = /\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}/;
 
+const MAX_TOOL_OUTPUT_CHARS = 8000;
+
 function formatToolOutputs(toolCalls: ToolCallRecord[]): string {
 	if (toolCalls.length === 0) {
 		return "No tool calls recorded.";
@@ -69,10 +98,14 @@ function formatToolOutputs(toolCalls: ToolCallRecord[]): string {
 
 	return toolCalls
 		.map((tc) => {
-			const output =
+			const raw =
 				typeof tc.output === "string"
-					? tc.output.slice(0, 2000)
-					: (JSON.stringify(tc.output, null, 1)?.slice(0, 2000) ?? "null");
+					? tc.output
+					: (JSON.stringify(tc.output, null, 1) ?? "null");
+			const truncated = raw.length > MAX_TOOL_OUTPUT_CHARS;
+			const output = truncated
+				? `${raw.slice(0, MAX_TOOL_OUTPUT_CHARS)}\n... [truncated ${raw.length - MAX_TOOL_OUTPUT_CHARS} chars]`
+				: raw;
 			return `[${tc.index}] ${tc.name}:\n${output}`;
 		})
 		.join("\n\n");

@@ -6,7 +6,12 @@ import {
 	insightUserFeedback,
 	websites,
 } from "@databuddy/db/schema";
-import { cacheable, getRedisCache } from "@databuddy/redis";
+import {
+	cacheable,
+	getRedisCache,
+	invalidateAgentContextSnapshotsForOwner,
+	invalidateAgentContextSnapshotsForWebsite,
+} from "@databuddy/redis";
 import { getRateLimitHeaders, ratelimit } from "@databuddy/redis/rate-limit";
 import { generateText, Output, stepCountIs, ToolLoopAgent } from "ai";
 import dayjs from "dayjs";
@@ -1062,6 +1067,7 @@ export const insights = new Elysia({ prefix: "/v1/insights" })
 			}
 
 			await invalidateInsightsCacheForOrg(organizationId);
+			await invalidateAgentContextSnapshotsForOwner(organizationId);
 			mergeWideEvent({ insights_cleared: ids.length });
 
 			return { success: true, deleted: ids.length };
@@ -1273,6 +1279,13 @@ export const insights = new Elysia({ prefix: "/v1/insights" })
 						finalInsights = [];
 						mergeWideEvent({ insights_persist_failed: true });
 					}
+
+					await Promise.all(
+						[...new Set(finalInsights.map((insight) => insight.websiteId))].map(
+							(websiteId) =>
+								invalidateAgentContextSnapshotsForWebsite(websiteId)
+						)
+					);
 				}
 
 				for (const site of orgSites.slice(0, MAX_WEBSITES)) {

@@ -28,6 +28,7 @@
     "./flags": "./src/flags/index.ts",
     "./flags/utils": "./src/flags/utils.ts",
     "./utils/date-utils": "./src/utils/date-utils.ts",
+    "./utils/referrer": "./src/utils/referrer.ts",
     "./utils/ids": "./src/utils/ids.ts",
     "./bot-detection": "./src/utils/bot-detection/index.ts",
     "./bot-detection/detector": "./src/utils/bot-detection/detector.ts",

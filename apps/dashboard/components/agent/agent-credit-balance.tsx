@@ -29,6 +29,9 @@ export function AgentCreditBalance({
 	const shakeNonce = useAtomValue(agentCreditShakeNonceAtom);
 	const prevStatusRef = useRef(status);
 
+	const refetchRef = useRef(refetch);
+	refetchRef.current = refetch;
+
 	useEffect(() => {
 		const prev = prevStatusRef.current;
 		prevStatusRef.current = status;
@@ -38,9 +41,9 @@ export function AgentCreditBalance({
 		if (!justFinished) {
 			return;
 		}
-		const timer = setTimeout(() => refetch(), 1500);
+		const timer = setTimeout(() => refetchRef.current(), 1500);
 		return () => clearTimeout(timer);
-	}, [status, refetch]);
+	}, [status]);
 
 	if (isLoading) {
 		return (

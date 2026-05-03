@@ -104,6 +104,7 @@ export interface TimeBucketConfig {
 
 export interface QueryPlugins {
 	deduplicateGeo?: boolean;
+	deduplicateReferrers?: boolean;
 	normalizeGeo?: boolean;
 	normalizeUrls?: boolean;
 	parseReferrers?: boolean;
@@ -144,6 +145,7 @@ export interface SimpleQueryConfig {
 	meta?: QueryBuilderMeta;
 	orderBy?: string;
 	plugins?: QueryPlugins;
+	requiredFilters?: string[];
 	skipDateFilter?: boolean;
 	table?: string;
 	timeBucket?: TimeBucketConfig;

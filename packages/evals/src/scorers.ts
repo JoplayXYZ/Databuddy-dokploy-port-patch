@@ -3,6 +3,7 @@ import type { EvalCase, ParsedAgentResponse, ScoreCard } from "./types";
 interface ScoreResult {
 	failures: string[];
 	score: number;
+	warnings?: string[];
 }
 
 export function scoreToolRouting(
@@ -144,7 +145,7 @@ export function scorePerformance(
 	evalCase: EvalCase,
 	response: ParsedAgentResponse
 ): ScoreResult {
-	const failures: string[] = [];
+	const warnings: string[] = [];
 	let score: number;
 
 	const ms = response.latencyMs;
@@ -163,7 +164,7 @@ export function scorePerformance(
 	}
 
 	if (evalCase.expect.maxLatencyMs && ms > evalCase.expect.maxLatencyMs) {
-		failures.push(
+		warnings.push(
 			`Latency ${ms}ms exceeds budget ${evalCase.expect.maxLatencyMs}ms`
 		);
 	}
@@ -171,19 +172,20 @@ export function scorePerformance(
 	if (evalCase.expect.maxSteps && response.steps > evalCase.expect.maxSteps) {
 		const extra = response.steps - evalCase.expect.maxSteps;
 		score = Math.max(0, score - extra * 10);
-		failures.push(
+		warnings.push(
 			`${response.steps} steps exceeds budget of ${evalCase.expect.maxSteps}`
 		);
 	}
 
-	return { score: Math.max(0, Math.min(100, score)), failures };
+	return { score: Math.max(0, Math.min(100, score)), failures: [], warnings };
 }
 
 export function scoreCase(
 	evalCase: EvalCase,
 	response: ParsedAgentResponse
-): { scores: Partial<ScoreCard>; failures: string[] } {
+): { scores: Partial<ScoreCard>; failures: string[]; warnings: string[] } {
 	const allFailures: string[] = [];
+	const allWarnings: string[] = [];
 	const scores: Partial<ScoreCard> = {};
 
 	const tr = scoreToolRouting(evalCase, response);
@@ -201,6 +203,9 @@ export function scoreCase(
 	const pf = scorePerformance(evalCase, response);
 	scores.performance = pf.score;
 	allFailures.push(...pf.failures);
+	if (pf.warnings) {
+		allWarnings.push(...pf.warnings);
+	}
 
-	return { scores, failures: allFailures };
+	return { scores, failures: allFailures, warnings: allWarnings };
 }

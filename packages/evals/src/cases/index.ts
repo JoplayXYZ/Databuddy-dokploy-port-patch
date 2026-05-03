@@ -1,4 +1,5 @@
 import type { EvalCase } from "../types";
+import { attributionCases } from "./attribution";
 import { behavioralCases } from "./behavioral";
 import { formatCases } from "./format";
 import { qualityCases } from "./quality";
@@ -7,6 +8,7 @@ import { toolRoutingCases } from "./tool-routing";
 export const allCases: EvalCase[] = [
 	...toolRoutingCases,
 	...behavioralCases,
+	...attributionCases,
 	...qualityCases,
 	...formatCases,
 ];

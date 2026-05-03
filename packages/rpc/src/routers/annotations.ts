@@ -1,6 +1,10 @@
 import { and, desc, eq, isNull, or, type SQL } from "@databuddy/db";
 import { annotations } from "@databuddy/db/schema";
-import { createDrizzleCache, redis } from "@databuddy/redis";
+import {
+	createDrizzleCache,
+	invalidateAgentContextSnapshotsForWebsite,
+	redis,
+} from "@databuddy/redis";
 import { randomUUIDv7 } from "bun";
 import { z } from "zod";
 import { rpcError } from "../errors";
@@ -14,6 +18,13 @@ const annotationsCache = createDrizzleCache({
 	namespace: "annotations",
 });
 const CACHE_TTL = 300;
+
+async function invalidateAnnotationCaches(websiteId: string): Promise<void> {
+	await Promise.all([
+		annotationsCache.invalidateByTables(["annotations"]),
+		invalidateAgentContextSnapshotsForWebsite(websiteId),
+	]);
+}
 
 const chartContextSchema = z.object({
 	dateRange: z.object({
@@ -263,7 +274,7 @@ export const annotationsRouter = {
 				})
 				.returning();
 
-			await annotationsCache.invalidateByTables(["annotations"]);
+			await invalidateAnnotationCaches(input.websiteId);
 
 			return newAnnotation;
 		}),
@@ -299,6 +310,9 @@ export const annotationsRouter = {
 			}
 
 			const annotation = existingAnnotation[0];
+			if (!annotation) {
+				throw rpcError.notFound("annotation", input.id);
+			}
 
 			await withWorkspace(context, {
 				websiteId: annotation.websiteId,
@@ -344,7 +358,7 @@ export const annotationsRouter = {
 				.where(eq(annotations.id, input.id))
 				.returning();
 
-			await annotationsCache.invalidateByTables(["annotations"]);
+			await invalidateAnnotationCaches(annotation.websiteId);
 
 			return updatedAnnotation;
 		}),
@@ -372,6 +386,9 @@ export const annotationsRouter = {
 			}
 
 			const annotation = existingAnnotation[0];
+			if (!annotation) {
+				throw rpcError.notFound("annotation", input.id);
+			}
 
 			await withWorkspace(context, {
 				websiteId: annotation.websiteId,
@@ -396,7 +413,7 @@ export const annotationsRouter = {
 				.set({ deletedAt: new Date() })
 				.where(eq(annotations.id, input.id));
 
-			await annotationsCache.invalidateByTables(["annotations"]);
+			await invalidateAnnotationCaches(annotation.websiteId);
 
 			return { success: true };
 		}),

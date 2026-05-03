@@ -1,6 +1,39 @@
 import { Analytics } from "../../types/tables";
 import type { Filter, SimpleQueryConfig, TimeUnit } from "../types";
 
+const WEB_VITALS_SESSION_DIMENSIONS_CTE = `
+	session_dimensions AS (
+		SELECT
+			session_id,
+			client_id,
+			argMinIf(browser_name, time, ifNull(browser_name, '') != '') as browser_name,
+			argMinIf(country, time, ifNull(country, '') != '') as country,
+			argMinIf(region, time, ifNull(region, '') != '') as region,
+			argMinIf(os_name, time, ifNull(os_name, '') != '') as os_name
+		FROM ${Analytics.events}
+		WHERE
+			client_id = {websiteId:String}
+			AND time >= toDateTime({startDate:String})
+			AND time <= toDateTime(concat({endDate:String}, ' 23:59:59'))
+			AND session_id != ''
+			AND event_name = 'screen_view'
+		GROUP BY session_id, client_id
+	)
+`;
+
+const WEB_VITALS_METRICS = `
+	COUNT(DISTINCT wv.anonymous_id) as visitors,
+	avgIf(wv.metric_value, wv.metric_name = 'FCP' AND wv.metric_value > 0) as avg_fcp,
+	quantileIf(0.50)(wv.metric_value, wv.metric_name = 'FCP' AND wv.metric_value > 0) as p50_fcp,
+	avgIf(wv.metric_value, wv.metric_name = 'LCP' AND wv.metric_value > 0) as avg_lcp,
+	quantileIf(0.50)(wv.metric_value, wv.metric_name = 'LCP' AND wv.metric_value > 0) as p50_lcp,
+	avgIf(wv.metric_value, wv.metric_name = 'CLS') as avg_cls,
+	quantileIf(0.50)(wv.metric_value, wv.metric_name = 'CLS') as p50_cls,
+	avgIf(wv.metric_value, wv.metric_name = 'INP' AND wv.metric_value > 0) as avg_inp,
+	avgIf(wv.metric_value, wv.metric_name = 'TTFB' AND wv.metric_value > 0) as avg_ttfb,
+	COUNT(*) as measurements
+`;
+
 // Load-time metrics come from events; web vitals live in web_vitals_spans as EAV rows
 // (one row per metric_name/metric_value pair), which is why the vitals queries pivot.
 export const PerformanceBuilders: Record<string, SimpleQueryConfig> = {
@@ -196,30 +229,18 @@ export const PerformanceBuilders: Record<string, SimpleQueryConfig> = {
 			const limit = _limit ?? 100;
 			return {
 				sql: `
+					WITH ${WEB_VITALS_SESSION_DIMENSIONS_CTE}
 					SELECT 
-						any(e.browser_name) as name,
-						COUNT(DISTINCT wv.anonymous_id) as visitors,
-						avgIf(wv.metric_value, wv.metric_name = 'FCP' AND wv.metric_value > 0) as avg_fcp,
-						quantileIf(0.50)(wv.metric_value, wv.metric_name = 'FCP' AND wv.metric_value > 0) as p50_fcp,
-						avgIf(wv.metric_value, wv.metric_name = 'LCP' AND wv.metric_value > 0) as avg_lcp,
-						quantileIf(0.50)(wv.metric_value, wv.metric_name = 'LCP' AND wv.metric_value > 0) as p50_lcp,
-						avgIf(wv.metric_value, wv.metric_name = 'CLS') as avg_cls,
-						quantileIf(0.50)(wv.metric_value, wv.metric_name = 'CLS') as p50_cls,
-						avgIf(wv.metric_value, wv.metric_name = 'INP' AND wv.metric_value > 0) as avg_inp,
-						avgIf(wv.metric_value, wv.metric_name = 'TTFB' AND wv.metric_value > 0) as avg_ttfb,
-						COUNT(*) as measurements
+						sd.browser_name as name,
+						${WEB_VITALS_METRICS}
 					FROM ${Analytics.web_vitals_spans} wv
-					INNER JOIN ${Analytics.events} e ON (
-						wv.session_id = e.session_id 
-						AND wv.client_id = e.client_id
-						AND abs(dateDiff('second', wv.timestamp, e.time)) < 60
-						AND e.browser_name != ''
-					)
+					INNER JOIN session_dimensions sd ON wv.session_id = sd.session_id AND wv.client_id = sd.client_id
 					WHERE 
 						wv.client_id = {websiteId:String}
 						AND wv.timestamp >= toDateTime({startDate:String})
 						AND wv.timestamp <= toDateTime(concat({endDate:String}, ' 23:59:59'))
-					GROUP BY e.browser_name
+						AND ifNull(sd.browser_name, '') != ''
+					GROUP BY sd.browser_name
 					ORDER BY p50_lcp DESC
 					LIMIT {limit:UInt32}
 				`,
@@ -242,30 +263,18 @@ export const PerformanceBuilders: Record<string, SimpleQueryConfig> = {
 			const limit = _limit ?? 100;
 			return {
 				sql: `
+					WITH ${WEB_VITALS_SESSION_DIMENSIONS_CTE}
 					SELECT 
-						any(e.country) as name,
-						COUNT(DISTINCT wv.anonymous_id) as visitors,
-						avgIf(wv.metric_value, wv.metric_name = 'FCP' AND wv.metric_value > 0) as avg_fcp,
-						quantileIf(0.50)(wv.metric_value, wv.metric_name = 'FCP' AND wv.metric_value > 0) as p50_fcp,
-						avgIf(wv.metric_value, wv.metric_name = 'LCP' AND wv.metric_value > 0) as avg_lcp,
-						quantileIf(0.50)(wv.metric_value, wv.metric_name = 'LCP' AND wv.metric_value > 0) as p50_lcp,
-						avgIf(wv.metric_value, wv.metric_name = 'CLS') as avg_cls,
-						quantileIf(0.50)(wv.metric_value, wv.metric_name = 'CLS') as p50_cls,
-						avgIf(wv.metric_value, wv.metric_name = 'INP' AND wv.metric_value > 0) as avg_inp,
-						avgIf(wv.metric_value, wv.metric_name = 'TTFB' AND wv.metric_value > 0) as avg_ttfb,
-						COUNT(*) as measurements
+						sd.country as name,
+						${WEB_VITALS_METRICS}
 					FROM ${Analytics.web_vitals_spans} wv
-					LEFT JOIN ${Analytics.events} e ON (
-						wv.session_id = e.session_id 
-						AND wv.client_id = e.client_id
-						AND abs(dateDiff('second', wv.timestamp, e.time)) < 60
-					)
+					INNER JOIN session_dimensions sd ON wv.session_id = sd.session_id AND wv.client_id = sd.client_id
 					WHERE 
 						wv.client_id = {websiteId:String}
 						AND wv.timestamp >= toDateTime({startDate:String})
 						AND wv.timestamp <= toDateTime(concat({endDate:String}, ' 23:59:59'))
-						AND e.country != ''
-					GROUP BY e.country
+						AND ifNull(sd.country, '') != ''
+					GROUP BY sd.country
 					ORDER BY p50_lcp DESC
 					LIMIT {limit:UInt32}
 				`,
@@ -289,30 +298,18 @@ export const PerformanceBuilders: Record<string, SimpleQueryConfig> = {
 			const limit = _limit ?? 100;
 			return {
 				sql: `
+					WITH ${WEB_VITALS_SESSION_DIMENSIONS_CTE}
 					SELECT 
-						any(e.os_name) as name,
-						COUNT(DISTINCT wv.anonymous_id) as visitors,
-						avgIf(wv.metric_value, wv.metric_name = 'FCP' AND wv.metric_value > 0) as avg_fcp,
-						quantileIf(0.50)(wv.metric_value, wv.metric_name = 'FCP' AND wv.metric_value > 0) as p50_fcp,
-						avgIf(wv.metric_value, wv.metric_name = 'LCP' AND wv.metric_value > 0) as avg_lcp,
-						quantileIf(0.50)(wv.metric_value, wv.metric_name = 'LCP' AND wv.metric_value > 0) as p50_lcp,
-						avgIf(wv.metric_value, wv.metric_name = 'CLS') as avg_cls,
-						quantileIf(0.50)(wv.metric_value, wv.metric_name = 'CLS') as p50_cls,
-						avgIf(wv.metric_value, wv.metric_name = 'INP' AND wv.metric_value > 0) as avg_inp,
-						avgIf(wv.metric_value, wv.metric_name = 'TTFB' AND wv.metric_value > 0) as avg_ttfb,
-						COUNT(*) as measurements
+						sd.os_name as name,
+						${WEB_VITALS_METRICS}
 					FROM ${Analytics.web_vitals_spans} wv
-					LEFT JOIN ${Analytics.events} e ON (
-						wv.session_id = e.session_id 
-						AND wv.client_id = e.client_id
-						AND abs(dateDiff('second', wv.timestamp, e.time)) < 60
-					)
+					INNER JOIN session_dimensions sd ON wv.session_id = sd.session_id AND wv.client_id = sd.client_id
 					WHERE 
 						wv.client_id = {websiteId:String}
 						AND wv.timestamp >= toDateTime({startDate:String})
 						AND wv.timestamp <= toDateTime(concat({endDate:String}, ' 23:59:59'))
-						AND e.os_name != ''
-					GROUP BY e.os_name
+						AND ifNull(sd.os_name, '') != ''
+					GROUP BY sd.os_name
 					ORDER BY p50_lcp DESC
 					LIMIT {limit:UInt32}
 				`,
@@ -335,30 +332,18 @@ export const PerformanceBuilders: Record<string, SimpleQueryConfig> = {
 			const limit = _limit ?? 100;
 			return {
 				sql: `
+					WITH ${WEB_VITALS_SESSION_DIMENSIONS_CTE}
 					SELECT 
-						CONCAT(e.region, ', ', e.country) as name,
-						COUNT(DISTINCT wv.anonymous_id) as visitors,
-						avgIf(wv.metric_value, wv.metric_name = 'FCP' AND wv.metric_value > 0) as avg_fcp,
-						quantileIf(0.50)(wv.metric_value, wv.metric_name = 'FCP' AND wv.metric_value > 0) as p50_fcp,
-						avgIf(wv.metric_value, wv.metric_name = 'LCP' AND wv.metric_value > 0) as avg_lcp,
-						quantileIf(0.50)(wv.metric_value, wv.metric_name = 'LCP' AND wv.metric_value > 0) as p50_lcp,
-						avgIf(wv.metric_value, wv.metric_name = 'CLS') as avg_cls,
-						quantileIf(0.50)(wv.metric_value, wv.metric_name = 'CLS') as p50_cls,
-						avgIf(wv.metric_value, wv.metric_name = 'INP' AND wv.metric_value > 0) as avg_inp,
-						avgIf(wv.metric_value, wv.metric_name = 'TTFB' AND wv.metric_value > 0) as avg_ttfb,
-						COUNT(*) as measurements
+						CONCAT(ifNull(sd.region, ''), ', ', ifNull(sd.country, '')) as name,
+						${WEB_VITALS_METRICS}
 					FROM ${Analytics.web_vitals_spans} wv
-					INNER JOIN ${Analytics.events} e ON (
-						wv.session_id = e.session_id 
-						AND wv.client_id = e.client_id
-						AND abs(dateDiff('second', wv.timestamp, e.time)) < 60
-						AND e.region != ''
-					)
+					INNER JOIN session_dimensions sd ON wv.session_id = sd.session_id AND wv.client_id = sd.client_id
 					WHERE 
 						wv.client_id = {websiteId:String}
 						AND wv.timestamp >= toDateTime({startDate:String})
 						AND wv.timestamp <= toDateTime(concat({endDate:String}, ' 23:59:59'))
-					GROUP BY e.region, e.country
+						AND ifNull(sd.region, '') != ''
+					GROUP BY sd.region, sd.country
 					ORDER BY p50_lcp DESC
 					LIMIT {limit:UInt32}
 				`,

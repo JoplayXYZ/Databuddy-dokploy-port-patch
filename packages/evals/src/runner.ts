@@ -5,9 +5,16 @@ import type {
 	ToolCallRecord,
 } from "./types";
 
+export type ProgressEvent =
+	| { kind: "step"; step: number }
+	| { kind: "tool"; name: string; index: number }
+	| { kind: "text"; chars: number }
+	| { kind: "done" };
+
 export async function runCase(
 	evalCase: EvalCase,
-	config: EvalConfig
+	config: EvalConfig,
+	onProgress?: (evt: ProgressEvent) => void
 ): Promise<ParsedAgentResponse> {
 	const startTime = Date.now();
 
@@ -48,12 +55,13 @@ export async function runCase(
 		throw new Error(`Agent API error ${response.status}: ${errorText}`);
 	}
 
-	return streamSSE(response, startTime);
+	return streamSSE(response, startTime, onProgress);
 }
 
 async function streamSSE(
 	response: Response,
-	startTime: number
+	startTime: number,
+	onProgress?: (evt: ProgressEvent) => void
 ): Promise<ParsedAgentResponse> {
 	const toolCalls: ToolCallRecord[] = [];
 	let pendingToolCall: Omit<ToolCallRecord, "output"> | null = null;
@@ -83,10 +91,12 @@ async function streamSSE(
 			buf = buf.slice(newlineIdx + 1);
 
 			if (!line.startsWith("data: ")) {
+				newlineIdx = buf.indexOf("\n");
 				continue;
 			}
 			const payload = line.slice(6).trim();
 			if (payload === "[DONE]") {
+				onProgress?.({ kind: "done" });
 				break;
 			}
 
@@ -94,6 +104,7 @@ async function streamSSE(
 			try {
 				evt = JSON.parse(payload);
 			} catch {
+				newlineIdx = buf.indexOf("\n");
 				continue;
 			}
 
@@ -108,6 +119,11 @@ async function streamSSE(
 							name: evt.toolName,
 							input: evt.input ?? null,
 						};
+						onProgress?.({
+							kind: "tool",
+							name: evt.toolName,
+							index: toolCalls.length,
+						});
 					}
 					break;
 				case "tool-output-available":
@@ -123,6 +139,7 @@ async function streamSSE(
 				case "content-delta":
 					if (typeof evt.delta === "string") {
 						textContent += evt.delta;
+						onProgress?.({ kind: "text", chars: textContent.length });
 					}
 					break;
 				case "step-finish":
@@ -147,6 +164,7 @@ async function streamSSE(
 					break;
 				case "start-step":
 					steps++;
+					onProgress?.({ kind: "step", step: steps });
 					break;
 				default:
 					break;

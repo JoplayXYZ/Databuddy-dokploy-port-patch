@@ -43,7 +43,7 @@ import { DropdownMenu } from "@databuddy/ui/client";
 import { Button, Skeleton, Textarea, Tooltip } from "@databuddy/ui";
 
 export function AgentInput() {
-	const { sendMessage, stop, status } = useChat();
+	const { sendMessage, setMessages, stop, status } = useChat();
 	const { messages: pendingMessages, removeAction } = usePendingQueue();
 	const isLoading = status === "streaming" || status === "submitted";
 	const [input, setInput] = useAtom(agentInputAtom);
@@ -128,6 +128,12 @@ export function AgentInput() {
 	};
 
 	const selectCommand = (command: AgentCommand) => {
+		if (command.action === "clear") {
+			setMessages([]);
+			setInput("");
+			setCommandsDismissed(true);
+			return;
+		}
 		setInput(command.prompt);
 		setSelectedCommandIndex(0);
 		setCommandsDismissed(true);

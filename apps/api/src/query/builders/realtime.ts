@@ -57,10 +57,34 @@ export const RealtimeBuilders: Record<string, SimpleQueryConfig> = {
 			tags: ["realtime", "referrers", "live", "sources"],
 			output_fields: [
 				{
+					name: "name",
+					type: "string",
+					label: "Source",
+					description: "Parsed display name for the referrer",
+				},
+				{
 					name: "referrer",
 					type: "string",
 					label: "Referrer",
-					description: "Referring domain",
+					description: "Canonical raw referrer value",
+				},
+				{
+					name: "source",
+					type: "string",
+					label: "Source",
+					description: "Alias for the canonical raw referrer value",
+				},
+				{
+					name: "domain",
+					type: "string",
+					label: "Domain",
+					description: "Parsed referring domain",
+				},
+				{
+					name: "referrer_type",
+					type: "string",
+					label: "Referrer Type",
+					description: "Parsed source category",
 				},
 				{
 					name: "visitors",
@@ -74,18 +98,41 @@ export const RealtimeBuilders: Record<string, SimpleQueryConfig> = {
 			supports_granularity: [],
 			version: "1.0",
 		},
-		table: Analytics.events,
-		fields: [
-			"if(referrer_domain = '', 'Direct', referrer_domain) as referrer",
-			"uniq(anonymous_id) as visitors",
-		],
-		where: ["event_name = 'screen_view'", "time >= now() - INTERVAL 5 MINUTE"],
-		groupBy: ["referrer"],
-		orderBy: "visitors DESC",
-		limit: 10,
+		customSql: (
+			websiteId: string,
+			_startDate: string,
+			_endDate: string,
+			_filters?: Filter[],
+			_granularity?: TimeUnit,
+			_limit?: number
+		) => {
+			const limit = _limit ?? 10;
+			return {
+				sql: `
+					SELECT
+						referrer,
+						uniq(anonymous_id) as visitors
+					FROM (
+						SELECT
+							anonymous_id,
+							if(domain(ifNull(referrer, '')) = '', 'Direct', domain(ifNull(referrer, ''))) as referrer
+						FROM ${Analytics.events}
+						WHERE
+							client_id = {websiteId:String}
+							AND event_name = 'screen_view'
+							AND time >= now() - INTERVAL 5 MINUTE
+					)
+					GROUP BY referrer
+					ORDER BY visitors DESC
+					LIMIT {limit:UInt32}
+				`,
+				params: { websiteId, limit },
+			};
+		},
 		timeField: "time",
 		skipDateFilter: true,
 		customizable: false,
+		plugins: { deduplicateReferrers: true, parseReferrers: true },
 	},
 
 	realtime_countries: {

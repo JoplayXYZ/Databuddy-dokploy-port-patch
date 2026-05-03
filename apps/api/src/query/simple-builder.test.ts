@@ -2,6 +2,7 @@ import { describe, expect, it } from "bun:test";
 import { QueryBuilders } from "./builders";
 import { SimpleQueryBuilder } from "./simple-builder";
 import type { Filter, QueryRequest, SimpleQueryConfig } from "./types";
+import { applyPlugins } from "./utils";
 
 function makeRequest(overrides: Partial<QueryRequest> = {}): QueryRequest {
 	return {
@@ -166,6 +167,45 @@ describe("SimpleQueryBuilder.compile", () => {
 		).not.toThrow();
 	});
 
+	it("throws when a required filter is missing", () => {
+		expect(() => compile({ requiredFilters: ["session_id"] })).toThrow(
+			"Missing required filter: 'session_id'."
+		);
+	});
+
+	it("allows a configured required filter when present", () => {
+		const filters: Filter[] = [
+			{ field: "session_id", op: "eq", value: "session-1" },
+		];
+
+		const { sql, params } = compile(
+			{
+				allowedFilters: ["session_id"],
+				requiredFilters: ["session_id"],
+			},
+			{ filters }
+		);
+
+		expect(sql).toContain("session_id = {f0:String}");
+		expect(params.f0).toBe("session-1");
+	});
+
+	it("requires session_id for the session_events builder", () => {
+		const config = QueryBuilders.session_events;
+		if (!config) {
+			throw new Error("session_events builder is missing");
+		}
+
+		const builder = new SimpleQueryBuilder(
+			config,
+			makeRequest({ type: "session_events" })
+		);
+
+		expect(() => builder.compile()).toThrow(
+			"Missing required filter: 'session_id'."
+		);
+	});
+
 	it("throws on SQL injection in groupBy", () => {
 		expect(() =>
 			compile({}, { groupBy: ["path; DROP TABLE analytics.events"] })
@@ -184,6 +224,20 @@ describe("SimpleQueryBuilder.compile", () => {
 		];
 		const { params } = compile({}, { filters });
 		expect(params.f0).toBe("https://google.com");
+	});
+
+	it("normalizes common referrer aliases for filters", () => {
+		const xFilter: Filter[] = [{ field: "referrer", op: "eq", value: "x.com" }];
+		const linkedinFilter: Filter[] = [
+			{ field: "referrer", op: "eq", value: "linkedin" },
+		];
+
+		expect(compile({}, { filters: xFilter }).params.f0).toBe(
+			"https://twitter.com"
+		);
+		expect(compile({}, { filters: linkedinFilter }).params.f0).toBe(
+			"https://linkedin.com"
+		);
 	});
 
 	it("uses custom idField when configured", () => {
@@ -292,6 +346,139 @@ describe("SimpleQueryBuilder.compile", () => {
 		expect(sql).not.toContain("concat({to:String}, ' 23:59:59')");
 		expect(params.from).toBe("2026-04-27 12:00:00");
 		expect(params.to).toBe("2026-04-27 13:28:59");
+	});
+
+	it("builds traffic sources with direct visits and session attribution", () => {
+		const config = QueryBuilders.traffic_sources;
+		if (!config) {
+			throw new Error("traffic_sources builder is missing");
+		}
+
+		const builder = new SimpleQueryBuilder(
+			config,
+			makeRequest({ type: "traffic_sources" }),
+			"example.com"
+		);
+
+		const { sql } = builder.compile();
+
+		expect(sql).toContain("session_attribution AS");
+		expect(sql).toContain("e.* REPLACE(");
+		expect(sql).toContain("WHEN referrer = '' OR referrer IS NULL");
+		expect(sql).toContain("domain(referrer) = ''");
+		expect(sql).toContain("domain(referrer) = 'example.com'");
+		expect(sql).toContain("domain(referrer) LIKE 'x.com%'");
+		expect(sql).toContain("https://linkedin.com");
+		expect(sql).toContain("as name");
+		expect(sql).toContain("as percentage");
+		expect(sql).not.toContain("referrer != ''");
+	});
+
+	it("canonicalizes and deduplicates parsed traffic source display rows", () => {
+		const rows = applyPlugins(
+			[
+				{ source: "direct", pageviews: 10, visitors: 5, percentage: 50 },
+				{
+					source: "https://app.example.com",
+					pageviews: 6,
+					visitors: 3,
+					percentage: 30,
+				},
+				{ name: "https://", pageviews: 1, visitors: 1, percentage: 5 },
+				{
+					source: "https://google.com",
+					pageviews: 4,
+					visitors: 2,
+					percentage: 20,
+				},
+			],
+			{
+				plugins: {
+					deduplicateReferrers: true,
+					parseReferrers: true,
+				},
+			},
+			"example.com"
+		);
+
+		expect(rows).toHaveLength(2);
+		expect(rows[0]).toMatchObject({
+			name: "Direct",
+			referrer: "direct",
+			source: "direct",
+			domain: "",
+			referrer_type: "direct",
+			pageviews: 17,
+			visitors: 9,
+			percentage: 81.82,
+		});
+		expect(rows[1]).toMatchObject({
+			name: "Google",
+			referrer: "https://google.com",
+			source: "https://google.com",
+			domain: "google.com",
+			referrer_type: "search",
+			pageviews: 4,
+			visitors: 2,
+			percentage: 18.18,
+		});
+	});
+
+	it("deduplicates parsed click-based referrer rows", () => {
+		const rows = applyPlugins(
+			[
+				{ referrer: "https://twitter.com", clicks: 7, percentage: 70 },
+				{ referrer: "https://x.com", clicks: 3, percentage: 30 },
+			],
+			{
+				plugins: {
+					deduplicateReferrers: true,
+					parseReferrers: true,
+				},
+			}
+		);
+
+		expect(rows).toHaveLength(1);
+		expect(rows[0]).toMatchObject({
+			name: "Twitter",
+			clicks: 10,
+			percentage: 100,
+			referrer_type: "social",
+		});
+	});
+
+	it("builds scroll depth queries from page_exit percent values", () => {
+		const summaryConfig = QueryBuilders.scroll_depth_summary;
+		const distributionConfig = QueryBuilders.scroll_depth_distribution;
+		const pageConfig = QueryBuilders.page_scroll_performance;
+		if (!(summaryConfig && distributionConfig && pageConfig)) {
+			throw new Error("scroll depth builders are missing");
+		}
+
+		const summarySql = new SimpleQueryBuilder(
+			summaryConfig,
+			makeRequest({ type: "scroll_depth_summary" })
+		).compile().sql;
+		const distributionSql = new SimpleQueryBuilder(
+			distributionConfig,
+			makeRequest({ type: "scroll_depth_distribution" })
+		).compile().sql;
+		const pageSql = new SimpleQueryBuilder(
+			pageConfig,
+			makeRequest({ type: "page_scroll_performance" })
+		).compile().sql;
+
+		for (const sql of [summarySql, distributionSql, pageSql]) {
+			expect(sql).toContain("event_name = 'page_exit'");
+			expect(sql).not.toContain("event_name = 'screen_view'");
+		}
+		expect(summarySql).toContain("scroll_depth ELSE NULL");
+		expect(summarySql).not.toContain("scroll_depth * 100");
+		expect(pageSql).toContain("scroll_depth ELSE NULL");
+		expect(pageSql).not.toContain("scroll_depth * 100");
+		expect(distributionSql).toContain("WHEN scroll_depth < 25");
+		expect(distributionSql).toContain("WHEN scroll_depth < 100");
+		expect(distributionSql).not.toContain("WHEN scroll_depth < 0.25");
 	});
 
 	it("applies request limit override", () => {
