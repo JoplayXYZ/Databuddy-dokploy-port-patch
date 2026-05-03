@@ -246,7 +246,7 @@ export const SessionsBuilders: Record<string, SimpleQueryConfig> = {
 		table: Analytics.events,
 		fields: [
 			"session_id",
-			"event_id",
+			"toString(id) as event_id",
 			"time",
 			"event_name",
 			"path",
