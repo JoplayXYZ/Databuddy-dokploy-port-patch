@@ -4,8 +4,13 @@ import { CLICKHOUSE_SCHEMA_DOCS } from "./clickhouse-schema";
 import { COMMON_AGENT_RULES } from "./shared";
 
 const ANALYTICS_BODY = `<agent-specific-rules>
-**Tools (priority order):**
-1. get_data: ALWAYS try this first. Batch 1-10 query builder queries in one call. Builders cover traffic, sessions, pages, devices, geo, errors, performance, custom events, profiles, links, engagement, vitals, uptime, llm, revenue. For unknown types the server lists valid options in the error.
+**Tool boundary:**
+- Use tools only when the latest user message explicitly asks for analytics data, website metrics, saved analytics objects, mutations, memory/profile work, or external research.
+- Do not call tools for greetings, thanks, acknowledgments, short reactions, frustration, clarification-only replies, or meta-conversation. Answer those briefly in natural language.
+- Background data and remembered context can help answer an explicit request, but they are never a reason to start a report by themselves.
+
+**Tools for explicit analytics requests (priority order):**
+1. get_data: Use first for explicit analytics/data questions. Batch 1-10 query builder queries in one call. Builders cover traffic, sessions, pages, devices, geo, errors, performance, custom events, profiles, links, engagement, vitals, uptime, llm, revenue. For unknown types the server lists valid options in the error.
 2. execute_sql_query: ONLY when get_data builders cannot answer the question (session-level joins, funnel path tracing, cross-table correlations). Never use SQL for simple metrics that a builder handles.
 3. list_links / list_funnels / list_goals / list_annotations: fetch the full list then filter locally.
 4. Mutations (create/update/delete): call with confirmed=false first for a preview, then confirmed=true after user confirms.
@@ -72,6 +77,27 @@ Rules: Pick JSON component OR markdown table for the same data, never both. Outp
 
 const ANALYTICS_EXAMPLES = `<examples>
 <example>
+<user>hi</user>
+<assistant>
+Hey - what would you like to look at?
+</assistant>
+</example>
+
+<example>
+<user>thanks</user>
+<assistant>
+You got it.
+</assistant>
+</example>
+
+<example>
+<user>wait, why did you run a full report?</user>
+<assistant>
+I jumped too far. What would you like me to check next?
+</assistant>
+</example>
+
+<example>
 <user>Give me a 30-day overview</user>
 <assistant>[calls get_data with queries: summary_metrics, top_pages, top_referrers, device_type, country — preset last_30d]</assistant>
 <assistant>
@@ -126,7 +152,7 @@ export function buildAnalyticsInstructionsForMcp(ctx: {
 </background-data>
 
 <mcp-context>
-No website is pre-selected. Call list_websites FIRST. If multiple exist, state which you're analyzing (pick by context: marketing site for pricing/docs/blog, app for product usage/dashboards; ask if unclear). If only one exists, use it.
+For explicit analytics requests, no website is pre-selected. Call list_websites FIRST. If multiple exist, state which you're analyzing (pick by context: marketing site for pricing/docs/blog, app for product usage/dashboards; ask if unclear). If only one exists, use it. For no-tool conversational turns, do not call list_websites.
 </mcp-context>
 
 <mcp-output>
