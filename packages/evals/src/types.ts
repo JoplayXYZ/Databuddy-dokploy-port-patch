@@ -1,4 +1,9 @@
-export type EvalCategory = "tool-routing" | "behavioral" | "quality" | "format";
+export type EvalCategory =
+	| "tool-routing"
+	| "behavioral"
+	| "quality"
+	| "format"
+	| "attribution";
 
 export interface EvalCase {
 	category: EvalCategory;
@@ -14,6 +19,7 @@ export interface EvalCase {
 		maxSteps?: number;
 		maxLatencyMs?: number;
 		maxInputTokens?: number;
+		minQualityScore?: number;
 		confirmationFlow?: boolean;
 	};
 	id: string;
@@ -58,6 +64,7 @@ export interface CaseResult {
 	scores: Partial<ScoreCard>;
 	toolCalls: ToolCallRecord[];
 	toolsCalled: string[];
+	warnings: string[];
 }
 
 export interface EvalRun {

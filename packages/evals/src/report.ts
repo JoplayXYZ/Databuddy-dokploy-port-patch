@@ -47,6 +47,11 @@ export function printReport(run: EvalRun): void {
 				console.log(`${DIM}     -> ${f}${RESET}`);
 			}
 		}
+		if (c.warnings?.length > 0) {
+			for (const w of c.warnings) {
+				console.log(`${DIM}     ~  ${w}${RESET}`);
+			}
+		}
 	}
 
 	console.log("");

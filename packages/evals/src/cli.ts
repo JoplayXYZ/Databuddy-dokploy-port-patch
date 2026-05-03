@@ -4,6 +4,7 @@ import { allCases, getCaseById, getCasesByCategory } from "./cases";
 import { judgeQuality } from "./judge";
 import { printReport } from "./report";
 import { runCase } from "./runner";
+import type { ProgressEvent } from "./runner";
 import { scoreCase } from "./scorers";
 import type {
 	CaseResult,
@@ -12,6 +13,17 @@ import type {
 	EvalRun,
 	ScoreCard,
 } from "./types";
+
+const DIM = "\x1b[2m";
+const RESET = "\x1b[0m";
+const GREEN = "\x1b[32m";
+const RED = "\x1b[31m";
+const YELLOW = "\x1b[33m";
+const CYAN = "\x1b[36m";
+const BOLD = "\x1b[1m";
+const CLEAR_LINE = "\x1b[2K\r";
+const HIDE_CURSOR = "\x1b[?25l";
+const SHOW_CURSOR = "\x1b[?25h";
 
 interface CliOpts {
 	apiUrl: string;
@@ -25,6 +37,46 @@ interface CliOpts {
 	rejudge: boolean;
 	skipJudge: boolean;
 	subcommand: "run" | "compare";
+}
+
+const STRUCTURAL_PASS_THRESHOLD = 60;
+const DEFAULT_JUDGED_QUALITY_THRESHOLD = 60;
+const QUALITY_GATE_FAILURE_PREFIX = "Quality judge score";
+
+function shouldJudgeCase(evalCase: EvalCase): boolean {
+	return evalCase.category === "quality" || evalCase.category === "attribution";
+}
+
+function averageScore(scores: Partial<ScoreCard>): number {
+	const scoreValues = Object.values(scores).filter(
+		(v): v is number => v !== undefined
+	);
+	return scoreValues.length > 0
+		? Math.round(scoreValues.reduce((a, b) => a + b, 0) / scoreValues.length)
+		: 0;
+}
+
+function refreshCaseStatus(result: CaseResult, evalCase: EvalCase): void {
+	result.failures = result.failures.filter(
+		(f) => !f.startsWith(QUALITY_GATE_FAILURE_PREFIX)
+	);
+
+	const minQualityScore =
+		evalCase.expect.minQualityScore ??
+		(shouldJudgeCase(evalCase) ? DEFAULT_JUDGED_QUALITY_THRESHOLD : undefined);
+	if (
+		minQualityScore !== undefined &&
+		result.scores.quality !== undefined &&
+		result.scores.quality < minQualityScore
+	) {
+		result.failures.push(
+			`${QUALITY_GATE_FAILURE_PREFIX} ${result.scores.quality} below required ${minQualityScore}`
+		);
+	}
+
+	result.passed =
+		result.failures.length === 0 &&
+		averageScore(result.scores) >= STRUCTURAL_PASS_THRESHOLD;
 }
 
 function parseArgs(): CliOpts {
@@ -77,7 +129,8 @@ function parseArgs(): CliOpts {
 				apiUrl = remainingArgs.shift() ?? apiUrl;
 				break;
 			case "--concurrency":
-				concurrency = Number.parseInt(remainingArgs.shift() ?? "", 10) || 10;
+				concurrency =
+					Number.parseInt(remainingArgs.shift() ?? "", 10) || 10;
 				break;
 			default:
 				break;
@@ -99,31 +152,75 @@ function parseArgs(): CliOpts {
 	};
 }
 
+interface SlotState {
+	caseId: string;
+	startedAt: number;
+	steps: number;
+	tools: string[];
+	textChars: number;
+	status: "running" | "done";
+}
+
+function formatElapsed(ms: number): string {
+	const s = Math.floor(ms / 1000);
+	return s < 60 ? `${s}s` : `${Math.floor(s / 60)}m${s % 60}s`;
+}
+
+function renderLiveSlots(
+	slots: Map<number, SlotState>,
+	completed: number,
+	total: number,
+	startTime: number
+) {
+	const lines: string[] = [];
+	const elapsed = formatElapsed(Date.now() - startTime);
+	lines.push(
+		`${DIM}[${elapsed}] ${completed}/${total} done${RESET}`
+	);
+
+	for (const [, slot] of slots) {
+		if (slot.status !== "running") continue;
+		const age = formatElapsed(Date.now() - slot.startedAt);
+		const toolStr =
+			slot.tools.length > 0
+				? ` ${CYAN}${slot.tools.at(-1)}${RESET}`
+				: "";
+		const charStr =
+			slot.textChars > 0 ? ` ${DIM}${slot.textChars}ch${RESET}` : "";
+		lines.push(
+			`  ${YELLOW}▶${RESET} ${slot.caseId.slice(0, 30).padEnd(30)} step ${slot.steps}${toolStr}${charStr} ${DIM}${age}${RESET}`
+		);
+	}
+
+	const output = lines.join("\n");
+	const lineCount = lines.length;
+
+	process.stderr.write(`${output}\n`);
+
+	return lineCount;
+}
+
+function clearLines(count: number) {
+	for (let i = 0; i < count; i++) {
+		process.stderr.write(`\x1b[A${CLEAR_LINE}`);
+	}
+}
+
 async function runSingleCase(
 	evalCase: EvalCase,
-	config: EvalConfig
+	config: EvalConfig,
+	onProgress?: (evt: ProgressEvent) => void
 ): Promise<CaseResult> {
 	try {
-		const response = await runCase(evalCase, config);
+		const response = await runCase(evalCase, config, onProgress);
 		const { scores, failures, warnings } = scoreCase(evalCase, response);
 
-		const scoreValues = Object.values(scores).filter(
-			(v): v is number => v !== undefined
-		);
-		const avgScore =
-			scoreValues.length > 0
-				? Math.round(
-						scoreValues.reduce((a, b) => a + b, 0) / scoreValues.length
-					)
-				: 0;
-		const passed = failures.length === 0 && avgScore >= 60;
-
-		return {
+		const result: CaseResult = {
 			id: evalCase.id,
 			category: evalCase.category,
 			name: evalCase.name,
 			query: evalCase.query,
-			passed,
+			passed: false,
 			scores,
 			metrics: {
 				steps: response.steps,
@@ -135,8 +232,11 @@ async function runSingleCase(
 			toolsCalled: [...new Set(response.toolCalls.map((tc) => tc.name))],
 			toolCalls: response.toolCalls,
 			failures: [...failures, ...warnings],
+			warnings,
 			response: response.textContent,
 		};
+		refreshCaseStatus(result, evalCase);
+		return result;
 	} catch (error) {
 		const msg = error instanceof Error ? error.message : "Unknown error";
 		return {
@@ -156,36 +256,10 @@ async function runSingleCase(
 			toolsCalled: [],
 			toolCalls: [],
 			failures: [`Runner error: ${msg}`],
+			warnings: [],
 			response: "",
 		};
 	}
-}
-
-async function runWithConcurrency<T, R>(
-	items: T[],
-	concurrency: number,
-	fn: (item: T) => Promise<R>,
-	onComplete?: (item: T, result: R) => void
-): Promise<R[]> {
-	const results: R[] = new Array(items.length);
-	let nextIdx = 0;
-
-	async function worker() {
-		while (nextIdx < items.length) {
-			const idx = nextIdx++;
-			const item = items[idx];
-			const result = await fn(item);
-			results[idx] = result;
-			onComplete?.(item, result);
-		}
-	}
-
-	const workers = Array.from(
-		{ length: Math.min(concurrency, items.length) },
-		() => worker()
-	);
-	await Promise.all(workers);
-	return results;
 }
 
 function buildRun(
@@ -306,64 +380,169 @@ async function cmdRun() {
 		return;
 	}
 
-	const c = Math.min(opts.concurrency, cases.length);
+	const concurrency = Math.min(opts.concurrency, cases.length);
 	console.log(
-		`Running ${cases.length} eval cases against ${config.apiUrl} (concurrency: ${c})...`
+		`${BOLD}Running ${cases.length} evals${RESET} against ${config.apiUrl} (concurrency: ${concurrency})`
 	);
 	console.log(`Model: ${modelId}`);
-	if (!opts.skipJudge) {
-		console.log(`Judge: ${judgeModel}`);
-	}
+	if (!opts.skipJudge) console.log(`Judge: ${judgeModel}`);
 	console.log("");
 
 	const runStart = Date.now();
 	let completed = 0;
 	const pendingJudges: Promise<void>[] = [];
 
-	const results = await runWithConcurrency(
-		cases,
-		c,
-		(evalCase) => runSingleCase(evalCase, config),
-		(evalCase, result) => {
+	const slots = new Map<number, SlotState>();
+	let lastLineCount = 0;
+	let slotIdCounter = 0;
+	const isTTY = process.stderr.isTTY;
+
+	function redraw() {
+		if (!isTTY) return;
+		if (lastLineCount > 0) clearLines(lastLineCount);
+		lastLineCount = renderLiveSlots(slots, completed, cases.length, runStart);
+	}
+
+	let redrawTimer: ReturnType<typeof setInterval> | null = null;
+	if (isTTY) {
+		process.stderr.write(HIDE_CURSOR);
+		redrawTimer = setInterval(redraw, 500);
+	}
+
+	const results: CaseResult[] = new Array(cases.length);
+	let nextIdx = 0;
+
+	async function worker() {
+		while (nextIdx < cases.length) {
+			const idx = nextIdx++;
+			const evalCase = cases[idx];
+			const slotId = slotIdCounter++;
+
+			const slot: SlotState = {
+				caseId: evalCase.id,
+				startedAt: Date.now(),
+				steps: 0,
+				tools: [],
+				textChars: 0,
+				status: "running",
+			};
+			slots.set(slotId, slot);
+			redraw();
+
+			const result = await runSingleCase(evalCase, config, (evt) => {
+				switch (evt.kind) {
+					case "step":
+						slot.steps = evt.step;
+						break;
+					case "tool":
+						slot.tools.push(evt.name);
+						break;
+					case "text":
+						slot.textChars = evt.chars;
+						break;
+				}
+			});
+
+			results[idx] = result;
+			slot.status = "done";
+			slots.delete(slotId);
 			completed++;
-			const status = result.passed
-				? "\x1b[32mOK\x1b[0m"
-				: result.failures[0]?.startsWith("Runner error")
-					? "\x1b[31mERROR\x1b[0m"
-					: `\x1b[31mFAIL\x1b[0m (${result.failures.length})`;
-			const time = `${(result.metrics.latencyMs / 1000).toFixed(1)}s`;
+
+			if (isTTY && lastLineCount > 0) {
+				clearLines(lastLineCount);
+				lastLineCount = 0;
+			}
+
+			const status = result.failures[0]?.startsWith("Runner error")
+				? `${RED}ERROR${RESET}`
+				: !result.passed
+					? `${RED}FAIL${RESET} (${result.failures.length})`
+					: result.warnings.length > 0
+						? `${YELLOW}WARN${RESET} (${result.warnings.length})`
+						: `${GREEN}OK${RESET}`;
+			const time = formatElapsed(result.metrics.latencyMs);
+			const toolList =
+				slot.tools.length > 0
+					? ` ${DIM}[${[...new Set(slot.tools)].join(", ")}]${RESET}`
+					: "";
 			console.log(
-				`  [${completed}/${cases.length}] ${evalCase.id} ${status} ${time}`
+				`  ${String(completed).padStart(2)}/${cases.length} ${evalCase.id.slice(0, 30).padEnd(30)} ${status} ${time} ${DIM}${slot.steps} steps${RESET}${toolList}`
 			);
+
+			if (result.failures.length > 0) {
+				for (const f of result.failures) {
+					console.log(`       ${DIM}-> ${f}${RESET}`);
+				}
+			}
+			if (result.warnings.length > 0) {
+				for (const w of result.warnings) {
+					console.log(`       ${DIM}~  ${w}${RESET}`);
+				}
+			}
+
+			redraw();
 
 			if (
 				!opts.skipJudge &&
-				evalCase.category === "quality" &&
+				shouldJudgeCase(evalCase) &&
 				result.response.length > 0
 			) {
 				pendingJudges.push(
-					judgeQuality(evalCase, result.response, result.toolCalls, judgeModel)
+					judgeQuality(
+						evalCase,
+						result.response,
+						result.toolCalls,
+						judgeModel
+					)
 						.then((scores) => {
 							if (scores) {
 								result.scores.quality = scores.average;
 								result.qualityDetail = scores;
+								refreshCaseStatus(result, evalCase);
+
+								if (isTTY && lastLineCount > 0) {
+									clearLines(lastLineCount);
+									lastLineCount = 0;
+								}
 								console.log(
-									`  [judge] ${evalCase.id}: q=${scores.average} (dg=${scores.dataGrounding} ad=${scores.analyticalDepth} ac=${scores.actionability} co=${scores.completeness} cm=${scores.communication})`
+									`  ${DIM}[judge]${RESET} ${evalCase.id.slice(0, 25)} q=${scores.average} ${result.passed ? `${GREEN}PASS${RESET}` : `${RED}FAIL${RESET}`} ${DIM}dg=${scores.dataGrounding} ad=${scores.analyticalDepth} ac=${scores.actionability} co=${scores.completeness} cm=${scores.communication}${RESET}`
 								);
+								if (scores.explanation) {
+									console.log(
+										`         ${DIM}${scores.explanation}${RESET}`
+									);
+								}
+								redraw();
 							}
 						})
 						.catch((err) => {
+							if (isTTY && lastLineCount > 0) {
+								clearLines(lastLineCount);
+								lastLineCount = 0;
+							}
 							console.log(
-								`  [judge] ${evalCase.id}: ${err instanceof Error ? err.message : err}`
+								`  ${DIM}[judge]${RESET} ${evalCase.id.slice(0, 25)} ${RED}error${RESET}: ${err instanceof Error ? err.message : err}`
 							);
+							redraw();
 						})
 				);
 			}
 		}
-	);
+	}
+
+	const workers = Array.from({ length: concurrency }, () => worker());
+	await Promise.all(workers);
+
+	if (redrawTimer) clearInterval(redrawTimer);
+	if (isTTY) {
+		if (lastLineCount > 0) clearLines(lastLineCount);
+		process.stderr.write(SHOW_CURSOR);
+	}
 
 	if (pendingJudges.length > 0) {
-		console.log(`\nAwaiting ${pendingJudges.length} judge calls...`);
+		console.log(
+			`\n${DIM}Awaiting ${pendingJudges.length} judge calls...${RESET}`
+		);
 		await Promise.all(pendingJudges);
 	}
 
@@ -380,6 +559,10 @@ async function cmdRun() {
 		const resultsDir = join(import.meta.dir, "..", "results");
 		const filepath = saveRun(run, resultsDir);
 		console.log(`Saved: ${filepath}`);
+	}
+
+	if (run.summary.failed > 0) {
+		process.exitCode = 1;
 	}
 }
 
@@ -398,11 +581,7 @@ async function rejudgeFromFile(opts: CliOpts, judgeModel: string) {
 			console.error(`No results found for model ${opts.model}`);
 			process.exit(1);
 		}
-		const latest = all.at(-1);
-		if (!latest) {
-			console.error(`No results found for model ${opts.model}`);
-			process.exit(1);
-		}
+		const latest = all.at(-1)!;
 		filepath = join(resultsDir, latest);
 	} else {
 		console.error("--rejudge requires --model or --file");
@@ -413,9 +592,10 @@ async function rejudgeFromFile(opts: CliOpts, judgeModel: string) {
 	console.log(`Re-judging ${run.model} (${filepath})...`);
 	console.log(`Judge: ${judgeModel}\n`);
 
-	const toJudge = run.cases.filter(
-		(c) => c.category === "quality" && c.response?.length > 0
-	);
+	const toJudge = run.cases.filter((c) => {
+		const evalCase = getCaseById(c.id);
+		return !!(evalCase && shouldJudgeCase(evalCase) && c.response?.length > 0);
+	});
 
 	if (toJudge.length === 0) {
 		console.log("No quality cases to judge");
@@ -425,9 +605,7 @@ async function rejudgeFromFile(opts: CliOpts, judgeModel: string) {
 	const results = await Promise.all(
 		toJudge.map(async (caseResult) => {
 			const evalCase = getCaseById(caseResult.id);
-			if (!evalCase) {
-				return false;
-			}
+			if (!evalCase) return false;
 
 			const scores = await judgeQuality(
 				evalCase,
@@ -442,9 +620,13 @@ async function rejudgeFromFile(opts: CliOpts, judgeModel: string) {
 
 			caseResult.scores.quality = scores.average;
 			caseResult.qualityDetail = scores;
+			refreshCaseStatus(caseResult, evalCase);
 			console.log(
-				`  ${caseResult.id}: quality=${scores.average} (dg=${scores.dataGrounding} ad=${scores.analyticalDepth} ac=${scores.actionability} co=${scores.completeness} cm=${scores.communication})`
+				`  ${caseResult.id}: quality=${scores.average} ${caseResult.passed ? `${GREEN}PASS${RESET}` : `${RED}FAIL${RESET}`} (dg=${scores.dataGrounding} ad=${scores.analyticalDepth} ac=${scores.actionability} co=${scores.completeness} cm=${scores.communication})`
 			);
+			if (scores.explanation) {
+				console.log(`    ${DIM}${scores.explanation}${RESET}`);
+			}
 			return true;
 		})
 	);
@@ -474,10 +656,10 @@ function cmdCompare() {
 
 	const latestByModel = new Map<string, EvalRun>();
 	for (const f of all) {
-		const run: EvalRun = JSON.parse(readFileSync(join(resultsDir, f), "utf-8"));
-		if (run.summary.total === 0) {
-			continue;
-		}
+		const run: EvalRun = JSON.parse(
+			readFileSync(join(resultsDir, f), "utf-8")
+		);
+		if (run.summary.total === 0) continue;
 		latestByModel.set(run.model, run);
 	}
 
@@ -530,9 +712,7 @@ function cmdCompare() {
 		if (opts.diff) {
 			const statuses = cellValues.map((v) => v.trim().startsWith("OK"));
 			const hasDiff = statuses.some((s) => s !== statuses[0]);
-			if (!hasDiff) {
-				continue;
-			}
+			if (!hasDiff) continue;
 		}
 
 		for (const v of cellValues) {

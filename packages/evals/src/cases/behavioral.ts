@@ -1,6 +1,34 @@
 import type { EvalCase } from "../types";
 
 const WS = "OXmNQsViBT-FOS_wZCTHc";
+const CONVERSATIONAL_TOOLS_NOT_CALLED: string[] = [
+	"get_data",
+	"execute_sql_query",
+	"web_search",
+	"search_memory",
+	"save_memory",
+	"forget_memory",
+	"list_profiles",
+	"get_profile",
+	"get_profile_sessions",
+	"list_funnels",
+	"get_funnel_analytics",
+	"get_funnel_analytics_by_referrer",
+	"create_funnel",
+	"list_goals",
+	"get_goal_analytics",
+	"create_goal",
+	"update_goal",
+	"delete_goal",
+	"list_annotations",
+	"create_annotation",
+	"update_annotation",
+	"delete_annotation",
+	"list_links",
+	"create_link",
+	"update_link",
+	"delete_link",
+];
 
 /**
  * Behavioral cases — edge cases testing reasoning boundaries, honest
@@ -9,6 +37,42 @@ const WS = "OXmNQsViBT-FOS_wZCTHc";
  * ambiguous queries.
  */
 export const behavioralCases: EvalCase[] = [
+	{
+		id: "conversational-greeting-no-tools",
+		category: "behavioral",
+		name: "Responds to a greeting without running analytics tools",
+		query: "hi",
+		websiteId: WS,
+		expect: {
+			toolsNotCalled: CONVERSATIONAL_TOOLS_NOT_CALLED,
+			responseNotContains: [
+				"pageviews",
+				"unique visitors",
+				"sessions",
+				"revenue",
+			],
+			maxSteps: 1,
+			maxLatencyMs: 15_000,
+		},
+	},
+	{
+		id: "conversational-thanks-no-tools",
+		category: "behavioral",
+		name: "Responds to thanks without continuing the previous analysis",
+		query: "thanks",
+		websiteId: WS,
+		expect: {
+			toolsNotCalled: CONVERSATIONAL_TOOLS_NOT_CALLED,
+			responseNotContains: [
+				"pageviews",
+				"unique visitors",
+				"sessions",
+				"revenue",
+			],
+			maxSteps: 1,
+			maxLatencyMs: 15_000,
+		},
+	},
 	{
 		id: "impossible-revenue-metrics",
 		category: "behavioral",

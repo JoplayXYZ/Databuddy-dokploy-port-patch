@@ -5,9 +5,16 @@ import type {
 	ToolCallRecord,
 } from "./types";
 
+export type ProgressEvent =
+	| { kind: "step"; step: number }
+	| { kind: "tool"; name: string; index: number }
+	| { kind: "text"; chars: number }
+	| { kind: "done" };
+
 export async function runCase(
 	evalCase: EvalCase,
-	config: EvalConfig
+	config: EvalConfig,
+	onProgress?: (evt: ProgressEvent) => void
 ): Promise<ParsedAgentResponse> {
 	const startTime = Date.now();
 
@@ -48,12 +55,13 @@ export async function runCase(
 		throw new Error(`Agent API error ${response.status}: ${errorText}`);
 	}
 
-	return streamSSE(response, startTime);
+	return streamSSE(response, startTime, onProgress);
 }
 
 async function streamSSE(
 	response: Response,
-	startTime: number
+	startTime: number,
+	onProgress?: (evt: ProgressEvent) => void
 ): Promise<ParsedAgentResponse> {
 	const toolCalls: ToolCallRecord[] = [];
 	let pendingToolCall: Omit<ToolCallRecord, "output"> | null = null;
@@ -72,9 +80,7 @@ async function streamSSE(
 
 	for (;;) {
 		const { done, value } = await reader.read();
-		if (done) {
-			break;
-		}
+		if (done) break;
 		buf += decoder.decode(value, { stream: true });
 
 		let newlineIdx = buf.indexOf("\n");
@@ -83,10 +89,12 @@ async function streamSSE(
 			buf = buf.slice(newlineIdx + 1);
 
 			if (!line.startsWith("data: ")) {
+				newlineIdx = buf.indexOf("\n");
 				continue;
 			}
 			const payload = line.slice(6).trim();
 			if (payload === "[DONE]") {
+				onProgress?.({ kind: "done" });
 				break;
 			}
 
@@ -94,6 +102,7 @@ async function streamSSE(
 			try {
 				evt = JSON.parse(payload);
 			} catch {
+				newlineIdx = buf.indexOf("\n");
 				continue;
 			}
 
@@ -108,6 +117,11 @@ async function streamSSE(
 							name: evt.toolName,
 							input: evt.input ?? null,
 						};
+						onProgress?.({
+							kind: "tool",
+							name: evt.toolName,
+							index: toolCalls.length,
+						});
 					}
 					break;
 				case "tool-output-available":
@@ -123,6 +137,7 @@ async function streamSSE(
 				case "content-delta":
 					if (typeof evt.delta === "string") {
 						textContent += evt.delta;
+						onProgress?.({ kind: "text", chars: textContent.length });
 					}
 					break;
 				case "step-finish":
@@ -130,12 +145,8 @@ async function streamSSE(
 						const u = evt.usage as Record<string, number>;
 						const iT = u.inputTokens ?? u.prompt_tokens ?? 0;
 						const oT = u.outputTokens ?? u.completion_tokens ?? 0;
-						if (iT > 0) {
-							inputTokens += iT;
-						}
-						if (oT > 0) {
-							outputTokens += oT;
-						}
+						if (iT > 0) inputTokens += iT;
+						if (oT > 0) outputTokens += oT;
 					}
 					break;
 				case "finish":
@@ -147,6 +158,7 @@ async function streamSSE(
 					break;
 				case "start-step":
 					steps++;
+					onProgress?.({ kind: "step", step: steps });
 					break;
 				default:
 					break;
@@ -166,16 +178,13 @@ async function streamSSE(
 	let searchIdx = 0;
 	while (searchIdx < textContent.length) {
 		const start = textContent.indexOf('{"type":"', searchIdx);
-		if (start === -1) {
-			break;
-		}
+		if (start === -1) break;
 
 		let depth = 0;
 		let end = -1;
 		for (let i = start; i < textContent.length; i++) {
-			if (textContent[i] === "{") {
-				depth++;
-			} else if (textContent[i] === "}") {
+			if (textContent[i] === "{") depth++;
+			else if (textContent[i] === "}") {
 				depth--;
 				if (depth === 0) {
 					end = i;
@@ -183,16 +192,13 @@ async function streamSSE(
 				}
 			}
 		}
-		if (end === -1) {
-			break;
-		}
+		if (end === -1) break;
 
 		const jsonStr = textContent.slice(start, end + 1);
 		try {
 			const parsed = JSON.parse(jsonStr) as Record<string, unknown>;
-			if (typeof parsed.type === "string") {
+			if (typeof parsed.type === "string")
 				chartJSONs.push({ type: parsed.type, raw: jsonStr, parsed });
-			}
 		} catch {
 			rawJSONLeaks.push(jsonStr.slice(0, 100));
 		}

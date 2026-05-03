@@ -19,6 +19,8 @@ Score the response on 5 criteria (0-100 each). Be harsh. Most responses should s
    - Missing obvious correlations or patterns in the data
    - Not comparing to relevant baselines (prior period, industry standard)
    - No segmentation (treating all traffic as one bucket)
+   - For attribution questions: failing to state the attribution model, lookback window, denominator, identity/session coverage, and what revenue/conversions are unattributable
+   - For causal/incrementality questions: claiming causality from observational data without a holdout, geo split, randomized experiment, or clearly labeled quasi-experimental assumption
    Score 90+ only if the analysis reveals non-obvious insights
 
 3. **Actionability (0-100)**: Are the recommendations specific and implementable? Deduct for:
@@ -26,6 +28,7 @@ Score the response on 5 criteria (0-100 each). Be harsh. Most responses should s
    - Recommendations not tied to specific data findings
    - No prioritization (everything presented as equally important)
    - No estimated impact or effort level
+   - For attribution questions: recommending channel investment from raw volume, single-touch attribution, or fabricated attribution coverage instead of defensible model comparisons
    Score 90+ only if a marketer could execute the recommendations TODAY
 
 4. **Completeness (0-100)**: Did it fully answer what was asked? Deduct for:
@@ -48,6 +51,13 @@ Score the response on 5 criteria (0-100 each). Be harsh. Most responses should s
 - 50-69: Mediocre. Answers the question but misses depth, nuance, or specifics.
 - 30-49: Poor. Significant gaps in analysis or misleading conclusions.
 - 0-29: Bad. Wrong data, hallucinated numbers, or completely missed the point.
+
+**Attribution and causality guardrails:**
+- Deduct heavily if the agent allocates unattributed revenue/conversions to channels without observed identity/session/path evidence.
+- Deduct heavily if first-touch, last-touch, assisted, multi-touch, incrementality, and contribution are used interchangeably.
+- Deduct heavily if the agent hides missing session_id, anonymous_id, UTM, referrer, entry page, or revenue identity coverage.
+- Deduct heavily if the agent presents observational attribution as proof of incrementality.
+- Reward answers that separate "observed attribution," "assisted influence," "incrementality hypothesis," and "not answerable from current tracking."
 
 **Scoring examples:**
 
