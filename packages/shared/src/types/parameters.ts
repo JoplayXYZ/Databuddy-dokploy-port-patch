@@ -276,6 +276,7 @@ export interface ParameterDataMap {
 	today_metrics: GenericParameterRow;
 	top_pages: GenericParameterRow;
 	top_referrers: GenericParameterRow;
+	traffic_sources: GenericParameterRow;
 	utm_campaign: GenericParameterRow;
 	utm_campaigns: GenericParameterRow;
 	utm_medium: GenericParameterRow;

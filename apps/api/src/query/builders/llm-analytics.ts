@@ -953,8 +953,8 @@ export const LLMAnalyticsBuilders: Record<string, SimpleQueryConfig> = {
 				SELECT
 					trace_id AS name,
 					trace_id,
-					user_id,
-					website_id,
+					'' AS user_id,
+					'' AS website_id,
 					count() AS calls,
 					sum(total_tokens) AS total_tokens,
 					sum(total_token_cost_usd) AS total_cost,
@@ -966,7 +966,7 @@ export const LLMAnalyticsBuilders: Record<string, SimpleQueryConfig> = {
 					AND trace_id IS NOT NULL
 					AND trace_id != ''
 					${filterClause}
-				GROUP BY trace_id, user_id, website_id
+				GROUP BY trace_id
 				ORDER BY total_cost DESC
 				LIMIT ${appliedLimit}
 				`,
@@ -1012,7 +1012,7 @@ export const LLMAnalyticsBuilders: Record<string, SimpleQueryConfig> = {
 				SELECT
 					${TIME_FIELD} AS timestamp,
 					trace_id,
-					user_id,
+					'' AS user_id,
 					provider,
 					model,
 					total_tokens,

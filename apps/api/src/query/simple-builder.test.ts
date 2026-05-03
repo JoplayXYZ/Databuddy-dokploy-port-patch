@@ -294,6 +294,29 @@ describe("SimpleQueryBuilder.compile", () => {
 		expect(params.to).toBe("2026-04-27 13:28:59");
 	});
 
+	it("builds traffic sources with direct visits and session attribution", () => {
+		const config = QueryBuilders.traffic_sources;
+		if (!config) {
+			throw new Error("traffic_sources builder is missing");
+		}
+
+		const builder = new SimpleQueryBuilder(
+			config,
+			makeRequest({ type: "traffic_sources" }),
+			"example.com"
+		);
+
+		const { sql } = builder.compile();
+
+		expect(sql).toContain("session_attribution AS");
+		expect(sql).toContain("e.* REPLACE(");
+		expect(sql).toContain("WHEN referrer = '' OR referrer IS NULL");
+		expect(sql).toContain("domain(referrer) = 'example.com'");
+		expect(sql).toContain("as name");
+		expect(sql).toContain("as percentage");
+		expect(sql).not.toContain("referrer != ''");
+	});
+
 	it("applies request limit override", () => {
 		const { sql } = compile({ limit: 10 }, { limit: 25 });
 		expect(sql).toContain("LIMIT 25");

@@ -76,11 +76,13 @@ export const RealtimeBuilders: Record<string, SimpleQueryConfig> = {
 		},
 		table: Analytics.events,
 		fields: [
-			"if(referrer_domain = '', 'Direct', referrer_domain) as referrer",
+			"if(domain(ifNull(referrer, '')) = '', 'Direct', domain(ifNull(referrer, ''))) as referrer",
 			"uniq(anonymous_id) as visitors",
 		],
 		where: ["event_name = 'screen_view'", "time >= now() - INTERVAL 5 MINUTE"],
-		groupBy: ["referrer"],
+		groupBy: [
+			"if(domain(ifNull(referrer, '')) = '', 'Direct', domain(ifNull(referrer, '')))",
+		],
 		orderBy: "visitors DESC",
 		limit: 10,
 		timeField: "time",

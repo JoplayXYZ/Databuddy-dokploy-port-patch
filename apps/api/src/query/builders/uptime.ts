@@ -249,15 +249,21 @@ export const UptimeBuilders: Record<string, SimpleQueryConfig> = {
 		customSql: (websiteId: string, startDate: string, endDate: string) => ({
 			sql: `
 				SELECT 
-					argMax(ssl_expiry, timestamp) as ssl_expiry,
-					argMax(ssl_valid, timestamp) as ssl_valid,
-					sum(CASE WHEN ssl_valid = 0 THEN 1 ELSE 0 END) as invalid_ssl_checks
-				FROM ${UPTIME_TABLE}
-				WHERE 
-					site_id = {websiteId:String}
-					AND timestamp >= toDateTime({startDate:String})
-					AND timestamp <= toDateTime(concat({endDate:String}, ' 23:59:59'))
-				GROUP BY site_id
+					latest_ssl_expiry as ssl_expiry,
+					latest_ssl_valid as ssl_valid,
+					invalid_ssl_checks
+				FROM (
+					SELECT
+						argMax(ssl_expiry, timestamp) as latest_ssl_expiry,
+						argMax(ssl_valid, timestamp) as latest_ssl_valid,
+						countIf(ssl_valid = 0) as invalid_ssl_checks
+					FROM ${UPTIME_TABLE}
+					WHERE 
+						site_id = {websiteId:String}
+						AND timestamp >= toDateTime({startDate:String})
+						AND timestamp <= toDateTime(concat({endDate:String}, ' 23:59:59'))
+					GROUP BY site_id
+				)
 			`,
 			params: { websiteId, startDate, endDate },
 		}),

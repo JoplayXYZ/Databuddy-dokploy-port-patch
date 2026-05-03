@@ -346,7 +346,8 @@ export class SimpleQueryBuilder {
 				.replace(
 					/domain\(referrer\) NOT IN \('localhost', '127\.0\.0\.1'\)/g,
 					"1=1"
-				);
+				)
+				.replace(/\{websiteDomain\}/g, "__databuddy_no_domain__");
 		}
 		return sql
 			.replace(/\{websiteDomain\}/g, this.websiteDomain)
@@ -689,8 +690,9 @@ export class SimpleQueryBuilder {
 		WITH ${this.generateSessionAttributionCTE(timeField, table, "from", "to")},
 		attributed_events AS (
 			SELECT 
-				e.*,
-				${sessionAttribution.joinSelectFields("sa").join(",\n\t\t\t\t")}
+				e.* REPLACE(
+					${sessionAttribution.joinSelectFields("sa").join(",\n\t\t\t\t\t")}
+				)
 			FROM ${table} e
 			${this.generateSessionAttributionJoin("e")}
 			WHERE e.${idField} = {websiteId:String}

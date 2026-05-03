@@ -376,42 +376,40 @@ export const CustomEventsBuilders: Record<string, SimpleQueryConfig> = {
 
 			return {
 				sql: `
-					WITH property_keys AS (
+					WITH property_values AS (
 						SELECT 
 							event_name,
-							arrayJoin(JSONExtractKeys(properties)) as property_key
-						FROM ${Analytics.custom_events}
-						WHERE 
-							${projectWhereClause(filterParams)}
-							AND timestamp >= toDateTime({startDate:String})
-							AND timestamp <= toDateTime(concat({endDate:String}, ' 23:59:59'))
-							AND event_name != ''
-							AND properties != '{}'
-							AND isValidJSON(properties)
-							${whereClause}
+							property_key,
+							JSONExtractRaw(properties, property_key) as property_value
+						FROM (
+							SELECT
+								event_name,
+								properties,
+								arrayJoin(JSONExtractKeys(properties)) as property_key
+							FROM ${Analytics.custom_events}
+							WHERE 
+								${projectWhereClause(filterParams)}
+								AND timestamp >= toDateTime({startDate:String})
+								AND timestamp <= toDateTime(concat({endDate:String}, ' 23:59:59'))
+								AND event_name != ''
+								AND properties != '{}'
+								AND isValidJSON(properties)
+								${whereClause}
+						)
 					),
 					cardinality_data AS (
 						SELECT 
 							event_name,
 							property_key,
-							uniqExact(JSONExtractRaw(ce.properties, pk.property_key)) as unique_values,
+							uniqExact(property_value) as unique_values,
 							COUNT(*) as occurrences
-						FROM ${Analytics.custom_events} ce
-						INNER JOIN property_keys pk ON ce.event_name = pk.event_name
-						WHERE 
-							${projectWhereClause(filterParams)}
-							AND ce.timestamp >= toDateTime({startDate:String})
-							AND ce.timestamp <= toDateTime(concat({endDate:String}, ' 23:59:59'))
-							AND ce.event_name != ''
-							AND ce.properties != '{}'
-							AND isValidJSON(ce.properties)
-							${whereClause}
+						FROM property_values
+						WHERE 1 = 1
+						${propertyKeyClause}
 						GROUP BY event_name, property_key
 					)
 					SELECT event_name, property_key, unique_values, occurrences
 					FROM cardinality_data
-					WHERE 1 = 1
-					${propertyKeyClause}
 					ORDER BY occurrences DESC
 					LIMIT {limit:UInt32}
 				`,

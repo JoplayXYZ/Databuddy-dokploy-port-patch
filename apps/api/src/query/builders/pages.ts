@@ -322,7 +322,7 @@ export const PagesBuilders: Record<string, SimpleQueryConfig> = {
 	page_performance: {
 		table: Analytics.events,
 		fields: [
-			"CASE WHEN trimRight(path(path), '/') = '' THEN '/' ELSE trimRight(path(path), '/') END as name",
+			"decodeURLComponent(CASE WHEN trimRight(path(path), '/') = '' THEN '/' ELSE trimRight(path(path), '/') END) as name",
 			"COUNT(*) as pageviews",
 			"ROUND(AVG(CASE WHEN time_on_page > 0 THEN time_on_page / 1000 ELSE NULL END), 2) as avg_time_on_page",
 			"COUNT(DISTINCT anonymous_id) as visitors",

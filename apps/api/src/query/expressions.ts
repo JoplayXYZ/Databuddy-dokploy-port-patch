@@ -208,6 +208,18 @@ export const Expressions = {
 				ELSE concat('https://', domain(referrer))
 			END`),
 
+		sourceWithDirect: (websiteDomain = "{websiteDomain}") =>
+			expr(`
+			CASE
+				WHEN referrer = '' OR referrer IS NULL OR referrer = 'direct' THEN 'direct'
+				WHEN domain(referrer) = '${websiteDomain}' OR domain(referrer) ILIKE '%.${websiteDomain}' THEN 'direct'
+				WHEN domain(referrer) LIKE '%.google.com%' OR domain(referrer) LIKE 'google.com%' THEN 'https://google.com'
+				WHEN domain(referrer) LIKE '%.facebook.com%' OR domain(referrer) LIKE 'facebook.com%' THEN 'https://facebook.com'
+				WHEN domain(referrer) LIKE '%.twitter.com%' OR domain(referrer) LIKE 'twitter.com%' OR domain(referrer) LIKE 't.co%' THEN 'https://twitter.com'
+				WHEN domain(referrer) LIKE '%.instagram.com%' OR domain(referrer) LIKE 'instagram.com%' OR domain(referrer) LIKE 'l.instagram.com%' THEN 'https://instagram.com'
+				ELSE concat('https://', domain(referrer))
+			END`),
+
 		domain: expr("domain(referrer)"),
 
 		isDirect: expr("referrer = '' OR referrer IS NULL OR referrer = 'direct'"),

@@ -1,6 +1,36 @@
 import { Analytics } from "../../types/tables";
 import type { SimpleQueryConfig } from "../types";
 
+const VITALS_SESSION_DIMENSIONS_CTE = `
+	session_dimensions AS (
+		SELECT
+			session_id,
+			client_id,
+			argMinIf(browser_name, time, ifNull(browser_name, '') != '') as browser_name,
+			argMinIf(country, time, ifNull(country, '') != '') as country,
+			argMinIf(region, time, ifNull(region, '') != '') as region,
+			argMinIf(city, time, ifNull(city, '') != '') as city
+		FROM ${Analytics.events}
+		WHERE
+			client_id = {websiteId:String}
+			AND time >= toDateTime({startDate:String})
+			AND time <= toDateTime(concat({endDate:String}, ' 23:59:59'))
+			AND session_id != ''
+			AND event_name = 'screen_view'
+		GROUP BY session_id, client_id
+	)
+`;
+
+const VITALS_P50_METRICS = `
+	COUNT(DISTINCT wv.anonymous_id) as visitors,
+	quantileIf(0.50)(wv.metric_value, wv.metric_name = 'LCP' AND wv.metric_value > 0) as p50_lcp,
+	quantileIf(0.50)(wv.metric_value, wv.metric_name = 'FCP' AND wv.metric_value > 0) as p50_fcp,
+	quantileIf(0.50)(wv.metric_value, wv.metric_name = 'CLS') as p50_cls,
+	quantileIf(0.50)(wv.metric_value, wv.metric_name = 'INP' AND wv.metric_value > 0) as p50_inp,
+	quantileIf(0.50)(wv.metric_value, wv.metric_name = 'TTFB' AND wv.metric_value > 0) as p50_ttfb,
+	COUNT(*) as samples
+`;
+
 /**
  * Web Vitals query builders
  * Uses web_vitals_spans table (EAV format: metric_name + metric_value per row)
@@ -131,35 +161,19 @@ export const VitalsBuilders: Record<string, SimpleQueryConfig> = {
 				: "";
 			return {
 				sql: `
-					WITH session_geo AS (
-						SELECT
-							session_id,
-							client_id,
-							any(country) as country
-						FROM ${Analytics.events}
-						WHERE client_id = {websiteId:String}
-							AND time >= toDateTime({startDate:String})
-							AND time <= toDateTime(concat({endDate:String}, ' 23:59:59'))
-							AND country != ''
-						GROUP BY session_id, client_id
-					)
+					WITH ${VITALS_SESSION_DIMENSIONS_CTE}
 					SELECT
-						sg.country as name,
-						COUNT(DISTINCT wv.anonymous_id) as visitors,
-						quantileIf(0.50)(wv.metric_value, wv.metric_name = 'LCP' AND wv.metric_value > 0) as p50_lcp,
-						quantileIf(0.50)(wv.metric_value, wv.metric_name = 'FCP' AND wv.metric_value > 0) as p50_fcp,
-						quantileIf(0.50)(wv.metric_value, wv.metric_name = 'CLS') as p50_cls,
-						quantileIf(0.50)(wv.metric_value, wv.metric_name = 'INP' AND wv.metric_value > 0) as p50_inp,
-						quantileIf(0.50)(wv.metric_value, wv.metric_name = 'TTFB' AND wv.metric_value > 0) as p50_ttfb,
-						COUNT(*) as samples
+						sd.country as name,
+						${VITALS_P50_METRICS}
 					FROM ${Analytics.web_vitals_spans} wv
-					INNER JOIN session_geo sg ON wv.session_id = sg.session_id AND wv.client_id = sg.client_id
+					INNER JOIN session_dimensions sd ON wv.session_id = sd.session_id AND wv.client_id = sd.client_id
 					WHERE
 						wv.client_id = {websiteId:String}
 						AND wv.timestamp >= toDateTime({startDate:String})
 						AND wv.timestamp <= toDateTime(concat({endDate:String}, ' 23:59:59'))
+						AND ifNull(sd.country, '') != ''
 						${filterClause}
-					GROUP BY sg.country
+					GROUP BY sd.country
 					ORDER BY samples DESC
 					LIMIT {limit:UInt32}
 				`,
@@ -190,35 +204,19 @@ export const VitalsBuilders: Record<string, SimpleQueryConfig> = {
 				: "";
 			return {
 				sql: `
-					WITH session_browsers AS (
-						SELECT
-							session_id,
-							client_id,
-							any(browser_name) as browser_name
-						FROM ${Analytics.events}
-						WHERE client_id = {websiteId:String}
-							AND time >= toDateTime({startDate:String})
-							AND time <= toDateTime(concat({endDate:String}, ' 23:59:59'))
-							AND browser_name != ''
-						GROUP BY session_id, client_id
-					)
+					WITH ${VITALS_SESSION_DIMENSIONS_CTE}
 					SELECT
-						sb.browser_name as name,
-						COUNT(DISTINCT wv.anonymous_id) as visitors,
-						quantileIf(0.50)(wv.metric_value, wv.metric_name = 'LCP' AND wv.metric_value > 0) as p50_lcp,
-						quantileIf(0.50)(wv.metric_value, wv.metric_name = 'FCP' AND wv.metric_value > 0) as p50_fcp,
-						quantileIf(0.50)(wv.metric_value, wv.metric_name = 'CLS') as p50_cls,
-						quantileIf(0.50)(wv.metric_value, wv.metric_name = 'INP' AND wv.metric_value > 0) as p50_inp,
-						quantileIf(0.50)(wv.metric_value, wv.metric_name = 'TTFB' AND wv.metric_value > 0) as p50_ttfb,
-						COUNT(*) as samples
+						sd.browser_name as name,
+						${VITALS_P50_METRICS}
 					FROM ${Analytics.web_vitals_spans} wv
-					INNER JOIN session_browsers sb ON wv.session_id = sb.session_id AND wv.client_id = sb.client_id
+					INNER JOIN session_dimensions sd ON wv.session_id = sd.session_id AND wv.client_id = sd.client_id
 					WHERE
 						wv.client_id = {websiteId:String}
 						AND wv.timestamp >= toDateTime({startDate:String})
 						AND wv.timestamp <= toDateTime(concat({endDate:String}, ' 23:59:59'))
+						AND ifNull(sd.browser_name, '') != ''
 						${filterClause}
-					GROUP BY sb.browser_name
+					GROUP BY sd.browser_name
 					ORDER BY samples DESC
 					LIMIT {limit:UInt32}
 				`,
@@ -248,36 +246,19 @@ export const VitalsBuilders: Record<string, SimpleQueryConfig> = {
 				: "";
 			return {
 				sql: `
-					WITH session_geo AS (
-						SELECT
-							session_id,
-							client_id,
-							any(region) as region,
-							any(country) as country
-						FROM ${Analytics.events}
-						WHERE client_id = {websiteId:String}
-							AND time >= toDateTime({startDate:String})
-							AND time <= toDateTime(concat({endDate:String}, ' 23:59:59'))
-							AND region != ''
-						GROUP BY session_id, client_id
-					)
+					WITH ${VITALS_SESSION_DIMENSIONS_CTE}
 					SELECT
-						CONCAT(sg.region, ', ', sg.country) as name,
-						COUNT(DISTINCT wv.anonymous_id) as visitors,
-						quantileIf(0.50)(wv.metric_value, wv.metric_name = 'LCP' AND wv.metric_value > 0) as p50_lcp,
-						quantileIf(0.50)(wv.metric_value, wv.metric_name = 'FCP' AND wv.metric_value > 0) as p50_fcp,
-						quantileIf(0.50)(wv.metric_value, wv.metric_name = 'CLS') as p50_cls,
-						quantileIf(0.50)(wv.metric_value, wv.metric_name = 'INP' AND wv.metric_value > 0) as p50_inp,
-						quantileIf(0.50)(wv.metric_value, wv.metric_name = 'TTFB' AND wv.metric_value > 0) as p50_ttfb,
-						COUNT(*) as samples
+						CONCAT(ifNull(sd.region, ''), ', ', ifNull(sd.country, '')) as name,
+						${VITALS_P50_METRICS}
 					FROM ${Analytics.web_vitals_spans} wv
-					INNER JOIN session_geo sg ON wv.session_id = sg.session_id AND wv.client_id = sg.client_id
+					INNER JOIN session_dimensions sd ON wv.session_id = sd.session_id AND wv.client_id = sd.client_id
 					WHERE
 						wv.client_id = {websiteId:String}
 						AND wv.timestamp >= toDateTime({startDate:String})
 						AND wv.timestamp <= toDateTime(concat({endDate:String}, ' 23:59:59'))
+						AND ifNull(sd.region, '') != ''
 						${filterClause}
-					GROUP BY sg.region, sg.country
+					GROUP BY sd.region, sd.country
 					ORDER BY samples DESC
 					LIMIT {limit:UInt32}
 				`,
@@ -308,36 +289,19 @@ export const VitalsBuilders: Record<string, SimpleQueryConfig> = {
 				: "";
 			return {
 				sql: `
-					WITH session_geo AS (
-						SELECT
-							session_id,
-							client_id,
-							any(city) as city,
-							any(country) as country
-						FROM ${Analytics.events}
-						WHERE client_id = {websiteId:String}
-							AND time >= toDateTime({startDate:String})
-							AND time <= toDateTime(concat({endDate:String}, ' 23:59:59'))
-							AND city != ''
-						GROUP BY session_id, client_id
-					)
+					WITH ${VITALS_SESSION_DIMENSIONS_CTE}
 					SELECT
-						CONCAT(sg.city, ', ', sg.country) as name,
-						COUNT(DISTINCT wv.anonymous_id) as visitors,
-						quantileIf(0.50)(wv.metric_value, wv.metric_name = 'LCP' AND wv.metric_value > 0) as p50_lcp,
-						quantileIf(0.50)(wv.metric_value, wv.metric_name = 'FCP' AND wv.metric_value > 0) as p50_fcp,
-						quantileIf(0.50)(wv.metric_value, wv.metric_name = 'CLS') as p50_cls,
-						quantileIf(0.50)(wv.metric_value, wv.metric_name = 'INP' AND wv.metric_value > 0) as p50_inp,
-						quantileIf(0.50)(wv.metric_value, wv.metric_name = 'TTFB' AND wv.metric_value > 0) as p50_ttfb,
-						COUNT(*) as samples
+						CONCAT(ifNull(sd.city, ''), ', ', ifNull(sd.country, '')) as name,
+						${VITALS_P50_METRICS}
 					FROM ${Analytics.web_vitals_spans} wv
-					INNER JOIN session_geo sg ON wv.session_id = sg.session_id AND wv.client_id = sg.client_id
+					INNER JOIN session_dimensions sd ON wv.session_id = sd.session_id AND wv.client_id = sd.client_id
 					WHERE
 						wv.client_id = {websiteId:String}
 						AND wv.timestamp >= toDateTime({startDate:String})
 						AND wv.timestamp <= toDateTime(concat({endDate:String}, ' 23:59:59'))
+						AND ifNull(sd.city, '') != ''
 						${filterClause}
-					GROUP BY sg.city, sg.country
+					GROUP BY sd.city, sd.country
 					ORDER BY samples DESC
 					LIMIT {limit:UInt32}
 				`,
