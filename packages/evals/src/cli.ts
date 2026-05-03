@@ -443,6 +443,8 @@ async function cmdRun() {
 					case "text":
 						slot.textChars = evt.chars;
 						break;
+					default:
+						break;
 				}
 			});
 
@@ -581,7 +583,11 @@ async function rejudgeFromFile(opts: CliOpts, judgeModel: string) {
 			console.error(`No results found for model ${opts.model}`);
 			process.exit(1);
 		}
-		const latest = all.at(-1)!;
+		const latest = all.at(-1);
+		if (!latest) {
+			console.error(`No results found for model ${opts.model}`);
+			process.exit(1);
+		}
 		filepath = join(resultsDir, latest);
 	} else {
 		console.error("--rejudge requires --model or --file");
