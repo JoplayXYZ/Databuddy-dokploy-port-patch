@@ -83,3 +83,7 @@ export const getCategories = cache(() =>
 export const getAuthors = cache(() =>
 	fetchFromMarble<MarbleAuthorList>("authors")
 );
+
+export function isPublished(post: { publishedAt: Date }): boolean {
+	return new Date(post.publishedAt).getTime() <= Date.now();
+}

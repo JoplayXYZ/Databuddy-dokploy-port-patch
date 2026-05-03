@@ -15,7 +15,7 @@ import Section from "@/components/landing/section";
 import { SciFiCard } from "@/components/scifi-card";
 import { StructuredData } from "@/components/structured-data";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { getPosts } from "@/lib/blog-query";
+import { getPosts, isPublished } from "@/lib/blog-query";
 
 export const revalidate = 3600;
 
@@ -166,9 +166,8 @@ function BlogPostCard({ post }: { post: Post }) {
 export default async function BlogPage() {
 	const result = await getPosts();
 	const posts = "error" in result ? [] : result.posts;
-	const now = Date.now();
 	const sortedPosts = [...posts]
-		.filter((p) => new Date(p.publishedAt).getTime() <= now)
+		.filter(isPublished)
 		.sort(
 			(a, b) =>
 				new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()
