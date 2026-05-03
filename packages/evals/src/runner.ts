@@ -43,105 +43,103 @@ export async function runCase(
 		throw new Error(`Agent API error ${response.status}: ${errorText}`);
 	}
 
-	const raw = await response.text();
-	const latencyMs = Date.now() - startTime;
-
-	return parseSSE(raw, latencyMs);
+	return streamSSE(response, startTime);
 }
 
-interface SSEEvent {
-	type: string;
-	[key: string]: unknown;
-}
-
-function parseSSE(raw: string, latencyMs: number): ParsedAgentResponse {
-	const lines = raw.split("\n");
-	const events: SSEEvent[] = [];
-
-	for (const line of lines) {
-		if (!line.startsWith("data: ")) {
-			continue;
-		}
-		const payload = line.slice(6).trim();
-		if (payload === "[DONE]") {
-			break;
-		}
-		try {
-			events.push(JSON.parse(payload) as SSEEvent);
-		} catch {}
-	}
-
+async function streamSSE(
+	response: Response,
+	startTime: number
+): Promise<ParsedAgentResponse> {
 	const toolCalls: ParsedAgentResponse["toolCalls"] = [];
 	const toolNames = new Set<string>();
-	for (const evt of events) {
-		if (
-			evt.type === "tool-input-available" &&
-			typeof evt.toolName === "string" &&
-			!toolNames.has(evt.toolName)
-		) {
-			toolNames.add(evt.toolName);
-			toolCalls.push({
-				name: evt.toolName,
-				input: evt.input ?? null,
-				output: null,
-			});
-		}
-		if (
-			evt.type === "tool-output-available" &&
-			typeof evt.toolCallId === "string"
-		) {
-			const tc = toolCalls.find((t) => t.output === null);
-			if (tc) {
-				tc.output = evt.output ?? null;
-			}
-		}
-	}
-
 	let textContent = "";
-	for (const evt of events) {
-		if (
-			(evt.type === "text-delta" || evt.type === "content-delta") &&
-			typeof evt.delta === "string"
-		) {
-			textContent += evt.delta;
-		}
-	}
-
 	let inputTokens = 0;
 	let outputTokens = 0;
-	for (const evt of events) {
-		if (evt.type === "step-finish" && evt.usage) {
-			const u = evt.usage as Record<string, number>;
-			inputTokens += u.inputTokens ?? u.prompt_tokens ?? 0;
-			outputTokens += u.outputTokens ?? u.completion_tokens ?? 0;
-		}
-		if (evt.type === "finish" && evt.usage) {
-			const u = evt.usage as Record<string, number>;
-			if (inputTokens === 0) {
-				inputTokens = u.inputTokens ?? u.prompt_tokens ?? 0;
+	let steps = 0;
+
+	const reader = response.body!.getReader();
+	const decoder = new TextDecoder();
+	let buf = "";
+
+	for (;;) {
+		const { done, value } = await reader.read();
+		if (done) break;
+		buf += decoder.decode(value, { stream: true });
+
+		let newlineIdx: number;
+		while ((newlineIdx = buf.indexOf("\n")) !== -1) {
+			const line = buf.slice(0, newlineIdx);
+			buf = buf.slice(newlineIdx + 1);
+
+			if (!line.startsWith("data: ")) continue;
+			const payload = line.slice(6).trim();
+			if (payload === "[DONE]") break;
+
+			let evt: Record<string, unknown>;
+			try {
+				evt = JSON.parse(payload);
+			} catch {
+				continue;
 			}
-			if (outputTokens === 0) {
-				outputTokens = u.outputTokens ?? u.completion_tokens ?? 0;
+
+			switch (evt.type) {
+				case "tool-input-available":
+					if (
+						typeof evt.toolName === "string" &&
+						!toolNames.has(evt.toolName)
+					) {
+						toolNames.add(evt.toolName);
+						toolCalls.push({
+							name: evt.toolName,
+							input: evt.input ?? null,
+							output: null,
+						});
+					}
+					break;
+				case "tool-output-available": {
+					const tc = toolCalls.find((t) => t.output === null);
+					if (tc) tc.output = evt.output ?? null;
+					break;
+				}
+				case "text-delta":
+				case "content-delta":
+					if (typeof evt.delta === "string") textContent += evt.delta;
+					break;
+				case "step-finish":
+					if (evt.usage) {
+						const u = evt.usage as Record<string, number>;
+						inputTokens += u.inputTokens ?? u.prompt_tokens ?? 0;
+						outputTokens += u.outputTokens ?? u.completion_tokens ?? 0;
+					}
+					break;
+				case "finish":
+					if (evt.usage && inputTokens === 0) {
+						const u = evt.usage as Record<string, number>;
+						inputTokens = u.inputTokens ?? u.prompt_tokens ?? 0;
+						outputTokens = u.outputTokens ?? u.completion_tokens ?? 0;
+					}
+					break;
+				case "start-step":
+					steps++;
+					break;
 			}
 		}
 	}
+
+	const latencyMs = Date.now() - startTime;
 
 	const chartJSONs: ParsedAgentResponse["chartJSONs"] = [];
 	const rawJSONLeaks: string[] = [];
-
 	let searchIdx = 0;
 	while (searchIdx < textContent.length) {
 		const start = textContent.indexOf('{"type":"', searchIdx);
-		if (start === -1) {
-			break;
-		}
+		if (start === -1) break;
 
 		let depth = 0;
 		let end = -1;
 		for (let i = start; i < textContent.length; i++) {
-			if (textContent[i] === "{") {
-				depth++;
-			} else if (textContent[i] === "}") {
+			if (textContent[i] === "{") depth++;
+			else if (textContent[i] === "}") {
 				depth--;
 				if (depth === 0) {
 					end = i;
@@ -149,25 +147,18 @@ function parseSSE(raw: string, latencyMs: number): ParsedAgentResponse {
 				}
 			}
 		}
-
-		if (end === -1) {
-			break;
-		}
+		if (end === -1) break;
 
 		const jsonStr = textContent.slice(start, end + 1);
 		try {
 			const parsed = JSON.parse(jsonStr) as Record<string, unknown>;
-			if (typeof parsed.type === "string") {
+			if (typeof parsed.type === "string")
 				chartJSONs.push({ type: parsed.type, raw: jsonStr, parsed });
-			}
 		} catch {
 			rawJSONLeaks.push(jsonStr.slice(0, 100));
 		}
-
 		searchIdx = end + 1;
 	}
-
-	const steps = events.filter((e) => e.type === "start-step").length;
 
 	return {
 		textContent,

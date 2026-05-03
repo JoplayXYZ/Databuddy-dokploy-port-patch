@@ -272,13 +272,16 @@ async function cmdRun() {
 	const opts = parseArgs();
 	const modelId = opts.model ?? "anthropic/claude-sonnet-4.6";
 
+	const skipJudge =
+		process.env.EVAL_SKIP_JUDGE === "true" || opts.noSave;
+
 	const config: EvalConfig = {
 		apiUrl: opts.apiUrl,
 		authCookie: process.env.EVAL_SESSION_COOKIE,
 		apiKey: process.env.EVAL_API_KEY,
 		judgeModel: process.env.EVAL_JUDGE_MODEL,
 		modelOverride: opts.model,
-		skipJudge: true,
+		skipJudge,
 	};
 
 	let cases = allCases;
@@ -306,6 +309,7 @@ async function cmdRun() {
 
 	const runStart = Date.now();
 	let completed = 0;
+	const pendingJudges: Array<Promise<void>> = [];
 
 	const results = await runWithConcurrency(
 		cases,
@@ -326,8 +330,31 @@ async function cmdRun() {
 			console.log(
 				`  [${completed}/${cases.length}] ${evalCase.id} ${status} ${time}${cost}`
 			);
+
+			if (
+				!skipJudge &&
+				evalCase.category === "quality" &&
+				result.response.length > 0
+			) {
+				pendingJudges.push(
+					judgeQuality(evalCase, result.response, config).then((scores) => {
+						if (scores) {
+							result.scores.quality = scores.average;
+							(result as unknown as { qualityDetail: JudgeScores }).qualityDetail = scores;
+							console.log(
+								`  [judge] ${evalCase.id}: q=${scores.average} (dg=${scores.dataGrounding} ad=${scores.analyticalDepth} ac=${scores.actionability} co=${scores.completeness} cm=${scores.communication})`
+							);
+						}
+					})
+				);
+			}
 		}
 	);
+
+	if (pendingJudges.length > 0) {
+		console.log(`\nAwaiting ${pendingJudges.length} judge calls...`);
+		await Promise.all(pendingJudges);
+	}
 
 	const run = buildRun(results, modelId, config.apiUrl, Date.now() - runStart);
 	printReport(run);
@@ -375,11 +402,10 @@ async function cmdJudge() {
 		const run: EvalRun = JSON.parse(readFileSync(filepath, "utf-8"));
 		console.log(`\nJudging ${run.model} (${filepath})...`);
 
-		let judged = 0;
+		const toJudge: Array<{ caseResult: CaseResult; evalCase: EvalCase }> = [];
+
 		for (const c of run.cases) {
-			if (c.category !== "quality") {
-				continue;
-			}
+			if (c.category !== "quality") continue;
 
 			const existingScore = c.scores.quality;
 			const alreadyJudged =
@@ -398,31 +424,37 @@ async function cmdJudge() {
 			}
 
 			const evalCase = getCaseById(c.id);
-			if (!evalCase) {
-				continue;
-			}
-
-			const scores = await judgeQuality(evalCase, c.response, config);
-			if (scores === null) {
-				console.log(`  ${c.id}: judge failed`);
-			} else {
-				c.scores.quality = scores.average;
-				(c as unknown as { qualityDetail: JudgeScores }).qualityDetail = scores;
-				judged++;
-				console.log(
-					`  ${c.id}: quality=${scores.average} (dg=${scores.dataGrounding} ad=${scores.analyticalDepth} ac=${scores.actionability} co=${scores.completeness} cm=${scores.communication})`
-				);
-			}
+			if (evalCase) toJudge.push({ caseResult: c, evalCase });
 		}
 
+		if (toJudge.length === 0) {
+			console.log("No cases to judge");
+			continue;
+		}
+
+		const judgeResults = await Promise.all(
+			toJudge.map(async ({ caseResult, evalCase }) => {
+				const scores = await judgeQuality(evalCase, caseResult.response, config);
+				if (scores === null) {
+					console.log(`  ${caseResult.id}: judge failed`);
+					return false;
+				}
+				caseResult.scores.quality = scores.average;
+				(caseResult as unknown as { qualityDetail: JudgeScores }).qualityDetail = scores;
+				console.log(
+					`  ${caseResult.id}: quality=${scores.average} (dg=${scores.dataGrounding} ad=${scores.analyticalDepth} ac=${scores.actionability} co=${scores.completeness} cm=${scores.communication})`
+				);
+				return true;
+			})
+		);
+
+		const judged = judgeResults.filter(Boolean).length;
 		if (judged > 0) {
 			const updated = buildRun(run.cases, run.model, run.apiUrl, run.duration);
 			updated.timestamp = run.timestamp;
 			writeFileSync(filepath, JSON.stringify(updated, null, 2));
 			console.log(`Updated ${filepath} (${judged} cases judged)`);
 			printReport(updated);
-		} else {
-			console.log("No cases to judge");
 		}
 	}
 }
