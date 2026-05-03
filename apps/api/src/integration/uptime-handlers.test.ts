@@ -1,6 +1,5 @@
 import "@databuddy/test/env";
 
-import { eq } from "@databuddy/db";
 import { flags, uptimeSchedules } from "@databuddy/db/schema";
 import {
 	closeUptimeQueue,
@@ -110,7 +109,7 @@ async function createSchedule(values: {
 
 async function scheduleRow(scheduleId: string) {
 	return db().query.uptimeSchedules.findFirst({
-		where: eq(uptimeSchedules.id, scheduleId),
+		where: { id: scheduleId },
 	});
 }
 
