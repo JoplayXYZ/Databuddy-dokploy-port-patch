@@ -40,6 +40,120 @@ export function getCacheableKey(prefix: string, ...args: unknown[]): string {
 	return `cacheable:${prefix}:${stringify(args)}`;
 }
 
+export const AGENT_CONTEXT_SNAPSHOT_PREFIX = "agent:context-snapshot";
+const AGENT_CONTEXT_SNAPSHOT_STALE_AT = new Date(0).toISOString();
+
+export function getAgentContextSnapshotKey(
+	userId: string,
+	websiteId: string,
+	organizationId?: string | null
+): string {
+	const ownerId = organizationId ?? userId;
+	return `${AGENT_CONTEXT_SNAPSHOT_PREFIX}:${ownerId}:${websiteId}`;
+}
+
+async function markAgentContextSnapshotStale(key: string): Promise<number> {
+	const redis = getRedisCache();
+	const cached = await redis.get(key);
+	if (!cached) {
+		return 0;
+	}
+
+	try {
+		const parsed = JSON.parse(cached) as unknown;
+		if (!(parsed && typeof parsed === "object")) {
+			await redis.del(key);
+			return 1;
+		}
+		const snapshot = parsed as Record<string, unknown>;
+		if (typeof snapshot.context !== "string") {
+			await redis.del(key);
+			return 1;
+		}
+		const ttl = await redis.ttl(key);
+		if (ttl === -2) {
+			return 0;
+		}
+		const stale = JSON.stringify({
+			...snapshot,
+			refreshedAt: AGENT_CONTEXT_SNAPSHOT_STALE_AT,
+		});
+		if (ttl > 0) {
+			await redis.setex(key, ttl, stale);
+			return 1;
+		}
+		await redis.set(key, stale);
+		return 1;
+	} catch {
+		await redis.del(key);
+		return 1;
+	}
+}
+
+async function markAgentContextSnapshotsStale(
+	pattern: string
+): Promise<number> {
+	const redis = getRedisCache();
+	let markedCount = 0;
+	let cursor = "0";
+	do {
+		const [nextCursor, keys] = (await redis.scan(
+			cursor,
+			"MATCH",
+			pattern,
+			"COUNT",
+			100
+		)) as [string, string[]];
+		cursor = nextCursor;
+
+		if (keys.length > 0) {
+			const counts = await Promise.all(
+				keys.map((key) => markAgentContextSnapshotStale(key))
+			);
+			markedCount += counts.reduce((sum, count) => sum + count, 0);
+		}
+	} while (cursor !== "0");
+	return markedCount;
+}
+
+export async function invalidateAgentContextSnapshot(
+	userId: string,
+	websiteId: string,
+	organizationId?: string | null
+): Promise<void> {
+	try {
+		await markAgentContextSnapshotStale(
+			getAgentContextSnapshotKey(userId, websiteId, organizationId)
+		);
+	} catch {
+		// Agent context is advisory; cache invalidation should not fail mutations.
+	}
+}
+
+export async function invalidateAgentContextSnapshotsForWebsite(
+	websiteId: string
+): Promise<number> {
+	try {
+		return await markAgentContextSnapshotsStale(
+			`${AGENT_CONTEXT_SNAPSHOT_PREFIX}:*:${websiteId}`
+		);
+	} catch {
+		return 0;
+	}
+}
+
+export async function invalidateAgentContextSnapshotsForOwner(
+	ownerId: string
+): Promise<number> {
+	try {
+		return await markAgentContextSnapshotsStale(
+			`${AGENT_CONTEXT_SNAPSHOT_PREFIX}:${ownerId}:*`
+		);
+	} catch {
+		return 0;
+	}
+}
+
 /**
  * Invalidates a specific cacheable cache entry by prefix and exact arguments.
  */

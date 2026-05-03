@@ -35,9 +35,10 @@ import { useLogger } from "evlog/elysia";
 import { createConfig as createAgentConfig } from "../ai/agents/analytics";
 import {
 	checkWebsiteReadPermissionCached,
-	enrichAgentContextCached,
 	ensureAgentCreditsAvailableCached,
+	getAgentContextSnapshot,
 	getMemoryContextCached,
+	shouldLoadMemoryContext,
 } from "../ai/agents/cache";
 import {
 	resolveAgentBillingCustomerId,
@@ -497,28 +498,39 @@ export const agent = new Elysia({ prefix: "/v1/agent" })
 							)
 						: Promise.resolve(true);
 
+					const loadMemoryContext = shouldLoadMemoryContext(lastMessage);
+					mergeWideEvent({
+						agent_memory_context_strategy: loadMemoryContext
+							? "inline"
+							: "tool_on_demand",
+					});
+					if (!loadMemoryContext) {
+						mergeWideEvent({
+							agent_memory_context_skipped: true,
+							agent_phase_memory_only_ms: 0,
+						});
+					}
+
 					const [hasCredits, memoryCtx, enrichment] = await timeAgentPhase(
 						"memory_enrich",
 						Promise.all([
 							creditsCheck,
-							optionalAgentContext(
-								"memory",
-								getMemoryContextCached(lastMessage, userId, body.websiteId),
-								EMPTY_MEMORY_CONTEXT,
-								AGENT_MEMORY_CONTEXT_TIMEOUT_MS,
-								{
-									agent_chat_id: chatId,
-									agent_website_id: body.websiteId,
-								}
-							),
+							loadMemoryContext
+								? optionalAgentContext(
+										"memory",
+										getMemoryContextCached(lastMessage, userId, body.websiteId),
+										EMPTY_MEMORY_CONTEXT,
+										AGENT_MEMORY_CONTEXT_TIMEOUT_MS,
+										{
+											agent_chat_id: chatId,
+											agent_website_id: body.websiteId,
+										}
+									)
+								: Promise.resolve(EMPTY_MEMORY_CONTEXT),
 							optionalAgentContext(
 								"enrichment",
-								enrichAgentContextCached(
-									userId,
-									body.websiteId,
-									organizationId
-								),
-								"",
+								getAgentContextSnapshot(userId, body.websiteId, organizationId),
+								{ context: "", source: "error" },
 								AGENT_ENRICHMENT_CONTEXT_TIMEOUT_MS,
 								{
 									agent_chat_id: chatId,
@@ -527,6 +539,9 @@ export const agent = new Elysia({ prefix: "/v1/agent" })
 							),
 						])
 					);
+					mergeWideEvent({
+						agent_enrichment_context_source: enrichment.source,
+					});
 
 					if (!hasCredits) {
 						mergeWideEvent({ agent_rejected: "out_of_credits" });
@@ -559,7 +574,7 @@ export const agent = new Elysia({ prefix: "/v1/agent" })
 
 					const extras = [
 						memoryCtx ? formatMemoryForPrompt(memoryCtx) : "",
-						enrichment,
+						enrichment.context,
 					]
 						.filter(Boolean)
 						.join("\n\n");
