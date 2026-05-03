@@ -92,7 +92,7 @@ function FunnelRow({
 				)}
 			</div>
 
-			<div className="hidden shrink-0 items-center gap-3 sm:flex mx-3">
+			<div className="mx-3 hidden shrink-0 items-center gap-3 sm:flex">
 				<div className="flex h-5 items-center gap-0.5">
 					{funnel.steps.slice(0, 4).map((_, idx) => (
 						<div

@@ -1,4 +1,4 @@
-import { and, db, eq } from "@databuddy/db";
+import { db, eq } from "@databuddy/db";
 import { uptimeSchedules } from "@databuddy/db/schema";
 import { randomUUIDv7 } from "bun";
 import { z } from "zod";
@@ -50,7 +50,7 @@ async function getScheduleAndAuthorize(
 	context: Parameters<typeof withWorkspace>[0]
 ) {
 	const schedule = await db.query.uptimeSchedules.findFirst({
-		where: eq(uptimeSchedules.id, scheduleId),
+		where: { id: scheduleId },
 	});
 
 	if (!schedule) {
@@ -113,8 +113,8 @@ export const uptimeRouter = {
 		.output(scheduleOutputSchema.nullable())
 		.handler(async ({ context, input }) => {
 			const schedule = await db.query.uptimeSchedules.findFirst({
-				where: eq(uptimeSchedules.websiteId, input.websiteId),
-				orderBy: (table, { desc }) => [desc(table.createdAt)],
+				where: { websiteId: input.websiteId },
+				orderBy: { createdAt: "desc" },
 			});
 
 			if (schedule) {
@@ -159,8 +159,8 @@ export const uptimeRouter = {
 			});
 
 			return db.query.uptimeSchedules.findMany({
-				where: eq(uptimeSchedules.organizationId, orgId),
-				orderBy: (table, { desc }) => [desc(table.createdAt)],
+				where: { organizationId: orgId },
+				orderBy: { createdAt: "desc" },
 				with: { website: true },
 				limit: 100,
 			});
@@ -179,7 +179,7 @@ export const uptimeRouter = {
 		.handler(async ({ context, input }) => {
 			const [dbSchedule, schedulerActive] = await Promise.all([
 				db.query.uptimeSchedules.findFirst({
-					where: eq(uptimeSchedules.id, input.scheduleId),
+					where: { id: input.scheduleId },
 					with: { website: true },
 				}),
 				hasUptimeSchedule(input.scheduleId).catch(() => false),
@@ -242,10 +242,7 @@ export const uptimeRouter = {
 			});
 
 			const existing = await db.query.uptimeSchedules.findFirst({
-				where: and(
-					eq(uptimeSchedules.url, input.url),
-					eq(uptimeSchedules.organizationId, organizationId)
-				),
+				where: { url: input.url, organizationId },
 			});
 
 			if (existing) {
@@ -273,7 +270,7 @@ export const uptimeRouter = {
 			logger.info({ scheduleId, url: input.url }, "Schedule created");
 
 			const created = await db.query.uptimeSchedules.findFirst({
-				where: eq(uptimeSchedules.id, scheduleId),
+				where: { id: scheduleId },
 			});
 
 			return {
@@ -350,7 +347,7 @@ export const uptimeRouter = {
 			logger.info({ scheduleId: input.scheduleId }, "Schedule updated");
 
 			const schedule = await db.query.uptimeSchedules.findFirst({
-				where: eq(uptimeSchedules.id, input.scheduleId),
+				where: { id: input.scheduleId },
 			});
 
 			return {

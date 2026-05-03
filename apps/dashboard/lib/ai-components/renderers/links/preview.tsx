@@ -128,36 +128,45 @@ export function LinkPreviewRenderer({
 							<div>
 								<p className="text-muted-foreground text-xs">Target URL</p>
 								<pre className="mt-1 overflow-x-auto text-pretty break-all rounded bg-muted p-1.5 px-2 font-mono text-xs">
-									<code className="text-ring font-semibold">{link.targetUrl}</code>
+									<code className="font-semibold text-ring">
+										{link.targetUrl}
+									</code>
 								</pre>
 							</div>
 							<div>
 								<p className="text-muted-foreground text-xs">Short URL</p>
 								<pre className="mt-1 overflow-x-auto rounded bg-muted p-1.5 px-2 font-mono text-ring text-xs">
-									<code className="text-ring font-semibold">
+									<code className="font-semibold text-ring">
 										{link.slug === "(auto-generated)"
 											? "Will be auto-generated"
 											: `dby.sh/${link.slug}`}
 									</code>
 								</pre>
 							</div>
-							<div className="flex gap-2 mt-3">
-							{hasExpiration && (
-								<div className="w-full max-w-1/2 bg-muted/30 rounded-md px-2 py-1.5">
-									<p className="text-muted-foreground text-xs">Expires</p>
-									<p className="text-sm mt-0.5">{link.expiresAt ?? "Never"}</p>
-								</div>
-							)}
-							{hasOgData && (
-								<div className={cn(hasExpiration ? "" : "", "w-full max-w-1/2 bg-muted/30 rounded-md px-2 py-1.5")}>
-									<p className="text-muted-foreground text-xs">
-										Social Preview
-									</p>
-									<p className="text-sm mt-0.5">
-										{link.ogTitle ?? "Custom OG data set"}
-									</p>
-								</div>
-							)}
+							<div className="mt-3 flex gap-2">
+								{hasExpiration && (
+									<div className="w-full max-w-1/2 rounded-md bg-muted/30 px-2 py-1.5">
+										<p className="text-muted-foreground text-xs">Expires</p>
+										<p className="mt-0.5 text-sm">
+											{link.expiresAt ?? "Never"}
+										</p>
+									</div>
+								)}
+								{hasOgData && (
+									<div
+										className={cn(
+											hasExpiration ? "" : "",
+											"w-full max-w-1/2 rounded-md bg-muted/30 px-2 py-1.5"
+										)}
+									>
+										<p className="text-muted-foreground text-xs">
+											Social Preview
+										</p>
+										<p className="mt-0.5 text-sm">
+											{link.ogTitle ?? "Custom OG data set"}
+										</p>
+									</div>
+								)}
 							</div>
 						</div>
 					</div>

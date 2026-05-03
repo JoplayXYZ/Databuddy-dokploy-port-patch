@@ -28,7 +28,7 @@ import {
 	generateVueCode,
 	type VersionedScript,
 } from "../utils/code-generators";
-import type { TrackingOptionConfig, TrackingOptions } from "../utils/types";
+import type { TrackingOptionConfig } from "../utils/types";
 import {
 	ArrowClockwiseIcon,
 	BookOpenIcon,
@@ -36,7 +36,6 @@ import {
 	CheckIcon,
 	ClipboardIcon,
 	CodeIcon,
-	GlobeIcon,
 	LightningIcon,
 	PackageIcon,
 	PulseIcon,
@@ -91,7 +90,7 @@ function CodeBlock({
 				lang: getLanguage(code),
 				theme: "vesper",
 			}),
-		[code],
+		[code]
 	);
 
 	return (
@@ -101,7 +100,7 @@ function CodeBlock({
 					"overflow-x-auto font-mono text-[13px] leading-relaxed",
 					"[&>pre]:m-0 [&>pre]:overflow-visible [&>pre]:p-4 [&>pre]:leading-relaxed",
 					"[&>pre>code]:block [&>pre>code]:w-full",
-					"[&_.line]:min-h-5",
+					"[&_.line]:min-h-5"
 				)}
 				dangerouslySetInnerHTML={{ __html: highlighted }}
 			/>
@@ -139,7 +138,7 @@ function OptionToggle({
 			className={cn(
 				"flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors",
 				"hover:border-primary/40 hover:bg-accent/50",
-				isEnabled && "border-primary/30 bg-primary/5",
+				isEnabled && "border-primary/30 bg-primary/5"
 			)}
 			htmlFor={switchId}
 		>
@@ -194,13 +193,20 @@ const TROUBLESHOOTING_ITEMS = [
 function VueLogo({ className }: { className?: string }) {
 	return (
 		<svg
+			aria-hidden="true"
 			className={className}
 			fill="currentColor"
 			viewBox="0 0 256 221"
 			xmlns="http://www.w3.org/2000/svg"
 		>
-			<path d="M204.8 0H256L128 220.8L0 0h97.92L128 51.2L157.44 0h47.36Z" opacity="0.5" />
-			<path d="m0 0 128 220.8L256 0h-51.2L128 132.48 51.2 0H0Z" opacity="0.25" />
+			<path
+				d="M204.8 0H256L128 220.8L0 0h97.92L128 51.2L157.44 0h47.36Z"
+				opacity="0.5"
+			/>
+			<path
+				d="m0 0 128 220.8L256 0h-51.2L128 132.48 51.2 0H0Z"
+				opacity="0.25"
+			/>
 			<path d="M50.56 0 128 133.12 204.8 0h-47.36L128 51.2 97.92 0H50.56Z" />
 		</svg>
 	);
@@ -218,15 +224,19 @@ export function WebsiteTrackingSetupTab({ websiteId }: TrackingSetupTabProps) {
 	const { data: trackerVersionsData } = useQuery(
 		orpc.tracker.listVersions.queryOptions({
 			input: { filename: "databuddy.js" },
-		}),
+		})
 	);
 
 	const availableVersions = trackerVersionsData ?? [];
 
 	const activeVersionedScript = useMemo((): VersionedScript | undefined => {
-		if (!usePinnedVersion || !selectedVersion) return undefined;
+		if (!(usePinnedVersion && selectedVersion)) {
+			return;
+		}
 		const match = availableVersions.find((v) => v.version === selectedVersion);
-		if (!match) return undefined;
+		if (!match) {
+			return;
+		}
 		return {
 			version: match.version,
 			filename: `databuddy.v${match.version}.js`,
@@ -281,7 +291,7 @@ export function WebsiteTrackingSetupTab({ websiteId }: TrackingSetupTabProps) {
 					"flex items-center justify-between rounded-lg border p-3",
 					isSetup
 						? "border-success/30 bg-success/5"
-						: "border-amber-500/30 bg-amber-500/5",
+						: "border-amber-500/30 bg-amber-500/5"
 				)}
 			>
 				<div className="flex items-center gap-2.5">
@@ -343,10 +353,7 @@ export function WebsiteTrackingSetupTab({ websiteId }: TrackingSetupTabProps) {
 								<span className="text-muted-foreground">ID:</span>
 								<span className="max-w-32 truncate">{websiteId}</span>
 								{copiedBlockId === "client-id" ? (
-									<CheckIcon
-										className="size-3 text-success"
-										weight="bold"
-									/>
+									<CheckIcon className="size-3 text-success" weight="bold" />
 								) : (
 									<ClipboardIcon
 										className="size-3 opacity-50 transition-opacity group-hover:opacity-100"
@@ -357,7 +364,7 @@ export function WebsiteTrackingSetupTab({ websiteId }: TrackingSetupTabProps) {
 						</div>
 
 						<Tabs.Panel className="mt-4 space-y-3" value="script">
-							<p className="text-muted-foreground text-sm text-pretty">
+							<p className="text-pretty text-muted-foreground text-sm">
 								Add this to the{" "}
 								<code className="rounded bg-accent px-1.5 py-0.5 font-mono text-xs">
 									{"<head>"}
@@ -369,11 +376,7 @@ export function WebsiteTrackingSetupTab({ websiteId }: TrackingSetupTabProps) {
 								code={activeCode}
 								copied={copiedBlockId === "script-tag"}
 								onCopy={() =>
-									handleCopy(
-										activeCode,
-										"script-tag",
-										"Script tag copied!",
-									)
+									handleCopy(activeCode, "script-tag", "Script tag copied!")
 								}
 							/>
 
@@ -383,7 +386,7 @@ export function WebsiteTrackingSetupTab({ websiteId }: TrackingSetupTabProps) {
 										className={cn(
 											"flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors",
 											"hover:border-primary/40 hover:bg-accent/50",
-											usePinnedVersion && "border-primary/30 bg-primary/5",
+											usePinnedVersion && "border-primary/30 bg-primary/5"
 										)}
 										htmlFor="switch-pinned-version"
 									>
@@ -393,13 +396,8 @@ export function WebsiteTrackingSetupTab({ websiteId }: TrackingSetupTabProps) {
 											id="switch-pinned-version"
 											onCheckedChange={() => {
 												setUsePinnedVersion((prev) => !prev);
-												if (
-													!selectedVersion &&
-													availableVersions.length > 0
-												) {
-													setSelectedVersion(
-														availableVersions[0].version,
-													);
+												if (!selectedVersion && availableVersions.length > 0) {
+													setSelectedVersion(availableVersions[0].version);
 												}
 											}}
 										/>
@@ -428,7 +426,7 @@ export function WebsiteTrackingSetupTab({ websiteId }: TrackingSetupTabProps) {
 														"rounded-md border px-2.5 py-1 font-mono text-xs transition-colors",
 														selectedVersion === v.version
 															? "border-primary bg-primary/10 text-primary"
-															: "border-accent bg-accent hover:bg-accent-brighter",
+															: "border-accent bg-accent hover:bg-accent-brighter"
 													)}
 													key={v.version}
 													onClick={() => setSelectedVersion(v.version)}
@@ -481,19 +479,17 @@ export function WebsiteTrackingSetupTab({ websiteId }: TrackingSetupTabProps) {
 											>
 												<CodeBlock
 													code={command}
-													copied={
-														copiedBlockId === `react-${manager}-install`
-													}
+													copied={copiedBlockId === `react-${manager}-install`}
 													onCopy={() =>
 														handleCopy(
 															command,
 															`react-${manager}-install`,
-															"Command copied!",
+															"Command copied!"
 														)
 													}
 												/>
 											</Tabs.Panel>
-										),
+										)
 									)}
 								</Tabs>
 							</div>
@@ -506,11 +502,7 @@ export function WebsiteTrackingSetupTab({ websiteId }: TrackingSetupTabProps) {
 									code={npmCode}
 									copied={copiedBlockId === "react-code"}
 									onCopy={() =>
-										handleCopy(
-											npmCode,
-											"react-code",
-											"Code copied!",
-										)
+										handleCopy(npmCode, "react-code", "Code copied!")
 									}
 								/>
 							</div>
@@ -542,19 +534,17 @@ export function WebsiteTrackingSetupTab({ websiteId }: TrackingSetupTabProps) {
 											>
 												<CodeBlock
 													code={command}
-													copied={
-														copiedBlockId === `vue-${manager}-install`
-													}
+													copied={copiedBlockId === `vue-${manager}-install`}
 													onCopy={() =>
 														handleCopy(
 															command,
 															`vue-${manager}-install`,
-															"Command copied!",
+															"Command copied!"
 														)
 													}
 												/>
 											</Tabs.Panel>
-										),
+										)
 									)}
 								</Tabs>
 							</div>
@@ -566,13 +556,7 @@ export function WebsiteTrackingSetupTab({ websiteId }: TrackingSetupTabProps) {
 								<CodeBlock
 									code={vueCode}
 									copied={copiedBlockId === "vue-code"}
-									onCopy={() =>
-										handleCopy(
-											vueCode,
-											"vue-code",
-											"Code copied!",
-										)
-									}
+									onCopy={() => handleCopy(vueCode, "vue-code", "Code copied!")}
 								/>
 							</div>
 						</Tabs.Panel>
@@ -586,21 +570,23 @@ export function WebsiteTrackingSetupTab({ websiteId }: TrackingSetupTabProps) {
 						<h3 className="font-semibold text-sm">Tracking Options</h3>
 						<p className="text-muted-foreground text-xs tabular-nums">
 							{
-								[...BASIC_TRACKING_OPTIONS, ...ADVANCED_TRACKING_OPTIONS].filter(
-									(opt) => {
-										const value = trackingOptions[opt.key] as boolean;
-										return opt.inverted ? !value : value;
-									},
-								).length
+								[
+									...BASIC_TRACKING_OPTIONS,
+									...ADVANCED_TRACKING_OPTIONS,
+								].filter((opt) => {
+									const value = trackingOptions[opt.key] as boolean;
+									return opt.inverted ? !value : value;
+								}).length
 							}
-							/{BASIC_TRACKING_OPTIONS.length + ADVANCED_TRACKING_OPTIONS.length}{" "}
+							/
+							{BASIC_TRACKING_OPTIONS.length + ADVANCED_TRACKING_OPTIONS.length}{" "}
 							enabled
 						</p>
 					</div>
 
 					<div className="space-y-4">
 						<div>
-							<p className="mb-2 text-muted-foreground text-xs font-medium uppercase tracking-wide">
+							<p className="mb-2 font-medium text-muted-foreground text-xs uppercase tracking-wide">
 								Core
 							</p>
 							<div className="grid gap-2 sm:grid-cols-2">
@@ -608,9 +594,7 @@ export function WebsiteTrackingSetupTab({ websiteId }: TrackingSetupTabProps) {
 									<OptionToggle
 										enabled={trackingOptions[option.key] as boolean}
 										key={option.key}
-										onToggle={() =>
-											toggleTrackingOptionAction(option.key)
-										}
+										onToggle={() => toggleTrackingOptionAction(option.key)}
 										option={option}
 									/>
 								))}
@@ -618,7 +602,7 @@ export function WebsiteTrackingSetupTab({ websiteId }: TrackingSetupTabProps) {
 						</div>
 
 						<div>
-							<p className="mb-2 text-muted-foreground text-xs font-medium uppercase tracking-wide">
+							<p className="mb-2 font-medium text-muted-foreground text-xs uppercase tracking-wide">
 								Advanced
 							</p>
 							<div className="grid gap-2 sm:grid-cols-2">
@@ -626,9 +610,7 @@ export function WebsiteTrackingSetupTab({ websiteId }: TrackingSetupTabProps) {
 									<OptionToggle
 										enabled={trackingOptions[option.key] as boolean}
 										key={option.key}
-										onToggle={() =>
-											toggleTrackingOptionAction(option.key)
-										}
+										onToggle={() => toggleTrackingOptionAction(option.key)}
 										option={option}
 									/>
 								))}
@@ -655,14 +637,14 @@ export function WebsiteTrackingSetupTab({ websiteId }: TrackingSetupTabProps) {
 						<CaretDownIcon
 							className={cn(
 								"size-4 text-muted-foreground transition-transform",
-								troubleshootingOpen && "rotate-180",
+								troubleshootingOpen && "rotate-180"
 							)}
 							weight="bold"
 						/>
 					</button>
 
 					{troubleshootingOpen && (
-						<div className="border-t px-4 pb-4 pt-3">
+						<div className="border-t px-4 pt-3 pb-4">
 							<div className="space-y-3">
 								{TROUBLESHOOTING_ITEMS.map((item) => (
 									<div className="flex items-start gap-2.5" key={item.title}>
@@ -672,7 +654,7 @@ export function WebsiteTrackingSetupTab({ websiteId }: TrackingSetupTabProps) {
 										/>
 										<div className="min-w-0">
 											<p className="font-medium text-sm">{item.title}</p>
-											<p className="text-muted-foreground text-xs leading-relaxed text-pretty">
+											<p className="text-pretty text-muted-foreground text-xs leading-relaxed">
 												{item.description}
 											</p>
 										</div>

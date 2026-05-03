@@ -17,7 +17,7 @@ import { Prose } from "@/components/prose";
 import { SciFiCard } from "@/components/scifi-card";
 import { StructuredData } from "@/components/structured-data";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { getPosts, getSinglePost } from "@/lib/blog-query";
+import { getPosts, getSinglePost, isPublished } from "@/lib/blog-query";
 
 const STRIP_HTML_REGEX = /<[^>]+>/g;
 const WORD_SPLIT_REGEX = /\s+/;
@@ -30,7 +30,7 @@ export async function generateStaticParams() {
 		if ("error" in result) {
 			return [];
 		}
-		return result.posts.map((post) => ({
+		return result.posts.filter(isPublished).map((post) => ({
 			slug: post.slug,
 		}));
 	} catch {
@@ -99,7 +99,7 @@ export default async function PostPage({
 		status?: number;
 		statusText?: string;
 	};
-	if (!result?.post) {
+	if (!(result?.post && isPublished(result.post))) {
 		return (
 			<>
 				<div className="relative flex min-h-[60vh] w-full items-center justify-center overflow-hidden px-4 pt-10 sm:px-6 sm:pt-12 lg:px-8">

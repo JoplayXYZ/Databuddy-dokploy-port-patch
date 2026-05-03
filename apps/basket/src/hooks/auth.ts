@@ -5,8 +5,8 @@
  * client IDs and origins against registered websites.
  */
 
-import { and, db, eq } from "@databuddy/db";
-import { member, type Website, websites } from "@databuddy/db/schema";
+import { db } from "@databuddy/db";
+import type { Website } from "@databuddy/db/schema";
 import { cacheable } from "@databuddy/redis/cacheable";
 import { captureError, record } from "@lib/tracing";
 import { createError, EvlogError } from "evlog";
@@ -28,10 +28,7 @@ function _resolveOwnerId(
 
 		try {
 			const orgMember = await db.query.member.findFirst({
-				where: and(
-					eq(member.organizationId, organizationId),
-					eq(member.role, "owner")
-				),
+				where: { organizationId, role: "owner" },
 				columns: {
 					userId: true,
 				},
@@ -182,7 +179,7 @@ const getWebsiteByIdWithOwnerCached = cacheable(
 	async (id: string): Promise<WebsiteWithOwner | null> => {
 		try {
 			const website = await db.query.websites.findFirst({
-				where: eq(websites.id, id),
+				where: { id },
 			});
 
 			if (!website) {

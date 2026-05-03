@@ -51,6 +51,19 @@ export function ComparisonPageView({
 	return (
 		<div className="overflow-hidden">
 			<StructuredData
+				elements={
+					faqs.length
+						? [
+								{
+									type: "faq",
+									items: faqs.map((f) => ({
+										question: f.question,
+										answer: f.answer,
+									})),
+								},
+							]
+						: undefined
+				}
 				page={{
 					title: structuredTitle,
 					description: structuredDescription,

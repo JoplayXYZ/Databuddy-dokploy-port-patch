@@ -13,7 +13,6 @@ export function scoreToolRouting(
 	let score = 100;
 	const called = new Set(response.toolCalls.map((tc) => tc.name));
 
-	// Check expected tools were called
 	if (evalCase.expect.toolsCalled) {
 		for (const tool of evalCase.expect.toolsCalled) {
 			if (!called.has(tool)) {
@@ -23,7 +22,6 @@ export function scoreToolRouting(
 		}
 	}
 
-	// Check forbidden tools were NOT called
 	if (evalCase.expect.toolsNotCalled) {
 		for (const tool of evalCase.expect.toolsNotCalled) {
 			if (called.has(tool)) {
@@ -33,7 +31,6 @@ export function scoreToolRouting(
 		}
 	}
 
-	// Check batching
 	if (evalCase.expect.batchedQueries && !called.has("get_data")) {
 		score -= 25;
 		failures.push("Expected batched queries via get_data");
@@ -49,7 +46,6 @@ export function scoreBehavioral(
 	const failures: string[] = [];
 	let score = 100;
 
-	// Check responseContains
 	if (evalCase.expect.responseContains) {
 		const lower = response.textContent.toLowerCase();
 		for (const term of evalCase.expect.responseContains) {
@@ -60,7 +56,6 @@ export function scoreBehavioral(
 		}
 	}
 
-	// Check responseNotContains
 	if (evalCase.expect.responseNotContains) {
 		const lower = response.textContent.toLowerCase();
 		for (const term of evalCase.expect.responseNotContains) {
@@ -71,7 +66,6 @@ export function scoreBehavioral(
 		}
 	}
 
-	// Check confirmation flow (tool called with confirmed=false)
 	if (evalCase.expect.confirmationFlow) {
 		const hasConfirmFalse = response.textContent.includes("confirmed");
 		if (!hasConfirmFalse) {
@@ -92,7 +86,6 @@ export function scoreFormat(
 	const failures: string[] = [];
 	let score = 100;
 
-	// Check chart type
 	if (evalCase.expect.chartType) {
 		const hasChart = response.chartJSONs.some(
 			(c) => c.type === evalCase.expect.chartType
@@ -105,7 +98,6 @@ export function scoreFormat(
 		}
 	}
 
-	// Check valid chart JSON
 	if (evalCase.expect.validChartJSON) {
 		if (response.chartJSONs.length === 0) {
 			score -= 30;
@@ -113,7 +105,6 @@ export function scoreFormat(
 		} else {
 			for (const chart of response.chartJSONs) {
 				const p = chart.parsed as Record<string, unknown>;
-				// Row-oriented format check
 				if (
 					[
 						"line-chart",
@@ -139,7 +130,6 @@ export function scoreFormat(
 		}
 	}
 
-	// Check no raw JSON leaks
 	if (evalCase.expect.noRawJSON && response.rawJSONLeaks.length > 0) {
 		score -= 20;
 		failures.push(
@@ -155,7 +145,7 @@ export function scorePerformance(
 	response: ParsedAgentResponse
 ): ScoreResult {
 	const failures: string[] = [];
-	let score = 100;
+	let score: number;
 
 	const ms = response.latencyMs;
 	if (ms < 60_000) {
@@ -180,7 +170,7 @@ export function scorePerformance(
 
 	if (evalCase.expect.maxSteps && response.steps > evalCase.expect.maxSteps) {
 		const extra = response.steps - evalCase.expect.maxSteps;
-		score = Math.max(0, score - extra * 20);
+		score = Math.max(0, score - extra * 10);
 		failures.push(
 			`${response.steps} steps exceeds budget of ${evalCase.expect.maxSteps}`
 		);
@@ -189,9 +179,6 @@ export function scorePerformance(
 	return { score: Math.max(0, Math.min(100, score)), failures };
 }
 
-/**
- * Run all applicable scorers for a test case.
- */
 export function scoreCase(
 	evalCase: EvalCase,
 	response: ParsedAgentResponse

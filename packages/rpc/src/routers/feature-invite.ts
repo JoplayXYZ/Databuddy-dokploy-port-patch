@@ -1,4 +1,4 @@
-import { and, db, desc, eq, ne, withTransaction } from "@databuddy/db";
+import { and, db, eq, ne, withTransaction } from "@databuddy/db";
 import { featureInvite, flags } from "@databuddy/db/schema";
 import type { userRuleSchema } from "@databuddy/shared/flags";
 import { invalidateFlagCache } from "@databuddy/shared/flags/utils";
@@ -19,12 +19,20 @@ type UserRule = z.infer<typeof userRuleSchema>;
 
 // ── Helpers ─────────────────────────────────────────────────────────
 
-function userLinksWhere(flagKey: string, userId: string) {
-	return and(
-		eq(featureInvite.flagKey, flagKey),
-		eq(featureInvite.invitedById, userId),
-		ne(featureInvite.status, "revoked")
+function userLinksWhere(
+	t: typeof featureInvite,
+	flagKey: string,
+	userId: string
+) {
+	const condition = and(
+		eq(t.flagKey, flagKey),
+		eq(t.invitedById, userId),
+		ne(t.status, "revoked")
 	);
+	if (!condition) {
+		throw new Error("Expected invite link filter conditions");
+	}
+	return condition;
 }
 
 async function requireAccess(context: Context, flagKey: string): Promise<void> {
@@ -43,7 +51,7 @@ async function syncEmailToFlagRules(
 	const normalizedEmail = email.toLowerCase();
 
 	const matchingFlags = await db.query.flags.findMany({
-		where: eq(flags.key, flagKey),
+		where: { key: flagKey },
 		columns: { id: true, rules: true, websiteId: true, organizationId: true },
 		limit: 1000,
 	});
@@ -135,7 +143,7 @@ export const featureInviteRouter = {
 		)
 		.handler(async ({ input }) => {
 			const invite = await db.query.featureInvite.findFirst({
-				where: eq(featureInvite.token, input.token),
+				where: { token: input.token },
 				columns: { flagKey: true, status: true },
 			});
 
@@ -163,8 +171,8 @@ export const featureInviteRouter = {
 
 			return withTransaction(async (tx) => {
 				const existing = await tx.query.featureInvite.findMany({
-					where: userLinksWhere(input.flagKey, userId),
-					orderBy: [desc(featureInvite.createdAt)],
+					where: { RAW: (t) => userLinksWhere(t, input.flagKey, userId) },
+					orderBy: { createdAt: "desc" },
 					limit: MAX_LINKS_PER_FLAG,
 				});
 
@@ -184,8 +192,8 @@ export const featureInviteRouter = {
 				await tx.insert(featureInvite).values(newLinks);
 
 				return tx.query.featureInvite.findMany({
-					where: userLinksWhere(input.flagKey, userId),
-					orderBy: [desc(featureInvite.createdAt)],
+					where: { RAW: (t) => userLinksWhere(t, input.flagKey, userId) },
+					orderBy: { createdAt: "desc" },
 					limit: MAX_LINKS_PER_FLAG,
 				});
 			});
@@ -207,8 +215,8 @@ export const featureInviteRouter = {
 			await requireAccess(context as Context, input.flagKey);
 
 			return db.query.featureInvite.findMany({
-				where: userLinksWhere(input.flagKey, userId),
-				orderBy: [desc(featureInvite.createdAt)],
+				where: { RAW: (t) => userLinksWhere(t, input.flagKey, userId) },
+				orderBy: { createdAt: "desc" },
 				limit: MAX_LINKS_PER_FLAG,
 			});
 		}),
@@ -226,7 +234,7 @@ export const featureInviteRouter = {
 		.output(linkOutputSchema)
 		.handler(async ({ context, input }) => {
 			const invite = await db.query.featureInvite.findFirst({
-				where: eq(featureInvite.id, input.inviteId),
+				where: { id: input.inviteId },
 			});
 
 			if (!invite) {
@@ -266,7 +274,7 @@ export const featureInviteRouter = {
 
 			const result = await withTransaction(async (tx) => {
 				const invite = await tx.query.featureInvite.findFirst({
-					where: eq(featureInvite.token, input.token),
+					where: { token: input.token },
 				});
 
 				if (!invite) {
@@ -327,7 +335,7 @@ export const featureInviteRouter = {
 			const userId = context.user.id;
 
 			const links = await db.query.featureInvite.findMany({
-				where: userLinksWhere(input.flagKey, userId),
+				where: { RAW: (t) => userLinksWhere(t, input.flagKey, userId) },
 				columns: { id: true },
 				limit: MAX_LINKS_PER_FLAG,
 			});

@@ -30,6 +30,7 @@ import {
 	formatDateByGranularity,
 } from "../utils/analytics-helpers";
 import type { FullTabProps, MetricPoint } from "../utils/types";
+import { AITrafficSection } from "./overview/_components/ai-traffic-section";
 import { TrafficTrendsChart } from "./overview/_components/traffic-trends-chart";
 import {
 	ChartLineIcon,
@@ -89,6 +90,7 @@ interface AnalyticsRowData {
 	pageviews: number;
 	percentage: number;
 	referrer?: string;
+	referrer_type?: string;
 	visitors: number;
 }
 
@@ -936,6 +938,11 @@ export function WebsiteOverviewTab({
 				isMobile={isMobile}
 				onRangeSelect={setDateRangeAction}
 				websiteId={websiteId}
+			/>
+
+			<AITrafficSection
+				isLoading={isLoading}
+				referrers={analytics.top_referrers || []}
 			/>
 
 			<div className="grid grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-2">

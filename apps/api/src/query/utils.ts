@@ -46,6 +46,7 @@ export function applyPlugins(
 				name: parsed.name,
 				referrer: url,
 				domain: parsed.domain,
+				referrer_type: parsed.type,
 			};
 		});
 	}

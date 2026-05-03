@@ -630,7 +630,8 @@ function LinkSheetInner({ open, onOpenChange, link, onSave }: LinkSheetProps) {
 									loading={isPending}
 									type="submit"
 								>
-									Save Changes								</Button>
+									Save Changes{" "}
+								</Button>
 							</Sheet.Footer>
 						</Tabs>
 					) : (
@@ -649,7 +650,8 @@ function LinkSheetInner({ open, onOpenChange, link, onSave }: LinkSheetProps) {
 									loading={isPending}
 									type="submit"
 								>
-									Create Link								</Button>
+									Create Link{" "}
+								</Button>
 							</Sheet.Footer>
 						</>
 					)}

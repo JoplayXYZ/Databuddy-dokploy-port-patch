@@ -1,11 +1,12 @@
-type SectionBulletProps = {
+interface SectionBulletProps {
 	color: string;
-};
+}
 
 export function SectionBullet({ color }: SectionBulletProps) {
 	return (
 		<div>
 			<svg
+				aria-hidden="true"
 				className="h-6 w-4 sm:h-7 sm:w-5 md:h-8 md:w-6"
 				fill="none"
 				viewBox="0 0 26 39"

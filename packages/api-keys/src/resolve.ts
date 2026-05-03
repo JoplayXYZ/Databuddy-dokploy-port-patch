@@ -36,7 +36,7 @@ type CachedResolveResult =
 const getCachedApiKeyByHash = cacheable(
 	async (keyHash: string): Promise<CachedResolveResult> => {
 		const key = await db.query.apikey.findFirst({
-			where: eq(apikey.keyHash, keyHash),
+			where: { keyHash },
 		});
 		if (!key) {
 			return { outcome: "invalid", key: null };

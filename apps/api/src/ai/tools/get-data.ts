@@ -88,8 +88,7 @@ function resolveDates(item: QueryItem): { from: string; to: string } {
 }
 
 export const getDataTool = tool({
-	description:
-		"Batch 1-10 analytics query builder queries in parallel. Common types: summary_metrics, today_metrics, traffic, top_pages, top_referrers, sessions_*, device_types, browsers, country, city, errors_*, performance_*, custom_events_*, profile_list, vitals_*, revenue_*. Use preset (last_7d/last_30d/…) or from+to dates. Server returns valid types on unknown input.",
+	description: `Batch 1-10 analytics query builder queries in parallel. Use preset (last_7d/last_30d/…) or from+to dates. Valid types: ${Object.keys(QueryBuilders).join(", ")}.`,
 	inputSchema: z.object({
 		websiteId: z.string(),
 		queries: z.array(queryItemSchema).min(1).max(10),

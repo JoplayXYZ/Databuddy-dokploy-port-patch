@@ -88,9 +88,7 @@ export function AgentCreditBalance({
 			}
 		>
 			<motion.div
-				animate={
-					shakeNonce === 0 ? { x: 0 } : { x: [0, -2, 2, -2, 2, 0] }
-				}
+				animate={shakeNonce === 0 ? { x: 0 } : { x: [0, -2, 2, -2, 2, 0] }}
 				className="inline-flex max-w-full"
 				initial={{ x: 0 }}
 				key={shakeNonce}
@@ -111,9 +109,7 @@ export function AgentCreditBalance({
 					size="sm"
 					variant="secondary"
 				>
-					{variant === "compact" ? null : (
-						<CoinsIcon className="size-3" />
-					)}
+					{variant === "compact" ? null : <CoinsIcon className="size-3" />}
 					<span className="font-medium tabular-nums">{label}</span>
 				</Button>
 			</motion.div>

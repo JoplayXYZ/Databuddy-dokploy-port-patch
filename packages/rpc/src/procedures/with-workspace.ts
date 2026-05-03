@@ -5,8 +5,7 @@ import {
 	requiredScopesForResource,
 } from "@databuddy/api-keys/scopes";
 import type { PermissionFor, ResourceType, User } from "@databuddy/auth";
-import { db, eq } from "@databuddy/db";
-import { websites } from "@databuddy/db/schema";
+import { db } from "@databuddy/db";
 import { cacheable } from "@databuddy/redis";
 import type { PlanId } from "@databuddy/shared/types/features";
 import { z } from "zod";
@@ -42,7 +41,7 @@ const getWebsiteById = cacheable(
 		}
 		try {
 			return await db.query.websites.findFirst({
-				where: eq(websites.id, id),
+				where: { id },
 			});
 		} catch (error) {
 			logger.error({ error, id }, "Error fetching website by ID");
@@ -63,8 +62,7 @@ const _getOrganizationRole = async (
 ): Promise<string | null> => {
 	try {
 		const membership = await db.query.member.findFirst({
-			where: (m, { and, eq }) =>
-				and(eq(m.userId, userId), eq(m.organizationId, organizationId)),
+			where: { userId, organizationId },
 			columns: { role: true },
 		});
 		return membership?.role ?? null;
@@ -321,8 +319,7 @@ async function _resolveCreatedBy(
 
 	if (context.apiKey) {
 		const ownerRow = await db.query.member.findFirst({
-			where: (m, { and, eq }) =>
-				and(eq(m.organizationId, organizationId), eq(m.role, "owner")),
+			where: { organizationId, role: "owner" },
 			columns: { userId: true },
 		});
 		if (!ownerRow) {

@@ -111,9 +111,7 @@ export function StatusPagesSearchBar({
 					</DropdownMenu.Group>
 					<DropdownMenu.Separator />
 					<DropdownMenu.RadioGroup
-						onValueChange={(value) =>
-							onSortByChangeAction(value as SortOption)
-						}
+						onValueChange={(value) => onSortByChangeAction(value as SortOption)}
 						value={sortBy}
 					>
 						<DropdownMenu.RadioItem value="newest">

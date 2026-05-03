@@ -39,6 +39,7 @@ export interface CaseMetrics {
 }
 
 export interface ToolCallRecord {
+	index: number;
 	input: unknown;
 	name: string;
 	output: unknown;
@@ -51,6 +52,7 @@ export interface CaseResult {
 	metrics: CaseMetrics;
 	name: string;
 	passed: boolean;
+	qualityDetail?: JudgeScores;
 	query: string;
 	response: string;
 	scores: Partial<ScoreCard>;
@@ -63,6 +65,7 @@ export interface EvalRun {
 	cases: CaseResult[];
 	dimensions: ScoreCard;
 	duration: number;
+	judgeModel?: string;
 	model: string;
 	summary: {
 		total: number;
@@ -80,6 +83,7 @@ export interface JudgeScores {
 	communication: number;
 	completeness: number;
 	dataGrounding: number;
+	explanation?: string;
 }
 
 export interface ParsedAgentResponse {
@@ -90,7 +94,7 @@ export interface ParsedAgentResponse {
 	rawJSONLeaks: string[];
 	steps: number;
 	textContent: string;
-	toolCalls: Array<{ name: string; input: unknown; output: unknown }>;
+	toolCalls: ToolCallRecord[];
 }
 
 export interface EvalConfig {
@@ -99,5 +103,4 @@ export interface EvalConfig {
 	authCookie?: string;
 	judgeModel?: string;
 	modelOverride?: string;
-	skipJudge: boolean;
 }

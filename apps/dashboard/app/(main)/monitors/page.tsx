@@ -128,9 +128,8 @@ export default function MonitorsPage() {
 									<ArrowClockwiseIcon
 										className={cn(
 											"size-3.5",
-											(schedulesQuery.isLoading ||
-												schedulesQuery.isFetching) &&
-												"animate-spin",
+											(schedulesQuery.isLoading || schedulesQuery.isFetching) &&
+												"animate-spin"
 										)}
 									/>
 								</Button>
@@ -161,7 +160,7 @@ export default function MonitorsPage() {
 								</div>
 							)}
 
-							{!isLoading && !hasMonitors && (
+							{!(isLoading || hasMonitors) && (
 								<div className="px-5 py-12">
 									<EmptyState
 										action={

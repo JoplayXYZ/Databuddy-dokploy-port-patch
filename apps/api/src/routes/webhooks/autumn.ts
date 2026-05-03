@@ -1,5 +1,5 @@
-import { and, db, eq, gt } from "@databuddy/db";
-import { usageAlertLog, user } from "@databuddy/db/schema";
+import { db } from "@databuddy/db";
+import { usageAlertLog } from "@databuddy/db/schema";
 import { render, UsageAlertEmail, UsageLimitEmail } from "@databuddy/email";
 import { SlackProvider } from "@databuddy/notifications";
 import { cacheable } from "@databuddy/redis";
@@ -72,7 +72,7 @@ const getUserData = cacheable(
 		customerId: string
 	): Promise<{ email: string | null; name: string | null }> => {
 		const row = await db.query.user.findFirst({
-			where: eq(user.id, customerId),
+			where: { id: customerId },
 			columns: { email: true, name: true },
 		});
 		return { email: row?.email ?? null, name: row?.name ?? null };
@@ -92,11 +92,7 @@ function formatFeatureId(id: string): string {
 async function wasRecentlySent(userId: string, key: string): Promise<boolean> {
 	const since = new Date(Date.now() - COOLDOWN_MS);
 	const row = await db.query.usageAlertLog.findFirst({
-		where: and(
-			eq(usageAlertLog.userId, userId),
-			eq(usageAlertLog.featureId, key),
-			gt(usageAlertLog.createdAt, since)
-		),
+		where: { userId, featureId: key, createdAt: { gt: since } },
 		columns: { id: true },
 	});
 	return Boolean(row);

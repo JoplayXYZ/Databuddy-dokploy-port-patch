@@ -2,11 +2,9 @@
 
 import { drizzle, type NodePgDatabase } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
-import * as schema from "./drizzle/schema";
+import { relations } from "./drizzle/schema/relations";
 
-const fullSchema = schema;
-
-type DB = NodePgDatabase<typeof fullSchema>;
+type DB = NodePgDatabase<typeof relations>;
 
 let _pgTraceFn: ((durationMs: number) => void) | null = null;
 
@@ -83,14 +81,14 @@ function getDb(): DB {
 		_pool = instrumentedPool(
 			new Pool({
 				connectionString: connectionStringForNodePg(databaseUrl),
-				max: Number.parseInt(process.env.DB_POOL_MAX ?? "20", 10) || 20,
+				max: Number.parseInt(process.env.DB_POOL_MAX ?? "50", 10) || 50,
 				idleTimeoutMillis: 30_000,
 				connectionTimeoutMillis: 5000,
 				application_name: process.env.SERVICE_NAME || "databuddy",
 			})
 		);
 
-		_db = drizzle(_pool, { schema: fullSchema });
+		_db = drizzle({ client: _pool, relations, jit: true });
 	}
 	return _db;
 }

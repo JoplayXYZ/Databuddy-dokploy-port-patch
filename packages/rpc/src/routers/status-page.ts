@@ -1,12 +1,4 @@
-import {
-	and,
-	db,
-	desc,
-	eq,
-	gte,
-	inArray,
-	withTransaction,
-} from "@databuddy/db";
+import { and, db, desc, eq, inArray, withTransaction } from "@databuddy/db";
 import { chQuery } from "@databuddy/db/clickhouse";
 import {
 	incidentAffectedMonitors,
@@ -366,15 +358,15 @@ async function _fetchStatusPageData(
 					)
 				: Promise.resolve([]),
 			db.query.incidents.findMany({
-				where: and(
-					eq(incidents.statusPageId, rows[0].statusPageId),
-					gte(incidents.createdAt, ninetyDaysAgoDate)
-				),
-				orderBy: [desc(incidents.createdAt)],
+				where: {
+					statusPageId: rows[0].statusPageId,
+					createdAt: { gte: ninetyDaysAgoDate },
+				},
+				orderBy: { createdAt: "desc" },
 				limit: 50,
 				with: {
 					updates: {
-						orderBy: [desc(incidentUpdates.createdAt)],
+						orderBy: { createdAt: "desc" },
 						limit: 20,
 					},
 					affectedMonitors: true,
@@ -605,8 +597,8 @@ export const statusPageRouter = {
 			});
 
 			const pages = await db.query.statusPages.findMany({
-				where: eq(statusPages.organizationId, input.organizationId),
-				orderBy: (statusPages, { desc }) => [desc(statusPages.createdAt)],
+				where: { organizationId: input.organizationId },
+				orderBy: { createdAt: "desc" },
 				with: {
 					statusPageMonitors: {
 						columns: { id: true },
@@ -635,7 +627,7 @@ export const statusPageRouter = {
 		)
 		.handler(async ({ context, input }) => {
 			const statusPage = await db.query.statusPages.findFirst({
-				where: eq(statusPages.id, input.statusPageId),
+				where: { id: input.statusPageId },
 				with: {
 					statusPageMonitors: {
 						with: {
@@ -648,7 +640,7 @@ export const statusPageRouter = {
 								},
 							},
 						},
-						orderBy: (monitors, { asc }) => [asc(monitors.order)],
+						orderBy: { order: "asc" },
 					},
 				},
 			});
@@ -702,7 +694,7 @@ export const statusPageRouter = {
 			});
 
 			const existing = await db.query.statusPages.findFirst({
-				where: eq(statusPages.slug, input.slug),
+				where: { slug: input.slug },
 			});
 
 			if (existing) {
@@ -727,7 +719,7 @@ export const statusPageRouter = {
 			});
 
 			return db.query.statusPages.findFirst({
-				where: eq(statusPages.id, id),
+				where: { id },
 			});
 		}),
 
@@ -755,7 +747,7 @@ export const statusPageRouter = {
 		)
 		.handler(async ({ context, input }) => {
 			const statusPage = await db.query.statusPages.findFirst({
-				where: eq(statusPages.id, input.statusPageId),
+				where: { id: input.statusPageId },
 			});
 
 			if (!statusPage) {
@@ -770,7 +762,7 @@ export const statusPageRouter = {
 
 			if (input.slug && input.slug !== statusPage.slug) {
 				const existing = await db.query.statusPages.findFirst({
-					where: eq(statusPages.slug, input.slug),
+					where: { slug: input.slug },
 				});
 
 				if (existing) {
@@ -811,7 +803,7 @@ export const statusPageRouter = {
 			}
 
 			return db.query.statusPages.findFirst({
-				where: eq(statusPages.id, input.statusPageId),
+				where: { id: input.statusPageId },
 			});
 		}),
 
@@ -829,7 +821,7 @@ export const statusPageRouter = {
 		)
 		.handler(async ({ context, input }) => {
 			const statusPage = await db.query.statusPages.findFirst({
-				where: eq(statusPages.id, input.statusPageId),
+				where: { id: input.statusPageId },
 			});
 
 			if (!statusPage) {
@@ -868,7 +860,7 @@ export const statusPageRouter = {
 		.output(z.object({ success: z.literal(true) }))
 		.handler(async ({ context, input }) => {
 			const statusPage = await db.query.statusPages.findFirst({
-				where: eq(statusPages.id, input.statusPageId),
+				where: { id: input.statusPageId },
 				with: {
 					statusPageMonitors: {
 						columns: { uptimeScheduleId: true },
@@ -944,7 +936,7 @@ export const statusPageRouter = {
 		)
 		.handler(async ({ context, input }) => {
 			const statusPage = await db.query.statusPages.findFirst({
-				where: eq(statusPages.id, input.statusPageId),
+				where: { id: input.statusPageId },
 			});
 
 			if (!statusPage) {
@@ -958,10 +950,10 @@ export const statusPageRouter = {
 			});
 
 			const existing = await db.query.statusPageMonitors.findFirst({
-				where: and(
-					eq(statusPageMonitors.statusPageId, input.statusPageId),
-					eq(statusPageMonitors.uptimeScheduleId, input.uptimeScheduleId)
-				),
+				where: {
+					statusPageId: input.statusPageId,
+					uptimeScheduleId: input.uptimeScheduleId,
+				},
 			});
 
 			if (existing) {
@@ -979,7 +971,7 @@ export const statusPageRouter = {
 			await invalidateCacheableWithArgs("status-page", [statusPage.slug]);
 
 			return db.query.statusPageMonitors.findFirst({
-				where: eq(statusPageMonitors.id, id),
+				where: { id },
 			});
 		}),
 
@@ -998,7 +990,7 @@ export const statusPageRouter = {
 		)
 		.handler(async ({ context, input }) => {
 			const statusPage = await db.query.statusPages.findFirst({
-				where: eq(statusPages.id, input.statusPageId),
+				where: { id: input.statusPageId },
 			});
 
 			if (!statusPage) {
@@ -1044,7 +1036,7 @@ export const statusPageRouter = {
 		)
 		.handler(async ({ context, input }) => {
 			const monitor = await db.query.statusPageMonitors.findFirst({
-				where: eq(statusPageMonitors.id, input.monitorId),
+				where: { id: input.monitorId },
 				with: {
 					statusPage: true,
 				},
@@ -1083,7 +1075,7 @@ export const statusPageRouter = {
 			]);
 
 			return db.query.statusPageMonitors.findFirst({
-				where: eq(statusPageMonitors.id, input.monitorId),
+				where: { id: input.monitorId },
 			});
 		}),
 
@@ -1114,7 +1106,7 @@ export const statusPageRouter = {
 		.handler(async ({ context, input }) => {
 			setTrackProperties({ severity: input.severity ?? "minor" });
 			const statusPage = await db.query.statusPages.findFirst({
-				where: eq(statusPages.id, input.statusPageId),
+				where: { id: input.statusPageId },
 			});
 
 			if (!statusPage) {
@@ -1161,7 +1153,7 @@ export const statusPageRouter = {
 			await invalidateCacheableWithArgs("status-page", [statusPage.slug]);
 
 			return db.query.incidents.findFirst({
-				where: eq(incidents.id, incidentId),
+				where: { id: incidentId },
 				with: { updates: true, affectedMonitors: true },
 			});
 		}),
@@ -1183,7 +1175,7 @@ export const statusPageRouter = {
 		.handler(async ({ context, input }) => {
 			setTrackProperties({ status: input.status });
 			const incident = await db.query.incidents.findFirst({
-				where: eq(incidents.id, input.incidentId),
+				where: { id: input.incidentId },
 				with: { statusPage: true },
 			});
 
@@ -1219,8 +1211,8 @@ export const statusPageRouter = {
 			]);
 
 			return db.query.incidents.findFirst({
-				where: eq(incidents.id, input.incidentId),
-				with: { updates: { orderBy: [desc(incidentUpdates.createdAt)] } },
+				where: { id: input.incidentId },
+				with: { updates: { orderBy: { createdAt: "desc" } } },
 			});
 		}),
 
@@ -1234,7 +1226,7 @@ export const statusPageRouter = {
 		.input(z.object({ incidentId: z.string() }))
 		.handler(async ({ context, input }) => {
 			const incident = await db.query.incidents.findFirst({
-				where: eq(incidents.id, input.incidentId),
+				where: { id: input.incidentId },
 				with: { statusPage: true },
 			});
 
@@ -1267,7 +1259,7 @@ export const statusPageRouter = {
 		.input(z.object({ statusPageId: z.string() }))
 		.handler(async ({ context, input }) => {
 			const statusPage = await db.query.statusPages.findFirst({
-				where: eq(statusPages.id, input.statusPageId),
+				where: { id: input.statusPageId },
 			});
 
 			if (!statusPage) {
@@ -1281,11 +1273,11 @@ export const statusPageRouter = {
 			});
 
 			return db.query.incidents.findMany({
-				where: eq(incidents.statusPageId, input.statusPageId),
-				orderBy: [desc(incidents.createdAt)],
+				where: { statusPageId: input.statusPageId },
+				orderBy: { createdAt: "desc" },
 				with: {
 					updates: {
-						orderBy: [desc(incidentUpdates.createdAt)],
+						orderBy: { createdAt: "desc" },
 					},
 					affectedMonitors: {
 						with: {

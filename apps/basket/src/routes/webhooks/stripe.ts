@@ -1,7 +1,7 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { clickHouse } from "@databuddy/db/clickhouse";
 import { Elysia } from "elysia";
-import { useLogger } from "evlog/elysia";
+import { evlog, useLogger } from "evlog/elysia";
 import { getDailySalt, saltAnonymousId } from "@lib/security";
 import { formatDate, getWebhookConfig, resolveWebsiteId } from "./shared";
 
@@ -544,7 +544,7 @@ async function handleRefund(
 	}
 }
 
-export const stripeWebhook = new Elysia().post(
+export const stripeWebhook = new Elysia().use(evlog()).post(
 	"/webhooks/stripe/:hash",
 	async ({ params, request, set }) => {
 		const log = useLogger();

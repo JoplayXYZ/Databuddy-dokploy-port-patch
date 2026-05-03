@@ -1,14 +1,7 @@
 "use client";
 
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import {
-	useCallback,
-	useEffect,
-	memo,
-	useMemo,
-	useRef,
-	useState,
-} from "react";
+import { useCallback, useEffect, memo, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import {
 	BrainIcon,
@@ -195,11 +188,7 @@ export function AgentInput() {
 	};
 
 	return (
-		<form
-			className="z-10 mt-auto"
-			onSubmit={handleSubmit}
-			ref={formRef}
-		>
+		<form className="z-10 mt-auto" onSubmit={handleSubmit} ref={formRef}>
 			{pendingMessages.length > 0 ? (
 				<PendingPill
 					messages={pendingMessages}
@@ -212,7 +201,7 @@ export function AgentInput() {
 				anchor={
 					<div
 						className={cn(
-							"rounded-lg border border-border/60 bg-muted p-1 shadow-sm transition-colors space-y-1.5",
+							"space-y-1.5 rounded-lg border border-border/60 bg-muted p-1 shadow-sm transition-colors",
 							"focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/50"
 						)}
 					>
@@ -222,8 +211,8 @@ export function AgentInput() {
 									active={input.length === 0 && !isLoading}
 									className="text-muted-foreground/80 text-sm"
 									key={placeholderReplayKey}
-									phrases={AGENT_INPUT_PLACEHOLDER_PHRASES}
 									nostagger
+									phrases={AGENT_INPUT_PLACEHOLDER_PHRASES}
 								/>
 							</div>
 							<Textarea
@@ -235,26 +224,26 @@ export function AgentInput() {
 								)}
 								maxRows={8}
 								minRows={1}
-								rows={1}
 								onBlur={() => schedulePlaceholderReplayIfIdle(false)}
 								onChange={(e) => handleInputChange(e.target.value)}
 								onKeyDown={handleMessageKeyDown}
 								ref={textareaRef}
+								rows={1}
 								showFocusIndicator={false}
 								value={input}
 							/>
 						</section>
 
-						<div className="flex items-center justify-between gap-3 border-border/60 bg-background px-1.5 py-1.5 rounded">
+						<div className="flex items-center justify-between gap-3 rounded border-border/60 bg-background px-1.5 py-1.5">
 							<div className="flex gap-1">
 								<Tooltip content="Attach file (coming soon)" side="top">
 									<Button
-										variant="secondary"
 										aria-label="Attach file"
 										className="size-7"
 										disabled
 										size="icon"
 										type="button"
+										variant="secondary"
 									>
 										<PaperclipIcon className="size-3.5" />
 									</Button>
@@ -263,7 +252,7 @@ export function AgentInput() {
 								<ThinkingControl />
 							</div>
 
-							<div className="flex shrink-0 items-center gap-3 ml-auto">
+							<div className="ml-auto flex shrink-0 items-center gap-3">
 								<KeyboardHints isLoading={isLoading} />
 								{isLoading ? (
 									<Button
@@ -381,22 +370,18 @@ const ThinkingControl = memo(function ThinkingControl({
 				{THINKING_DESCRIPTIONS[thinking]}
 			</span>
 		</div>
-	) : "Not available for this model";
+	) : (
+		"Not available for this model"
+	);
 
 	return (
-		<Tooltip
-			content={tooltipContent}
-			delay={250}
-			side="top"
-		>
+		<Tooltip content={tooltipContent} delay={250} side="top">
 			<Button
 				aria-label={`Thinking effort: ${THINKING_LABELS[thinking]}. Click to cycle.`}
 				className={cn(
 					iconOnly ? "border-transparent" : "h-7 gap-1 border px-2 text-xs",
 					!iconOnly && compact && "h-7 px-1.5 text-[11px]",
-					isOn
-						? "border-0"
-						: "",
+					isOn ? "border-0" : "",
 					!(isOn || iconOnly) && "border-transparent hover:border-border/60"
 				)}
 				disabled={!supportsThinking}
@@ -408,11 +393,11 @@ const ThinkingControl = memo(function ThinkingControl({
 				{iconOnly ? null : (
 					<AnimatePresence initial={false} mode="popLayout">
 						<motion.span
-							key={thinking}
 							animate={{ filter: "blur(0px)", opacity: 1 }}
 							className="font-medium"
 							exit={{ filter: "blur(4px)", opacity: 0 }}
 							initial={{ filter: "blur(4px)", opacity: 0 }}
+							key={thinking}
 							transition={THINKING_LABEL_TRANSITION}
 						>
 							{THINKING_LABELS[thinking]}
@@ -467,13 +452,13 @@ const TierControl = memo(function TierControl() {
 			>
 				<DropdownMenu.Trigger
 					aria-label={`Model tier: ${TIER_LABELS[tier]}`}
-					className="inline-flex h-7 items-center gap-1 rounded border border-transparent bg-secondary px-2 font-medium text-xs text-foreground transition-all hover:border-border/60 hover:bg-interactive-hover"
+					className="inline-flex h-7 items-center gap-1 rounded border border-transparent bg-secondary px-2 font-medium text-foreground text-xs transition-all hover:border-border/60 hover:bg-interactive-hover"
 				>
 					<TierIcon className="size-3.5" tier={tier} />
 					{TIER_LABELS[tier]}
 					<CaretDownIcon
 						className={cn(
-							"size-3 -mt-px transition-transform duration-150 ease-out motion-reduce:transition-none",
+							"-mt-px size-3 transition-transform duration-150 ease-out motion-reduce:transition-none",
 							tierMenuOpen && "rotate-180"
 						)}
 					/>
@@ -482,20 +467,20 @@ const TierControl = memo(function TierControl() {
 			<DropdownMenu.Content align="start" className="w-52">
 				{AGENT_TIERS.map((optionTier) => (
 					<DropdownMenu.Item
+						className="h-10"
 						key={optionTier}
 						onClick={() => selectTier(optionTier)}
-						className="h-10"
 					>
 						<div className="flex min-w-0 items-start gap-2">
 							<TierIcon className="mt-0.5 size-4 shrink-0" tier={optionTier} />
 							<div className="flex min-w-0 flex-col">
-							<span className="font-medium text-xs">
-								{TIER_LABELS[optionTier]}
-								{tier === optionTier ? " (Current)" : ""}
-							</span>
-							<span className="text-muted-foreground text-[11px]">
-								{TIER_DESCRIPTIONS[optionTier]}
-							</span>
+								<span className="font-medium text-xs">
+									{TIER_LABELS[optionTier]}
+									{tier === optionTier ? " (Current)" : ""}
+								</span>
+								<span className="text-[11px] text-muted-foreground">
+									{TIER_DESCRIPTIONS[optionTier]}
+								</span>
 							</div>
 						</div>
 					</DropdownMenu.Item>
@@ -531,7 +516,7 @@ const KeyboardHints = memo(function KeyboardHints({
 		return <GeneratingHint />;
 	}
 	return (
-		<div className="hidden min-w-0 items-center gap-1 text-muted-foreground/60 text-[10px] sm:flex">
+		<div className="hidden min-w-0 items-center gap-1 text-[10px] text-muted-foreground/60 sm:flex">
 			<Kbd>↵</Kbd>
 			<span className="mr-1">send</span>
 			<Kbd>⇧↵</Kbd>

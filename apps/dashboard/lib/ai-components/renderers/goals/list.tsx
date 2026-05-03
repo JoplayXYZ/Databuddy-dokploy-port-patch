@@ -10,8 +10,6 @@ import { type CreateGoalData, type Goal, useGoals } from "@/hooks/use-goals";
 import { cn } from "@/lib/utils";
 import type { BaseComponentProps } from "../../types";
 import {
-	ArrowRightIcon,
-	CheckIcon,
 	CopyIcon,
 	DotsThreeIcon,
 	EyeIcon,
@@ -84,7 +82,7 @@ function GoalRow({
 	onEdit: () => void;
 	onDelete: () => void;
 }) {
-	const { copyToClipboard, isCopied } = useCopyToClipboard({
+	const { copyToClipboard } = useCopyToClipboard({
 		onCopy: () => toast.success("Target copied"),
 	});
 
@@ -124,19 +122,22 @@ function GoalRow({
 			<div className="min-w-0 flex-1">
 				<div className="flex items-center gap-2">
 					<p className="truncate font-medium text-sm">{goal.name}</p>
-				<div className="flex items-center gap-1">
-				<Badge className="rounded px-1.5 py-0.5! text-[10px]!" variant="muted">
-						{goalTypeLabel(goal.type)}
-					</Badge>
-					{!goal.isActive && (
+					<div className="flex items-center gap-1">
 						<Badge
-							className="rounded px-1.5 py-0.5 text-[10px]!"
-							variant="default"
+							className="rounded px-1.5 py-0.5! text-[10px]!"
+							variant="muted"
 						>
-							Paused
+							{goalTypeLabel(goal.type)}
 						</Badge>
-					)}
-				</div>
+						{!goal.isActive && (
+							<Badge
+								className="rounded px-1.5 py-0.5 text-[10px]!"
+								variant="default"
+							>
+								Paused
+							</Badge>
+						)}
+					</div>
 				</div>
 				<div className="mt-1 flex items-center gap-2">
 					<button
@@ -144,7 +145,7 @@ function GoalRow({
 						onClick={handleCopyButton}
 						type="button"
 					>
-						<span className="max-w-[7rem] text-ring truncate">
+						<span className="max-w-[7rem] truncate text-ring">
 							{formatGoalTargetDisplay(goal.target, 28)}
 						</span>
 					</button>

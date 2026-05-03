@@ -36,7 +36,7 @@ function thinkingProviderOptions(
 	modelKey: AgentModelKey
 ): AgentConfig["providerOptions"] {
 	const tier = TIER_CONFIG[modelKey];
-	if (!tier.supportsThinking || !thinking || thinking === "off") {
+	if (!(tier.supportsThinking && thinking) || thinking === "off") {
 		return;
 	}
 	const budget = tier.thinkingBudgets?.[thinking];

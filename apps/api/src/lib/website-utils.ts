@@ -4,8 +4,7 @@ import {
 	isApiKeyPresent,
 } from "@databuddy/api-keys/resolve";
 import { auth } from "@databuddy/auth";
-import { db, eq, inArray } from "@databuddy/db";
-import { userPreferences, websites } from "@databuddy/db/schema";
+import { db } from "@databuddy/db";
 import { cacheable } from "@databuddy/redis";
 import type { Website } from "@databuddy/shared/types/website";
 import { record } from "./tracing";
@@ -27,7 +26,7 @@ const getCachedWebsite = cacheable(
 	async (websiteId: string) => {
 		try {
 			const website = await db.query.websites.findFirst({
-				where: eq(websites.id, websiteId),
+				where: { id: websiteId },
 			});
 			return website || null;
 		} catch {
@@ -46,7 +45,7 @@ const getWebsiteDomain = cacheable(
 	async (websiteId: string): Promise<string | null> => {
 		try {
 			const website = await db.query.websites.findFirst({
-				where: eq(websites.id, websiteId),
+				where: { id: websiteId },
 			});
 			return website?.domain || null;
 		} catch {
@@ -69,7 +68,7 @@ const getCachedWebsiteDomain = cacheable(
 
 		try {
 			const websitesList = await db.query.websites.findMany({
-				where: inArray(websites.id, websiteIds),
+				where: { id: { in: websiteIds } },
 				columns: { id: true, domain: true },
 			});
 
@@ -98,7 +97,7 @@ const userPreferencesCache = cacheable(
 	async (userId: string) => {
 		try {
 			return await db.query.userPreferences.findFirst({
-				where: eq(userPreferences.userId, userId),
+				where: { userId },
 			});
 		} catch {
 			return null;

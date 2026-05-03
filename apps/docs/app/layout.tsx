@@ -93,14 +93,6 @@ export default function Layout({ children }: { children: ReactNode }) {
 			lang="en"
 			suppressHydrationWarning
 		>
-			<Databuddy
-				clientId="OXmNQsViBT-FOS_wZCTHc"
-				disabled={process.env.NODE_ENV === "development"}
-				trackAttributes
-				trackErrors
-				trackOutgoingLinks
-				trackWebVitals
-			/>
 			<body className="min-h-dvh">
 				<ThemeProvider attribute="class" defaultTheme="dark" forcedTheme="dark">
 					<NuqsAdapter>
@@ -115,6 +107,14 @@ export default function Layout({ children }: { children: ReactNode }) {
 						</RootProvider>
 					</NuqsAdapter>
 				</ThemeProvider>
+				<Databuddy
+					clientId="OXmNQsViBT-FOS_wZCTHc"
+					disabled={process.env.NODE_ENV === "development"}
+					trackAttributes
+					trackErrors
+					trackOutgoingLinks
+					trackWebVitals
+				/>
 			</body>
 		</html>
 	);

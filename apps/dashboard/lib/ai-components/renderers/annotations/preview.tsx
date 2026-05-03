@@ -149,7 +149,7 @@ export function AnnotationPreviewRenderer({
 						{Array.isArray(annotation.tags) && annotation.tags.length > 0 && (
 							<div>
 								<p className="mb-1.5 text-muted-foreground text-xs">Tags</p>
-								<div className="flex items-center flex-wrap gap-1">
+								<div className="flex flex-wrap items-center gap-1">
 									{annotation.tags.map((tag) => (
 										<div
 											className="flex items-center gap-2 rounded-md bg-muted px-2 py-1.5 hover:bg-interactive-hover"

@@ -16,8 +16,7 @@ async function getLinkBySlug(slug: string): Promise<CachedLink | null> {
 	}
 
 	const dbLink = await db.query.links.findFirst({
-		where: (links, { and, eq, isNull }) =>
-			and(eq(links.slug, slug), isNull(links.deletedAt)),
+		where: { slug, deletedAt: { isNull: true } },
 		columns: {
 			id: true,
 			targetUrl: true,

@@ -138,7 +138,7 @@ export const annotationsRouter = {
 		.output(annotationOutputSchema)
 		.handler(async ({ context, input, errors }) => {
 			const annotationRow = await context.db.query.annotations.findFirst({
-				where: and(eq(annotations.id, input.id), isNull(annotations.deletedAt)),
+				where: { id: input.id, deletedAt: { isNull: true } },
 				columns: {
 					websiteId: true,
 					isPublic: true,

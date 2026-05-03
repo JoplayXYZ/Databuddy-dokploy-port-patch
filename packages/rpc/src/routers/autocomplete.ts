@@ -13,7 +13,7 @@ const CACHE_TTL = 1800;
 
 const getDefaultDateRange = () => {
 	const endDate = new Date().toISOString().split("T")[0];
-	const startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+	const startDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
 		.toISOString()
 		.split("T")[0];
 	return { startDate, endDate };
@@ -188,7 +188,9 @@ export const autocompleteRouter = {
 						const results = await chQuery<{
 							category: string;
 							value: string;
-						}>(getAutocompleteQuery(), params);
+						}>(getAutocompleteQuery(), params, {
+							clickhouse_settings: { max_execution_time: 10 },
+						});
 
 						return categorizeAutocompleteResults(results);
 					} catch (error) {

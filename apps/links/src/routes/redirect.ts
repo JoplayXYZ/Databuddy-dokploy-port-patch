@@ -1,5 +1,4 @@
-import { db, eq } from "@databuddy/db";
-import { links } from "@databuddy/db/schema";
+import { db } from "@databuddy/db";
 import {
 	type CachedLink,
 	getCachedLink,
@@ -179,7 +178,7 @@ async function lookupLink(slug: string) {
 	const t1 = performance.now();
 	const row = await record("link.db.find", () =>
 		db.query.links.findFirst({
-			where: eq(links.slug, slug),
+			where: { slug },
 			columns: {
 				id: true,
 				targetUrl: true,
@@ -238,7 +237,7 @@ async function lookupLink(slug: string) {
 
 async function recordClick(
 	link: CachedLink,
-	slug: string,
+	_slug: string,
 	ipHash: string,
 	ip: string,
 	request: Request

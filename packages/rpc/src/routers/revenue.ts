@@ -1,4 +1,4 @@
-import { and, eq, isNull } from "@databuddy/db";
+import { eq } from "@databuddy/db";
 import { revenueConfig } from "@databuddy/db/schema";
 import { createId } from "@databuddy/shared/utils/ids";
 import { z } from "zod";
@@ -42,14 +42,8 @@ export const revenueRouter = {
 
 			const config = await context.db.query.revenueConfig.findFirst({
 				where: input.websiteId
-					? and(
-							eq(revenueConfig.ownerId, ownerId),
-							eq(revenueConfig.websiteId, input.websiteId)
-						)
-					: and(
-							eq(revenueConfig.ownerId, ownerId),
-							isNull(revenueConfig.websiteId)
-						),
+					? { ownerId, websiteId: input.websiteId }
+					: { ownerId, websiteId: { isNull: true } },
 			});
 
 			if (!config) {
@@ -98,14 +92,8 @@ export const revenueRouter = {
 
 			const existing = await context.db.query.revenueConfig.findFirst({
 				where: input.websiteId
-					? and(
-							eq(revenueConfig.ownerId, ownerId),
-							eq(revenueConfig.websiteId, input.websiteId)
-						)
-					: and(
-							eq(revenueConfig.ownerId, ownerId),
-							isNull(revenueConfig.websiteId)
-						),
+					? { ownerId, websiteId: input.websiteId }
+					: { ownerId, websiteId: { isNull: true } },
 			});
 
 			if (existing) {
@@ -177,14 +165,8 @@ export const revenueRouter = {
 
 			const existing = await context.db.query.revenueConfig.findFirst({
 				where: input.websiteId
-					? and(
-							eq(revenueConfig.ownerId, ownerId),
-							eq(revenueConfig.websiteId, input.websiteId)
-						)
-					: and(
-							eq(revenueConfig.ownerId, ownerId),
-							isNull(revenueConfig.websiteId)
-						),
+					? { ownerId, websiteId: input.websiteId }
+					: { ownerId, websiteId: { isNull: true } },
 			});
 
 			if (!existing) {
@@ -223,14 +205,8 @@ export const revenueRouter = {
 
 			const existing = await context.db.query.revenueConfig.findFirst({
 				where: input.websiteId
-					? and(
-							eq(revenueConfig.ownerId, ownerId),
-							eq(revenueConfig.websiteId, input.websiteId)
-						)
-					: and(
-							eq(revenueConfig.ownerId, ownerId),
-							isNull(revenueConfig.websiteId)
-						),
+					? { ownerId, websiteId: input.websiteId }
+					: { ownerId, websiteId: { isNull: true } },
 			});
 
 			if (!existing) {

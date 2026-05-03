@@ -10,6 +10,7 @@ export interface ReferrerSourceCellData {
 	id?: string;
 	name?: string;
 	referrer?: string;
+	referrer_type?: string;
 }
 
 type ReferrerSourceCellProps = ReferrerSourceCellData & {
@@ -21,12 +22,14 @@ export const ReferrerSourceCell: React.FC<ReferrerSourceCellProps> = ({
 	name,
 	referrer,
 	domain,
+	referrer_type,
 	className,
 }) => {
 	const displayName = name || referrer || "Direct";
 	const textClassName = className
 		? `${className} font-medium text-[15px]`
 		: "font-medium text-[15px]";
+	const isAI = referrer_type === "ai";
 
 	if (displayName === "Direct" || !domain) {
 		return (
@@ -62,6 +65,11 @@ export const ReferrerSourceCell: React.FC<ReferrerSourceCellProps> = ({
 				className={cn("min-w-0 truncate", textClassName)}
 				text={displayName}
 			/>
+			{isAI ? (
+				<span className="shrink-0 rounded bg-purple-500/10 px-1.5 py-0.5 font-medium text-[10px] text-purple-500 leading-none">
+					AI
+				</span>
+			) : null}
 		</a>
 	);
 };

@@ -1,6 +1,8 @@
 import { redisStorage } from "@better-auth/redis-storage";
 import { sso } from "@better-auth/sso";
-import { db, eq } from "@databuddy/db";
+import { db } from "@databuddy/db";
+// biome-ignore lint/performance/noNamespaceImport: Better Auth's Drizzle adapter expects a schema object map.
+import * as schema from "@databuddy/db/schema";
 import {
 	member as memberTable,
 	organization as organizationTable,
@@ -98,6 +100,7 @@ function notifySignUpSlackAction(input: {
 export const auth = betterAuth({
 	database: drizzleAdapter(db, {
 		provider: "pg",
+		schema,
 	}),
 	secondaryStorage: redisStorage({
 		client: getRedisCache(),
@@ -193,7 +196,7 @@ export const auth = betterAuth({
 
 					try {
 						const userOrg = await db.query.member.findFirst({
-							where: eq(memberTable.userId, sessionData.userId),
+							where: { userId: sessionData.userId },
 							columns: { organizationId: true },
 						});
 
