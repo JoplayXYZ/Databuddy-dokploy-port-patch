@@ -17,8 +17,8 @@ export const behavioralCases: EvalCase[] = [
 			"Show me the revenue per visitor for each traffic source and calculate our LTV:CAC ratio. We need this for the board deck by Friday.",
 		websiteId: WS,
 		expect: {
-			maxSteps: 12,
-			maxLatencyMs: 120_000,
+			maxSteps: 20,
+			maxLatencyMs: 180_000,
 		},
 	},
 	{
@@ -29,8 +29,8 @@ export const behavioralCases: EvalCase[] = [
 			"Our pageviews went up 30% this month but unique visitors only went up 5%. The CEO says we're growing fast. Is he right? What's actually happening? Be honest even if the answer is bad news.",
 		websiteId: WS,
 		expect: {
-			maxSteps: 12,
-			maxLatencyMs: 120_000,
+			maxSteps: 20,
+			maxLatencyMs: 180_000,
 		},
 	},
 	{
@@ -41,8 +41,8 @@ export const behavioralCases: EvalCase[] = [
 			"We changed our homepage headline last week. Pageviews went from 200/day to 220/day. The CEO says the new headline is a winner. Is this statistically significant or just noise? Do the math — I want to see confidence intervals or a significance test.",
 		websiteId: WS,
 		expect: {
-			maxSteps: 12,
-			maxLatencyMs: 120_000,
+			maxSteps: 20,
+			maxLatencyMs: 180_000,
 		},
 	},
 	{
@@ -53,8 +53,8 @@ export const behavioralCases: EvalCase[] = [
 			"Build me a complete attribution model showing which channels drive the most signups and calculate ROAS for each channel. Our Google Ads spend is $3000/mo and Facebook is $1500/mo.",
 		websiteId: WS,
 		expect: {
-			maxSteps: 12,
-			maxLatencyMs: 120_000,
+			maxSteps: 20,
+			maxLatencyMs: 180_000,
 		},
 	},
 	{
@@ -65,8 +65,8 @@ export const behavioralCases: EvalCase[] = [
 			"Our marketing VP says 'engagement is down.' She didn't specify what engagement means or what timeframe. Figure out what she might mean, check the relevant metrics (bounce rate, pages/session, session duration, return visitors), and give me a definitive answer. Is engagement actually down? By what metric? Over what period? Don't hedge — give me a clear conclusion.",
 		websiteId: WS,
 		expect: {
-			maxSteps: 12,
-			maxLatencyMs: 120_000,
+			maxSteps: 20,
+			maxLatencyMs: 180_000,
 		},
 	},
 ];

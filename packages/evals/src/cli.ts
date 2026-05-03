@@ -105,7 +105,7 @@ async function runSingleCase(
 ): Promise<CaseResult> {
 	try {
 		const response = await runCase(evalCase, config);
-		const { scores, failures } = scoreCase(evalCase, response);
+		const { scores, failures, warnings } = scoreCase(evalCase, response);
 
 		const scoreValues = Object.values(scores).filter(
 			(v): v is number => v !== undefined
@@ -134,7 +134,7 @@ async function runSingleCase(
 			},
 			toolsCalled: [...new Set(response.toolCalls.map((tc) => tc.name))],
 			toolCalls: response.toolCalls,
-			failures,
+			failures: [...failures, ...warnings],
 			response: response.textContent,
 		};
 	} catch (error) {
