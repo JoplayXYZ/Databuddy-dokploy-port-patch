@@ -6,7 +6,6 @@ import {
 	UserIcon,
 	WarningCircleIcon,
 } from "@phosphor-icons/react/ssr";
-import type { Post } from "@usemarble/core";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
@@ -17,7 +16,12 @@ import { Prose } from "@/components/prose";
 import { SciFiCard } from "@/components/scifi-card";
 import { StructuredData } from "@/components/structured-data";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { getPosts, getSinglePost, isPublished } from "@/lib/blog-query";
+import {
+	getPosts,
+	getSinglePost,
+	isPublished,
+	type Post,
+} from "@/lib/blog-query";
 
 const STRIP_HTML_REGEX = /<[^>]+>/g;
 const WORD_SPLIT_REGEX = /\s+/;
