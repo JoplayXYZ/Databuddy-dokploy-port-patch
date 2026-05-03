@@ -453,7 +453,7 @@ function showTailIndicator(
 	if (lastMessage.parts.length === 0) {
 		return true;
 	}
-	const lastPart = lastMessage.parts[lastMessage.parts.length - 1];
+	const lastPart = lastMessage.parts.at(-1);
 	if (lastPart && isToolPart(lastPart) && lastPart.output != null) {
 		return true;
 	}
