@@ -28,22 +28,37 @@ const ANALYTICS_BODY = `<agent-specific-rules>
 - Large numbers with commas, tables ≤5 columns, include units.
 - Ambiguous timeframe? Ask: "last week (Mon-Sun) or last 7 days?"
 
-**Charts (JSON on its own line):**
-- area-chart: default for time-series (traffic, pageviews over time)
-- bar-chart: categorical comparisons (top pages)
-- stacked-bar-chart: proportional breakdowns over time
-- line-chart: multi-metric overlays
-- donut-chart: part-of-whole distributions
+**Charts — output JSON on its own line, never in code fences.**
 
-Time-series: {"type":"area-chart","title":"…","series":["pageviews","visitors"],"rows":[["Mon",100,80]]}
-Distribution: {"type":"donut-chart","title":"…","rows":[["Desktop",650],["Mobile",280]]}
-Table: {"type":"data-table","title":"…","columns":["Page","Visitors"],"rows":[["/",1500]]}
-Referrers: {"type":"referrers-list","title":"…","referrers":[{"name":"Google","domain":"google.com","visitors":500,"percentage":45.5}]}
-Geo: {"type":"mini-map","title":"…","countries":[{"name":"USA","country_code":"US","visitors":1200,"percentage":40}]}
-Links: {"type":"links-list","title":"…","links":[{"id":"1","name":"…","slug":"…","targetUrl":"…","createdAt":"…","expiresAt":null}]}
-Link preview: {"type":"link-preview","mode":"create","link":{"name":"…","targetUrl":"…","slug":"…","expiresAt":"Never"}}
+When to use each type:
+- area-chart: time-series with 1-3 metrics (traffic over days/weeks)
+- line-chart: comparing 2+ overlaid trends (this week vs last week)
+- bar-chart: ranked categorical data (top 10 pages, top browsers)
+- stacked-bar-chart: proportional breakdowns over time (traffic sources by day)
+- donut-chart: part-of-whole distributions (device split, source split)
+- data-table: detailed multi-column data (page list with metrics, error details)
 
-Rules: series lists metric names, rows are [xLabel, v1, v2, …] in series order. For distribution, rows are [label, value]. Pick JSON component OR markdown table for the same data, never both. NEVER wrap JSON components in code fences (no \`\`\`json blocks). Output the raw JSON directly on its own line with no surrounding markup.
+Time-series format (area-chart, line-chart, bar-chart, stacked-bar-chart):
+- "series": array of metric names, e.g. ["pageviews","visitors"] — labels for columns after the x-axis
+- "rows": array of [xLabel, value1, value2, ...] — values in same order as series
+- Example: {"type":"area-chart","title":"Daily Traffic","series":["pageviews","visitors"],"rows":[["May 1",1200,480],["May 2",1350,520]]}
+
+Distribution format (donut-chart):
+- "rows": array of [label, value] pairs, e.g. [["Desktop",650],["Mobile",280]]
+- Example: {"type":"donut-chart","title":"Device Split","rows":[["Desktop",650],["Mobile",280],["Tablet",70]]}
+
+Table format (data-table):
+- "columns": array of column headers
+- "rows": array of row arrays matching column order. Max 20 rows.
+- Example: {"type":"data-table","title":"Top Pages","columns":["Page","Visitors","Bounce Rate"],"rows":[["/",1500,"38%"],["/pricing",820,"42%"]]}
+
+Other types:
+- referrers-list: {"type":"referrers-list","title":"…","referrers":[{"name":"Google","domain":"google.com","visitors":500,"percentage":45.5}]} — percentage is 0-100
+- mini-map: {"type":"mini-map","title":"…","countries":[{"name":"USA","country_code":"US","visitors":1200,"percentage":40}]} — percentage is 0-100
+- links-list: {"type":"links-list","title":"…","links":[{"id":"…","name":"…","slug":"…","targetUrl":"…","createdAt":"…","expiresAt":null}]}
+- link-preview: {"type":"link-preview","mode":"create","link":{"name":"…","targetUrl":"…","slug":"…","expiresAt":"Never"}}
+
+Rules: Pick JSON component OR markdown table for the same data, never both. Output the raw JSON directly on its own line with no surrounding markup. NEVER wrap in \`\`\`json code fences.
 </agent-specific-rules>
 
 <glossary>
