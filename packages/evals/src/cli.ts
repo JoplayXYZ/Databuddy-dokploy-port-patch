@@ -1,6 +1,5 @@
 import { mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { costFromUsage } from "tokenlens";
 import { allCases, getCaseById, getCasesByCategory } from "./cases";
 import { judgeQuality } from "./judge";
 import { printReport } from "./report";
@@ -11,53 +10,77 @@ import type {
 	EvalCase,
 	EvalConfig,
 	EvalRun,
-	JudgeScores,
 	ScoreCard,
 } from "./types";
 
-function parseArgs(): {
-	subcommand: "run" | "judge" | "compare";
-	category?: string;
-	caseId?: string;
-	model?: string;
-	file?: string;
-	noSave: boolean;
-	diff: boolean;
+interface CliOpts {
 	apiUrl: string;
+	caseId?: string;
+	category?: string;
 	concurrency: number;
-} {
+	diff: boolean;
+	file?: string;
+	model?: string;
+	noSave: boolean;
+	rejudge: boolean;
+	skipJudge: boolean;
+	subcommand: "run" | "compare";
+}
+
+function parseArgs(): CliOpts {
 	const args = process.argv.slice(2);
-	let subcommand: "run" | "judge" | "compare" = "run";
+	let subcommand: CliOpts["subcommand"] = "run";
 	let category: string | undefined;
 	let caseId: string | undefined;
 	let model: string | undefined;
 	let file: string | undefined;
 	let noSave = false;
+	let skipJudge = process.env.EVAL_SKIP_JUDGE === "true";
+	let rejudge = false;
 	let diff = false;
 	let apiUrl = process.env.EVAL_API_URL ?? "http://localhost:3001";
-	let concurrency = Infinity;
+	let concurrency = 10;
 
-	if (args[0] === "judge" || args[0] === "compare") {
-		subcommand = args[0];
+	if (args[0] === "compare") {
+		subcommand = "compare";
 	}
 
-	for (let i = 0; i < args.length; i++) {
-		if (args[i] === "--category" && args[i + 1]) {
-			category = args[++i];
-		} else if (args[i] === "--case" && args[i + 1]) {
-			caseId = args[++i];
-		} else if (args[i] === "--model" && args[i + 1]) {
-			model = args[++i];
-		} else if (args[i] === "--file" && args[i + 1]) {
-			file = args[++i];
-		} else if (args[i] === "--no-save") {
-			noSave = true;
-		} else if (args[i] === "--diff") {
-			diff = true;
-		} else if (args[i] === "--api-url" && args[i + 1]) {
-			apiUrl = args[++i];
-		} else if (args[i] === "--concurrency" && args[i + 1]) {
-			concurrency = Number.parseInt(args[++i], 10) || Infinity;
+	const remainingArgs = [...args];
+	while (remainingArgs.length > 0) {
+		const arg = remainingArgs.shift();
+		switch (arg) {
+			case "--category":
+				category = remainingArgs.shift();
+				break;
+			case "--case":
+				caseId = remainingArgs.shift();
+				break;
+			case "--model":
+				model = remainingArgs.shift();
+				break;
+			case "--file":
+				file = remainingArgs.shift();
+				break;
+			case "--no-save":
+				noSave = true;
+				break;
+			case "--skip-judge":
+				skipJudge = true;
+				break;
+			case "--rejudge":
+				rejudge = true;
+				break;
+			case "--diff":
+				diff = true;
+				break;
+			case "--api-url":
+				apiUrl = remainingArgs.shift() ?? apiUrl;
+				break;
+			case "--concurrency":
+				concurrency = Number.parseInt(remainingArgs.shift() ?? "", 10) || 10;
+				break;
+			default:
+				break;
 		}
 	}
 
@@ -68,34 +91,18 @@ function parseArgs(): {
 		model,
 		file,
 		noSave,
+		skipJudge,
+		rejudge,
 		diff,
 		apiUrl,
 		concurrency,
 	};
 }
 
-function computeCost(
-	modelId: string,
-	inputTokens: number,
-	outputTokens: number
-): number {
-	try {
-		const result = costFromUsage({
-			id: modelId,
-			usage: { inputTokens, outputTokens },
-		});
-		return typeof result === "number" ? result : 0;
-	} catch {
-		return 0;
-	}
-}
-
 async function runSingleCase(
 	evalCase: EvalCase,
-	config: EvalConfig,
-	modelId: string
+	config: EvalConfig
 ): Promise<CaseResult> {
-	const caseStart = Date.now();
 	try {
 		const response = await runCase(evalCase, config);
 		const { scores, failures } = scoreCase(evalCase, response);
@@ -111,12 +118,6 @@ async function runSingleCase(
 				: 0;
 		const passed = failures.length === 0 && avgScore >= 60;
 
-		const costUsd = computeCost(
-			modelId,
-			response.inputTokens,
-			response.outputTokens
-		);
-
 		return {
 			id: evalCase.id,
 			category: evalCase.category,
@@ -129,21 +130,15 @@ async function runSingleCase(
 				latencyMs: response.latencyMs,
 				inputTokens: response.inputTokens,
 				outputTokens: response.outputTokens,
-				costUsd,
+				costUsd: 0,
 			},
-			toolsCalled: response.toolCalls.map((tc) => tc.name),
+			toolsCalled: [...new Set(response.toolCalls.map((tc) => tc.name))],
 			toolCalls: response.toolCalls,
 			failures,
 			response: response.textContent,
 		};
 	} catch (error) {
-		const isTimeout =
-			error instanceof DOMException && error.name === "TimeoutError";
-		const msg = isTimeout
-			? "Timed out"
-			: error instanceof Error
-				? error.message
-				: "Unknown error";
+		const msg = error instanceof Error ? error.message : "Unknown error";
 		return {
 			id: evalCase.id,
 			category: evalCase.category,
@@ -153,7 +148,7 @@ async function runSingleCase(
 			scores: {},
 			metrics: {
 				steps: 0,
-				latencyMs: Date.now() - caseStart,
+				latencyMs: 0,
 				inputTokens: 0,
 				outputTokens: 0,
 				costUsd: 0,
@@ -197,7 +192,8 @@ function buildRun(
 	results: CaseResult[],
 	model: string,
 	apiUrl: string,
-	duration: number
+	duration: number,
+	judgeModel?: string
 ): EvalRun {
 	const dimSums: ScoreCard = {
 		tool_routing: 0,
@@ -250,6 +246,7 @@ function buildRun(
 		model,
 		apiUrl,
 		duration,
+		judgeModel,
 		summary: {
 			total: results.length,
 			passed: passedCount,
@@ -278,17 +275,14 @@ function saveRun(run: EvalRun, resultsDir: string): string {
 async function cmdRun() {
 	const opts = parseArgs();
 	const modelId = opts.model ?? "anthropic/claude-sonnet-4.6";
-
-	const skipJudge =
-		process.env.EVAL_SKIP_JUDGE === "true" || opts.noSave;
+	const judgeModel = process.env.EVAL_JUDGE_MODEL ?? "zai/glm-5-turbo";
 
 	const config: EvalConfig = {
 		apiUrl: opts.apiUrl,
 		authCookie: process.env.EVAL_SESSION_COOKIE,
 		apiKey: process.env.EVAL_API_KEY,
-		judgeModel: process.env.EVAL_JUDGE_MODEL,
+		judgeModel,
 		modelOverride: opts.model,
-		skipJudge,
 	};
 
 	let cases = allCases;
@@ -307,21 +301,29 @@ async function cmdRun() {
 		}
 	}
 
+	if (opts.rejudge) {
+		await rejudgeFromFile(opts, judgeModel);
+		return;
+	}
+
 	const c = Math.min(opts.concurrency, cases.length);
 	console.log(
 		`Running ${cases.length} eval cases against ${config.apiUrl} (concurrency: ${c})...`
 	);
 	console.log(`Model: ${modelId}`);
+	if (!opts.skipJudge) {
+		console.log(`Judge: ${judgeModel}`);
+	}
 	console.log("");
 
 	const runStart = Date.now();
 	let completed = 0;
-	const pendingJudges: Array<Promise<void>> = [];
+	const pendingJudges: Promise<void>[] = [];
 
 	const results = await runWithConcurrency(
 		cases,
 		c,
-		(evalCase) => runSingleCase(evalCase, config, modelId),
+		(evalCase) => runSingleCase(evalCase, config),
 		(evalCase, result) => {
 			completed++;
 			const status = result.passed
@@ -330,38 +332,32 @@ async function cmdRun() {
 					? "\x1b[31mERROR\x1b[0m"
 					: `\x1b[31mFAIL\x1b[0m (${result.failures.length})`;
 			const time = `${(result.metrics.latencyMs / 1000).toFixed(1)}s`;
-			const cost =
-				result.metrics.costUsd > 0
-					? ` $${result.metrics.costUsd.toFixed(4)}`
-					: "";
 			console.log(
-				`  [${completed}/${cases.length}] ${evalCase.id} ${status} ${time}${cost}`
+				`  [${completed}/${cases.length}] ${evalCase.id} ${status} ${time}`
 			);
 
 			if (
-				!skipJudge &&
+				!opts.skipJudge &&
 				evalCase.category === "quality" &&
 				result.response.length > 0
 			) {
-				const judgeWithTimeout = Promise.race([
-					judgeQuality(evalCase, result.response, config),
-					new Promise<null>((_, reject) =>
-						setTimeout(() => reject(new Error("Judge timed out")), 60_000)
-					),
-				])
-					.then((scores) => {
-						if (scores) {
-							result.scores.quality = scores.average;
-							(result as unknown as { qualityDetail: JudgeScores }).qualityDetail = scores;
+				pendingJudges.push(
+					judgeQuality(evalCase, result.response, result.toolCalls, judgeModel)
+						.then((scores) => {
+							if (scores) {
+								result.scores.quality = scores.average;
+								result.qualityDetail = scores;
+								console.log(
+									`  [judge] ${evalCase.id}: q=${scores.average} (dg=${scores.dataGrounding} ad=${scores.analyticalDepth} ac=${scores.actionability} co=${scores.completeness} cm=${scores.communication})`
+								);
+							}
+						})
+						.catch((err) => {
 							console.log(
-								`  [judge] ${evalCase.id}: q=${scores.average} (dg=${scores.dataGrounding} ad=${scores.analyticalDepth} ac=${scores.actionability} co=${scores.completeness} cm=${scores.communication})`
+								`  [judge] ${evalCase.id}: ${err instanceof Error ? err.message : err}`
 							);
-						}
-					})
-					.catch((err) => {
-						console.log(`  [judge] ${evalCase.id}: ${err.message}`);
-					});
-				pendingJudges.push(judgeWithTimeout);
+						})
+				);
 			}
 		}
 	);
@@ -371,7 +367,13 @@ async function cmdRun() {
 		await Promise.all(pendingJudges);
 	}
 
-	const run = buildRun(results, modelId, config.apiUrl, Date.now() - runStart);
+	const run = buildRun(
+		results,
+		modelId,
+		config.apiUrl,
+		Date.now() - runStart,
+		opts.skipJudge ? undefined : judgeModel
+	);
 	printReport(run);
 
 	if (!opts.noSave) {
@@ -381,96 +383,85 @@ async function cmdRun() {
 	}
 }
 
-async function cmdJudge() {
-	const opts = parseArgs();
+async function rejudgeFromFile(opts: CliOpts, judgeModel: string) {
 	const resultsDir = join(import.meta.dir, "..", "results");
-	const files: string[] = [];
+	let filepath: string;
 
 	if (opts.file) {
-		files.push(opts.file);
-	} else {
+		filepath = opts.file;
+	} else if (opts.model) {
+		const slug = opts.model.replace(/\//g, "--");
 		const all = readdirSync(resultsDir)
-			.filter((f) => f.endsWith(".json"))
+			.filter((f) => f.endsWith(".json") && f.includes(slug))
 			.sort();
-		if (opts.model) {
-			const slug = opts.model.replace(/\//g, "--");
-			const matching = all.filter((f) => f.includes(slug));
-			if (matching.length === 0) {
-				console.error(`No results found for model ${opts.model}`);
-				process.exit(1);
-			}
-			files.push(join(resultsDir, matching.at(-1)));
-		} else {
-			for (const f of all) {
-				files.push(join(resultsDir, f));
-			}
+		if (all.length === 0) {
+			console.error(`No results found for model ${opts.model}`);
+			process.exit(1);
 		}
+		const latest = all.at(-1);
+		if (!latest) {
+			console.error(`No results found for model ${opts.model}`);
+			process.exit(1);
+		}
+		filepath = join(resultsDir, latest);
+	} else {
+		console.error("--rejudge requires --model or --file");
+		process.exit(1);
 	}
 
-	const config: EvalConfig = {
-		apiUrl: "",
-		judgeModel: process.env.EVAL_JUDGE_MODEL,
-		skipJudge: false,
-	};
+	const run: EvalRun = JSON.parse(readFileSync(filepath, "utf-8"));
+	console.log(`Re-judging ${run.model} (${filepath})...`);
+	console.log(`Judge: ${judgeModel}\n`);
 
-	for (const filepath of files) {
-		const run: EvalRun = JSON.parse(readFileSync(filepath, "utf-8"));
-		console.log(`\nJudging ${run.model} (${filepath})...`);
+	const toJudge = run.cases.filter(
+		(c) => c.category === "quality" && c.response?.length > 0
+	);
 
-		const toJudge: Array<{ caseResult: CaseResult; evalCase: EvalCase }> = [];
+	if (toJudge.length === 0) {
+		console.log("No quality cases to judge");
+		return;
+	}
 
-		for (const c of run.cases) {
-			if (c.category !== "quality") continue;
-
-			const existingScore = c.scores.quality;
-			const alreadyJudged =
-				existingScore !== undefined &&
-				existingScore > 0 &&
-				(c as unknown as { qualityDetail?: JudgeScores }).qualityDetail !==
-					undefined;
-
-			if (alreadyJudged) {
-				console.log(`  ${c.id}: already judged (${existingScore}), skipping`);
-				continue;
-			}
-			if (!c.response || c.response.length === 0) {
-				console.log(`  ${c.id}: no response stored, skipping`);
-				continue;
+	const results = await Promise.all(
+		toJudge.map(async (caseResult) => {
+			const evalCase = getCaseById(caseResult.id);
+			if (!evalCase) {
+				return false;
 			}
 
-			const evalCase = getCaseById(c.id);
-			if (evalCase) toJudge.push({ caseResult: c, evalCase });
-		}
+			const scores = await judgeQuality(
+				evalCase,
+				caseResult.response,
+				caseResult.toolCalls,
+				judgeModel
+			);
+			if (!scores) {
+				console.log(`  ${caseResult.id}: judge failed`);
+				return false;
+			}
 
-		if (toJudge.length === 0) {
-			console.log("No cases to judge");
-			continue;
-		}
+			caseResult.scores.quality = scores.average;
+			caseResult.qualityDetail = scores;
+			console.log(
+				`  ${caseResult.id}: quality=${scores.average} (dg=${scores.dataGrounding} ad=${scores.analyticalDepth} ac=${scores.actionability} co=${scores.completeness} cm=${scores.communication})`
+			);
+			return true;
+		})
+	);
 
-		const judgeResults = await Promise.all(
-			toJudge.map(async ({ caseResult, evalCase }) => {
-				const scores = await judgeQuality(evalCase, caseResult.response, config);
-				if (scores === null) {
-					console.log(`  ${caseResult.id}: judge failed`);
-					return false;
-				}
-				caseResult.scores.quality = scores.average;
-				(caseResult as unknown as { qualityDetail: JudgeScores }).qualityDetail = scores;
-				console.log(
-					`  ${caseResult.id}: quality=${scores.average} (dg=${scores.dataGrounding} ad=${scores.analyticalDepth} ac=${scores.actionability} co=${scores.completeness} cm=${scores.communication})`
-				);
-				return true;
-			})
+	const judged = results.filter(Boolean).length;
+	if (judged > 0) {
+		const updated = buildRun(
+			run.cases,
+			run.model,
+			run.apiUrl,
+			run.duration,
+			judgeModel
 		);
-
-		const judged = judgeResults.filter(Boolean).length;
-		if (judged > 0) {
-			const updated = buildRun(run.cases, run.model, run.apiUrl, run.duration);
-			updated.timestamp = run.timestamp;
-			writeFileSync(filepath, JSON.stringify(updated, null, 2));
-			console.log(`Updated ${filepath} (${judged} cases judged)`);
-			printReport(updated);
-		}
+		updated.timestamp = run.timestamp;
+		writeFileSync(filepath, JSON.stringify(updated, null, 2));
+		console.log(`\nUpdated ${filepath} (${judged} cases re-judged)`);
+		printReport(updated);
 	}
 }
 
@@ -491,21 +482,20 @@ function cmdCompare() {
 	}
 
 	const models = [...latestByModel.keys()].sort();
-	const caseIds =
-		latestByModel
-			.values()
-			.next()
-			.value?.cases.map((c: CaseResult) => c.id) ?? [];
+	const firstRun = latestByModel.values().next().value;
+	if (!firstRun) {
+		console.log("No results to compare");
+		return;
+	}
+	const caseIds = firstRun.cases.map((c: CaseResult) => c.id);
 
 	const COL = 20;
 	const pad = (s: string, n: number) =>
 		s.length >= n ? s.slice(0, n) : s + " ".repeat(n - s.length);
-	const _rpad = (s: string, n: number) =>
-		s.length >= n ? s.slice(0, n) : " ".repeat(n - s.length) + s;
 
 	const shortName = (m: string) => {
 		const parts = m.split("/");
-		return parts.at(-1).slice(0, COL - 1);
+		return (parts.at(-1) ?? m).slice(0, COL - 1);
 	};
 
 	console.log(
@@ -515,7 +505,6 @@ function cmdCompare() {
 
 	for (const cid of caseIds) {
 		let row = `${pad(cid.slice(0, 30), 32)} |`;
-		let hasDiff = false;
 		const cellValues: string[] = [];
 
 		for (const model of models) {
@@ -535,22 +524,21 @@ function cmdCompare() {
 				c.scores.quality !== undefined && c.scores.quality > 0
 					? `q${c.scores.quality}`
 					: "";
-			const cost =
-				c.metrics.costUsd > 0 ? `$${c.metrics.costUsd.toFixed(3)}` : "";
-			cellValues.push(pad(`${status} ${t} ${q} ${cost}`.trim(), COL));
+			cellValues.push(pad(`${status} ${t} ${q}`.trim(), COL));
 		}
 
 		if (opts.diff) {
 			const statuses = cellValues.map((v) => v.trim().startsWith("OK"));
-			hasDiff = statuses.some((s) => s !== statuses[0]);
+			const hasDiff = statuses.some((s) => s !== statuses[0]);
+			if (!hasDiff) {
+				continue;
+			}
 		}
 
-		if (!opts.diff || hasDiff) {
-			for (const v of cellValues) {
-				row += ` ${v} |`;
-			}
-			console.log(row);
+		for (const v of cellValues) {
+			row += ` ${v} |`;
 		}
+		console.log(row);
 	}
 
 	console.log("-".repeat(34 + models.length * (COL + 3)));
@@ -569,27 +557,22 @@ function cmdCompare() {
 				.reduce((a, c) => a + c.metrics.latencyMs, 0) /
 			(s.passed || 1) /
 			1000;
-		const totalCost = run.cases.reduce(
-			(a, c) => a + (c.metrics.costUsd ?? 0),
-			0
-		);
-		const costStr = totalCost > 0 ? ` $${totalCost.toFixed(3)}` : "";
 		const q = d.quality > 0 ? ` q${d.quality}` : "";
-		summaryRow += ` ${pad(`${s.passed}/${s.total} ${avgLat.toFixed(0)}s${q}${costStr}`, COL)} |`;
+		summaryRow += ` ${pad(`${s.passed}/${s.total} ${avgLat.toFixed(0)}s${q}`, COL)} |`;
 	}
 	console.log(summaryRow);
 	console.log("");
 }
 
-function main() {
+async function main() {
 	const opts = parseArgs();
 	switch (opts.subcommand) {
-		case "judge":
-			return cmdJudge();
 		case "compare":
-			return cmdCompare();
+			cmdCompare();
+			break;
 		default:
-			return cmdRun();
+			await cmdRun();
+			break;
 	}
 }
 

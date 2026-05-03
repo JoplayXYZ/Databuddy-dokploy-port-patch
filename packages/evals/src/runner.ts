@@ -1,13 +1,15 @@
-import type { EvalCase, EvalConfig, ParsedAgentResponse } from "./types";
-
-const CASE_TIMEOUT_MS = 3 * 60 * 1000;
+import type {
+	EvalCase,
+	EvalConfig,
+	ParsedAgentResponse,
+	ToolCallRecord,
+} from "./types";
 
 export async function runCase(
 	evalCase: EvalCase,
 	config: EvalConfig
 ): Promise<ParsedAgentResponse> {
 	const startTime = Date.now();
-	const signal = AbortSignal.timeout(CASE_TIMEOUT_MS);
 
 	const headers: Record<string, string> = {
 		"Content-Type": "application/json",
@@ -39,7 +41,6 @@ export async function runCase(
 		method: "POST",
 		headers,
 		body,
-		signal,
 	});
 
 	if (!response.ok) {
@@ -47,43 +48,47 @@ export async function runCase(
 		throw new Error(`Agent API error ${response.status}: ${errorText}`);
 	}
 
-	return streamSSE(response, startTime, signal);
+	return streamSSE(response, startTime);
 }
 
 async function streamSSE(
 	response: Response,
-	startTime: number,
-	signal: AbortSignal
+	startTime: number
 ): Promise<ParsedAgentResponse> {
-	const toolCalls: ParsedAgentResponse["toolCalls"] = [];
-	const toolNames = new Set<string>();
+	const toolCalls: ToolCallRecord[] = [];
+	let pendingToolCall: Omit<ToolCallRecord, "output"> | null = null;
 	let textContent = "";
 	let inputTokens = 0;
 	let outputTokens = 0;
 	let steps = 0;
 
-	const reader = response.body!.getReader();
+	if (!response.body) {
+		throw new Error("Agent API response did not include a body");
+	}
+
+	const reader = response.body.getReader();
 	const decoder = new TextDecoder();
 	let buf = "";
 
-	const onAbort = () => reader.cancel();
-	signal.addEventListener("abort", onAbort, { once: true });
-
-	try {
 	for (;;) {
 		const { done, value } = await reader.read();
-		if (done) break;
-		if (signal.aborted) throw new Error("Eval case timed out");
+		if (done) {
+			break;
+		}
 		buf += decoder.decode(value, { stream: true });
 
-		let newlineIdx: number;
-		while ((newlineIdx = buf.indexOf("\n")) !== -1) {
+		let newlineIdx = buf.indexOf("\n");
+		while (newlineIdx !== -1) {
 			const line = buf.slice(0, newlineIdx);
 			buf = buf.slice(newlineIdx + 1);
 
-			if (!line.startsWith("data: ")) continue;
+			if (!line.startsWith("data: ")) {
+				continue;
+			}
 			const payload = line.slice(6).trim();
-			if (payload === "[DONE]") break;
+			if (payload === "[DONE]") {
+				break;
+			}
 
 			let evt: Record<string, unknown>;
 			try {
@@ -94,32 +99,43 @@ async function streamSSE(
 
 			switch (evt.type) {
 				case "tool-input-available":
-					if (
-						typeof evt.toolName === "string" &&
-						!toolNames.has(evt.toolName)
-					) {
-						toolNames.add(evt.toolName);
-						toolCalls.push({
+					if (typeof evt.toolName === "string") {
+						if (pendingToolCall) {
+							toolCalls.push({ ...pendingToolCall, output: null });
+						}
+						pendingToolCall = {
+							index: toolCalls.length,
 							name: evt.toolName,
 							input: evt.input ?? null,
-							output: null,
-						});
+						};
 					}
 					break;
-				case "tool-output-available": {
-					const tc = toolCalls.find((t) => t.output === null);
-					if (tc) tc.output = evt.output ?? null;
+				case "tool-output-available":
+					if (pendingToolCall) {
+						toolCalls.push({
+							...pendingToolCall,
+							output: evt.output ?? null,
+						});
+						pendingToolCall = null;
+					}
 					break;
-				}
 				case "text-delta":
 				case "content-delta":
-					if (typeof evt.delta === "string") textContent += evt.delta;
+					if (typeof evt.delta === "string") {
+						textContent += evt.delta;
+					}
 					break;
 				case "step-finish":
 					if (evt.usage) {
 						const u = evt.usage as Record<string, number>;
-						inputTokens += u.inputTokens ?? u.prompt_tokens ?? 0;
-						outputTokens += u.outputTokens ?? u.completion_tokens ?? 0;
+						const iT = u.inputTokens ?? u.prompt_tokens ?? 0;
+						const oT = u.outputTokens ?? u.completion_tokens ?? 0;
+						if (iT > 0) {
+							inputTokens += iT;
+						}
+						if (oT > 0) {
+							outputTokens += oT;
+						}
 					}
 					break;
 				case "finish":
@@ -132,11 +148,15 @@ async function streamSSE(
 				case "start-step":
 					steps++;
 					break;
+				default:
+					break;
 			}
+			newlineIdx = buf.indexOf("\n");
 		}
 	}
-	} finally {
-		signal.removeEventListener("abort", onAbort);
+
+	if (pendingToolCall) {
+		toolCalls.push({ ...pendingToolCall, output: null });
 	}
 
 	const latencyMs = Date.now() - startTime;
@@ -146,13 +166,16 @@ async function streamSSE(
 	let searchIdx = 0;
 	while (searchIdx < textContent.length) {
 		const start = textContent.indexOf('{"type":"', searchIdx);
-		if (start === -1) break;
+		if (start === -1) {
+			break;
+		}
 
 		let depth = 0;
 		let end = -1;
 		for (let i = start; i < textContent.length; i++) {
-			if (textContent[i] === "{") depth++;
-			else if (textContent[i] === "}") {
+			if (textContent[i] === "{") {
+				depth++;
+			} else if (textContent[i] === "}") {
 				depth--;
 				if (depth === 0) {
 					end = i;
@@ -160,13 +183,16 @@ async function streamSSE(
 				}
 			}
 		}
-		if (end === -1) break;
+		if (end === -1) {
+			break;
+		}
 
 		const jsonStr = textContent.slice(start, end + 1);
 		try {
 			const parsed = JSON.parse(jsonStr) as Record<string, unknown>;
-			if (typeof parsed.type === "string")
+			if (typeof parsed.type === "string") {
 				chartJSONs.push({ type: parsed.type, raw: jsonStr, parsed });
+			}
 		} catch {
 			rawJSONLeaks.push(jsonStr.slice(0, 100));
 		}

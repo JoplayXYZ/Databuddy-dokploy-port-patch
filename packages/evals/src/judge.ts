@@ -1,16 +1,18 @@
 import { createGateway, generateText } from "ai";
-import type { EvalCase, EvalConfig, JudgeScores } from "./types";
+import type { EvalCase, JudgeScores, ToolCallRecord } from "./types";
 
 const JUDGE_PROMPT = `You are a brutally honest evaluator of an analytics AI agent. You have extremely high standards — you are a senior data analyst who has seen hundreds of reports and dashboards. You score like a tough professor: 90+ is exceptional work that would impress a VP, 70 is acceptable but unremarkable, 50 is mediocre, below 40 is bad.
 
+You are given the user's query, the agent's response, AND the raw tool outputs the agent received. Use the tool outputs to verify whether the agent's claims are grounded in real data.
+
 Score the response on 5 criteria (0-100 each). Be harsh. Most responses should score 40-70.
 
-1. **Data Grounding (0-100)**: Every claim must be backed by a specific number from the tool results. Deduct heavily for:
+1. **Data Grounding (0-100)**: Every claim must be backed by a specific number from the tool results. Cross-reference the agent's statements against the tool outputs provided. Deduct heavily for:
+   - Numbers that don't match the tool outputs (hallucinated or rounded when exact data was available)
    - Vague statements without numbers ("traffic increased" without saying by how much)
-   - Rounded/approximated numbers when exact data was available
-   - Claims that don't match the actual data returned
+   - Claims that can't be traced back to any tool output
    - Missing key metrics that were available in the data
-   Score 90+ only if EVERY statement references a specific number
+   Score 90+ only if EVERY number can be traced to a tool output
 
 2. **Analytical Depth (0-100)**: Does the response go beyond surface-level "here's the data"? Deduct for:
    - Just listing numbers without explaining what they MEAN
@@ -47,8 +49,8 @@ Score the response on 5 criteria (0-100 each). Be harsh. Most responses should s
 - 30-49: Poor. Significant gaps in analysis or misleading conclusions.
 - 0-29: Bad. Wrong data, hallucinated numbers, or completely missed the point.
 
-Respond with ONLY a JSON object:
-{"data_grounding": N, "analytical_depth": N, "actionability": N, "completeness": N, "communication": N}`;
+Respond with a JSON object containing scores AND a brief explanation of your reasoning:
+{"data_grounding": N, "analytical_depth": N, "actionability": N, "completeness": N, "communication": N, "explanation": "2-3 sentences on the biggest strengths and weaknesses"}`;
 
 const gateway = createGateway({
 	apiKey: process.env.AI_GATEWAY_API_KEY ?? process.env.AI_API_KEY ?? "",
@@ -58,27 +60,42 @@ const gateway = createGateway({
 	},
 });
 
-const JSON_OBJECT_RE = /\{[^}]+\}/;
+const JSON_OBJECT_RE = /\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}/;
+
+function formatToolOutputs(toolCalls: ToolCallRecord[]): string {
+	if (toolCalls.length === 0) {
+		return "No tool calls recorded.";
+	}
+
+	return toolCalls
+		.map((tc) => {
+			const output =
+				typeof tc.output === "string"
+					? tc.output.slice(0, 2000)
+					: (JSON.stringify(tc.output, null, 1)?.slice(0, 2000) ?? "null");
+			return `[${tc.index}] ${tc.name}:\n${output}`;
+		})
+		.join("\n\n");
+}
 
 export async function judgeQuality(
 	evalCase: EvalCase,
 	responseText: string,
-	config: EvalConfig
+	toolCalls: ToolCallRecord[],
+	judgeModel?: string
 ): Promise<JudgeScores | null> {
-	if (config.skipJudge) {
-		return null;
-	}
 	if (!responseText.trim()) {
 		return null;
 	}
 
-	const model = config.judgeModel ?? "zai/glm-5-turbo";
+	const model = judgeModel ?? "zai/glm-5-turbo";
+	const toolSection = formatToolOutputs(toolCalls);
 
 	try {
 		const result = await generateText({
 			model: gateway.chat(model),
 			system: JUDGE_PROMPT,
-			prompt: `**User query:** ${evalCase.query}\n\n**Agent response:**\n${responseText}`,
+			prompt: `**User query:** ${evalCase.query}\n\n**Tool outputs the agent received:**\n${toolSection}\n\n**Agent response:**\n${responseText}`,
 			maxOutputTokens: 4096,
 			temperature: 0,
 		});
@@ -94,6 +111,7 @@ export async function judgeQuality(
 			actionability: number;
 			completeness: number;
 			communication: number;
+			explanation?: string;
 		};
 
 		const average = Math.round(
@@ -112,6 +130,7 @@ export async function judgeQuality(
 			completeness: parsed.completeness,
 			communication: parsed.communication,
 			average,
+			explanation: parsed.explanation,
 		};
 	} catch (err) {
 		console.error(`  [judge] ${err instanceof Error ? err.message : err}`);
