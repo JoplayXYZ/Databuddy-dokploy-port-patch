@@ -1,3 +1,4 @@
+import { dayjs, guessTimezone } from "@databuddy/ui";
 import { atom } from "jotai";
 import { RECOMMENDED_DEFAULTS } from "../../app/(main)/websites/[id]/_components/utils/tracking-defaults";
 import {
@@ -6,7 +7,6 @@ import {
 	enableAllOptimization,
 } from "../../app/(main)/websites/[id]/_components/utils/tracking-helpers";
 import type { TrackingOptions } from "../../app/(main)/websites/[id]/_components/utils/types";
-import { dayjs, guessTimezone } from "@databuddy/ui";
 
 export interface DynamicQueryFilter {
 	field: string;

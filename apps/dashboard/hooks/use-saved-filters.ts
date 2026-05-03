@@ -5,9 +5,9 @@ import type { DynamicQueryFilter } from "@databuddy/shared/types/api";
 import { useAtom } from "jotai";
 import { useCallback, useEffect, useRef } from "react";
 import { toast } from "sonner";
-import { type SavedFilter, savedFiltersAtom } from "@/stores/jotai/filterAtoms";
+import { savedFiltersAtom, type SavedFilter } from "@/stores/jotai/filterAtoms";
 
-export type { SavedFilter };
+export type { SavedFilter } from "@/stores/jotai/filterAtoms";
 
 export interface SavedFilterError {
 	message: string;

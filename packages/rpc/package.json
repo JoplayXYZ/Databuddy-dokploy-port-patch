@@ -27,7 +27,6 @@
     "ai": "^6.0.0",
     "autumn-js": "catalog:",
     "dayjs": "^1.11.19",
-    "drizzle-orm": "^0.45.2",
     "evlog": "catalog:",
     "jszip": "^3.10.1",
     "keypal": "0.2.0",

@@ -77,35 +77,33 @@ export function websiteAuth() {
 				_authChecked: true,
 			} as const;
 		})
-		.onBeforeHandle(
-			async ({ user, website, _apiKey, _apiKeyPresent, request }) => {
-				if (isPreflight(request)) {
-					return;
-				}
-
-				const url = new URL(request.url);
-				const websiteId = url.searchParams.get("website_id");
-
-				if (!websiteId) {
-					if (user || _apiKey) {
-						return null;
-					}
-					return json(401, {
-						success: false,
-						error: "Authentication required",
-						code: "AUTH_REQUIRED",
-					});
-				}
-
-				return checkWebsiteAuth(
-					websiteId,
-					user,
-					website ?? null,
-					_apiKey,
-					_apiKeyPresent
-				);
+		.onBeforeHandle(({ user, website, _apiKey, _apiKeyPresent, request }) => {
+			if (isPreflight(request)) {
+				return;
 			}
-		);
+
+			const url = new URL(request.url);
+			const websiteId = url.searchParams.get("website_id");
+
+			if (!websiteId) {
+				if (user || _apiKey) {
+					return null;
+				}
+				return json(401, {
+					success: false,
+					error: "Authentication required",
+					code: "AUTH_REQUIRED",
+				});
+			}
+
+			return checkWebsiteAuth(
+				websiteId,
+				user,
+				website ?? null,
+				_apiKey,
+				_apiKeyPresent
+			);
+		});
 }
 
 function isPreflight(request: Request): boolean {

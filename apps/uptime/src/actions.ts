@@ -1,6 +1,7 @@
 import { connect } from "node:tls";
 import { db } from "@databuddy/db";
 import { validateUrl } from "@databuddy/shared/ssrf-guard";
+import { CryptoHasher } from "bun";
 import { Data, Effect } from "effect";
 import { UPTIME_ENV } from "./lib/env";
 import { extractHealth } from "./json-parser";
@@ -358,9 +359,7 @@ const runUptimeCheck = (
 			failure_streak: 0,
 			response_bytes: pingResult.ok ? pingResult.bytes : 0,
 			content_hash: pingResult.ok
-				? new Bun.CryptoHasher("sha256")
-						.update(pingResult.content)
-						.digest("hex")
+				? new CryptoHasher("sha256").update(pingResult.content).digest("hex")
 				: "",
 			redirect_count: pingResult.ok ? pingResult.redirects : 0,
 			probe_region: probe.region,

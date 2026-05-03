@@ -169,8 +169,6 @@ interface TrafficTrendsRechartsPlotProps {
 	features?: ChartInteractiveFeatures;
 	height: number;
 	onCreateAnnotation: (annotation: CreateAnnotationInput) => Promise<void>;
-	onDeleteAnnotation: (id: string) => Promise<void>;
-	onEditAnnotation: (annotation: Annotation) => void;
 	onRangeSelect?: (dateRange: DateRangeState) => void;
 	showAnnotations: boolean;
 	websiteId: string;
@@ -220,8 +218,6 @@ function TrafficTrendsRechartsPlot({
 	features: featuresProp,
 	height,
 	onCreateAnnotation,
-	onDeleteAnnotation,
-	onEditAnnotation,
 	onRangeSelect,
 	showAnnotations,
 	websiteId,
@@ -990,8 +986,6 @@ export function TrafficTrendsChart({
 								}}
 								height={plotHeight}
 								onCreateAnnotation={handleCreateAnnotation}
-								onDeleteAnnotation={handleDeleteAnnotation}
-								onEditAnnotation={setEditingAnnotation}
 								onRangeSelect={onRangeSelect}
 								showAnnotations={showAnnotations}
 								websiteId={websiteId}

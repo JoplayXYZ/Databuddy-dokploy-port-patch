@@ -28,7 +28,9 @@ class ScheduleNotFound extends Data.TaggedError("ScheduleNotFound")<{
 	message: string;
 }> {}
 
-class SchedulePaused extends Data.TaggedError("SchedulePaused")<{}> {}
+class SchedulePaused extends Data.TaggedError("SchedulePaused")<
+	Record<keyof any, never>
+> {}
 
 class CheckFailed extends Data.TaggedError("CheckFailed")<{
 	message: string;

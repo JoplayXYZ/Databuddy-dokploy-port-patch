@@ -126,9 +126,11 @@ const probe = (_name: string, fn: () => Promise<void>) =>
 	});
 
 const healthCheck = Effect.gen(function* () {
-	const { db, sql } = await import("@databuddy/db");
-	const { getUptimeQueue } = await import("@databuddy/redis");
-	const { Kafka } = await import("kafkajs");
+	const { db, sql } = yield* Effect.promise(() => import("@databuddy/db"));
+	const { getUptimeQueue } = yield* Effect.promise(
+		() => import("@databuddy/redis")
+	);
+	const { Kafka } = yield* Effect.promise(() => import("kafkajs"));
 
 	const [postgres, bullmqRedis, redpanda] = yield* Effect.all(
 		[

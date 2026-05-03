@@ -193,6 +193,7 @@ const TROUBLESHOOTING_ITEMS = [
 function VueLogo({ className }: { className?: string }) {
 	return (
 		<svg
+			aria-hidden="true"
 			className={className}
 			fill="currentColor"
 			viewBox="0 0 256 221"

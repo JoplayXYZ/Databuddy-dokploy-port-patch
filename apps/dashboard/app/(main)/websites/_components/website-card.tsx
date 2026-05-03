@@ -23,7 +23,7 @@ import {
 	ContextMenuRoot,
 	ContextMenuSeparator,
 	ContextMenuTrigger,
-} from "@/components/ui/context-menu";
+} from "@/components/ds/context-menu";
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
 import { useDeleteWebsite } from "@/hooks/use-websites";
 import { formatNumber } from "@/lib/formatters";

@@ -39,6 +39,8 @@ const NO_TRANSITION: TransitionResult = {
 	transition_kind: null,
 };
 
+const TRAILING_SLASH = /\/$/;
+
 export function resolveTransitionKind(
 	previous: number | undefined,
 	current: number
@@ -88,10 +90,13 @@ const AlarmCacheLive = Layer.effect(
 		timeToLive: Duration.seconds(30),
 		lookup: (key: string) => {
 			const [organizationId, scheduleId] = key.split(":", 2);
+			if (!(organizationId && scheduleId)) {
+				return Effect.succeed([]);
+			}
 			return Effect.tryPromise({
 				try: async () => {
 					const rows = await db.query.alarms.findMany({
-						where: { organizationId: organizationId!, enabled: true },
+						where: { organizationId, enabled: true },
 						with: { destinations: true },
 					});
 
@@ -100,11 +105,10 @@ const AlarmCacheLive = Layer.effect(
 							string,
 							unknown
 						> | null;
-						return (
-							tc &&
-							Array.isArray(tc.monitorIds) &&
-							(tc.monitorIds as string[]).includes(scheduleId!)
-						);
+						const monitorIds = Array.isArray(tc?.monitorIds)
+							? tc.monitorIds
+							: [];
+						return monitorIds.some((id) => id === scheduleId);
 					}) as LinkedAlarm[];
 				},
 				catch: (cause) => new AlarmLookupError({ cause }),
@@ -240,7 +244,7 @@ const handleTransition = (options: {
 
 		const siteLabel = buildSiteLabel(options.schedule);
 		const baseUrl = process.env.DASHBOARD_APP_URL ?? "https://app.databuddy.cc";
-		const dashboardUrl = `${baseUrl.replace(/\/$/, "")}/monitors/${options.schedule.id}`;
+		const dashboardUrl = `${baseUrl.replace(TRAILING_SLASH, "")}/monitors/${options.schedule.id}`;
 
 		const httpInfo = options.data.http_code
 			? ` (HTTP ${options.data.http_code})`
@@ -298,7 +302,7 @@ export async function getPreviousMonitorStatus(
 	return Option.getOrUndefined(option);
 }
 
-export async function fireTransitionAlerts(options: {
+export function fireTransitionAlerts(options: {
 	schedule: ScheduleData;
 	data: UptimeData;
 	previousStatus?: number;

@@ -24,11 +24,15 @@ function userLinksWhere(
 	flagKey: string,
 	userId: string
 ) {
-	return and(
+	const condition = and(
 		eq(t.flagKey, flagKey),
 		eq(t.invitedById, userId),
 		ne(t.status, "revoked")
 	);
+	if (!condition) {
+		throw new Error("Expected invite link filter conditions");
+	}
+	return condition;
 }
 
 async function requireAccess(context: Context, flagKey: string): Promise<void> {
@@ -167,7 +171,7 @@ export const featureInviteRouter = {
 
 			return withTransaction(async (tx) => {
 				const existing = await tx.query.featureInvite.findMany({
-					where: { RAW: (t) => userLinksWhere(t, input.flagKey, userId)! },
+					where: { RAW: (t) => userLinksWhere(t, input.flagKey, userId) },
 					orderBy: { createdAt: "desc" },
 					limit: MAX_LINKS_PER_FLAG,
 				});
@@ -188,7 +192,7 @@ export const featureInviteRouter = {
 				await tx.insert(featureInvite).values(newLinks);
 
 				return tx.query.featureInvite.findMany({
-					where: { RAW: (t) => userLinksWhere(t, input.flagKey, userId)! },
+					where: { RAW: (t) => userLinksWhere(t, input.flagKey, userId) },
 					orderBy: { createdAt: "desc" },
 					limit: MAX_LINKS_PER_FLAG,
 				});
@@ -211,7 +215,7 @@ export const featureInviteRouter = {
 			await requireAccess(context as Context, input.flagKey);
 
 			return db.query.featureInvite.findMany({
-				where: { RAW: (t) => userLinksWhere(t, input.flagKey, userId)! },
+				where: { RAW: (t) => userLinksWhere(t, input.flagKey, userId) },
 				orderBy: { createdAt: "desc" },
 				limit: MAX_LINKS_PER_FLAG,
 			});
@@ -331,7 +335,7 @@ export const featureInviteRouter = {
 			const userId = context.user.id;
 
 			const links = await db.query.featureInvite.findMany({
-				where: { RAW: (t) => userLinksWhere(t, input.flagKey, userId)! },
+				where: { RAW: (t) => userLinksWhere(t, input.flagKey, userId) },
 				columns: { id: true },
 				limit: MAX_LINKS_PER_FLAG,
 			});

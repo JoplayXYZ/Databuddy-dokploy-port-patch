@@ -472,7 +472,11 @@ function cmdCompare() {
 		const cellValues: string[] = [];
 
 		for (const model of models) {
-			const run = latestByModel.get(model)!;
+			const run = latestByModel.get(model);
+			if (!run) {
+				cellValues.push(pad("--", COL));
+				continue;
+			}
 			const c = run.cases.find((x) => x.id === cid);
 			if (!c) {
 				cellValues.push(pad("--", COL));
@@ -505,7 +509,11 @@ function cmdCompare() {
 	console.log("-".repeat(34 + models.length * (COL + 3)));
 	let summaryRow = `${pad("TOTAL", 32)} |`;
 	for (const model of models) {
-		const run = latestByModel.get(model)!;
+		const run = latestByModel.get(model);
+		if (!run) {
+			summaryRow += ` ${pad("--", COL)} |`;
+			continue;
+		}
 		const s = run.summary;
 		const d = run.dimensions;
 		const avgLat =
@@ -526,7 +534,7 @@ function cmdCompare() {
 	console.log("");
 }
 
-async function main() {
+function main() {
 	const opts = parseArgs();
 	switch (opts.subcommand) {
 		case "judge":

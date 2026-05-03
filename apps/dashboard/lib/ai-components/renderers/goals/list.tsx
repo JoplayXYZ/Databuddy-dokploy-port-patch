@@ -82,7 +82,7 @@ function GoalRow({
 	onEdit: () => void;
 	onDelete: () => void;
 }) {
-	const { copyToClipboard, isCopied } = useCopyToClipboard({
+	const { copyToClipboard } = useCopyToClipboard({
 		onCopy: () => toast.success("Target copied"),
 	});
 

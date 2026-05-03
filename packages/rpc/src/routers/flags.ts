@@ -45,6 +45,13 @@ import { getCacheAuthContext } from "../utils/cache-keys";
 const flagsCache = createDrizzleCache({ redis, namespace: "flags" });
 const CACHE_DURATION = 60;
 
+function requireCondition(condition: ReturnType<typeof and>) {
+	if (!condition) {
+		throw new Error("Expected flag filter conditions");
+	}
+	return condition;
+}
+
 const authorizeScope = async (
 	context: Context,
 	websiteId?: string,
@@ -326,7 +333,7 @@ export const flagsRouter = {
 								if (input.status) {
 									conditions.push(eq(t.status, input.status));
 								}
-								return and(...conditions)!;
+								return requireCondition(and(...conditions));
 							},
 						},
 						orderBy: { createdAt: "desc" },
@@ -401,16 +408,18 @@ export const flagsRouter = {
 					const flag = await context.db.query.flags.findFirst({
 						where: {
 							RAW: (t) =>
-								and(
-									eq(t.id, input.id),
-									getScopeCondition(
-										input.websiteId,
-										input.organizationId,
-										undefined,
-										t
-									),
-									isNull(t.deletedAt)
-								)!,
+								requireCondition(
+									and(
+										eq(t.id, input.id),
+										getScopeCondition(
+											input.websiteId,
+											input.organizationId,
+											undefined,
+											t
+										),
+										isNull(t.deletedAt)
+									)
+								),
 						},
 						with: {
 							flagsToTargetGroups: {
@@ -485,17 +494,19 @@ export const flagsRouter = {
 					const flag = await context.db.query.flags.findFirst({
 						where: {
 							RAW: (t) =>
-								and(
-									eq(t.key, input.key),
-									getScopeCondition(
-										input.websiteId,
-										input.organizationId,
-										undefined,
-										t
-									),
-									eq(t.status, "active"),
-									isNull(t.deletedAt)
-								)!,
+								requireCondition(
+									and(
+										eq(t.key, input.key),
+										getScopeCondition(
+											input.websiteId,
+											input.organizationId,
+											undefined,
+											t
+										),
+										eq(t.status, "active"),
+										isNull(t.deletedAt)
+									)
+								),
 						},
 						with: {
 							flagsToTargetGroups: {
@@ -724,11 +735,13 @@ export const flagsRouter = {
 					const validGroups = await tx.query.targetGroups.findMany({
 						where: {
 							RAW: (t) =>
-								and(
-									inArray(t.id, ids),
-									eq(t.websiteId, input.websiteId || ""),
-									isNull(t.deletedAt)
-								)!,
+								requireCondition(
+									and(
+										inArray(t.id, ids),
+										eq(t.websiteId, input.websiteId || ""),
+										isNull(t.deletedAt)
+									)
+								),
 						},
 					});
 
@@ -904,11 +917,13 @@ export const flagsRouter = {
 						const validGroups = await tx.query.targetGroups.findMany({
 							where: {
 								RAW: (t) =>
-									and(
-										inArray(t.id, targetGroupIds),
-										eq(t.websiteId, flag.websiteId || ""),
-										isNull(t.deletedAt)
-									)!,
+									requireCondition(
+										and(
+											inArray(t.id, targetGroupIds),
+											eq(t.websiteId, flag.websiteId || ""),
+											isNull(t.deletedAt)
+										)
+									),
 							},
 						});
 

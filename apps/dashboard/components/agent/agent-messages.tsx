@@ -12,7 +12,7 @@ import {
 import {
 	DotMatrixLoader,
 	useRandomDotMatrixLoader,
-} from "@/components/ai-elements/dotmatrix-loader";
+} from "@/components/ui/dotmatrix";
 import {
 	Reasoning,
 	ReasoningContent,

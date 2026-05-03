@@ -73,7 +73,10 @@ export function AITrafficSection({
 							</div>
 						))
 					: aiReferrers.map((r) => (
-							<div className="flex shrink-0 items-center gap-2" key={r.name}>
+							<div
+								className="flex shrink-0 items-center gap-2"
+								key={r.domain ? `${r.name}-${r.domain}` : r.name}
+							>
 								{r.domain ? (
 									<FaviconImage
 										altText={r.name}

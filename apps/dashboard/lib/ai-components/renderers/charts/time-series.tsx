@@ -64,7 +64,6 @@ export function TimeSeriesRenderer({
 	data,
 	series,
 	className,
-	streaming,
 }: TimeSeriesProps) {
 	const [hiddenSeries, setHiddenSeries] = useState<Set<string>>(new Set());
 

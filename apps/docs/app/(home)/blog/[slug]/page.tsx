@@ -30,11 +30,9 @@ export async function generateStaticParams() {
 		if ("error" in result) {
 			return [];
 		}
-		return result.posts
-			.filter(isPublished)
-			.map((post) => ({
-				slug: post.slug,
-			}));
+		return result.posts.filter(isPublished).map((post) => ({
+			slug: post.slug,
+		}));
 	} catch {
 		return [];
 	}
@@ -101,7 +99,7 @@ export default async function PostPage({
 		status?: number;
 		statusText?: string;
 	};
-	if (!result?.post || !isPublished(result.post)) {
+	if (!(result?.post && isPublished(result.post))) {
 		return (
 			<>
 				<div className="relative flex min-h-[60vh] w-full items-center justify-center overflow-hidden px-4 pt-10 sm:px-6 sm:pt-12 lg:px-8">

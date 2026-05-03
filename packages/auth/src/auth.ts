@@ -1,6 +1,7 @@
 import { redisStorage } from "@better-auth/redis-storage";
 import { sso } from "@better-auth/sso";
 import { db } from "@databuddy/db";
+// biome-ignore lint/performance/noNamespaceImport: Better Auth's Drizzle adapter expects a schema object map.
 import * as schema from "@databuddy/db/schema";
 import {
 	member as memberTable,
