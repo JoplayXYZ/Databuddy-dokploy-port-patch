@@ -7,6 +7,7 @@ interface RedisEntry {
 
 const redisStore = new Map<string, RedisEntry>();
 let failGet = false;
+let failSet = false;
 let memoryEnabled = true;
 
 const getSnapshotKey = (
@@ -23,10 +24,17 @@ const mockRedisClient = {
 		return redisStore.get(key)?.value ?? null;
 	}),
 	setex: mock(async (key: string, ttl: number, value: string) => {
+		if (failSet) {
+			throw new Error("redis set failed");
+		}
 		redisStore.set(key, { ttl, value });
 		return "OK";
 	}),
 };
+
+const mockCaptureError = mock(
+	(_error: unknown, _fields?: Record<string, string | number | boolean>) => {}
+);
 
 const mockEnrichAgentContext = mock(
 	async (opts: {
@@ -56,6 +64,12 @@ mock.module("../../lib/supermemory", () => ({
 	isMemoryEnabled: () => memoryEnabled,
 }));
 
+mock.module("../../lib/tracing", () => ({
+	captureError: mockCaptureError,
+	mergeWideEvent: mock(() => {}),
+	record: mock(async (_name: string, fn: () => unknown) => fn()),
+}));
+
 mock.module("../config/enrich-context", () => ({
 	enrichAgentContext: mockEnrichAgentContext,
 }));
@@ -78,10 +92,12 @@ async function flushBackgroundRefresh() {
 beforeEach(() => {
 	redisStore.clear();
 	failGet = false;
+	failSet = false;
 	memoryEnabled = true;
 	mockRedisClient.get.mockClear();
 	mockRedisClient.setex.mockClear();
 	mockEnrichAgentContext.mockClear();
+	mockCaptureError.mockClear();
 });
 
 describe("shouldLoadMemoryContext", () => {
@@ -169,6 +185,20 @@ describe("getAgentContextSnapshot", () => {
 		expect(result).toEqual({ context: "", source: "error" });
 		expect(JSON.parse(redisStore.get(key)?.value ?? "{}")).toMatchObject({
 			context: "fresh:user-1:site-1",
+		});
+	});
+
+	it("captures background refresh failures", async () => {
+		failSet = true;
+
+		const result = await getAgentContextSnapshot("user-1", "site-1", "org-1");
+		await flushBackgroundRefresh();
+
+		expect(result).toEqual({ context: "", source: "miss" });
+		expect(mockCaptureError).toHaveBeenCalledTimes(1);
+		expect(mockCaptureError.mock.calls[0]?.[1]).toMatchObject({
+			agent_context_snapshot_refresh_error: true,
+			agent_snapshot_key: getSnapshotKey("user-1", "site-1", "org-1"),
 		});
 	});
 });

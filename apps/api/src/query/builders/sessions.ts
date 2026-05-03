@@ -260,6 +260,7 @@ export const SessionsBuilders: Record<string, SimpleQueryConfig> = {
 		limit: 500,
 		timeField: "time",
 		allowedFilters: ["session_id"],
+		requiredFilters: ["session_id"],
 		customizable: true,
 	} satisfies SimpleQueryConfig,
 };

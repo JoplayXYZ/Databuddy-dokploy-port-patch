@@ -145,6 +145,7 @@ export interface SimpleQueryConfig {
 	meta?: QueryBuilderMeta;
 	orderBy?: string;
 	plugins?: QueryPlugins;
+	requiredFilters?: string[];
 	skipDateFilter?: boolean;
 	table?: string;
 	timeBucket?: TimeBucketConfig;

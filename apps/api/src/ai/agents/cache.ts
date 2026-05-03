@@ -10,6 +10,7 @@ import {
 	isMemoryEnabled,
 	type MemoryContext,
 } from "../../lib/supermemory";
+import { captureError } from "../../lib/tracing";
 import { ensureAgentCreditsAvailable } from "./execution";
 
 const PERM_TTL_SEC = 60;
@@ -102,7 +103,12 @@ function refreshAgentContextSnapshot(
 		} satisfies AgentContextSnapshot);
 		await redis.setex(key, AGENT_CONTEXT_SNAPSHOT_TTL_SEC, value);
 	})()
-		.catch(() => {})
+		.catch((err) => {
+			captureError(err, {
+				agent_context_snapshot_refresh_error: true,
+				agent_snapshot_key: key,
+			});
+		})
 		.finally(() => {
 			snapshotRefreshes.delete(key);
 		});

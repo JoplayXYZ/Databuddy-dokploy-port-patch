@@ -321,6 +321,28 @@ export class SimpleQueryBuilder {
 		return this.config.idField || "client_id";
 	}
 
+	private validateRequiredFilters(): void {
+		if (!this.config.requiredFilters?.length) {
+			return;
+		}
+
+		const requestFilters = this.request.filters ?? [];
+		const missingFilters = this.config.requiredFilters.filter(
+			(requiredField) =>
+				!requestFilters.some(
+					(filter) => filter.field === requiredField && !filter.having
+				)
+		);
+
+		if (missingFilters.length > 0) {
+			throw new Error(
+				`Missing required filter${missingFilters.length > 1 ? "s" : ""}: ${missingFilters
+					.map((field) => `'${field}'`)
+					.join(", ")}.`
+			);
+		}
+	}
+
 	private generateSessionAttributionCTE(
 		timeField: string,
 		table: string,
@@ -422,6 +444,8 @@ export class SimpleQueryBuilder {
 	}
 
 	compile(): CompiledQuery {
+		this.validateRequiredFilters();
+
 		if (this.config.customSql) {
 			const whereClauseParams: Record<string, Filter["value"]> = {};
 			const whereClause = this.buildWhereClauseFromFilters(whereClauseParams);

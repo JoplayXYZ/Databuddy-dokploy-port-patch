@@ -167,6 +167,45 @@ describe("SimpleQueryBuilder.compile", () => {
 		).not.toThrow();
 	});
 
+	it("throws when a required filter is missing", () => {
+		expect(() => compile({ requiredFilters: ["session_id"] })).toThrow(
+			"Missing required filter: 'session_id'."
+		);
+	});
+
+	it("allows a configured required filter when present", () => {
+		const filters: Filter[] = [
+			{ field: "session_id", op: "eq", value: "session-1" },
+		];
+
+		const { sql, params } = compile(
+			{
+				allowedFilters: ["session_id"],
+				requiredFilters: ["session_id"],
+			},
+			{ filters }
+		);
+
+		expect(sql).toContain("session_id = {f0:String}");
+		expect(params.f0).toBe("session-1");
+	});
+
+	it("requires session_id for the session_events builder", () => {
+		const config = QueryBuilders.session_events;
+		if (!config) {
+			throw new Error("session_events builder is missing");
+		}
+
+		const builder = new SimpleQueryBuilder(
+			config,
+			makeRequest({ type: "session_events" })
+		);
+
+		expect(() => builder.compile()).toThrow(
+			"Missing required filter: 'session_id'."
+		);
+	});
+
 	it("throws on SQL injection in groupBy", () => {
 		expect(() =>
 			compile({}, { groupBy: ["path; DROP TABLE analytics.events"] })
