@@ -210,6 +210,189 @@ const LEGEND_WRAPPER_STYLE = {
 	paddingBottom: "4px",
 } as const;
 
+const INLINE_ANNOTATION_LABEL_LIMIT = 6;
+const INLINE_ANNOTATION_LABEL_MAX_CHARS = 28;
+
+interface AnnotationRenderItem {
+	annotation: Annotation;
+	clampedEnd: string;
+	clampedStart: string;
+	endIndex: number;
+	isSingleDayRange: boolean;
+	label: string | null;
+	labelPosition: "top" | "insideTop" | "insideTopLeft";
+	startIndex: number;
+}
+
+function formatInlineAnnotationLabel(text: string): string {
+	const compact = text.trim().replace(/\s+/g, " ");
+	if (compact.length <= INLINE_ANNOTATION_LABEL_MAX_CHARS) {
+		return compact;
+	}
+	return `${compact.slice(0, INLINE_ANNOTATION_LABEL_MAX_CHARS - 3)}...`;
+}
+
+function getChartPointDate(point: ChartDataRow): string {
+	return (point as ChartDataRow & { rawDate?: string }).rawDate || point.date;
+}
+
+function getComparableDate(
+	date: Date | string,
+	isHourlyBucket: boolean,
+	boundary: "end" | "start" = "start"
+): Date {
+	const parsed = dayjs(date);
+	if (isHourlyBucket) {
+		return parsed.toDate();
+	}
+	return boundary === "end"
+		? parsed.endOf("day").toDate()
+		: parsed.startOf("day").toDate();
+}
+
+function buildAnnotationRenderItems({
+	annotations,
+	chartData,
+	granularity,
+}: {
+	annotations: Annotation[];
+	chartData: Array<ChartDataRow & { xKey: string }>;
+	granularity: TrafficTrendsRechartsPlotProps["dateRange"]["granularity"];
+}): AnnotationRenderItem[] {
+	const chartFirst = chartData[0];
+	const chartLast = chartData.at(-1);
+	if (!(chartFirst && chartLast)) {
+		return [];
+	}
+
+	const isHourlyBucket = granularity === "hourly";
+	const chartDomainStart = getComparableDate(
+		getChartPointDate(chartFirst),
+		isHourlyBucket
+	);
+	const chartDomainEnd = getComparableDate(
+		getChartPointDate(chartLast),
+		isHourlyBucket,
+		"end"
+	);
+
+	const visibleItems = annotations
+		.map((annotation): AnnotationRenderItem | null => {
+			const rangeStart = getComparableDate(annotation.xValue, isHourlyBucket);
+			const rangeEnd = getComparableDate(
+				annotation.xEndValue || annotation.xValue,
+				isHourlyBucket,
+				"end"
+			);
+
+			if (rangeEnd < chartDomainStart || rangeStart > chartDomainEnd) {
+				return null;
+			}
+
+			let startIndex = 0;
+			for (let i = 0; i < chartData.length; i++) {
+				const point = chartData[i];
+				if (!point) {
+					continue;
+				}
+				const pointCompare = getComparableDate(
+					getChartPointDate(point),
+					isHourlyBucket
+				);
+				if (pointCompare >= rangeStart) {
+					startIndex = i;
+					break;
+				}
+			}
+
+			let endIndex = chartData.length - 1;
+			for (let i = chartData.length - 1; i >= 0; i--) {
+				const point = chartData[i];
+				if (!point) {
+					continue;
+				}
+				const pointCompare = getComparableDate(
+					getChartPointDate(point),
+					isHourlyBucket
+				);
+				if (pointCompare <= rangeEnd) {
+					endIndex = i;
+					break;
+				}
+			}
+
+			const clampedStart = chartData[startIndex]?.xKey ?? chartFirst.xKey;
+			const clampedEnd = chartData[endIndex]?.xKey ?? chartLast.xKey;
+
+			return {
+				annotation,
+				clampedEnd,
+				clampedStart,
+				endIndex,
+				isSingleDayRange: isSingleDayAnnotation(annotation),
+				label: null,
+				labelPosition: "top" as const,
+				startIndex,
+			};
+		})
+		.filter((item): item is AnnotationRenderItem => item !== null)
+		.sort((a, b) => a.startIndex - b.startIndex || a.endIndex - b.endIndex);
+
+	const maxInlineLabels = Math.min(
+		INLINE_ANNOTATION_LABEL_LIMIT,
+		Math.max(2, Math.ceil(chartData.length / 4))
+	);
+	let placedLabels = 0;
+	let lastLabelEnd = Number.NEGATIVE_INFINITY;
+
+	return visibleItems.map((item) => {
+		const label = formatInlineAnnotationLabel(item.annotation.text);
+		const centerIndex = (item.startIndex + item.endIndex) / 2;
+		const estimatedLabelSpan = Math.max(1, Math.ceil(label.length / 7));
+		const labelStart = centerIndex - estimatedLabelSpan / 2;
+		const labelEnd = centerIndex + estimatedLabelSpan / 2;
+		const hasLabelRoom =
+			placedLabels < maxInlineLabels && labelStart > lastLabelEnd + 0.75;
+
+		if (!hasLabelRoom) {
+			return item;
+		}
+
+		const labelPosition =
+			item.annotation.annotationType === "range" && !item.isSingleDayRange
+				? placedLabels % 2 === 0
+					? "top"
+					: "insideTop"
+				: placedLabels % 2 === 0
+					? "top"
+					: "insideTopLeft";
+
+		placedLabels += 1;
+		lastLabelEnd = labelEnd;
+
+		return {
+			...item,
+			label,
+			labelPosition,
+		};
+	});
+}
+
+function getAnnotationLabel(item: AnnotationRenderItem) {
+	if (!item.label) {
+		return;
+	}
+
+	return {
+		value: item.label,
+		position: item.labelPosition,
+		fill: item.annotation.color,
+		fontSize: CHART_ANNOTATION_STYLES.fontSize,
+		fontWeight: CHART_ANNOTATION_STYLES.fontWeight,
+		offset: CHART_ANNOTATION_STYLES.offset,
+	};
+}
+
 function TrafficTrendsRechartsPlot({
 	annotations,
 	className,
@@ -342,6 +525,20 @@ function TrafficTrendsRechartsPlot({
 		setShowAnnotationModal(false);
 	};
 
+	const annotationRenderItems = useMemo(
+		() =>
+			buildAnnotationRenderItems({
+				annotations,
+				chartData,
+				granularity,
+			}),
+		[annotations, chartData, granularity]
+	);
+
+	const condensedAnnotationLabelCount = annotationRenderItems.filter(
+		(item) => item.label === null
+	).length;
+
 	if (!chartData.length) {
 		return null;
 	}
@@ -382,6 +579,13 @@ function TrafficTrendsRechartsPlot({
 								<span>Drag to annotate</span>
 								<XIcon className="size-2.5" />
 							</button>
+						</div>
+					)}
+				{mergedFeatures.annotations &&
+					showAnnotations === true &&
+					condensedAnnotationLabelCount > 0 && (
+						<div className="pointer-events-none absolute top-2 right-3 z-10 rounded border bg-card/90 px-2 py-1 text-muted-foreground text-xs shadow-sm backdrop-blur-sm">
+							+{condensedAnnotationLabelCount} in panel
 						</div>
 					)}
 				<ResponsiveContainer height="100%" width="100%">
@@ -478,115 +682,23 @@ function TrafficTrendsRechartsPlot({
 
 						{mergedFeatures.annotations &&
 							showAnnotations === true &&
-							annotations.map((annotation, index) => {
-								if (!chartData.length) {
-									return null;
-								}
-
-								const chartFirst = chartData[0];
-								const chartLast = chartData.at(-1);
-								if (!(chartFirst && chartLast)) {
-									return null;
-								}
-
-								const isHourlyBucket = granularity === "hourly";
-
-								const rangeStart = isHourlyBucket
-									? dayjs(annotation.xValue).toDate()
-									: dayjs(annotation.xValue).startOf("day").toDate();
-								const rangeEnd = isHourlyBucket
-									? dayjs(annotation.xEndValue || annotation.xValue).toDate()
-									: dayjs(annotation.xEndValue || annotation.xValue)
-											.endOf("day")
-											.toDate();
-
-								const chartFirstD = dayjs(
-									(chartFirst as ChartDataRow & { rawDate?: string }).rawDate ||
-										chartFirst.date
-								);
-								const chartLastD = dayjs(
-									(chartLast as ChartDataRow & { rawDate?: string }).rawDate ||
-										chartLast.date
-								);
-
-								const chartDomainStart = isHourlyBucket
-									? chartFirstD.toDate()
-									: chartFirstD.startOf("day").toDate();
-								const chartDomainEnd = isHourlyBucket
-									? chartLastD.toDate()
-									: chartLastD.endOf("day").toDate();
-
-								if (
-									rangeEnd < chartDomainStart ||
-									rangeStart > chartDomainEnd
-								) {
-									return null;
-								}
-
-								let clampedStart = chartFirst.xKey;
-								for (const point of chartData) {
-									const pointDate = dayjs(
-										(point as ChartDataRow & { rawDate?: string }).rawDate ||
-											point.date
-									).toDate();
-									const pointCompare = isHourlyBucket
-										? pointDate
-										: dayjs(pointDate).startOf("day").toDate();
-									const startCompare = isHourlyBucket
-										? rangeStart
-										: dayjs(rangeStart).startOf("day").toDate();
-									if (pointCompare >= startCompare) {
-										clampedStart = point.xKey;
-										break;
-									}
-								}
-
-								let clampedEnd = chartLast.xKey;
-								for (let i = chartData.length - 1; i >= 0; i--) {
-									const point = chartData[i];
-									if (!point) {
-										continue;
-									}
-									const pointDate = dayjs(
-										(point as ChartDataRow & { rawDate?: string }).rawDate ||
-											point.date
-									).toDate();
-									const pointCompare = isHourlyBucket
-										? pointDate
-										: dayjs(pointDate).startOf("day").toDate();
-									const endCompare = isHourlyBucket
-										? rangeEnd
-										: dayjs(rangeEnd).startOf("day").toDate();
-									if (pointCompare <= endCompare) {
-										clampedEnd = point.xKey;
-										break;
-									}
-								}
-
+							annotationRenderItems.map((item) => {
+								const { annotation } = item;
 								if (
 									annotation.annotationType === "range" &&
 									annotation.xEndValue
 								) {
-									const isSingleDay = isSingleDayAnnotation(annotation);
-
-									if (isSingleDay) {
+									if (item.isSingleDayRange) {
 										return (
 											<ReferenceLine
 												key={annotation.id}
-												label={{
-													value: annotation.text,
-													position: index % 2 === 0 ? "top" : "insideTopLeft",
-													fill: annotation.color,
-													fontSize: CHART_ANNOTATION_STYLES.fontSize,
-													fontWeight: CHART_ANNOTATION_STYLES.fontWeight,
-													offset: CHART_ANNOTATION_STYLES.offset,
-												}}
+												label={getAnnotationLabel(item)}
 												stroke={annotation.color}
 												strokeDasharray={
 													CHART_ANNOTATION_STYLES.strokeDasharray
 												}
 												strokeWidth={CHART_ANNOTATION_STYLES.strokeWidth}
-												x={clampedStart}
+												x={item.clampedStart}
 											/>
 										);
 									}
@@ -596,20 +708,13 @@ function TrafficTrendsRechartsPlot({
 											fill={annotation.color}
 											fillOpacity={CHART_ANNOTATION_STYLES.fillOpacity}
 											key={annotation.id}
-											label={{
-												value: annotation.text,
-												position: index % 2 === 0 ? "top" : "insideTop",
-												fill: annotation.color,
-												fontSize: CHART_ANNOTATION_STYLES.fontSize,
-												fontWeight: CHART_ANNOTATION_STYLES.fontWeight,
-												offset: CHART_ANNOTATION_STYLES.offset,
-											}}
+											label={getAnnotationLabel(item)}
 											stroke={annotation.color}
 											strokeDasharray="3 3"
 											strokeOpacity={CHART_ANNOTATION_STYLES.strokeOpacity}
 											strokeWidth={2}
-											x1={clampedStart}
-											x2={clampedEnd}
+											x1={item.clampedStart}
+											x2={item.clampedEnd}
 										/>
 									);
 								}
@@ -617,18 +722,11 @@ function TrafficTrendsRechartsPlot({
 								return (
 									<ReferenceLine
 										key={annotation.id}
-										label={{
-											value: annotation.text,
-											position: index % 2 === 0 ? "top" : "insideTopLeft",
-											fill: annotation.color,
-											fontSize: CHART_ANNOTATION_STYLES.fontSize,
-											fontWeight: CHART_ANNOTATION_STYLES.fontWeight,
-											offset: CHART_ANNOTATION_STYLES.offset,
-										}}
+										label={getAnnotationLabel(item)}
 										stroke={annotation.color}
 										strokeDasharray={CHART_ANNOTATION_STYLES.strokeDasharray}
 										strokeWidth={CHART_ANNOTATION_STYLES.strokeWidth}
-										x={clampedStart}
+										x={item.clampedStart}
 									/>
 								);
 							})}
@@ -809,14 +907,20 @@ export function TrafficTrendsChart({
 		const startDate = new Date(dateRange.start_date);
 		const endDate = dayjs(dateRange.end_date).endOf("day").toDate();
 
-		return allAnnotations.filter((annotation) => {
-			const annotationStart = new Date(annotation.xValue);
-			const annotationEnd = annotation.xEndValue
-				? new Date(annotation.xEndValue)
-				: annotationStart;
+		return allAnnotations
+			.filter((annotation) => {
+				const annotationStart = new Date(annotation.xValue);
+				const annotationEnd = annotation.xEndValue
+					? new Date(annotation.xEndValue)
+					: annotationStart;
 
-			return annotationStart <= endDate && annotationEnd >= startDate;
-		});
+				return annotationStart <= endDate && annotationEnd >= startDate;
+			})
+			.sort(
+				(a, b) =>
+					new Date(a.xValue).getTime() - new Date(b.xValue).getTime() ||
+					new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+			);
 	}, [allAnnotations, dateRange]) as Annotation[];
 
 	const handleCreateAnnotation = async (annotation: CreateAnnotationInput) => {
