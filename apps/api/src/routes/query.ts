@@ -324,6 +324,17 @@ async function getWebsiteOwnerId(websiteId: string): Promise<string | null> {
 	return website.organizationId ?? null;
 }
 
+async function getOrganizationWebsiteIds(
+	organizationId: string
+): Promise<string[]> {
+	const websites = await db.query.websites.findMany({
+		where: { organizationId, deletedAt: { isNull: true } },
+		columns: { id: true },
+	});
+
+	return websites.map((website) => website.id);
+}
+
 function verifyWebsiteAccess(
 	ctx: AuthContext,
 	websiteId: string
@@ -723,7 +734,8 @@ async function executeDynamicQuery(
 	projectId: string,
 	projectType: ProjectType,
 	timezone: string,
-	domainCache?: Record<string, string | null>
+	domainCache?: Record<string, string | null>,
+	scope?: { organizationWebsiteIds?: string[] }
 ): Promise<{
 	queryId: string;
 	data: QueryResult[];
@@ -738,8 +750,14 @@ async function executeDynamicQuery(
 	const { startDate: from, endDate: to } = request;
 
 	const domain =
-		domainCache?.[projectId] ??
-		(await getWebsiteDomain(projectId).catch(() => null));
+		projectType === "website"
+			? (domainCache?.[projectId] ??
+				(await getWebsiteDomain(projectId).catch(() => null)))
+			: null;
+	const organizationWebsiteIds =
+		projectType === "organization"
+			? (scope?.organizationWebsiteIds ?? [])
+			: undefined;
 
 	// LLM queries are scoped by owner (organizationId/userId), not website_id.
 	const hasLlmQueries = request.parameters.some((param) => {
@@ -786,7 +804,6 @@ async function executeDynamicQuery(
 		}
 
 		const isLlmQuery = name.startsWith("llm_");
-		const isCustomEventsQuery = name.startsWith("custom_event");
 		const effectiveProjectId = isLlmQuery ? ownerId : projectId;
 
 		const hasRequiredFields = effectiveProjectId && paramFrom && paramTo;
@@ -821,8 +838,9 @@ async function executeDynamicQuery(
 				limit: request.limit || 100,
 				offset: request.page ? (request.page - 1) * (request.limit || 100) : 0,
 				timezone,
-				organizationWebsiteIds:
-					isCustomEventsQuery && isOrgCustomEvents ? [] : undefined,
+				organizationWebsiteIds: isOrgCustomEvents
+					? (organizationWebsiteIds ?? [])
+					: organizationWebsiteIds,
 				orderBy,
 			},
 		};
@@ -1079,10 +1097,21 @@ export const query = new Elysia({ prefix: "/v1/query" })
 					);
 				}
 
+				const organizationWebsiteIds =
+					accessResult.projectType === "organization"
+						? await getOrganizationWebsiteIds(accessResult.projectId)
+						: undefined;
+				const organizationScope = organizationWebsiteIds
+					? { organizationWebsiteIds }
+					: undefined;
+
 				const isBatch = Array.isArray(body);
 				mergeWideEvent({
 					query_is_batch: isBatch,
 					query_count: isBatch ? body.length : 1,
+					...(organizationWebsiteIds && {
+						query_organization_website_count: organizationWebsiteIds.length,
+					}),
 				});
 
 				if (isBatch) {
@@ -1129,7 +1158,8 @@ export const query = new Elysia({ prefix: "/v1/query" })
 								accessResult.projectId,
 								accessResult.projectType,
 								timezone,
-								cache
+								cache,
+								organizationScope
 							).catch((e) => ({
 								queryId: req.id,
 								data: [
@@ -1171,7 +1201,9 @@ export const query = new Elysia({ prefix: "/v1/query" })
 						resolvedBody,
 						accessResult.projectId,
 						accessResult.projectType,
-						timezone
+						timezone,
+						undefined,
+						organizationScope
 					)),
 				};
 			})(),

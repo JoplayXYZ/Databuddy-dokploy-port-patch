@@ -321,6 +321,17 @@ export class SimpleQueryBuilder {
 		return this.config.idField || "client_id";
 	}
 
+	private isOrganizationScope(): boolean {
+		return Array.isArray(this.request.organizationWebsiteIds);
+	}
+
+	private buildIdCondition(field: string): string {
+		if (this.isOrganizationScope()) {
+			return `${field} IN {websiteIds:Array(String)}`;
+		}
+		return `${field} = {websiteId:String}`;
+	}
+
 	private validateRequiredFilters(): void {
 		if (!this.config.requiredFilters?.length) {
 			return;
@@ -355,7 +366,7 @@ export class SimpleQueryBuilder {
 				session_id,
 				${sessionAttribution.selectFields(timeField).join(",\n\t\t\t")}
 			FROM ${table}
-			WHERE ${idField} = {websiteId:String}
+			WHERE ${this.buildIdCondition(idField)}
 				AND ${timeField} >= toDateTime({${fromParam}:String})
 				AND ${timeField} <= toDateTime(concat({${toParam}:String}, ' 23:59:59'))
 				AND session_id != ''
@@ -438,6 +449,26 @@ export class SimpleQueryBuilder {
 
 		if (finalSql.includes("{timezone:String}") && !finalParams.timezone) {
 			finalParams.timezone = this.request.timezone || "UTC";
+		}
+
+		if (this.isOrganizationScope()) {
+			finalParams.websiteIds = this.request.organizationWebsiteIds ?? [];
+			const idFields = new Set([
+				"client_id",
+				"website_id",
+				"owner_id",
+				this.getIdField(),
+			]);
+			for (const field of idFields) {
+				const escaped = field.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+				finalSql = finalSql.replace(
+					new RegExp(
+						`((?:\\b\\w+\\.)?${escaped})\\s*=\\s*\\{websiteId:String\\}`,
+						"g"
+					),
+					"$1 IN {websiteIds:Array(String)}"
+				);
+			}
 		}
 
 		return { sql: finalSql, params: finalParams };
@@ -572,7 +603,7 @@ export class SimpleQueryBuilder {
 		if (cte.table && !this.config.skipDateFilter) {
 			const timeField = this.config.timeField || "time";
 			const idField = this.getIdField();
-			whereConditions.push(`${idField} = {websiteId:String}`);
+			whereConditions.push(this.buildIdCondition(idField));
 			whereConditions.push(`${timeField} >= toDateTime({from:String})`);
 			whereConditions.push(
 				`${timeField} <= toDateTime(concat({to:String}, ' 23:59:59'))`
@@ -726,7 +757,7 @@ export class SimpleQueryBuilder {
 				)
 			FROM ${table} e
 			${this.generateSessionAttributionJoin("e")}
-			WHERE e.${idField} = {websiteId:String}
+			WHERE ${this.buildIdCondition(`e.${idField}`)}
 				AND e.${timeField} >= toDateTime({from:String})
 				AND e.${timeField} <= toDateTime(concat({to:String}, ' 23:59:59'))
 				AND e.session_id != ''
@@ -751,7 +782,7 @@ export class SimpleQueryBuilder {
 			whereClause.push(...this.config.where);
 		}
 
-		whereClause.push(`${this.getIdField()} = {websiteId:String}`);
+		whereClause.push(this.buildIdCondition(this.getIdField()));
 
 		if (!this.config.skipDateFilter) {
 			const timeField = this.config.timeField || "time";

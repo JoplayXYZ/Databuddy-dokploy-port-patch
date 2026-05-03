@@ -48,6 +48,45 @@ describe("SimpleQueryBuilder.compile", () => {
 		expect(params.websiteId).toBe("test-site-id");
 	});
 
+	it("uses all organization website ids for org-scoped standard queries", () => {
+		const { sql, params } = compile(
+			{},
+			{
+				projectId: "org-id",
+				organizationWebsiteIds: ["site-a", "site-b"],
+			}
+		);
+
+		expect(sql).toContain("client_id IN {websiteIds:Array(String)}");
+		expect(sql).not.toContain("client_id = {websiteId:String}");
+		expect(params.websiteIds).toEqual(["site-a", "site-b"]);
+	});
+
+	it("rewrites custom SQL website filters for org scope", () => {
+		const { sql, params } = compile(
+			{
+				customSql: (websiteId, startDate, endDate) => ({
+					sql: `
+						SELECT count() as total
+						FROM analytics.events e
+						WHERE e.client_id = {websiteId:String}
+							AND e.time >= toDateTime({startDate:String})
+							AND e.time <= toDateTime({endDate:String})
+					`,
+					params: { websiteId, startDate, endDate },
+				}),
+			},
+			{
+				projectId: "org-id",
+				organizationWebsiteIds: ["site-a", "site-b"],
+			}
+		);
+
+		expect(sql).toContain("e.client_id IN {websiteIds:Array(String)}");
+		expect(sql).not.toContain("e.client_id = {websiteId:String}");
+		expect(params.websiteIds).toEqual(["site-a", "site-b"]);
+	});
+
 	it("applies eq filter with parameterized value", () => {
 		const filters: Filter[] = [{ field: "country", op: "eq", value: "US" }];
 		const { sql, params } = compile({}, { filters });
