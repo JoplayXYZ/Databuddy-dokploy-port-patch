@@ -2,7 +2,11 @@ import { db } from "@databuddy/db";
 import { usageAlertLog } from "@databuddy/db/schema";
 import { render, UsageAlertEmail, UsageLimitEmail } from "@databuddy/email";
 import { SlackProvider } from "@databuddy/notifications";
-import { cacheable } from "@databuddy/redis";
+import {
+	cacheable,
+	invalidateAgentContextSnapshotsForOwner,
+	invalidateCacheablePattern,
+} from "@databuddy/redis";
 import { createId } from "@databuddy/shared/utils/ids";
 import { Elysia } from "elysia";
 import { useLogger } from "evlog/elysia";
@@ -152,6 +156,37 @@ async function sendAlertEmail(opts: {
 	return { success: true, message: "Email sent" };
 }
 
+async function invalidatePlanCaches(customerId: string | null): Promise<void> {
+	if (!customerId) {
+		return;
+	}
+	try {
+		const ownedOrganizations = await db.query.member.findMany({
+			where: { userId: customerId, role: "owner" },
+			columns: { organizationId: true },
+		});
+		const ownerIds = [
+			customerId,
+			...ownedOrganizations.map((row) => row.organizationId),
+		];
+		await Promise.all([
+			invalidateCacheablePattern(`cacheable:rpc:billing_owner:*${customerId}*`),
+			...ownerIds.map((ownerId) =>
+				invalidateAgentContextSnapshotsForOwner(ownerId)
+			),
+			...ownedOrganizations.map((row) =>
+				invalidateCacheablePattern(
+					`cacheable:rpc:billing_owner:*${row.organizationId}*`
+				)
+			),
+		]);
+	} catch (error) {
+		useLogger().info("Plan cache invalidation failed (best-effort)", {
+			autumn: { customerId, error },
+		});
+	}
+}
+
 function handleLimitReached(
 	data: LimitReachedData
 ): Promise<WebhookResult> | WebhookResult {
@@ -240,7 +275,9 @@ const SCENARIO_LABELS: Record<
 	},
 };
 
-function handleProductsUpdated(data: ProductsUpdatedData): WebhookResult {
+async function handleProductsUpdated(
+	data: ProductsUpdatedData
+): Promise<WebhookResult> {
 	const log = useLogger();
 	const { scenario, customer, updated_product } = data;
 	const productLabel = updated_product.name ?? updated_product.id;
@@ -248,6 +285,7 @@ function handleProductsUpdated(data: ProductsUpdatedData): WebhookResult {
 	log.info("Products updated", {
 		autumn: { customerId: customer.id, scenario, product: updated_product.id },
 	});
+	await invalidatePlanCaches(customer.id);
 
 	const shouldSkipSlack =
 		!slack ||

@@ -1,6 +1,10 @@
 import { and, desc, eq, inArray, isNull } from "@databuddy/db";
 import { goals } from "@databuddy/db/schema";
-import { createDrizzleCache, redis } from "@databuddy/redis";
+import {
+	createDrizzleCache,
+	invalidateAgentContextSnapshotsForWebsite,
+	redis,
+} from "@databuddy/redis";
 import { GATED_FEATURES } from "@databuddy/shared/types/features";
 import { randomUUIDv7 } from "bun";
 import { z } from "zod";
@@ -233,6 +237,8 @@ export const goalsRouter = {
 				})
 				.returning();
 
+			await invalidateAgentContextSnapshotsForWebsite(input.websiteId);
+
 			return newGoal;
 		}),
 
@@ -281,6 +287,8 @@ export const goalsRouter = {
 				.where(and(eq(goals.id, id), isNull(goals.deletedAt)))
 				.returning();
 
+			await invalidateAgentContextSnapshotsForWebsite(existingGoal.websiteId);
+
 			return updatedGoal;
 		}),
 
@@ -314,6 +322,8 @@ export const goalsRouter = {
 				.update(goals)
 				.set({ deletedAt: new Date(), isActive: false })
 				.where(and(eq(goals.id, input.id), isNull(goals.deletedAt)));
+
+			await invalidateAgentContextSnapshotsForWebsite(existingGoal.websiteId);
 
 			return { success: true };
 		}),

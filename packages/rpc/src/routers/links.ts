@@ -2,6 +2,7 @@ import { and, desc, eq, isNull, isUniqueViolationFor } from "@databuddy/db";
 import { linkFolders, links } from "@databuddy/db/schema";
 import {
 	type CachedLink,
+	invalidateAgentContextSnapshotsForOwner,
 	invalidateLinkCache,
 	setCachedLink,
 } from "@databuddy/redis";
@@ -209,6 +210,10 @@ async function resolveFolderId(
 		})
 		.returning({ id: linkFolders.id });
 
+	if (!folder) {
+		throw rpcError.internal("Failed to create link folder");
+	}
+
 	return folder.id;
 }
 
@@ -321,6 +326,9 @@ export const linksRouter = {
 			}
 
 			const linkRow = result[0];
+			if (!linkRow) {
+				throw rpcError.notFound("link", input.id);
+			}
 			await withLinksAccess(context, {
 				organizationId: linkRow.organizationId,
 				permission: "read",
@@ -402,12 +410,17 @@ export const linksRouter = {
 						})
 						.returning();
 
+					if (!newLink) {
+						throw rpcError.internal("Failed to create link");
+					}
+
 					await setCachedLink(slug, toCachedLink(newLink)).catch((err) =>
 						logger.error(
 							{ slug, linkId: newLink.id, error: String(err) },
 							"Failed to cache link after create"
 						)
 					);
+					await invalidateAgentContextSnapshotsForOwner(organizationId);
 
 					return newLink;
 				} catch (error) {
@@ -446,6 +459,9 @@ export const linksRouter = {
 			}
 
 			const link = existingLink[0];
+			if (!link) {
+				throw rpcError.notFound("link", input.id);
+			}
 			await withLinksAccess(context, {
 				organizationId: link.organizationId,
 				permission: "update",
@@ -515,11 +531,16 @@ export const linksRouter = {
 					.where(eq(links.id, id))
 					.returning();
 
+				if (!updatedLink) {
+					throw rpcError.notFound("link", input.id);
+				}
+
 				await Promise.all([
 					oldSlug === updatedLink.slug
 						? Promise.resolve()
 						: invalidateLinkCache(oldSlug),
 					setCachedLink(updatedLink.slug, toCachedLink(updatedLink)),
+					invalidateAgentContextSnapshotsForOwner(link.organizationId),
 				]).catch((err) =>
 					logger.error(
 						{
@@ -567,6 +588,9 @@ export const linksRouter = {
 			}
 
 			const link = existingLink[0];
+			if (!link) {
+				throw rpcError.notFound("link", input.id);
+			}
 
 			await withLinksAccess(context, {
 				organizationId: link.organizationId,
@@ -587,6 +611,7 @@ export const linksRouter = {
 
 			// Hard delete the link
 			await context.db.delete(links).where(eq(links.id, input.id));
+			await invalidateAgentContextSnapshotsForOwner(link.organizationId);
 
 			return { success: true };
 		}),

@@ -1,6 +1,10 @@
 import { and, desc, eq, isNull, sql } from "@databuddy/db";
 import { funnelDefinitions } from "@databuddy/db/schema";
-import { createDrizzleCache, redis } from "@databuddy/redis";
+import {
+	createDrizzleCache,
+	invalidateAgentContextSnapshotsForWebsite,
+	redis,
+} from "@databuddy/redis";
 import { GATED_FEATURES } from "@databuddy/shared/types/features";
 import { randomUUIDv7 } from "bun";
 import { z } from "zod";
@@ -65,12 +69,13 @@ const invalidateFunnelsCache = async (websiteId: string, funnelId?: string) => {
 	if (funnelId) {
 		keys.push(`byId:${funnelId}:${websiteId}`);
 	}
-	const operations: Promise<void>[] = keys.map((key) =>
+	const operations: Promise<unknown>[] = keys.map((key) =>
 		cache.invalidateByKey(key)
 	);
 	if (funnelId) {
 		operations.push(cache.invalidateByTags([`funnel:${funnelId}`]));
 	}
+	operations.push(invalidateAgentContextSnapshotsForWebsite(websiteId));
 	await Promise.all(operations);
 };
 
