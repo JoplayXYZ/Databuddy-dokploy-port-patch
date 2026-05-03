@@ -110,6 +110,7 @@ const QUERY_CONFIG = {
 			"page_time_analysis",
 		] as string[],
 		traffic: [
+			"traffic_sources",
 			"top_referrers",
 			"utm_sources",
 			"utm_mediums",
@@ -236,6 +237,8 @@ export function WebsiteOverviewTab({
 		exit_pages: getDataForQuery("overview-pages", "exit_pages") || [],
 		page_time_analysis:
 			getDataForQuery("overview-pages", "page_time_analysis") || [],
+		traffic_sources:
+			getDataForQuery("overview-traffic", "traffic_sources") || [],
 		top_referrers: getDataForQuery("overview-traffic", "top_referrers") || [],
 		utm_sources: getDataForQuery("overview-traffic", "utm_sources") || [],
 		utm_mediums: getDataForQuery("overview-traffic", "utm_mediums") || [],
@@ -264,6 +267,19 @@ export function WebsiteOverviewTab({
 
 	const referrerTabs = useMemo(
 		() => [
+			{
+				id: "sources",
+				label: "Sources",
+				data: analytics.traffic_sources || [],
+				columns: createReferrerColumns() as ColumnDef<
+					AnalyticsRowData,
+					unknown
+				>[],
+				getFilter: (row: AnalyticsRowData) => ({
+					field: "referrer",
+					value: row.referrer || row.name || "",
+				}),
+			},
 			{
 				id: "referrers",
 				label: "Referrers",
@@ -324,6 +340,7 @@ export function WebsiteOverviewTab({
 			},
 		],
 		[
+			analytics.traffic_sources,
 			analytics.top_referrers,
 			analytics.utm_sources,
 			analytics.utm_mediums,
