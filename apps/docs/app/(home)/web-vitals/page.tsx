@@ -148,7 +148,7 @@ export default function WebVitalsPage() {
 
 				<Section className="border-border border-b" id="faq">
 					<div className={container}>
-						<FaqSection eyebrow="FAQ" items={[...FAQ_ITEMS]} />
+						<FaqSection items={[...FAQ_ITEMS]} />
 					</div>
 				</Section>
 

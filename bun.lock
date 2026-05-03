@@ -315,6 +315,7 @@
         "@types/react": "catalog:",
         "@types/react-dom": "catalog:",
         "@types/topojson-client": "^3.1.5",
+        "@types/topojson-specification": "^1.0.5",
         "babel-plugin-react-compiler": "^1.0.0",
         "next-validate-link": "^1.6.4",
         "postcss": "^8.5.10",
