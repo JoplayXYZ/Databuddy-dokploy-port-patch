@@ -357,7 +357,7 @@ async function cmdJudge() {
 				console.error(`No results found for model ${opts.model}`);
 				process.exit(1);
 			}
-			files.push(join(resultsDir, matching[matching.length - 1]));
+			files.push(join(resultsDir, matching.at(-1)));
 		} else {
 			for (const f of all) {
 				files.push(join(resultsDir, f));
@@ -453,12 +453,12 @@ function cmdCompare() {
 	const COL = 20;
 	const pad = (s: string, n: number) =>
 		s.length >= n ? s.slice(0, n) : s + " ".repeat(n - s.length);
-	const rpad = (s: string, n: number) =>
+	const _rpad = (s: string, n: number) =>
 		s.length >= n ? s.slice(0, n) : " ".repeat(n - s.length) + s;
 
 	const shortName = (m: string) => {
 		const parts = m.split("/");
-		return parts[parts.length - 1].slice(0, COL - 1);
+		return parts.at(-1).slice(0, COL - 1);
 	};
 
 	console.log(
@@ -467,7 +467,7 @@ function cmdCompare() {
 	console.log("-".repeat(34 + models.length * (COL + 3)));
 
 	for (const cid of caseIds) {
-		let row = pad(cid.slice(0, 30), 32) + " |";
+		let row = `${pad(cid.slice(0, 30), 32)} |`;
 		let hasDiff = false;
 		const cellValues: string[] = [];
 
@@ -503,7 +503,7 @@ function cmdCompare() {
 	}
 
 	console.log("-".repeat(34 + models.length * (COL + 3)));
-	let summaryRow = pad("TOTAL", 32) + " |";
+	let summaryRow = `${pad("TOTAL", 32)} |`;
 	for (const model of models) {
 		const run = latestByModel.get(model)!;
 		const s = run.summary;

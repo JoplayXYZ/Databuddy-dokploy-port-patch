@@ -351,379 +351,377 @@ function TrafficTrendsRechartsPlot({
 	}
 
 	return (
-		<>
-			<div className={cn("w-full overflow-hidden", className)}>
-				<div
-					className="relative select-none"
-					style={{
-						width: "100%",
-						height,
-						userSelect: refAreaLeft ? "none" : "auto",
-						WebkitUserSelect: refAreaLeft ? "none" : "auto",
-					}}
-				>
-					{mergedFeatures.rangeSelection &&
-						refAreaLeft !== null &&
-						refAreaRight === null && (
-							<div className="absolute top-3 left-1/2 z-10 -translate-x-1/2">
-								<div className="rounded bg-foreground px-2.5 py-1 font-medium text-background text-xs shadow-lg">
-									Drag to select range
-								</div>
+		<div className={cn("w-full overflow-hidden", className)}>
+			<div
+				className="relative select-none"
+				style={{
+					width: "100%",
+					height,
+					userSelect: refAreaLeft ? "none" : "auto",
+					WebkitUserSelect: refAreaLeft ? "none" : "auto",
+				}}
+			>
+				{mergedFeatures.rangeSelection &&
+					refAreaLeft !== null &&
+					refAreaRight === null && (
+						<div className="absolute top-3 left-1/2 z-10 -translate-x-1/2">
+							<div className="rounded bg-foreground px-2.5 py-1 font-medium text-background text-xs shadow-lg">
+								Drag to select range
 							</div>
-						)}
+						</div>
+					)}
 
-					{mergedFeatures.annotations &&
-						mergedFeatures.rangeSelection &&
-						!refAreaLeft &&
-						annotations.length === 0 &&
-						!tipDismissed && (
-							<div className="absolute top-2 right-3 z-10">
-								<button
-									className="flex items-center gap-1.5 rounded border bg-card/90 px-2 py-1 text-muted-foreground text-xs shadow-sm backdrop-blur-sm hover:text-foreground"
-									onClick={() => setTipDismissed(true)}
-									type="button"
+				{mergedFeatures.annotations &&
+					mergedFeatures.rangeSelection &&
+					!refAreaLeft &&
+					annotations.length === 0 &&
+					!tipDismissed && (
+						<div className="absolute top-2 right-3 z-10">
+							<button
+								className="flex items-center gap-1.5 rounded border bg-card/90 px-2 py-1 text-muted-foreground text-xs shadow-sm backdrop-blur-sm hover:text-foreground"
+								onClick={() => setTipDismissed(true)}
+								type="button"
+							>
+								<NoteIcon className="size-3" weight="duotone" />
+								<span>Drag to annotate</span>
+								<XIcon className="size-2.5" />
+							</button>
+						</div>
+					)}
+				<ResponsiveContainer height="100%" width="100%">
+					<ComposedChart
+						data={chartData}
+						margin={{
+							top: 20,
+							right: 20,
+							left: 10,
+							bottom: 10,
+						}}
+						onMouseDown={
+							mergedFeatures.rangeSelection ? handleMouseDown : undefined
+						}
+						onMouseMove={
+							mergedFeatures.rangeSelection ? handleMouseMove : undefined
+						}
+						onMouseUp={
+							mergedFeatures.rangeSelection ? handleMouseUp : undefined
+						}
+					>
+						<defs>
+							{metrics.map((metric) => (
+								<linearGradient
+									id={`gradient-${metric.gradient}`}
+									key={metric.key}
+									x1="0"
+									x2="0"
+									y1="0"
+									y2="1"
 								>
-									<NoteIcon className="size-3" weight="duotone" />
-									<span>Drag to annotate</span>
-									<XIcon className="size-2.5" />
-								</button>
-							</div>
-						)}
-					<ResponsiveContainer height="100%" width="100%">
-						<ComposedChart
-							data={chartData}
-							margin={{
-								top: 20,
-								right: 20,
-								left: 10,
-								bottom: 10,
-							}}
-							onMouseDown={
-								mergedFeatures.rangeSelection ? handleMouseDown : undefined
-							}
-							onMouseMove={
-								mergedFeatures.rangeSelection ? handleMouseMove : undefined
-							}
-							onMouseUp={
-								mergedFeatures.rangeSelection ? handleMouseUp : undefined
-							}
-						>
-							<defs>
-								{metrics.map((metric) => (
-									<linearGradient
-										id={`gradient-${metric.gradient}`}
-										key={metric.key}
-										x1="0"
-										x2="0"
-										y1="0"
-										y2="1"
-									>
-										<stop
-											offset="0%"
-											stopColor={metric.color}
-											stopOpacity={0.3}
-										/>
-										<stop
-											offset="100%"
-											stopColor={metric.color}
-											stopOpacity={0.02}
-										/>
-									</linearGradient>
-								))}
-							</defs>
-							<CartesianGrid {...chartCartesianGridDefault} />
-							<XAxis
-								axisLine={false}
-								dataKey="xKey"
-								tick={chartAxisTickDefault}
-								tickFormatter={(value) =>
-									formatAxisTickLabel(String(value), granularity)
-								}
-								tickLine={false}
-							/>
-							<YAxis
-								axisLine={false}
-								tick={chartAxisTickDefault}
-								tickLine={false}
-								width={45}
-							/>
-							<Tooltip
-								content={
-									<CustomTooltip
-										isDragging={isDragging}
-										justFinishedDragging={suppressTooltip}
+									<stop
+										offset="0%"
+										stopColor={metric.color}
+										stopOpacity={0.3}
 									/>
-								}
-								cursor={
-									suppressTooltip
-										? false
-										: {
-												stroke: "var(--color-chart-1)",
-												strokeDasharray: "4 4",
-												strokeOpacity: 0.5,
-											}
-								}
-								labelFormatter={(value) =>
-									formatAxisTickLabel(String(value), granularity)
-								}
-							/>
-							{mergedFeatures.rangeSelection &&
-								refAreaLeft !== null &&
-								refAreaRight !== null && (
-									<ReferenceArea
-										fill="var(--color-chart-1)"
-										fillOpacity={0.2}
-										stroke="var(--color-chart-1)"
-										strokeOpacity={0.6}
-										strokeWidth={1}
-										x1={refAreaLeft}
-										x2={refAreaRight}
+									<stop
+										offset="100%"
+										stopColor={metric.color}
+										stopOpacity={0.02}
 									/>
-								)}
-
-							{mergedFeatures.annotations &&
-								showAnnotations === true &&
-								annotations.map((annotation, index) => {
-									if (!chartData.length) {
-										return null;
-									}
-
-									const chartFirst = chartData[0];
-									const chartLast = chartData.at(-1);
-									if (!(chartFirst && chartLast)) {
-										return null;
-									}
-
-									const isHourlyBucket = granularity === "hourly";
-
-									const rangeStart = isHourlyBucket
-										? dayjs(annotation.xValue).toDate()
-										: dayjs(annotation.xValue).startOf("day").toDate();
-									const rangeEnd = isHourlyBucket
-										? dayjs(annotation.xEndValue || annotation.xValue).toDate()
-										: dayjs(annotation.xEndValue || annotation.xValue)
-												.endOf("day")
-												.toDate();
-
-									const chartFirstD = dayjs(
-										(chartFirst as ChartDataRow & { rawDate?: string })
-											.rawDate || chartFirst.date
-									);
-									const chartLastD = dayjs(
-										(chartLast as ChartDataRow & { rawDate?: string })
-											.rawDate || chartLast.date
-									);
-
-									const chartDomainStart = isHourlyBucket
-										? chartFirstD.toDate()
-										: chartFirstD.startOf("day").toDate();
-									const chartDomainEnd = isHourlyBucket
-										? chartLastD.toDate()
-										: chartLastD.endOf("day").toDate();
-
-									if (
-										rangeEnd < chartDomainStart ||
-										rangeStart > chartDomainEnd
-									) {
-										return null;
-									}
-
-									let clampedStart = chartFirst.xKey;
-									for (const point of chartData) {
-										const pointDate = dayjs(
-											(point as ChartDataRow & { rawDate?: string }).rawDate ||
-												point.date
-										).toDate();
-										const pointCompare = isHourlyBucket
-											? pointDate
-											: dayjs(pointDate).startOf("day").toDate();
-										const startCompare = isHourlyBucket
-											? rangeStart
-											: dayjs(rangeStart).startOf("day").toDate();
-										if (pointCompare >= startCompare) {
-											clampedStart = point.xKey;
-											break;
+								</linearGradient>
+							))}
+						</defs>
+						<CartesianGrid {...chartCartesianGridDefault} />
+						<XAxis
+							axisLine={false}
+							dataKey="xKey"
+							tick={chartAxisTickDefault}
+							tickFormatter={(value) =>
+								formatAxisTickLabel(String(value), granularity)
+							}
+							tickLine={false}
+						/>
+						<YAxis
+							axisLine={false}
+							tick={chartAxisTickDefault}
+							tickLine={false}
+							width={45}
+						/>
+						<Tooltip
+							content={
+								<CustomTooltip
+									isDragging={isDragging}
+									justFinishedDragging={suppressTooltip}
+								/>
+							}
+							cursor={
+								suppressTooltip
+									? false
+									: {
+											stroke: "var(--color-chart-1)",
+											strokeDasharray: "4 4",
+											strokeOpacity: 0.5,
 										}
+							}
+							labelFormatter={(value) =>
+								formatAxisTickLabel(String(value), granularity)
+							}
+						/>
+						{mergedFeatures.rangeSelection &&
+							refAreaLeft !== null &&
+							refAreaRight !== null && (
+								<ReferenceArea
+									fill="var(--color-chart-1)"
+									fillOpacity={0.2}
+									stroke="var(--color-chart-1)"
+									strokeOpacity={0.6}
+									strokeWidth={1}
+									x1={refAreaLeft}
+									x2={refAreaRight}
+								/>
+							)}
+
+						{mergedFeatures.annotations &&
+							showAnnotations === true &&
+							annotations.map((annotation, index) => {
+								if (!chartData.length) {
+									return null;
+								}
+
+								const chartFirst = chartData[0];
+								const chartLast = chartData.at(-1);
+								if (!(chartFirst && chartLast)) {
+									return null;
+								}
+
+								const isHourlyBucket = granularity === "hourly";
+
+								const rangeStart = isHourlyBucket
+									? dayjs(annotation.xValue).toDate()
+									: dayjs(annotation.xValue).startOf("day").toDate();
+								const rangeEnd = isHourlyBucket
+									? dayjs(annotation.xEndValue || annotation.xValue).toDate()
+									: dayjs(annotation.xEndValue || annotation.xValue)
+											.endOf("day")
+											.toDate();
+
+								const chartFirstD = dayjs(
+									(chartFirst as ChartDataRow & { rawDate?: string }).rawDate ||
+										chartFirst.date
+								);
+								const chartLastD = dayjs(
+									(chartLast as ChartDataRow & { rawDate?: string }).rawDate ||
+										chartLast.date
+								);
+
+								const chartDomainStart = isHourlyBucket
+									? chartFirstD.toDate()
+									: chartFirstD.startOf("day").toDate();
+								const chartDomainEnd = isHourlyBucket
+									? chartLastD.toDate()
+									: chartLastD.endOf("day").toDate();
+
+								if (
+									rangeEnd < chartDomainStart ||
+									rangeStart > chartDomainEnd
+								) {
+									return null;
+								}
+
+								let clampedStart = chartFirst.xKey;
+								for (const point of chartData) {
+									const pointDate = dayjs(
+										(point as ChartDataRow & { rawDate?: string }).rawDate ||
+											point.date
+									).toDate();
+									const pointCompare = isHourlyBucket
+										? pointDate
+										: dayjs(pointDate).startOf("day").toDate();
+									const startCompare = isHourlyBucket
+										? rangeStart
+										: dayjs(rangeStart).startOf("day").toDate();
+									if (pointCompare >= startCompare) {
+										clampedStart = point.xKey;
+										break;
 									}
+								}
 
-									let clampedEnd = chartLast.xKey;
-									for (let i = chartData.length - 1; i >= 0; i--) {
-										const point = chartData[i];
-										if (!point) {
-											continue;
-										}
-										const pointDate = dayjs(
-											(point as ChartDataRow & { rawDate?: string }).rawDate ||
-												point.date
-										).toDate();
-										const pointCompare = isHourlyBucket
-											? pointDate
-											: dayjs(pointDate).startOf("day").toDate();
-										const endCompare = isHourlyBucket
-											? rangeEnd
-											: dayjs(rangeEnd).startOf("day").toDate();
-										if (pointCompare <= endCompare) {
-											clampedEnd = point.xKey;
-											break;
-										}
+								let clampedEnd = chartLast.xKey;
+								for (let i = chartData.length - 1; i >= 0; i--) {
+									const point = chartData[i];
+									if (!point) {
+										continue;
 									}
+									const pointDate = dayjs(
+										(point as ChartDataRow & { rawDate?: string }).rawDate ||
+											point.date
+									).toDate();
+									const pointCompare = isHourlyBucket
+										? pointDate
+										: dayjs(pointDate).startOf("day").toDate();
+									const endCompare = isHourlyBucket
+										? rangeEnd
+										: dayjs(rangeEnd).startOf("day").toDate();
+									if (pointCompare <= endCompare) {
+										clampedEnd = point.xKey;
+										break;
+									}
+								}
 
-									if (
-										annotation.annotationType === "range" &&
-										annotation.xEndValue
-									) {
-										const isSingleDay = isSingleDayAnnotation(annotation);
+								if (
+									annotation.annotationType === "range" &&
+									annotation.xEndValue
+								) {
+									const isSingleDay = isSingleDayAnnotation(annotation);
 
-										if (isSingleDay) {
-											return (
-												<ReferenceLine
-													key={annotation.id}
-													label={{
-														value: annotation.text,
-														position: index % 2 === 0 ? "top" : "insideTopLeft",
-														fill: annotation.color,
-														fontSize: CHART_ANNOTATION_STYLES.fontSize,
-														fontWeight: CHART_ANNOTATION_STYLES.fontWeight,
-														offset: CHART_ANNOTATION_STYLES.offset,
-													}}
-													stroke={annotation.color}
-													strokeDasharray={
-														CHART_ANNOTATION_STYLES.strokeDasharray
-													}
-													strokeWidth={CHART_ANNOTATION_STYLES.strokeWidth}
-													x={clampedStart}
-												/>
-											);
-										}
-
+									if (isSingleDay) {
 										return (
-											<ReferenceArea
-												fill={annotation.color}
-												fillOpacity={CHART_ANNOTATION_STYLES.fillOpacity}
+											<ReferenceLine
 												key={annotation.id}
 												label={{
 													value: annotation.text,
-													position: index % 2 === 0 ? "top" : "insideTop",
+													position: index % 2 === 0 ? "top" : "insideTopLeft",
 													fill: annotation.color,
 													fontSize: CHART_ANNOTATION_STYLES.fontSize,
 													fontWeight: CHART_ANNOTATION_STYLES.fontWeight,
 													offset: CHART_ANNOTATION_STYLES.offset,
 												}}
 												stroke={annotation.color}
-												strokeDasharray="3 3"
-												strokeOpacity={CHART_ANNOTATION_STYLES.strokeOpacity}
-												strokeWidth={2}
-												x1={clampedStart}
-												x2={clampedEnd}
+												strokeDasharray={
+													CHART_ANNOTATION_STYLES.strokeDasharray
+												}
+												strokeWidth={CHART_ANNOTATION_STYLES.strokeWidth}
+												x={clampedStart}
 											/>
 										);
 									}
 
 									return (
-										<ReferenceLine
+										<ReferenceArea
+											fill={annotation.color}
+											fillOpacity={CHART_ANNOTATION_STYLES.fillOpacity}
 											key={annotation.id}
 											label={{
 												value: annotation.text,
-												position: index % 2 === 0 ? "top" : "insideTopLeft",
+												position: index % 2 === 0 ? "top" : "insideTop",
 												fill: annotation.color,
 												fontSize: CHART_ANNOTATION_STYLES.fontSize,
 												fontWeight: CHART_ANNOTATION_STYLES.fontWeight,
 												offset: CHART_ANNOTATION_STYLES.offset,
 											}}
 											stroke={annotation.color}
-											strokeDasharray={CHART_ANNOTATION_STYLES.strokeDasharray}
-											strokeWidth={CHART_ANNOTATION_STYLES.strokeWidth}
-											x={clampedStart}
+											strokeDasharray="3 3"
+											strokeOpacity={CHART_ANNOTATION_STYLES.strokeOpacity}
+											strokeWidth={2}
+											x1={clampedStart}
+											x2={clampedEnd}
 										/>
 									);
-								})}
+								}
 
-							<Legend
-								align="center"
-								formatter={(label) => {
-									const metric = metrics.find((m) => m.label === label);
-									const isHidden = metric ? hiddenMetrics[metric.key] : false;
-									return (
-										<span
-											className={chartRechartsInteractiveLegendLabelClassName(
-												isHidden
-											)}
-										>
-											{label}
-										</span>
-									);
-								}}
-								iconSize={chartRechartsLegendIconSize}
-								iconType="circle"
-								onClick={(payload: { value?: string | number }) => {
-									const metric = metrics.find((m) => m.label === payload.value);
-									if (metric) {
-										toggleMetric(metric.key as keyof typeof visibleMetrics);
-									}
-								}}
-								verticalAlign="bottom"
-								wrapperStyle={LEGEND_WRAPPER_STYLE}
-							/>
-							{metrics.map((metric) => (
-								<Area
-									activeDot={
-										suppressTooltip
-											? false
-											: { r: 4, stroke: metric.color, strokeWidth: 2 }
-									}
-									dataKey={metric.key}
-									fill={`url(#gradient-${metric.gradient})`}
-									hide={hiddenMetrics[metric.key]}
-									isAnimationActive={!hasAnimated}
-									key={metric.key}
-									name={metric.label}
-									onAnimationEnd={() => {
-										setHasAnimated(true);
-									}}
-									stroke={metric.color}
-									strokeDasharray={
-										lineDasharrays.find((line) => line.name === metric.key)
-											?.strokeDasharray || "0 0"
-									}
-									strokeWidth={2.5}
-									type={chartStepType}
-								/>
-							))}
-							<Customized component={DasharrayCalculator} />
-						</ComposedChart>
-					</ResponsiveContainer>
-				</div>
+								return (
+									<ReferenceLine
+										key={annotation.id}
+										label={{
+											value: annotation.text,
+											position: index % 2 === 0 ? "top" : "insideTopLeft",
+											fill: annotation.color,
+											fontSize: CHART_ANNOTATION_STYLES.fontSize,
+											fontWeight: CHART_ANNOTATION_STYLES.fontWeight,
+											offset: CHART_ANNOTATION_STYLES.offset,
+										}}
+										stroke={annotation.color}
+										strokeDasharray={CHART_ANNOTATION_STYLES.strokeDasharray}
+										strokeWidth={CHART_ANNOTATION_STYLES.strokeWidth}
+										x={clampedStart}
+									/>
+								);
+							})}
 
-				{mergedFeatures.rangeSelection &&
-					showRangePopup === true &&
-					selectedDateRange !== null && (
-						<RangeSelectionPopup
-							dateRange={selectedDateRange}
-							isOpen={showRangePopup}
-							onAddAnnotationAction={() => {
-								setShowRangePopup(false);
-								setShowAnnotationModal(true);
+						<Legend
+							align="center"
+							formatter={(label) => {
+								const metric = metrics.find((m) => m.label === label);
+								const isHidden = metric ? hiddenMetrics[metric.key] : false;
+								return (
+									<span
+										className={chartRechartsInteractiveLegendLabelClassName(
+											isHidden
+										)}
+									>
+										{label}
+									</span>
+								);
 							}}
-							onCloseAction={() => setShowRangePopup(false)}
-							onZoomAction={onRangeSelect ?? (() => {})}
-							showAnnotationAction={mergedFeatures.annotations}
+							iconSize={chartRechartsLegendIconSize}
+							iconType="circle"
+							onClick={(payload: { value?: string | number }) => {
+								const metric = metrics.find((m) => m.label === payload.value);
+								if (metric) {
+									toggleMetric(metric.key as keyof typeof visibleMetrics);
+								}
+							}}
+							verticalAlign="bottom"
+							wrapperStyle={LEGEND_WRAPPER_STYLE}
 						/>
-					)}
-
-				{mergedFeatures.annotations &&
-					mergedFeatures.rangeSelection &&
-					showAnnotationModal === true &&
-					selectedDateRange !== null && (
-						<AnnotationModal
-							dateRange={selectedDateRange}
-							isOpen={showAnnotationModal}
-							mode="create"
-							onClose={() => setShowAnnotationModal(false)}
-							onCreate={handleInternalCreateAnnotation}
-						/>
-					)}
+						{metrics.map((metric) => (
+							<Area
+								activeDot={
+									suppressTooltip
+										? false
+										: { r: 4, stroke: metric.color, strokeWidth: 2 }
+								}
+								dataKey={metric.key}
+								fill={`url(#gradient-${metric.gradient})`}
+								hide={hiddenMetrics[metric.key]}
+								isAnimationActive={!hasAnimated}
+								key={metric.key}
+								name={metric.label}
+								onAnimationEnd={() => {
+									setHasAnimated(true);
+								}}
+								stroke={metric.color}
+								strokeDasharray={
+									lineDasharrays.find((line) => line.name === metric.key)
+										?.strokeDasharray || "0 0"
+								}
+								strokeWidth={2.5}
+								type={chartStepType}
+							/>
+						))}
+						<Customized component={DasharrayCalculator} />
+					</ComposedChart>
+				</ResponsiveContainer>
 			</div>
-		</>
+
+			{mergedFeatures.rangeSelection &&
+				showRangePopup === true &&
+				selectedDateRange !== null && (
+					<RangeSelectionPopup
+						dateRange={selectedDateRange}
+						isOpen={showRangePopup}
+						onAddAnnotationAction={() => {
+							setShowRangePopup(false);
+							setShowAnnotationModal(true);
+						}}
+						onCloseAction={() => setShowRangePopup(false)}
+						onZoomAction={onRangeSelect ?? (() => {})}
+						showAnnotationAction={mergedFeatures.annotations}
+					/>
+				)}
+
+			{mergedFeatures.annotations &&
+				mergedFeatures.rangeSelection &&
+				showAnnotationModal === true &&
+				selectedDateRange !== null && (
+					<AnnotationModal
+						dateRange={selectedDateRange}
+						isOpen={showAnnotationModal}
+						mode="create"
+						onClose={() => setShowAnnotationModal(false)}
+						onCreate={handleInternalCreateAnnotation}
+					/>
+				)}
+		</div>
 	);
 }
 

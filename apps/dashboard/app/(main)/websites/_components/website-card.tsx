@@ -259,21 +259,21 @@ export const WebsiteCard = memo(
 						<ContextMenuPositioner className="z-50">
 							<ContextMenuPopup className="min-w-48 rounded border border-border/50 bg-popover/95 p-0 shadow-lg backdrop-blur-sm">
 								<ContextMenuItem
-									className="flex w-full cursor-default items-center gap-2 rounded-none px-3 py-2 text-sm outline-none select-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground"
+									className="flex w-full cursor-default select-none items-center gap-2 rounded-none px-3 py-2 text-sm outline-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground"
 									onClick={handleOpen}
 								>
 									<EyeIcon className="size-4" weight="duotone" />
 									Open
 								</ContextMenuItem>
 								<ContextMenuItem
-									className="flex w-full cursor-default items-center gap-2 rounded-none px-3 py-2 text-sm outline-none select-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground"
+									className="flex w-full cursor-default select-none items-center gap-2 rounded-none px-3 py-2 text-sm outline-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground"
 									onClick={handleOpenNewTab}
 								>
 									<ArrowSquareOutIcon className="size-4" weight="duotone" />
 									Open in new tab
 								</ContextMenuItem>
 								<ContextMenuItem
-									className="flex w-full cursor-default items-center gap-2 rounded-none px-3 py-2 text-sm outline-none select-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground"
+									className="flex w-full cursor-default select-none items-center gap-2 rounded-none px-3 py-2 text-sm outline-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground"
 									onClick={handleCopyLink}
 								>
 									<CopyIcon className="size-4" weight="duotone" />
@@ -281,21 +281,21 @@ export const WebsiteCard = memo(
 								</ContextMenuItem>
 								<ContextMenuSeparator className="h-px bg-border" />
 								<ContextMenuItem
-									className="flex w-full cursor-default items-center gap-2 rounded-none px-3 py-2 text-sm outline-none select-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground"
+									className="flex w-full cursor-default select-none items-center gap-2 rounded-none px-3 py-2 text-sm outline-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground"
 									onClick={handleEdit}
 								>
 									<PencilSimpleIcon className="size-4" weight="duotone" />
 									Edit
 								</ContextMenuItem>
 								<ContextMenuItem
-									className="flex w-full cursor-default items-center gap-2 rounded-none px-3 py-2 text-sm outline-none select-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground"
+									className="flex w-full cursor-default select-none items-center gap-2 rounded-none px-3 py-2 text-sm outline-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground"
 									onClick={handleSettings}
 								>
 									<GearIcon className="size-4" weight="duotone" />
 									Settings
 								</ContextMenuItem>
 								<ContextMenuItem
-									className="flex w-full cursor-default items-center gap-2 rounded-none px-3 py-2 text-sm outline-none select-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground"
+									className="flex w-full cursor-default select-none items-center gap-2 rounded-none px-3 py-2 text-sm outline-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground"
 									onClick={handleTransfer}
 								>
 									<ArrowsLeftRightIcon className="size-4" weight="duotone" />
@@ -303,7 +303,7 @@ export const WebsiteCard = memo(
 								</ContextMenuItem>
 								<ContextMenuSeparator className="h-px bg-border" />
 								<ContextMenuItem
-									className="flex w-full cursor-default items-center gap-2 rounded-none px-3 py-2 text-sm text-destructive outline-none select-none data-[highlighted]:bg-destructive/10 data-[highlighted]:text-destructive"
+									className="flex w-full cursor-default select-none items-center gap-2 rounded-none px-3 py-2 text-destructive text-sm outline-none data-[highlighted]:bg-destructive/10 data-[highlighted]:text-destructive"
 									onClick={handleDelete}
 								>
 									<TrashIcon className="size-4" weight="duotone" />

@@ -31,9 +31,7 @@ export async function GET(
 					ETag: `"${Buffer.from(body).length.toString(36)}"`,
 				},
 			});
-		} catch {
-			continue;
-		}
+		} catch {}
 	}
 
 	return new Response("Not found", { status: 404 });

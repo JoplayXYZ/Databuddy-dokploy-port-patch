@@ -24,10 +24,10 @@ class NotificationSendError extends Data.TaggedError("NotificationSendError")<{
 	cause: unknown;
 }> {}
 
-type LinkedAlarm = {
-	id: string;
+interface LinkedAlarm {
 	destinations: Array<{ type: string; identifier: string; config: unknown }>;
-};
+	id: string;
+}
 
 export interface TransitionResult {
 	alarms_fired: number;

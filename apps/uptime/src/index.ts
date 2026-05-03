@@ -100,7 +100,7 @@ type ProbeResult =
 	| { status: "ok"; latency_ms: number }
 	| { status: "error"; latency_ms: number; error: string };
 
-const probe = (name: string, fn: () => Promise<void>) =>
+const probe = (_name: string, fn: () => Promise<void>) =>
 	Effect.gen(function* () {
 		const start = performance.now();
 		const result = yield* Effect.tryPromise({

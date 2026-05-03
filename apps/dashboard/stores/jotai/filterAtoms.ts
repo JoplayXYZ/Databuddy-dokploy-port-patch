@@ -303,7 +303,7 @@ export const savedFiltersAtom = atom(
 		const { filters, loaded } = get(savedFiltersBaseAtom);
 		return { savedFilters: filters, isLoading: !loaded };
 	},
-	(get, set, update: { websiteId: string; filters: SavedFilter[] }) => {
+	(_get, set, update: { websiteId: string; filters: SavedFilter[] }) => {
 		set(savedFiltersBaseAtom, {
 			websiteId: update.websiteId,
 			filters: update.filters,

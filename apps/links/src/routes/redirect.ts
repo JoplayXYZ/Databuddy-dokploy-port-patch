@@ -237,7 +237,7 @@ async function lookupLink(slug: string) {
 
 async function recordClick(
 	link: CachedLink,
-	slug: string,
+	_slug: string,
 	ipHash: string,
 	ip: string,
 	request: Request

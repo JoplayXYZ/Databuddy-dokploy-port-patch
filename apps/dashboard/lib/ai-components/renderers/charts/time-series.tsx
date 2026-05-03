@@ -41,7 +41,7 @@ export interface TimeSeriesProps extends ChartComponentProps {
 }
 
 const PLOT_HEIGHT = 200;
-const VARIANT_LABEL: Record<TimeSeriesProps["variant"], string> = {
+const _VARIANT_LABEL: Record<TimeSeriesProps["variant"], string> = {
 	line: "Line",
 	bar: "Bar",
 	area: "Area",

@@ -102,7 +102,10 @@ export default async function PostPage({
 		status?: number;
 		statusText?: string;
 	};
-	if (!result?.post || new Date(result.post.publishedAt).getTime() > Date.now()) {
+	if (
+		!result?.post ||
+		new Date(result.post.publishedAt).getTime() > Date.now()
+	) {
 		return (
 			<>
 				<div className="relative flex min-h-[60vh] w-full items-center justify-center overflow-hidden px-4 pt-10 sm:px-6 sm:pt-12 lg:px-8">

@@ -1,6 +1,6 @@
-type SectionBulletProps = {
+interface SectionBulletProps {
 	color: string;
-};
+}
 
 export function SectionBullet({ color }: SectionBulletProps) {
 	return (

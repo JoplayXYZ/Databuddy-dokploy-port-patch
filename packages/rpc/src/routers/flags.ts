@@ -11,7 +11,6 @@ import {
 	flagChangeEvents,
 	flags,
 	flagsToTargetGroups,
-	targetGroups,
 } from "@databuddy/db/schema";
 import { createDrizzleCache, redis } from "@databuddy/redis";
 import {

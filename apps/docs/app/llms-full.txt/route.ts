@@ -72,9 +72,7 @@ export async function GET() {
 	const sections = SECTION_ORDER.filter((s) => grouped[s])
 		.map((section) => {
 			const label = SECTION_LABELS[section] || section;
-			const docs = grouped[section]
-				.map((e) => e.body)
-				.join("\n\n---\n\n");
+			const docs = grouped[section].map((e) => e.body).join("\n\n---\n\n");
 			return `## ${label}\n\n${docs}`;
 		})
 		.join("\n\n---\n\n");
