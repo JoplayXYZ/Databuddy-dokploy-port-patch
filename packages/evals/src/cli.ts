@@ -129,8 +129,7 @@ function parseArgs(): CliOpts {
 				apiUrl = remainingArgs.shift() ?? apiUrl;
 				break;
 			case "--concurrency":
-				concurrency =
-					Number.parseInt(remainingArgs.shift() ?? "", 10) || 10;
+				concurrency = Number.parseInt(remainingArgs.shift() ?? "", 10) || 10;
 				break;
 			default:
 				break;
@@ -155,10 +154,10 @@ function parseArgs(): CliOpts {
 interface SlotState {
 	caseId: string;
 	startedAt: number;
-	steps: number;
-	tools: string[];
-	textChars: number;
 	status: "running" | "done";
+	steps: number;
+	textChars: number;
+	tools: string[];
 }
 
 function formatElapsed(ms: number): string {
@@ -174,17 +173,15 @@ function renderLiveSlots(
 ) {
 	const lines: string[] = [];
 	const elapsed = formatElapsed(Date.now() - startTime);
-	lines.push(
-		`${DIM}[${elapsed}] ${completed}/${total} done${RESET}`
-	);
+	lines.push(`${DIM}[${elapsed}] ${completed}/${total} done${RESET}`);
 
 	for (const [, slot] of slots) {
-		if (slot.status !== "running") continue;
+		if (slot.status !== "running") {
+			continue;
+		}
 		const age = formatElapsed(Date.now() - slot.startedAt);
 		const toolStr =
-			slot.tools.length > 0
-				? ` ${CYAN}${slot.tools.at(-1)}${RESET}`
-				: "";
+			slot.tools.length > 0 ? ` ${CYAN}${slot.tools.at(-1)}${RESET}` : "";
 		const charStr =
 			slot.textChars > 0 ? ` ${DIM}${slot.textChars}ch${RESET}` : "";
 		lines.push(
@@ -385,7 +382,9 @@ async function cmdRun() {
 		`${BOLD}Running ${cases.length} evals${RESET} against ${config.apiUrl} (concurrency: ${concurrency})`
 	);
 	console.log(`Model: ${modelId}`);
-	if (!opts.skipJudge) console.log(`Judge: ${judgeModel}`);
+	if (!opts.skipJudge) {
+		console.log(`Judge: ${judgeModel}`);
+	}
 	console.log("");
 
 	const runStart = Date.now();
@@ -398,8 +397,12 @@ async function cmdRun() {
 	const isTTY = process.stderr.isTTY;
 
 	function redraw() {
-		if (!isTTY) return;
-		if (lastLineCount > 0) clearLines(lastLineCount);
+		if (!isTTY) {
+			return;
+		}
+		if (lastLineCount > 0) {
+			clearLines(lastLineCount);
+		}
 		lastLineCount = renderLiveSlots(slots, completed, cases.length, runStart);
 	}
 
@@ -455,11 +458,11 @@ async function cmdRun() {
 
 			const status = result.failures[0]?.startsWith("Runner error")
 				? `${RED}ERROR${RESET}`
-				: !result.passed
-					? `${RED}FAIL${RESET} (${result.failures.length})`
-					: result.warnings.length > 0
+				: result.passed
+					? result.warnings.length > 0
 						? `${YELLOW}WARN${RESET} (${result.warnings.length})`
-						: `${GREEN}OK${RESET}`;
+						: `${GREEN}OK${RESET}`
+					: `${RED}FAIL${RESET} (${result.failures.length})`;
 			const time = formatElapsed(result.metrics.latencyMs);
 			const toolList =
 				slot.tools.length > 0
@@ -488,12 +491,7 @@ async function cmdRun() {
 				result.response.length > 0
 			) {
 				pendingJudges.push(
-					judgeQuality(
-						evalCase,
-						result.response,
-						result.toolCalls,
-						judgeModel
-					)
+					judgeQuality(evalCase, result.response, result.toolCalls, judgeModel)
 						.then((scores) => {
 							if (scores) {
 								result.scores.quality = scores.average;
@@ -508,9 +506,7 @@ async function cmdRun() {
 									`  ${DIM}[judge]${RESET} ${evalCase.id.slice(0, 25)} q=${scores.average} ${result.passed ? `${GREEN}PASS${RESET}` : `${RED}FAIL${RESET}`} ${DIM}dg=${scores.dataGrounding} ad=${scores.analyticalDepth} ac=${scores.actionability} co=${scores.completeness} cm=${scores.communication}${RESET}`
 								);
 								if (scores.explanation) {
-									console.log(
-										`         ${DIM}${scores.explanation}${RESET}`
-									);
+									console.log(`         ${DIM}${scores.explanation}${RESET}`);
 								}
 								redraw();
 							}
@@ -533,9 +529,13 @@ async function cmdRun() {
 	const workers = Array.from({ length: concurrency }, () => worker());
 	await Promise.all(workers);
 
-	if (redrawTimer) clearInterval(redrawTimer);
+	if (redrawTimer) {
+		clearInterval(redrawTimer);
+	}
 	if (isTTY) {
-		if (lastLineCount > 0) clearLines(lastLineCount);
+		if (lastLineCount > 0) {
+			clearLines(lastLineCount);
+		}
 		process.stderr.write(SHOW_CURSOR);
 	}
 
@@ -605,7 +605,9 @@ async function rejudgeFromFile(opts: CliOpts, judgeModel: string) {
 	const results = await Promise.all(
 		toJudge.map(async (caseResult) => {
 			const evalCase = getCaseById(caseResult.id);
-			if (!evalCase) return false;
+			if (!evalCase) {
+				return false;
+			}
 
 			const scores = await judgeQuality(
 				evalCase,
@@ -656,10 +658,10 @@ function cmdCompare() {
 
 	const latestByModel = new Map<string, EvalRun>();
 	for (const f of all) {
-		const run: EvalRun = JSON.parse(
-			readFileSync(join(resultsDir, f), "utf-8")
-		);
-		if (run.summary.total === 0) continue;
+		const run: EvalRun = JSON.parse(readFileSync(join(resultsDir, f), "utf-8"));
+		if (run.summary.total === 0) {
+			continue;
+		}
 		latestByModel.set(run.model, run);
 	}
 
@@ -712,7 +714,9 @@ function cmdCompare() {
 		if (opts.diff) {
 			const statuses = cellValues.map((v) => v.trim().startsWith("OK"));
 			const hasDiff = statuses.some((s) => s !== statuses[0]);
-			if (!hasDiff) continue;
+			if (!hasDiff) {
+				continue;
+			}
 		}
 
 		for (const v of cellValues) {

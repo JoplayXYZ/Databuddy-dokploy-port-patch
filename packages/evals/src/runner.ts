@@ -80,7 +80,9 @@ async function streamSSE(
 
 	for (;;) {
 		const { done, value } = await reader.read();
-		if (done) break;
+		if (done) {
+			break;
+		}
 		buf += decoder.decode(value, { stream: true });
 
 		let newlineIdx = buf.indexOf("\n");
@@ -145,8 +147,12 @@ async function streamSSE(
 						const u = evt.usage as Record<string, number>;
 						const iT = u.inputTokens ?? u.prompt_tokens ?? 0;
 						const oT = u.outputTokens ?? u.completion_tokens ?? 0;
-						if (iT > 0) inputTokens += iT;
-						if (oT > 0) outputTokens += oT;
+						if (iT > 0) {
+							inputTokens += iT;
+						}
+						if (oT > 0) {
+							outputTokens += oT;
+						}
 					}
 					break;
 				case "finish":
@@ -178,13 +184,16 @@ async function streamSSE(
 	let searchIdx = 0;
 	while (searchIdx < textContent.length) {
 		const start = textContent.indexOf('{"type":"', searchIdx);
-		if (start === -1) break;
+		if (start === -1) {
+			break;
+		}
 
 		let depth = 0;
 		let end = -1;
 		for (let i = start; i < textContent.length; i++) {
-			if (textContent[i] === "{") depth++;
-			else if (textContent[i] === "}") {
+			if (textContent[i] === "{") {
+				depth++;
+			} else if (textContent[i] === "}") {
 				depth--;
 				if (depth === 0) {
 					end = i;
@@ -192,13 +201,16 @@ async function streamSSE(
 				}
 			}
 		}
-		if (end === -1) break;
+		if (end === -1) {
+			break;
+		}
 
 		const jsonStr = textContent.slice(start, end + 1);
 		try {
 			const parsed = JSON.parse(jsonStr) as Record<string, unknown>;
-			if (typeof parsed.type === "string")
+			if (typeof parsed.type === "string") {
 				chartJSONs.push({ type: parsed.type, raw: jsonStr, parsed });
+			}
 		} catch {
 			rawJSONLeaks.push(jsonStr.slice(0, 100));
 		}

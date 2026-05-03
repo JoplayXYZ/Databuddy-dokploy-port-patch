@@ -203,7 +203,9 @@ export function scoreCase(
 	const pf = scorePerformance(evalCase, response);
 	scores.performance = pf.score;
 	allFailures.push(...pf.failures);
-	if (pf.warnings) allWarnings.push(...pf.warnings);
+	if (pf.warnings) {
+		allWarnings.push(...pf.warnings);
+	}
 
 	return { scores, failures: allFailures, warnings: allWarnings };
 }
