@@ -82,6 +82,7 @@
   "sideEffects": false,
   "type": "module",
   "dependencies": {
+    "browser-use-sdk": "^3.4.3",
     "uuid": "^14.0.0"
   }
 }
