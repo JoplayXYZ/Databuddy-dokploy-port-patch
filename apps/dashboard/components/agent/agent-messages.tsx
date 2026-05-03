@@ -71,7 +71,7 @@ function findActiveToolLabel(message: UIMessage | undefined): string | null {
 			continue;
 		}
 		if (part.output != null) {
-			return null;
+			return "Thinking";
 		}
 		return formatToolLabel(getToolName(part), part.input ?? {});
 	}
@@ -450,7 +450,14 @@ function showTailIndicator(
 	if (!lastMessage || lastMessage.role !== "assistant") {
 		return true;
 	}
-	return lastMessage.parts.length === 0;
+	if (lastMessage.parts.length === 0) {
+		return true;
+	}
+	const lastPart = lastMessage.parts[lastMessage.parts.length - 1];
+	if (lastPart && isToolPart(lastPart) && lastPart.output != null) {
+		return true;
+	}
+	return false;
 }
 
 function StreamingIndicator({ label }: { label: string | null }) {
