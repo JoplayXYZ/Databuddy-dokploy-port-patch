@@ -35,7 +35,7 @@ function parseArgs(): {
 	let noSave = false;
 	let diff = false;
 	let apiUrl = process.env.EVAL_API_URL ?? "http://localhost:3001";
-	let concurrency = 10;
+	let concurrency = Infinity;
 
 	if (args[0] === "judge" || args[0] === "compare") {
 		subcommand = args[0];
@@ -57,7 +57,7 @@ function parseArgs(): {
 		} else if (args[i] === "--api-url" && args[i + 1]) {
 			apiUrl = args[++i];
 		} else if (args[i] === "--concurrency" && args[i + 1]) {
-			concurrency = Number.parseInt(args[++i], 10) || 10;
+			concurrency = Number.parseInt(args[++i], 10) || Infinity;
 		}
 	}
 
@@ -95,6 +95,7 @@ async function runSingleCase(
 	config: EvalConfig,
 	modelId: string
 ): Promise<CaseResult> {
+	const caseStart = Date.now();
 	try {
 		const response = await runCase(evalCase, config);
 		const { scores, failures } = scoreCase(evalCase, response);
@@ -136,7 +137,13 @@ async function runSingleCase(
 			response: response.textContent,
 		};
 	} catch (error) {
-		const msg = error instanceof Error ? error.message : "Unknown error";
+		const isTimeout =
+			error instanceof DOMException && error.name === "TimeoutError";
+		const msg = isTimeout
+			? "Timed out"
+			: error instanceof Error
+				? error.message
+				: "Unknown error";
 		return {
 			id: evalCase.id,
 			category: evalCase.category,
@@ -146,7 +153,7 @@ async function runSingleCase(
 			scores: {},
 			metrics: {
 				steps: 0,
-				latencyMs: 0,
+				latencyMs: Date.now() - caseStart,
 				inputTokens: 0,
 				outputTokens: 0,
 				costUsd: 0,
@@ -336,8 +343,13 @@ async function cmdRun() {
 				evalCase.category === "quality" &&
 				result.response.length > 0
 			) {
-				pendingJudges.push(
-					judgeQuality(evalCase, result.response, config).then((scores) => {
+				const judgeWithTimeout = Promise.race([
+					judgeQuality(evalCase, result.response, config),
+					new Promise<null>((_, reject) =>
+						setTimeout(() => reject(new Error("Judge timed out")), 60_000)
+					),
+				])
+					.then((scores) => {
 						if (scores) {
 							result.scores.quality = scores.average;
 							(result as unknown as { qualityDetail: JudgeScores }).qualityDetail = scores;
@@ -346,7 +358,10 @@ async function cmdRun() {
 							);
 						}
 					})
-				);
+					.catch((err) => {
+						console.log(`  [judge] ${evalCase.id}: ${err.message}`);
+					});
+				pendingJudges.push(judgeWithTimeout);
 			}
 		}
 	);

@@ -1,10 +1,13 @@
 import type { EvalCase, EvalConfig, ParsedAgentResponse } from "./types";
 
+const CASE_TIMEOUT_MS = 3 * 60 * 1000;
+
 export async function runCase(
 	evalCase: EvalCase,
 	config: EvalConfig
 ): Promise<ParsedAgentResponse> {
 	const startTime = Date.now();
+	const signal = AbortSignal.timeout(CASE_TIMEOUT_MS);
 
 	const headers: Record<string, string> = {
 		"Content-Type": "application/json",
@@ -36,6 +39,7 @@ export async function runCase(
 		method: "POST",
 		headers,
 		body,
+		signal,
 	});
 
 	if (!response.ok) {
@@ -43,12 +47,13 @@ export async function runCase(
 		throw new Error(`Agent API error ${response.status}: ${errorText}`);
 	}
 
-	return streamSSE(response, startTime);
+	return streamSSE(response, startTime, signal);
 }
 
 async function streamSSE(
 	response: Response,
-	startTime: number
+	startTime: number,
+	signal: AbortSignal
 ): Promise<ParsedAgentResponse> {
 	const toolCalls: ParsedAgentResponse["toolCalls"] = [];
 	const toolNames = new Set<string>();
@@ -61,9 +66,14 @@ async function streamSSE(
 	const decoder = new TextDecoder();
 	let buf = "";
 
+	const onAbort = () => reader.cancel();
+	signal.addEventListener("abort", onAbort, { once: true });
+
+	try {
 	for (;;) {
 		const { done, value } = await reader.read();
 		if (done) break;
+		if (signal.aborted) throw new Error("Eval case timed out");
 		buf += decoder.decode(value, { stream: true });
 
 		let newlineIdx: number;
@@ -124,6 +134,9 @@ async function streamSSE(
 					break;
 			}
 		}
+	}
+	} finally {
+		signal.removeEventListener("abort", onAbort);
 	}
 
 	const latencyMs = Date.now() - startTime;
