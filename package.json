@@ -54,6 +54,8 @@
     "sdk:build": "turbo run build --filter @databuddy/sdk --filter @databuddy/cache",
     "dev:dashboard": "dotenv -- turbo dev --filter @databuddy/dashboard --filter @databuddy/api --filter @databuddy/slack",
     "dev:slack": "dotenv -- turbo dev --filter @databuddy/slack",
+    "slack:manifest:validate": "bun run --cwd apps/slack manifest:validate",
+    "slack:manifest:update": "bun run --cwd apps/slack manifest:update",
     "dev:status": "dotenv -- turbo dev --filter @databuddy/status --filter @databuddy/api",
     "git:setup-aliases": "git config --local include.path ../gitconfig",
     "eval": "dotenv -- bun run --cwd packages/evals src/cli.ts",

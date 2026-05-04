@@ -21,7 +21,7 @@ Keep additions **minimal**: one bullet, a new `rg` hint, or a routing note—eno
 - `apps/api`: Elysia API on port `3001`
 - `apps/slack`: Slack agent adapter; Slack installs must resolve through org-scoped DB integration records, not a single env bot token/default website. Agent calls must use an encrypted per-integration Databuddy API key secret as a normal bearer token, never a global internal secret.
 - Slack OAuth lives in `apps/api`, but slash commands/events require `apps/slack` to be running too; local `bun run dev:dashboard` includes Slack, and the Slack package scripts read the root `.env`.
-- Slack routing is organization-scoped: OAuth binds a Slack workspace to a Databuddy organization, `/bind` is the only slash command and only marks a Slack channel, and analytics questions should go through app mentions/DMs using MCP-style website discovery instead of website/domain bindings.
+- Slack routing is organization-scoped: OAuth binds a Slack workspace to a Databuddy organization, `/bind` is the only slash command and only marks a Slack channel, and analytics questions should go through app mentions/DMs using MCP-style website discovery instead of website/domain bindings. Remote manifest updates need `SLACK_APP_ID` plus a Slack app configuration token in `SLACK_APP_CONFIG_TOKEN`; the `xapp-` Socket Mode token cannot update manifests.
 - `apps/basket`: ingest and LLM tracking service, Elysia app on port `4000`
 - `apps/docs`: Next.js + Fumadocs docs app on port `3005`
 - `apps/links`: redirect/link service
