@@ -26,7 +26,6 @@
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"],
   "references": [
-    { "path": "../../packages/ai" },
     { "path": "../../packages/db" },
     { "path": "../../packages/redis" },
     { "path": "../../packages/sdk" },
