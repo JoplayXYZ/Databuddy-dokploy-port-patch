@@ -46,21 +46,28 @@ export async function streamAgentToSlack({
 	say,
 }: StreamAgentToSlackOptions): Promise<StreamAgentToSlackResult> {
 	let streamTs: string | null = null;
+	let streamStartAttempted = false;
 	let pending = "";
 	let fullText = "";
 	let chunks = 0;
 	let lastFlushAt = Date.now();
 	const startedAt = performance.now();
 
-	if (run.threadTs) {
-		streamTs = await startSlackStream(client, run, logger);
-		setSlackLog(eventLog, { slack_stream_started: Boolean(streamTs) });
-	}
+	const shouldStream = Boolean(run.threadTs);
 
 	const flush = async (force = false) => {
 		if (!pending) {
 			return;
 		}
+
+		if (shouldStream && !streamTs && !streamStartAttempted) {
+			await tryStartStream();
+		}
+
+		if (!streamTs) {
+			return;
+		}
+
 		const shouldFlush =
 			force ||
 			pending.length >= STREAM_FLUSH_CHARS ||
@@ -81,22 +88,35 @@ export async function streamAgentToSlack({
 					markdown_text: chunk,
 					ts: streamTs,
 				});
-			} else {
-				fullText += chunk;
 			}
 		} while (force && pending);
+	};
+
+	const tryStartStream = async () => {
+		const initialText = pending.slice(0, STREAM_APPEND_LIMIT_CHARS);
+		if (!initialText.trim()) {
+			return;
+		}
+
+		streamStartAttempted = true;
+		pending = pending.slice(initialText.length);
+		streamTs = await startSlackStream(client, run, logger, initialText);
+		if (!streamTs) {
+			pending = initialText + pending;
+		}
+		setSlackLog(eventLog, { slack_stream_started: Boolean(streamTs) });
 	};
 
 	try {
 		for await (const chunk of agent.stream(run)) {
 			chunks++;
 			pending += chunk;
-			fullText += streamTs ? chunk : "";
+			fullText += chunk;
 			await flush(false);
 		}
 		await flush(true);
 
-		const finalText = (fullText || pending).trim();
+		const finalText = fullText.trim();
 		if (streamTs) {
 			await client.apiCall("chat.stopStream", {
 				channel: run.channelId,
@@ -141,6 +161,35 @@ export async function streamAgentToSlack({
 		const err = toError(error);
 		logger.error("Slack agent response failed", err);
 		eventLog?.error(err, { error_step: "agent_response" });
+		const partialText = fullText.trim();
+		if (partialText) {
+			await flush(true).catch((flushError) =>
+				logger.warn("Failed to flush partial Slack stream", flushError)
+			);
+			if (streamTs) {
+				await client
+					.apiCall("chat.stopStream", {
+						channel: run.channelId,
+						ts: streamTs,
+					})
+					.catch((stopError) =>
+						logger.warn("Failed to stop Slack stream", stopError)
+					);
+				return {
+					answerChars: partialText.length,
+					chunks,
+					ok: false,
+					streamed: true,
+				};
+			}
+			await say({ text: partialText, thread_ts: run.threadTs });
+			return {
+				answerChars: partialText.length,
+				chunks,
+				ok: false,
+				streamed: false,
+			};
+		}
 		if (streamTs) {
 			await client
 				.apiCall("chat.stopStream", {
@@ -171,12 +220,13 @@ export async function streamAgentToSlack({
 async function startSlackStream(
 	client: Pick<WebClient, "apiCall">,
 	run: SlackAgentRun,
-	logger: LoggerLike
+	logger: LoggerLike,
+	openingText: string
 ): Promise<string | null> {
 	try {
 		const result = await client.apiCall("chat.startStream", {
 			channel: run.channelId,
-			markdown_text: SLACK_COPY.streamOpening,
+			markdown_text: openingText,
 			recipient_team_id: run.teamId,
 			recipient_user_id: run.userId,
 			thread_ts: run.threadTs,
