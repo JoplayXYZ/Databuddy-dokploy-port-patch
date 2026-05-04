@@ -29,7 +29,8 @@ const app = new App({
 
 registerSlackListeners(
 	app,
-	new DatabuddyAgentClient(config.agent, installations)
+	new DatabuddyAgentClient(config.agent, installations),
+	installations
 );
 
 try {

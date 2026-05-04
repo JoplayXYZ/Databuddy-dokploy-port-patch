@@ -27,7 +27,7 @@ import {
 	cn,
 	dayjs,
 } from "@databuddy/ui";
-import { DropdownMenu } from "@databuddy/ui/client";
+import { Accordion, DropdownMenu } from "@databuddy/ui/client";
 
 type SlackIntegration = SlackIntegrationOutput;
 type Website = WebsiteOutput;
@@ -234,6 +234,16 @@ function slackStatusBadge(
 	);
 }
 
+function slackNeedsSetup(integrations: SlackIntegration[]): boolean {
+	return (
+		integrations.length === 0 ||
+		integrations.some(
+			(integration) =>
+				integration.status === "active" && !integration.defaultWebsiteId
+		)
+	);
+}
+
 function slackAction(
 	integrations: SlackIntegration[],
 	isLoading: boolean,
@@ -404,6 +414,7 @@ export function IntegrationsSettings({
 									slackIntegrations,
 									integrationsQuery.isLoading
 								)}
+								defaultOpen={slackNeedsSetup(slackIntegrations)}
 								item={SLACK_ITEM}
 							>
 								<SlackIntegrationDetails
@@ -441,7 +452,9 @@ export function IntegrationsSettings({
 									}
 									item={item}
 									key={item.id}
-								/>
+								>
+									<ComingSoonIntegrationDetails item={item} />
+								</IntegrationListRow>
 							))}
 						</Card.Content>
 					</Card>
@@ -455,38 +468,59 @@ function IntegrationListRow({
 	action,
 	badge,
 	children,
+	defaultOpen,
 	item,
 }: {
 	action: React.ReactNode;
 	badge: React.ReactNode;
 	children?: React.ReactNode;
+	defaultOpen?: boolean;
 	item: IntegrationCatalogItem;
 }) {
 	return (
 		<div className="border-border/60 border-b last:border-b-0">
-			<div className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-				<div className="flex min-w-0 items-center gap-3">
-					<IntegrationLogo item={item} />
-					<div className="min-w-0">
-						<div className="flex min-w-0 flex-wrap items-center gap-2">
-							<h3 className="truncate font-semibold text-foreground text-sm">
-								{item.name}
-							</h3>
-							{badge}
-							<Badge size="sm" variant="muted">
-								{item.category}
-							</Badge>
+			<Accordion defaultOpen={defaultOpen}>
+				<div className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+					<Accordion.Trigger className="h-auto min-w-0 flex-1 bg-transparent px-0 py-0 hover:bg-transparent">
+						<IntegrationLogo item={item} />
+						<div className="min-w-0">
+							<div className="flex min-w-0 flex-wrap items-center gap-2">
+								<h3 className="truncate font-semibold text-foreground text-sm">
+									{item.name}
+								</h3>
+								{badge}
+								<Badge size="sm" variant="muted">
+									{item.category}
+								</Badge>
+							</div>
+							<Text className="mt-1" tone="muted" variant="caption">
+								{item.description}
+							</Text>
 						</div>
-						<Text className="mt-1" tone="muted" variant="caption">
-							{item.description}
-						</Text>
+					</Accordion.Trigger>
+					<div className="flex shrink-0 items-center gap-2 sm:justify-end">
+						{action}
 					</div>
 				</div>
-				<div className="flex shrink-0 items-center gap-2 sm:justify-end">
-					{action}
-				</div>
-			</div>
-			{children}
+				<Accordion.Panel>
+					<div className="px-5 pb-4">{children}</div>
+				</Accordion.Panel>
+			</Accordion>
+		</div>
+	);
+}
+
+function ComingSoonIntegrationDetails({
+	item,
+}: {
+	item: IntegrationCatalogItem;
+}) {
+	return (
+		<div className="rounded border border-border/60 bg-secondary/30 px-3 py-2">
+			<Text tone="muted" variant="caption">
+				{item.name} is planned. Setup controls will appear here when the
+				integration is ready.
+			</Text>
 		</div>
 	);
 }
@@ -528,28 +562,28 @@ function SlackIntegrationDetails({
 }) {
 	if (isLoading) {
 		return (
-			<div className="px-5 pb-4">
-				<div className="rounded border border-border/60 bg-secondary/30">
-					<SlackWorkspaceSkeleton />
-					<SlackWorkspaceSkeleton />
-				</div>
+			<div className="rounded border border-border/60 bg-secondary/30">
+				<SlackWorkspaceSkeleton />
+				<SlackWorkspaceSkeleton />
 			</div>
 		);
 	}
 
 	if (integrations.length === 0) {
 		return (
-			<div className="px-5 pb-4">
+			<div className="space-y-3">
+				<SlackSetupGuide />
 				<div className="flex items-center gap-2 rounded border border-warning/30 bg-warning/10 px-3 py-2 text-muted-foreground text-xs">
 					<TriangleWarningIcon className="size-3.5 shrink-0 text-warning" />
-					No Slack workspace is connected to this organization yet.
+					Connect Slack to create the workspace connection.
 				</div>
 			</div>
 		);
 	}
 
 	return (
-		<div className="px-5 pb-4">
+		<div className="space-y-3">
+			<SlackSetupGuide integration={integrations[0]} />
 			<div className="rounded border border-border/60 bg-secondary/30">
 				{integrations.map((integration) => (
 					<SlackWorkspaceRow
@@ -563,6 +597,81 @@ function SlackIntegrationDetails({
 						websitesLoading={websitesLoading}
 					/>
 				))}
+			</div>
+		</div>
+	);
+}
+
+function SlackSetupGuide({ integration }: { integration?: SlackIntegration }) {
+	const hasDefaultWebsite = Boolean(integration?.defaultWebsiteId);
+	const boundChannels = integration?.channelBindings.length ?? 0;
+
+	return (
+		<div className="grid gap-2 rounded border border-border/60 bg-secondary/30 p-3 md:grid-cols-3">
+			<SlackSetupStep
+				description={
+					integration
+						? integration.teamName || integration.teamId
+						: "No workspace connected"
+				}
+				done={Boolean(integration)}
+				label="Workspace"
+			/>
+			<SlackSetupStep
+				description={
+					hasDefaultWebsite
+						? "DMs and unbound channels have a site"
+						: "Pick one before asking from Slack"
+				}
+				done={hasDefaultWebsite}
+				label="Default website"
+			/>
+			<SlackSetupStep
+				description={
+					boundChannels > 0
+						? `${boundChannels} channel${boundChannels === 1 ? "" : "s"} bound`
+						: "Run /databuddy bind in Slack"
+				}
+				done={boundChannels > 0}
+				label="Channel routing"
+				optional={hasDefaultWebsite}
+			/>
+		</div>
+	);
+}
+
+function SlackSetupStep({
+	description,
+	done,
+	label,
+	optional,
+}: {
+	description: string;
+	done: boolean;
+	label: string;
+	optional?: boolean;
+}) {
+	const complete = done || optional;
+
+	return (
+		<div className="flex min-w-0 items-start gap-2">
+			{complete ? (
+				<CheckCircleIcon className="mt-0.5 size-4 shrink-0 text-success" />
+			) : (
+				<TriangleWarningIcon className="mt-0.5 size-4 shrink-0 text-warning" />
+			)}
+			<div className="min-w-0">
+				<div className="flex min-w-0 items-center gap-1.5">
+					<Text variant="label">{label}</Text>
+					{optional && !done && (
+						<Badge size="sm" variant="muted">
+							optional
+						</Badge>
+					)}
+				</div>
+				<Text className="truncate" tone="muted" variant="caption">
+					{description}
+				</Text>
 			</div>
 		</div>
 	);
@@ -652,6 +761,20 @@ function SlackWorkspaceRow({
 				</DropdownMenu>
 			</div>
 
+			<div className="mt-3 rounded border border-border/60 bg-background px-3 py-2">
+				<div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+					<div className="min-w-0">
+						<Text variant="label">Slack channel routing</Text>
+						<Text className="mt-0.5" tone="muted" variant="caption">
+							Run <SlackCommand value="/databuddy bind" /> in Slack to bind the
+							current channel. Add a domain to route a channel to a specific
+							website.
+						</Text>
+					</div>
+					<SlackCommand value="/databuddy unbind" />
+				</div>
+			</div>
+
 			<div className="mt-3 grid gap-2 sm:grid-cols-3">
 				<IntegrationMeta
 					label="Default"
@@ -668,9 +791,9 @@ function SlackWorkspaceRow({
 				/>
 			</div>
 
-			{integration.channelBindings.length > 0 && (
-				<div className="mt-3 rounded border border-border/60 bg-background">
-					{integration.channelBindings.map((binding) => (
+			<div className="mt-3 rounded border border-border/60 bg-background">
+				{integration.channelBindings.length > 0 ? (
+					integration.channelBindings.map((binding) => (
 						<div
 							className="flex items-center gap-3 border-border/60 border-b px-3 py-2 last:border-b-0"
 							key={binding.id}
@@ -685,10 +808,24 @@ function SlackWorkspaceRow({
 									binding.websiteId}
 							</span>
 						</div>
-					))}
-				</div>
-			)}
+					))
+				) : (
+					<div className="flex items-center gap-2 px-3 py-2 text-muted-foreground text-xs">
+						<MsgContentIcon className="size-3.5 shrink-0" />
+						No channel bindings yet. Channels and DMs use the default website
+						when one is selected.
+					</div>
+				)}
+			</div>
 		</div>
+	);
+}
+
+function SlackCommand({ value }: { value: string }) {
+	return (
+		<code className="rounded border border-border/60 bg-secondary px-1.5 py-0.5 font-mono text-foreground text-xs">
+			{value}
+		</code>
 	);
 }
 

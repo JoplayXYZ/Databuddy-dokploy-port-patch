@@ -89,7 +89,7 @@ export class DatabuddyAgentClient {
 export function getMissingAgentContextMessage(): string {
 	return [
 		"Slack is connected, but this channel is not mapped to a Databuddy website yet.",
-		"Choose a default website for the Databuddy organization or bind this Slack channel to a website.",
+		"Choose a default website in Databuddy or run `/databuddy bind your-domain.com` in this Slack channel.",
 	].join(" ");
 }
 

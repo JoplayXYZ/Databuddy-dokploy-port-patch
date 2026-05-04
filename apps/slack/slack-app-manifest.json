@@ -34,7 +34,7 @@
       {
         "command": "/databuddy",
         "description": "Ask Databuddy an analytics question.",
-        "usage_hint": "summarize traffic for the last 7 days",
+        "usage_hint": "bind | unbind | summarize traffic for the last 7 days",
         "should_escape": true
       }
     ]

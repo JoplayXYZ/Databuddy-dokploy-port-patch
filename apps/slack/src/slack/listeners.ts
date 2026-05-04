@@ -1,5 +1,6 @@
 import { Assistant, type App } from "@slack/bolt";
 import type { DatabuddyAgentClient } from "../agent/agent-client";
+import type { SlackInstallationStore } from "./installations";
 import { streamAgentToSlack } from "./respond";
 
 const SUGGESTED_PROMPTS = [
@@ -18,6 +19,7 @@ const SUGGESTED_PROMPTS = [
 ];
 
 const LEADING_APP_MENTION_REGEX = /^<@[A-Z0-9]+>\s*/i;
+const WHITESPACE_REGEX = /\s+/;
 
 interface SlackMessageLike {
 	bot_id?: string;
@@ -34,7 +36,8 @@ interface SlackMessageLike {
 
 export function registerSlackListeners(
 	app: App,
-	agent: DatabuddyAgentClient
+	agent: DatabuddyAgentClient,
+	installations: SlackInstallationStore
 ): void {
 	const dedupe = createRecentDedupe();
 
@@ -183,10 +186,63 @@ export function registerSlackListeners(
 		await ack();
 
 		const text = command.text.trim();
+		const subcommand = parseSlashSubcommand(text);
+		if (subcommand.name === "help") {
+			await respond({
+				response_type: "ephemeral",
+				text: [
+					"`/databuddy bind` binds this channel to the default Databuddy website.",
+					"`/databuddy bind your-domain.com` binds this channel to a specific website.",
+					"`/databuddy unbind` removes this channel binding.",
+					"`/databuddy summarize traffic for the last 7 days` asks the analytics agent.",
+				].join("\n"),
+			});
+			return;
+		}
+		if (subcommand.name === "bind") {
+			try {
+				const result = await installations.bindChannel({
+					channelId: command.channel_id,
+					selector: subcommand.args || undefined,
+					teamId: command.team_id,
+				});
+				await respond({
+					response_type: "ephemeral",
+					text: result.message,
+				});
+			} catch (error) {
+				logger.error(error);
+				await respond({
+					response_type: "ephemeral",
+					text: "Sorry, Databuddy could not bind this channel.",
+				});
+			}
+			return;
+		}
+		if (subcommand.name === "unbind") {
+			try {
+				const result = await installations.unbindChannel({
+					channelId: command.channel_id,
+					teamId: command.team_id,
+				});
+				await respond({
+					response_type: "ephemeral",
+					text: result.message,
+				});
+			} catch (error) {
+				logger.error(error);
+				await respond({
+					response_type: "ephemeral",
+					text: "Sorry, Databuddy could not unbind this channel.",
+				});
+			}
+			return;
+		}
+
 		if (!text) {
 			await respond({
 				response_type: "ephemeral",
-				text: "Usage: `/databuddy summarize traffic for the last 7 days`",
+				text: "Usage: `/databuddy summarize traffic for the last 7 days` or `/databuddy help`",
 			});
 			return;
 		}
@@ -212,6 +268,14 @@ export function registerSlackListeners(
 			});
 		}
 	});
+}
+
+function parseSlashSubcommand(text: string): { args: string; name: string } {
+	const [name = "", ...args] = text.split(WHITESPACE_REGEX);
+	return {
+		args: args.join(" ").trim(),
+		name: name.toLowerCase(),
+	};
 }
 
 function toSlackMessage(message: unknown): SlackMessageLike | null {
