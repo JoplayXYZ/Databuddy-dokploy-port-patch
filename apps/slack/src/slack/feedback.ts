@@ -1,5 +1,12 @@
+import type { WebClient } from "@slack/web-api";
+import type { RequestLogger } from "evlog";
+import {
+	createSlackEventLog,
+	getSlackApiErrorCode,
+	setSlackLog,
+	toError,
+} from "../lib/evlog-slack";
 import type { SlackInstallationStore } from "./installations";
-import { createSlackEventLog, setSlackLog, toError } from "../lib/evlog-slack";
 import { SLACK_COPY } from "./messages";
 
 const POSITIVE_REACTIONS = new Set([
@@ -48,6 +55,56 @@ interface SlackReactionEventLike {
 interface SlackFeedbackLogger {
 	error(...args: unknown[]): void;
 	warn(...args: unknown[]): void;
+}
+
+interface SlackReactionAddClient {
+	reactions: Pick<WebClient["reactions"], "add">;
+}
+
+export async function addSlackResponseFeedbackReactions({
+	channelId,
+	client,
+	eventLog,
+	logger,
+	messageTs,
+}: {
+	channelId: string;
+	client: SlackReactionAddClient;
+	eventLog: RequestLogger;
+	logger: SlackFeedbackLogger;
+	messageTs: string;
+}): Promise<void> {
+	const startedAt = performance.now();
+	let added = 0;
+
+	for (const reaction of SLACK_COPY.feedbackReactions) {
+		try {
+			await client.reactions.add({
+				channel: channelId,
+				name: reaction,
+				timestamp: messageTs,
+			});
+			added++;
+		} catch (error) {
+			const code = getSlackApiErrorCode(error) ?? "unknown";
+			if (code === "already_reacted") {
+				added++;
+				continue;
+			}
+			setSlackLog(eventLog, {
+				slack_feedback_reaction_error: code,
+			});
+			logger.warn("Failed to add Slack feedback reaction", reaction, code);
+			break;
+		}
+	}
+
+	setSlackLog(eventLog, {
+		slack_feedback_reactions_added: added,
+		"timing.slack_feedback_reactions_ms": Math.round(
+			performance.now() - startedAt
+		),
+	});
 }
 
 export async function logSlackReactionFeedback({

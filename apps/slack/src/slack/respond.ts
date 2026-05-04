@@ -34,6 +34,7 @@ export interface StreamAgentToSlackResult {
 	answerChars: number;
 	chunks: number;
 	ok: boolean;
+	responseTs?: string;
 	streamed: boolean;
 }
 
@@ -65,6 +66,9 @@ export async function streamAgentToSlack({
 		}
 
 		if (!streamTs) {
+			return;
+		}
+		if (!pending) {
 			return;
 		}
 
@@ -135,16 +139,19 @@ export async function streamAgentToSlack({
 				answerChars: finalText.length,
 				chunks,
 				ok: true,
+				responseTs: streamTs,
 				streamed: true,
 			};
 		}
 
-		await say({
+		const response = await say({
 			text: finalText || SLACK_COPY.noAnswer,
 			thread_ts: run.threadTs,
 		});
+		const responseTs = getSlackMessageTs(response);
 		setSlackLog(eventLog, {
 			slack_answer_chars: finalText.length,
+			slack_response_ts: responseTs,
 			slack_stream_chunks: chunks,
 			slack_streamed: false,
 			"timing.slack_agent_response_ms": Math.round(
@@ -155,6 +162,7 @@ export async function streamAgentToSlack({
 			answerChars: finalText.length,
 			chunks,
 			ok: true,
+			responseTs,
 			streamed: false,
 		};
 	} catch (error) {
@@ -179,14 +187,19 @@ export async function streamAgentToSlack({
 					answerChars: partialText.length,
 					chunks,
 					ok: false,
+					responseTs: streamTs,
 					streamed: true,
 				};
 			}
-			await say({ text: partialText, thread_ts: run.threadTs });
+			const response = await say({
+				text: partialText,
+				thread_ts: run.threadTs,
+			});
 			return {
 				answerChars: partialText.length,
 				chunks,
 				ok: false,
+				responseTs: getSlackMessageTs(response),
 				streamed: false,
 			};
 		}
@@ -204,14 +217,19 @@ export async function streamAgentToSlack({
 				answerChars: 0,
 				chunks,
 				ok: false,
+				responseTs: streamTs,
 				streamed: true,
 			};
 		}
-		await say({ text: SLACK_COPY.agentFailure, thread_ts: run.threadTs });
+		const response = await say({
+			text: SLACK_COPY.agentFailure,
+			thread_ts: run.threadTs,
+		});
 		return {
 			answerChars: 0,
 			chunks,
 			ok: false,
+			responseTs: getSlackMessageTs(response),
 			streamed: false,
 		};
 	}
@@ -256,4 +274,10 @@ async function startSlackStream(
 
 function isRecord(value: unknown): value is Record<string, unknown> {
 	return Boolean(value && typeof value === "object" && !Array.isArray(value));
+}
+
+function getSlackMessageTs(response: unknown): string | undefined {
+	return isRecord(response) && typeof response.ts === "string"
+		? response.ts
+		: undefined;
 }

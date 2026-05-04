@@ -5,6 +5,8 @@ import { streamAgentToSlack } from "./respond";
 
 describe("Databuddy Slack response streaming", () => {
 	it("starts streams with answer text, not a loading placeholder", async () => {
+		const originalDateNow = Date.now;
+		let now = 0;
 		const calls: Array<{ method: string; options: Record<string, unknown> }> = [];
 		const client = {
 			apiCall: async (method: string, options?: Record<string, unknown>) => {
@@ -17,30 +19,41 @@ describe("Databuddy Slack response streaming", () => {
 		};
 		const agent: Pick<DatabuddyAgentClient, "stream"> = {
 			async *stream() {
+				now = 1000;
 				yield "Traffic is up 12%.";
 			},
 		};
 
-		const result = await streamAgentToSlack({
-			agent,
-			client,
-			logger: {
-				error: () => {},
-				warn: () => {},
-			},
-			run: {
-				channelId: "C123",
-				messageTs: "171234.567",
-				teamId: "T123",
-				text: "What changed?",
-				threadTs: "171234.567",
-				trigger: "app_mention",
-				userId: "U123",
-			},
-			say: async () => {},
-		});
+		Date.now = () => now;
+		let result: Awaited<ReturnType<typeof streamAgentToSlack>> | undefined;
+		try {
+			result = await streamAgentToSlack({
+				agent,
+				client,
+				logger: {
+					error: () => {},
+					warn: () => {},
+				},
+				run: {
+					channelId: "C123",
+					messageTs: "171234.567",
+					teamId: "T123",
+					text: "What changed?",
+					threadTs: "171234.567",
+					trigger: "app_mention",
+					userId: "U123",
+				},
+				say: async () => {},
+			});
+		} finally {
+			Date.now = originalDateNow;
+		}
 
-		expect(result).toMatchObject({ ok: true, streamed: true });
+		expect(result).toMatchObject({
+			ok: true,
+			responseTs: "stream_ts",
+			streamed: true,
+		});
 		expect(calls[0]).toEqual({
 			method: "chat.startStream",
 			options: expect.objectContaining({
