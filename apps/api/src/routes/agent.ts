@@ -1,3 +1,4 @@
+import { timingSafeEqual } from "node:crypto";
 import {
 	getAccessibleWebsiteIds,
 	getApiKeyFromHeader,
@@ -91,6 +92,37 @@ function getErrorName(error: unknown, fallback = "UnknownError"): string {
 		return error.name;
 	}
 	return fallback;
+}
+
+function secureEqual(
+	a: string | null | undefined,
+	b: string | null | undefined
+) {
+	if (!(a && b)) {
+		return false;
+	}
+	const left = Buffer.from(a);
+	const right = Buffer.from(b);
+	return left.length === right.length && timingSafeEqual(left, right);
+}
+
+async function getInternalApiKey(headers: Headers) {
+	const secret = headers.get("x-databuddy-internal-secret");
+	const keyId = headers.get("x-databuddy-api-key-id");
+	if (!(secureEqual(secret, process.env.DATABUDDY_INTERNAL_SECRET) && keyId)) {
+		return null;
+	}
+
+	const key = await db.query.apikey.findFirst({
+		where: { id: keyId },
+	});
+	if (!(key?.enabled && !key.revokedAt)) {
+		return null;
+	}
+	if (key.expiresAt && key.expiresAt.getTime() <= Date.now()) {
+		return null;
+	}
+	return key;
 }
 
 function getLastMessagePreview(
@@ -349,6 +381,10 @@ export const agent = new Elysia({ prefix: "/v1/agent" })
 			]);
 			user = session?.user ?? null;
 			apiKey = resolvedApiKey;
+		}
+
+		if (!(user || apiKey)) {
+			apiKey = await getInternalApiKey(request.headers);
 		}
 
 		const validApiKey =
@@ -748,6 +784,7 @@ export const agent = new Elysia({ prefix: "/v1/agent" })
 						}
 					}
 
+					const usagePromise = result.totalUsage;
 					const response = result.toUIMessageStreamResponse({
 						originalMessages: validation.data,
 						onFinish: async ({ messages }) => {
@@ -797,7 +834,35 @@ export const agent = new Elysia({ prefix: "/v1/agent" })
 					});
 
 					if (response.body) {
-						const [forClient, forStorage] = response.body.tee();
+						const encoder = new TextEncoder();
+						const decoder = new TextDecoder();
+						const usageInjector = new TransformStream<Uint8Array, Uint8Array>({
+							async transform(chunk, controller) {
+								const text = decoder.decode(chunk, { stream: true });
+								if (text.includes("data: [DONE]")) {
+									const before = text.replace("data: [DONE]", "").trimEnd();
+									if (before) controller.enqueue(encoder.encode(before));
+									try {
+										const usage = await usagePromise;
+										const evt = JSON.stringify({
+											type: "usage",
+											inputTokens: usage.inputTokens,
+											outputTokens: usage.outputTokens,
+										});
+										controller.enqueue(
+											encoder.encode(`\ndata: ${evt}\n\ndata: [DONE]\n`)
+										);
+									} catch {
+										controller.enqueue(encoder.encode(`\ndata: [DONE]\n`));
+									}
+								} else {
+									controller.enqueue(chunk);
+								}
+							},
+						});
+
+						const injectedStream = response.body.pipeThrough(usageInjector);
+						const [forClient, forStorage] = injectedStream.tee();
 						(async () => {
 							const reader = forStorage.getReader();
 							try {
