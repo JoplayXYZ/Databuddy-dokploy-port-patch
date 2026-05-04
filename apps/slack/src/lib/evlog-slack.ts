@@ -1,5 +1,6 @@
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { env } from "@databuddy/env/slack";
 import type { DrainContext, RequestLogger } from "evlog";
 import { createLogger, log } from "evlog";
 import { createAxiomDrain } from "evlog/axiom";
@@ -9,13 +10,21 @@ import { createDrainPipeline } from "evlog/pipeline";
 type SlackLogValue = string | number | boolean;
 type SlackLogFields = Record<string, SlackLogValue | null | undefined>;
 
-const batchedAxiomDrain = createDrainPipeline<DrainContext>({
-	batch: { size: 50, intervalMs: 5000 },
-	maxBufferSize: 2000,
-})(createAxiomDrain());
+const batchedAxiomDrain = env.AXIOM_TOKEN
+	? createDrainPipeline<DrainContext>({
+			batch: { size: 50, intervalMs: 5000 },
+			maxBufferSize: 2000,
+		})(
+			createAxiomDrain({
+				dataset: env.SLACK_AXIOM_DATASET,
+				token: env.AXIOM_TOKEN,
+				...(env.AXIOM_ORG_ID ? { orgId: env.AXIOM_ORG_ID } : {}),
+			})
+		)
+	: null;
 
 const fsDrain =
-	process.env.NODE_ENV === "development" || process.env.SLACK_EVLOG_FS === "1"
+	env.NODE_ENV === "development" || env.SLACK_EVLOG_FS === "1"
 		? createFsDrain({
 				dir: join(
 					dirname(fileURLToPath(import.meta.url)),
@@ -38,11 +47,11 @@ export async function slackLoggerDrain(ctx: DrainContext): Promise<void> {
 	if (fsDrain) {
 		await fsDrain(ctx);
 	}
-	batchedAxiomDrain(ctx);
+	batchedAxiomDrain?.(ctx);
 }
 
 export async function flushBatchedSlackDrain(): Promise<void> {
-	await batchedAxiomDrain.flush();
+	await batchedAxiomDrain?.flush();
 }
 
 export function createSlackEventLog(fields: SlackLogFields): RequestLogger {
