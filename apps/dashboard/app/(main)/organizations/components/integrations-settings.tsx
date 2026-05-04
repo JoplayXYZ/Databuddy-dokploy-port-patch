@@ -627,25 +627,27 @@ function SlackWorkspaceRow({
 						<CaretDownIcon className="size-3 shrink-0" weight="fill" />
 					</DropdownMenu.Trigger>
 					<DropdownMenu.Content align="end" className="w-64">
-						<DropdownMenu.GroupLabel>Default website</DropdownMenu.GroupLabel>
-						<DropdownMenu.Item onClick={() => onDefaultWebsiteChange(null)}>
-							No default website
-						</DropdownMenu.Item>
-						<DropdownMenu.Separator />
-						{websites.map((website) => (
-							<DropdownMenu.Item
-								key={website.id}
-								onClick={() => onDefaultWebsiteChange(website.id)}
-							>
-								<GlobeIcon className="size-3.5 text-muted-foreground" />
-								<span className="min-w-0 flex-1 truncate">
-									{websiteLabel(website)}
-								</span>
-								{website.id === integration.defaultWebsiteId && (
-									<CheckCircleIcon className="size-3.5 text-success" />
-								)}
+						<DropdownMenu.Group>
+							<DropdownMenu.GroupLabel>Default website</DropdownMenu.GroupLabel>
+							<DropdownMenu.Item onClick={() => onDefaultWebsiteChange(null)}>
+								No default website
 							</DropdownMenu.Item>
-						))}
+							<DropdownMenu.Separator />
+							{websites.map((website) => (
+								<DropdownMenu.Item
+									key={website.id}
+									onClick={() => onDefaultWebsiteChange(website.id)}
+								>
+									<GlobeIcon className="size-3.5 text-muted-foreground" />
+									<span className="min-w-0 flex-1 truncate">
+										{websiteLabel(website)}
+									</span>
+									{website.id === integration.defaultWebsiteId && (
+										<CheckCircleIcon className="size-3.5 text-success" />
+									)}
+								</DropdownMenu.Item>
+							))}
+						</DropdownMenu.Group>
 					</DropdownMenu.Content>
 				</DropdownMenu>
 			</div>
