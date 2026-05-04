@@ -178,4 +178,5 @@ const port = process.env.PORT || 4000;
 export default {
 	fetch: app.fetch,
 	port,
+	maxRequestBodySize: 2 * 1024 * 1024,
 };
