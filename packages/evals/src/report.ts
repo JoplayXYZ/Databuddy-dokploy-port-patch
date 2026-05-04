@@ -32,13 +32,16 @@ export function printReport(run: EvalRun): void {
 	console.log("-".repeat(header.length));
 
 	let totalCost = 0;
+	let totalJudgeCost = 0;
 	for (let i = 0; i < run.cases.length; i++) {
 		const c = run.cases[i];
 		const status = c.passed ? PASS : FAIL;
 		const time = `${(c.metrics.latencyMs / 1000).toFixed(1)}s`;
+		const caseTotalCost = c.metrics.costUsd + (c.metrics.judgeCostUsd ?? 0);
 		const cost =
-			c.metrics.costUsd > 0 ? `$${c.metrics.costUsd.toFixed(4)}` : pad("--", 7);
+			caseTotalCost > 0 ? `$${caseTotalCost.toFixed(4)}` : pad("--", 7);
 		totalCost += c.metrics.costUsd;
+		totalJudgeCost += c.metrics.judgeCostUsd ?? 0;
 		const row = `${pad(String(i + 1), 2)} | ${pad(c.id, 28)} | ${status} | ${padNum(c.scores.tool_routing)} | ${padNum(c.scores.behavioral)} | ${padNum(c.scores.quality)} | ${padNum(c.scores.format)} | ${padNum(c.scores.performance)} | ${pad(cost, 7)} | ${time}`;
 		console.log(row);
 
@@ -57,7 +60,10 @@ export function printReport(run: EvalRun): void {
 	console.log("");
 	const s = run.summary;
 	const d = run.dimensions;
-	const costStr = totalCost > 0 ? ` | Cost: $${totalCost.toFixed(4)}` : "";
+	const grandTotal = totalCost + totalJudgeCost;
+	const costStr = grandTotal > 0
+		? ` | Cost: $${grandTotal.toFixed(4)} (agent: $${totalCost.toFixed(4)}, judge: $${totalJudgeCost.toFixed(4)})`
+		: "";
 	console.log(
 		`${BOLD}Summary:${RESET} ${s.passed}/${s.total} passed (${s.score}%) | Tools: ${d.tool_routing} | Behavioral: ${d.behavioral} | Quality: ${d.quality} | Format: ${d.format} | Perf: ${d.performance}${costStr}`
 	);

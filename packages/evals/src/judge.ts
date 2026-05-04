@@ -1,5 +1,5 @@
 import { createGateway, generateText } from "ai";
-import type { EvalCase, JudgeScores, ToolCallRecord } from "./types";
+import type { EvalCase, JudgeScores, JudgeResult, ToolCallRecord } from "./types";
 
 const JUDGE_PROMPT = `You are a brutally honest evaluator of an analytics AI agent. You have extremely high standards — you are a senior data analyst who has seen hundreds of reports and dashboards. You score like a tough professor: 90+ is exceptional work that would impress a VP, 70 is acceptable but unremarkable, 50 is mediocre, below 40 is bad.
 
@@ -116,7 +116,7 @@ export async function judgeQuality(
 	responseText: string,
 	toolCalls: ToolCallRecord[],
 	judgeModel?: string
-): Promise<JudgeScores | null> {
+): Promise<JudgeResult | null> {
 	if (!responseText.trim()) {
 		return null;
 	}
@@ -157,13 +157,19 @@ export async function judgeQuality(
 		);
 
 		return {
-			dataGrounding: parsed.data_grounding,
-			analyticalDepth: parsed.analytical_depth,
-			actionability: parsed.actionability,
-			completeness: parsed.completeness,
-			communication: parsed.communication,
-			average,
-			explanation: parsed.explanation,
+			scores: {
+				dataGrounding: parsed.data_grounding,
+				analyticalDepth: parsed.analytical_depth,
+				actionability: parsed.actionability,
+				completeness: parsed.completeness,
+				communication: parsed.communication,
+				average,
+				explanation: parsed.explanation,
+			},
+			usage: {
+				inputTokens: result.usage?.promptTokens ?? 0,
+				outputTokens: result.usage?.completionTokens ?? 0,
+			},
 		};
 	} catch (err) {
 		console.error(`  [judge] ${err instanceof Error ? err.message : err}`);

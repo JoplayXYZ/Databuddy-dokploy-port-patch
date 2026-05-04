@@ -39,6 +39,7 @@ export interface ScoreCard {
 export interface CaseMetrics {
 	costUsd: number;
 	inputTokens: number;
+	judgeCostUsd: number;
 	latencyMs: number;
 	outputTokens: number;
 	steps: number;
@@ -102,6 +103,11 @@ export interface ParsedAgentResponse {
 	steps: number;
 	textContent: string;
 	toolCalls: ToolCallRecord[];
+}
+
+export interface JudgeResult {
+	scores: JudgeScores;
+	usage: { inputTokens: number; outputTokens: number };
 }
 
 export interface EvalConfig {

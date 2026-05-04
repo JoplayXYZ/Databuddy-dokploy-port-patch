@@ -143,6 +143,7 @@ async function streamSSE(
 					}
 					break;
 				case "step-finish":
+				case "finish-step":
 					if (evt.usage) {
 						const u = evt.usage as Record<string, number>;
 						const iT = u.inputTokens ?? u.prompt_tokens ?? 0;
@@ -155,6 +156,14 @@ async function streamSSE(
 						}
 					}
 					break;
+				case "usage": {
+					const u = evt as Record<string, number>;
+					const iT = u.inputTokens ?? u.prompt_tokens ?? 0;
+					const oT = u.outputTokens ?? u.completion_tokens ?? 0;
+					if (iT > 0) inputTokens = iT;
+					if (oT > 0) outputTokens = oT;
+					break;
+				}
 				case "finish":
 					if (evt.usage && inputTokens === 0) {
 						const u = evt.usage as Record<string, number>;

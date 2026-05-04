@@ -14,17 +14,25 @@ Bun.serve({
 
 		if (url.pathname === "/api/results") {
 			try {
-				const files = await readdir(RESULTS_DIR);
-				const jsonFiles = files
-					.filter((f) => f.endsWith(".json"))
-					.sort()
-					.reverse();
-				const results = await Promise.all(
-					jsonFiles.map(async (f) => {
-						const content = await readFile(join(RESULTS_DIR, f), "utf-8");
-						return JSON.parse(content);
-					})
-				);
+				const dirs = (await readdir(RESULTS_DIR, { withFileTypes: true }))
+					.filter((d) => d.isDirectory())
+					.map((d) => d.name)
+					.sort();
+				const results = (
+					await Promise.all(
+						dirs.map(async (dir) => {
+							try {
+								const content = await readFile(
+									join(RESULTS_DIR, dir, "latest.json"),
+									"utf-8"
+								);
+								return JSON.parse(content);
+							} catch {
+								return null;
+							}
+						})
+					)
+				).filter(Boolean);
 				return Response.json(results, {
 					headers: { "Content-Type": "application/json" },
 				});

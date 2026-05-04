@@ -1,6 +1,13 @@
 import { mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { allCases, getCaseById, getCasesByCategory } from "./cases";
+import {
+	allModelIds,
+	computeCaseCost,
+	filterModels,
+	getModelTags,
+	listTags,
+} from "./costs";
 import { judgeQuality } from "./judge";
 import { printReport } from "./report";
 import { runCase } from "./runner";
@@ -32,11 +39,12 @@ interface CliOpts {
 	concurrency: number;
 	diff: boolean;
 	file?: string;
+	filter?: string;
 	model?: string;
 	noSave: boolean;
 	rejudge: boolean;
 	skipJudge: boolean;
-	subcommand: "run" | "compare";
+	subcommand: "run" | "compare" | "models";
 }
 
 const STRUCTURAL_PASS_THRESHOLD = 60;
@@ -86,6 +94,7 @@ function parseArgs(): CliOpts {
 	let caseId: string | undefined;
 	let model: string | undefined;
 	let file: string | undefined;
+	let filter: string | undefined;
 	let noSave = false;
 	let skipJudge = process.env.EVAL_SKIP_JUDGE === "true";
 	let rejudge = false;
@@ -95,6 +104,8 @@ function parseArgs(): CliOpts {
 
 	if (args[0] === "compare") {
 		subcommand = "compare";
+	} else if (args[0] === "models") {
+		subcommand = "models";
 	}
 
 	const remainingArgs = [...args];
@@ -131,6 +142,9 @@ function parseArgs(): CliOpts {
 			case "--concurrency":
 				concurrency = Number.parseInt(remainingArgs.shift() ?? "", 10) || 10;
 				break;
+			case "--filter":
+				filter = remainingArgs.shift();
+				break;
 			default:
 				break;
 		}
@@ -142,6 +156,7 @@ function parseArgs(): CliOpts {
 		caseId,
 		model,
 		file,
+		filter,
 		noSave,
 		skipJudge,
 		rejudge,
@@ -206,11 +221,14 @@ function clearLines(count: number) {
 async function runSingleCase(
 	evalCase: EvalCase,
 	config: EvalConfig,
+	modelId: string,
 	onProgress?: (evt: ProgressEvent) => void
 ): Promise<CaseResult> {
 	try {
 		const response = await runCase(evalCase, config, onProgress);
 		const { scores, failures, warnings } = scoreCase(evalCase, response);
+
+		const costUsd = computeCaseCost(modelId, response.inputTokens, response.outputTokens);
 
 		const result: CaseResult = {
 			id: evalCase.id,
@@ -224,7 +242,8 @@ async function runSingleCase(
 				latencyMs: response.latencyMs,
 				inputTokens: response.inputTokens,
 				outputTokens: response.outputTokens,
-				costUsd: 0,
+				costUsd,
+				judgeCostUsd: 0,
 			},
 			toolsCalled: [...new Set(response.toolCalls.map((tc) => tc.name))],
 			toolCalls: response.toolCalls,
@@ -249,6 +268,7 @@ async function runSingleCase(
 				inputTokens: 0,
 				outputTokens: 0,
 				costUsd: 0,
+				judgeCostUsd: 0,
 			},
 			toolsCalled: [],
 			toolCalls: [],
@@ -329,32 +349,37 @@ function buildRun(
 	};
 }
 
+function modelSlug(model: string): string {
+	return model.replace(/\//g, "--");
+}
+
 function saveRun(run: EvalRun, resultsDir: string): string {
-	mkdirSync(resultsDir, { recursive: true });
-	const slug = run.model.replace(/\//g, "--");
-	const ts = new Date()
-		.toISOString()
-		.replace(/[:.]/g, "")
-		.replace("T", "-")
-		.slice(0, 15);
-	const filename = `${ts}_${slug}.json`;
-	const filepath = join(resultsDir, filename);
+	const modelDir = join(resultsDir, modelSlug(run.model));
+	mkdirSync(modelDir, { recursive: true });
+	const filepath = join(modelDir, "latest.json");
 	writeFileSync(filepath, JSON.stringify(run, null, 2));
 	return filepath;
 }
 
 async function cmdRun() {
 	const opts = parseArgs();
-	const modelId = opts.model ?? "anthropic/claude-sonnet-4.6";
 	const judgeModel = process.env.EVAL_JUDGE_MODEL ?? "zai/glm-5-turbo";
 
-	const config: EvalConfig = {
-		apiUrl: opts.apiUrl,
-		authCookie: process.env.EVAL_SESSION_COOKIE,
-		apiKey: process.env.EVAL_API_KEY,
-		judgeModel,
-		modelOverride: opts.model,
-	};
+	if (opts.rejudge) {
+		await rejudgeFromFile(opts, judgeModel);
+		return;
+	}
+
+	let modelIds: string[];
+	if (opts.filter) {
+		modelIds = filterModels(opts.filter);
+		if (modelIds.length === 0) {
+			console.error(`No models match filter '${opts.filter}'`);
+			process.exit(1);
+		}
+	} else {
+		modelIds = [opts.model ?? "anthropic/claude-sonnet-4.6"];
+	}
 
 	let cases = allCases;
 	if (opts.caseId) {
@@ -372,10 +397,40 @@ async function cmdRun() {
 		}
 	}
 
-	if (opts.rejudge) {
-		await rejudgeFromFile(opts, judgeModel);
-		return;
+	if (modelIds.length > 1) {
+		console.log(
+			`${BOLD}Batch run: ${modelIds.length} models × ${cases.length} cases${RESET}\n`
+		);
 	}
+
+	let anyFailed = false;
+	for (let mi = 0; mi < modelIds.length; mi++) {
+		const modelId = modelIds[mi];
+		if (modelIds.length > 1) {
+			console.log(
+				`\n${CYAN}━━━ [${mi + 1}/${modelIds.length}] ${modelId} ━━━${RESET}\n`
+			);
+		}
+		const run = await runModelSuite(opts, modelId, judgeModel, cases);
+		if (run.summary.failed > 0) anyFailed = true;
+	}
+
+	if (anyFailed) process.exitCode = 1;
+}
+
+async function runModelSuite(
+	opts: CliOpts,
+	modelId: string,
+	judgeModel: string,
+	cases: EvalCase[]
+) {
+	const config: EvalConfig = {
+		apiUrl: opts.apiUrl,
+		authCookie: process.env.EVAL_SESSION_COOKIE,
+		apiKey: process.env.EVAL_API_KEY,
+		judgeModel,
+		modelOverride: modelId,
+	};
 
 	const concurrency = Math.min(opts.concurrency, cases.length);
 	console.log(
@@ -432,7 +487,7 @@ async function cmdRun() {
 			slots.set(slotId, slot);
 			redraw();
 
-			const result = await runSingleCase(evalCase, config, (evt) => {
+			const result = await runSingleCase(evalCase, config, modelId, (evt) => {
 				switch (evt.kind) {
 					case "step":
 						slot.steps = evt.step;
@@ -494,10 +549,18 @@ async function cmdRun() {
 			) {
 				pendingJudges.push(
 					judgeQuality(evalCase, result.response, result.toolCalls, judgeModel)
-						.then((scores) => {
-							if (scores) {
+						.then((judgeResult) => {
+							if (judgeResult) {
+								const { scores, usage } = judgeResult;
 								result.scores.quality = scores.average;
 								result.qualityDetail = scores;
+
+								result.metrics.judgeCostUsd = computeCaseCost(
+									judgeModel,
+									usage.inputTokens,
+									usage.outputTokens
+								);
+
 								refreshCaseStatus(result, evalCase);
 
 								if (isTTY && lastLineCount > 0) {
@@ -563,9 +626,7 @@ async function cmdRun() {
 		console.log(`Saved: ${filepath}`);
 	}
 
-	if (run.summary.failed > 0) {
-		process.exitCode = 1;
-	}
+	return run;
 }
 
 async function rejudgeFromFile(opts: CliOpts, judgeModel: string) {
@@ -575,20 +636,13 @@ async function rejudgeFromFile(opts: CliOpts, judgeModel: string) {
 	if (opts.file) {
 		filepath = opts.file;
 	} else if (opts.model) {
-		const slug = opts.model.replace(/\//g, "--");
-		const all = readdirSync(resultsDir)
-			.filter((f) => f.endsWith(".json") && f.includes(slug))
-			.sort();
-		if (all.length === 0) {
+		filepath = join(resultsDir, modelSlug(opts.model), "latest.json");
+		try {
+			readFileSync(filepath);
+		} catch {
 			console.error(`No results found for model ${opts.model}`);
 			process.exit(1);
 		}
-		const latest = all.at(-1);
-		if (!latest) {
-			console.error(`No results found for model ${opts.model}`);
-			process.exit(1);
-		}
-		filepath = join(resultsDir, latest);
 	} else {
 		console.error("--rejudge requires --model or --file");
 		process.exit(1);
@@ -615,19 +669,25 @@ async function rejudgeFromFile(opts: CliOpts, judgeModel: string) {
 				return false;
 			}
 
-			const scores = await judgeQuality(
+			const judgeResult = await judgeQuality(
 				evalCase,
 				caseResult.response,
 				caseResult.toolCalls,
 				judgeModel
 			);
-			if (!scores) {
+			if (!judgeResult) {
 				console.log(`  ${caseResult.id}: judge failed`);
 				return false;
 			}
 
+			const { scores } = judgeResult;
 			caseResult.scores.quality = scores.average;
 			caseResult.qualityDetail = scores;
+			caseResult.metrics.judgeCostUsd = computeCaseCost(
+				judgeModel,
+				judgeResult.usage.inputTokens,
+				judgeResult.usage.outputTokens
+			);
 			refreshCaseStatus(caseResult, evalCase);
 			console.log(
 				`  ${caseResult.id}: quality=${scores.average} ${caseResult.passed ? `${GREEN}PASS${RESET}` : `${RED}FAIL${RESET}`} (dg=${scores.dataGrounding} ad=${scores.analyticalDepth} ac=${scores.actionability} co=${scores.completeness} cm=${scores.communication})`
@@ -655,21 +715,34 @@ async function rejudgeFromFile(opts: CliOpts, judgeModel: string) {
 	}
 }
 
+function loadAllResults(resultsDir: string): Map<string, EvalRun> {
+	const latestByModel = new Map<string, EvalRun>();
+	let dirs: string[];
+	try {
+		dirs = readdirSync(resultsDir, { withFileTypes: true })
+			.filter((d) => d.isDirectory())
+			.map((d) => d.name);
+	} catch {
+		return latestByModel;
+	}
+	for (const dir of dirs) {
+		const filepath = join(resultsDir, dir, "latest.json");
+		try {
+			const run: EvalRun = JSON.parse(readFileSync(filepath, "utf-8"));
+			if (run.summary.total > 0) {
+				latestByModel.set(run.model, run);
+			}
+		} catch {
+			continue;
+		}
+	}
+	return latestByModel;
+}
+
 function cmdCompare() {
 	const opts = parseArgs();
 	const resultsDir = join(import.meta.dir, "..", "results");
-	const all = readdirSync(resultsDir)
-		.filter((f) => f.endsWith(".json"))
-		.sort();
-
-	const latestByModel = new Map<string, EvalRun>();
-	for (const f of all) {
-		const run: EvalRun = JSON.parse(readFileSync(join(resultsDir, f), "utf-8"));
-		if (run.summary.total === 0) {
-			continue;
-		}
-		latestByModel.set(run.model, run);
-	}
+	const latestByModel = loadAllResults(resultsDir);
 
 	const models = [...latestByModel.keys()].sort();
 	const firstRun = latestByModel.values().next().value;
@@ -710,11 +783,12 @@ function cmdCompare() {
 			}
 			const status = c.passed ? "OK" : "FAIL";
 			const t = `${(c.metrics.latencyMs / 1000).toFixed(0)}s`;
+			const cost = c.metrics.costUsd > 0 ? `$${c.metrics.costUsd.toFixed(3)}` : "";
 			const q =
 				c.scores.quality !== undefined && c.scores.quality > 0
 					? `q${c.scores.quality}`
 					: "";
-			cellValues.push(pad(`${status} ${t} ${q}`.trim(), COL));
+			cellValues.push(pad(`${status} ${t} ${cost} ${q}`.trim(), COL));
 		}
 
 		if (opts.diff) {
@@ -751,7 +825,49 @@ function cmdCompare() {
 		summaryRow += ` ${pad(`${s.passed}/${s.total} ${avgLat.toFixed(0)}s${q}`, COL)} |`;
 	}
 	console.log(summaryRow);
+
+	let costRow = `${pad("COST", 32)} |`;
+	for (const model of models) {
+		const run = latestByModel.get(model);
+		if (!run) {
+			costRow += ` ${pad("--", COL)} |`;
+			continue;
+		}
+		const totalCost = run.cases.reduce((a, c) => a + c.metrics.costUsd, 0);
+		const avgCost = totalCost / (run.cases.length || 1);
+		const costStr = totalCost > 0
+			? `$${totalCost.toFixed(4)} (~$${avgCost.toFixed(4)}/q)`
+			: "--";
+		costRow += ` ${pad(costStr, COL)} |`;
+	}
+	console.log(costRow);
+
+	let tokenRow = `${pad("TOKENS", 32)} |`;
+	for (const model of models) {
+		const run = latestByModel.get(model);
+		if (!run) {
+			tokenRow += ` ${pad("--", COL)} |`;
+			continue;
+		}
+		const totalIn = run.cases.reduce((a, c) => a + c.metrics.inputTokens, 0);
+		const totalOut = run.cases.reduce((a, c) => a + c.metrics.outputTokens, 0);
+		const fmt = (n: number) => n > 1000 ? `${(n / 1000).toFixed(0)}k` : String(n);
+		tokenRow += ` ${pad(`${fmt(totalIn)}in ${fmt(totalOut)}out`, COL)} |`;
+	}
+	console.log(tokenRow);
 	console.log("");
+}
+
+function cmdModels() {
+	const opts = parseArgs();
+	const ids = opts.filter ? filterModels(opts.filter) : allModelIds();
+
+	console.log(`\n${BOLD}${ids.length} models${RESET}${opts.filter ? ` (filter: ${opts.filter})` : ""}\n`);
+	for (const id of ids) {
+		const tags = getModelTags(id);
+		console.log(`  ${id.padEnd(42)} ${DIM}${tags.join(", ")}${RESET}`);
+	}
+	console.log(`\n${DIM}Tags: ${listTags().join(", ")}${RESET}\n`);
 }
 
 async function main() {
@@ -759,6 +875,9 @@ async function main() {
 	switch (opts.subcommand) {
 		case "compare":
 			cmdCompare();
+			break;
+		case "models":
+			cmdModels();
 			break;
 		default:
 			await cmdRun();
