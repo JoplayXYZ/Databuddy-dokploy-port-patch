@@ -34,5 +34,7 @@ export const SLACK_COPY = {
 		"Databuddy is not connected to this Slack workspace yet. Open Databuddy organization settings -> Integrations -> Slack, connect the workspace, then run `/bind` in this channel.",
 	noAnswer:
 		"I reached Databuddy, but no answer came back. Try a narrower question, like `traffic for the last 7 days`.",
+	processingReaction: "eyes",
+	streamOpening: "Looking at your Databuddy analytics...",
 	suggestedPromptsTitle: "Start with Databuddy",
 } as const;

@@ -1,0 +1,101 @@
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+import type { DrainContext, RequestLogger } from "evlog";
+import { createLogger, log } from "evlog";
+import { createAxiomDrain } from "evlog/axiom";
+import { createFsDrain } from "evlog/fs";
+import { createDrainPipeline } from "evlog/pipeline";
+
+type SlackLogValue = string | number | boolean;
+type SlackLogFields = Record<string, SlackLogValue | null | undefined>;
+
+const batchedAxiomDrain = createDrainPipeline<DrainContext>({
+	batch: { size: 50, intervalMs: 5000 },
+	maxBufferSize: 2000,
+})(createAxiomDrain());
+
+const fsDrain =
+	process.env.NODE_ENV === "development" || process.env.SLACK_EVLOG_FS === "1"
+		? createFsDrain({
+				dir: join(
+					dirname(fileURLToPath(import.meta.url)),
+					"..",
+					"..",
+					".evlog",
+					"logs"
+				),
+				pretty: false,
+			})
+		: null;
+
+export async function slackLoggerDrain(ctx: DrainContext): Promise<void> {
+	const event = ctx.event as Record<string, unknown>;
+	if (typeof event.error === "string") {
+		event.error_message = event.error;
+		event.error = undefined;
+	}
+
+	if (fsDrain) {
+		await fsDrain(ctx);
+	}
+	batchedAxiomDrain(ctx);
+}
+
+export async function flushBatchedSlackDrain(): Promise<void> {
+	await batchedAxiomDrain.flush();
+}
+
+export function createSlackEventLog(fields: SlackLogFields): RequestLogger {
+	return createLogger(cleanFields({ service: "slack", ...fields }));
+}
+
+export function setSlackLog(
+	logger: RequestLogger | undefined,
+	fields: SlackLogFields
+): void {
+	logger?.set(cleanFields(fields));
+}
+
+export function captureSlackError(
+	error: unknown,
+	fields?: SlackLogFields
+): void {
+	const err = toError(error);
+	log.error({
+		service: "slack",
+		error_message: err.message,
+		error_stack: err.stack,
+		...cleanFields(fields ?? {}),
+	});
+}
+
+export function toError(error: unknown): Error {
+	return error instanceof Error ? error : new Error(String(error));
+}
+
+export function getSlackApiErrorCode(error: unknown): string | undefined {
+	if (!isRecord(error)) {
+		return;
+	}
+
+	const data = error.data;
+	if (isRecord(data) && typeof data.error === "string") {
+		return data.error;
+	}
+
+	return typeof error.code === "string" ? error.code : undefined;
+}
+
+function cleanFields(fields: SlackLogFields): Record<string, SlackLogValue> {
+	const clean: Record<string, SlackLogValue> = {};
+	for (const [key, value] of Object.entries(fields)) {
+		if (value !== undefined && value !== null) {
+			clean[key] = value;
+		}
+	}
+	return clean;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+	return Boolean(value && typeof value === "object" && !Array.isArray(value));
+}

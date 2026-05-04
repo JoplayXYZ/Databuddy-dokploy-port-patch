@@ -50,7 +50,8 @@
         "app_mentions:read",
         "chat:write",
         "commands",
-        "im:history"
+        "im:history",
+        "reactions:write"
       ]
     }
   },

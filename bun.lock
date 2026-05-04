@@ -351,6 +351,7 @@
         "@databuddy/env": "workspace:*",
         "@slack/bolt": "^4.7.2",
         "@slack/web-api": "^7.15.1",
+        "evlog": "catalog:",
       },
       "devDependencies": {
         "@types/bun": "catalog:",

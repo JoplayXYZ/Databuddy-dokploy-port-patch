@@ -1,5 +1,16 @@
 import { Assistant, type App } from "@slack/bolt";
-import type { DatabuddyAgentClient } from "../agent/agent-client";
+import type { WebClient } from "@slack/web-api";
+import type { RequestLogger } from "evlog";
+import type {
+	DatabuddyAgentClient,
+	SlackAgentRun,
+} from "../agent/agent-client";
+import {
+	createSlackEventLog,
+	getSlackApiErrorCode,
+	setSlackLog,
+	toError,
+} from "../lib/evlog-slack";
 import type { SlackInstallationStore } from "./installations";
 import { SLACK_COPY, SLACK_SUGGESTED_PROMPTS } from "./messages";
 import { streamAgentToSlack } from "./respond";
@@ -22,15 +33,24 @@ interface SlackMessageLike {
 interface SlackSlashCommand {
 	channel_id: string;
 	team_id?: string;
+	user_id?: string;
 }
 
 interface SlackSlashLogger {
 	error(...args: unknown[]): void;
+	warn(...args: unknown[]): void;
 }
 
 type SlackSlashRespond = (message: {
 	response_type: "ephemeral";
 	text: string;
+}) => Promise<unknown>;
+
+type SlackAgentClient = Pick<WebClient, "apiCall" | "reactions">;
+
+type SlackSay = (message: {
+	text: string;
+	thread_ts?: string;
 }) => Promise<unknown>;
 
 export function registerSlackListeners(
@@ -101,7 +121,7 @@ export function registerSlackListeners(
 				status: "is thinking...",
 			});
 
-			await streamAgentToSlack({
+			await handleAgentRun({
 				agent,
 				client,
 				logger,
@@ -151,7 +171,7 @@ export function registerSlackListeners(
 			return;
 		}
 
-		await streamAgentToSlack({
+		await handleAgentRun({
 			agent,
 			client,
 			logger,
@@ -181,7 +201,7 @@ export function registerSlackListeners(
 			return;
 		}
 
-		await streamAgentToSlack({
+		await handleAgentRun({
 			agent,
 			client,
 			logger,
@@ -209,6 +229,96 @@ export function registerSlackListeners(
 	});
 }
 
+async function handleAgentRun({
+	agent,
+	client,
+	logger,
+	run,
+	say,
+}: {
+	agent: DatabuddyAgentClient;
+	client: SlackAgentClient;
+	logger: SlackSlashLogger;
+	run: SlackAgentRun;
+	say: SlackSay;
+}): Promise<void> {
+	const eventLog = createRunLog(run);
+	const startedAt = performance.now();
+
+	try {
+		await addTriggerReaction({ client, eventLog, logger, run });
+		const result = await streamAgentToSlack({
+			agent,
+			client,
+			eventLog,
+			logger,
+			run,
+			say,
+		});
+		setSlackLog(eventLog, {
+			slack_response_ok: result.ok,
+			slack_response_streamed: result.streamed,
+		});
+	} finally {
+		setSlackLog(eventLog, {
+			"timing.slack_total_ms": Math.round(performance.now() - startedAt),
+		});
+		eventLog.emit();
+	}
+}
+
+function createRunLog(run: SlackAgentRun): RequestLogger {
+	return createSlackEventLog({
+		slack_channel_id: run.channelId,
+		slack_event: "agent_run",
+		slack_message_ts: run.messageTs,
+		slack_team_id: run.teamId,
+		slack_text_length: run.text.length,
+		slack_thread_ts: run.threadTs,
+		slack_trigger: run.trigger,
+		slack_user_id: run.userId,
+	});
+}
+
+async function addTriggerReaction({
+	client,
+	eventLog,
+	logger,
+	run,
+}: {
+	client: Pick<WebClient, "reactions">;
+	eventLog: RequestLogger;
+	logger: SlackSlashLogger;
+	run: SlackAgentRun;
+}): Promise<void> {
+	if (!run.messageTs) {
+		return;
+	}
+
+	const startedAt = performance.now();
+	try {
+		await client.reactions.add({
+			channel: run.channelId,
+			name: SLACK_COPY.processingReaction,
+			timestamp: run.messageTs,
+		});
+		setSlackLog(eventLog, {
+			slack_reaction_added: true,
+			"timing.slack_reaction_ms": Math.round(performance.now() - startedAt),
+		});
+	} catch (error) {
+		const code = getSlackApiErrorCode(error) ?? "unknown";
+		setSlackLog(eventLog, {
+			slack_reaction_added: code === "already_reacted",
+			slack_reaction_error: code,
+			"timing.slack_reaction_ms": Math.round(performance.now() - startedAt),
+		});
+		if (code !== "already_reacted") {
+			logger.warn("Failed to add Slack trigger reaction", code);
+		}
+	}
+}
+
 async function respondToBindCommand({
 	command,
 	installations,
@@ -220,21 +330,37 @@ async function respondToBindCommand({
 	logger: SlackSlashLogger;
 	respond: SlackSlashRespond;
 }): Promise<void> {
+	const eventLog = createSlackEventLog({
+		slack_channel_id: command.channel_id,
+		slack_command: "/bind",
+		slack_event: "slash_command",
+		slack_team_id: command.team_id,
+		slack_user_id: command.user_id,
+	});
+	const startedAt = performance.now();
 	try {
 		const result = await installations.bindChannel({
 			channelId: command.channel_id,
 			teamId: command.team_id,
+		});
+		setSlackLog(eventLog, {
+			slack_bind_ok: result.ok,
+			"timing.slack_bind_ms": Math.round(performance.now() - startedAt),
 		});
 		await respond({
 			response_type: "ephemeral",
 			text: result.message,
 		});
 	} catch (error) {
-		logger.error(error);
+		const err = toError(error);
+		logger.error(err);
+		eventLog.error(err, { error_step: "bind_channel" });
 		await respond({
 			response_type: "ephemeral",
 			text: SLACK_COPY.bindFailure,
 		});
+	} finally {
+		eventLog.emit();
 	}
 }
 

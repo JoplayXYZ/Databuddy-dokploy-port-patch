@@ -1,8 +1,10 @@
+import type { RequestLogger } from "evlog";
 import type { WebClient } from "@slack/web-api";
 import type {
 	DatabuddyAgentClient,
 	SlackAgentRun,
 } from "../agent/agent-client";
+import { setSlackLog, toError } from "../lib/evlog-slack";
 import { SLACK_COPY } from "./messages";
 
 const STREAM_FLUSH_INTERVAL_MS = 900;
@@ -20,27 +22,39 @@ type SayFn = (message: {
 }) => Promise<unknown>;
 
 interface StreamAgentToSlackOptions {
-	agent: DatabuddyAgentClient;
-	client: WebClient;
+	agent: Pick<DatabuddyAgentClient, "stream">;
+	client: Pick<WebClient, "apiCall">;
+	eventLog?: RequestLogger;
 	logger: LoggerLike;
 	run: SlackAgentRun;
 	say: SayFn;
 }
 
+export interface StreamAgentToSlackResult {
+	answerChars: number;
+	chunks: number;
+	ok: boolean;
+	streamed: boolean;
+}
+
 export async function streamAgentToSlack({
 	agent,
 	client,
+	eventLog,
 	logger,
 	run,
 	say,
-}: StreamAgentToSlackOptions): Promise<void> {
+}: StreamAgentToSlackOptions): Promise<StreamAgentToSlackResult> {
 	let streamTs: string | null = null;
 	let pending = "";
 	let fullText = "";
+	let chunks = 0;
 	let lastFlushAt = Date.now();
+	const startedAt = performance.now();
 
 	if (run.threadTs) {
 		streamTs = await startSlackStream(client, run, logger);
+		setSlackLog(eventLog, { slack_stream_started: Boolean(streamTs) });
 	}
 
 	const flush = async (force = false) => {
@@ -75,6 +89,7 @@ export async function streamAgentToSlack({
 
 	try {
 		for await (const chunk of agent.stream(run)) {
+			chunks++;
 			pending += chunk;
 			fullText += streamTs ? chunk : "";
 			await flush(false);
@@ -88,15 +103,44 @@ export async function streamAgentToSlack({
 				markdown_text: finalText ? undefined : SLACK_COPY.noAnswer,
 				ts: streamTs,
 			});
-			return;
+			setSlackLog(eventLog, {
+				slack_answer_chars: finalText.length,
+				slack_stream_chunks: chunks,
+				slack_streamed: true,
+				"timing.slack_agent_response_ms": Math.round(
+					performance.now() - startedAt
+				),
+			});
+			return {
+				answerChars: finalText.length,
+				chunks,
+				ok: true,
+				streamed: true,
+			};
 		}
 
 		await say({
 			text: finalText || SLACK_COPY.noAnswer,
 			thread_ts: run.threadTs,
 		});
+		setSlackLog(eventLog, {
+			slack_answer_chars: finalText.length,
+			slack_stream_chunks: chunks,
+			slack_streamed: false,
+			"timing.slack_agent_response_ms": Math.round(
+				performance.now() - startedAt
+			),
+		});
+		return {
+			answerChars: finalText.length,
+			chunks,
+			ok: true,
+			streamed: false,
+		};
 	} catch (error) {
-		logger.error("Slack agent response failed", error);
+		const err = toError(error);
+		logger.error("Slack agent response failed", err);
+		eventLog?.error(err, { error_step: "agent_response" });
 		if (streamTs) {
 			await client
 				.apiCall("chat.stopStream", {
@@ -107,21 +151,32 @@ export async function streamAgentToSlack({
 				.catch((stopError) =>
 					logger.warn("Failed to stop Slack stream", stopError)
 				);
-			return;
+			return {
+				answerChars: 0,
+				chunks,
+				ok: false,
+				streamed: true,
+			};
 		}
 		await say({ text: SLACK_COPY.agentFailure, thread_ts: run.threadTs });
+		return {
+			answerChars: 0,
+			chunks,
+			ok: false,
+			streamed: false,
+		};
 	}
 }
 
 async function startSlackStream(
-	client: WebClient,
+	client: Pick<WebClient, "apiCall">,
 	run: SlackAgentRun,
 	logger: LoggerLike
 ): Promise<string | null> {
 	try {
 		const result = await client.apiCall("chat.startStream", {
 			channel: run.channelId,
-			markdown_text: "",
+			markdown_text: SLACK_COPY.streamOpening,
 			recipient_team_id: run.teamId,
 			recipient_user_id: run.userId,
 			thread_ts: run.threadTs,

@@ -9,6 +9,7 @@ import type {
 	SlackRunContextResolver,
 } from "../agent/agent-client";
 import type { TokenCryptoConfig } from "../config";
+import { createSlackEventLog, setSlackLog, toError } from "../lib/evlog-slack";
 import { SLACK_COPY } from "./messages";
 
 export interface SlackChannelBindingCommand {
@@ -29,20 +30,45 @@ export class SlackInstallationStore implements SlackRunContextResolver {
 	}
 
 	async authorize(teamId: string) {
-		const installation = await findActiveIntegration(teamId);
-		if (!installation) {
-			throw new Error(`Slack team ${teamId} is not connected to Databuddy`);
-		}
+		const eventLog = createSlackEventLog({
+			slack_event: "authorize",
+			slack_team_id: teamId,
+		});
+		const startedAt = performance.now();
 
-		return {
-			botId: installation.botId ?? undefined,
-			botToken: decrypt(
-				installation.botTokenCiphertext,
-				this.#crypto.encryptionKey
-			),
-			botUserId: installation.botUserId ?? undefined,
-			teamId,
-		};
+		try {
+			const installation = await findActiveIntegration(teamId);
+			if (!installation) {
+				setSlackLog(eventLog, { slack_authorized: false });
+				throw new Error(`Slack team ${teamId} is not connected to Databuddy`);
+			}
+
+			setSlackLog(eventLog, {
+				slack_authorized: true,
+				slack_bot_id: installation.botId,
+				slack_integration_id: installation.id,
+				slack_organization_id: installation.organizationId,
+			});
+
+			return {
+				botId: installation.botId ?? undefined,
+				botToken: decrypt(
+					installation.botTokenCiphertext,
+					this.#crypto.encryptionKey
+				),
+				botUserId: installation.botUserId ?? undefined,
+				teamId,
+			};
+		} catch (error) {
+			const err = toError(error);
+			eventLog.error(err, { error_step: "authorize" });
+			throw err;
+		} finally {
+			setSlackLog(eventLog, {
+				"timing.slack_authorize_ms": Math.round(performance.now() - startedAt),
+			});
+			eventLog.emit();
+		}
 	}
 
 	async resolve(run: SlackAgentRun): Promise<SlackRunContext | null> {
