@@ -34,6 +34,7 @@ import { initTccTracing, shutdownTccTracing } from "@/lib/tcc-otel";
 import { captureError, record } from "@/lib/tracing";
 import { agent } from "./routes/agent";
 import { health } from "./routes/health";
+import { integrations } from "./routes/integrations";
 import { insights } from "./routes/insights";
 import { mcp } from "./routes/mcp";
 import { publicApi } from "./routes/public";
@@ -363,6 +364,7 @@ const app = new Elysia({ precompile: true })
 	)
 	.use(query)
 	.use(agent)
+	.use(integrations)
 	.use(insights)
 	.use(mcp)
 	.all(

@@ -2,6 +2,8 @@
 
 import type { SlackIntegrationOutput, WebsiteOutput } from "@databuddy/rpc";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useSearchParams } from "next/navigation";
+import { useEffect } from "react";
 import { toast } from "sonner";
 import { TopBar } from "@/components/layout/top-bar";
 import type { Organization } from "@/hooks/use-organizations";
@@ -198,6 +200,15 @@ function selectedWebsiteLabel(
 	return "No default website";
 }
 
+function slackInstallUrl(organizationId: string): string {
+	const url = new URL(
+		"/v1/integrations/slack/install",
+		process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"
+	);
+	url.searchParams.set("organizationId", organizationId);
+	return url.toString();
+}
+
 function slackStatusBadge(
 	integrations: SlackIntegration[],
 	isLoading: boolean
@@ -223,7 +234,11 @@ function slackStatusBadge(
 	);
 }
 
-function slackAction(integrations: SlackIntegration[], isLoading: boolean) {
+function slackAction(
+	integrations: SlackIntegration[],
+	isLoading: boolean,
+	organizationId: string
+) {
 	if (isLoading) {
 		return (
 			<Button disabled size="sm" variant="secondary">
@@ -232,7 +247,7 @@ function slackAction(integrations: SlackIntegration[], isLoading: boolean) {
 			</Button>
 		);
 	}
-	if (integrations.length > 0) {
+	if (integrations.some((item) => item.status === "active")) {
 		return (
 			<Button disabled size="sm" variant="secondary">
 				<CheckCircleIcon className="size-4" />
@@ -241,15 +256,13 @@ function slackAction(integrations: SlackIntegration[], isLoading: boolean) {
 		);
 	}
 	return (
-		<Button
-			disabled
-			size="sm"
-			title="Slack OAuth install is the next backend slice"
-			variant="secondary"
+		<a
+			className={buttonVariants({ size: "sm", variant: "secondary" })}
+			href={slackInstallUrl(organizationId)}
 		>
 			<PlugIcon className="size-4" />
 			Connect
-		</Button>
+		</a>
 	);
 }
 
@@ -319,9 +332,20 @@ export function IntegrationsSettings({
 	organization: Organization;
 }) {
 	const queryClient = useQueryClient();
+	const searchParams = useSearchParams();
 	const listKey = orpc.integrations.list.key({
 		input: { organizationId: organization.id },
 	});
+
+	useEffect(() => {
+		const slackResult = searchParams.get("slack");
+		if (slackResult === "connected") {
+			toast.success("Slack workspace connected");
+		}
+		if (slackResult === "error") {
+			toast.error(searchParams.get("message") ?? "Slack install failed");
+		}
+	}, [searchParams]);
 
 	const integrationsQuery = useQuery({
 		...orpc.integrations.list.queryOptions({
@@ -373,7 +397,8 @@ export function IntegrationsSettings({
 							<IntegrationListRow
 								action={slackAction(
 									slackIntegrations,
-									integrationsQuery.isLoading
+									integrationsQuery.isLoading,
+									organization.id
 								)}
 								badge={slackStatusBadge(
 									slackIntegrations,
