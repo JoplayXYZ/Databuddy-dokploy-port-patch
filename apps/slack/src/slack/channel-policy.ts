@@ -4,6 +4,7 @@ import { getSlackApiErrorCode } from "../lib/evlog-slack";
 export type SlackChannelPolicyReason =
 	| "internal"
 	| "slack_connect"
+	| "missing_scope"
 	| "lookup_failed";
 
 export interface SlackChannelMentionPolicy {
@@ -58,7 +59,7 @@ export async function getSlackChannelMentionPolicy({
 		return {
 			autoBind: false,
 			errorCode: code,
-			reason: "lookup_failed",
+			reason: code === "missing_scope" ? "missing_scope" : "lookup_failed",
 		};
 	}
 }

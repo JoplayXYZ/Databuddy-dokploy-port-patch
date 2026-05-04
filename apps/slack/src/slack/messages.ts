@@ -35,6 +35,8 @@ export const SLACK_COPY = {
 		"Slack did not include a workspace id for this request. Try again from a normal workspace channel.",
 	missingWorkspace:
 		"Databuddy is not connected to this Slack workspace yet. Open Databuddy organization settings -> Integrations -> Slack, connect the workspace, then run `/bind` in this channel.",
+	missingSlackScopes:
+		"Slack did not grant Databuddy the channel and reaction permissions it needs yet. Reconnect Slack from Databuddy organization settings, then try again.",
 	noAnswer:
 		"I reached Databuddy, but no answer came back. Try a narrower question, like `traffic for the last 7 days`.",
 	feedbackReactions: ["thumbsup", "thumbsdown"],

@@ -52,7 +52,7 @@ describe("Slack channel mention policy", () => {
 		});
 	});
 
-	it("fails closed when Slack channel lookup is unavailable", async () => {
+	it("reports missing scopes separately from channel binding", async () => {
 		const policy = await getSlackChannelMentionPolicy({
 			channelId: "C123",
 			client: {
@@ -66,6 +66,24 @@ describe("Slack channel mention policy", () => {
 		expect(policy).toMatchObject({
 			autoBind: false,
 			errorCode: "missing_scope",
+			reason: "missing_scope",
+		});
+	});
+
+	it("fails closed when Slack channel lookup is unavailable", async () => {
+		const policy = await getSlackChannelMentionPolicy({
+			channelId: "C123",
+			client: {
+				apiCall: async () => {
+					throw { data: { error: "ratelimited" } };
+				},
+			},
+			logger,
+		});
+
+		expect(policy).toMatchObject({
+			autoBind: false,
+			errorCode: "ratelimited",
 			reason: "lookup_failed",
 		});
 	});

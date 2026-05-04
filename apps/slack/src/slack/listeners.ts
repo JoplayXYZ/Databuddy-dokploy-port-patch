@@ -172,6 +172,7 @@ export function registerSlackListeners(
 		if (!readiness.ok) {
 			logChannelGate({
 				channelId: event.channel,
+				errorCode: channelPolicy.errorCode,
 				messageTs: event.ts,
 				policyReason: channelPolicy.reason,
 				teamId,
@@ -181,7 +182,9 @@ export function registerSlackListeners(
 				text:
 					channelPolicy.reason === "slack_connect"
 						? SLACK_COPY.slackConnectNeedsBind
-						: readiness.message,
+						: channelPolicy.reason === "missing_scope"
+							? SLACK_COPY.missingSlackScopes
+							: readiness.message,
 				thread_ts: threadTs,
 			});
 			return;
@@ -269,12 +272,14 @@ export function registerSlackListeners(
 
 function logChannelGate({
 	channelId,
+	errorCode,
 	messageTs,
 	policyReason,
 	teamId,
 	userId,
 }: {
 	channelId: string;
+	errorCode?: string;
 	messageTs: string;
 	policyReason: string;
 	teamId?: string;
@@ -283,6 +288,7 @@ function logChannelGate({
 	createSlackEventLog({
 		slack_channel_gate_reason: policyReason,
 		slack_channel_id: channelId,
+		slack_channel_lookup_error: errorCode,
 		slack_event: "channel_gate",
 		slack_message_ts: messageTs,
 		slack_team_id: teamId,
