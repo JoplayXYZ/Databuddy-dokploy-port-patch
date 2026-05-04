@@ -27,7 +27,7 @@ import {
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
 import { useDeleteWebsite } from "@/hooks/use-websites";
 import { formatNumber } from "@/lib/formatters";
-import { TOAST_MESSAGES } from "../[id]/_components/shared/tracking-constants";
+import { TOAST_MESSAGES } from "../[id]/_components/constants/settings-constants";
 import MiniChart from "./mini-chart";
 import { TransferWebsiteDialog } from "./transfer-website-dialog";
 import {

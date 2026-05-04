@@ -27,7 +27,7 @@ import { cn } from "@/lib/utils";
 import {
 	COPY_SUCCESS_TIMEOUT,
 	INSTALL_COMMANDS,
-} from "../../websites/[id]/_components/shared/tracking-constants";
+} from "../../websites/[id]/_components/constants/settings-constants";
 import {
 	generateNpmCode,
 	generateScriptTag,
