@@ -1,5 +1,5 @@
 import { createGateway, generateText } from "ai";
-import type { EvalCase, JudgeScores, JudgeResult, ToolCallRecord } from "./types";
+import type { EvalCase, JudgeResult, ToolCallRecord } from "./types";
 
 const JUDGE_PROMPT = `You are a brutally honest evaluator of an analytics AI agent. You have extremely high standards — you are a senior data analyst who has seen hundreds of reports and dashboards. You score like a tough professor: 90+ is exceptional work that would impress a VP, 70 is acceptable but unremarkable, 50 is mediocre, below 40 is bad.
 

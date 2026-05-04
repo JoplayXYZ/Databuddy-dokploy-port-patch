@@ -160,8 +160,12 @@ async function streamSSE(
 					const u = evt as Record<string, number>;
 					const iT = u.inputTokens ?? u.prompt_tokens ?? 0;
 					const oT = u.outputTokens ?? u.completion_tokens ?? 0;
-					if (iT > 0) inputTokens = iT;
-					if (oT > 0) outputTokens = oT;
+					if (iT > 0) {
+						inputTokens = iT;
+					}
+					if (oT > 0) {
+						outputTokens = oT;
+					}
 					break;
 				}
 				case "finish":

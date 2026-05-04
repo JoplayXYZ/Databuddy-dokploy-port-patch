@@ -1,7 +1,6 @@
 import { userPreferences } from "@databuddy/db/schema";
 import { randomUUIDv7 } from "bun";
 import { z } from "zod";
-import { rpcError } from "..";
 import { sessionProcedure, trackedSessionProcedure } from "../orpc";
 
 const defaultPreferences = {

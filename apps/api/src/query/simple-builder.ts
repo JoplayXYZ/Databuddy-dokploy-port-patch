@@ -252,8 +252,7 @@ export class SimpleQueryBuilder {
 			filter.field as (typeof GLOBAL_ALLOWED_FILTERS)[number]
 		);
 		if (
-			!isGloballyAllowed &&
-			!this.config.allowedFilters?.includes(filter.field)
+			!(isGloballyAllowed || this.config.allowedFilters?.includes(filter.field))
 		) {
 			throw new Error(`Filter on field '${filter.field}' is not permitted.`);
 		}

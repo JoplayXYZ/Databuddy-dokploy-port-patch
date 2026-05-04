@@ -3,20 +3,15 @@ import { VALIDATION_LIMITS } from "../constants";
 
 const boundedPropertiesJson = z
 	.json()
-	.refine(
-		(val) => {
-			if (typeof val !== "object" || val === null || Array.isArray(val))
-				return true;
-			return (
-				Object.keys(val).length <= VALIDATION_LIMITS.PROPERTIES_MAX_KEYS
-			);
-		},
-		`Too many properties (max ${VALIDATION_LIMITS.PROPERTIES_MAX_KEYS})`
-	)
+	.refine((val) => {
+		if (typeof val !== "object" || val === null || Array.isArray(val)) {
+			return true;
+		}
+		return Object.keys(val).length <= VALIDATION_LIMITS.PROPERTIES_MAX_KEYS;
+	}, `Too many properties (max ${VALIDATION_LIMITS.PROPERTIES_MAX_KEYS})`)
 	.refine(
 		(val) =>
-			JSON.stringify(val).length <=
-			VALIDATION_LIMITS.PROPERTIES_MAX_SERIALIZED,
+			JSON.stringify(val).length <= VALIDATION_LIMITS.PROPERTIES_MAX_SERIALIZED,
 		`Properties too large (max ${VALIDATION_LIMITS.PROPERTIES_MAX_SERIALIZED} bytes)`
 	);
 

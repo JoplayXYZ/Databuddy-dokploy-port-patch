@@ -172,9 +172,10 @@ async function handlePaymentIntent(
 	const metadata = await extractAnalyticsMetadata(pi.metadata);
 	const customerId = extractCustomerId(pi.customer);
 	const descLower = pi.description?.toLowerCase() ?? "";
-	const isSubscription =
-		!!pi.invoice || descLower.startsWith("subscription");
-	const type: "sale" | "subscription" = isSubscription ? "subscription" : "sale";
+	const isSubscription = !!pi.invoice || descLower.startsWith("subscription");
+	const type: "sale" | "subscription" = isSubscription
+		? "subscription"
+		: "sale";
 	const amount = (pi.amount_received ?? pi.amount) / 100;
 	const currency = pi.currency.toUpperCase();
 	const productName =
@@ -236,7 +237,9 @@ async function handleFailedPayment(
 	const currency = pi.currency.toUpperCase();
 	const descLower = pi.description?.toLowerCase() ?? "";
 	const isSubscription = !!pi.invoice || descLower.startsWith("subscription");
-	const type: "sale" | "subscription" = isSubscription ? "subscription" : "sale";
+	const type: "sale" | "subscription" = isSubscription
+		? "subscription"
+		: "sale";
 	const productName =
 		pi.description && !descLower.startsWith("subscription")
 			? pi.description

@@ -234,7 +234,9 @@ export function extractIpFromRequest(request: Request): string {
 			TRUSTED_IP_HEADER === "x-forwarded-for"
 				? trusted.split(",")[0]?.trim()
 				: trusted.trim();
-		if (ip) return ip;
+		if (ip) {
+			return ip;
+		}
 	}
 
 	const forwardedFor = request.headers.get("x-forwarded-for");

@@ -1599,7 +1599,8 @@ export const competitors: Record<string, ComparisonData> = {
 				name: "Short links with analytics",
 				databuddy: true,
 				competitor: false,
-				benefit: "Branded short links with click tracking built into your dashboard",
+				benefit:
+					"Branded short links with click tracking built into your dashboard",
 				category: "features",
 			},
 			{

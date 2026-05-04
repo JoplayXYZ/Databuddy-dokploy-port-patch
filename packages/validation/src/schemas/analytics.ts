@@ -190,8 +190,7 @@ export const analyticsEventSchema = z.object({
 			z.unknown()
 		)
 		.refine(
-			(obj) =>
-				Object.keys(obj).length <= VALIDATION_LIMITS.PROPERTIES_MAX_KEYS,
+			(obj) => Object.keys(obj).length <= VALIDATION_LIMITS.PROPERTIES_MAX_KEYS,
 			`Too many properties (max ${VALIDATION_LIMITS.PROPERTIES_MAX_KEYS})`
 		)
 		.refine(

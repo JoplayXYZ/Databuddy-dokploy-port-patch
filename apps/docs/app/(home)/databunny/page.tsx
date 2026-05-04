@@ -71,7 +71,8 @@ export default function DatabunnyPage() {
 			<StructuredData
 				elements={[{ type: "faq", items: [...FAQ_ITEMS] }]}
 				page={{
-					title: "AI Analytics Agent - Ask Your Data Questions in Plain English",
+					title:
+						"AI Analytics Agent - Ask Your Data Questions in Plain English",
 					description:
 						"Ask questions about your analytics in plain English. Natural language queries, automated insights, anomaly detection, and proactive alerts.",
 					url: "https://www.databuddy.cc/databunny",

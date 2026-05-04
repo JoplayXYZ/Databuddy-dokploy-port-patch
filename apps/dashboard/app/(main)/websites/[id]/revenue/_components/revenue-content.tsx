@@ -794,7 +794,9 @@ export function RevenueContent({ websiteId }: RevenueContentProps) {
 					}
 					icon={<CurrencyDollarIcon />}
 					title={
-						isConfigured ? "Waiting for transactions" : "Set up revenue tracking"
+						isConfigured
+							? "Waiting for transactions"
+							: "Set up revenue tracking"
 					}
 				/>
 			)}

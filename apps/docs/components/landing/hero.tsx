@@ -90,9 +90,7 @@ export default function Hero({
 					<h1 className="z-10 font-semibold text-3xl sm:text-5xl md:text-6xl">
 						One script. Six tools.
 						<br />
-						<span className="text-muted-foreground">
-							Under 30 KB.
-						</span>
+						<span className="text-muted-foreground">Under 30 KB.</span>
 					</h1>
 
 					<p className="z-10 max-w-2xl text-muted-foreground text-sm sm:text-base lg:text-lg">

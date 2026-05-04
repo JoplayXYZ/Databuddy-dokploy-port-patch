@@ -163,9 +163,13 @@ export function computeCaseCost(
 	inputTokens: number,
 	outputTokens: number
 ): number {
-	if (inputTokens === 0 && outputTokens === 0) return 0;
+	if (inputTokens === 0 && outputTokens === 0) {
+		return 0;
+	}
 	const entry = MODELS[modelId];
-	if (!entry) return 0;
+	if (!entry) {
+		return 0;
+	}
 	return (
 		(inputTokens / 1_000_000) * entry.inputPerMToken +
 		(outputTokens / 1_000_000) * entry.outputPerMToken
@@ -209,7 +213,9 @@ export function getModelTags(modelId: string): ModelTag[] {
 export function listTags(): string[] {
 	const tags = new Set<string>();
 	for (const entry of Object.values(MODELS)) {
-		for (const t of entry.tags) tags.add(t);
+		for (const t of entry.tags) {
+			tags.add(t);
+		}
 	}
 	return [...tags].sort();
 }

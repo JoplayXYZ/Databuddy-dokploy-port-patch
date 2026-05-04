@@ -228,7 +228,11 @@ async function runSingleCase(
 		const response = await runCase(evalCase, config, onProgress);
 		const { scores, failures, warnings } = scoreCase(evalCase, response);
 
-		const costUsd = computeCaseCost(modelId, response.inputTokens, response.outputTokens);
+		const costUsd = computeCaseCost(
+			modelId,
+			response.inputTokens,
+			response.outputTokens
+		);
 
 		const result: CaseResult = {
 			id: evalCase.id,
@@ -412,10 +416,14 @@ async function cmdRun() {
 			);
 		}
 		const run = await runModelSuite(opts, modelId, judgeModel, cases);
-		if (run.summary.failed > 0) anyFailed = true;
+		if (run.summary.failed > 0) {
+			anyFailed = true;
+		}
 	}
 
-	if (anyFailed) process.exitCode = 1;
+	if (anyFailed) {
+		process.exitCode = 1;
+	}
 }
 
 async function runModelSuite(
@@ -732,9 +740,7 @@ function loadAllResults(resultsDir: string): Map<string, EvalRun> {
 			if (run.summary.total > 0) {
 				latestByModel.set(run.model, run);
 			}
-		} catch {
-			continue;
-		}
+		} catch {}
 	}
 	return latestByModel;
 }
@@ -783,7 +789,8 @@ function cmdCompare() {
 			}
 			const status = c.passed ? "OK" : "FAIL";
 			const t = `${(c.metrics.latencyMs / 1000).toFixed(0)}s`;
-			const cost = c.metrics.costUsd > 0 ? `$${c.metrics.costUsd.toFixed(3)}` : "";
+			const cost =
+				c.metrics.costUsd > 0 ? `$${c.metrics.costUsd.toFixed(3)}` : "";
 			const q =
 				c.scores.quality !== undefined && c.scores.quality > 0
 					? `q${c.scores.quality}`
@@ -835,9 +842,10 @@ function cmdCompare() {
 		}
 		const totalCost = run.cases.reduce((a, c) => a + c.metrics.costUsd, 0);
 		const avgCost = totalCost / (run.cases.length || 1);
-		const costStr = totalCost > 0
-			? `$${totalCost.toFixed(4)} (~$${avgCost.toFixed(4)}/q)`
-			: "--";
+		const costStr =
+			totalCost > 0
+				? `$${totalCost.toFixed(4)} (~$${avgCost.toFixed(4)}/q)`
+				: "--";
 		costRow += ` ${pad(costStr, COL)} |`;
 	}
 	console.log(costRow);
@@ -851,7 +859,8 @@ function cmdCompare() {
 		}
 		const totalIn = run.cases.reduce((a, c) => a + c.metrics.inputTokens, 0);
 		const totalOut = run.cases.reduce((a, c) => a + c.metrics.outputTokens, 0);
-		const fmt = (n: number) => n > 1000 ? `${(n / 1000).toFixed(0)}k` : String(n);
+		const fmt = (n: number) =>
+			n > 1000 ? `${(n / 1000).toFixed(0)}k` : String(n);
 		tokenRow += ` ${pad(`${fmt(totalIn)}in ${fmt(totalOut)}out`, COL)} |`;
 	}
 	console.log(tokenRow);
@@ -862,7 +871,9 @@ function cmdModels() {
 	const opts = parseArgs();
 	const ids = opts.filter ? filterModels(opts.filter) : allModelIds();
 
-	console.log(`\n${BOLD}${ids.length} models${RESET}${opts.filter ? ` (filter: ${opts.filter})` : ""}\n`);
+	console.log(
+		`\n${BOLD}${ids.length} models${RESET}${opts.filter ? ` (filter: ${opts.filter})` : ""}\n`
+	);
 	for (const id of ids) {
 		const tags = getModelTags(id);
 		console.log(`  ${id.padEnd(42)} ${DIM}${tags.join(", ")}${RESET}`);
