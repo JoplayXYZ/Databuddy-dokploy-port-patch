@@ -114,12 +114,7 @@ export function registerSlackListeners(
 
 			await setTitle(toThreadTitle(text));
 			await setStatus({
-				loading_messages: [
-					"Reading analytics context",
-					"Planning the query",
-					"Checking the numbers",
-					"Preparing the answer",
-				],
+				loading_messages: [SLACK_COPY.streamOpening],
 				status: "is thinking...",
 			});
 
