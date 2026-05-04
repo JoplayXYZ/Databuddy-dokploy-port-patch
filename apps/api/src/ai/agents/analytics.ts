@@ -16,13 +16,11 @@ import { createGoalTools } from "../tools/goals";
 import { createLinksTools } from "../tools/links";
 import { createMemoryTools } from "../tools/memory";
 import { createProfileTools } from "../tools/profiles";
-import { webSearchTool } from "../tools/web-search";
 import type { AgentConfig, AgentContext, AgentThinking } from "./types";
 
 const analyticsTools = {
 	get_data: getDataTool,
 	execute_sql_query: executeSqlQueryTool,
-	web_search: webSearchTool,
 	...createMemoryTools(),
 	...createProfileTools(),
 	...createFunnelTools(),

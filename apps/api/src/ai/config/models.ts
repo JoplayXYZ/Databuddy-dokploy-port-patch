@@ -21,7 +21,6 @@ export const modelNames = {
 	quick: "inception/mercury-2",
 	balanced: "anthropic/claude-sonnet-4.6",
 	deep: "deepseek/deepseek-v4-flash",
-	perplexity: "perplexity/sonar-pro",
 } as const;
 
 export type AgentModelKey = "quick" | "balanced" | "deep";
@@ -31,7 +30,6 @@ export const models = {
 	quick: gateway.chat(modelNames.quick),
 	balanced: gateway.chat(modelNames.balanced),
 	deep: gateway.chat(modelNames.deep),
-	perplexity: gateway.chat(modelNames.perplexity),
 } as const;
 
 export const ANTHROPIC_CACHE_1H = {

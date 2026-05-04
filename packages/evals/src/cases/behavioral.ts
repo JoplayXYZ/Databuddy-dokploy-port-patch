@@ -4,7 +4,6 @@ const WS = "OXmNQsViBT-FOS_wZCTHc";
 const CONVERSATIONAL_TOOLS_NOT_CALLED: string[] = [
 	"get_data",
 	"execute_sql_query",
-	"web_search",
 	"search_memory",
 	"save_memory",
 	"forget_memory",

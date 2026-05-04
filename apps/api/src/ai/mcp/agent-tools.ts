@@ -18,7 +18,6 @@ import { createLinksTools } from "../tools/links";
 import { createMemoryTools } from "../tools/memory";
 import { createProfileTools } from "../tools/profiles";
 import { executeTimedQuery } from "../tools/utils";
-import { webSearchTool } from "../tools/web-search";
 import { buildBatchQueryRequests, MCP_DATE_PRESETS } from "./mcp-utils";
 import { ensureWebsiteAccess } from "./tool-context";
 
@@ -255,7 +254,6 @@ export function createMcpAgentTools() {
 				};
 			},
 		}),
-		web_search: webSearchTool,
 		...createMemoryTools(),
 		...createProfileTools(),
 		...createFunnelTools(),

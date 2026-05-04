@@ -92,11 +92,6 @@ const TOOL_LABELS: Record<string, (input: Input) => string> = {
 	get_profile: () => "Getting visitor profile",
 	get_profile_sessions: () => "Loading visitor sessions",
 
-	web_search: (input) => {
-		const query = input.query as string | undefined;
-		return query ? `Searching: ${query.slice(0, 40)}` : "Searching the web";
-	},
-
 	competitor_analysis: () => "Analyzing competitors",
 
 	save_memory: () => "Saving memory",

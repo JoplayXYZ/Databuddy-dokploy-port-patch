@@ -49,7 +49,6 @@ export interface LlmOverviewKpiRow {
 	total_calls: number;
 	total_cost: number;
 	total_tokens: number;
-	web_search_rate: number;
 }
 
 export interface LlmTimeSeriesRow {

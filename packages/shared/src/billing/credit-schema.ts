@@ -44,14 +44,6 @@ export const BASELINE_MODEL_ID = "anthropic/claude-4-1-opus" as const;
  */
 const CACHE_WRITE_1H_USD_PER_M_TOKENS = 6;
 
-/**
- * Flat credit cost per agent_web_search_calls. 1 credit ≈ $0.10 retail
- * at CREDITS_PER_USD=10 — priced separately from token burn because
- * the Perplexity call is a fixed-cost API hit regardless of tokens
- * returned.
- */
-export const WEB_SEARCH_CREDIT_COST = 1;
-
 const TOKENS_PER_MILLION = 1_000_000;
 
 interface ModelCostsPerMillion {
@@ -96,8 +88,6 @@ export interface AgentCreditSchema {
 	input: number;
 	/** Credits per output token. */
 	output: number;
-	/** Flat credits per web search call. */
-	webSearch: number;
 }
 
 const baselineUsd = getBaselineUsdPerMillion();
@@ -111,5 +101,4 @@ export const AGENT_CREDIT_SCHEMA: AgentCreditSchema = {
 	output: toCredits(baselineUsd.output),
 	cacheRead: toCredits(baselineUsd.cache_read),
 	cacheWrite: toCredits(baselineUsd.cache_write),
-	webSearch: WEB_SEARCH_CREDIT_COST,
 };

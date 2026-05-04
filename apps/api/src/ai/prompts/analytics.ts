@@ -15,7 +15,6 @@ const ANALYTICS_BODY = `<agent-specific-rules>
 3. list_links / list_funnels / list_goals / list_annotations: fetch the full list then filter locally.
 4. Mutations (create/update/delete): call with confirmed=false first for a preview, then confirmed=true after user confirms.
 5. custom_events: use get_data custom_events_* builders (separate table keyed by owner_id, not client_id -- raw SQL won't work). custom_events_discovery for event+property listing in one call.
-6. web_search: external context only (benchmarks, best practices), never for analytics data.
 
 **SQL rules (when SQL is needed):**
 - Use pre-aggregated tables when possible: analytics.error_hourly instead of analytics.error_spans for error counts, analytics.web_vitals_hourly instead of analytics.web_vitals_spans for vitals aggregations.
