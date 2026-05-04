@@ -11,6 +11,7 @@ import { flagsRouter } from "./routers/flags";
 import { funnelsRouter } from "./routers/funnels";
 import { goalsRouter } from "./routers/goals";
 import { insightsRouter } from "./routers/insights";
+import { integrationsRouter } from "./routers/integrations";
 import { linkFoldersRouter } from "./routers/link-folders";
 import { linksRouter } from "./routers/links";
 import { organizationsRouter } from "./routers/organizations";
@@ -33,6 +34,7 @@ export const appRouter = {
 	goals: goalsRouter,
 	autocomplete: autocompleteRouter,
 	apikeys: apikeysRouter,
+	integrations: integrationsRouter,
 	featureInvite: featureInviteRouter,
 	feedback: feedbackRouter,
 	flags: flagsRouter,
