@@ -63,27 +63,13 @@ class SlackInstallError extends Error {
 	}
 }
 
-function getString(value: unknown): string | null {
-	return typeof value === "string" && value.trim() ? value : null;
-}
-
-function getRecord(value: unknown): Record<string, unknown> | null {
-	return value && typeof value === "object"
-		? (value as Record<string, unknown>)
-		: null;
-}
-
-function getDashboardUrl(): string {
-	return process.env.BETTER_AUTH_URL || "http://localhost:3000";
-}
-
 function integrationsRedirect(
 	status: "connected" | "error",
 	message?: string
 ): Response {
 	const url = new URL(
 		"/organizations/settings/integrations",
-		getDashboardUrl()
+		process.env.BETTER_AUTH_URL || "http://localhost:3000"
 	);
 	url.searchParams.set("slack", status);
 	if (message) {
@@ -173,7 +159,9 @@ function buildSlackAuthorizeUrl(
 async function readSlackJson(
 	response: Response
 ): Promise<Record<string, unknown>> {
-	const body = getRecord(await response.json().catch(() => null));
+	const raw = await response.json().catch(() => null);
+	const body =
+		raw && typeof raw === "object" ? (raw as Record<string, unknown>) : null;
 	if (!body) {
 		throw new SlackInstallError("Slack returned an invalid response");
 	}
@@ -197,14 +185,24 @@ async function exchangeSlackCode(
 	const body = await readSlackJson(response);
 	if (body.ok !== true) {
 		throw new SlackInstallError(
-			`Slack OAuth failed: ${getString(body.error) ?? "unknown_error"}`
+			`Slack OAuth failed: ${typeof body.error === "string" && body.error.trim() ? body.error : "unknown_error"}`
 		);
 	}
 
-	const team = getRecord(body.team);
-	const enterprise = getRecord(body.enterprise);
-	const accessToken = getString(body.access_token);
-	const teamId = getString(team?.id);
+	const team =
+		body.team && typeof body.team === "object"
+			? (body.team as Record<string, unknown>)
+			: null;
+	const enterprise =
+		body.enterprise && typeof body.enterprise === "object"
+			? (body.enterprise as Record<string, unknown>)
+			: null;
+	const accessToken =
+		typeof body.access_token === "string" && body.access_token.trim()
+			? body.access_token
+			: null;
+	const teamId =
+		typeof team?.id === "string" && team.id.trim() ? team.id : null;
 	if (!(accessToken && teamId)) {
 		throw new SlackInstallError(
 			"Slack did not return a bot token and workspace id"
@@ -213,11 +211,21 @@ async function exchangeSlackCode(
 
 	return {
 		accessToken,
-		appId: getString(body.app_id),
-		botUserId: getString(body.bot_user_id),
-		enterpriseId: getString(enterprise?.id),
+		appId:
+			typeof body.app_id === "string" && body.app_id.trim()
+				? body.app_id
+				: null,
+		botUserId:
+			typeof body.bot_user_id === "string" && body.bot_user_id.trim()
+				? body.bot_user_id
+				: null,
+		enterpriseId:
+			typeof enterprise?.id === "string" && enterprise.id.trim()
+				? enterprise.id
+				: null,
 		teamId,
-		teamName: getString(team?.name),
+		teamName:
+			typeof team?.name === "string" && team.name.trim() ? team.name : null,
 	};
 }
 
@@ -228,17 +236,25 @@ async function readSlackBotIdentity(token: string): Promise<SlackBotIdentity> {
 	const body = await readSlackJson(response);
 	if (body.ok !== true) {
 		throw new SlackInstallError(
-			`Slack token verification failed: ${
-				getString(body.error) ?? "unknown_error"
-			}`
+			`Slack token verification failed: ${typeof body.error === "string" && body.error.trim() ? body.error : "unknown_error"}`
 		);
 	}
 
 	return {
-		botId: getString(body.bot_id),
-		botUserId: getString(body.user_id),
-		teamId: getString(body.team_id),
-		teamName: getString(body.team),
+		botId:
+			typeof body.bot_id === "string" && body.bot_id.trim()
+				? body.bot_id
+				: null,
+		botUserId:
+			typeof body.user_id === "string" && body.user_id.trim()
+				? body.user_id
+				: null,
+		teamId:
+			typeof body.team_id === "string" && body.team_id.trim()
+				? body.team_id
+				: null,
+		teamName:
+			typeof body.team === "string" && body.team.trim() ? body.team : null,
 	};
 }
 
@@ -247,8 +263,12 @@ function isTransientDatabaseConnectionError(error: unknown): boolean {
 		return false;
 	}
 
-	const record = getRecord(error);
-	const code = getString(record?.code);
+	const record =
+		error && typeof error === "object"
+			? (error as Record<string, unknown>)
+			: null;
+	const code =
+		typeof record?.code === "string" && record.code.trim() ? record.code : null;
 	if (code && ["08003", "08006", "57P01", "ECONNRESET"].includes(code)) {
 		return true;
 	}
