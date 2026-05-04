@@ -2,6 +2,16 @@ import { Analytics } from "../../types/tables";
 import type { Filter, SimpleQueryConfig, TimeUnit } from "../types";
 
 const ATTRIBUTION_CTE = `
+	pi_dedup AS (
+		SELECT amount, toUnixTimestamp(created) as ts
+		FROM ${Analytics.revenue}
+		WHERE
+			(owner_id = {websiteId:String} OR website_id = {websiteId:String})
+			AND created >= toDateTime({startDate:String})
+			AND created <= toDateTime(concat({endDate:String}, ' 23:59:59'))
+			AND startsWith(transaction_id, 'pi_')
+			AND amount > 0
+	),
 	revenue_base AS (
 		SELECT
 			r.transaction_id,
@@ -20,6 +30,14 @@ const ATTRIBUTION_CTE = `
 			AND r.created >= toDateTime({startDate:String})
 			AND r.created <= toDateTime(concat({endDate:String}, ' 23:59:59'))
 			AND r.type != 'subscription_event'
+			AND NOT (
+				startsWith(r.transaction_id, 'in_')
+				AND (
+					(r.amount, toUnixTimestamp(r.created)) IN (SELECT amount, ts FROM pi_dedup)
+					OR (r.amount, toUnixTimestamp(r.created) + 1) IN (SELECT amount, ts FROM pi_dedup)
+					OR (r.amount, toUnixTimestamp(r.created) - 1) IN (SELECT amount, ts FROM pi_dedup)
+				)
+			)
 	),
 	active_customers AS (
 		SELECT DISTINCT r_customer_id as customer_id

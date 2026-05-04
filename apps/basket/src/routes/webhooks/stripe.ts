@@ -54,36 +54,9 @@ interface WebhookInvoice {
 	subscription?: string | null;
 }
 
-interface WebhookSubscription {
-	cancel_at_period_end?: boolean;
-	canceled_at?: number | null;
-	created: number;
-	currency?: string;
-	current_period_end?: number;
-	current_period_start?: number;
-	customer?: string | { id: string } | null;
-	id: string;
-	items?: {
-		data: Array<{
-			price?: {
-				unit_amount?: number | null;
-				currency?: string;
-				recurring?: { interval?: string } | null;
-			};
-			plan?: { product?: string };
-		}>;
-	};
-	metadata?: Record<string, string>;
-	status: string;
-}
-
 interface WebhookEvent {
 	data: {
-		object:
-			| WebhookPaymentIntent
-			| WebhookCharge
-			| WebhookInvoice
-			| WebhookSubscription;
+		object: WebhookPaymentIntent | WebhookCharge | WebhookInvoice;
 	};
 	id: string;
 	type: string;
@@ -198,9 +171,16 @@ async function handlePaymentIntent(
 	const log = useLogger();
 	const metadata = await extractAnalyticsMetadata(pi.metadata);
 	const customerId = extractCustomerId(pi.customer);
-	const type: "sale" | "subscription" = pi.invoice ? "subscription" : "sale";
+	const descLower = pi.description?.toLowerCase() ?? "";
+	const isSubscription =
+		!!pi.invoice || descLower.startsWith("subscription");
+	const type: "sale" | "subscription" = isSubscription ? "subscription" : "sale";
 	const amount = (pi.amount_received ?? pi.amount) / 100;
 	const currency = pi.currency.toUpperCase();
+	const productName =
+		pi.description && !descLower.startsWith("subscription")
+			? pi.description
+			: undefined;
 
 	log.set({
 		revenue: {
@@ -234,7 +214,7 @@ async function handlePaymentIntent(
 				anonymous_id: metadata.anonymous_id || undefined,
 				session_id: metadata.session_id || undefined,
 				customer_id: customerId,
-				product_name: pi.description || undefined,
+				product_name: productName,
 				metadata: JSON.stringify(metadata),
 				created: formatDate(new Date(pi.created * 1000)),
 				synced_at: formatDate(new Date()),
@@ -250,11 +230,17 @@ async function handleFailedPayment(
 	status: "failed" | "canceled"
 ): Promise<void> {
 	const log = useLogger();
-	const metadata = extractAnalyticsMetadata(pi.metadata);
+	const metadata = await extractAnalyticsMetadata(pi.metadata);
 	const customerId = extractCustomerId(pi.customer);
 	const amount = (pi.amount_received ?? pi.amount) / 100;
 	const currency = pi.currency.toUpperCase();
-	const type: "sale" | "subscription" = pi.invoice ? "subscription" : "sale";
+	const descLower = pi.description?.toLowerCase() ?? "";
+	const isSubscription = !!pi.invoice || descLower.startsWith("subscription");
+	const type: "sale" | "subscription" = isSubscription ? "subscription" : "sale";
+	const productName =
+		pi.description && !descLower.startsWith("subscription")
+			? pi.description
+			: undefined;
 
 	log.set({
 		revenue: {
@@ -288,74 +274,9 @@ async function handleFailedPayment(
 				anonymous_id: metadata.anonymous_id || undefined,
 				session_id: metadata.session_id || undefined,
 				customer_id: customerId,
-				product_name: pi.description || undefined,
+				product_name: productName,
 				metadata: JSON.stringify(metadata),
 				created: formatDate(new Date(pi.created * 1000)),
-				synced_at: formatDate(new Date()),
-			},
-		],
-		format: "JSONEachRow",
-	});
-}
-
-async function handleInvoicePaid(
-	invoice: WebhookInvoice,
-	config: WebhookConfig
-): Promise<void> {
-	const log = useLogger();
-
-	if (invoice.payment_intent) {
-		log.set({
-			revenue: {
-				skipped: true,
-				reason: "has_payment_intent",
-				invoiceId: invoice.id,
-			},
-		});
-		return;
-	}
-
-	const metadata = await extractAnalyticsMetadata(invoice.metadata);
-	const customerId = extractCustomerId(invoice.customer);
-	const amount = invoice.amount_paid / 100;
-	const currency = invoice.currency.toUpperCase();
-
-	log.set({
-		revenue: {
-			type: "subscription",
-			status: "completed",
-			amount,
-			currency,
-			customerId,
-			transactionId: invoice.id,
-			billingReason: invoice.billing_reason,
-		},
-	});
-
-	await clickHouse.insert({
-		table: "analytics.revenue",
-		values: [
-			{
-				owner_id: config.ownerId,
-				website_id: await resolveWebsiteId(
-					metadata.client_id,
-					config.websiteId,
-					config.ownerId
-				),
-				transaction_id: invoice.id,
-				provider: "stripe",
-				type: "subscription" as const,
-				status: "completed",
-				amount,
-				original_amount: amount,
-				original_currency: currency,
-				currency,
-				anonymous_id: metadata.anonymous_id || undefined,
-				session_id: metadata.session_id || undefined,
-				customer_id: customerId,
-				product_name: invoice.description || undefined,
-				metadata: JSON.stringify(metadata),
-				created: formatDate(new Date(invoice.created * 1000)),
 				synced_at: formatDate(new Date()),
 			},
 		],
@@ -410,79 +331,6 @@ async function handleInvoiceFailed(
 				product_name: invoice.description || undefined,
 				metadata: JSON.stringify(metadata),
 				created: formatDate(new Date(invoice.created * 1000)),
-				synced_at: formatDate(new Date()),
-			},
-		],
-		format: "JSONEachRow",
-	});
-}
-
-async function handleSubscriptionEvent(
-	sub: WebhookSubscription,
-	config: WebhookConfig,
-	eventType: string
-): Promise<void> {
-	const log = useLogger();
-	const metadata = await extractAnalyticsMetadata(sub.metadata);
-	const customerId = extractCustomerId(sub.customer);
-	const firstItem = sub.items?.data?.[0];
-	const amount = (firstItem?.price?.unit_amount ?? 0) / 100;
-	const currency = (
-		firstItem?.price?.currency ||
-		sub.currency ||
-		"USD"
-	).toUpperCase();
-	const interval = firstItem?.price?.recurring?.interval;
-
-	log.set({
-		revenue: {
-			type: "subscription_event",
-			eventType,
-			subscriptionId: sub.id,
-			status: sub.status,
-			amount,
-			currency,
-			customerId,
-			interval,
-			cancelAtPeriodEnd: sub.cancel_at_period_end,
-		},
-	});
-
-	const subscriptionMetadata = {
-		...metadata,
-		subscription_status: sub.status,
-		event_type: eventType,
-		cancel_at_period_end: sub.cancel_at_period_end ? "true" : "false",
-		...(interval ? { billing_interval: interval } : {}),
-		...(sub.current_period_end
-			? { period_end: String(sub.current_period_end) }
-			: {}),
-	};
-
-	await clickHouse.insert({
-		table: "analytics.revenue",
-		values: [
-			{
-				owner_id: config.ownerId,
-				website_id: await resolveWebsiteId(
-					metadata.client_id,
-					config.websiteId,
-					config.ownerId
-				),
-				transaction_id: `${sub.id}_${eventType}`,
-				provider: "stripe",
-				type: "subscription_event",
-				status: sub.status,
-				amount: 0,
-				original_amount: amount,
-				original_currency: currency,
-				currency,
-				anonymous_id: metadata.anonymous_id || undefined,
-				session_id: metadata.session_id || undefined,
-				customer_id: customerId,
-				product_name: firstItem?.plan?.product || undefined,
-				metadata: JSON.stringify(subscriptionMetadata),
-				created: formatDate(new Date(sub.created * 1000)),
 				synced_at: formatDate(new Date()),
 			},
 		],
@@ -613,27 +461,10 @@ export const stripeWebhook = new Elysia().use(evlog()).post(
 					);
 					break;
 				}
-				case "invoice.paid": {
-					await handleInvoicePaid(event.data.object as WebhookInvoice, result);
-					break;
-				}
 				case "invoice.payment_failed": {
 					await handleInvoiceFailed(
 						event.data.object as WebhookInvoice,
 						result
-					);
-					break;
-				}
-				case "customer.subscription.created":
-				case "customer.subscription.updated":
-				case "customer.subscription.deleted":
-				case "customer.subscription.paused":
-				case "customer.subscription.resumed": {
-					const subEventType = event.type.replace("customer.subscription.", "");
-					await handleSubscriptionEvent(
-						event.data.object as WebhookSubscription,
-						result,
-						subEventType
 					);
 					break;
 				}

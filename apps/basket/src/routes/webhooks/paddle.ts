@@ -192,10 +192,7 @@ export const paddleWebhook = new Elysia().use(evlog()).post(
 		log.set({ eventType: event.event_type });
 
 		try {
-			if (
-				event.event_type === "transaction.completed" ||
-				event.event_type === "transaction.billed"
-			) {
+			if (event.event_type === "transaction.completed") {
 				await handleTransaction(event.data, result);
 			} else {
 				log.set({ unhandled: true });
