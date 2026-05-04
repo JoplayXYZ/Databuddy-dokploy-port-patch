@@ -26,6 +26,7 @@ export interface SlackRunContext {
 }
 
 export interface SlackRunContextResolver {
+	describeMissingContext?(run: SlackAgentRun): Promise<string>;
 	resolve(run: SlackAgentRun): Promise<SlackRunContext | null>;
 }
 
@@ -49,7 +50,7 @@ export class DatabuddyAgentClient {
 	async *stream(run: SlackAgentRun): AsyncGenerator<string> {
 		const context = await this.#contexts.resolve(run);
 		if (!context) {
-			yield getMissingAgentContextMessage();
+			yield await getMissingAgentContextMessage(this.#contexts, run);
 			return;
 		}
 
@@ -86,10 +87,17 @@ export class DatabuddyAgentClient {
 	}
 }
 
-export function getMissingAgentContextMessage(): string {
+export async function getMissingAgentContextMessage(
+	contexts?: SlackRunContextResolver,
+	run?: SlackAgentRun
+): Promise<string> {
+	if (contexts?.describeMissingContext && run) {
+		return await contexts.describeMissingContext(run);
+	}
+
 	return [
 		"Slack is connected, but this channel is not mapped to a Databuddy website yet.",
-		"Choose a default website in Databuddy or run `/databuddy bind your-domain.com` in this Slack channel.",
+		"Run `/bind` to bind the channel, or set a default website in Databuddy.",
 	].join(" ");
 }
 

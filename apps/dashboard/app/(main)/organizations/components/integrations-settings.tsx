@@ -750,9 +750,9 @@ function SlackWorkspaceRow({
 			<div className="mt-3 rounded border border-border/60 bg-background px-3 py-2">
 				<Text tone="muted" variant="caption">
 					DMs and unbound channels use the default website. Run{" "}
-					<SlackCommand value="/databuddy bind" /> in a Slack channel to route
-					that channel to a site, or <SlackCommand value="/databuddy unbind" />{" "}
-					to remove that route.
+					<SlackCommand value="/bind" /> in a Slack channel to route that
+					channel to a site, or <SlackCommand value="/unbind" /> to remove that
+					route.
 				</Text>
 			</div>
 

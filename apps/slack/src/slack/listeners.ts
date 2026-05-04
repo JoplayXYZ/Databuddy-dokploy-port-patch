@@ -34,6 +34,22 @@ interface SlackMessageLike {
 	user?: string;
 }
 
+interface SlackSlashCommand {
+	channel_id: string;
+	team_id?: string;
+	text: string;
+	user_id: string;
+}
+
+interface SlackSlashLogger {
+	error(...args: unknown[]): void;
+}
+
+type SlackSlashRespond = (message: {
+	response_type: "ephemeral";
+	text: string;
+}) => Promise<unknown>;
+
 export function registerSlackListeners(
 	app: App,
 	agent: DatabuddyAgentClient,
@@ -188,61 +204,33 @@ export function registerSlackListeners(
 		const text = command.text.trim();
 		const subcommand = parseSlashSubcommand(text);
 		if (subcommand.name === "help") {
-			await respond({
-				response_type: "ephemeral",
-				text: [
-					"`/databuddy bind` binds this channel to the default Databuddy website.",
-					"`/databuddy bind your-domain.com` binds this channel to a specific website.",
-					"`/databuddy unbind` removes this channel binding.",
-					"`/databuddy summarize traffic for the last 7 days` asks the analytics agent.",
-				].join("\n"),
+			await respondToSlashHelp({
+				installations,
+				respond,
+				teamId: command.team_id,
 			});
 			return;
 		}
 		if (subcommand.name === "bind") {
-			try {
-				const result = await installations.bindChannel({
-					channelId: command.channel_id,
-					selector: subcommand.args || undefined,
-					teamId: command.team_id,
-				});
-				await respond({
-					response_type: "ephemeral",
-					text: result.message,
-				});
-			} catch (error) {
-				logger.error(error);
-				await respond({
-					response_type: "ephemeral",
-					text: "Sorry, Databuddy could not bind this channel.",
-				});
-			}
+			await respondToBindCommand({
+				command,
+				installations,
+				logger,
+				respond,
+				selector: subcommand.args || undefined,
+			});
 			return;
 		}
 		if (subcommand.name === "unbind") {
-			try {
-				const result = await installations.unbindChannel({
-					channelId: command.channel_id,
-					teamId: command.team_id,
-				});
-				await respond({
-					response_type: "ephemeral",
-					text: result.message,
-				});
-			} catch (error) {
-				logger.error(error);
-				await respond({
-					response_type: "ephemeral",
-					text: "Sorry, Databuddy could not unbind this channel.",
-				});
-			}
+			await respondToUnbindCommand({ command, installations, logger, respond });
 			return;
 		}
 
 		if (!text) {
-			await respond({
-				response_type: "ephemeral",
-				text: "Usage: `/databuddy summarize traffic for the last 7 days` or `/databuddy help`",
+			await respondToSlashHelp({
+				installations,
+				respond,
+				teamId: command.team_id,
 			});
 			return;
 		}
@@ -268,6 +256,106 @@ export function registerSlackListeners(
 			});
 		}
 	});
+
+	app.command("/bind", async ({ ack, command, logger, respond }) => {
+		await ack();
+		await respondToBindCommand({
+			command,
+			installations,
+			logger,
+			respond,
+			selector: command.text.trim() || undefined,
+		});
+	});
+
+	app.command("/unbind", async ({ ack, command, logger, respond }) => {
+		await ack();
+		await respondToUnbindCommand({ command, installations, logger, respond });
+	});
+}
+
+async function respondToSlashHelp({
+	installations,
+	respond,
+	teamId,
+}: {
+	installations: SlackInstallationStore;
+	respond: SlackSlashRespond;
+	teamId?: string;
+}): Promise<void> {
+	const websiteOptions = await installations.listWebsiteOptions(teamId);
+	await respond({
+		response_type: "ephemeral",
+		text: [
+			"`/bind` binds this channel to the default Databuddy website.",
+			"`/bind your-domain.com` binds this channel to a specific website.",
+			"`/unbind` removes this channel binding.",
+			"`/databuddy summarize traffic for the last 7 days` asks the analytics agent.",
+			"",
+			websiteOptions,
+		].join("\n"),
+	});
+}
+
+async function respondToBindCommand({
+	command,
+	installations,
+	logger,
+	respond,
+	selector,
+}: {
+	command: SlackSlashCommand;
+	installations: SlackInstallationStore;
+	logger: SlackSlashLogger;
+	respond: SlackSlashRespond;
+	selector?: string;
+}): Promise<void> {
+	try {
+		const result = await installations.bindChannel({
+			channelId: command.channel_id,
+			selector,
+			teamId: command.team_id,
+		});
+		await respond({
+			response_type: "ephemeral",
+			text: result.message,
+		});
+	} catch (error) {
+		logger.error(error);
+		await respond({
+			response_type: "ephemeral",
+			text: "Sorry, Databuddy could not bind this channel.",
+		});
+	}
+}
+
+async function respondToUnbindCommand({
+	command,
+	installations,
+	logger,
+	respond,
+}: {
+	command: SlackSlashCommand;
+	installations: SlackInstallationStore;
+	logger: SlackSlashLogger;
+	respond: SlackSlashRespond;
+}): Promise<void> {
+	try {
+		const result = await installations.unbindChannel({
+			channelId: command.channel_id,
+			teamId: command.team_id,
+		});
+		await respond({
+			response_type: "ephemeral",
+			text: result.message,
+		});
+	} catch (error) {
+		logger.error(error);
+		await respond({
+			response_type: "ephemeral",
+			text: "Sorry, Databuddy could not unbind this channel.",
+		});
+	}
 }
 
 function parseSlashSubcommand(text: string): { args: string; name: string } {

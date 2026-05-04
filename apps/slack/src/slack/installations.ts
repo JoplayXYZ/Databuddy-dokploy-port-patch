@@ -1,4 +1,4 @@
-import { and, db, eq, ilike, or } from "@databuddy/db";
+import { and, asc, db, eq, isNull } from "@databuddy/db";
 import {
 	slackChannelBindings,
 	slackIntegrations,
@@ -15,6 +15,7 @@ import type {
 import type { TokenCryptoConfig } from "../config";
 
 const LEADING_WWW_REGEX = /^www\./;
+const WEBSITE_OPTION_LIMIT = 8;
 
 export interface SlackChannelBindingCommand {
 	channelId: string;
@@ -25,6 +26,12 @@ export interface SlackChannelBindingCommand {
 export interface SlackChannelBindingCommandResult {
 	message: string;
 	ok: boolean;
+}
+
+interface SlackWebsiteOption {
+	domain: string;
+	id: string;
+	name: string | null;
 }
 
 export class SlackInstallationStore implements SlackRunContextResolver {
@@ -73,33 +80,42 @@ export class SlackInstallationStore implements SlackRunContextResolver {
 			.limit(1);
 		const websiteId =
 			channelBinding?.websiteId ?? installation.defaultWebsiteId;
-		if (!websiteId) {
-			return null;
+		if (websiteId) {
+			const website = await findWebsiteById({
+				organizationId: installation.organizationId,
+				websiteId,
+			});
+			if (website) {
+				return this.toRunContext(installation, website.id);
+			}
 		}
 
-		const [website] = await db
-			.select({ id: websites.id })
-			.from(websites)
-			.where(
-				and(
-					eq(websites.id, websiteId),
-					eq(websites.organizationId, installation.organizationId)
-				)
-			)
-			.limit(1);
-		if (!website) {
-			return null;
+		if (!(channelBinding || installation.defaultWebsiteId)) {
+			const websiteOptions = await listWebsitesForOrganization(
+				installation.organizationId
+			);
+			const [onlyWebsite] = websiteOptions;
+			if (websiteOptions.length === 1 && onlyWebsite) {
+				return this.toRunContext(installation, onlyWebsite.id);
+			}
 		}
 
-		return {
-			agentApiKeySecret: decrypt(
-				installation.agentApiKeyCiphertext,
-				this.#crypto.encryptionKey
-			),
-			organizationId: installation.organizationId,
-			teamId: installation.teamId,
-			websiteId: website.id,
-		};
+		return null;
+	}
+
+	async describeMissingContext(run: SlackAgentRun): Promise<string> {
+		if (!run.teamId) {
+			return "Slack did not include a workspace id, so I could not find this Databuddy organization.";
+		}
+
+		const installation = await findActiveIntegration(run.teamId);
+		if (!installation) {
+			return "This Slack workspace is not connected to a Databuddy organization yet.";
+		}
+
+		return describeWebsiteChoice(
+			await listWebsitesForOrganization(installation.organizationId)
+		);
 	}
 
 	async bindChannel({
@@ -123,16 +139,14 @@ export class SlackInstallationStore implements SlackRunContextResolver {
 			};
 		}
 
-		const website = await findWebsiteForBinding({
+		const selection = await selectWebsiteForBinding({
 			defaultWebsiteId: installation.defaultWebsiteId,
 			organizationId: installation.organizationId,
 			selector,
 		});
-		if (!website) {
+		if (!selection.website) {
 			return {
-				message: selector
-					? `I could not find a Databuddy website matching "${selector}".`
-					: "Set a default website in Databuddy first, or run `/databuddy bind your-domain.com`.",
+				message: selection.message,
 				ok: false,
 			};
 		}
@@ -146,10 +160,10 @@ export class SlackInstallationStore implements SlackRunContextResolver {
 				integrationId: installation.id,
 				slackChannelId: channelId,
 				updatedAt: now,
-				websiteId: website.id,
+				websiteId: selection.website.id,
 			})
 			.onConflictDoUpdate({
-				set: { updatedAt: now, websiteId: website.id },
+				set: { updatedAt: now, websiteId: selection.website.id },
 				target: [
 					slackChannelBindings.integrationId,
 					slackChannelBindings.slackChannelId,
@@ -157,7 +171,7 @@ export class SlackInstallationStore implements SlackRunContextResolver {
 			});
 
 		return {
-			message: `This channel is now bound to ${websiteLabel(website)}.`,
+			message: `This channel is now bound to ${websiteLabel(selection.website)}.`,
 			ok: true,
 		};
 	}
@@ -203,6 +217,36 @@ export class SlackInstallationStore implements SlackRunContextResolver {
 					ok: true,
 				};
 	}
+
+	async listWebsiteOptions(teamId?: string): Promise<string> {
+		if (!teamId) {
+			return "Slack did not include a workspace id, so I could not list Databuddy websites.";
+		}
+
+		const installation = await findActiveIntegration(teamId);
+		if (!installation) {
+			return "This Slack workspace is not connected to a Databuddy organization yet.";
+		}
+
+		return formatWebsiteOptions(
+			await listWebsitesForOrganization(installation.organizationId)
+		);
+	}
+
+	private toRunContext(
+		installation: ActiveSlackIntegration,
+		websiteId: string
+	): SlackRunContext {
+		return {
+			agentApiKeySecret: decrypt(
+				installation.agentApiKeyCiphertext,
+				this.#crypto.encryptionKey
+			),
+			organizationId: installation.organizationId,
+			teamId: installation.teamId,
+			websiteId,
+		};
+	}
 }
 
 export function createSlackAuthorize(
@@ -239,6 +283,10 @@ function findActiveIntegration(teamId: string) {
 		.then(([installation]) => installation ?? null);
 }
 
+type ActiveSlackIntegration = NonNullable<
+	Awaited<ReturnType<typeof findActiveIntegration>>
+>;
+
 function normalizeWebsiteSelector(selector: string): string {
 	const value = selector.trim();
 	if (!value) {
@@ -252,7 +300,7 @@ function normalizeWebsiteSelector(selector: string): string {
 	}
 }
 
-async function findWebsiteForBinding({
+async function selectWebsiteForBinding({
 	defaultWebsiteId,
 	organizationId,
 	selector,
@@ -260,42 +308,181 @@ async function findWebsiteForBinding({
 	defaultWebsiteId: string | null;
 	organizationId: string;
 	selector?: string;
-}) {
-	const normalizedSelector = selector ? normalizeWebsiteSelector(selector) : "";
-	const rawSelector = selector?.trim() ?? normalizedSelector;
-	const where = normalizedSelector
-		? and(
-				eq(websites.organizationId, organizationId),
-				or(
-					eq(websites.id, rawSelector),
-					ilike(websites.domain, normalizedSelector),
-					ilike(websites.domain, `www.${normalizedSelector}`),
-					ilike(websites.name, rawSelector)
-				)
-			)
-		: defaultWebsiteId
-			? and(
-					eq(websites.organizationId, organizationId),
-					eq(websites.id, defaultWebsiteId)
-				)
-			: undefined;
+}): Promise<
+	{ message: string; website?: undefined } | { website: SlackWebsiteOption }
+> {
+	const websiteOptions = await listWebsitesForOrganization(organizationId);
 
-	if (!where) {
-		return null;
+	if (selector) {
+		const website = findWebsiteBySelector(websiteOptions, selector);
+		if (website) {
+			return { website };
+		}
+		return {
+			message: [
+				`I could not find a Databuddy website matching "${selector}".`,
+				formatWebsiteOptions(websiteOptions),
+				suggestBindCommand(websiteOptions),
+			]
+				.filter(Boolean)
+				.join("\n\n"),
+		};
 	}
 
+	if (defaultWebsiteId) {
+		const defaultWebsite = websiteOptions.find(
+			(website) => website.id === defaultWebsiteId
+		);
+		if (defaultWebsite) {
+			return { website: defaultWebsite };
+		}
+	}
+
+	const [onlyWebsite] = websiteOptions;
+	if (websiteOptions.length === 1 && onlyWebsite) {
+		return { website: onlyWebsite };
+	}
+
+	return { message: describeWebsiteChoice(websiteOptions) };
+}
+
+async function findWebsiteById({
+	organizationId,
+	websiteId,
+}: {
+	organizationId: string;
+	websiteId: string;
+}): Promise<SlackWebsiteOption | null> {
 	const [website] = await db
-		.select({ domain: websites.domain, id: websites.id, name: websites.name })
+		.select({
+			domain: websites.domain,
+			id: websites.id,
+			name: websites.name,
+		})
 		.from(websites)
-		.where(where)
+		.where(
+			and(
+				eq(websites.id, websiteId),
+				eq(websites.organizationId, organizationId),
+				isNull(websites.deletedAt)
+			)
+		)
 		.limit(1);
 
 	return website ?? null;
 }
 
-function websiteLabel(website: {
-	domain: string | null;
-	name: string | null;
-}): string {
-	return website.name?.trim() || website.domain || "selected website";
+async function listWebsitesForOrganization(
+	organizationId: string
+): Promise<SlackWebsiteOption[]> {
+	return await db
+		.select({
+			domain: websites.domain,
+			id: websites.id,
+			name: websites.name,
+		})
+		.from(websites)
+		.where(
+			and(
+				eq(websites.organizationId, organizationId),
+				isNull(websites.deletedAt)
+			)
+		)
+		.orderBy(asc(websites.name), asc(websites.domain));
+}
+
+function findWebsiteBySelector(
+	websiteOptions: SlackWebsiteOption[],
+	selector: string
+): SlackWebsiteOption | null {
+	const normalizedSelector = normalizeWebsiteSelector(selector).toLowerCase();
+	const rawSelector = selector.trim().toLowerCase();
+
+	let best: { score: number; website: SlackWebsiteOption } | null = null;
+	for (const website of websiteOptions) {
+		const score = scoreWebsiteMatch(website, {
+			normalizedSelector,
+			rawSelector,
+		});
+		if (score > 0 && (!best || score > best.score)) {
+			best = { score, website };
+		}
+	}
+
+	return best?.website ?? null;
+}
+
+function scoreWebsiteMatch(
+	website: SlackWebsiteOption,
+	selector: { normalizedSelector: string; rawSelector: string }
+): number {
+	const domain = normalizeWebsiteSelector(website.domain).toLowerCase();
+	const name = website.name?.trim().toLowerCase() ?? "";
+	const id = website.id.toLowerCase();
+
+	if (id === selector.rawSelector) {
+		return 100;
+	}
+	if (domain === selector.normalizedSelector) {
+		return 90;
+	}
+	if (name && name === selector.rawSelector) {
+		return 80;
+	}
+	if (domain.endsWith(`.${selector.normalizedSelector}`)) {
+		return 70;
+	}
+	if (selector.normalizedSelector.endsWith(`.${domain}`)) {
+		return 60;
+	}
+	if (domain.includes(selector.normalizedSelector)) {
+		return 50;
+	}
+	if (name.includes(selector.rawSelector)) {
+		return 40;
+	}
+
+	return 0;
+}
+
+function describeWebsiteChoice(websiteOptions: SlackWebsiteOption[]): string {
+	if (websiteOptions.length === 0) {
+		return "This Slack workspace is connected, but this Databuddy organization does not have any websites yet. Add a website in Databuddy, then ask me again.";
+	}
+
+	return [
+		"I found multiple Databuddy websites. Tell me which one this channel should use:",
+		formatWebsiteOptions(websiteOptions),
+		suggestBindCommand(websiteOptions),
+	].join("\n\n");
+}
+
+function formatWebsiteOptions(websiteOptions: SlackWebsiteOption[]): string {
+	if (websiteOptions.length === 0) {
+		return "No Databuddy websites found for this organization.";
+	}
+
+	const visible = websiteOptions.slice(0, WEBSITE_OPTION_LIMIT);
+	const lines = visible.map((website) => `• ${websiteLabel(website)}`);
+	const remaining = websiteOptions.length - visible.length;
+	if (remaining > 0) {
+		lines.push(`• ...and ${remaining} more`);
+	}
+	return ["Available websites:", ...lines].join("\n");
+}
+
+function suggestBindCommand(websiteOptions: SlackWebsiteOption[]): string {
+	const firstWebsite = websiteOptions[0];
+	if (!firstWebsite) {
+		return "";
+	}
+	return `Run \`/bind ${firstWebsite.domain}\` or set a default website in Databuddy.`;
+}
+
+function websiteLabel(website: SlackWebsiteOption): string {
+	const name = website.name?.trim();
+	if (name && name !== website.domain) {
+		return `${name} (${website.domain})`;
+	}
+	return website.domain;
 }

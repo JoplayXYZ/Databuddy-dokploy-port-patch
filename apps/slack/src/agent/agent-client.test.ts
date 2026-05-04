@@ -116,4 +116,27 @@ describe("Databuddy Slack agent client", () => {
 			globalThis.fetch = originalFetch;
 		}
 	});
+
+	it("uses resolver-provided website guidance when context is missing", async () => {
+		const client = new DatabuddyAgentClient(
+			{
+				apiUrl: "http://api.test",
+			},
+			{
+				describeMissingContext: async () =>
+					"Available websites:\n• Databuddy (databuddy.cc)",
+				resolve: async () => null,
+			}
+		);
+
+		const answer = await client.runToText({
+			channelId: "C123",
+			teamId: "T123",
+			text: "Summarize traffic",
+			trigger: "direct_message",
+			userId: "U123",
+		});
+
+		expect(answer).toBe("Available websites:\n• Databuddy (databuddy.cc)");
+	});
 });

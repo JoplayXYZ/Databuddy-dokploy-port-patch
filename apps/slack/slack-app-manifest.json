@@ -34,7 +34,18 @@
       {
         "command": "/databuddy",
         "description": "Ask Databuddy an analytics question.",
-        "usage_hint": "bind | unbind | summarize traffic for the last 7 days",
+        "usage_hint": "help | bind | unbind | summarize traffic for the last 7 days",
+        "should_escape": true
+      },
+      {
+        "command": "/bind",
+        "description": "Bind this channel to a Databuddy website.",
+        "usage_hint": "your-domain.com",
+        "should_escape": true
+      },
+      {
+        "command": "/unbind",
+        "description": "Remove this channel's Databuddy website binding.",
         "should_escape": true
       }
     ]
