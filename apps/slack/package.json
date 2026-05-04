@@ -1,0 +1,22 @@
+{
+  "name": "@databuddy/slack",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "NODE_ENV=development dotenv -- bun --watch src/index.ts",
+    "start": "dotenv -- bun src/index.ts",
+    "check-types": "tsc --noEmit",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@databuddy/env": "workspace:*",
+    "@databuddy/db": "workspace:*",
+    "@slack/bolt": "^4.7.2",
+    "@slack/web-api": "^7.15.1"
+  },
+  "devDependencies": {
+    "@types/bun": "catalog:",
+    "typescript": "catalog:"
+  }
+}

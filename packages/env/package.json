@@ -27,6 +27,10 @@
     "./docs": {
       "types": "./src/docs.ts",
       "default": "./src/docs.ts"
+    },
+    "./slack": {
+      "types": "./src/slack.ts",
+      "default": "./src/slack.ts"
     }
   },
   "files": [

@@ -24,6 +24,7 @@ import {
 import { alarmDestinations, alarms, usageAlertLog } from "./billing";
 import { feedback, feedbackRedemptions, insightUserFeedback } from "./feedback";
 import { flags, flagsToTargetGroups, targetGroups } from "./flags";
+import { slackChannelBindings, slackIntegrations } from "./integrations";
 import { linkFolders, links } from "./links";
 import {
 	incidentAffectedMonitors,
@@ -73,6 +74,8 @@ const schema = {
 	insightUserFeedback,
 	ssoProvider,
 	agentChats,
+	slackIntegrations,
+	slackChannelBindings,
 };
 
 export const relations = defineRelations(schema, (r) => ({
@@ -110,6 +113,7 @@ export const relations = defineRelations(schema, (r) => ({
 		statusPages: r.many.statusPages(),
 		linkFolders: r.many.linkFolders(),
 		links: r.many.links(),
+		slackIntegrations: r.many.slackIntegrations(),
 	},
 
 	account: {
@@ -179,6 +183,7 @@ export const relations = defineRelations(schema, (r) => ({
 		funnelDefinitions: r.many.funnelDefinitions(),
 		alarms: r.many.alarms(),
 		analyticsInsights: r.many.analyticsInsights(),
+		slackChannelBindings: r.many.slackChannelBindings(),
 	},
 
 	analyticsInsights: {
@@ -223,6 +228,42 @@ export const relations = defineRelations(schema, (r) => ({
 		organization: r.one.organization({
 			from: r.apikey.organizationId,
 			to: r.organization.id,
+		}),
+		slackIntegrations: r.many.slackIntegrations(),
+	},
+
+	slackIntegrations: {
+		organization: r.one.organization({
+			from: r.slackIntegrations.organizationId,
+			to: r.organization.id,
+			optional: false,
+		}),
+		agentApiKey: r.one.apikey({
+			from: r.slackIntegrations.agentApiKeyId,
+			to: r.apikey.id,
+			optional: false,
+		}),
+		defaultWebsite: r.one.websites({
+			from: r.slackIntegrations.defaultWebsiteId,
+			to: r.websites.id,
+		}),
+		installedByUser: r.one.user({
+			from: r.slackIntegrations.installedByUserId,
+			to: r.user.id,
+		}),
+		channelBindings: r.many.slackChannelBindings(),
+	},
+
+	slackChannelBindings: {
+		integration: r.one.slackIntegrations({
+			from: r.slackChannelBindings.integrationId,
+			to: r.slackIntegrations.id,
+			optional: false,
+		}),
+		website: r.one.websites({
+			from: r.slackChannelBindings.websiteId,
+			to: r.websites.id,
+			optional: false,
 		}),
 	},
 
