@@ -170,7 +170,7 @@ export default function Hero({
 							</span>
 						</a>
 						<div className="group relative rounded-sm border border-border/50 bg-card p-1.5 shadow-2xl backdrop-blur-sm sm:p-2">
-							<div className="relative min-h-[400px] overflow-hidden rounded bg-muted sm:min-h-[500px] lg:min-h-[600px]">
+							<div className="relative min-h-[400px] overflow-x-hidden rounded bg-muted sm:min-h-[500px] lg:min-h-[600px]">
 								{tabs.map((tab, i) => {
 									const isActive = activeTab === tab.id;
 									const translateX = isActive
