@@ -271,7 +271,7 @@ export function DesignShowcase() {
 							<div className="flex min-w-0 flex-1 flex-col">
 								<Text variant="label">Iza</Text>
 								<Text tone="muted" variant="caption">
-									iza@databuddy.cc
+									user@example.com
 								</Text>
 							</div>
 							<Badge size="sm" variant="primary">
@@ -1263,7 +1263,7 @@ function SettingsMockup() {
 								<div className="flex flex-col gap-1">
 									<Text variant="label">Iza Nassiri</Text>
 									<Text tone="muted" variant="caption">
-										iza@databuddy.cc
+										user@example.com
 									</Text>
 								</div>
 								<Button className="ml-auto" size="sm" variant="secondary">
@@ -1278,7 +1278,7 @@ function SettingsMockup() {
 								<Field>
 									<Field.Label>Email</Field.Label>
 									<Input
-										defaultValue="iza@databuddy.cc"
+										defaultValue="user@example.com"
 										prefix={<GlobeIcon className="size-3.5" />}
 									/>
 								</Field>
@@ -1382,7 +1382,7 @@ function SettingsMockup() {
 							<Field>
 								<Field.Label>Notification email</Field.Label>
 								<Input
-									defaultValue="iza@databuddy.cc"
+									defaultValue="user@example.com"
 									prefix={<BellIcon className="size-3.5" />}
 								/>
 								<Field.Description>
@@ -1771,19 +1771,19 @@ function AnalyticsMockup() {
 const MEMBERS = [
 	{
 		name: "Iza Nassiri",
-		email: "iza@databuddy.cc",
+		email: "user@example.com",
 		role: "Owner",
 		status: "active" as const,
 	},
 	{
 		name: "Sarah Chen",
-		email: "sarah@databuddy.cc",
+		email: "sarah@example.com",
 		role: "Admin",
 		status: "active" as const,
 	},
 	{
 		name: "Alex Rivera",
-		email: "alex@databuddy.cc",
+		email: "alex@example.com",
 		role: "Member",
 		status: "active" as const,
 	},
