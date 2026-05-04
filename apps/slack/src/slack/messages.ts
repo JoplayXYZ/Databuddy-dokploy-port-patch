@@ -40,7 +40,7 @@ export const SLACK_COPY = {
 	noAnswer:
 		"I reached Databuddy, but no answer came back. Try a narrower question, like `traffic for the last 7 days`.",
 	feedbackReactions: ["thumbsup", "thumbsdown"],
-	processingReaction: "eyes",
+	processingReaction: "rabbit",
 	streamOpening: "Thinking...",
 	suggestedPromptsTitle: "Start with Databuddy",
 } as const;
