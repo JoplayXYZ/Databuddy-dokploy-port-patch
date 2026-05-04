@@ -1,29 +1,29 @@
-import { beforeEach, describe, expect, it, mock } from "bun:test";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const mockGetBillingCustomerId = mock(
+const mockGetBillingCustomerId = vi.fn(
 	async (userId: string, organizationId?: string | null) =>
 		organizationId ? `billing:${organizationId}:${userId}` : `billing:${userId}`
 );
-const mockGetOrganizationOwnerId = mock(async (organizationId: string) =>
+const mockGetOrganizationOwnerId = vi.fn(async (organizationId: string) =>
 	organizationId === "org_missing" ? null : `owner:${organizationId}`
 );
 
-mock.module("@databuddy/rpc", () => ({
+vi.mock("@databuddy/rpc", () => ({
 	getAutumn: () => ({
-		check: mock(async () => ({ allowed: true })),
-		track: mock(async () => undefined),
+		check: vi.fn(async () => ({ allowed: true })),
+		track: vi.fn(async () => undefined),
 	}),
 	getBillingCustomerId: mockGetBillingCustomerId,
 	getOrganizationOwnerId: mockGetOrganizationOwnerId,
 }));
 
-mock.module("../../lib/databuddy", () => ({
-	trackAgentEvent: mock(() => {}),
+vi.mock("../../lib/databuddy", () => ({
+	trackAgentEvent: vi.fn(() => {}),
 }));
 
-mock.module("../../lib/tracing", () => ({
-	captureError: mock(() => {}),
-	mergeWideEvent: mock(() => {}),
+vi.mock("../../lib/tracing", () => ({
+	captureError: vi.fn(() => {}),
+	mergeWideEvent: vi.fn(() => {}),
 }));
 
 const { resolveAgentBillingCustomerId } = await import("./execution");

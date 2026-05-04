@@ -78,6 +78,7 @@
         "@databuddy/test": "workspace:*",
         "@types/bun": "^1.3.6",
         "mitata": "^1.0.34",
+        "vitest": "^4.1.5",
       },
       "peerDependencies": {
         "typescript": "^5.9.3",

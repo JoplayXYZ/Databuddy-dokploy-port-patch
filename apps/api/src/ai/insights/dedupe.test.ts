@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import { deriveInsightSubjectKey, insightDedupeKey } from "./dedupe";
 import type { InsightDedupeInput } from "./dedupe";
 

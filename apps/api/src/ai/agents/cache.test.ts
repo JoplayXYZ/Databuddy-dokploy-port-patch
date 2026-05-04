@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, mock } from "bun:test";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 interface RedisEntry {
 	ttl: number;
@@ -17,13 +17,13 @@ const getSnapshotKey = (
 ) => `agent:context-snapshot:${organizationId ?? userId}:${websiteId}`;
 
 const mockRedisClient = {
-	get: mock(async (key: string) => {
+	get: vi.fn(async (key: string) => {
 		if (failGet) {
 			throw new Error("redis get failed");
 		}
 		return redisStore.get(key)?.value ?? null;
 	}),
-	setex: mock(async (key: string, ttl: number, value: string) => {
+	setex: vi.fn(async (key: string, ttl: number, value: string) => {
 		if (failSet) {
 			throw new Error("redis set failed");
 		}
@@ -32,11 +32,11 @@ const mockRedisClient = {
 	}),
 };
 
-const mockCaptureError = mock(
+const mockCaptureError = vi.fn(
 	(_error: unknown, _fields?: Record<string, string | number | boolean>) => {}
 );
 
-const mockEnrichAgentContext = mock(
+const mockEnrichAgentContext = vi.fn(
 	async (opts: {
 		organizationId: string | null;
 		userId: string;
@@ -47,35 +47,37 @@ const mockEnrichAgentContext = mock(
 const passthroughCacheable = <T extends (...args: never[]) => unknown>(fn: T) =>
 	fn;
 
-mock.module("@databuddy/auth", () => ({
+vi.mock("@databuddy/auth", () => ({
 	websitesApi: {
-		hasPermission: mock(async () => ({ success: true })),
+		hasPermission: vi.fn(async () => ({ success: true })),
 	},
 }));
 
-mock.module("@databuddy/redis", () => ({
+vi.mock("@databuddy/redis", () => ({
 	cacheable: passthroughCacheable,
 	getAgentContextSnapshotKey: getSnapshotKey,
 	getRedisCache: () => mockRedisClient,
 }));
 
-mock.module("../../lib/supermemory", () => ({
-	getMemoryContext: mock(async () => null),
+vi.mock("../../lib/supermemory", () => ({
+	getMemoryContext: vi.fn(async () => null),
 	isMemoryEnabled: () => memoryEnabled,
 }));
 
-mock.module("../../lib/tracing", () => ({
+vi.mock("../../lib/tracing", () => ({
 	captureError: mockCaptureError,
-	mergeWideEvent: mock(() => {}),
-	record: mock(async (_name: string, fn: () => unknown) => fn()),
+	mergeWideEvent: vi.fn(() => {}),
+	record: vi.fn(async (_name: string, fn: () => unknown) => fn()),
 }));
 
-mock.module("../config/enrich-context", () => ({
+vi.mock("../config/enrich-context", () => ({
 	enrichAgentContext: mockEnrichAgentContext,
 }));
 
-mock.module("./execution", () => ({
-	ensureAgentCreditsAvailable: mock(async () => true),
+vi.mock("./execution", () => ({
+	ensureAgentCreditsAvailable: vi.fn(async () => true),
+	resolveAgentBillingCustomerId: vi.fn(async () => null),
+	trackAgentUsageAndBill: vi.fn(async () => ({})),
 }));
 
 const { getAgentContextSnapshot, shouldLoadMemoryContext } = await import(

@@ -1,6 +1,6 @@
 import "@databuddy/test/env";
 
-import { describe, it, expect, beforeEach, afterAll } from "bun:test";
+import { describe, it, expect, beforeEach, afterAll } from "vitest";
 import { appRouter } from "@databuddy/rpc";
 import {
 	reset,
