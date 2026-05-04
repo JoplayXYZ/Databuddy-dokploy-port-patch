@@ -1,5 +1,9 @@
 import type { ApiKeyRow } from "@databuddy/api-keys/resolve";
-import { getAutumn, getBillingCustomerId } from "@databuddy/rpc";
+import {
+	getAutumn,
+	getBillingCustomerId,
+	getOrganizationOwnerId,
+} from "@databuddy/rpc";
 import type { LanguageModelUsage } from "ai";
 import { trackAgentEvent } from "../../lib/databuddy";
 import { captureError, mergeWideEvent } from "../../lib/tracing";
@@ -25,14 +29,13 @@ export async function resolveAgentBillingCustomerId(principal: {
 	organizationId?: string | null;
 	userId?: string | null;
 }): Promise<string | null> {
+	const organizationId =
+		principal.organizationId ?? principal.apiKey?.organizationId ?? null;
 	const ownerUserId = principal.userId ?? principal.apiKey?.userId ?? null;
 	if (!ownerUserId) {
-		return null;
+		return organizationId ? await getOrganizationOwnerId(organizationId) : null;
 	}
-	return await getBillingCustomerId(
-		ownerUserId,
-		principal.organizationId ?? principal.apiKey?.organizationId ?? null
-	);
+	return await getBillingCustomerId(ownerUserId, organizationId);
 }
 
 export async function ensureAgentCreditsAvailable(

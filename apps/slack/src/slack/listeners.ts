@@ -11,6 +11,7 @@ import {
 	setSlackLog,
 	toError,
 } from "../lib/evlog-slack";
+import { logSlackReactionFeedback } from "./feedback";
 import type { SlackInstallationStore } from "./installations";
 import { SLACK_COPY, SLACK_SUGGESTED_PROMPTS } from "./messages";
 import { streamAgentToSlack } from "./respond";
@@ -225,6 +226,28 @@ export function registerSlackListeners(
 			installations,
 			logger,
 			respond,
+		});
+	});
+
+	app.event("reaction_added", async ({ context, event, logger }) => {
+		await logSlackReactionFeedback({
+			action: "added",
+			botUserId: context.botUserId,
+			event,
+			installations,
+			logger,
+			teamId: context.teamId,
+		});
+	});
+
+	app.event("reaction_removed", async ({ context, event, logger }) => {
+		await logSlackReactionFeedback({
+			action: "removed",
+			botUserId: context.botUserId,
+			event,
+			installations,
+			logger,
+			teamId: context.teamId,
 		});
 	});
 }

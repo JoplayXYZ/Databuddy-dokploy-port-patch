@@ -48,7 +48,7 @@ import {
 	appendToConversation,
 	getConversationHistory,
 } from "../ai/mcp/conversation-store";
-import { runMcpAgent } from "../ai/mcp/run-agent";
+import { runMcpAgent, streamMcpAgentText } from "../ai/mcp/run-agent";
 import { type AgentTier, tierToModelKey } from "../ai/agents/router";
 import {
 	AGENT_THINKING_LEVELS,
@@ -231,6 +231,7 @@ const AgentRequestSchema = t.Object({
 const AgentAskRequestSchema = t.Object({
 	question: t.String({ minLength: 1, maxLength: 2000 }),
 	id: t.Optional(t.String({ minLength: 1 })),
+	stream: t.Optional(t.Boolean()),
 	timezone: t.Optional(t.String()),
 });
 
@@ -346,6 +347,34 @@ function createToolLoopAgent(
 	});
 }
 
+function createPlainTextStreamResponse(
+	stream: AsyncIterable<string>
+): Response {
+	const encoder = new TextEncoder();
+	return new Response(
+		new ReadableStream<Uint8Array>({
+			async start(controller) {
+				try {
+					for await (const chunk of stream) {
+						if (chunk) {
+							controller.enqueue(encoder.encode(chunk));
+						}
+					}
+					controller.close();
+				} catch (error) {
+					controller.error(error);
+				}
+			},
+		}),
+		{
+			headers: {
+				"Cache-Control": "no-cache",
+				"Content-Type": "text/plain; charset=utf-8",
+			},
+		}
+	);
+}
+
 export const agent = new Elysia({ prefix: "/v1/agent" })
 	.derive(async ({ request }) => {
 		const preResolved = getResolvedAuth(request.headers);
@@ -405,6 +434,22 @@ export const agent = new Elysia({ prefix: "/v1/agent" })
 					userId,
 					apiKey
 				);
+				if (body.stream) {
+					return createPlainTextStreamResponse(
+						streamMcpAgentText({
+							apiKey,
+							conversationId,
+							priorMessages:
+								priorMessages.length > 0 ? priorMessages : undefined,
+							question: body.question,
+							requestHeaders: request.headers,
+							source: "slack",
+							timezone: body.timezone,
+							userId,
+						})
+					);
+				}
+
 				const answer = await runMcpAgent({
 					apiKey,
 					conversationId,

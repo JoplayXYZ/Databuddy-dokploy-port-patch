@@ -22,6 +22,11 @@ export interface SlackChannelBindingCommandResult {
 	ok: boolean;
 }
 
+export interface SlackTeamContext {
+	integrationId: string;
+	organizationId: string;
+}
+
 export class SlackInstallationStore implements SlackRunContextResolver {
 	readonly #crypto: TokenCryptoConfig;
 
@@ -78,6 +83,19 @@ export class SlackInstallationStore implements SlackRunContextResolver {
 
 		const installation = await findActiveIntegration(run.teamId);
 		return installation ? this.toRunContext(installation) : null;
+	}
+
+	async getTeamContext(teamId?: string): Promise<SlackTeamContext | null> {
+		if (!teamId) {
+			return null;
+		}
+		const installation = await findActiveIntegration(teamId);
+		return installation
+			? {
+					integrationId: installation.id,
+					organizationId: installation.organizationId,
+				}
+			: null;
 	}
 
 	async bindChannel({

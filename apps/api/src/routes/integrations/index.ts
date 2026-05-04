@@ -19,6 +19,8 @@ const SLACK_OAUTH_SCOPES = [
 	"chat:write",
 	"commands",
 	"im:history",
+	"reactions:read",
+	"reactions:write",
 ] as const;
 
 const SLACK_STATE_TTL_MS = 10 * 60 * 1000;
@@ -341,7 +343,7 @@ async function saveSlackInstallationOnce({
 			scopes: [...SLACK_API_KEY_SCOPES],
 			start: agentApiKeySecret.slice(0, 8),
 			type: "automation",
-			userId: null,
+			userId: state.userId,
 		});
 
 		const values = {

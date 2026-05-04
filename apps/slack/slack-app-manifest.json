@@ -51,6 +51,7 @@
         "chat:write",
         "commands",
         "im:history",
+        "reactions:read",
         "reactions:write"
       ]
     }
@@ -61,7 +62,9 @@
         "app_mention",
         "assistant_thread_context_changed",
         "assistant_thread_started",
-        "message.im"
+        "message.im",
+        "reaction_added",
+        "reaction_removed"
       ]
     },
     "interactivity": {

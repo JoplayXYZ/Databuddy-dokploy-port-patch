@@ -55,4 +55,5 @@ export {
 	type BillingOwner,
 	getBillingCustomerId,
 	getBillingOwner,
+	getOrganizationOwnerId,
 } from "./utils/billing";

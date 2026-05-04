@@ -73,9 +73,62 @@ describe("Databuddy Slack agent client", () => {
 			expect(captured.headers.get("x-databuddy-slack-team-id")).toBe("T123");
 			expect(captured.body).toMatchObject({
 				question: "Summarize traffic",
+				stream: true,
 				timezone: "UTC",
 			});
 			expect(captured.body).not.toHaveProperty("websiteId");
+		} finally {
+			globalThis.fetch = originalFetch;
+		}
+	});
+
+	it("reads text stream responses from the Databuddy agent API", async () => {
+		const originalFetch = globalThis.fetch;
+		const encoder = new TextEncoder();
+		const fetchMock = Object.assign(
+			async () =>
+				new Response(
+					new ReadableStream<Uint8Array>({
+						start(controller) {
+							controller.enqueue(encoder.encode("Hello "));
+							controller.enqueue(encoder.encode("from stream"));
+							controller.close();
+						},
+					}),
+					{
+						headers: { "Content-Type": "text/plain; charset=utf-8" },
+					}
+				),
+			{ preconnect: originalFetch.preconnect }
+		);
+		globalThis.fetch = fetchMock;
+
+		try {
+			const client = new DatabuddyAgentClient(
+				{
+					apiUrl: "http://api.test",
+				},
+				{
+					resolve: async () => ({
+						agentApiKeySecret: "dbdy_secret",
+						organizationId: "org_123",
+						teamId: "T123",
+					}),
+				}
+			);
+
+			const chunks: string[] = [];
+			for await (const chunk of client.stream({
+				channelId: "C123",
+				teamId: "T123",
+				text: "Summarize traffic",
+				trigger: "direct_message",
+				userId: "U123",
+			})) {
+				chunks.push(chunk);
+			}
+
+			expect(chunks).toEqual(["Hello ", "from stream"]);
 		} finally {
 			globalThis.fetch = originalFetch;
 		}

@@ -32,6 +32,68 @@ export interface RunMcpAgentOptions {
 export async function runMcpAgent(
 	options: RunMcpAgentOptions
 ): Promise<string> {
+	const prepared = await prepareMcpAgentRun(options);
+	const abortController = new AbortController();
+	const timeout = setTimeout(
+		() => abortController.abort(),
+		MCP_AGENT_TIMEOUT_MS
+	);
+
+	try {
+		const result = await prepared.agent.generate({
+			messages: prepared.messages,
+			abortSignal: abortController.signal,
+		});
+
+		const usage = (result as { usage?: LanguageModelUsage }).usage;
+		if (usage) {
+			await trackPreparedUsage(prepared, usage);
+		}
+
+		const answer = result.text ?? "No response generated.";
+		storePreparedConversation(prepared, options.question, answer);
+
+		return answer;
+	} finally {
+		clearTimeout(timeout);
+	}
+}
+
+export async function* streamMcpAgentText(
+	options: RunMcpAgentOptions
+): AsyncGenerator<string> {
+	const prepared = await prepareMcpAgentRun(options);
+	const abortController = new AbortController();
+	const timeout = setTimeout(
+		() => abortController.abort(),
+		MCP_AGENT_TIMEOUT_MS
+	);
+
+	try {
+		const result = await prepared.agent.stream({
+			messages: prepared.messages,
+			abortSignal: abortController.signal,
+		});
+		let answer = "";
+
+		for await (const chunk of result.textStream) {
+			answer += chunk;
+			yield chunk;
+		}
+
+		const usage = await result.totalUsage;
+		await trackPreparedUsage(prepared, usage);
+		storePreparedConversation(
+			prepared,
+			options.question,
+			answer.trim() || "No response generated."
+		);
+	} finally {
+		clearTimeout(timeout);
+	}
+}
+
+async function prepareMcpAgentRun(options: RunMcpAgentOptions) {
 	const sessionId = options.conversationId ?? crypto.randomUUID();
 	const mcpUserId = options.userId ?? options.apiKey?.userId ?? null;
 	const organizationId = options.apiKey?.organizationId ?? null;
@@ -116,48 +178,48 @@ export async function runMcpAgent(
 				]
 			: [{ role: "user" as const, content: questionContent }];
 
-	const abortController = new AbortController();
-	const timeout = setTimeout(
-		() => abortController.abort(),
-		MCP_AGENT_TIMEOUT_MS
-	);
+	return {
+		agent,
+		apiKeyId,
+		billingCustomerId,
+		mcpUserId,
+		messages,
+		organizationId,
+		sessionId,
+		source,
+	};
+}
 
-	try {
-		const result = await agent.generate({
-			messages,
-			abortSignal: abortController.signal,
-		});
+async function trackPreparedUsage(
+	prepared: Awaited<ReturnType<typeof prepareMcpAgentRun>>,
+	usage: LanguageModelUsage
+): Promise<void> {
+	await trackAgentUsageAndBill({
+		usage,
+		modelId: modelNames.balanced,
+		source: prepared.source,
+		organizationId: prepared.organizationId,
+		userId: prepared.mcpUserId,
+		chatId: prepared.sessionId,
+		billingCustomerId: prepared.billingCustomerId,
+	});
+}
 
-		const usage = (result as { usage?: LanguageModelUsage }).usage;
-		if (usage) {
-			await trackAgentUsageAndBill({
-				usage,
-				modelId: modelNames.balanced,
-				source,
-				organizationId,
-				userId: mcpUserId,
-				chatId: sessionId,
-				billingCustomerId,
-			});
+function storePreparedConversation(
+	prepared: Awaited<ReturnType<typeof prepareMcpAgentRun>>,
+	question: string,
+	answer: string
+): void {
+	storeConversation(
+		[
+			{ role: "user", content: question },
+			{ role: "assistant", content: answer },
+		],
+		prepared.mcpUserId,
+		prepared.apiKeyId,
+		{
+			metadata: { source: prepared.source },
+			conversationId: prepared.sessionId,
 		}
-
-		const answer = result.text ?? "No response generated.";
-
-		storeConversation(
-			[
-				{ role: "user", content: options.question },
-				{ role: "assistant", content: answer },
-			],
-			mcpUserId,
-			apiKeyId,
-			{
-				metadata: { source },
-				conversationId: sessionId,
-			}
-		);
-
-		return answer;
-	} finally {
-		clearTimeout(timeout);
-	}
+	);
 }

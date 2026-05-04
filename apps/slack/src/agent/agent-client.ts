@@ -54,6 +54,7 @@ export class DatabuddyAgentClient {
 			body: JSON.stringify({
 				id: createSlackChatId(run),
 				question: run.text,
+				stream: true,
 				timezone: DEFAULT_TIMEZONE,
 			}),
 			headers: {
@@ -70,6 +71,11 @@ export class DatabuddyAgentClient {
 			throw new Error(
 				`Databuddy agent API returned ${response.status} ${response.statusText}`.trim()
 			);
+		}
+
+		if (isPlainTextStream(response)) {
+			yield* streamResponseText(response);
+			return;
 		}
 
 		const payload = (await response.json()) as { answer?: unknown };
@@ -96,4 +102,40 @@ export function createSlackChatId(run: SlackAgentRun): string {
 
 function safeId(value: string): string {
 	return value.replace(/[^a-zA-Z0-9_-]/g, "_").slice(0, 160);
+}
+
+function isPlainTextStream(response: Response): boolean {
+	return (
+		Boolean(response.body) &&
+		(response.headers.get("content-type") ?? "")
+			.toLowerCase()
+			.startsWith("text/plain")
+	);
+}
+
+async function* streamResponseText(response: Response): AsyncGenerator<string> {
+	const reader = response.body?.getReader();
+	if (!reader) {
+		return;
+	}
+
+	const decoder = new TextDecoder();
+	try {
+		while (true) {
+			const { done, value } = await reader.read();
+			if (done) {
+				break;
+			}
+			if (value) {
+				yield decoder.decode(value, { stream: true });
+			}
+		}
+
+		const tail = decoder.decode();
+		if (tail) {
+			yield tail;
+		}
+	} finally {
+		reader.releaseLock();
+	}
 }
