@@ -52,7 +52,7 @@
     "db:seed": "dotenv -- sh -c 'cd packages/db && bun run db:seed \"$@\"' --",
     "email:dev": "dotenv -- sh -c 'cd packages/email && bun run dev'",
     "sdk:build": "turbo run build --filter @databuddy/sdk --filter @databuddy/cache",
-    "dev:dashboard": "dotenv -- turbo dev --filter @databuddy/dashboard --filter @databuddy/api",
+    "dev:dashboard": "dotenv -- turbo dev --filter @databuddy/dashboard --filter @databuddy/api --filter @databuddy/slack",
     "dev:slack": "dotenv -- turbo dev --filter @databuddy/slack",
     "dev:status": "dotenv -- turbo dev --filter @databuddy/status --filter @databuddy/api",
     "git:setup-aliases": "git config --local include.path ../gitconfig",
