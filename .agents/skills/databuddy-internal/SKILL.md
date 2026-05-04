@@ -19,6 +19,7 @@ Keep additions **minimal**: one bullet, a new `rg` hint, or a routing note—eno
 
 - `apps/dashboard`: Next.js app on port `3000` (per-website **agent** chat: `@ai-sdk/react` `useChat` via `contexts/chat-context.tsx` — not the separate `chat-sdk` package; overlapping sends while streaming are queued client-side to mirror a “queue latest” strategy.)
 - `apps/api`: Elysia API on port `3001`
+- `apps/slack`: Slack agent adapter; Slack installs must resolve through org-scoped DB integration records, not a single env bot token/default website. Agent calls must use an encrypted per-integration Databuddy API key secret as a normal bearer token, never a global internal secret.
 - `apps/basket`: ingest and LLM tracking service, Elysia app on port `4000`
 - `apps/docs`: Next.js + Fumadocs docs app on port `3005`
 - `apps/links`: redirect/link service
@@ -65,6 +66,7 @@ Read [codebase-map.md](./references/codebase-map.md) when you need deeper routin
 - For dashboard navigation audits, check all route surfaces: `components/layout/navigation/navigation-config.tsx`, `components/ui/command-search.tsx`, and local `PageNavigation` layouts under `app/**/layout.tsx` before calling a page orphaned.
 - Custom events UI is shared in `apps/dashboard/components/events/custom-events`; keep many-series legends outside the Recharts plot, use compact controls for property-summary event selection, and avoid separate event-count chip/list sections.
 - Insights merged feed (`use-insights-feed`) collapses history + AI by `insightSignalDedupeKey` in `apps/dashboard/lib/insight-signal-key.ts` so the list is one row per signal (latest wins).
+- Insights page (`app/(main)/insights`) should stay focused on the brief + signal queue; do not add generic global analytics KPI cards or top pages/referrers/countries tables there.
 - Theme: `apps/dashboard/app/globals.css`. **`--border` is intentionally subtle**; do not crank it darker for “contrast” unless **iza** asks—prefer text tokens or layout for readability.
 - Integration catalog logos: use filled Simple Icons SVG path data (or equivalent filled brand SVG), store the path on each item as `iconPath`, render it through a shared logo tile with `bg-secondary/60`, `border-border/70`, `text-foreground`, and `fill="currentColor"`, then use brand color only as a small accent bar (`accent` or `accentClassName: "bg-foreground/70"` for black/near-black brands). Avoid raw brand-black icons or mixed line/filled icon sets that disappear in dark mode.
 - Dashboard UI must use `apps/dashboard/components/ds` primitives exactly; feature code must not use raw form/control elements (`button`, `input`, `select`, `textarea`, native dialogs), Base UI/Radix primitives, or ad hoc styled controls directly. If a variant is missing, add or extend the DS component first. For menu-style folder/status/filter/sort/action pickers, use `components/ds/dropdown-menu.tsx`; use `Select` only when the established pattern is explicitly a select/combobox. Read `apps/dashboard/components/ds/README.md` before creating new dashboard UI.
