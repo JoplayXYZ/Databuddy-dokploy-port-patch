@@ -24,6 +24,9 @@ const SLACK_OAUTH_SCOPES = [
 const SLACK_STATE_TTL_MS = 10 * 60 * 1000;
 const SLACK_API_KEY_SCOPES = ["read:data"] as const;
 const SLACK_API_KEY_RESOURCES = { global: [...SLACK_API_KEY_SCOPES] };
+const CONNECTION_DROP_MESSAGE_RE =
+	/connection (terminated|ended|timeout|reset)/i;
+const ECONNRESET_RE = /econnreset/i;
 
 interface SlackOAuthConfig {
 	authSecret: string;
@@ -235,7 +238,50 @@ async function readSlackBotIdentity(token: string): Promise<SlackBotIdentity> {
 	};
 }
 
+function isTransientDatabaseConnectionError(error: unknown): boolean {
+	if (!error) {
+		return false;
+	}
+
+	const record = getRecord(error);
+	const code = getString(record?.code);
+	if (code && ["08003", "08006", "57P01", "ECONNRESET"].includes(code)) {
+		return true;
+	}
+
+	const message = error instanceof Error ? error.message : String(error);
+	if (CONNECTION_DROP_MESSAGE_RE.test(message) || ECONNRESET_RE.test(message)) {
+		return true;
+	}
+
+	return error instanceof Error
+		? isTransientDatabaseConnectionError(error.cause)
+		: false;
+}
+
 async function saveSlackInstallation({
+	access,
+	config,
+	identity,
+	state,
+}: {
+	access: SlackAccessResponse;
+	config: SlackOAuthConfig;
+	identity: SlackBotIdentity;
+	state: SlackOAuthState;
+}): Promise<void> {
+	try {
+		await saveSlackInstallationOnce({ access, config, identity, state });
+	} catch (error) {
+		if (!isTransientDatabaseConnectionError(error)) {
+			throw error;
+		}
+		await new Promise((resolve) => setTimeout(resolve, 100));
+		await saveSlackInstallationOnce({ access, config, identity, state });
+	}
+}
+
+async function saveSlackInstallationOnce({
 	access,
 	config,
 	identity,

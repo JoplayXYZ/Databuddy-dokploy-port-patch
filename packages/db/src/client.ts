@@ -7,9 +7,14 @@ import { relations } from "./drizzle/schema/relations";
 type DB = NodePgDatabase<typeof relations>;
 
 let _pgTraceFn: ((durationMs: number) => void) | null = null;
+let _pgErrorFn: ((error: Error) => void) | null = null;
 
 export function setPgTraceFn(fn: (durationMs: number) => void) {
 	_pgTraceFn = fn;
+}
+
+export function setPgErrorFn(fn: (error: Error) => void) {
+	_pgErrorFn = fn;
 }
 
 function connectionStringForNodePg(connectionString: string): string {
@@ -78,15 +83,22 @@ function getDb(): DB {
 			throw new Error("DATABASE_URL is not set");
 		}
 
-		_pool = instrumentedPool(
-			new Pool({
-				connectionString: connectionStringForNodePg(databaseUrl),
-				max: Number.parseInt(process.env.DB_POOL_MAX ?? "50", 10) || 50,
-				idleTimeoutMillis: 30_000,
-				connectionTimeoutMillis: 5000,
-				application_name: process.env.SERVICE_NAME || "databuddy",
-			})
-		);
+		const pool = new Pool({
+			connectionString: connectionStringForNodePg(databaseUrl),
+			max: Number.parseInt(process.env.DB_POOL_MAX ?? "50", 10) || 50,
+			idleTimeoutMillis: 30_000,
+			connectionTimeoutMillis: 5000,
+			application_name: process.env.SERVICE_NAME || "databuddy",
+		});
+		pool.on("error", (error) => {
+			if (_pgErrorFn) {
+				_pgErrorFn(error);
+				return;
+			}
+			console.error("[db] postgres pool error", error);
+		});
+
+		_pool = instrumentedPool(pool);
 
 		_db = drizzle({ client: _pool, relations, jit: true });
 	}

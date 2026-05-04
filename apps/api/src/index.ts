@@ -1,6 +1,6 @@
 import "./polyfills/compression";
 import { auth } from "@databuddy/auth";
-import { setPgTraceFn, warmPool } from "@databuddy/db";
+import { setPgErrorFn, setPgTraceFn, warmPool } from "@databuddy/db";
 import { setChRecordFn } from "@databuddy/db/clickhouse";
 import { setCacheTraceFn } from "@databuddy/redis";
 import {
@@ -73,6 +73,14 @@ setPgTraceFn((ms) => {
 			"pg.max_ms": next[2],
 		});
 	} catch {}
+});
+setPgErrorFn((error) => {
+	log.error({
+		service: "api",
+		component: "postgres_pool",
+		error_message: error.message,
+		error_stack: error.stack,
+	});
 });
 setCacheTraceFn((fields) => {
 	try {
