@@ -70,43 +70,66 @@ export const integrationsRouter = {
 				permissions: ["read"],
 			});
 
-			const slackRows = await context.db
-				.select({
-					id: slackIntegrations.id,
-					teamId: slackIntegrations.teamId,
-					teamName: slackIntegrations.teamName,
-					enterpriseId: slackIntegrations.enterpriseId,
-					appId: slackIntegrations.appId,
-					botId: slackIntegrations.botId,
-					botUserId: slackIntegrations.botUserId,
-					defaultWebsiteId: slackIntegrations.defaultWebsiteId,
-					defaultWebsiteName: websites.name,
-					defaultWebsiteDomain: websites.domain,
-					status: slackIntegrations.status,
-					createdAt: slackIntegrations.createdAt,
-					updatedAt: slackIntegrations.updatedAt,
-				})
-				.from(slackIntegrations)
-				.leftJoin(websites, eq(slackIntegrations.defaultWebsiteId, websites.id))
-				.where(eq(slackIntegrations.organizationId, input.organizationId))
-				.orderBy(desc(slackIntegrations.updatedAt));
+			let slackRows: SlackIntegrationRow[];
+			try {
+				slackRows = await context.db
+					.select({
+						id: slackIntegrations.id,
+						teamId: slackIntegrations.teamId,
+						teamName: slackIntegrations.teamName,
+						enterpriseId: slackIntegrations.enterpriseId,
+						appId: slackIntegrations.appId,
+						botId: slackIntegrations.botId,
+						botUserId: slackIntegrations.botUserId,
+						defaultWebsiteId: slackIntegrations.defaultWebsiteId,
+						defaultWebsiteName: websites.name,
+						defaultWebsiteDomain: websites.domain,
+						status: slackIntegrations.status,
+						createdAt: slackIntegrations.createdAt,
+						updatedAt: slackIntegrations.updatedAt,
+					})
+					.from(slackIntegrations)
+					.leftJoin(
+						websites,
+						eq(slackIntegrations.defaultWebsiteId, websites.id)
+					)
+					.where(eq(slackIntegrations.organizationId, input.organizationId))
+					.orderBy(desc(slackIntegrations.updatedAt));
+			} catch (error) {
+				if (isMissingSlackSchemaError(error)) {
+					return { slack: [] };
+				}
+				throw error;
+			}
 
 			const slack = await Promise.all(
 				slackRows.map(async (integration) => {
-					const channelBindings = await context.db
-						.select({
-							id: slackChannelBindings.id,
-							slackChannelId: slackChannelBindings.slackChannelId,
-							websiteId: slackChannelBindings.websiteId,
-							websiteName: websites.name,
-							websiteDomain: websites.domain,
-							createdAt: slackChannelBindings.createdAt,
-							updatedAt: slackChannelBindings.updatedAt,
-						})
-						.from(slackChannelBindings)
-						.leftJoin(websites, eq(slackChannelBindings.websiteId, websites.id))
-						.where(eq(slackChannelBindings.integrationId, integration.id))
-						.orderBy(desc(slackChannelBindings.updatedAt));
+					let channelBindings: SlackChannelBindingRow[];
+					try {
+						channelBindings = await context.db
+							.select({
+								id: slackChannelBindings.id,
+								slackChannelId: slackChannelBindings.slackChannelId,
+								websiteId: slackChannelBindings.websiteId,
+								websiteName: websites.name,
+								websiteDomain: websites.domain,
+								createdAt: slackChannelBindings.createdAt,
+								updatedAt: slackChannelBindings.updatedAt,
+							})
+							.from(slackChannelBindings)
+							.leftJoin(
+								websites,
+								eq(slackChannelBindings.websiteId, websites.id)
+							)
+							.where(eq(slackChannelBindings.integrationId, integration.id))
+							.orderBy(desc(slackChannelBindings.updatedAt));
+					} catch (error) {
+						if (isMissingSlackSchemaError(error)) {
+							channelBindings = [];
+						} else {
+							throw error;
+						}
+					}
 
 					return {
 						...integration,
@@ -151,19 +174,27 @@ export const integrationsRouter = {
 				}
 			}
 
-			const [updated] = await context.db
-				.update(slackIntegrations)
-				.set({
-					defaultWebsiteId: input.defaultWebsiteId,
-					updatedAt: new Date(),
-				})
-				.where(
-					and(
-						eq(slackIntegrations.id, input.integrationId),
-						eq(slackIntegrations.organizationId, input.organizationId)
+			let updated: { id: string } | undefined;
+			try {
+				[updated] = await context.db
+					.update(slackIntegrations)
+					.set({
+						defaultWebsiteId: input.defaultWebsiteId,
+						updatedAt: new Date(),
+					})
+					.where(
+						and(
+							eq(slackIntegrations.id, input.integrationId),
+							eq(slackIntegrations.organizationId, input.organizationId)
+						)
 					)
-				)
-				.returning({ id: slackIntegrations.id });
+					.returning({ id: slackIntegrations.id });
+			} catch (error) {
+				if (isMissingSlackSchemaError(error)) {
+					throw rpcError.notFound("Slack integration", input.integrationId);
+				}
+				throw error;
+			}
 
 			if (!updated) {
 				throw rpcError.notFound("Slack integration", input.integrationId);
@@ -172,3 +203,33 @@ export const integrationsRouter = {
 			return { success: true };
 		}),
 };
+
+type SlackIntegrationRow = Omit<SlackIntegrationOutput, "channelBindings">;
+type SlackChannelBindingRow = z.infer<typeof slackChannelBindingOutputSchema>;
+
+function isMissingSlackSchemaError(error: unknown): boolean {
+	if (error instanceof Error && isMissingSlackSchemaError(error.cause)) {
+		return true;
+	}
+
+	if (!(typeof error === "object" && error !== null)) {
+		return false;
+	}
+
+	const pgError = error as {
+		code?: unknown;
+		message?: unknown;
+		relation?: unknown;
+	};
+	if (pgError.code !== "42P01") {
+		return false;
+	}
+
+	const relation = typeof pgError.relation === "string" ? pgError.relation : "";
+	const message = typeof pgError.message === "string" ? pgError.message : "";
+	return (
+		relation.startsWith("slack_") ||
+		message.includes("slack_integrations") ||
+		message.includes("slack_channel_bindings")
+	);
+}
