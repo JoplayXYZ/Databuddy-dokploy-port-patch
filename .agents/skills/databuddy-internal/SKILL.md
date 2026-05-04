@@ -31,7 +31,7 @@ Keep additions **minimal**: one bullet, a new `rg` hint, or a routing note—eno
 - `packages/shared`: shared types, flags, analytics schemas, utilities
 - `packages/sdk`: published analytics SDK for React, Vue, and Node
 - `packages/tracker`: internal tracker script build and release package
-- `packages/ai`, `packages/notifications`, `packages/cache`, `packages/redis`, `packages/services`, `packages/validation`, `packages/api-keys`: shared infra and domain packages
+- `packages/encryption`, `packages/notifications`, `packages/cache`, `packages/redis`, `packages/services`, `packages/validation`, `packages/api-keys`: shared infra and domain packages
 
 Read [codebase-map.md](./references/codebase-map.md) when you need deeper routing guidance.
 

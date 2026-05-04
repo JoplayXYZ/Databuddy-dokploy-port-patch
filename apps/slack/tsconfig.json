@@ -23,6 +23,7 @@
   "exclude": ["node_modules", "dist"],
   "references": [
     { "path": "../../packages/db" },
+    { "path": "../../packages/encryption" },
     { "path": "../../packages/env" }
   ]
 }

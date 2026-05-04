@@ -346,6 +346,7 @@
       "version": "0.1.0",
       "dependencies": {
         "@databuddy/db": "workspace:*",
+        "@databuddy/encryption": "workspace:*",
         "@databuddy/env": "workspace:*",
         "@slack/bolt": "^4.7.2",
         "@slack/web-api": "^7.15.1",
@@ -489,6 +490,15 @@
         "@react-email/ui": "^6.0.0",
         "@types/react": "catalog:",
         "@types/react-dom": "catalog:",
+      },
+    },
+    "packages/encryption": {
+      "name": "@databuddy/encryption",
+      "version": "0.1.0",
+      "devDependencies": {
+        "@types/bun": "catalog:",
+        "@types/node": "^24.12.2",
+        "typescript": "catalog:",
       },
     },
     "packages/env": {
@@ -955,6 +965,8 @@
     "@databuddy/docs": ["@databuddy/docs@workspace:apps/docs"],
 
     "@databuddy/email": ["@databuddy/email@workspace:packages/email"],
+
+    "@databuddy/encryption": ["@databuddy/encryption@workspace:packages/encryption"],
 
     "@databuddy/env": ["@databuddy/env@workspace:packages/env"],
 

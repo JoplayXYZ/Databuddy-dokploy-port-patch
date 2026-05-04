@@ -4,6 +4,7 @@ import {
 	slackIntegrations,
 	websites,
 } from "@databuddy/db/schema";
+import { decrypt } from "@databuddy/encryption";
 import type { Authorize } from "@slack/bolt";
 import type {
 	SlackAgentRun,
@@ -11,7 +12,6 @@ import type {
 	SlackRunContextResolver,
 } from "../agent/agent-client";
 import type { TokenCryptoConfig } from "../config";
-import { decryptSecret } from "./token-crypto";
 
 export class SlackInstallationStore implements SlackRunContextResolver {
 	readonly #crypto: TokenCryptoConfig;
@@ -28,7 +28,7 @@ export class SlackInstallationStore implements SlackRunContextResolver {
 
 		return {
 			botId: installation.botId ?? undefined,
-			botToken: decryptSecret(
+			botToken: decrypt(
 				installation.botTokenCiphertext,
 				this.#crypto.encryptionKey
 			),
@@ -78,7 +78,7 @@ export class SlackInstallationStore implements SlackRunContextResolver {
 		}
 
 		return {
-			agentApiKeySecret: decryptSecret(
+			agentApiKeySecret: decrypt(
 				installation.agentApiKeyCiphertext,
 				this.#crypto.encryptionKey
 			),
