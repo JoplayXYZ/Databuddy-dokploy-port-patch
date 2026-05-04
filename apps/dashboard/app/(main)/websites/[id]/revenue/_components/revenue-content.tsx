@@ -23,7 +23,6 @@ import { StripeLogoIcon } from "@phosphor-icons/react/dist/ssr";
 import {
 	ArrowClockwiseIcon,
 	ArrowSquareOutIcon,
-	ArrowsCounterClockwiseIcon,
 	CaretDownIcon,
 	CheckCircleIcon,
 	CheckIcon,
@@ -74,16 +73,12 @@ const BASKET_URL =
 
 const STRIPE_EVENTS = {
 	required: ["payment_intent.succeeded", "charge.refunded"],
-	optional: [
-		"payment_intent.payment_failed",
-		"payment_intent.canceled",
-		"invoice.payment_succeeded",
-	],
+	optional: ["payment_intent.payment_failed", "payment_intent.canceled"],
 };
 
 const PADDLE_EVENTS = {
 	required: ["transaction.completed"],
-	optional: ["transaction.billed"],
+	optional: [],
 };
 
 function formatCurrency(amount: number, currency = "USD"): string {
@@ -708,6 +703,14 @@ export function RevenueContent({ websiteId }: RevenueContentProps) {
 					<div className="grid grid-cols-1 gap-1.5 rounded-xl bg-secondary p-1.5 sm:grid-cols-2 lg:grid-cols-5">
 						<StatCard
 							displayMode="text"
+							icon={CurrencyDollarIcon}
+							id="total-revenue"
+							isLoading={isLoading}
+							title="Revenue"
+							value={formatCurrency(overview?.total_revenue ?? 0)}
+						/>
+						<StatCard
+							displayMode="text"
 							icon={ReceiptIcon}
 							id="transactions"
 							isLoading={isLoading}
@@ -723,19 +726,6 @@ export function RevenueContent({ websiteId }: RevenueContentProps) {
 							value={formatCurrency(avgTransaction)}
 						/>
 						<StatCard
-							description={
-								overview?.refund_count
-									? `${overview.refund_count} refunds`
-									: undefined
-							}
-							displayMode="text"
-							icon={ArrowsCounterClockwiseIcon}
-							id="refunds"
-							isLoading={isLoading}
-							title="Refunds"
-							value={formatCurrency(Math.abs(overview?.refund_amount ?? 0))}
-						/>
-						<StatCard
 							displayMode="text"
 							icon={UsersIcon}
 							id="unique-customers"
@@ -746,14 +736,14 @@ export function RevenueContent({ websiteId }: RevenueContentProps) {
 						<StatCard
 							description={
 								overview?.attributed_transactions
-									? `${overview.attributed_transactions} of ${overview.total_transactions} transactions`
+									? `${overview.attributed_transactions} of ${overview.total_transactions} attributed`
 									: undefined
 							}
 							displayMode="text"
 							icon={TrendUpIcon}
 							id="attribution-rate"
 							isLoading={isLoading}
-							title="Attribution Rate"
+							title="Attribution"
 							value={
 								overview?.total_transactions
 									? `${Math.round((overview.attributed_transactions / overview.total_transactions) * 100)}%`
@@ -792,17 +782,19 @@ export function RevenueContent({ websiteId }: RevenueContentProps) {
 			) : (
 				<EmptyState
 					action={{
-						label: "Configure webhooks",
+						label: isConfigured
+							? "Check webhook settings"
+							: "Configure webhooks",
 						onClick: () => setSettingsOpen(true),
 					}}
 					description={
 						isConfigured
-							? "Revenue appears here once webhooks process transactions."
-							: "Connect Stripe or Paddle to track revenue."
+							? "Revenue will appear here once your payment provider sends webhook events."
+							: "Connect Stripe or Paddle to start tracking revenue and attribution."
 					}
 					icon={<CurrencyDollarIcon />}
 					title={
-						isConfigured ? "No revenue data yet" : "Set up revenue tracking"
+						isConfigured ? "Waiting for transactions" : "Set up revenue tracking"
 					}
 				/>
 			)}
