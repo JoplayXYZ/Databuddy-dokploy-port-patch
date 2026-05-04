@@ -20,14 +20,17 @@ export const SLACK_COPY = {
 		"I hit a snag while asking Databuddy. Try again in a moment; if it keeps happening, reconnect Slack from Databuddy organization settings.",
 	assistantGreeting:
 		"I can help with traffic, referrers, pages, conversions, campaigns, and product usage. Ask naturally and I will use your Databuddy analytics context.",
+	autoBindSuccess: "Databuddy auto-connected this channel.",
 	bindFailure:
 		"I couldn't bind this channel. Check that Slack is connected in Databuddy organization settings, then try `/bind` again.",
 	bindSuccess:
 		"*Databuddy is ready in this channel.* Mention `@Databuddy` here or DM me to ask analytics questions.",
 	channelNotBound:
-		"This channel is not bound to Databuddy yet. Run `/bind` in this channel first, then mention `@Databuddy` with any analytics question.",
+		"I need this channel explicitly connected first. Run `/bind` here once, then mention `@Databuddy` with any analytics question.",
 	emptyMention:
 		"Ask a Databuddy analytics question after the mention. Example: `@Databuddy what changed this week?`",
+	slackConnectNeedsBind:
+		"This looks like a Slack Connect channel. To avoid sharing analytics with external workspaces by accident, run `/bind` here only if this channel is approved for Databuddy answers.",
 	missingTeam:
 		"Slack did not include a workspace id for this request. Try again from a normal workspace channel.",
 	missingWorkspace:

@@ -602,9 +602,10 @@ function SlackWorkspaceRow({
 			<div className="mt-3 rounded border border-border/60 bg-background px-3 py-2">
 				<Text tone="muted" variant="caption">
 					Slack is connected at the organization level. The agent can discover
-					websites itself when an analytics question needs one. Run{" "}
-					<SlackCommand value="/bind" /> in a Slack channel to mark that channel
-					as connected, then mention Databuddy in Slack and ask anything.
+					websites itself when an analytics question needs one. Mention
+					Databuddy in an internal channel and it will connect that channel
+					automatically. Use <SlackCommand value="/bind" /> for Slack Connect
+					channels that are approved for Databuddy answers.
 				</Text>
 			</div>
 
@@ -628,9 +629,9 @@ function SlackWorkspaceRow({
 					<div className="flex items-center gap-2 px-3 py-2 text-muted-foreground text-xs">
 						<MsgContentIcon className="size-3.5 shrink-0" />
 						<span>
-							No channel bindings yet. The workspace is connected; use{" "}
-							<SlackCommand value="/bind" /> when you want this channel marked
-							in Databuddy.
+							No channel bindings yet. Internal channels connect on first
+							mention; Slack Connect channels require{" "}
+							<SlackCommand value="/bind" /> first.
 						</span>
 					</div>
 				)}

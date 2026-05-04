@@ -18,6 +18,7 @@ export interface SlackChannelBindingCommand {
 }
 
 export interface SlackChannelBindingCommandResult {
+	autoBound?: boolean;
 	message: string;
 	ok: boolean;
 }
@@ -117,23 +118,7 @@ export class SlackInstallationStore implements SlackRunContextResolver {
 			};
 		}
 
-		const now = new Date();
-		await db
-			.insert(slackChannelBindings)
-			.values({
-				createdAt: now,
-				id: randomUUIDv7(),
-				integrationId: installation.id,
-				slackChannelId: channelId,
-				updatedAt: now,
-			})
-			.onConflictDoUpdate({
-				set: { updatedAt: now },
-				target: [
-					slackChannelBindings.integrationId,
-					slackChannelBindings.slackChannelId,
-				],
-			});
+		await upsertChannelBinding(installation.id, channelId);
 
 		return {
 			message: SLACK_COPY.bindSuccess,
@@ -142,9 +127,12 @@ export class SlackInstallationStore implements SlackRunContextResolver {
 	}
 
 	async getChannelReadiness({
+		autoBind = false,
 		channelId,
 		teamId,
-	}: SlackChannelBindingCommand): Promise<SlackChannelBindingCommandResult> {
+	}: SlackChannelBindingCommand & {
+		autoBind?: boolean;
+	}): Promise<SlackChannelBindingCommandResult> {
 		if (!teamId) {
 			return {
 				message: SLACK_COPY.missingTeam,
@@ -162,6 +150,21 @@ export class SlackInstallationStore implements SlackRunContextResolver {
 
 		const binding = await findChannelBinding(installation.id, channelId);
 		if (!binding) {
+			if (autoBind) {
+				await upsertChannelBinding(installation.id, channelId);
+				createSlackEventLog({
+					slack_channel_id: channelId,
+					slack_event: "channel_auto_bind",
+					slack_integration_id: installation.id,
+					slack_organization_id: installation.organizationId,
+					slack_team_id: teamId,
+				}).emit();
+				return {
+					autoBound: true,
+					message: SLACK_COPY.autoBindSuccess,
+					ok: true,
+				};
+			}
 			return {
 				message: SLACK_COPY.channelNotBound,
 				ok: false,
@@ -195,6 +198,29 @@ export function createSlackAuthorize(
 		}
 		return await installations.authorize(teamId);
 	};
+}
+
+async function upsertChannelBinding(
+	integrationId: string,
+	channelId: string
+): Promise<void> {
+	const now = new Date();
+	await db
+		.insert(slackChannelBindings)
+		.values({
+			createdAt: now,
+			id: randomUUIDv7(),
+			integrationId,
+			slackChannelId: channelId,
+			updatedAt: now,
+		})
+		.onConflictDoUpdate({
+			set: { updatedAt: now },
+			target: [
+				slackChannelBindings.integrationId,
+				slackChannelBindings.slackChannelId,
+			],
+		});
 }
 
 function findActiveIntegration(teamId: string) {

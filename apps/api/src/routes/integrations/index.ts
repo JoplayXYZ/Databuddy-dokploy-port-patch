@@ -16,8 +16,10 @@ import {
 const SLACK_OAUTH_SCOPES = [
 	"assistant:write",
 	"app_mentions:read",
+	"channels:read",
 	"chat:write",
 	"commands",
+	"groups:read",
 	"im:history",
 	"reactions:read",
 	"reactions:write",

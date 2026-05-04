@@ -11,6 +11,7 @@ import {
 	setSlackLog,
 	toError,
 } from "../lib/evlog-slack";
+import { getSlackChannelMentionPolicy } from "./channel-policy";
 import { logSlackReactionFeedback } from "./feedback";
 import type { SlackInstallationStore } from "./installations";
 import { SLACK_COPY, SLACK_SUGGESTED_PROMPTS } from "./messages";
@@ -160,13 +161,29 @@ export function registerSlackListeners(
 			return;
 		}
 
+		const channelPolicy = await getSlackChannelMentionPolicy({
+			channelId: event.channel,
+			client,
+			logger,
+		});
 		const readiness = await installations.getChannelReadiness({
+			autoBind: channelPolicy.autoBind,
 			channelId: event.channel,
 			teamId,
 		});
 		if (!readiness.ok) {
+			logChannelGate({
+				channelId: event.channel,
+				messageTs: event.ts,
+				policyReason: channelPolicy.reason,
+				teamId,
+				userId: event.user,
+			});
 			await say({
-				text: readiness.message,
+				text:
+					channelPolicy.reason === "slack_connect"
+						? SLACK_COPY.slackConnectNeedsBind
+						: readiness.message,
 				thread_ts: threadTs,
 			});
 			return;
@@ -250,6 +267,29 @@ export function registerSlackListeners(
 			teamId: context.teamId,
 		});
 	});
+}
+
+function logChannelGate({
+	channelId,
+	messageTs,
+	policyReason,
+	teamId,
+	userId,
+}: {
+	channelId: string;
+	messageTs: string;
+	policyReason: string;
+	teamId?: string;
+	userId: string;
+}) {
+	createSlackEventLog({
+		slack_channel_gate_reason: policyReason,
+		slack_channel_id: channelId,
+		slack_event: "channel_gate",
+		slack_message_ts: messageTs,
+		slack_team_id: teamId,
+		slack_user_id: userId,
+	}).emit();
 }
 
 async function handleAgentRun({
