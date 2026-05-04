@@ -22,11 +22,9 @@ export interface SlackRunContext {
 	agentApiKeySecret: string;
 	organizationId: string;
 	teamId: string;
-	websiteId: string;
 }
 
 export interface SlackRunContextResolver {
-	describeMissingContext?(run: SlackAgentRun): Promise<string>;
 	resolve(run: SlackAgentRun): Promise<SlackRunContext | null>;
 }
 
@@ -50,22 +48,15 @@ export class DatabuddyAgentClient {
 	async *stream(run: SlackAgentRun): AsyncGenerator<string> {
 		const context = await this.#contexts.resolve(run);
 		if (!context) {
-			yield await getMissingAgentContextMessage(this.#contexts, run);
+			yield getMissingAgentContextMessage();
 			return;
 		}
 
-		const response = await fetch(`${this.#config.apiUrl}/v1/agent/chat`, {
+		const response = await fetch(`${this.#config.apiUrl}/v1/agent/ask`, {
 			body: JSON.stringify({
 				id: createSlackChatId(run),
-				messages: [
-					{
-						id: createSlackMessageId(run),
-						parts: [{ text: run.text, type: "text" }],
-						role: "user",
-					},
-				],
+				question: run.text,
 				timezone: DEFAULT_TIMEZONE,
-				websiteId: context.websiteId,
 			}),
 			headers: {
 				Authorization: `Bearer ${context.agentApiKeySecret}`,
@@ -83,22 +74,15 @@ export class DatabuddyAgentClient {
 			);
 		}
 
-		yield* readAgentStream(response);
+		const payload = (await response.json()) as { answer?: unknown };
+		yield typeof payload.answer === "string"
+			? payload.answer
+			: "No answer was generated.";
 	}
 }
 
-export async function getMissingAgentContextMessage(
-	contexts?: SlackRunContextResolver,
-	run?: SlackAgentRun
-): Promise<string> {
-	if (contexts?.describeMissingContext && run) {
-		return await contexts.describeMissingContext(run);
-	}
-
-	return [
-		"Slack is connected, but this channel is not mapped to a Databuddy website yet.",
-		"Run `/bind` to bind the channel, or set a default website in Databuddy.",
-	].join(" ");
+export function getMissingAgentContextMessage(): string {
+	return "This Slack workspace is not connected to a Databuddy organization yet.";
 }
 
 export function createSlackChatId(run: SlackAgentRun): string {
@@ -112,88 +96,6 @@ export function createSlackChatId(run: SlackAgentRun): string {
 	);
 }
 
-function createSlackMessageId(run: SlackAgentRun): string {
-	return safeId(
-		["slack-message", run.messageTs ?? Date.now().toString()].join("-")
-	);
-}
-
 function safeId(value: string): string {
 	return value.replace(/[^a-zA-Z0-9_-]/g, "_").slice(0, 160);
-}
-
-export async function* readAgentStream(
-	response: Response
-): AsyncGenerator<string> {
-	if (!response.body) {
-		throw new Error("Databuddy agent response did not include a body");
-	}
-
-	const reader = response.body.getReader();
-	const decoder = new TextDecoder();
-	let buffer = "";
-
-	for (;;) {
-		const { done, value } = await reader.read();
-		if (done) {
-			buffer += decoder.decode();
-			break;
-		}
-		buffer += decoder.decode(value, { stream: true });
-		const result = drainSseBuffer(buffer);
-		buffer = result.remaining;
-		yield* result.text;
-	}
-
-	yield* drainSseBuffer(`${buffer}\n`).text;
-}
-
-function drainSseBuffer(buffer: string): { remaining: string; text: string[] } {
-	let newlineIndex = buffer.indexOf("\n");
-	let remaining = buffer;
-	const text: string[] = [];
-
-	while (newlineIndex !== -1) {
-		const line = remaining.slice(0, newlineIndex);
-		remaining = remaining.slice(newlineIndex + 1);
-
-		if (line.startsWith("data: ")) {
-			const chunk = parseAgentStreamPayload(line.slice(6).trim());
-			if (chunk) {
-				text.push(chunk);
-			}
-		}
-
-		newlineIndex = remaining.indexOf("\n");
-	}
-
-	return { remaining, text };
-}
-
-export function parseAgentStreamPayload(payload: string): string | null {
-	if (!(payload && payload !== "[DONE]")) {
-		return null;
-	}
-
-	let event: unknown;
-	try {
-		event = JSON.parse(payload);
-	} catch {
-		return null;
-	}
-	if (!isRecord(event)) {
-		return null;
-	}
-
-	switch (event.type) {
-		case "text-delta":
-		case "content-delta":
-			return typeof event.delta === "string" ? event.delta : null;
-		default:
-			return null;
-	}
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-	return Boolean(value && typeof value === "object" && !Array.isArray(value));
 }

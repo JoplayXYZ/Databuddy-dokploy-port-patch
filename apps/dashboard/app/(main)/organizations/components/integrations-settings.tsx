@@ -1,6 +1,6 @@
 "use client";
 
-import type { SlackIntegrationOutput, WebsiteOutput } from "@databuddy/rpc";
+import type { SlackIntegrationOutput } from "@databuddy/rpc";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -9,10 +9,8 @@ import { TopBar } from "@/components/layout/top-bar";
 import type { Organization } from "@/hooks/use-organizations";
 import { orpc } from "@/lib/orpc";
 import {
-	CaretDownIcon,
 	CheckCircleIcon,
 	ClockIcon,
-	GlobeIcon,
 	MsgContentIcon,
 	PlugIcon,
 	TrashIcon,
@@ -27,10 +25,9 @@ import {
 	cn,
 	dayjs,
 } from "@databuddy/ui";
-import { Accordion, DeleteDialog, DropdownMenu } from "@databuddy/ui/client";
+import { Accordion, DeleteDialog } from "@databuddy/ui/client";
 
 type SlackIntegration = SlackIntegrationOutput;
-type Website = WebsiteOutput;
 
 interface IntegrationCatalogItem {
 	accent: string;
@@ -176,30 +173,6 @@ const COMING_SOON_INTEGRATIONS: IntegrationCatalogItem[] = [
 	},
 ];
 
-function websiteLabel(website: Pick<Website, "domain" | "name">): string {
-	return website.name?.trim() || website.domain;
-}
-
-function selectedWebsiteLabel(
-	integration: SlackIntegration,
-	websites: Website[]
-): string {
-	const fromList = websites.find(
-		(site) => site.id === integration.defaultWebsiteId
-	);
-	if (fromList) {
-		return websiteLabel(fromList);
-	}
-	if (integration.defaultWebsiteName || integration.defaultWebsiteDomain) {
-		return (
-			integration.defaultWebsiteName ??
-			integration.defaultWebsiteDomain ??
-			"Unknown website"
-		);
-	}
-	return "No default website";
-}
-
 function slackInstallUrl(organizationId: string): string {
 	const url = new URL(
 		"/v1/integrations/slack/install",
@@ -235,13 +208,7 @@ function slackStatusBadge(
 }
 
 function slackNeedsSetup(integrations: SlackIntegration[]): boolean {
-	return (
-		integrations.length === 0 ||
-		integrations.some(
-			(integration) =>
-				integration.status === "active" && !integration.defaultWebsiteId
-		)
-	);
+	return integrations.length === 0;
 }
 
 function slackAction(
@@ -277,27 +244,10 @@ function slackAction(
 }
 
 function slackWorkspaceBadge(integration: SlackIntegration) {
-	if (integration.status === "active" && integration.defaultWebsiteId) {
+	if (integration.status === "active") {
 		return (
 			<Badge size="sm" variant="success">
 				Active
-			</Badge>
-		);
-	}
-	if (
-		integration.status === "active" &&
-		integration.channelBindings.length > 0
-	) {
-		return (
-			<Badge size="sm" variant="warning">
-				Partial
-			</Badge>
-		);
-	}
-	if (integration.status === "active") {
-		return (
-			<Badge size="sm" variant="warning">
-				Needs website
 			</Badge>
 		);
 	}
@@ -365,23 +315,6 @@ export function IntegrationsSettings({
 		}),
 	});
 
-	const websitesQuery = useQuery({
-		...orpc.websites.list.queryOptions({
-			input: { organizationId: organization.id },
-		}),
-	});
-
-	const updateDefaultWebsite = useMutation({
-		...orpc.integrations.updateSlackDefaultWebsite.mutationOptions(),
-		onError: () => {
-			toast.error("Could not update Slack website");
-		},
-		onSuccess: async () => {
-			toast.success("Slack default website updated");
-			await queryClient.invalidateQueries({ queryKey: listKey });
-		},
-	});
-
 	const uninstallSlack = useMutation({
 		...orpc.integrations.uninstallSlack.mutationOptions(),
 		onError: () => {
@@ -395,7 +328,6 @@ export function IntegrationsSettings({
 
 	const slackIntegrations = (integrationsQuery.data?.slack ??
 		[]) as SlackIntegration[];
-	const websites = (websitesQuery.data ?? []) as Website[];
 
 	return (
 		<div className="flex h-full flex-col">
@@ -433,26 +365,12 @@ export function IntegrationsSettings({
 								<SlackIntegrationDetails
 									integrations={slackIntegrations}
 									isLoading={integrationsQuery.isLoading}
-									onDefaultWebsiteChange={(integrationId, defaultWebsiteId) =>
-										updateDefaultWebsite.mutate({
-											defaultWebsiteId,
-											integrationId,
-											organizationId: organization.id,
-										})
-									}
 									onUninstall={setPendingUninstall}
 									uninstallingIntegrationId={
 										uninstallSlack.isPending
 											? uninstallSlack.variables?.integrationId
 											: undefined
 									}
-									updatingIntegrationId={
-										updateDefaultWebsite.isPending
-											? updateDefaultWebsite.variables?.integrationId
-											: undefined
-									}
-									websites={websites}
-									websitesLoading={websitesQuery.isLoading}
 								/>
 							</IntegrationListRow>
 
@@ -583,24 +501,13 @@ function IntegrationLogo({ item }: { item: IntegrationCatalogItem }) {
 function SlackIntegrationDetails({
 	integrations,
 	isLoading,
-	onDefaultWebsiteChange,
 	onUninstall,
 	uninstallingIntegrationId,
-	updatingIntegrationId,
-	websites,
-	websitesLoading,
 }: {
 	integrations: SlackIntegration[];
 	isLoading: boolean;
-	onDefaultWebsiteChange: (
-		integrationId: string,
-		defaultWebsiteId: string | null
-	) => void;
 	onUninstall: (integration: SlackIntegration) => void;
 	uninstallingIntegrationId?: string;
-	updatingIntegrationId?: string;
-	websites: Website[];
-	websitesLoading: boolean;
 }) {
 	if (isLoading) {
 		return (
@@ -628,14 +535,8 @@ function SlackIntegrationDetails({
 				<SlackWorkspaceRow
 					integration={integration}
 					isUninstalling={uninstallingIntegrationId === integration.id}
-					isUpdating={updatingIntegrationId === integration.id}
 					key={integration.id}
-					onDefaultWebsiteChange={(defaultWebsiteId) =>
-						onDefaultWebsiteChange(integration.id, defaultWebsiteId)
-					}
 					onUninstall={() => onUninstall(integration)}
-					websites={websites}
-					websitesLoading={websitesLoading}
 				/>
 			))}
 		</div>
@@ -658,24 +559,13 @@ function SlackWorkspaceSkeleton() {
 function SlackWorkspaceRow({
 	integration,
 	isUninstalling,
-	isUpdating,
-	onDefaultWebsiteChange,
 	onUninstall,
-	websites,
-	websitesLoading,
 }: {
 	integration: SlackIntegration;
 	isUninstalling: boolean;
-	isUpdating: boolean;
-	onDefaultWebsiteChange: (websiteId: string | null) => void;
 	onUninstall: () => void;
-	websites: Website[];
-	websitesLoading: boolean;
 }) {
-	const label = selectedWebsiteLabel(integration, websites);
 	const teamName = integration.teamName ?? integration.teamId;
-	const canChooseWebsite =
-		websites.length > 0 && integration.status === "active" && !websitesLoading;
 
 	return (
 		<div className="border-border/60 border-b px-3 py-3 last:border-b-0">
@@ -689,51 +579,13 @@ function SlackWorkspaceRow({
 					</div>
 					<div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-muted-foreground text-xs">
 						<span className="font-mono">{integration.teamId}</span>
-						<span>Default: {label}</span>
+						<span>Organization connected</span>
 						<span>{integration.channelBindings.length} channels</span>
 						<span>Updated {dayjs(integration.updatedAt).fromNow()}</span>
 					</div>
 				</div>
 
 				<div className="flex flex-wrap items-center gap-2">
-					<DropdownMenu>
-						<DropdownMenu.Trigger
-							className={buttonVariants({
-								className: "max-w-full justify-between sm:w-56",
-								size: "sm",
-								variant: "secondary",
-							})}
-							disabled={!canChooseWebsite || isUpdating || isUninstalling}
-						>
-							<span className="truncate">{label}</span>
-							<CaretDownIcon className="size-3 shrink-0" weight="fill" />
-						</DropdownMenu.Trigger>
-						<DropdownMenu.Content align="end" className="w-64">
-							<DropdownMenu.Group>
-								<DropdownMenu.GroupLabel>
-									Default website
-								</DropdownMenu.GroupLabel>
-								<DropdownMenu.Item onClick={() => onDefaultWebsiteChange(null)}>
-									No default website
-								</DropdownMenu.Item>
-								<DropdownMenu.Separator />
-								{websites.map((website) => (
-									<DropdownMenu.Item
-										key={website.id}
-										onClick={() => onDefaultWebsiteChange(website.id)}
-									>
-										<GlobeIcon className="size-3.5 text-muted-foreground" />
-										<span className="min-w-0 flex-1 truncate">
-											{websiteLabel(website)}
-										</span>
-										{website.id === integration.defaultWebsiteId && (
-											<CheckCircleIcon className="size-3.5 text-success" />
-										)}
-									</DropdownMenu.Item>
-								))}
-							</DropdownMenu.Group>
-						</DropdownMenu.Content>
-					</DropdownMenu>
 					<Button
 						loading={isUninstalling}
 						onClick={onUninstall}
@@ -749,10 +601,11 @@ function SlackWorkspaceRow({
 
 			<div className="mt-3 rounded border border-border/60 bg-background px-3 py-2">
 				<Text tone="muted" variant="caption">
-					DMs and unbound channels use the default website. Run{" "}
-					<SlackCommand value="/bind" /> in a Slack channel to route that
-					channel to a site, or <SlackCommand value="/unbind" /> to remove that
-					route.
+					Slack is connected at the organization level. The agent can discover
+					websites itself when an analytics question needs one. Run{" "}
+					<SlackCommand value="/bind" /> in a Slack channel to mark that channel
+					as connected, or <SlackCommand value="/unbind" /> to remove the
+					marker.
 				</Text>
 			</div>
 
@@ -768,17 +621,18 @@ function SlackWorkspaceRow({
 								{binding.slackChannelId}
 							</span>
 							<span className="truncate text-foreground text-xs">
-								{binding.websiteName ??
-									binding.websiteDomain ??
-									binding.websiteId}
+								Connected channel
 							</span>
 						</div>
 					))
 				) : (
 					<div className="flex items-center gap-2 px-3 py-2 text-muted-foreground text-xs">
 						<MsgContentIcon className="size-3.5 shrink-0" />
-						No channel bindings yet. Channels and DMs use the default website
-						when one is selected.
+						<span>
+							No channel bindings yet. The workspace is connected; use{" "}
+							<SlackCommand value="/bind" /> when you want this channel marked
+							in Databuddy.
+						</span>
 					</div>
 				)}
 			</div>

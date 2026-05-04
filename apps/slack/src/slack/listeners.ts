@@ -204,11 +204,7 @@ export function registerSlackListeners(
 		const text = command.text.trim();
 		const subcommand = parseSlashSubcommand(text);
 		if (subcommand.name === "help") {
-			await respondToSlashHelp({
-				installations,
-				respond,
-				teamId: command.team_id,
-			});
+			await respondToSlashHelp(respond);
 			return;
 		}
 		if (subcommand.name === "bind") {
@@ -217,7 +213,6 @@ export function registerSlackListeners(
 				installations,
 				logger,
 				respond,
-				selector: subcommand.args || undefined,
 			});
 			return;
 		}
@@ -227,11 +222,7 @@ export function registerSlackListeners(
 		}
 
 		if (!text) {
-			await respondToSlashHelp({
-				installations,
-				respond,
-				teamId: command.team_id,
-			});
+			await respondToSlashHelp(respond);
 			return;
 		}
 
@@ -264,7 +255,6 @@ export function registerSlackListeners(
 			installations,
 			logger,
 			respond,
-			selector: command.text.trim() || undefined,
 		});
 	});
 
@@ -274,25 +264,13 @@ export function registerSlackListeners(
 	});
 }
 
-async function respondToSlashHelp({
-	installations,
-	respond,
-	teamId,
-}: {
-	installations: SlackInstallationStore;
-	respond: SlackSlashRespond;
-	teamId?: string;
-}): Promise<void> {
-	const websiteOptions = await installations.listWebsiteOptions(teamId);
+async function respondToSlashHelp(respond: SlackSlashRespond): Promise<void> {
 	await respond({
 		response_type: "ephemeral",
 		text: [
-			"`/bind` binds this channel to the default Databuddy website.",
-			"`/bind your-domain.com` binds this channel to a specific website.",
-			"`/unbind` removes this channel binding.",
-			"`/databuddy summarize traffic for the last 7 days` asks the analytics agent.",
-			"",
-			websiteOptions,
+			"`/bind` connects this Slack channel to the Databuddy organization.",
+			"`/unbind` removes this channel marker; the Slack workspace stays connected.",
+			"`/databuddy summarize traffic for the last 7 days` asks the organization-scoped analytics agent.",
 		].join("\n"),
 	});
 }
@@ -302,18 +280,15 @@ async function respondToBindCommand({
 	installations,
 	logger,
 	respond,
-	selector,
 }: {
 	command: SlackSlashCommand;
 	installations: SlackInstallationStore;
 	logger: SlackSlashLogger;
 	respond: SlackSlashRespond;
-	selector?: string;
 }): Promise<void> {
 	try {
 		const result = await installations.bindChannel({
 			channelId: command.channel_id,
-			selector,
 			teamId: command.team_id,
 		});
 		await respond({
@@ -358,10 +333,9 @@ async function respondToUnbindCommand({
 	}
 }
 
-function parseSlashSubcommand(text: string): { args: string; name: string } {
-	const [name = "", ...args] = text.split(WHITESPACE_REGEX);
+function parseSlashSubcommand(text: string): { name: string } {
+	const [name = ""] = text.split(WHITESPACE_REGEX);
 	return {
-		args: args.join(" ").trim(),
 		name: name.toLowerCase(),
 	};
 }

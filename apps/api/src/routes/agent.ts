@@ -44,6 +44,11 @@ import {
 	resolveAgentBillingCustomerId,
 	trackAgentUsageAndBill,
 } from "../ai/agents/execution";
+import {
+	appendToConversation,
+	getConversationHistory,
+} from "../ai/mcp/conversation-store";
+import { runMcpAgent } from "../ai/mcp/run-agent";
 import { type AgentTier, tierToModelKey } from "../ai/agents/router";
 import {
 	AGENT_THINKING_LEVELS,
@@ -223,6 +228,12 @@ const AgentRequestSchema = t.Object({
 	tier: t.Optional(t.Union(AGENT_TIERS.map((tier) => t.Literal(tier)))),
 });
 
+const AgentAskRequestSchema = t.Object({
+	question: t.String({ minLength: 1, maxLength: 2000 }),
+	id: t.Optional(t.String({ minLength: 1 })),
+	timezone: t.Optional(t.String()),
+});
+
 const AGENT_TYPE = "analytics";
 const AGENT_MEMORY_CONTEXT_TIMEOUT_MS = 700;
 const AGENT_ENRICHMENT_CONTEXT_TIMEOUT_MS = 700;
@@ -370,6 +381,75 @@ export const agent = new Elysia({ prefix: "/v1/agent" })
 			};
 		}
 	})
+	.post(
+		"/ask",
+		async function agentAsk({ body, user, apiKey, request }) {
+			const conversationId = body.id ?? generateId();
+			const userId = user?.id ?? null;
+			const organizationId = apiKey?.organizationId ?? null;
+
+			mergeWideEvent({
+				agent_chat_id: conversationId,
+				agent_user_id: userId ?? `apikey:${apiKey?.id ?? "unknown"}`,
+				...(organizationId ? { organization_id: organizationId } : {}),
+				source: "slack",
+			});
+
+			try {
+				if (!(user || apiKey)) {
+					return jsonError(401, "AUTH_REQUIRED", "Authentication required");
+				}
+
+				const priorMessages = await getConversationHistory(
+					conversationId,
+					userId,
+					apiKey
+				);
+				const answer = await runMcpAgent({
+					apiKey,
+					conversationId,
+					priorMessages: priorMessages.length > 0 ? priorMessages : undefined,
+					question: body.question,
+					requestHeaders: request.headers,
+					source: "slack",
+					timezone: body.timezone,
+					userId,
+				});
+
+				await appendToConversation(
+					conversationId,
+					userId,
+					apiKey,
+					body.question,
+					answer,
+					priorMessages
+				);
+
+				return {
+					answer,
+					conversationId,
+				};
+			} catch (error) {
+				trackAgentEvent("agent_activity", {
+					action: "chat_error",
+					source: "slack",
+					error_type: getErrorName(error),
+					organization_id: organizationId,
+					user_id: userId,
+				});
+				captureError(error, {
+					agent_error: true,
+					agent_type: AGENT_TYPE,
+					agent_chat_id: conversationId,
+					agent_user_id: userId ?? "unknown",
+					error_type: getErrorName(error),
+					source: "slack",
+				});
+				return jsonError(500, "INTERNAL_ERROR", getErrorMessage(error));
+			}
+		},
+		{ body: AgentAskRequestSchema, idleTimeout: 60_000 }
+	)
 	.post(
 		"/chat",
 		function agentChat({ body, user, apiKey, request }) {

@@ -1,10 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import {
-	createSlackChatId,
-	DatabuddyAgentClient,
-	parseAgentStreamPayload,
-	readAgentStream,
-} from "./agent-client";
+import { createSlackChatId, DatabuddyAgentClient } from "./agent-client";
 
 describe("Databuddy Slack agent client", () => {
 	it("creates stable Slack-scoped chat ids", () => {
@@ -21,44 +16,9 @@ describe("Databuddy Slack agent client", () => {
 		).toBe("slack-T123-C123-171234_000");
 	});
 
-	it("parses text deltas from the agent stream protocol", () => {
-		expect(
-			parseAgentStreamPayload(
-				JSON.stringify({ delta: "hello", type: "text-delta" })
-			)
-		).toBe("hello");
-	});
-
-	it("reads text events from an SSE response", async () => {
-		const encoder = new TextEncoder();
-		const response = new Response(
-			new ReadableStream({
-				start(controller) {
-					controller.enqueue(
-						encoder.encode(
-							[
-								'data: {"type":"text-delta","delta":"Hello"}\n',
-								'data: {"type":"text-delta","delta":" world"}\n',
-								"data: [DONE]\n",
-							].join("")
-						)
-					);
-					controller.close();
-				},
-			})
-		);
-
-		const text: string[] = [];
-		for await (const chunk of readAgentStream(response)) {
-			text.push(chunk);
-		}
-
-		expect(text.join("")).toBe("Hello world");
-	});
-
 	it("sends resolved org integration context to the Databuddy agent API", async () => {
 		const originalFetch = globalThis.fetch;
-		const captured: { body?: unknown; headers?: Headers } = {};
+		const captured: { body?: unknown; headers?: Headers; url?: string } = {};
 		const fetchMock = Object.assign(
 			async (
 				input: Parameters<typeof fetch>[0],
@@ -70,10 +30,8 @@ describe("Databuddy Slack agent client", () => {
 						: new Request(input.toString(), init);
 				captured.body = init?.body ? JSON.parse(String(init.body)) : null;
 				captured.headers = request.headers;
-				return new Response(
-					'data: {"type":"text-delta","delta":"Done"}\n',
-					{ status: 200 }
-				);
+				captured.url = request.url;
+				return Response.json({ answer: "Done" });
 			},
 			{ preconnect: originalFetch.preconnect }
 		);
@@ -89,7 +47,6 @@ describe("Databuddy Slack agent client", () => {
 						agentApiKeySecret: "dbdy_secret",
 						organizationId: "org_123",
 						teamId: "T123",
-						websiteId: "site_123",
 					}),
 				}
 			);
@@ -103,28 +60,33 @@ describe("Databuddy Slack agent client", () => {
 			});
 
 			expect(answer).toBe("Done");
+			expect(captured.url).toBe("http://api.test/v1/agent/ask");
 			if (!captured.headers) {
 				throw new Error("Expected the agent client to call fetch");
 			}
 			expect(captured.headers.get("authorization")).toBe("Bearer dbdy_secret");
 			expect(captured.headers.has("x-databuddy-api-key-id")).toBe(false);
 			expect(captured.headers.has("x-databuddy-internal-secret")).toBe(false);
+			expect(captured.headers.get("x-databuddy-slack-organization-id")).toBe(
+				"org_123"
+			);
+			expect(captured.headers.get("x-databuddy-slack-team-id")).toBe("T123");
 			expect(captured.body).toMatchObject({
-				websiteId: "site_123",
+				question: "Summarize traffic",
+				timezone: "UTC",
 			});
+			expect(captured.body).not.toHaveProperty("websiteId");
 		} finally {
 			globalThis.fetch = originalFetch;
 		}
 	});
 
-	it("uses resolver-provided website guidance when context is missing", async () => {
+	it("explains missing organization context when no Slack installation resolves", async () => {
 		const client = new DatabuddyAgentClient(
 			{
 				apiUrl: "http://api.test",
 			},
 			{
-				describeMissingContext: async () =>
-					"Available websites:\n• Databuddy (databuddy.cc)",
 				resolve: async () => null,
 			}
 		);
@@ -137,6 +99,8 @@ describe("Databuddy Slack agent client", () => {
 			userId: "U123",
 		});
 
-		expect(answer).toBe("Available websites:\n• Databuddy (databuddy.cc)");
+		expect(answer).toBe(
+			"This Slack workspace is not connected to a Databuddy organization yet."
+		);
 	});
 });

@@ -9,7 +9,6 @@ import {
 } from "drizzle-orm/pg-core";
 import { apikey } from "./api-keys";
 import { organization, user } from "./auth";
-import { websites } from "./websites";
 
 export const slackIntegrationStatus = pgEnum("slack_integration_status", [
 	"active",
@@ -30,7 +29,6 @@ export const slackIntegrations = pgTable(
 		botTokenCiphertext: text("bot_token_ciphertext").notNull(),
 		agentApiKeyCiphertext: text("agent_api_key_ciphertext").notNull(),
 		agentApiKeyId: text("agent_api_key_id").notNull(),
-		defaultWebsiteId: text("default_website_id"),
 		status: slackIntegrationStatus().default("active").notNull(),
 		installedByUserId: text("installed_by_user_id"),
 		createdAt: timestamp("created_at", { precision: 3, withTimezone: true })
@@ -55,11 +53,6 @@ export const slackIntegrations = pgTable(
 			name: "slack_integrations_agent_api_key_id_fkey",
 		}).onDelete("restrict"),
 		foreignKey({
-			columns: [table.defaultWebsiteId],
-			foreignColumns: [websites.id],
-			name: "slack_integrations_default_website_id_fkey",
-		}).onDelete("set null"),
-		foreignKey({
 			columns: [table.installedByUserId],
 			foreignColumns: [user.id],
 			name: "slack_integrations_installed_by_user_id_fkey",
@@ -73,7 +66,6 @@ export const slackChannelBindings = pgTable(
 		id: text().primaryKey(),
 		integrationId: text("integration_id").notNull(),
 		slackChannelId: text("slack_channel_id").notNull(),
-		websiteId: text("website_id").notNull(),
 		createdAt: timestamp("created_at", { precision: 3, withTimezone: true })
 			.defaultNow()
 			.notNull(),
@@ -87,16 +79,10 @@ export const slackChannelBindings = pgTable(
 			table.integrationId,
 			table.slackChannelId
 		),
-		index("slack_channel_bindings_website_id_idx").on(table.websiteId),
 		foreignKey({
 			columns: [table.integrationId],
 			foreignColumns: [slackIntegrations.id],
 			name: "slack_channel_bindings_integration_id_fkey",
-		}).onDelete("cascade"),
-		foreignKey({
-			columns: [table.websiteId],
-			foreignColumns: [websites.id],
-			name: "slack_channel_bindings_website_id_fkey",
 		}).onDelete("cascade"),
 	]
 );

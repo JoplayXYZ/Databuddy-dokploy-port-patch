@@ -39,13 +39,12 @@
       },
       {
         "command": "/bind",
-        "description": "Bind this channel to a Databuddy website.",
-        "usage_hint": "your-domain.com",
+        "description": "Connect this channel to the Databuddy organization.",
         "should_escape": true
       },
       {
         "command": "/unbind",
-        "description": "Remove this channel's Databuddy website binding.",
+        "description": "Remove this channel's Databuddy organization marker.",
         "should_escape": true
       }
     ]

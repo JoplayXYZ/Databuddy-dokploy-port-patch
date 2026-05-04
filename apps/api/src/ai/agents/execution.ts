@@ -14,7 +14,7 @@ interface AgentUsageTrackingInput {
 	chatId?: string;
 	modelId: string;
 	organizationId?: string | null;
-	source: "dashboard" | "mcp";
+	source: "dashboard" | "mcp" | "slack";
 	usage: LanguageModelUsage;
 	userId?: string | null;
 	websiteId?: string;

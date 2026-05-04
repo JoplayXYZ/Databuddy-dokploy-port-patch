@@ -183,7 +183,6 @@ export const relations = defineRelations(schema, (r) => ({
 		funnelDefinitions: r.many.funnelDefinitions(),
 		alarms: r.many.alarms(),
 		analyticsInsights: r.many.analyticsInsights(),
-		slackChannelBindings: r.many.slackChannelBindings(),
 	},
 
 	analyticsInsights: {
@@ -243,10 +242,6 @@ export const relations = defineRelations(schema, (r) => ({
 			to: r.apikey.id,
 			optional: false,
 		}),
-		defaultWebsite: r.one.websites({
-			from: r.slackIntegrations.defaultWebsiteId,
-			to: r.websites.id,
-		}),
 		installedByUser: r.one.user({
 			from: r.slackIntegrations.installedByUserId,
 			to: r.user.id,
@@ -258,11 +253,6 @@ export const relations = defineRelations(schema, (r) => ({
 		integration: r.one.slackIntegrations({
 			from: r.slackChannelBindings.integrationId,
 			to: r.slackIntegrations.id,
-			optional: false,
-		}),
-		website: r.one.websites({
-			from: r.slackChannelBindings.websiteId,
-			to: r.websites.id,
 			optional: false,
 		}),
 	},

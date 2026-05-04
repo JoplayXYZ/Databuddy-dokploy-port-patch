@@ -24,6 +24,7 @@ export interface RunMcpAgentOptions {
 	priorMessages?: Array<{ role: "user" | "assistant"; content: string }>;
 	question: string;
 	requestHeaders: Headers;
+	source?: "mcp" | "slack";
 	timezone?: string;
 	userId: string | null;
 }
@@ -34,6 +35,7 @@ export async function runMcpAgent(
 	const sessionId = options.conversationId ?? crypto.randomUUID();
 	const mcpUserId = options.userId ?? options.apiKey?.userId ?? null;
 	const organizationId = options.apiKey?.organizationId ?? null;
+	const source = options.source ?? "mcp";
 
 	const apiKeyId =
 		options.apiKey &&
@@ -74,7 +76,7 @@ export async function runMcpAgent(
 	const instructions = config.system;
 
 	const mcpTelemetryMetadata: Record<string, string> = {
-		source: "mcp",
+		source,
 		authType: options.apiKey ? "api_key" : "session",
 		timezone: options.timezone ?? "UTC",
 		"tcc.conversational": "true",
@@ -97,7 +99,7 @@ export async function runMcpAgent(
 		experimental_context: config.experimental_context,
 		experimental_telemetry: {
 			isEnabled: true,
-			functionId: "databuddy.mcp.ask",
+			functionId: `databuddy.${source}.ask`,
 			metadata: mcpTelemetryMetadata,
 		},
 	});
@@ -131,7 +133,7 @@ export async function runMcpAgent(
 			await trackAgentUsageAndBill({
 				usage,
 				modelId: modelNames.balanced,
-				source: "mcp",
+				source,
 				organizationId,
 				userId: mcpUserId,
 				chatId: sessionId,
@@ -149,7 +151,7 @@ export async function runMcpAgent(
 			mcpUserId,
 			apiKeyId,
 			{
-				metadata: { source: "mcp" },
+				metadata: { source },
 				conversationId: sessionId,
 			}
 		);
