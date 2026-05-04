@@ -22,10 +22,10 @@ export function CockpitNarrative() {
 							className="size-4 text-primary"
 							weight="duotone"
 						/>
-						<Card.Title className="text-sm">Global brief</Card.Title>
+						<Card.Title className="text-sm">Brief</Card.Title>
 					</div>
 					<Card.Description>
-						Organization-wide · {rangeLabel(range)}
+						Organization-wide signals · {rangeLabel(range)}
 					</Card.Description>
 				</div>
 				{!(isLoading || isError) &&
@@ -38,12 +38,11 @@ export function CockpitNarrative() {
 					)}
 			</Card.Header>
 
-			<Card.Content className="min-h-[128px]">
+			<Card.Content className="min-h-[72px]">
 				{isLoading && (
 					<div className="space-y-2">
 						<Skeleton className="h-4 w-11/12 rounded" />
 						<Skeleton className="h-4 w-8/12 rounded" />
-						<Skeleton className="h-4 w-9/12 rounded" />
 					</div>
 				)}
 
@@ -68,7 +67,7 @@ export function CockpitNarrative() {
 				)}
 
 				{!(isLoading || isError) && data && data.success && (
-					<p className="max-w-3xl text-balance font-medium text-[20px] text-foreground leading-snug">
+					<p className="max-w-4xl text-pretty text-[14px] text-foreground leading-relaxed">
 						{data.narrative}
 					</p>
 				)}
