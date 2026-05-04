@@ -17,16 +17,16 @@ import { WebVitalsTrendsSparklinesDemo } from "@/components/landing/web-vitals-t
 import { StructuredData } from "@/components/structured-data";
 
 export const metadata: Metadata = {
-	title: "Core Web Vitals Monitoring",
+	title: "Core Web Vitals Monitoring - Real User Performance Analytics",
 	description:
-		"Monitor LCP, CLS, FID, INP, and TTFB from real users in production. Percentile breakdowns, page-level analysis, and device segmentation - built into your analytics.",
+		"Monitor LCP, CLS, INP, FCP, and TTFB from real users in production. Percentile breakdowns by page, device, and country. Field data, not lab simulations. Built into your analytics.",
 	alternates: {
 		canonical: "https://www.databuddy.cc/web-vitals",
 	},
 	openGraph: {
-		title: "Core Web Vitals Monitoring",
+		title: "Core Web Vitals Monitoring - Real User Performance Analytics",
 		description:
-			"Monitor LCP, CLS, FID, INP, and TTFB from real users in production. Percentile breakdowns, page-level analysis, and device segmentation - built into your analytics.",
+			"Monitor LCP, CLS, INP, FCP, and TTFB from real users in production. Percentile breakdowns by page, device, and country. Field data, not lab simulations. Built into your analytics.",
 		url: "https://www.databuddy.cc/web-vitals",
 		images: ["/og-image.png"],
 	},
@@ -68,25 +68,25 @@ export default function WebVitalsPage() {
 			<StructuredData
 				elements={[{ type: "faq", items: [...FAQ_ITEMS] }]}
 				page={{
-					title: "Core Web Vitals Monitoring",
+					title: "Core Web Vitals Monitoring - Real User Performance Analytics",
 					description:
-						"Monitor LCP, CLS, FID, INP, and TTFB from real users in production. Percentile breakdowns, page-level analysis, and device segmentation.",
+						"Monitor LCP, CLS, INP, FCP, and TTFB from real users in production. Percentile breakdowns by page, device, and country.",
 					url: "https://www.databuddy.cc/web-vitals",
 				}}
 			/>
 			<div className="overflow-x-hidden">
 				<FeatureHero
 					docsHref="/docs/performance/core-web-vitals-guide"
-					subtitle="See exactly how your site performs for real users, not simulated tests. LCP, INP, CLS, FCP, and TTFB sliced by page, device, and country."
-					title="Slow pages hide in averages."
+					subtitle="LCP, INP, CLS, FCP, and TTFB from real users in production. Sliced by page, device, and country. No lab simulations."
+					title="Core Web Vitals, tracked from real users."
 				/>
 
 				<Section className="border-border border-b" id="breakdown">
 					<div className={container}>
 						<SectionHeader
 							subtitle="Every vital, sliced by page, device, and percentile, so you fix the right thing, not just the average."
-							title="Performance,"
-							titleMuted="broken down."
+							title="Every vital,"
+							titleMuted="by page and device."
 						/>
 
 						<TwoColumnGrid>
@@ -125,8 +125,8 @@ export default function WebVitalsPage() {
 					<div className={container}>
 						<SectionHeader
 							subtitle="Get alerted when a vital degrades. Track frequency over time to confirm your fix actually held."
-							title="Signal,"
-							titleMuted="not noise."
+							title="Alerts when"
+							titleMuted="a metric degrades."
 						/>
 
 						<TwoColumnGrid>

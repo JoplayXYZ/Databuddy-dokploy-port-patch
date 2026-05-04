@@ -16,16 +16,16 @@ import Section from "@/components/landing/section";
 import { StructuredData } from "@/components/structured-data";
 
 export const metadata: Metadata = {
-	title: "Error Tracking",
+	title: "JavaScript Error Tracking - Built Into Your Analytics",
 	description:
-		"Catch, group, and fix errors before your users notice. Stack traces, user impact, release tracking, and instant alerts - built into your analytics stack.",
+		"Catch, group, and fix JavaScript errors before your users notice. Stack traces, session context, user impact, and instant alerts. No second tool, no extra script.",
 	alternates: {
 		canonical: "https://www.databuddy.cc/errors",
 	},
 	openGraph: {
-		title: "Error Tracking",
+		title: "JavaScript Error Tracking - Built Into Your Analytics",
 		description:
-			"Catch, group, and fix errors before your users notice. Stack traces, user impact, release tracking, and instant alerts - built into your analytics stack.",
+			"Catch, group, and fix JavaScript errors before your users notice. Stack traces, session context, user impact, and instant alerts. No second tool, no extra script.",
 		url: "https://www.databuddy.cc/errors",
 		images: ["/og-image.png"],
 	},
@@ -67,9 +67,9 @@ export default function ErrorsPage() {
 			<StructuredData
 				elements={[{ type: "faq", items: [...FAQ_ITEMS] }]}
 				page={{
-					title: "Error Tracking",
+					title: "JavaScript Error Tracking - Built Into Your Analytics",
 					description:
-						"Catch, group, and fix errors before your users notice. Stack traces, user impact, release tracking, and instant alerts.",
+						"Catch, group, and fix JavaScript errors before your users notice. Stack traces, session context, user impact, and instant alerts.",
 					url: "https://www.databuddy.cc/errors",
 				}}
 			/>
@@ -77,8 +77,8 @@ export default function ErrorsPage() {
 				<FeatureHero
 					docsHref="/docs"
 					primaryLabel="Start Monitoring"
-					subtitle="Every error tied to the session, the page, and the funnel step where it happened."
-					title="Understand what your errors are costing users."
+					subtitle="Every JavaScript error tied to the session, the page, and the funnel step where it happened. Stack traces, user impact, and alerts without a second tool."
+					title="Error tracking built into your analytics."
 				/>
 
 				<Section className="border-border border-b" id="impact">
