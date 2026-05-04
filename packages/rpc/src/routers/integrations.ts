@@ -1,9 +1,11 @@
 import { and, desc, eq } from "@databuddy/db";
 import {
+	apikey,
 	slackChannelBindings,
 	slackIntegrations,
 	websites,
 } from "@databuddy/db/schema";
+import { invalidateCacheableKey } from "@databuddy/redis";
 import { z } from "zod";
 import { rpcError } from "../errors";
 import { protectedProcedure, trackedProcedure } from "../orpc";
@@ -44,6 +46,11 @@ const updateSlackDefaultWebsiteInputSchema = z.object({
 	organizationId: z.string().min(1),
 	integrationId: z.string().min(1),
 	defaultWebsiteId: z.string().min(1).nullable(),
+});
+
+const uninstallSlackInputSchema = z.object({
+	organizationId: z.string().min(1),
+	integrationId: z.string().min(1),
 });
 
 const successOutputSchema = z.object({ success: z.literal(true) });
@@ -198,6 +205,78 @@ export const integrationsRouter = {
 
 			if (!updated) {
 				throw rpcError.notFound("Slack integration", input.integrationId);
+			}
+
+			return { success: true };
+		}),
+
+	uninstallSlack: trackedProcedure
+		.route({
+			description:
+				"Disconnects a Slack workspace integration and revokes its Databuddy agent API key.",
+			method: "POST",
+			path: "/integrations/uninstallSlack",
+			summary: "Uninstall Slack",
+			tags: ["Integrations"],
+		})
+		.input(uninstallSlackInputSchema)
+		.output(successOutputSchema)
+		.handler(async ({ context, input }) => {
+			await withWorkspace(context, {
+				organizationId: input.organizationId,
+				resource: "organization",
+				permissions: ["update"],
+			});
+
+			let revokedKeyHash: string | undefined;
+
+			try {
+				await context.db.transaction(async (tx) => {
+					const [integration] = await tx
+						.select({
+							agentApiKeyId: slackIntegrations.agentApiKeyId,
+							id: slackIntegrations.id,
+						})
+						.from(slackIntegrations)
+						.where(
+							and(
+								eq(slackIntegrations.id, input.integrationId),
+								eq(slackIntegrations.organizationId, input.organizationId)
+							)
+						)
+						.limit(1);
+
+					if (!integration) {
+						throw rpcError.notFound("Slack integration", input.integrationId);
+					}
+
+					const [agentKey] = await tx
+						.select({ keyHash: apikey.keyHash })
+						.from(apikey)
+						.where(eq(apikey.id, integration.agentApiKeyId))
+						.limit(1);
+
+					revokedKeyHash = agentKey?.keyHash;
+					const now = new Date();
+
+					await tx
+						.delete(slackIntegrations)
+						.where(eq(slackIntegrations.id, integration.id));
+
+					await tx
+						.update(apikey)
+						.set({ enabled: false, revokedAt: now, updatedAt: now })
+						.where(eq(apikey.id, integration.agentApiKeyId));
+				});
+			} catch (error) {
+				if (isMissingSlackSchemaError(error)) {
+					throw rpcError.notFound("Slack integration", input.integrationId);
+				}
+				throw error;
+			}
+
+			if (revokedKeyHash) {
+				await invalidateCacheableKey("api-key-by-hash", revokedKeyHash);
 			}
 
 			return { success: true };
