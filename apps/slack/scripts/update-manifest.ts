@@ -79,12 +79,6 @@ async function readManifest(): Promise<Manifest> {
 function getConfigToken(): string {
 	const token = getRequiredEnv(CONFIG_TOKEN_ENV);
 
-	if (token.startsWith("xapp-")) {
-		fail(
-			`${CONFIG_TOKEN_ENV} is an app-level Socket Mode token. Create a Slack app configuration token with app_configurations:write instead.`
-		);
-	}
-
 	if (token.startsWith("xoxb-")) {
 		fail(
 			`${CONFIG_TOKEN_ENV} is a bot token. Create a Slack app configuration token with app_configurations:write instead.`
@@ -135,6 +129,10 @@ function reportSuccess(mode: ManifestMode, response: ManifestResponse) {
 }
 
 function formatSlackResponseError(response: ManifestResponse) {
+	if (response.error === "not_allowed_token_type") {
+		return formatWrongTokenTypeError();
+	}
+
 	const details = [
 		response.error && `error: ${response.error}`,
 		"needed" in response && response.needed && `needed: ${response.needed}`,
@@ -180,6 +178,10 @@ function getSlackErrorData(
 }
 
 function formatSlackPlatformError(data: Record<string, unknown>) {
+	if (data.error === "not_allowed_token_type") {
+		return formatWrongTokenTypeError();
+	}
+
 	const details = [
 		typeof data.error === "string" && `error: ${data.error}`,
 		typeof data.needed === "string" && `needed: ${data.needed}`,
@@ -192,6 +194,14 @@ function formatSlackPlatformError(data: Record<string, unknown>) {
 	return details.length > 0
 		? `Slack manifest request failed:\n${details.join("\n")}`
 		: "Slack manifest request failed.";
+}
+
+function formatWrongTokenTypeError() {
+	return [
+		"Slack rejected the token type.",
+		`${CONFIG_TOKEN_ENV} must be a Slack app configuration access token for the Manifest APIs, not the Socket Mode app token or bot token.`,
+		"Generate one from the Slack app dashboard under Your App Configuration Tokens.",
+	].join("\n");
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
