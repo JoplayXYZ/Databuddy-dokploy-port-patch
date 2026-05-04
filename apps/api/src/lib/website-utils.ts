@@ -7,6 +7,7 @@ import { auth } from "@databuddy/auth";
 import { db } from "@databuddy/db";
 import { cacheable } from "@databuddy/redis";
 import type { Website } from "@databuddy/shared/types/website";
+import { validateTimezone } from "@databuddy/validation";
 import { record } from "./tracing";
 
 export interface WebsiteContext {
@@ -126,7 +127,7 @@ export async function getTimezone(
 		}
 	}
 
-	return headerTimezone || paramTimezone || "UTC";
+	return validateTimezone(headerTimezone || paramTimezone) || "UTC";
 }
 
 export async function deriveWebsiteContext({ request }: { request: Request }) {

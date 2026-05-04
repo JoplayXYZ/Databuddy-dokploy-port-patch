@@ -143,8 +143,7 @@ function normalizeReferrerValue(value: string, forLikeSearch = false): string {
 		: value;
 }
 
-// Escape backslashes first so the subsequent [%_] replacement doesn't double-escape them.
-function escapeLikePattern(value: string): string {
+export function escapeLikePattern(value: string): string {
 	return value.replace(/\\/g, "\\\\").replace(/[%_]/g, "\\$&");
 }
 
@@ -253,9 +252,8 @@ export class SimpleQueryBuilder {
 			filter.field as (typeof GLOBAL_ALLOWED_FILTERS)[number]
 		);
 		if (
-			this.config.allowedFilters &&
 			!isGloballyAllowed &&
-			!this.config.allowedFilters.includes(filter.field)
+			!this.config.allowedFilters?.includes(filter.field)
 		) {
 			throw new Error(`Filter on field '${filter.field}' is not permitted.`);
 		}

@@ -1,4 +1,5 @@
 import { chQuery } from "@databuddy/db/clickhouse";
+import { escapeLikePattern } from "./simple-builder";
 import {
 	ANALYTICS_TABLES,
 	getColumnDefinition,
@@ -119,7 +120,7 @@ function prepareFilterValue(
 	value: string | number | (string | number)[]
 ): string | number | string[] {
 	if (operator === "contains" || operator === "not_contains") {
-		return `%${String(value)}%`;
+		return `%${escapeLikePattern(String(value))}%`;
 	}
 	if (operator === "in" || operator === "not_in") {
 		if (Array.isArray(value)) {

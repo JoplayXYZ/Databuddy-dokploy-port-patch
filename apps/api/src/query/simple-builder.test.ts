@@ -197,6 +197,26 @@ describe("SimpleQueryBuilder.compile", () => {
 		).toThrow("not permitted");
 	});
 
+	it("rejects unknown filter fields when allowedFilters is not configured", () => {
+		const filters: Filter[] = [
+			{ field: "1=1) OR (1", op: "eq", value: "x" },
+		];
+		expect(() => compile({}, { filters })).toThrow("not permitted");
+	});
+
+	it("rejects SQL injection attempts in filter field names", () => {
+		const injectionAttempts = [
+			"'; DROP TABLE analytics.events; --",
+			"country UNION SELECT * FROM system.tables--",
+			"1=1",
+			"path; DELETE FROM",
+		];
+		for (const field of injectionAttempts) {
+			const filters: Filter[] = [{ field, op: "eq", value: "x" }];
+			expect(() => compile({}, { filters })).toThrow("not permitted");
+		}
+	});
+
 	it("allows globally allowed filters even when allowedFilters is set", () => {
 		const filters: Filter[] = [
 			{ field: "country", op: "eq", value: "US" },
@@ -204,6 +224,15 @@ describe("SimpleQueryBuilder.compile", () => {
 		expect(() =>
 			compile({ allowedFilters: ["custom_field"] }, { filters })
 		).not.toThrow();
+	});
+
+	it("allows globally allowed filters when allowedFilters is not configured", () => {
+		const filters: Filter[] = [
+			{ field: "country", op: "eq", value: "US" },
+			{ field: "path", op: "contains", value: "/blog" },
+			{ field: "referrer", op: "eq", value: "google" },
+		];
+		expect(() => compile({}, { filters })).not.toThrow();
 	});
 
 	it("throws when a required filter is missing", () => {
