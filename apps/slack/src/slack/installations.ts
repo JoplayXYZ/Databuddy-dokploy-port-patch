@@ -9,6 +9,7 @@ import type {
 	SlackRunContextResolver,
 } from "../agent/agent-client";
 import type { TokenCryptoConfig } from "../config";
+import { SLACK_COPY } from "./messages";
 
 export interface SlackChannelBindingCommand {
 	channelId: string;
@@ -59,7 +60,7 @@ export class SlackInstallationStore implements SlackRunContextResolver {
 	}: SlackChannelBindingCommand): Promise<SlackChannelBindingCommandResult> {
 		if (!teamId) {
 			return {
-				message: "Slack did not include a workspace id for this command.",
+				message: SLACK_COPY.missingTeam,
 				ok: false,
 			};
 		}
@@ -67,8 +68,7 @@ export class SlackInstallationStore implements SlackRunContextResolver {
 		const installation = await findActiveIntegration(teamId);
 		if (!installation) {
 			return {
-				message:
-					"This Slack workspace is not connected to a Databuddy organization yet.",
+				message: SLACK_COPY.missingWorkspace,
 				ok: false,
 			};
 		}
@@ -92,8 +92,40 @@ export class SlackInstallationStore implements SlackRunContextResolver {
 			});
 
 		return {
-			message:
-				"This channel is now connected to the Databuddy organization for this Slack workspace.",
+			message: SLACK_COPY.bindSuccess,
+			ok: true,
+		};
+	}
+
+	async getChannelReadiness({
+		channelId,
+		teamId,
+	}: SlackChannelBindingCommand): Promise<SlackChannelBindingCommandResult> {
+		if (!teamId) {
+			return {
+				message: SLACK_COPY.missingTeam,
+				ok: false,
+			};
+		}
+
+		const installation = await findActiveIntegration(teamId);
+		if (!installation) {
+			return {
+				message: SLACK_COPY.missingWorkspace,
+				ok: false,
+			};
+		}
+
+		const binding = await findChannelBinding(installation.id, channelId);
+		if (!binding) {
+			return {
+				message: SLACK_COPY.channelNotBound,
+				ok: false,
+			};
+		}
+
+		return {
+			message: "",
 			ok: true,
 		};
 	}
@@ -141,6 +173,20 @@ function findActiveIntegration(teamId: string) {
 		)
 		.limit(1)
 		.then(([installation]) => installation ?? null);
+}
+
+function findChannelBinding(integrationId: string, channelId: string) {
+	return db
+		.select({ id: slackChannelBindings.id })
+		.from(slackChannelBindings)
+		.where(
+			and(
+				eq(slackChannelBindings.integrationId, integrationId),
+				eq(slackChannelBindings.slackChannelId, channelId)
+			)
+		)
+		.limit(1)
+		.then(([binding]) => binding ?? null);
 }
 
 type ActiveSlackIntegration = NonNullable<

@@ -3,6 +3,7 @@ import type {
 	DatabuddyAgentClient,
 	SlackAgentRun,
 } from "../agent/agent-client";
+import { SLACK_COPY } from "./messages";
 
 const STREAM_FLUSH_INTERVAL_MS = 900;
 const STREAM_FLUSH_CHARS = 1200;
@@ -84,25 +85,23 @@ export async function streamAgentToSlack({
 		if (streamTs) {
 			await client.apiCall("chat.stopStream", {
 				channel: run.channelId,
-				markdown_text: finalText ? undefined : "No answer was generated.",
+				markdown_text: finalText ? undefined : SLACK_COPY.noAnswer,
 				ts: streamTs,
 			});
 			return;
 		}
 
 		await say({
-			text: finalText || "No answer was generated.",
+			text: finalText || SLACK_COPY.noAnswer,
 			thread_ts: run.threadTs,
 		});
 	} catch (error) {
 		logger.error("Slack agent response failed", error);
-		const fallback =
-			"Sorry, Databuddy could not answer that from Slack yet. The request reached the bot, but the agent handoff failed.";
 		if (streamTs) {
 			await client
 				.apiCall("chat.stopStream", {
 					channel: run.channelId,
-					markdown_text: fallback,
+					markdown_text: SLACK_COPY.agentFailure,
 					ts: streamTs,
 				})
 				.catch((stopError) =>
@@ -110,7 +109,7 @@ export async function streamAgentToSlack({
 				);
 			return;
 		}
-		await say({ text: fallback, thread_ts: run.threadTs });
+		await say({ text: SLACK_COPY.agentFailure, thread_ts: run.threadTs });
 	}
 }
 

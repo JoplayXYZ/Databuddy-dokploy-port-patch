@@ -100,7 +100,56 @@ describe("Databuddy Slack agent client", () => {
 		});
 
 		expect(answer).toBe(
-			"This Slack workspace is not connected to a Databuddy organization yet."
+			"Databuddy is not connected to this Slack workspace yet. Open Databuddy organization settings -> Integrations -> Slack, connect the workspace, then run `/bind` in this channel."
 		);
+	});
+
+	it("does not include agent response bodies in thrown errors", async () => {
+		const originalFetch = globalThis.fetch;
+		const fetchMock = Object.assign(
+			async () =>
+				new Response("database password leaked into an upstream error", {
+					status: 500,
+					statusText: "Internal Server Error",
+				}),
+			{ preconnect: originalFetch.preconnect }
+		);
+		globalThis.fetch = fetchMock;
+
+		try {
+			const client = new DatabuddyAgentClient(
+				{
+					apiUrl: "http://api.test",
+				},
+				{
+					resolve: async () => ({
+						agentApiKeySecret: "dbdy_secret",
+						organizationId: "org_123",
+						teamId: "T123",
+					}),
+				}
+			);
+
+			let thrown: unknown;
+			try {
+				await client.runToText({
+					channelId: "C123",
+					teamId: "T123",
+					text: "Summarize traffic",
+					trigger: "direct_message",
+					userId: "U123",
+				});
+			} catch (error) {
+				thrown = error;
+			}
+
+			expect(thrown).toBeInstanceOf(Error);
+			expect((thrown as Error).message).toBe(
+				"Databuddy agent API returned 500 Internal Server Error"
+			);
+			expect((thrown as Error).message).not.toContain("database password");
+		} finally {
+			globalThis.fetch = originalFetch;
+		}
 	});
 });

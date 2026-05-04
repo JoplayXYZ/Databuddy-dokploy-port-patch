@@ -1,22 +1,8 @@
 import { Assistant, type App } from "@slack/bolt";
 import type { DatabuddyAgentClient } from "../agent/agent-client";
 import type { SlackInstallationStore } from "./installations";
+import { SLACK_COPY, SLACK_SUGGESTED_PROMPTS } from "./messages";
 import { streamAgentToSlack } from "./respond";
-
-const SUGGESTED_PROMPTS = [
-	{
-		message: "Summarize traffic for the last 7 days.",
-		title: "Traffic summary",
-	},
-	{
-		message: "Explain the biggest conversion changes this week.",
-		title: "Conversion changes",
-	},
-	{
-		message: "What are our top referrers right now?",
-		title: "Top referrers",
-	},
-];
 
 const LEADING_APP_MENTION_REGEX = /^<@[A-Z0-9]+>\s*/i;
 
@@ -69,11 +55,11 @@ export function registerSlackListeners(
 			setSuggestedPrompts,
 		}) => {
 			try {
-				await say("Ask me about your Databuddy analytics.");
+				await say(SLACK_COPY.assistantGreeting);
 				await saveThreadContext();
 				await setSuggestedPrompts({
-					prompts: SUGGESTED_PROMPTS,
-					title: "Try one of these:",
+					prompts: [...SLACK_SUGGESTED_PROMPTS],
+					title: SLACK_COPY.suggestedPromptsTitle,
 				});
 			} catch (error) {
 				logger.error(error);
@@ -136,14 +122,31 @@ export function registerSlackListeners(
 	app.assistant(assistant);
 
 	app.event("app_mention", async ({ client, context, event, logger, say }) => {
+		const threadTs = event.thread_ts ?? event.ts;
+		const teamId = context.teamId ?? event.team;
 		const text = stripLeadingMention(event.text ?? "").trim();
 		if (!event.user) {
 			return;
 		}
+		if (!dedupe.claim([teamId ?? "", event.channel, event.ts].join(":"))) {
+			return;
+		}
 		if (!text) {
 			await say({
-				text: "Ask me an analytics question after the mention.",
-				thread_ts: event.thread_ts ?? event.ts,
+				text: SLACK_COPY.emptyMention,
+				thread_ts: threadTs,
+			});
+			return;
+		}
+
+		const readiness = await installations.getChannelReadiness({
+			channelId: event.channel,
+			teamId,
+		});
+		if (!readiness.ok) {
+			await say({
+				text: readiness.message,
+				thread_ts: threadTs,
 			});
 			return;
 		}
@@ -155,9 +158,9 @@ export function registerSlackListeners(
 			run: {
 				channelId: event.channel,
 				messageTs: event.ts,
-				teamId: context.teamId,
+				teamId,
 				text,
-				threadTs: event.thread_ts ?? event.ts,
+				threadTs,
 				trigger: "app_mention",
 				userId: event.user,
 			},
@@ -230,7 +233,7 @@ async function respondToBindCommand({
 		logger.error(error);
 		await respond({
 			response_type: "ephemeral",
-			text: "Sorry, Databuddy could not bind this channel.",
+			text: SLACK_COPY.bindFailure,
 		});
 	}
 }

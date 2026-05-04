@@ -1,6 +1,8 @@
 import type { AgentBridgeConfig } from "../config";
+import { SLACK_COPY } from "../slack/messages";
 
 const DEFAULT_TIMEZONE = "UTC";
+const AGENT_REQUEST_TIMEOUT_MS = 120_000;
 
 export type SlackAgentTrigger = "app_mention" | "assistant" | "direct_message";
 
@@ -38,7 +40,7 @@ export class DatabuddyAgentClient {
 		for await (const chunk of this.stream(run)) {
 			text += chunk;
 		}
-		return text.trim() || "I could not produce a response for that request.";
+		return text.trim() || SLACK_COPY.noAnswer;
 	}
 
 	async *stream(run: SlackAgentRun): AsyncGenerator<string> {
@@ -61,24 +63,24 @@ export class DatabuddyAgentClient {
 				"x-databuddy-slack-team-id": context.teamId,
 			},
 			method: "POST",
+			signal: AbortSignal.timeout(AGENT_REQUEST_TIMEOUT_MS),
 		});
 
 		if (!response.ok) {
-			const body = await response.text();
 			throw new Error(
-				`Databuddy agent API returned ${response.status}: ${body.slice(0, 500)}`
+				`Databuddy agent API returned ${response.status} ${response.statusText}`.trim()
 			);
 		}
 
 		const payload = (await response.json()) as { answer?: unknown };
 		yield typeof payload.answer === "string"
 			? payload.answer
-			: "No answer was generated.";
+			: SLACK_COPY.noAnswer;
 	}
 }
 
 export function getMissingAgentContextMessage(): string {
-	return "This Slack workspace is not connected to a Databuddy organization yet.";
+	return SLACK_COPY.missingWorkspace;
 }
 
 export function createSlackChatId(run: SlackAgentRun): string {
