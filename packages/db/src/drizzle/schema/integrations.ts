@@ -28,6 +28,7 @@ export const slackIntegrations = pgTable(
 		botId: text("bot_id"),
 		botUserId: text("bot_user_id"),
 		botTokenCiphertext: text("bot_token_ciphertext").notNull(),
+		agentApiKeyCiphertext: text("agent_api_key_ciphertext").notNull(),
 		agentApiKeyId: text("agent_api_key_id").notNull(),
 		defaultWebsiteId: text("default_website_id"),
 		status: slackIntegrationStatus().default("active").notNull(),

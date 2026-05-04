@@ -23,8 +23,6 @@ const apiEnvSchema = z.object({
 	S3_SECRET_ACCESS_KEY: z.string().optional(),
 	S3_ENDPOINT: z.string().optional(),
 	AUTUMN_WEBHOOK_SECRET: z.string().optional(),
-	DATABUDDY_INTERNAL_SECRET: z.string().optional(),
-	DATABUDDY_ENCRYPTION_KEY: z.string().optional(),
 });
 
 /**

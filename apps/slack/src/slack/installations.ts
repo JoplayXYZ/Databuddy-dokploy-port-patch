@@ -11,7 +11,7 @@ import type {
 	SlackRunContextResolver,
 } from "../agent/agent-client";
 import type { TokenCryptoConfig } from "../config";
-import { decryptSlackToken } from "./token-crypto";
+import { decryptSecret } from "./token-crypto";
 
 export class SlackInstallationStore implements SlackRunContextResolver {
 	readonly #crypto: TokenCryptoConfig;
@@ -28,7 +28,7 @@ export class SlackInstallationStore implements SlackRunContextResolver {
 
 		return {
 			botId: installation.botId ?? undefined,
-			botToken: decryptSlackToken(
+			botToken: decryptSecret(
 				installation.botTokenCiphertext,
 				this.#crypto.encryptionKey
 			),
@@ -78,7 +78,10 @@ export class SlackInstallationStore implements SlackRunContextResolver {
 		}
 
 		return {
-			agentApiKeyId: installation.agentApiKeyId,
+			agentApiKeySecret: decryptSecret(
+				installation.agentApiKeyCiphertext,
+				this.#crypto.encryptionKey
+			),
 			organizationId: installation.organizationId,
 			teamId: installation.teamId,
 			websiteId: website.id,
@@ -101,7 +104,7 @@ function findActiveIntegration(teamId: string) {
 	return db
 		.select({
 			id: slackIntegrations.id,
-			agentApiKeyId: slackIntegrations.agentApiKeyId,
+			agentApiKeyCiphertext: slackIntegrations.agentApiKeyCiphertext,
 			botId: slackIntegrations.botId,
 			botTokenCiphertext: slackIntegrations.botTokenCiphertext,
 			botUserId: slackIntegrations.botUserId,

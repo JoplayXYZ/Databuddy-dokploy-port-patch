@@ -309,21 +309,6 @@ function createValidationErrorResponse(
 	);
 }
 
-async function getWebsiteOwnerId(websiteId: string): Promise<string | null> {
-	const website = await db.query.websites.findFirst({
-		where: { id: websiteId },
-		columns: {
-			organizationId: true,
-		},
-	});
-
-	if (!website) {
-		return null;
-	}
-
-	return website.organizationId ?? null;
-}
-
 async function getOrganizationWebsiteIds(
 	organizationId: string
 ): Promise<string[]> {
@@ -759,20 +744,6 @@ async function executeDynamicQuery(
 			? (scope?.organizationWebsiteIds ?? [])
 			: undefined;
 
-	// LLM queries are scoped by owner (organizationId/userId), not website_id.
-	const hasLlmQueries = request.parameters.some((param) => {
-		const name = typeof param === "string" ? param : param.name;
-		return name.startsWith("llm_");
-	});
-
-	let ownerId: string | null = null;
-	if (hasLlmQueries) {
-		ownerId =
-			projectType === "organization"
-				? projectId
-				: await getWebsiteOwnerId(projectId);
-	}
-
 	// Org-level custom_events queries: builder scans by owner_id (= organizationId
 	// set at ingestion) via primary key instead of matching website_id.
 	const hasCustomEventsQueries = request.parameters.some((param) => {
@@ -803,17 +774,11 @@ async function executeDynamicQuery(
 			return { id, error: "Invalid parameter date range" };
 		}
 
-		const isLlmQuery = name.startsWith("llm_");
-		const effectiveProjectId = isLlmQuery ? ownerId : projectId;
-
-		const hasRequiredFields = effectiveProjectId && paramFrom && paramTo;
+		const hasRequiredFields = projectId && paramFrom && paramTo;
 		if (!hasRequiredFields) {
 			return {
 				id,
-				error:
-					isLlmQuery && !ownerId
-						? "Could not resolve owner for LLM query"
-						: "Missing resource identifier, start_date, or end_date",
+				error: "Missing resource identifier, start_date, or end_date",
 			};
 		}
 
@@ -825,7 +790,7 @@ async function executeDynamicQuery(
 		return {
 			id,
 			request: {
-				projectId: effectiveProjectId,
+				projectId,
 				type: name,
 				from: paramFrom,
 				to: paramTo,

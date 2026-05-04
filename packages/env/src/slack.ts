@@ -26,7 +26,6 @@ const slackEnvSchema = z.object({
 	SLACK_PORT: z.coerce.number().int().positive().default(3010),
 	SLACK_LOG_LEVEL: z.enum(["DEBUG", "INFO", "WARN", "ERROR"]).default("INFO"),
 	DATABUDDY_API_URL: z.string().url().default("http://localhost:3001"),
-	DATABUDDY_INTERNAL_SECRET: optionalString,
 	DATABUDDY_ENCRYPTION_KEY: optionalString,
 });
 

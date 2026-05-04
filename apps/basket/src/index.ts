@@ -9,7 +9,6 @@ import { disconnect, disposeRuntime, runPromise } from "@lib/producer";
 import { buildBasketErrorPayload } from "@lib/structured-errors";
 import { captureError } from "@lib/tracing";
 import basketRouter from "@routes/basket";
-import llmRouter from "@routes/llm";
 import { trackRoute } from "@routes/track";
 import { paddleWebhook } from "@routes/webhooks/paddle";
 import { stripeWebhook } from "@routes/webhooks/stripe";
@@ -104,7 +103,6 @@ const app = new Elysia()
 	})
 	.options("*", () => new Response(null, { status: 204 }))
 	.use(basketRouter)
-	.use(llmRouter)
 	.use(trackRoute)
 	.use(stripeWebhook)
 	.use(paddleWebhook)

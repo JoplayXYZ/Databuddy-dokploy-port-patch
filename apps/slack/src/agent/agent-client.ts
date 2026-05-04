@@ -19,7 +19,7 @@ export interface SlackAgentRun {
 }
 
 export interface SlackRunContext {
-	agentApiKeyId: string;
+	agentApiKeySecret: string;
 	organizationId: string;
 	teamId: string;
 	websiteId: string;
@@ -67,9 +67,8 @@ export class DatabuddyAgentClient {
 				websiteId: context.websiteId,
 			}),
 			headers: {
+				Authorization: `Bearer ${context.agentApiKeySecret}`,
 				"Content-Type": "application/json",
-				"x-databuddy-api-key-id": context.agentApiKeyId,
-				"x-databuddy-internal-secret": this.#config.internalSecret,
 				"x-databuddy-slack-organization-id": context.organizationId,
 				"x-databuddy-slack-team-id": context.teamId,
 			},

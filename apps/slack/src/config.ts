@@ -3,7 +3,6 @@ import { LogLevel } from "@slack/bolt";
 
 export interface AgentBridgeConfig {
 	apiUrl: string;
-	internalSecret: string;
 }
 
 export interface TokenCryptoConfig {
@@ -40,28 +39,21 @@ export function resolveSlackConfig(): SlackRuntimeConfig {
 		return {
 			agent: {
 				apiUrl: env.DATABUDDY_API_URL,
-				internalSecret: "",
 			},
 			enabled: false,
 			reason,
 		};
 	}
 
-	if (!env.DATABUDDY_INTERNAL_SECRET) {
-		throw new Error(
-			"DATABUDDY_INTERNAL_SECRET is required for Slack agent runs"
-		);
-	}
 	if (!env.DATABUDDY_ENCRYPTION_KEY) {
 		throw new Error(
-			"DATABUDDY_ENCRYPTION_KEY is required for Slack bot tokens"
+			"DATABUDDY_ENCRYPTION_KEY is required for Slack integration secrets"
 		);
 	}
 
 	return {
 		agent: {
 			apiUrl: env.DATABUDDY_API_URL,
-			internalSecret: env.DATABUDDY_INTERNAL_SECRET,
 		},
 		appToken: env.SLACK_APP_TOKEN,
 		crypto: {

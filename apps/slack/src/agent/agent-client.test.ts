@@ -83,11 +83,10 @@ describe("Databuddy Slack agent client", () => {
 			const client = new DatabuddyAgentClient(
 				{
 					apiUrl: "http://api.test",
-					internalSecret: "secret",
 				},
 				{
 					resolve: async () => ({
-						agentApiKeyId: "key_123",
+						agentApiKeySecret: "dbdy_secret",
 						organizationId: "org_123",
 						teamId: "T123",
 						websiteId: "site_123",
@@ -107,10 +106,9 @@ describe("Databuddy Slack agent client", () => {
 			if (!captured.headers) {
 				throw new Error("Expected the agent client to call fetch");
 			}
-			expect(captured.headers.get("x-databuddy-api-key-id")).toBe("key_123");
-			expect(captured.headers.get("x-databuddy-internal-secret")).toBe(
-				"secret"
-			);
+			expect(captured.headers.get("authorization")).toBe("Bearer dbdy_secret");
+			expect(captured.headers.has("x-databuddy-api-key-id")).toBe(false);
+			expect(captured.headers.has("x-databuddy-internal-secret")).toBe(false);
 			expect(captured.body).toMatchObject({
 				websiteId: "site_123",
 			});

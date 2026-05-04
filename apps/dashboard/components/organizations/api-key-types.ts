@@ -3,7 +3,6 @@ import type { API_SCOPES, ApiScope } from "@databuddy/api-keys/scopes";
 export const SCOPE_OPTIONS: { value: ApiScope; label: string }[] = [
 	{ value: "read:data", label: "Read Data" },
 	{ value: "track:events", label: "Event Tracking" },
-	{ value: "track:llm", label: "LLM Tracking" },
 	{ value: "read:links", label: "Read Links" },
 	{ value: "write:links", label: "Write Links" },
 	{ value: "manage:websites", label: "Manage Websites" },

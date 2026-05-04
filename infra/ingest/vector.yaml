@@ -12,10 +12,8 @@ sources:
       - analytics-error-spans
       - analytics-vitals-spans
       - analytics-custom-events
-      - analytics-ai-call-spans
       - analytics-ai-traffic-spans
       - analytics-outgoing-links
-      - analytics-email-events
       - analytics-blocked-traffic
       - analytics-uptime-checks
       - analytics-link-visits
@@ -47,10 +45,8 @@ transforms:
       web_vitals: '.topic == "analytics-web-vitals"'
       vitals_spans: '.topic == "analytics-vitals-spans"'
       custom_events: '.topic == "analytics-custom-events"'
-      ai_call_spans: '.topic == "analytics-ai-call-spans"'
       ai_traffic_spans: '.topic == "analytics-ai-traffic-spans"'
       outgoing_links: '.topic == "analytics-outgoing-links"'
-      email_events: '.topic == "analytics-email-events"'
       blocked_traffic: '.topic == "analytics-blocked-traffic"'
       uptime_checks: '.topic == "analytics-uptime-checks"'
       link_visits: '.topic == "analytics-link-visits"'
@@ -184,26 +180,6 @@ sinks:
     encoding:
       timestamp_format: unix_ms
 
-  clickhouse_ai_call_spans:
-    type: clickhouse
-    inputs:
-      - route_analytics.ai_call_spans
-    endpoint: "${CLICKHOUSE_URL}"
-    database: observability
-    table: ai_call_spans
-    auth: 
-      strategy: basic
-      user: "${CLICKHOUSE_USER}"
-      password: "${CLICKHOUSE_PASSWORD}"
-    batch:
-      max_events: 5000
-      max_bytes: 5000000
-      timeout_secs: 5
-    date_time_best_effort: true
-    skip_unknown_fields: true
-    encoding:
-      timestamp_format: unix_ms
-
   clickhouse_ai_traffic_spans:
     type: clickhouse
     inputs:
@@ -231,26 +207,6 @@ sinks:
     endpoint: "${CLICKHOUSE_URL}"
     database: analytics
     table: outgoing_links
-    auth:
-      strategy: basic
-      user: "${CLICKHOUSE_USER}"
-      password: "${CLICKHOUSE_PASSWORD}"
-    batch:
-      max_events: 5000
-      max_bytes: 5000000
-      timeout_secs: 5
-    date_time_best_effort: true
-    skip_unknown_fields: true
-    encoding:
-      timestamp_format: unix_ms
-
-  clickhouse_email_events:
-    type: clickhouse
-    inputs:
-      - route_analytics.email_events
-    endpoint: "${CLICKHOUSE_URL}"
-    database: analytics
-    table: email_events
     auth:
       strategy: basic
       user: "${CLICKHOUSE_USER}"
@@ -444,26 +400,6 @@ sinks:
     encoding:
       timestamp_format: unix_ms
 
-  clickhouse_ai_call_spans_replica:
-    type: clickhouse
-    inputs:
-      - route_analytics.ai_call_spans
-    endpoint: "${CLICKHOUSE_REPLICA_URL}"
-    database: observability
-    table: ai_call_spans
-    auth:
-      strategy: basic
-      user: "${CLICKHOUSE_REPLICA_USER}"
-      password: "${CLICKHOUSE_REPLICA_PASSWORD}"
-    batch:
-      max_events: 5000
-      max_bytes: 5000000
-      timeout_secs: 5
-    date_time_best_effort: true
-    skip_unknown_fields: true
-    encoding:
-      timestamp_format: unix_ms
-
   clickhouse_ai_traffic_spans_replica:
     type: clickhouse
     inputs:
@@ -491,26 +427,6 @@ sinks:
     endpoint: "${CLICKHOUSE_REPLICA_URL}"
     database: analytics
     table: outgoing_links
-    auth:
-      strategy: basic
-      user: "${CLICKHOUSE_REPLICA_USER}"
-      password: "${CLICKHOUSE_REPLICA_PASSWORD}"
-    batch:
-      max_events: 5000
-      max_bytes: 5000000
-      timeout_secs: 5
-    date_time_best_effort: true
-    skip_unknown_fields: true
-    encoding:
-      timestamp_format: unix_ms
-
-  clickhouse_email_events_replica:
-    type: clickhouse
-    inputs:
-      - route_analytics.email_events
-    endpoint: "${CLICKHOUSE_REPLICA_URL}"
-    database: analytics
-    table: email_events
     auth:
       strategy: basic
       user: "${CLICKHOUSE_REPLICA_USER}"

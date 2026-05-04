@@ -1,5 +1,4 @@
 import type {
-	AICallSpan,
 	AnalyticsEvent,
 	BlockedTraffic,
 	CustomEvent,
@@ -26,10 +25,6 @@ export const Analytics = {
 	revenue: "analytics.revenue",
 } as const;
 
-export const Observability = {
-	ai_call_spans: "observability.ai_call_spans",
-} as const;
-
 export type AnalyticsTable = (typeof Analytics)[keyof typeof Analytics];
 
 export interface TableFieldsMap {
@@ -42,6 +37,5 @@ export interface TableFieldsMap {
 	"analytics.revenue": keyof RevenueTransaction;
 	"analytics.web_vitals_hourly": keyof WebVitalsHourlyAggregate;
 	"analytics.web_vitals_spans": keyof WebVitalsSpan;
-	"observability.ai_call_spans": keyof AICallSpan;
 	"uptime.uptime_monitor": keyof UptimeMonitor;
 }

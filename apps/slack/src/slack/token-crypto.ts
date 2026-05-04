@@ -8,11 +8,11 @@ import {
 const VERSION = "v1";
 const IV_BYTES = 12;
 
-export function encryptSlackToken(token: string, secret: string): string {
+export function encryptSecret(value: string, secret: string): string {
 	const iv = randomBytes(IV_BYTES);
 	const cipher = createCipheriv("aes-256-gcm", keyFromSecret(secret), iv);
 	const ciphertext = Buffer.concat([
-		cipher.update(token, "utf8"),
+		cipher.update(value, "utf8"),
 		cipher.final(),
 	]);
 	const tag = cipher.getAuthTag();
@@ -23,10 +23,10 @@ export function encryptSlackToken(token: string, secret: string): string {
 		.join(":");
 }
 
-export function decryptSlackToken(payload: string, secret: string): string {
+export function decryptSecret(payload: string, secret: string): string {
 	const [version, iv, tag, ciphertext] = payload.split(":");
 	if (!(version === VERSION && iv && tag && ciphertext)) {
-		throw new Error("Invalid Slack token ciphertext");
+		throw new Error("Invalid secret ciphertext");
 	}
 
 	const decipher = createDecipheriv(
