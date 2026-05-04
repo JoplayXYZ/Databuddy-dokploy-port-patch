@@ -2,11 +2,7 @@ import type { AgentBridgeConfig } from "../config";
 
 const DEFAULT_TIMEZONE = "UTC";
 
-export type SlackAgentTrigger =
-	| "app_mention"
-	| "assistant"
-	| "direct_message"
-	| "slash_command";
+export type SlackAgentTrigger = "app_mention" | "assistant" | "direct_message";
 
 export interface SlackAgentRun {
 	channelId: string;

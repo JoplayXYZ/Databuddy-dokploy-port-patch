@@ -604,8 +604,7 @@ function SlackWorkspaceRow({
 					Slack is connected at the organization level. The agent can discover
 					websites itself when an analytics question needs one. Run{" "}
 					<SlackCommand value="/bind" /> in a Slack channel to mark that channel
-					as connected, or <SlackCommand value="/unbind" /> to remove the
-					marker.
+					as connected, then mention Databuddy in Slack and ask anything.
 				</Text>
 			</div>
 

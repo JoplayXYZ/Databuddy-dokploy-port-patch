@@ -32,19 +32,8 @@
     },
     "slash_commands": [
       {
-        "command": "/databuddy",
-        "description": "Ask Databuddy an analytics question.",
-        "usage_hint": "help | bind | unbind | summarize traffic for the last 7 days",
-        "should_escape": true
-      },
-      {
         "command": "/bind",
         "description": "Connect this channel to the Databuddy organization.",
-        "should_escape": true
-      },
-      {
-        "command": "/unbind",
-        "description": "Remove this channel's Databuddy organization marker.",
         "should_escape": true
       }
     ]

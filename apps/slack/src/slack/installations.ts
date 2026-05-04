@@ -98,48 +98,6 @@ export class SlackInstallationStore implements SlackRunContextResolver {
 		};
 	}
 
-	async unbindChannel({
-		channelId,
-		teamId,
-	}: SlackChannelBindingCommand): Promise<SlackChannelBindingCommandResult> {
-		if (!teamId) {
-			return {
-				message: "Slack did not include a workspace id for this command.",
-				ok: false,
-			};
-		}
-
-		const installation = await findActiveIntegration(teamId);
-		if (!installation) {
-			return {
-				message:
-					"This Slack workspace is not connected to a Databuddy organization yet.",
-				ok: false,
-			};
-		}
-
-		const deleted = await db
-			.delete(slackChannelBindings)
-			.where(
-				and(
-					eq(slackChannelBindings.integrationId, installation.id),
-					eq(slackChannelBindings.slackChannelId, channelId)
-				)
-			)
-			.returning({ id: slackChannelBindings.id });
-
-		return deleted.length > 0
-			? {
-					message:
-						"This channel binding was removed. The Slack workspace is still connected to this Databuddy organization.",
-					ok: true,
-				}
-			: {
-					message: "This channel did not have a Databuddy binding.",
-					ok: true,
-				};
-	}
-
 	private toRunContext(installation: ActiveSlackIntegration): SlackRunContext {
 		return {
 			agentApiKeySecret: decrypt(

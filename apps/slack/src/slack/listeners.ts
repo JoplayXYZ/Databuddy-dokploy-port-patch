@@ -19,7 +19,6 @@ const SUGGESTED_PROMPTS = [
 ];
 
 const LEADING_APP_MENTION_REGEX = /^<@[A-Z0-9]+>\s*/i;
-const WHITESPACE_REGEX = /\s+/;
 
 interface SlackMessageLike {
 	bot_id?: string;
@@ -37,8 +36,6 @@ interface SlackMessageLike {
 interface SlackSlashCommand {
 	channel_id: string;
 	team_id?: string;
-	text: string;
-	user_id: string;
 }
 
 interface SlackSlashLogger {
@@ -198,56 +195,6 @@ export function registerSlackListeners(
 		});
 	});
 
-	app.command("/databuddy", async ({ ack, command, logger, respond }) => {
-		await ack();
-
-		const text = command.text.trim();
-		const subcommand = parseSlashSubcommand(text);
-		if (subcommand.name === "help") {
-			await respondToSlashHelp(respond);
-			return;
-		}
-		if (subcommand.name === "bind") {
-			await respondToBindCommand({
-				command,
-				installations,
-				logger,
-				respond,
-			});
-			return;
-		}
-		if (subcommand.name === "unbind") {
-			await respondToUnbindCommand({ command, installations, logger, respond });
-			return;
-		}
-
-		if (!text) {
-			await respondToSlashHelp(respond);
-			return;
-		}
-
-		try {
-			const answer = await agent.runToText({
-				channelId: command.channel_id,
-				teamId: command.team_id,
-				text,
-				trigger: "slash_command",
-				userId: command.user_id,
-			});
-
-			await respond({
-				response_type: "ephemeral",
-				text: answer,
-			});
-		} catch (error) {
-			logger.error(error);
-			await respond({
-				response_type: "ephemeral",
-				text: "Sorry, Databuddy could not answer that from Slack yet.",
-			});
-		}
-	});
-
 	app.command("/bind", async ({ ack, command, logger, respond }) => {
 		await ack();
 		await respondToBindCommand({
@@ -256,22 +203,6 @@ export function registerSlackListeners(
 			logger,
 			respond,
 		});
-	});
-
-	app.command("/unbind", async ({ ack, command, logger, respond }) => {
-		await ack();
-		await respondToUnbindCommand({ command, installations, logger, respond });
-	});
-}
-
-async function respondToSlashHelp(respond: SlackSlashRespond): Promise<void> {
-	await respond({
-		response_type: "ephemeral",
-		text: [
-			"`/bind` connects this Slack channel to the Databuddy organization.",
-			"`/unbind` removes this channel marker; the Slack workspace stays connected.",
-			"`/databuddy summarize traffic for the last 7 days` asks the organization-scoped analytics agent.",
-		].join("\n"),
 	});
 }
 
@@ -302,42 +233,6 @@ async function respondToBindCommand({
 			text: "Sorry, Databuddy could not bind this channel.",
 		});
 	}
-}
-
-async function respondToUnbindCommand({
-	command,
-	installations,
-	logger,
-	respond,
-}: {
-	command: SlackSlashCommand;
-	installations: SlackInstallationStore;
-	logger: SlackSlashLogger;
-	respond: SlackSlashRespond;
-}): Promise<void> {
-	try {
-		const result = await installations.unbindChannel({
-			channelId: command.channel_id,
-			teamId: command.team_id,
-		});
-		await respond({
-			response_type: "ephemeral",
-			text: result.message,
-		});
-	} catch (error) {
-		logger.error(error);
-		await respond({
-			response_type: "ephemeral",
-			text: "Sorry, Databuddy could not unbind this channel.",
-		});
-	}
-}
-
-function parseSlashSubcommand(text: string): { name: string } {
-	const [name = ""] = text.split(WHITESPACE_REGEX);
-	return {
-		name: name.toLowerCase(),
-	};
 }
 
 function toSlackMessage(message: unknown): SlackMessageLike | null {
