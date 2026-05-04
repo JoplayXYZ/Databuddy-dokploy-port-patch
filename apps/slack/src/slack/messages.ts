@@ -39,7 +39,6 @@ export const SLACK_COPY = {
 		"Slack did not grant Databuddy the channel and reaction permissions it needs yet. Reconnect Slack from Databuddy organization settings, then try again.",
 	noAnswer:
 		"I reached Databuddy, but no answer came back. Try a narrower question, like `traffic for the last 7 days`.",
-	feedbackReactions: ["thumbsup", "thumbsdown"],
 	processingReaction: "rabbit",
 	streamOpening: "Thinking...",
 	suggestedPromptsTitle: "Start with Databuddy",

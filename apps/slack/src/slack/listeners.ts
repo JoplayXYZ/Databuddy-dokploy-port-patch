@@ -12,10 +12,7 @@ import {
 	toError,
 } from "../lib/evlog-slack";
 import { getSlackChannelMentionPolicy } from "./channel-policy";
-import {
-	addSlackResponseFeedbackReactions,
-	logSlackReactionFeedback,
-} from "./feedback";
+import { logSlackReactionFeedback } from "./feedback";
 import type { SlackInstallationStore } from "./installations";
 import { SLACK_COPY, SLACK_SUGGESTED_PROMPTS } from "./messages";
 import { streamAgentToSlack } from "./respond";
@@ -327,15 +324,6 @@ async function handleAgentRun({
 			slack_response_ts: result.responseTs,
 			slack_response_streamed: result.streamed,
 		});
-		if (result.responseTs && result.answerChars > 0) {
-			await addSlackResponseFeedbackReactions({
-				channelId: run.channelId,
-				client,
-				eventLog,
-				logger,
-				messageTs: result.responseTs,
-			});
-		}
 	} finally {
 		setSlackLog(eventLog, {
 			"timing.slack_total_ms": Math.round(performance.now() - startedAt),
