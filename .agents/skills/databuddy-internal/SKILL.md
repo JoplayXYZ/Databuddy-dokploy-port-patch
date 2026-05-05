@@ -55,6 +55,7 @@ Read [codebase-map.md](./references/codebase-map.md) when you need deeper routin
 - Package manager: `bun`
 - Task runner: `turbo`
 - Formatting/linting: `bun run format`, `bun run lint`
+- Lefthook's `no-secrets` guard intentionally ignores the exact `.env.example` template; real `.env`, `.env.*`, key, and credential files should still be blocked.
 - Root dev orchestration: `bun run dev`
 - Dashboard + API together: `bun run dev:dashboard`
 - Tests at root currently target `./apps`: `bun run test`
