@@ -14,6 +14,8 @@
     "./templates/anomaly": "./src/templates/anomaly.ts"
   },
   "scripts": {
+    "build": "tsc --build",
+    "check-types": "tsc --build",
     "test": "bun test src/__tests__",
     "test:integration": "bun test src/__tests__/integration"
   },

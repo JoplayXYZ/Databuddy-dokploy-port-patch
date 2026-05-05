@@ -1,5 +1,5 @@
 import { isValid, parse } from "ipaddr.js";
-import { resolve4 } from "node:dns/promises";
+import { resolve4, resolve6 } from "node:dns/promises";
 
 const BLOCKED_HOSTNAMES = new Set([
 	"localhost",
@@ -59,24 +59,23 @@ export async function validateUrl(url: string): Promise<{
 		return { safe: true, hostname };
 	}
 
-	try {
-		const addresses = await resolve4(hostname);
-		if (addresses.length === 0) {
-			return { safe: false, hostname, error: "DNS resolution failed" };
-		}
+	const v4Result = await resolve4(hostname).catch(() => [] as string[]);
+	const v6Result = await resolve6(hostname).catch(() => [] as string[]);
+	const allAddresses = [...v4Result, ...v6Result];
 
-		for (const addr of addresses) {
-			if (isPrivateOrReserved(addr)) {
-				return {
-					safe: false,
-					hostname,
-					error: `Resolves to private IP: ${addr}`,
-				};
-			}
-		}
-
-		return { safe: true, hostname };
-	} catch {
+	if (allAddresses.length === 0) {
 		return { safe: false, hostname, error: "DNS resolution failed" };
 	}
+
+	for (const addr of allAddresses) {
+		if (isPrivateOrReserved(addr)) {
+			return {
+				safe: false,
+				hostname,
+				error: `Resolves to private IP: ${addr}`,
+			};
+		}
+	}
+
+	return { safe: true, hostname };
 }
