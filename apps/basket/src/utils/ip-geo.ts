@@ -227,22 +227,20 @@ export function getGeo(ip: string, request?: Request) {
 
 const TRUSTED_IP_HEADER = process.env.TRUSTED_IP_HEADER || "cf-connecting-ip";
 
-export function extractIpFromRequest(request: Request): string {
-	const trusted = request.headers.get(TRUSTED_IP_HEADER);
+export function extractIpFromRequest(
+	request: Request,
+	trustedHeader = TRUSTED_IP_HEADER
+): string {
+	const headerName = trustedHeader.toLowerCase();
+	const trusted = request.headers.get(headerName);
 	if (trusted) {
 		const ip =
-			TRUSTED_IP_HEADER === "x-forwarded-for"
+			headerName === "x-forwarded-for"
 				? trusted.split(",")[0]?.trim()
 				: trusted.trim();
 		if (ip) {
 			return ip;
 		}
-	}
-
-	const forwardedFor = request.headers.get("x-forwarded-for");
-	const firstIp = forwardedFor?.split(",")[0]?.trim();
-	if (firstIp) {
-		return firstIp;
 	}
 
 	return "";

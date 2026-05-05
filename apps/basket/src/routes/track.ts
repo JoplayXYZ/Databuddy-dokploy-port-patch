@@ -37,12 +37,23 @@ function parseTimestamp(
 		return fallback;
 	}
 	if (typeof value === "number") {
+		if (!Number.isFinite(value)) {
+			throw basketErrors.trackInvalidBody();
+		}
 		return value;
 	}
 	if (value instanceof Date) {
-		return value.getTime();
+		const timestamp = value.getTime();
+		if (!Number.isFinite(timestamp)) {
+			throw basketErrors.trackInvalidBody();
+		}
+		return timestamp;
 	}
-	return new Date(value).getTime();
+	const timestamp = new Date(value).getTime();
+	if (!Number.isFinite(timestamp)) {
+		throw basketErrors.trackInvalidBody();
+	}
+	return timestamp;
 }
 
 function resolveAuth(
@@ -170,20 +181,31 @@ export const trackRoute = new Elysia().post(
 				});
 			}
 
-			if (auth.apiKey) {
-				const allowedIds = hasGlobalAccess(auth.apiKey)
+			const allowedApiKeyWebsiteIds = auth.apiKey
+				? hasGlobalAccess(auth.apiKey)
 					? null
-					: new Set(getAccessibleWebsiteIds(auth.apiKey));
+					: new Set(getAccessibleWebsiteIds(auth.apiKey))
+				: undefined;
 
-				for (const event of events) {
-					const targetId = event.websiteId ?? auth.websiteId;
-					if (!targetId) {
-						throw basketErrors.trackInvalidBody();
-					}
-					if (allowedIds && !allowedIds.has(targetId)) {
+			for (const event of events) {
+				const targetId = event.websiteId ?? auth.websiteId;
+				if (!targetId) {
+					throw basketErrors.trackInvalidBody();
+				}
+				if (auth.apiKey) {
+					if (
+						allowedApiKeyWebsiteIds &&
+						!allowedApiKeyWebsiteIds.has(targetId)
+					) {
 						log.set({ rejected: "website_scope", targetWebsiteId: targetId });
 						throw basketErrors.trackMissingCredentials();
 					}
+					continue;
+				}
+
+				if (auth.websiteId && targetId !== auth.websiteId) {
+					log.set({ rejected: "website_scope", targetWebsiteId: targetId });
+					throw basketErrors.trackWebsiteScopeMismatch();
 				}
 			}
 

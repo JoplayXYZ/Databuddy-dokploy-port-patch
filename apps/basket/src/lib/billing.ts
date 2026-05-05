@@ -1,5 +1,7 @@
 import { getAutumn } from "@databuddy/rpc/autumn";
+import { basketErrors } from "@lib/structured-errors";
 import { captureError, record } from "@lib/tracing";
+import { EvlogError } from "evlog";
 import { useLogger } from "evlog/elysia";
 
 interface BillingResult {
@@ -34,13 +36,21 @@ export function checkAutumnUsage(
 				},
 			});
 
+			if (!response.allowed) {
+				throw basketErrors.billingLimitExceeded();
+			}
+
 			return { allowed: true };
 		} catch (error) {
-			log.set({ billing: { allowed: true, checkFailed: true } });
+			if (error instanceof EvlogError) {
+				throw error;
+			}
+
+			log.set({ billing: { allowed: false, checkFailed: true } });
 			captureError(error, {
-				message: "Autumn check failed, allowing event through",
+				message: "Autumn check failed, rejecting event",
 			});
-			return { allowed: true };
+			throw basketErrors.billingCheckUnavailable();
 		}
 	});
 }

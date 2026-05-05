@@ -13,9 +13,29 @@ const {
 	mockInsertIndividualVitals,
 	mockInsertErrorSpans,
 	mockInsertCustomEvents,
+	mockGetApiKeyFromHeader,
+	mockHasKeyScope,
+	mockHasGlobalAccess,
+	mockGetAccessibleWebsiteIds,
+	mockGetWebsiteByIdV2,
+	mockResolveApiKeyOwnerId,
 } = vi.hoisted(() => {
 	const noop = vi.fn(() => {});
 	const noopAsync = vi.fn(() => Promise.resolve());
+	const defaultApiKey = {
+		id: "key_1",
+		organizationId: "org_1",
+		userId: "user_1",
+		scopes: ["track:events"],
+	};
+	const defaultWebsite = {
+		id: "ws_test",
+		domain: "example.com",
+		name: "Test",
+		status: "ACTIVE",
+		ownerId: "user_1",
+		organizationId: "org_1",
+	};
 	return {
 		noop,
 		noopAsync,
@@ -42,6 +62,12 @@ const {
 		mockInsertIndividualVitals: vi.fn(() => Promise.resolve()),
 		mockInsertErrorSpans: vi.fn(() => Promise.resolve()),
 		mockInsertCustomEvents: vi.fn(() => Promise.resolve()),
+		mockGetApiKeyFromHeader: vi.fn(() => Promise.resolve(defaultApiKey)),
+		mockHasKeyScope: vi.fn(() => true),
+		mockHasGlobalAccess: vi.fn(() => false),
+		mockGetAccessibleWebsiteIds: vi.fn(() => ["ws_test"]),
+		mockGetWebsiteByIdV2: vi.fn(() => Promise.resolve(defaultWebsite)),
+		mockResolveApiKeyOwnerId: vi.fn(() => Promise.resolve("user_1")),
 	};
 });
 
@@ -111,31 +137,15 @@ vi.mock("@lib/billing", () => ({
 }));
 
 vi.mock("@lib/api-key", () => ({
-	getApiKeyFromHeader: vi.fn(() =>
-		Promise.resolve({
-			id: "key_1",
-			organizationId: "org_1",
-			userId: "user_1",
-			scopes: ["track:events"],
-		})
-	),
-	hasKeyScope: vi.fn(() => true),
-	hasGlobalAccess: vi.fn(() => false),
-	getAccessibleWebsiteIds: vi.fn(() => ["ws_test"]),
+	getApiKeyFromHeader: mockGetApiKeyFromHeader,
+	hasKeyScope: mockHasKeyScope,
+	hasGlobalAccess: mockHasGlobalAccess,
+	getAccessibleWebsiteIds: mockGetAccessibleWebsiteIds,
 }));
 
 vi.mock("@hooks/auth", () => ({
-	getWebsiteByIdV2: vi.fn(() =>
-		Promise.resolve({
-			id: "ws_test",
-			domain: "example.com",
-			name: "Test",
-			status: "ACTIVE",
-			ownerId: "user_1",
-			organizationId: "org_1",
-		})
-	),
-	resolveApiKeyOwnerId: vi.fn(() => Promise.resolve("user_1")),
+	getWebsiteByIdV2: mockGetWebsiteByIdV2,
+	resolveApiKeyOwnerId: mockResolveApiKeyOwnerId,
 	isValidOrigin: vi.fn(() => true),
 	isValidOriginFromSettings: vi.fn(() => true),
 	isValidIpFromSettings: vi.fn(() => true),
@@ -439,6 +449,35 @@ describe("GET /px.jpg", () => {
 // ── POST /track (API key custom events) ──
 
 describe("POST /track", () => {
+	beforeEach(() => {
+		mockInsertCustomEvents.mockClear();
+		mockGetApiKeyFromHeader.mockReset();
+		mockHasKeyScope.mockReset();
+		mockHasGlobalAccess.mockReset();
+		mockGetAccessibleWebsiteIds.mockReset();
+		mockGetWebsiteByIdV2.mockReset();
+		mockResolveApiKeyOwnerId.mockReset();
+
+		mockGetApiKeyFromHeader.mockResolvedValue({
+			id: "key_1",
+			organizationId: "org_1",
+			userId: "user_1",
+			scopes: ["track:events"],
+		});
+		mockHasKeyScope.mockReturnValue(true);
+		mockHasGlobalAccess.mockReturnValue(false);
+		mockGetAccessibleWebsiteIds.mockReturnValue(["ws_test"]);
+		mockGetWebsiteByIdV2.mockResolvedValue({
+			id: "ws_test",
+			domain: "example.com",
+			name: "Test",
+			status: "ACTIVE",
+			ownerId: "user_1",
+			organizationId: "org_1",
+		});
+		mockResolveApiKeyOwnerId.mockResolvedValue("user_1");
+	});
+
 	test("single event → 200", async () => {
 		const res = await post(trackRoute, "/track", {
 			name: "signup",
@@ -461,6 +500,31 @@ describe("POST /track", () => {
 		expect(body.count).toBe(2);
 	});
 
+	test("website_id auth accepts matching website batch → 200", async () => {
+		mockGetApiKeyFromHeader.mockResolvedValueOnce(null);
+		const res = await post(trackRoute, "/track?website_id=ws_test", [
+			{ name: "signup" },
+			{ name: "purchase", websiteId: "ws_test" },
+		]);
+
+		expect(res.status).toBe(200);
+		expect(mockInsertCustomEvents).toHaveBeenCalledWith([
+			expect.objectContaining({ event_name: "signup", website_id: "ws_test" }),
+			expect.objectContaining({ event_name: "purchase", website_id: "ws_test" }),
+		]);
+	});
+
+	test("website_id auth rejects mixed-website batch", async () => {
+		mockGetApiKeyFromHeader.mockResolvedValueOnce(null);
+		const res = await post(trackRoute, "/track?website_id=ws_test", [
+			{ name: "signup", websiteId: "ws_test" },
+			{ name: "purchase", websiteId: "ws_other" },
+		]);
+
+		expect(res.status).toBe(403);
+		expect(mockInsertCustomEvents).not.toHaveBeenCalled();
+	});
+
 	test("missing name → 400", async () => {
 		const res = await post(trackRoute, "/track", {
 			namespace: "x",
@@ -475,6 +539,17 @@ describe("POST /track", () => {
 			websiteId: "ws_test",
 		});
 		expect(res.status).toBe(400);
+	});
+
+	test("invalid timestamp → 400 and no insert", async () => {
+		mockInsertCustomEvents.mockClear();
+		const res = await post(trackRoute, "/track", {
+			name: "signup",
+			timestamp: "not-a-date",
+			websiteId: "ws_test",
+		});
+		expect(res.status).toBe(400);
+		expect(mockInsertCustomEvents).not.toHaveBeenCalled();
 	});
 
 	test("inserts call event-service", async () => {

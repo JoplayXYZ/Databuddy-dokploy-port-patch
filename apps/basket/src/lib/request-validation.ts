@@ -193,25 +193,26 @@ export function validateRequest(
 			throw basketErrors.ingestOriginNotAuthorized();
 		}
 
-		if (
-			ip &&
-			allowedIps &&
-			allowedIps.length > 0 &&
-			!(await record("isValidIpFromSettings", () =>
-				isValidIpFromSettings(ip, allowedIps)
-			))
-		) {
-			logBlockedTraffic(
-				request,
-				body,
-				query,
-				"ip_not_authorized",
-				"Security Check",
-				undefined,
-				clientId
-			);
-			log.set({ validation: { failed: true, reason: "ip_not_authorized" } });
-			throw basketErrors.ingestIpNotAuthorized();
+		if (allowedIps && allowedIps.length > 0) {
+			const isAllowed =
+				ip &&
+				(await record("isValidIpFromSettings", () =>
+					isValidIpFromSettings(ip, allowedIps)
+				));
+
+			if (!isAllowed) {
+				logBlockedTraffic(
+					request,
+					body,
+					query,
+					"ip_not_authorized",
+					"Security Check",
+					undefined,
+					clientId
+				);
+				log.set({ validation: { failed: true, reason: "ip_not_authorized" } });
+				throw basketErrors.ingestIpNotAuthorized();
+			}
 		}
 
 		const userAgent =

@@ -238,7 +238,8 @@ function makeProducerEffects(
 							status: 500,
 							why: `Topic "${topic}" is not mapped to a ClickHouse table.`,
 							fix: "Check topicMap configuration.",
-						})
+						}),
+						{ topic }
 					)
 				);
 				return;
@@ -312,6 +313,8 @@ function makeProducerEffects(
 									Effect.sync(() =>
 										captureError(err.cause, {
 											message: "Redpanda send failed, buffering to ClickHouse",
+											message_count: messages.length,
+											topic,
 										})
 									)
 								),
@@ -479,6 +482,7 @@ const CONFIG: ProducerConfig = {
 const TOPIC_MAP: Record<string, string> = {
 	"analytics-events": TABLE_NAMES.events,
 	"analytics-outgoing-links": TABLE_NAMES.outgoing_links,
+	"analytics-blocked-traffic": TABLE_NAMES.blocked_traffic,
 	"analytics-error-spans": TABLE_NAMES.error_spans,
 	"analytics-vitals-spans": TABLE_NAMES.web_vitals_spans,
 	"analytics-custom-events": TABLE_NAMES.custom_events,

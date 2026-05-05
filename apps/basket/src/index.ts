@@ -7,6 +7,10 @@ import {
 } from "@lib/evlog-basket";
 import { shutdownPostgres } from "@databuddy/db";
 import { disconnect, disposeRuntime, runPromise } from "@lib/producer";
+import {
+	handleUncaughtException,
+	handleUnhandledRejection,
+} from "@lib/process-errors";
 import { buildBasketErrorPayload } from "@lib/structured-errors";
 import { captureError } from "@lib/tracing";
 import basketRouter from "@routes/basket";
@@ -27,27 +31,13 @@ initLogger({
 	},
 });
 
-process.on("unhandledRejection", (reason, _promise) => {
-	captureError(reason);
-	log.error({
-		process: "unhandledRejection",
-		error_message: reason instanceof Error ? reason.message : String(reason),
-		error_stack: reason instanceof Error ? reason.stack : undefined,
-		error_source: "process",
-	});
-});
+let shutdownStarted = false;
 
-process.on("uncaughtException", (error) => {
-	captureError(error);
-	log.error({
-		process: "uncaughtException",
-		error_message: error instanceof Error ? error.message : String(error),
-		error_stack: error instanceof Error ? error.stack : undefined,
-		error_source: "process",
-	});
-});
-
-async function gracefulShutdown(signal: string) {
+async function gracefulShutdown(signal: string, exitCode = 0) {
+	if (shutdownStarted) {
+		return;
+	}
+	shutdownStarted = true;
 	log.info("lifecycle", `${signal} received, shutting down gracefully`);
 	const logErr = (lifecycle: string) => (error: unknown) =>
 		log.error({
@@ -63,9 +53,15 @@ async function gracefulShutdown(signal: string) {
 		disposeRuntime().catch(logErr("runtimeDispose")),
 	]);
 	closeGeoIPReader();
-	process.exit(0);
+	process.exit(exitCode);
 }
 
+process.on("unhandledRejection", (reason) => {
+	handleUnhandledRejection(reason);
+});
+process.on("uncaughtException", (error) => {
+	handleUncaughtException(error, gracefulShutdown);
+});
 process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
 process.on("SIGINT", () => gracefulShutdown("SIGINT"));
 

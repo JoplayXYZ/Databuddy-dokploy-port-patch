@@ -49,9 +49,9 @@ describe("extractIpFromRequest", () => {
 	const table: [string, Record<string, string>, string][] = [
 		["cf-connecting-ip", { "cf-connecting-ip": "1.2.3.4" }, "1.2.3.4"],
 		[
-			"x-forwarded-for first",
+			"x-forwarded-for alone is not trusted by default",
 			{ "x-forwarded-for": "5.6.7.8, 9.10.11.12" },
-			"5.6.7.8",
+			"",
 		],
 		[
 			"cf > xff priority",
@@ -70,6 +70,14 @@ describe("extractIpFromRequest", () => {
 			expect(extractIpFromRequest(req("https://x.com", headers))).toBe(expected)
 		);
 	}
+
+	test("x-forwarded-for is honored only when configured as trusted header", () => {
+		const request = req("https://x.com", {
+			"x-forwarded-for": "5.6.7.8, 9.10.11.12",
+		});
+
+		expect(extractIpFromRequest(request, "x-forwarded-for")).toBe("5.6.7.8");
+	});
 
 	test("100 random IPs round-trip", () => {
 		for (let i = 0; i < 100; i++) {

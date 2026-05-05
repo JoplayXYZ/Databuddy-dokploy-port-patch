@@ -63,6 +63,14 @@ export const basketErrors = {
 			fix: "Assign the website to an organization in the dashboard.",
 		}),
 
+	trackWebsiteScopeMismatch: () =>
+		createError({
+			message: "Website scope mismatch",
+			status: 403,
+			why: "The event website_id does not match the authenticated website.",
+			fix: "Send events only for the authenticated website, or use an API key with access to multiple websites.",
+		}),
+
 	ingestPayloadTooLarge: () =>
 		createError({
 			message: "Payload too large",
@@ -133,6 +141,22 @@ export const basketErrors = {
 			status: 400,
 			why: "The batch exceeds the maximum number of events per request.",
 			fix: "Split the batch into smaller requests.",
+		}),
+
+	billingLimitExceeded: () =>
+		createError({
+			message: "Event quota exceeded",
+			status: 402,
+			why: "The billing provider denied this usage check.",
+			fix: "Upgrade the plan, reduce event volume, or contact support.",
+		}),
+
+	billingCheckUnavailable: () =>
+		createError({
+			message: "Billing check unavailable",
+			status: 503,
+			why: "The event quota could not be verified before ingestion.",
+			fix: "Retry after the billing provider is reachable.",
 		}),
 };
 

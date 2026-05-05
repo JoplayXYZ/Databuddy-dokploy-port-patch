@@ -1,3 +1,4 @@
+import { MAX_FUTURE_MS, MIN_TIMESTAMP } from "@databuddy/validation";
 import { VALIDATION_LIMITS } from "@utils/validation";
 import { z } from "zod";
 
@@ -12,10 +13,34 @@ const boundedProperties = z
 		"Properties too large (max 32KB)"
 	);
 
+function timestampInWindow(timestamp: number): boolean {
+	return (
+		Number.isFinite(timestamp) &&
+		timestamp >= MIN_TIMESTAMP &&
+		timestamp <= Date.now() + MAX_FUTURE_MS
+	);
+}
+
+const timestampSchema = z.union([
+	z
+		.number()
+		.int()
+		.finite()
+		.refine(timestampInWindow, "Timestamp outside accepted range"),
+	z.string().refine((value) => {
+		const timestamp = new Date(value).getTime();
+		return timestampInWindow(timestamp);
+	}, "Invalid timestamp"),
+	z.date().refine((value) => {
+		const timestamp = value.getTime();
+		return timestampInWindow(timestamp);
+	}, "Invalid timestamp"),
+]);
+
 const trackEventObject = z.object({
 	name: z.string().min(1).max(256),
 	namespace: z.string().max(64).optional(),
-	timestamp: z.union([z.number(), z.string(), z.date()]).optional(),
+	timestamp: timestampSchema.optional(),
 	properties: boundedProperties.optional(),
 	anonymousId: z.string().max(256).optional(),
 	sessionId: z.string().max(256).optional(),
