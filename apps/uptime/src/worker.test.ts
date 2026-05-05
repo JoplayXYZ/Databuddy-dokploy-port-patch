@@ -2,6 +2,8 @@ import { beforeEach, describe, expect, it } from "bun:test";
 import type { ScheduleData } from "./actions";
 import type { UptimeData } from "./types";
 import {
+	DEFAULT_UPTIME_WORKER_CONCURRENCY,
+	getUptimeWorkerConcurrency,
 	processUptimeCheck,
 	processUptimeJob,
 	type UptimeWorkerDeps,
@@ -127,6 +129,27 @@ beforeEach(() => {
 	lookupResult = { success: true, data: schedule() };
 	checkResult = { success: true, data: uptimeData() };
 	previousStatus = 0;
+});
+
+describe("getUptimeWorkerConcurrency", () => {
+	it("keeps the high Bun worker default when no override is configured", () => {
+		expect(getUptimeWorkerConcurrency(undefined)).toBe(
+			DEFAULT_UPTIME_WORKER_CONCURRENCY
+		);
+	});
+
+	it("rejects invalid configured values", () => {
+		expect(getUptimeWorkerConcurrency("0")).toBe(
+			DEFAULT_UPTIME_WORKER_CONCURRENCY
+		);
+		expect(getUptimeWorkerConcurrency("nope")).toBe(
+			DEFAULT_UPTIME_WORKER_CONCURRENCY
+		);
+	});
+
+	it("uses explicit configured values without an arbitrary cap", () => {
+		expect(getUptimeWorkerConcurrency("25000")).toBe(25_000);
+	});
 });
 
 describe("processUptimeCheck", () => {

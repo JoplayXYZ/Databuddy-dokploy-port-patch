@@ -75,6 +75,23 @@ const uptimeWorkerDeps: UptimeWorkerDeps = {
 	fireTransitionAlerts,
 };
 
+export const DEFAULT_UPTIME_WORKER_CONCURRENCY = 10_000;
+
+export function getUptimeWorkerConcurrency(
+	value = process.env.UPTIME_WORKER_CONCURRENCY
+): number {
+	if (value === undefined || value.trim() === "") {
+		return DEFAULT_UPTIME_WORKER_CONCURRENCY;
+	}
+
+	const parsed = Number.parseInt(value, 10);
+	if (!Number.isSafeInteger(parsed) || parsed <= 0) {
+		return DEFAULT_UPTIME_WORKER_CONCURRENCY;
+	}
+
+	return parsed;
+}
+
 export interface UptimeWorkerJob {
 	attemptsMade?: number;
 	data: UptimeCheckJobData;
@@ -320,7 +337,7 @@ export function startUptimeWorker() {
 		(job) => processUptimeJob(job),
 		{
 			connection: getBullMQWorkerConnectionOptions(),
-			concurrency: Number(process.env.UPTIME_WORKER_CONCURRENCY ?? 10_000),
+			concurrency: getUptimeWorkerConcurrency(),
 			lockDuration: UPTIME_JOB_TIMEOUT_MS * 3,
 			stalledInterval: UPTIME_JOB_TIMEOUT_MS * 4,
 		}
