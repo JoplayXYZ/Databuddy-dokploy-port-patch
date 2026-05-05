@@ -20,10 +20,19 @@ function padNum(n: number | undefined, len = 5): string {
 }
 
 export function printReport(run: EvalRun): void {
+	const runner = run.runner ?? "api";
 	console.log("");
 	console.log(`${BOLD}Agent Eval - ${run.timestamp}${RESET}`);
 	console.log(`Model: ${run.model}`);
-	console.log(`API: ${run.apiUrl}`);
+	console.log(`Runner: ${runner}${runner === "api" ? ` (${run.apiUrl})` : ""}`);
+	if (run.filters?.surfaces?.length) {
+		console.log(`Surfaces: ${run.filters.surfaces.join(", ")}`);
+	}
+	if (run.filters?.tags?.length || run.filters?.excludeTags?.length) {
+		console.log(
+			`Tags: ${run.filters.tags?.join(", ") || "any"}${run.filters.excludeTags?.length ? ` | exclude: ${run.filters.excludeTags.join(", ")}` : ""}`
+		);
+	}
 	console.log(`Duration: ${(run.duration / 1000).toFixed(1)}s`);
 	console.log("");
 

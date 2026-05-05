@@ -9,6 +9,7 @@
     "eval:ui": "bun run ui/serve.ts"
   },
   "dependencies": {
+    "@databuddy/ai": "workspace:*",
     "ai": "^6.0.78"
   }
 }

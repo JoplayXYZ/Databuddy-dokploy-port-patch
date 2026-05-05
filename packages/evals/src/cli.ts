@@ -1,6 +1,13 @@
 import { mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { allCases, getCaseById, getCasesByCategory } from "./cases";
+import {
+	getCaseById,
+	getCasesByFilters,
+	getCaseSurfaces,
+	getCaseTags,
+	listCaseSurfaces,
+	listCaseTags,
+} from "./cases";
 import {
 	allModelIds,
 	computeCaseCost,
@@ -17,7 +24,9 @@ import type {
 	CaseResult,
 	EvalCase,
 	EvalConfig,
+	EvalRunner,
 	EvalRun,
+	EvalSurface,
 	ScoreCard,
 } from "./types";
 
@@ -38,13 +47,17 @@ interface CliOpts {
 	category?: string;
 	concurrency: number;
 	diff: boolean;
+	excludeTags: string[];
 	file?: string;
 	filter?: string;
 	model?: string;
 	noSave: boolean;
 	rejudge: boolean;
+	runner: EvalRunner;
 	skipJudge: boolean;
 	subcommand: "run" | "compare" | "models";
+	surfaces: Array<EvalSurface | "all">;
+	tags: string[];
 }
 
 const STRUCTURAL_PASS_THRESHOLD = 60;
@@ -95,12 +108,16 @@ function parseArgs(): CliOpts {
 	let model: string | undefined;
 	let file: string | undefined;
 	let filter: string | undefined;
+	let runner = (process.env.EVAL_RUNNER as EvalRunner | undefined) ?? "package";
 	let noSave = false;
 	let skipJudge = process.env.EVAL_SKIP_JUDGE === "true";
 	let rejudge = false;
 	let diff = false;
 	let apiUrl = process.env.EVAL_API_URL ?? "http://localhost:3001";
 	let concurrency = 10;
+	const surfaces: Array<EvalSurface | "all"> = [];
+	const tags: string[] = [];
+	const excludeTags: string[] = [];
 
 	if (args[0] === "compare") {
 		subcommand = "compare";
@@ -145,6 +162,22 @@ function parseArgs(): CliOpts {
 			case "--filter":
 				filter = remainingArgs.shift();
 				break;
+			case "--runner": {
+				const value = remainingArgs.shift();
+				if (value === "api" || value === "package") {
+					runner = value;
+				}
+				break;
+			}
+			case "--surface":
+				surfaces.push(...parseSurfaces(remainingArgs.shift()));
+				break;
+			case "--tag":
+				tags.push(...parseCsv(remainingArgs.shift()));
+				break;
+			case "--exclude-tag":
+				excludeTags.push(...parseCsv(remainingArgs.shift()));
+				break;
 			default:
 				break;
 		}
@@ -157,13 +190,31 @@ function parseArgs(): CliOpts {
 		model,
 		file,
 		filter,
+		runner,
 		noSave,
 		skipJudge,
 		rejudge,
 		diff,
 		apiUrl,
 		concurrency,
+		surfaces,
+		tags,
+		excludeTags,
 	};
+}
+
+function parseCsv(value: string | undefined): string[] {
+	return (value ?? "")
+		.split(",")
+		.map((part) => part.trim())
+		.filter(Boolean);
+}
+
+function parseSurfaces(value: string | undefined): Array<EvalSurface | "all"> {
+	const allowed = new Set(["agent", "mcp", "slack", "all"]);
+	return parseCsv(value).filter((surface): surface is EvalSurface | "all" =>
+		allowed.has(surface)
+	);
 }
 
 interface SlotState {
@@ -239,6 +290,8 @@ async function runSingleCase(
 			category: evalCase.category,
 			name: evalCase.name,
 			query: evalCase.query,
+			surfaces: getCaseSurfaces(evalCase),
+			tags: getCaseTags(evalCase),
 			passed: false,
 			scores,
 			metrics: {
@@ -264,6 +317,8 @@ async function runSingleCase(
 			category: evalCase.category,
 			name: evalCase.name,
 			query: evalCase.query,
+			surfaces: getCaseSurfaces(evalCase),
+			tags: getCaseTags(evalCase),
 			passed: false,
 			scores: {},
 			metrics: {
@@ -288,6 +343,8 @@ function buildRun(
 	model: string,
 	apiUrl: string,
 	duration: number,
+	runner: EvalRunner,
+	filters?: EvalRun["filters"],
 	judgeModel?: string
 ): EvalRun {
 	const dimSums: ScoreCard = {
@@ -341,6 +398,8 @@ function buildRun(
 		model,
 		apiUrl,
 		duration,
+		runner,
+		filters,
 		judgeModel,
 		summary: {
 			total: results.length,
@@ -385,7 +444,12 @@ async function cmdRun() {
 		modelIds = [opts.model ?? "anthropic/claude-sonnet-4.6"];
 	}
 
-	let cases = allCases;
+	let cases = getCasesByFilters({
+		category: opts.category,
+		excludeTags: opts.excludeTags,
+		surfaces: opts.surfaces,
+		tags: opts.tags,
+	});
 	if (opts.caseId) {
 		const c = getCaseById(opts.caseId);
 		if (!c) {
@@ -393,12 +457,12 @@ async function cmdRun() {
 			process.exit(1);
 		}
 		cases = [c];
-	} else if (opts.category) {
-		cases = getCasesByCategory(opts.category);
-		if (cases.length === 0) {
-			console.error(`No cases for category '${opts.category}'`);
-			process.exit(1);
-		}
+	} else if (cases.length === 0) {
+		console.error("No cases match the selected filters");
+		console.error(
+			`Surfaces: ${listCaseSurfaces().join(", ")} | Tags: ${listCaseTags().join(", ")}`
+		);
+		process.exit(1);
 	}
 
 	if (modelIds.length > 1) {
@@ -438,13 +502,23 @@ async function runModelSuite(
 		apiKey: process.env.EVAL_API_KEY,
 		judgeModel,
 		modelOverride: modelId,
+		runner: opts.runner,
+		surface: opts.surfaces.length === 1 ? opts.surfaces[0] : undefined,
 	};
 
 	const concurrency = Math.min(opts.concurrency, cases.length);
 	console.log(
-		`${BOLD}Running ${cases.length} evals${RESET} against ${config.apiUrl} (concurrency: ${concurrency})`
+		`${BOLD}Running ${cases.length} evals${RESET} with ${config.runner} runner${config.runner === "api" ? ` against ${config.apiUrl}` : ""} (concurrency: ${concurrency})`
 	);
 	console.log(`Model: ${modelId}`);
+	if (opts.surfaces.length > 0) {
+		console.log(`Surfaces: ${opts.surfaces.join(", ")}`);
+	}
+	if (opts.tags.length > 0 || opts.excludeTags.length > 0) {
+		console.log(
+			`Tags: ${opts.tags.join(", ") || "any"}${opts.excludeTags.length > 0 ? ` | exclude: ${opts.excludeTags.join(", ")}` : ""}`
+		);
+	}
 	if (!opts.skipJudge) {
 		console.log(`Judge: ${judgeModel}`);
 	}
@@ -624,6 +698,13 @@ async function runModelSuite(
 		modelId,
 		config.apiUrl,
 		Date.now() - runStart,
+		opts.runner,
+		{
+			...(opts.category ? { categories: [opts.category] } : {}),
+			...(opts.surfaces.length > 0 ? { surfaces: opts.surfaces } : {}),
+			...(opts.tags.length > 0 ? { tags: opts.tags } : {}),
+			...(opts.excludeTags.length > 0 ? { excludeTags: opts.excludeTags } : {}),
+		},
 		opts.skipJudge ? undefined : judgeModel
 	);
 	printReport(run);
@@ -714,6 +795,8 @@ async function rejudgeFromFile(opts: CliOpts, judgeModel: string) {
 			run.model,
 			run.apiUrl,
 			run.duration,
+			run.runner,
+			run.filters,
 			judgeModel
 		);
 		updated.timestamp = run.timestamp;
@@ -879,6 +962,9 @@ function cmdModels() {
 		console.log(`  ${id.padEnd(42)} ${DIM}${tags.join(", ")}${RESET}`);
 	}
 	console.log(`\n${DIM}Tags: ${listTags().join(", ")}${RESET}\n`);
+	console.log(
+		`${DIM}Eval surfaces: ${listCaseSurfaces().join(", ")} | Eval tags: ${listCaseTags().join(", ")}${RESET}\n`
+	);
 }
 
 async function main() {

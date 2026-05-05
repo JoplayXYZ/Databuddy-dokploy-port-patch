@@ -24,6 +24,7 @@ const CONVERSATIONAL_TOOLS_NOT_CALLED: string[] = [
 	"update_annotation",
 	"delete_annotation",
 	"list_links",
+	"list_link_folders",
 	"create_link",
 	"update_link",
 	"delete_link",
@@ -42,6 +43,8 @@ export const behavioralCases: EvalCase[] = [
 		name: "Responds to a greeting without running analytics tools",
 		query: "hi",
 		websiteId: WS,
+		surfaces: ["agent", "slack"],
+		tags: ["conversation", "no-tools", "slack"],
 		expect: {
 			toolsNotCalled: CONVERSATIONAL_TOOLS_NOT_CALLED,
 			responseNotContains: [
@@ -60,6 +63,8 @@ export const behavioralCases: EvalCase[] = [
 		name: "Responds to thanks without continuing the previous analysis",
 		query: "thanks",
 		websiteId: WS,
+		surfaces: ["agent", "slack"],
+		tags: ["conversation", "no-tools", "slack"],
 		expect: {
 			toolsNotCalled: CONVERSATIONAL_TOOLS_NOT_CALLED,
 			responseNotContains: [

@@ -37,6 +37,31 @@ export function scoreToolRouting(
 		failures.push("Expected batched queries via get_data");
 	}
 
+	if (evalCase.expect.toolInputs) {
+		for (const expectation of evalCase.expect.toolInputs) {
+			const calls = response.toolCalls.filter(
+				(call) => call.name === expectation.tool
+			);
+			if (calls.length === 0) {
+				score -= 25;
+				failures.push(
+					`Expected tool '${expectation.tool}' input could not be checked because the tool was not called`
+				);
+				continue;
+			}
+
+			const matched = calls.some((call) =>
+				toolInputMatches(call.input, expectation)
+			);
+			if (!matched) {
+				score -= 25;
+				failures.push(
+					`No '${expectation.tool}' call matched expected input constraints`
+				);
+			}
+		}
+	}
+
 	return { score: Math.max(0, Math.min(100, score)), failures };
 }
 
@@ -68,7 +93,11 @@ export function scoreBehavioral(
 	}
 
 	if (evalCase.expect.confirmationFlow) {
-		const hasConfirmFalse = response.textContent.includes("confirmed");
+		const hasConfirmFalse =
+			response.textContent.includes("confirmed") ||
+			response.toolCalls.some((call) =>
+				hasNestedValue(call.input, "confirmed", false)
+			);
 		if (!hasConfirmFalse) {
 			score -= 25;
 			failures.push(
@@ -78,6 +107,58 @@ export function scoreBehavioral(
 	}
 
 	return { score: Math.max(0, Math.min(100, score)), failures };
+}
+
+function toolInputMatches(
+	input: unknown,
+	expectation: NonNullable<EvalCase["expect"]["toolInputs"]>[number]
+): boolean {
+	if (expectation.excludes) {
+		for (const key of expectation.excludes) {
+			if (hasNestedKey(input, key)) {
+				return false;
+			}
+		}
+	}
+
+	if (expectation.includes) {
+		for (const [key, expected] of Object.entries(expectation.includes)) {
+			if (!hasNestedValue(input, key, expected)) {
+				return false;
+			}
+		}
+	}
+
+	return true;
+}
+
+function hasNestedKey(value: unknown, key: string): boolean {
+	if (!value || typeof value !== "object") {
+		return false;
+	}
+	if (Object.hasOwn(value, key)) {
+		return true;
+	}
+	return Object.values(value).some((child) => hasNestedKey(child, key));
+}
+
+function hasNestedValue(
+	value: unknown,
+	key: string,
+	expected: unknown
+): boolean {
+	if (!value || typeof value !== "object") {
+		return false;
+	}
+	if (
+		Object.hasOwn(value, key) &&
+		(value as Record<string, unknown>)[key] === expected
+	) {
+		return true;
+	}
+	return Object.values(value).some((child) =>
+		hasNestedValue(child, key, expected)
+	);
 }
 
 export function scoreFormat(

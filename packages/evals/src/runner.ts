@@ -1,6 +1,7 @@
 import type {
 	EvalCase,
 	EvalConfig,
+	EvalSurface,
 	ParsedAgentResponse,
 	ToolCallRecord,
 } from "./types";
@@ -11,7 +12,18 @@ export type ProgressEvent =
 	| { kind: "text"; chars: number }
 	| { kind: "done" };
 
-export async function runCase(
+export function runCase(
+	evalCase: EvalCase,
+	config: EvalConfig,
+	onProgress?: (evt: ProgressEvent) => void
+): Promise<ParsedAgentResponse> {
+	if (config.runner === "package") {
+		return runPackageCase(evalCase, config, onProgress);
+	}
+	return runApiCase(evalCase, config, onProgress);
+}
+
+async function runApiCase(
 	evalCase: EvalCase,
 	config: EvalConfig,
 	onProgress?: (evt: ProgressEvent) => void
@@ -56,6 +68,67 @@ export async function runCase(
 	}
 
 	return streamSSE(response, startTime, onProgress);
+}
+
+async function runPackageCase(
+	evalCase: EvalCase,
+	config: EvalConfig,
+	onProgress?: (evt: ProgressEvent) => void
+): Promise<ParsedAgentResponse> {
+	if (!config.apiKey) {
+		throw new Error("Package runner requires EVAL_API_KEY.");
+	}
+
+	const startTime = Date.now();
+	const source = getAgentSource(evalCase, config.surface);
+	const { traceDatabuddyAgent } = await import("@databuddy/ai/agent");
+	const result = await traceDatabuddyAgent({
+		actor: {
+			secret: config.apiKey,
+			type: "api_key_secret",
+			userId: null,
+		},
+		conversationId: `eval-${source}-${evalCase.id}-${Date.now()}`,
+		input: evalCase.query,
+		modelOverride: config.modelOverride,
+		persistConversation: false,
+		source,
+		timeoutMs: evalCase.expect.maxLatencyMs
+			? Math.max(evalCase.expect.maxLatencyMs, 45_000)
+			: undefined,
+		timezone: "UTC",
+		websiteId: evalCase.websiteId,
+	});
+
+	for (let step = 1; step <= result.steps; step++) {
+		onProgress?.({ kind: "step", step });
+	}
+	for (const call of result.toolCalls) {
+		onProgress?.({ kind: "tool", name: call.name, index: call.index });
+	}
+	onProgress?.({ kind: "text", chars: result.answer.length });
+	onProgress?.({ kind: "done" });
+
+	return {
+		textContent: result.answer,
+		toolCalls: result.toolCalls,
+		...extractChartJSONs(result.answer),
+		steps: result.steps,
+		latencyMs: Date.now() - startTime,
+		inputTokens: result.usage.inputTokens,
+		outputTokens: result.usage.outputTokens,
+	};
+}
+
+function getAgentSource(
+	evalCase: EvalCase,
+	selectedSurface: EvalSurface | "all" | undefined
+) {
+	const surface =
+		selectedSurface && selectedSurface !== "all"
+			? selectedSurface
+			: (evalCase.surfaces?.[0] ?? "agent");
+	return surface === "agent" ? "dashboard" : surface;
 }
 
 async function streamSSE(
@@ -192,6 +265,23 @@ async function streamSSE(
 
 	const latencyMs = Date.now() - startTime;
 
+	const { chartJSONs, rawJSONLeaks } = extractChartJSONs(textContent);
+
+	return {
+		textContent,
+		toolCalls,
+		chartJSONs,
+		rawJSONLeaks,
+		steps,
+		latencyMs,
+		inputTokens,
+		outputTokens,
+	};
+}
+
+function extractChartJSONs(
+	textContent: string
+): Pick<ParsedAgentResponse, "chartJSONs" | "rawJSONLeaks"> {
 	const chartJSONs: ParsedAgentResponse["chartJSONs"] = [];
 	const rawJSONLeaks: string[] = [];
 	let searchIdx = 0;
@@ -231,13 +321,7 @@ async function streamSSE(
 	}
 
 	return {
-		textContent,
-		toolCalls,
 		chartJSONs,
 		rawJSONLeaks,
-		steps,
-		latencyMs,
-		inputTokens,
-		outputTokens,
 	};
 }

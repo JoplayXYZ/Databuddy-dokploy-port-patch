@@ -5,6 +5,15 @@ export type EvalCategory =
 	| "format"
 	| "attribution";
 
+export type EvalSurface = "agent" | "mcp" | "slack";
+export type EvalRunner = "api" | "package";
+
+export interface ToolInputExpectation {
+	excludes?: string[];
+	includes?: Record<string, unknown>;
+	tool: string;
+}
+
 export interface EvalCase {
 	category: EvalCategory;
 	expect: {
@@ -21,10 +30,13 @@ export interface EvalCase {
 		maxInputTokens?: number;
 		minQualityScore?: number;
 		confirmationFlow?: boolean;
+		toolInputs?: ToolInputExpectation[];
 	};
 	id: string;
 	name: string;
 	query: string;
+	surfaces?: EvalSurface[];
+	tags?: string[];
 	websiteId: string;
 }
 
@@ -63,6 +75,8 @@ export interface CaseResult {
 	query: string;
 	response: string;
 	scores: Partial<ScoreCard>;
+	surfaces?: EvalSurface[];
+	tags?: string[];
 	toolCalls: ToolCallRecord[];
 	toolsCalled: string[];
 	warnings: string[];
@@ -73,8 +87,15 @@ export interface EvalRun {
 	cases: CaseResult[];
 	dimensions: ScoreCard;
 	duration: number;
+	filters?: {
+		categories?: string[];
+		excludeTags?: string[];
+		surfaces?: Array<EvalSurface | "all">;
+		tags?: string[];
+	};
 	judgeModel?: string;
 	model: string;
+	runner: EvalRunner;
 	summary: {
 		total: number;
 		passed: number;
@@ -116,4 +137,6 @@ export interface EvalConfig {
 	authCookie?: string;
 	judgeModel?: string;
 	modelOverride?: string;
+	runner: EvalRunner;
+	surface?: EvalSurface | "all";
 }
