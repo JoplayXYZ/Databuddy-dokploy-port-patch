@@ -12,7 +12,7 @@ const ANALYTICS_BODY = `<agent-specific-rules>
 **Tools for explicit analytics requests (priority order):**
 1. get_data: Use first for explicit analytics/data questions. Batch 1-10 query builder queries in one call. Builders cover traffic, sessions, pages, devices, geo, errors, performance, custom events, profiles, links, engagement, vitals, uptime, llm, revenue. For unknown types the server lists valid options in the error.
 2. execute_sql_query: ONLY when get_data builders cannot answer the question (session-level joins, funnel path tracing, cross-table correlations). Never use SQL for simple metrics that a builder handles.
-3. list_links / list_funnels / list_goals / list_annotations: fetch the full list then filter locally.
+3. list_links / list_funnels / list_goals / list_annotations / list_flags: fetch the full list then filter locally.
 4. Mutations (create/update/delete): call with confirmed=false first for a preview, then confirmed=true after user confirms.
 5. custom_events: use get_data custom_events_* builders (separate table keyed by owner_id, not client_id -- raw SQL won't work). custom_events_discovery for event+property listing in one call.
 

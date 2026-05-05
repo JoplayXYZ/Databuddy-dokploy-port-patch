@@ -10,19 +10,16 @@ import { z } from "zod";
 import { getAccessibleWebsites } from "../../lib/accessible-websites";
 import { getWebsiteDomain } from "../../lib/website-utils";
 import { executeBatch, executeQuery, QueryBuilders } from "../../query";
-import type { QueryRequest } from "../../query/types";
+import type { Filter, QueryRequest } from "../../query/types";
 import { createAnnotationTools } from "../tools/annotations";
+import { createFlagTools } from "../tools/flags";
 import { createFunnelTools } from "../tools/funnels";
 import { createGoalTools } from "../tools/goals";
 import { createLinksTools } from "../tools/links";
 import { createMemoryTools } from "../tools/memory";
 import { createProfileTools } from "../tools/profiles";
 import { executeTimedQuery } from "../tools/utils";
-import {
-	buildBatchQueryRequests,
-	MCP_DATE_PRESETS,
-	type McpQueryItem,
-} from "./mcp-utils";
+import { buildBatchQueryRequests, MCP_DATE_PRESETS } from "./mcp-utils";
 import { ensureWebsiteAccess } from "./tool-context";
 
 export interface McpAgentContext {
@@ -30,6 +27,26 @@ export interface McpAgentContext {
 	requestHeaders: Headers;
 	userId: string | null;
 }
+
+const FilterSchema = z.object({
+	field: z.string(),
+	op: z.enum([
+		"eq",
+		"ne",
+		"contains",
+		"not_contains",
+		"starts_with",
+		"in",
+		"not_in",
+	]),
+	value: z.union([
+		z.string(),
+		z.number(),
+		z.array(z.union([z.string(), z.number()])),
+	]),
+	target: z.string().optional(),
+	having: z.boolean().optional(),
+}) satisfies z.ZodType<Filter>;
 
 function getContext(ctx: unknown): McpAgentContext {
 	if (!ctx || typeof ctx !== "object" || !("requestHeaders" in ctx)) {
@@ -87,7 +104,7 @@ export function createMcpAgentTools(): ToolSet {
 				from: z.string(),
 				to: z.string(),
 				timeUnit: z.enum(["minute", "hour", "day", "week", "month"]).optional(),
-				filters: z.array(z.record(z.string(), z.unknown())).optional(),
+				filters: z.array(FilterSchema).optional(),
 				groupBy: z.array(z.string()).optional(),
 				orderBy: z.string().optional(),
 				limit: z.number().min(1).max(1000).optional(),
@@ -115,7 +132,7 @@ export function createMcpAgentTools(): ToolSet {
 					from: args.from,
 					to: args.to,
 					timeUnit: args.timeUnit,
-					filters: args.filters as unknown as QueryRequest["filters"],
+					filters: args.filters,
 					groupBy: args.groupBy,
 					orderBy: args.orderBy,
 					limit: args.limit,
@@ -189,29 +206,7 @@ export function createMcpAgentTools(): ToolSet {
 								.enum(["minute", "hour", "day", "week", "month"])
 								.optional(),
 							limit: z.number().min(1).max(1000).optional(),
-							filters: z
-								.array(
-									z.object({
-										field: z.string(),
-										op: z.enum([
-											"eq",
-											"ne",
-											"contains",
-											"not_contains",
-											"starts_with",
-											"in",
-											"not_in",
-										]),
-										value: z.union([
-											z.string(),
-											z.number(),
-											z.array(z.union([z.string(), z.number()])),
-										]),
-										target: z.string().optional(),
-										having: z.boolean().optional(),
-									})
-								)
-								.optional(),
+							filters: z.array(FilterSchema).optional(),
 							groupBy: z.array(z.string()).optional(),
 							orderBy: z.string().optional(),
 						})
@@ -234,7 +229,7 @@ export function createMcpAgentTools(): ToolSet {
 					throw new Error(access.message);
 				}
 				const buildResult = buildBatchQueryRequests(
-					args.queries as unknown as McpQueryItem[],
+					args.queries,
 					args.websiteId,
 					args.timezone ?? "UTC"
 				);
@@ -260,6 +255,7 @@ export function createMcpAgentTools(): ToolSet {
 		}),
 		...createMemoryTools(),
 		...createProfileTools(),
+		...createFlagTools(),
 		...createFunnelTools(),
 		...createGoalTools(),
 		...createAnnotationTools(),

@@ -1,5 +1,6 @@
 import dayjs from "dayjs";
 import { z } from "zod";
+import { userRuleSchema, variantSchema } from "@databuddy/shared/flags";
 import {
 	forgetMemory,
 	isMemoryEnabled,
@@ -17,8 +18,10 @@ import {
 import {
 	defineMcpTool,
 	McpToolError,
+	type McpHandlerContext,
 	type McpRequestContext,
 	type McpToolFactory,
+	type McpToolMetadata,
 	type RegisteredMcpTool,
 } from "./define-tool";
 import { INSIGHT_TOOL_FACTORIES } from "./insights-tools";
@@ -37,10 +40,10 @@ import {
 import { runMcpAgent } from "./run-agent";
 import {
 	buildRpcContext,
-	coerceQueriesArray,
 	getCachedAccessibleWebsites,
 	getOrganizationId,
 } from "./tool-context";
+import { createToolRegistry } from "./registry";
 
 const MEMORY_ENABLED = isMemoryEnabled();
 
@@ -87,17 +90,154 @@ const WebsiteSummarySchema = z.object({
 	isPublic: z.boolean().nullable(),
 });
 
+const DateStringSchema = z
+	.union([z.string(), z.date()])
+	.transform((value) => (value instanceof Date ? value.toISOString() : value));
+
 const LinkRowOutputSchema = z.object({
 	id: z.string(),
 	name: z.string(),
 	slug: z.string(),
 	targetUrl: z.string(),
 	externalId: z.string().nullable(),
-	expiresAt: z.string().nullable().optional(),
-	createdAt: z.string().optional(),
+	expiresAt: DateStringSchema.nullable().optional(),
+	createdAt: DateStringSchema.optional(),
 	ogTitle: z.string().nullable().optional(),
 	ogDescription: z.string().nullable().optional(),
 });
+
+const LinkRowSchema = LinkRowOutputSchema.extend({
+	externalId: z.string().nullable().optional(),
+	ogDescription: z.string().nullable().optional(),
+	ogTitle: z.string().nullable().optional(),
+});
+
+const WorkflowFilterSchema = z.object({
+	field: z.string(),
+	operator: z.enum(["equals", "contains", "not_equals", "in", "not_in"]),
+	value: z.union([z.string(), z.array(z.string())]),
+});
+
+const FunnelStepSchema = z.object({
+	type: z.enum(["PAGE_VIEW", "EVENT", "CUSTOM"]),
+	target: z.string().min(1),
+	name: z.string().min(1),
+	conditions: z.record(z.string(), z.unknown()).optional(),
+});
+
+const ChartContextSchema = z.object({
+	dateRange: z.object({
+		start_date: z.string(),
+		end_date: z.string(),
+		granularity: z.enum(["hourly", "daily", "weekly", "monthly"]),
+	}),
+	filters: z
+		.array(
+			z.object({
+				field: z.string(),
+				operator: z.enum(["eq", "ne", "gt", "lt", "contains"]),
+				value: z.string(),
+			})
+		)
+		.optional(),
+	metrics: z.array(z.string()).optional(),
+	tabId: z.string().optional(),
+});
+
+const FlagRuleSchema = userRuleSchema;
+const FlagVariantSchema = variantSchema;
+
+const FlagStatusSchema = z.enum(["active", "inactive", "archived"]);
+const FlagTypeSchema = z.enum(["boolean", "rollout", "multivariant"]);
+const ConfirmedSchema = z.boolean().optional().default(false);
+
+const MutationResultSchema = z
+	.object({
+		confirmationRequired: z.boolean().optional(),
+		message: z.string(),
+		preview: z.boolean().optional(),
+		success: z.boolean().optional(),
+	})
+	.passthrough();
+
+const WRITE_METADATA = {
+	capability: "workspace",
+	access: {
+		confirmation: "recommended",
+		kind: "write",
+	},
+	evlogAction: "tool_mutation",
+} satisfies Partial<McpToolMetadata>;
+
+function writeMetadata(scopes: string[]): Partial<McpToolMetadata> {
+	return {
+		...WRITE_METADATA,
+		access: {
+			...WRITE_METADATA.access,
+			scopes,
+		},
+	};
+}
+
+function validateDate(value: string | undefined, field: string): void {
+	if (value && !dayjs(value).isValid()) {
+		throw new McpToolError("invalid_input", `${field} must be a valid date`);
+	}
+}
+
+function createChartContext(input: {
+	from?: string;
+	granularity?: "hourly" | "daily" | "weekly" | "monthly";
+	metrics?: string[];
+	to?: string;
+}): z.infer<typeof ChartContextSchema> {
+	return {
+		dateRange: {
+			start_date:
+				input.from ?? dayjs().subtract(30, "day").format("YYYY-MM-DD"),
+			end_date: input.to ?? dayjs().format("YYYY-MM-DD"),
+			granularity: input.granularity ?? "daily",
+		},
+		...(input.metrics ? { metrics: input.metrics } : {}),
+	};
+}
+
+function parseFlagRules(value: unknown): z.infer<typeof FlagRuleSchema>[] {
+	const result = z.array(FlagRuleSchema).safeParse(value);
+	return result.success ? result.data : [];
+}
+
+function parseLinkRows(value: unknown): z.infer<typeof LinkRowSchema>[] {
+	const result = z.array(LinkRowSchema).safeParse(value);
+	return result.success ? result.data : [];
+}
+
+function asRecord(value: unknown): Record<string, unknown> {
+	return value && typeof value === "object" && !Array.isArray(value)
+		? (value as Record<string, unknown>)
+		: {};
+}
+
+function getResolvedWebsiteId(ctx: McpHandlerContext): string {
+	if (!ctx.websiteId) {
+		throw new McpToolError("internal", "Website was not resolved.");
+	}
+	return ctx.websiteId;
+}
+
+function createFlagUserRule(
+	matchBy: "email" | "user_id",
+	values: string[]
+): z.infer<typeof FlagRuleSchema> {
+	return {
+		batch: true,
+		batchValues: values,
+		enabled: true,
+		operator: "in",
+		type: matchBy,
+		values,
+	};
+}
 
 const askTool = defineMcpTool(
 	{
@@ -310,20 +450,16 @@ const getDataTool = defineMcpTool(
 		ratelimit: { limit: 30, windowSec: 60 },
 	},
 	async (input, ctx) => {
-		const websiteId = ctx.websiteId as string;
+		const websiteId = getResolvedWebsiteId(ctx);
 		const timezone = input.timezone ?? "UTC";
 
-		const rawQueries = input.queries
-			? Array.isArray(input.queries)
-				? input.queries
-				: coerceQueriesArray(input.queries)
-			: undefined;
+		const rawQueries = input.queries;
 
 		const items: McpQueryItem[] =
 			rawQueries && rawQueries.length >= 2
-				? (rawQueries as McpQueryItem[])
+				? rawQueries
 				: input.type
-					? ([
+					? [
 							{
 								type: input.type,
 								preset: input.preset,
@@ -335,7 +471,7 @@ const getDataTool = defineMcpTool(
 								groupBy: input.groupBy,
 								orderBy: input.orderBy,
 							},
-						] as McpQueryItem[])
+						]
 					: [];
 
 		if (items.length === 0) {
@@ -439,6 +575,7 @@ const CAPABILITY_SECTIONS = [
 	"datePresets",
 	"schemaSummary",
 	"availableTools",
+	"toolCatalog",
 	"categories",
 	"queryTypes",
 ] as const;
@@ -448,6 +585,7 @@ const CAPABILITY_DEFAULTS: readonly CapabilitySection[] = [
 	"datePresets",
 	"schemaSummary",
 	"availableTools",
+	"toolCatalog",
 	"categories",
 ];
 
@@ -462,6 +600,8 @@ const HINTS: readonly string[] = [
 	"detect_anomalies runs BOTH z-score (spikes) and week-over-week (gradual drops) by default; use method='wow' for trend-only",
 	"top_movers supports minDeltaPercent to drop small changes, and direction='up'|'down'|'both'",
 	"list_insights supports 'ids' for direct drill-down and 'fields' to slim the response",
+	"Workspace mutations use confirmed=false for preview and confirmed=true only after explicit user approval.",
+	"Feature flags: use list_flags first, then create_flag, update_flag, or add_users_to_flag for targeting changes.",
 	"Custom events: filter by event name with [{field:'event_name',op:'eq',value:'your-event'}]",
 	"Custom events: filter by property key with [{field:'property_key',op:'eq',value:'your-key'}] for property_top_values/distribution",
 ];
@@ -502,6 +642,7 @@ const capabilitiesTool = defineMcpTool(
 			dateFormat: z.string().optional(),
 			maxLimit: z.number().optional(),
 			availableTools: z.array(z.string()).optional(),
+			toolCatalog: z.array(z.record(z.string(), z.unknown())).optional(),
 			categories: z.array(z.string()).optional(),
 			queryTypes: z.record(z.string(), z.unknown()).optional(),
 			hints: z.array(z.string()).optional(),
@@ -532,6 +673,9 @@ const capabilitiesTool = defineMcpTool(
 		}
 		if (selected.has("availableTools")) {
 			out.availableTools = getRegisteredToolNames();
+		}
+		if (selected.has("toolCatalog")) {
+			out.toolCatalog = getToolCatalog();
 		}
 		if (selected.has("categories")) {
 			out.categories = QUERY_CATEGORY_KEYS;
@@ -631,6 +775,116 @@ const getFunnelAnalyticsTool = defineMcpTool(
 	}
 );
 
+const createFunnelTool = defineMcpTool(
+	{
+		name: "create_funnel",
+		description:
+			"Create a funnel for a website. Call with confirmed=false for preview, then confirmed=true after explicit user approval.",
+		inputSchema: z.object({
+			websiteId: z
+				.string()
+				.optional()
+				.describe("Website ID from list_websites"),
+			websiteName: z.string().optional(),
+			websiteDomain: z.string().optional(),
+			name: z.string().min(1).max(100),
+			description: z.string().optional(),
+			steps: z.array(FunnelStepSchema).min(2).max(10),
+			filters: z.array(WorkflowFilterSchema).optional(),
+			ignoreHistoricData: z.boolean().optional(),
+			confirmed: ConfirmedSchema,
+		}),
+		outputSchema: MutationResultSchema,
+		resolveWebsite: true,
+		metadata: writeMetadata(["manage:websites"]),
+		ratelimit: { limit: 10, windowSec: 60 },
+	},
+	async (input, ctx) => {
+		const websiteId = getResolvedWebsiteId(ctx);
+		if (!input.confirmed) {
+			return {
+				preview: true,
+				message: "Review this funnel before creating it.",
+				confirmationRequired: true,
+				funnel: {
+					name: input.name,
+					description: input.description ?? null,
+					stepCount: input.steps.length,
+					steps: input.steps,
+					filters: input.filters ?? [],
+					ignoreHistoricData: input.ignoreHistoricData ?? false,
+				},
+			};
+		}
+
+		const result = await callRPCProcedure(
+			"funnels",
+			"create",
+			{
+				websiteId,
+				name: input.name,
+				description: input.description,
+				steps: input.steps,
+				filters: input.filters,
+				ignoreHistoricData: input.ignoreHistoricData ?? false,
+			},
+			buildRpcContext(ctx)
+		);
+		return {
+			success: true,
+			message: `Funnel "${input.name}" created successfully.`,
+			funnel: result,
+		};
+	}
+);
+
+const summarizeFunnelsTool = defineMcpTool(
+	{
+		name: "summarize_funnels",
+		description:
+			"Summarize funnel definitions for a website: names, ids, active state, step counts, and targets.",
+		inputSchema: z.object({
+			websiteId: z
+				.string()
+				.optional()
+				.describe("Website ID from list_websites"),
+			websiteName: z.string().optional(),
+			websiteDomain: z.string().optional(),
+		}),
+		outputSchema: z.object({
+			funnels: z.array(z.record(z.string(), z.unknown())),
+			count: z.number(),
+		}),
+		resolveWebsite: true,
+		ratelimit: { limit: 60, windowSec: 60 },
+	},
+	async (_input, ctx) => {
+		const result = await callRPCProcedure(
+			"funnels",
+			"list",
+			{ websiteId: ctx.websiteId },
+			buildRpcContext(ctx)
+		);
+		const funnels = Array.isArray(result) ? result : [];
+		return {
+			funnels: funnels.map((funnel) => {
+				const row = asRecord(funnel);
+				const steps = Array.isArray(row.steps) ? row.steps : [];
+				return {
+					id: row.id,
+					name: row.name,
+					description: row.description,
+					isActive: row.isActive,
+					stepCount: steps.length,
+					steps,
+					updatedAt: row.updatedAt,
+				};
+			}),
+			count: funnels.length,
+		};
+	}
+);
+
 const listGoalsTool = defineMcpTool(
 	{
 		name: "list_goals",
@@ -709,17 +963,70 @@ const getGoalAnalyticsTool = defineMcpTool(
 	}
 );
 
-interface LinkRow {
-	createdAt: string;
-	expiresAt: string | null;
-	externalId: string | null;
-	id: string;
-	name: string;
-	ogDescription: string | null;
-	ogTitle: string | null;
-	slug: string;
-	targetUrl: string;
-}
+const createGoalTool = defineMcpTool(
+	{
+		name: "create_goal",
+		description:
+			"Create a conversion goal. Call with confirmed=false for preview, then confirmed=true after explicit user approval.",
+		inputSchema: z.object({
+			websiteId: z
+				.string()
+				.optional()
+				.describe("Website ID from list_websites"),
+			websiteName: z.string().optional(),
+			websiteDomain: z.string().optional(),
+			type: z.enum(["PAGE_VIEW", "EVENT", "CUSTOM"]),
+			target: z.string().min(1),
+			name: z.string().min(1).max(100),
+			description: z.string().nullable().optional(),
+			filters: z.array(WorkflowFilterSchema).optional(),
+			ignoreHistoricData: z.boolean().optional(),
+			confirmed: ConfirmedSchema,
+		}),
+		outputSchema: MutationResultSchema,
+		resolveWebsite: true,
+		metadata: writeMetadata(["manage:websites"]),
+		ratelimit: { limit: 10, windowSec: 60 },
+	},
+	async (input, ctx) => {
+		const websiteId = getResolvedWebsiteId(ctx);
+		if (!input.confirmed) {
+			return {
+				preview: true,
+				message: "Review this goal before creating it.",
+				confirmationRequired: true,
+				goal: {
+					name: input.name,
+					description: input.description ?? null,
+					type: input.type,
+					target: input.target,
+					filters: input.filters ?? [],
+					ignoreHistoricData: input.ignoreHistoricData ?? false,
+				},
+			};
+		}
+
+		const result = await callRPCProcedure(
+			"goals",
+			"create",
+			{
+				websiteId,
+				type: input.type,
+				target: input.target,
+				name: input.name,
+				description: input.description,
+				filters: input.filters,
+				ignoreHistoricData: input.ignoreHistoricData ?? false,
+			},
+			buildRpcContext(ctx)
+		);
+		return {
+			success: true,
+			message: `Goal "${input.name}" created successfully.`,
+			goal: result,
+		};
+	}
+);
 
 const listLinksTool = defineMcpTool(
 	{
@@ -748,7 +1055,7 @@ const listLinksTool = defineMcpTool(
 			{ organizationId: orgId },
 			buildRpcContext(ctx)
 		);
-		const links = (Array.isArray(result) ? result : []) as LinkRow[];
+		const links = parseLinkRows(result);
 		if (links.length === 0) {
 			return {
 				links,
@@ -805,12 +1112,14 @@ const searchLinksTool = defineMcpTool(
 		if (orgId instanceof Error) {
 			throw new McpToolError("not_found", orgId.message);
 		}
-		const allLinks = (await callRPCProcedure(
-			"links",
-			"list",
-			{ organizationId: orgId },
-			buildRpcContext(ctx)
-		)) as LinkRow[];
+		const allLinks = parseLinkRows(
+			await callRPCProcedure(
+				"links",
+				"list",
+				{ organizationId: orgId },
+				buildRpcContext(ctx)
+			)
+		);
 		const queryLower = input.query.toLowerCase();
 		const matches = allLinks.filter(
 			(link) =>
@@ -828,6 +1137,477 @@ const searchLinksTool = defineMcpTool(
 				externalId: link.externalId,
 			})),
 			count: matches.length,
+		};
+	}
+);
+
+const createLinkTool = defineMcpTool(
+	{
+		name: "create_link",
+		description:
+			"Create a short link for the website organization. Call with confirmed=false for preview first.",
+		inputSchema: z.object({
+			websiteId: z
+				.string()
+				.optional()
+				.describe("Website ID from list_websites"),
+			websiteName: z.string().optional(),
+			websiteDomain: z.string().optional(),
+			name: z.string().min(1).max(255),
+			targetUrl: z.string().url(),
+			slug: z
+				.string()
+				.min(3)
+				.max(50)
+				.regex(/^[a-zA-Z0-9_-]+$/)
+				.optional(),
+			expiresAt: z.string().optional(),
+			expiredRedirectUrl: z.string().url().optional(),
+			ogTitle: z.string().max(200).optional(),
+			ogDescription: z.string().max(500).optional(),
+			ogImageUrl: z.string().url().optional(),
+			externalId: z.string().max(255).optional(),
+			deepLinkApp: z.string().optional(),
+			confirmed: ConfirmedSchema,
+		}),
+		outputSchema: MutationResultSchema,
+		resolveWebsite: true,
+		metadata: writeMetadata(["write:links"]),
+		ratelimit: { limit: 20, windowSec: 60 },
+	},
+	async (input, ctx) => {
+		validateDate(input.expiresAt, "expiresAt");
+		if (!input.confirmed) {
+			return {
+				preview: true,
+				message: "Review this short link before creating it.",
+				confirmationRequired: true,
+				link: {
+					name: input.name,
+					targetUrl: input.targetUrl,
+					slug: input.slug ?? "(auto-generated)",
+					expiresAt: input.expiresAt ?? null,
+					ogTitle: input.ogTitle ?? null,
+					ogDescription: input.ogDescription ?? null,
+					externalId: input.externalId ?? null,
+				},
+			};
+		}
+
+		const orgId = await getOrganizationId(getResolvedWebsiteId(ctx));
+		if (orgId instanceof Error) {
+			throw new McpToolError("not_found", orgId.message);
+		}
+
+		const result = await callRPCProcedure(
+			"links",
+			"create",
+			{
+				organizationId: orgId,
+				name: input.name,
+				targetUrl: input.targetUrl,
+				slug: input.slug,
+				expiresAt: input.expiresAt ? new Date(input.expiresAt) : null,
+				expiredRedirectUrl: input.expiredRedirectUrl ?? null,
+				ogTitle: input.ogTitle ?? null,
+				ogDescription: input.ogDescription ?? null,
+				ogImageUrl: input.ogImageUrl ?? null,
+				externalId: input.externalId ?? null,
+				deepLinkApp: input.deepLinkApp ?? null,
+			},
+			buildRpcContext(ctx)
+		);
+		return {
+			success: true,
+			message: `Link "${input.name}" created successfully.`,
+			link: result,
+		};
+	}
+);
+
+const listAnnotationsTool = defineMcpTool(
+	{
+		name: "list_annotations",
+		description:
+			"List chart annotations for a website over a date range. Defaults to the last 30 days.",
+		inputSchema: z.object({
+			websiteId: z
+				.string()
+				.optional()
+				.describe("Website ID from list_websites"),
+			websiteName: z.string().optional(),
+			websiteDomain: z.string().optional(),
+			from: z.string().optional(),
+			to: z.string().optional(),
+			granularity: z.enum(["hourly", "daily", "weekly", "monthly"]).optional(),
+			metrics: z.array(z.string()).optional(),
+			chartContext: ChartContextSchema.optional(),
+		}),
+		outputSchema: z.object({
+			annotations: z.array(z.record(z.string(), z.unknown())),
+			count: z.number(),
+		}),
+		resolveWebsite: true,
+		ratelimit: { limit: 60, windowSec: 60 },
+	},
+	async (input, ctx) => {
+		validateDate(input.from, "from");
+		validateDate(input.to, "to");
+		const result = await callRPCProcedure(
+			"annotations",
+			"list",
+			{
+				websiteId: ctx.websiteId,
+				chartType: "metrics",
+				chartContext: input.chartContext ?? createChartContext(input),
+			},
+			buildRpcContext(ctx)
+		);
+		const annotations = Array.isArray(result) ? result : [];
+		return { annotations, count: annotations.length };
+	}
+);
+
+const createAnnotationTool = defineMcpTool(
+	{
+		name: "create_annotation",
+		description:
+			"Create a chart annotation. Call with confirmed=false for preview before writing.",
+		inputSchema: z.object({
+			websiteId: z
+				.string()
+				.optional()
+				.describe("Website ID from list_websites"),
+			websiteName: z.string().optional(),
+			websiteDomain: z.string().optional(),
+			chartContext: ChartContextSchema.optional(),
+			annotationType: z.enum(["point", "line", "range"]),
+			xValue: z.string(),
+			xEndValue: z.string().optional(),
+			yValue: z.number().optional(),
+			text: z.string().min(1).max(500),
+			tags: z.array(z.string()).optional(),
+			color: z.string().optional(),
+			isPublic: z.boolean().optional(),
+			confirmed: ConfirmedSchema,
+		}),
+		outputSchema: MutationResultSchema,
+		resolveWebsite: true,
+		metadata: writeMetadata(["manage:websites"]),
+		ratelimit: { limit: 20, windowSec: 60 },
+	},
+	async (input, ctx) => {
+		validateDate(input.xValue, "xValue");
+		validateDate(input.xEndValue, "xEndValue");
+		if (input.annotationType === "range" && !input.xEndValue) {
+			throw new McpToolError(
+				"invalid_input",
+				"Range annotations require xEndValue."
+			);
+		}
+
+		const chartContext =
+			input.chartContext ??
+			createChartContext({
+				from: dayjs(input.xValue).format("YYYY-MM-DD"),
+				to: dayjs(input.xEndValue ?? input.xValue).format("YYYY-MM-DD"),
+				granularity: "daily",
+			});
+
+		if (!input.confirmed) {
+			return {
+				preview: true,
+				message: "Review this annotation before creating it.",
+				confirmationRequired: true,
+				annotation: {
+					type: input.annotationType,
+					text: input.text,
+					xValue: input.xValue,
+					xEndValue: input.xEndValue ?? null,
+					tags: input.tags ?? [],
+					color: input.color ?? "#3B82F6",
+					isPublic: input.isPublic ?? false,
+				},
+			};
+		}
+
+		const result = await callRPCProcedure(
+			"annotations",
+			"create",
+			{
+				websiteId: ctx.websiteId,
+				chartType: "metrics",
+				chartContext,
+				annotationType: input.annotationType,
+				xValue: input.xValue,
+				xEndValue: input.xEndValue,
+				yValue: input.yValue,
+				text: input.text,
+				tags: input.tags,
+				color: input.color,
+				isPublic: input.isPublic ?? false,
+			},
+			buildRpcContext(ctx)
+		);
+		return {
+			success: true,
+			message: "Annotation created successfully.",
+			annotation: result,
+		};
+	}
+);
+
+const listFlagsTool = defineMcpTool(
+	{
+		name: "list_flags",
+		description:
+			"List feature flags for a website. Use before updating flag rollout, rules, or status.",
+		inputSchema: z.object({
+			websiteId: z
+				.string()
+				.optional()
+				.describe("Website ID from list_websites"),
+			websiteName: z.string().optional(),
+			websiteDomain: z.string().optional(),
+			status: FlagStatusSchema.optional(),
+		}),
+		outputSchema: z.object({
+			flags: z.array(z.record(z.string(), z.unknown())),
+			count: z.number(),
+		}),
+		resolveWebsite: true,
+		ratelimit: { limit: 60, windowSec: 60 },
+	},
+	async (input, ctx) => {
+		const result = await callRPCProcedure(
+			"flags",
+			"list",
+			{ websiteId: ctx.websiteId, status: input.status },
+			buildRpcContext(ctx)
+		);
+		const flags = Array.isArray(result) ? result : [];
+		return { flags, count: flags.length };
+	}
+);
+
+const createFlagTool = defineMcpTool(
+	{
+		name: "create_flag",
+		description:
+			"Create a feature flag. Defaults to inactive boolean flag until explicitly configured.",
+		inputSchema: z.object({
+			websiteId: z
+				.string()
+				.optional()
+				.describe("Website ID from list_websites"),
+			websiteName: z.string().optional(),
+			websiteDomain: z.string().optional(),
+			key: z
+				.string()
+				.min(1)
+				.max(100)
+				.regex(/^[a-zA-Z0-9_-]+$/),
+			name: z.string().min(1).max(100).optional(),
+			description: z.string().optional(),
+			type: FlagTypeSchema.optional(),
+			status: FlagStatusSchema.optional(),
+			defaultValue: z.boolean().optional(),
+			payload: z.record(z.string(), z.unknown()).optional(),
+			persistAcrossAuth: z.boolean().optional(),
+			rolloutPercentage: z.number().min(0).max(100).optional(),
+			rolloutBy: z.string().optional(),
+			rules: z.array(FlagRuleSchema).optional(),
+			variants: z.array(FlagVariantSchema).optional(),
+			dependencies: z.array(z.string()).optional(),
+			environment: z.string().nullable().optional(),
+			targetGroupIds: z.array(z.string()).optional(),
+			confirmed: ConfirmedSchema,
+		}),
+		outputSchema: MutationResultSchema,
+		resolveWebsite: true,
+		metadata: writeMetadata(["manage:flags", "manage:websites"]),
+		ratelimit: { limit: 20, windowSec: 60 },
+	},
+	async (input, ctx) => {
+		const payload = {
+			websiteId: ctx.websiteId,
+			key: input.key,
+			name: input.name,
+			description: input.description,
+			type: input.type ?? "boolean",
+			status: input.status ?? "inactive",
+			defaultValue: input.defaultValue ?? false,
+			payload: input.payload,
+			persistAcrossAuth: input.persistAcrossAuth,
+			rolloutPercentage: input.rolloutPercentage ?? 0,
+			rolloutBy: input.rolloutBy,
+			rules: input.rules,
+			variants: input.variants,
+			dependencies: input.dependencies,
+			environment: input.environment,
+			targetGroupIds: input.targetGroupIds,
+		};
+
+		if (!input.confirmed) {
+			return {
+				preview: true,
+				message: "Review this feature flag before creating it.",
+				confirmationRequired: true,
+				flag: {
+					key: payload.key,
+					name: payload.name ?? payload.key,
+					type: payload.type,
+					status: payload.status,
+					defaultValue: payload.defaultValue,
+					rolloutPercentage: payload.rolloutPercentage,
+					ruleCount: payload.rules?.length ?? 0,
+					variantCount: payload.variants?.length ?? 0,
+				},
+			};
+		}
+
+		const result = await callRPCProcedure(
+			"flags",
+			"create",
+			payload,
+			buildRpcContext(ctx)
+		);
+		return {
+			success: true,
+			message: `Feature flag "${input.key}" created successfully.`,
+			flag: result,
+		};
+	}
+);
+
+const updateFlagTool = defineMcpTool(
+	{
+		name: "update_flag",
+		description:
+			"Update feature flag config, status, rollout, rules, or variants after explicit confirmation.",
+		inputSchema: z.object({
+			id: z.string(),
+			name: z.string().min(1).max(100).optional(),
+			description: z.string().optional(),
+			type: FlagTypeSchema.optional(),
+			status: FlagStatusSchema.optional(),
+			defaultValue: z.boolean().optional(),
+			payload: z.record(z.string(), z.unknown()).optional(),
+			rules: z.array(FlagRuleSchema).optional(),
+			persistAcrossAuth: z.boolean().optional(),
+			rolloutPercentage: z.number().min(0).max(100).optional(),
+			rolloutBy: z.string().optional(),
+			variants: z.array(FlagVariantSchema).optional(),
+			dependencies: z.array(z.string()).optional(),
+			environment: z.string().optional(),
+			targetGroupIds: z.array(z.string()).optional(),
+			confirmed: ConfirmedSchema,
+		}),
+		outputSchema: MutationResultSchema,
+		metadata: writeMetadata(["manage:flags", "manage:websites"]),
+		ratelimit: { limit: 20, windowSec: 60 },
+	},
+	async (input, ctx) => {
+		const { confirmed, id, ...updates } = input;
+		const cleanUpdates = Object.fromEntries(
+			Object.entries(updates).filter(([, value]) => value !== undefined)
+		);
+		if (!confirmed) {
+			return {
+				preview: true,
+				message: "Review this feature flag update before applying it.",
+				confirmationRequired: true,
+				flagId: id,
+				updates: cleanUpdates,
+			};
+		}
+
+		const result = await callRPCProcedure(
+			"flags",
+			"update",
+			{ id, ...cleanUpdates },
+			buildRpcContext(ctx)
+		);
+		return {
+			success: true,
+			message: "Feature flag updated successfully.",
+			flag: result,
+		};
+	}
+);
+
+const addUsersToFlagTool = defineMcpTool(
+	{
+		name: "add_users_to_flag",
+		description:
+			"Add user IDs or emails to a feature flag targeting rule. Appends by default, replaces when mode=replace.",
+		inputSchema: z.object({
+			websiteId: z
+				.string()
+				.optional()
+				.describe("Website ID from list_websites"),
+			websiteName: z.string().optional(),
+			websiteDomain: z.string().optional(),
+			flagId: z.string(),
+			users: z.array(z.string().min(1)).min(1).max(500),
+			matchBy: z.enum(["email", "user_id"]).optional().default("email"),
+			mode: z.enum(["append", "replace"]).optional().default("append"),
+			confirmed: ConfirmedSchema,
+		}),
+		outputSchema: MutationResultSchema,
+		resolveWebsite: true,
+		metadata: writeMetadata(["manage:flags", "manage:websites"]),
+		ratelimit: { limit: 20, windowSec: 60 },
+	},
+	async (input, ctx) => {
+		const uniqueUsers = [
+			...new Set(input.users.map((user) => user.trim())),
+		].filter(Boolean);
+		const currentFlag = asRecord(
+			await callRPCProcedure(
+				"flags",
+				"getById",
+				{ id: input.flagId, websiteId: ctx.websiteId },
+				buildRpcContext(ctx)
+			)
+		);
+		const currentRules = parseFlagRules(currentFlag.rules);
+		const nextRule = createFlagUserRule(input.matchBy, uniqueUsers);
+		const nextRules =
+			input.mode === "replace" ? [nextRule] : [...currentRules, nextRule];
+
+		if (!input.confirmed) {
+			return {
+				preview: true,
+				message:
+					"Review this feature flag targeting change before applying it.",
+				confirmationRequired: true,
+				flag: {
+					id: currentFlag.id,
+					key: currentFlag.key,
+					name: currentFlag.name,
+					status: currentFlag.status,
+				},
+				targeting: {
+					matchBy: input.matchBy,
+					mode: input.mode,
+					userCount: uniqueUsers.length,
+					ruleCountBefore: currentRules.length,
+					ruleCountAfter: nextRules.length,
+				},
+			};
+		}
+
+		const result = await callRPCProcedure(
+			"flags",
+			"update",
+			{ id: input.flagId, rules: nextRules },
+			buildRpcContext(ctx)
+		);
+		return {
+			success: true,
+			message: `Added ${uniqueUsers.length} user target${uniqueUsers.length === 1 ? "" : "s"} to the flag.`,
+			flag: result,
 		};
 	}
 );
@@ -958,7 +1738,7 @@ const forgetMemoryTool = defineMcpTool(
 	}
 );
 
-const ALL_TOOL_FACTORIES: McpToolFactory[] = [
+const TOOL_REGISTRY = createToolRegistry([
 	askTool,
 	listWebsitesTool,
 	getDataTool,
@@ -966,31 +1746,34 @@ const ALL_TOOL_FACTORIES: McpToolFactory[] = [
 	capabilitiesTool,
 	listFunnelsTool,
 	getFunnelAnalyticsTool,
+	createFunnelTool,
+	summarizeFunnelsTool,
 	listGoalsTool,
 	getGoalAnalyticsTool,
+	createGoalTool,
 	listLinksTool,
 	searchLinksTool,
+	createLinkTool,
+	listAnnotationsTool,
+	createAnnotationTool,
+	listFlagsTool,
+	createFlagTool,
+	updateFlagTool,
+	addUsersToFlagTool,
 	...INSIGHT_TOOL_FACTORIES,
 	...(MEMORY_ENABLED
 		? [searchMemoryTool, saveMemoryTool, forgetMemoryTool]
 		: []),
-];
-
-const REGISTERED_TOOL_NAMES: readonly string[] = Object.freeze(
-	ALL_TOOL_FACTORIES.map((f, idx) => {
-		if (typeof f.toolName !== "string" || f.toolName.length === 0) {
-			throw new Error(
-				`MCP tool factory at index ${idx} is missing a toolName. Check defineMcpTool usage.`
-			);
-		}
-		return f.toolName;
-	})
-);
+] satisfies McpToolFactory[]);
 
 function getRegisteredToolNames(): readonly string[] {
-	return REGISTERED_TOOL_NAMES;
+	return TOOL_REGISTRY.names;
+}
+
+function getToolCatalog() {
+	return TOOL_REGISTRY.catalog;
 }
 
 export function createMcpTools(ctx: McpRequestContext): RegisteredMcpTool[] {
-	return ALL_TOOL_FACTORIES.map((factory) => factory.build(ctx));
+	return TOOL_REGISTRY.factories.map((factory) => factory.build(ctx));
 }

@@ -10,6 +10,7 @@ import { TIER_CONFIG } from "../config/tiers";
 import { buildAnalyticsInstructions } from "../prompts/analytics";
 import { createAnnotationTools } from "../tools/annotations";
 import { executeSqlQueryTool } from "../tools/execute-sql-query";
+import { createFlagTools } from "../tools/flags";
 import { createFunnelTools } from "../tools/funnels";
 import { getDataTool } from "../tools/get-data";
 import { createGoalTools } from "../tools/goals";
@@ -23,6 +24,7 @@ const analyticsTools = {
 	execute_sql_query: executeSqlQueryTool,
 	...createMemoryTools(),
 	...createProfileTools(),
+	...createFlagTools(),
 	...createFunnelTools(),
 	...createGoalTools(),
 	...createAnnotationTools(),

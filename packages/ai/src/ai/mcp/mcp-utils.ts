@@ -8,7 +8,7 @@ import {
 	resolveDatePreset,
 } from "../../lib/date-presets";
 import { QueryBuilders } from "../../query/builders";
-import type { QueryRequest } from "../../query/types";
+import type { Filter, QueryRequest } from "../../query/types";
 
 export {
 	MCP_DATE_PRESETS,
@@ -22,13 +22,7 @@ export {
 } from "../prompts/clickhouse-schema";
 
 export interface McpQueryItem {
-	filters?: Array<{
-		field: string;
-		op: string;
-		value: string | number | (string | number)[];
-		target?: string;
-		having?: boolean;
-	}>;
+	filters?: Filter[];
 	from?: string;
 	groupBy?: string[];
 	limit?: number;
@@ -95,7 +89,7 @@ export function buildBatchQueryRequests(
 			timeUnit: q.timeUnit,
 			limit: q.limit,
 			timezone,
-			filters: q.filters as QueryRequest["filters"],
+			filters: q.filters,
 			groupBy: q.groupBy,
 			orderBy: q.orderBy,
 		});

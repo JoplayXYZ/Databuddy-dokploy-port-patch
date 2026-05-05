@@ -26,7 +26,13 @@ const SLACK_OAUTH_SCOPES = [
 ] as const;
 
 const SLACK_STATE_TTL_MS = 10 * 60 * 1000;
-const SLACK_API_KEY_SCOPES = ["read:data"] as const;
+const SLACK_API_KEY_SCOPES = [
+	"read:data",
+	"read:links",
+	"write:links",
+	"manage:websites",
+	"manage:flags",
+] as const;
 const SLACK_API_KEY_RESOURCES = { global: [...SLACK_API_KEY_SCOPES] };
 const CONNECTION_DROP_MESSAGE_RE =
 	/connection (terminated|ended|timeout|reset)/i;

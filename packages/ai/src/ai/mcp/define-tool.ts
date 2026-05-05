@@ -1,7 +1,7 @@
 import type { ApiKeyRow } from "@databuddy/api-keys/resolve";
 import { getRateLimitHeaders, ratelimit } from "@databuddy/redis/rate-limit";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
-import { z } from "zod";
+import type { z } from "zod";
 import { trackAgentEvent } from "../../lib/databuddy";
 import { captureError, mergeWideEvent } from "../../lib/tracing";
 import {
@@ -89,9 +89,27 @@ export interface McpHandlerContext extends McpRequestContext {
 	websiteId?: string;
 }
 
+export type McpToolCapability = "analytics" | "memory" | "workspace";
+export type McpToolMutationKind = "read" | "write";
+export type McpToolSurface = "agent" | "mcp";
+
+export interface McpToolAccess {
+	confirmation?: "none" | "recommended" | "required";
+	kind: McpToolMutationKind;
+	scopes?: string[];
+}
+
+export interface McpToolMetadata {
+	access: McpToolAccess;
+	capability: McpToolCapability;
+	evlogAction?: string;
+	surfaces?: McpToolSurface[];
+}
+
 export interface McpToolMeta<S extends z.ZodTypeAny = z.ZodTypeAny> {
 	description: string;
 	inputSchema: S;
+	metadata?: Partial<McpToolMetadata>;
 	name: string;
 	/**
 	 * Optional Zod schema describing the successful response shape.
@@ -121,12 +139,15 @@ export interface RegisteredMcpTool {
 	description: string;
 	handler: (rawInput: unknown) => Promise<CallToolResult>;
 	inputSchema: z.ZodTypeAny;
+	metadata: McpToolMetadata;
 	name: string;
 	outputSchema?: z.ZodTypeAny;
 }
 
 export interface McpToolFactory {
 	readonly build: (ctx: McpRequestContext) => RegisteredMcpTool;
+	readonly description: string;
+	readonly metadata: McpToolMetadata;
 	readonly toolName: string;
 }
 
@@ -209,16 +230,14 @@ export function defineMcpTool<S extends z.ZodTypeAny>(
 		);
 	}
 
+	const metadata = normalizeToolMetadata(meta.metadata);
 	const hasOutputSchema = meta.outputSchema !== undefined;
-	const coercedInputSchema = z.preprocess(
-		coerceMcpInput,
-		meta.inputSchema
-	) as unknown as S;
 
 	const build = (ctx: McpRequestContext): RegisteredMcpTool => ({
 		name: meta.name,
 		description: meta.description,
-		inputSchema: coercedInputSchema,
+		inputSchema: meta.inputSchema,
+		metadata,
 		outputSchema: meta.outputSchema,
 		handler: async (rawInput: unknown): Promise<CallToolResult> => {
 			const start = Date.now();
@@ -230,7 +249,9 @@ export function defineMcpTool<S extends z.ZodTypeAny>(
 			});
 
 			try {
-				const parseResult = coercedInputSchema.safeParse(rawInput ?? {});
+				const parseResult = meta.inputSchema.safeParse(
+					coerceMcpInput(rawInput ?? {})
+				);
 				if (!parseResult.success) {
 					const issue = parseResult.error.issues[0];
 					const path = issue?.path.join(".") ?? "input";
@@ -293,10 +314,12 @@ export function defineMcpTool<S extends z.ZodTypeAny>(
 				const result = await handler(input, handlerCtx);
 
 				trackAgentEvent("agent_activity", {
-					action: "tool_completed",
+					action: metadata.evlogAction ?? "tool_completed",
 					source: "mcp",
 					tool: meta.name,
 					success: true,
+					tool_access_kind: metadata.access.kind,
+					tool_capability: metadata.capability,
 					...attribution,
 				});
 				mergeWideEvent({
@@ -319,10 +342,12 @@ export function defineMcpTool<S extends z.ZodTypeAny>(
 				}
 
 				trackAgentEvent("agent_activity", {
-					action: "tool_completed",
+					action: metadata.evlogAction ?? "tool_completed",
 					source: "mcp",
 					tool: meta.name,
 					success: false,
+					tool_access_kind: metadata.access.kind,
+					tool_capability: metadata.capability,
 					...attribution,
 				});
 				mergeWideEvent({
@@ -335,5 +360,25 @@ export function defineMcpTool<S extends z.ZodTypeAny>(
 			}
 		},
 	});
-	return { toolName: meta.name, build };
+	return {
+		toolName: meta.name,
+		description: meta.description,
+		metadata,
+		build,
+	};
+}
+
+function normalizeToolMetadata(
+	metadata: Partial<McpToolMetadata> | undefined
+): McpToolMetadata {
+	return {
+		access: {
+			confirmation: metadata?.access?.confirmation ?? "none",
+			kind: metadata?.access?.kind ?? "read",
+			scopes: metadata?.access?.scopes ?? [],
+		},
+		capability: metadata?.capability ?? "analytics",
+		evlogAction: metadata?.evlogAction,
+		surfaces: metadata?.surfaces ?? ["mcp", "agent"],
+	};
 }
