@@ -53,20 +53,13 @@ describe("extractIpFromRequest", () => {
 			{ "x-forwarded-for": "5.6.7.8, 9.10.11.12" },
 			"5.6.7.8",
 		],
-		["x-real-ip", { "x-real-ip": "13.14.15.16" }, "13.14.15.16"],
 		[
-			"cf > xff > real",
+			"cf > xff priority",
 			{
 				"cf-connecting-ip": "1.1.1.1",
 				"x-forwarded-for": "2.2.2.2",
-				"x-real-ip": "3.3.3.3",
 			},
 			"1.1.1.1",
-		],
-		[
-			"xff > real",
-			{ "x-forwarded-for": "2.2.2.2", "x-real-ip": "3.3.3.3" },
-			"2.2.2.2",
 		],
 		["trims whitespace", { "cf-connecting-ip": "  1.2.3.4  " }, "1.2.3.4"],
 		["no headers → empty", {}, ""],

@@ -12,11 +12,6 @@ import {
 
 describe("basketErrors", () => {
 	const errorTable: [string, keyof typeof basketErrors, number][] = [
-		["llmMissingApiKey", "llmMissingApiKey", 401],
-		["llmMissingScope", "llmMissingScope", 401],
-		["llmMissingOwner", "llmMissingOwner", 400],
-		["llmBillingOwnerUnresolved", "llmBillingOwnerUnresolved", 400],
-		["llmInvalidBody", "llmInvalidBody", 400],
 		["trackPayloadTooLarge", "trackPayloadTooLarge", 413],
 		["trackInvalidBody", "trackInvalidBody", 400],
 		["trackMissingScope", "trackMissingScope", 403],
