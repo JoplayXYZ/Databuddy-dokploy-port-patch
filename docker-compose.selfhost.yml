@@ -83,6 +83,8 @@ services:
       NODE_ENV: production
       PORT: "3001"
       DATABASE_URL: ${DATABASE_URL:?Set DATABASE_URL in your environment}
+      DB_POOL_MAX: ${DB_POOL_MAX:-10}
+      SERVICE_NAME: databuddy-api
       REDIS_URL: ${REDIS_URL:?Set REDIS_URL in your environment}
       BULLMQ_REDIS_URL: ${BULLMQ_REDIS_URL:?Set BULLMQ_REDIS_URL in your environment}
       CLICKHOUSE_URL: ${CLICKHOUSE_URL:?Set CLICKHOUSE_URL in your environment}
@@ -118,6 +120,8 @@ services:
       NODE_ENV: production
       PORT: "4000"
       DATABASE_URL: ${DATABASE_URL:?Set DATABASE_URL in your environment}
+      DB_POOL_MAX: ${DB_POOL_MAX:-10}
+      SERVICE_NAME: databuddy-basket
       REDIS_URL: ${REDIS_URL:?Set REDIS_URL in your environment}
       CLICKHOUSE_URL: ${CLICKHOUSE_URL:?Set CLICKHOUSE_URL in your environment}
       SELFHOST: "true"
@@ -147,6 +151,8 @@ services:
     environment:
       NODE_ENV: production
       DATABASE_URL: ${DATABASE_URL:?Set DATABASE_URL in your environment}
+      DB_POOL_MAX: ${DB_POOL_MAX:-10}
+      SERVICE_NAME: databuddy-links
       REDIS_URL: ${REDIS_URL:?Set REDIS_URL in your environment}
       APP_URL: ${APP_URL:-https://app.databuddy.cc}
       LINKS_ROOT_REDIRECT_URL: ${LINKS_ROOT_REDIRECT_URL:-https://databuddy.cc}
@@ -175,6 +181,8 @@ services:
   #   environment:
   #     NODE_ENV: production
   #     DATABASE_URL: ${DATABASE_URL:?Set DATABASE_URL in your environment}
+  #     DB_POOL_MAX: ${DB_POOL_MAX:-10}
+  #     SERVICE_NAME: databuddy-uptime
   #     BULLMQ_REDIS_URL: ${BULLMQ_REDIS_URL:?Set BULLMQ_REDIS_URL in your environment}
   #     RESEND_API_KEY: ${RESEND_API_KEY:-}
   #   healthcheck:

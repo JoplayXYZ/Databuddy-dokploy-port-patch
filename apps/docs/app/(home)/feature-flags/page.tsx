@@ -18,16 +18,16 @@ import Section from "@/components/landing/section";
 import { StructuredData } from "@/components/structured-data";
 
 export const metadata: Metadata = {
-	title: "Feature Flags & A/B Testing",
+	title: "Feature Flags & A/B Testing - Built Into Your Analytics",
 	description:
-		"Ship features safely with instant rollouts, percentage-based releases, A/B testing, and user targeting. No deploys needed - control everything from your dashboard.",
+		"Ship features safely with instant rollouts, percentage-based releases, A/B testing, and user targeting. No deploys needed. Built into your analytics dashboard.",
 	alternates: {
 		canonical: "https://www.databuddy.cc/feature-flags",
 	},
 	openGraph: {
-		title: "Feature Flags & A/B Testing",
+		title: "Feature Flags & A/B Testing - Built Into Your Analytics",
 		description:
-			"Ship features safely with instant rollouts, percentage-based releases, A/B testing, and user targeting. No deploys needed - control everything from your dashboard.",
+			"Ship features safely with instant rollouts, percentage-based releases, A/B testing, and user targeting. No deploys needed. Built into your analytics dashboard.",
 		url: "https://www.databuddy.cc/feature-flags",
 		images: ["/og-image.png"],
 	},

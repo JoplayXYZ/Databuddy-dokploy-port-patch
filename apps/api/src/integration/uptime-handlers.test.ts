@@ -23,7 +23,7 @@ import {
 	userContext,
 } from "@databuddy/test";
 import { createProcedureClient, type AnyProcedure } from "@orpc/server";
-import { afterAll, afterEach, beforeEach, describe, expect, it } from "bun:test";
+import { afterAll, afterEach, beforeEach, describe, expect, it } from "vitest";
 import { randomUUIDv7 } from "bun";
 import type { Job } from "bullmq";
 

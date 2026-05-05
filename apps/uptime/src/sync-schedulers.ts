@@ -6,7 +6,7 @@ import {
 	UPTIME_JOB_OPTIONS,
 	uptimeSchedulerId,
 } from "@databuddy/redis";
-import { Data, Effect, Ref } from "effect";
+import { Cause, Data, Effect, Exit, Ref } from "effect";
 import { log } from "evlog";
 
 const CRON_GRANULARITIES: Record<string, string> = {
@@ -96,15 +96,16 @@ const syncAll = Effect.gen(function* () {
 					? Ref.update(created, (n) => n + 1)
 					: Ref.update(skipped, (n) => n + 1)
 			),
-			Effect.catchTag("UnknownGranularity", (e) => {
-				log.error({
-					sync: "scheduler",
-					schedule_id: e.scheduleId,
-					error_message: `Unknown granularity: ${e.granularity}`,
-				});
-				return Ref.update(failed, (n) => n + 1);
-			}),
 			Effect.catch((error) => {
+				if (error instanceof UnknownGranularity) {
+					log.error({
+						sync: "scheduler",
+						schedule_id: error.scheduleId,
+						error_message: `Unknown granularity: ${error.granularity}`,
+					});
+					return Ref.update(failed, (n) => n + 1);
+				}
+
 				log.error({
 					sync: "scheduler",
 					schedule_id: monitor.id,
@@ -131,5 +132,8 @@ const syncAll = Effect.gen(function* () {
 });
 
 export async function syncSchedulers(): Promise<void> {
-	await Effect.runPromise(syncAll);
+	const exit = await Effect.runPromiseExit(syncAll);
+	if (Exit.isFailure(exit)) {
+		throw Cause.squash(exit.cause);
+	}
 }

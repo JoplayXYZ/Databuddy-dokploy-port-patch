@@ -7,46 +7,6 @@ import type { z } from "zod";
  * emit consistent JSON and wide-event context.
  */
 export const basketErrors = {
-	llmMissingApiKey: () =>
-		createError({
-			message: "Invalid or missing API key with track:llm scope",
-			status: 401,
-			why: "No API key was sent or the key could not be resolved.",
-			fix: "Send a valid API key with the track:llm scope in the Authorization or x-api-key header.",
-		}),
-
-	llmMissingScope: () =>
-		createError({
-			message: "Invalid or missing API key with track:llm scope",
-			status: 401,
-			why: "The API key does not include the track:llm scope.",
-			fix: "Create or use an API key that includes the track:llm scope.",
-		}),
-
-	llmMissingOwner: () =>
-		createError({
-			message: "API key missing owner ID",
-			status: 400,
-			why: "The key is not linked to a user or organization.",
-			fix: "Use an organization-scoped API key or contact support.",
-		}),
-
-	llmBillingOwnerUnresolved: () =>
-		createError({
-			message: "Could not resolve billing owner",
-			status: 400,
-			why: "Organization owner could not be loaded for billing.",
-			fix: "Verify the organization has an active owner.",
-		}),
-
-	llmInvalidBody: () =>
-		createError({
-			message: "Invalid request body",
-			status: 400,
-			why: "The JSON body did not match the LLM span schema.",
-			fix: "Send a valid AI call payload per the SDK documentation.",
-		}),
-
 	trackPayloadTooLarge: () =>
 		createError({
 			message: "Payload too large",
@@ -101,6 +61,14 @@ export const basketErrors = {
 			status: 400,
 			why: "The website is not linked to an organization.",
 			fix: "Assign the website to an organization in the dashboard.",
+		}),
+
+	trackWebsiteScopeMismatch: () =>
+		createError({
+			message: "Website scope mismatch",
+			status: 403,
+			why: "The event website_id does not match the authenticated website.",
+			fix: "Send events only for the authenticated website, or use an API key with access to multiple websites.",
 		}),
 
 	ingestPayloadTooLarge: () =>
@@ -173,6 +141,22 @@ export const basketErrors = {
 			status: 400,
 			why: "The batch exceeds the maximum number of events per request.",
 			fix: "Split the batch into smaller requests.",
+		}),
+
+	billingLimitExceeded: () =>
+		createError({
+			message: "Event quota exceeded",
+			status: 402,
+			why: "The billing provider denied this usage check.",
+			fix: "Upgrade the plan, reduce event volume, or contact support.",
+		}),
+
+	billingCheckUnavailable: () =>
+		createError({
+			message: "Billing check unavailable",
+			status: 503,
+			why: "The event quota could not be verified before ingestion.",
+			fix: "Retry after the billing provider is reachable.",
 		}),
 };
 

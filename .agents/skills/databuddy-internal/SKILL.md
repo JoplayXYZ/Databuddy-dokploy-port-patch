@@ -19,10 +19,21 @@ Keep additions **minimal**: one bullet, a new `rg` hint, or a routing note—eno
 
 - `apps/dashboard`: Next.js app on port `3000` (per-website **agent** chat: `@ai-sdk/react` `useChat` via `contexts/chat-context.tsx` — not the separate `chat-sdk` package; overlapping sends while streaming are queued client-side to mirror a “queue latest” strategy.)
 - `apps/api`: Elysia API on port `3001`
+- `apps/slack`: Slack agent adapter; Slack installs must resolve through org-scoped DB integration records, not a single env bot token/default website. Agent calls must use an encrypted per-integration Databuddy API key secret as a normal bearer token, never a global internal secret.
+- Slack OAuth lives in `apps/api`, but slash commands/events require `apps/slack` to be running too; local `bun run dev:dashboard` includes Slack, and the Slack package scripts read the root `.env`.
+- Slack routing is organization-scoped: OAuth binds a Slack workspace to a Databuddy organization, app mentions from the installed workspace auto-bind channels including Slack Connect, and `/bind` is now a manual fallback for unknown/unapproved channels. DMs/assistant threads work after workspace install. Analytics questions should go through app mentions/DMs using MCP-style website discovery instead of website/domain bindings. Slack emits evlog events under `apps/slack/.evlog/logs` in development/`SLACK_EVLOG_FS=1`; Axiom uses `AXIOM_TOKEN` with `SLACK_AXIOM_DATASET` defaulting to `slack`; and reactions need the `reactions:write` bot scope. Remote manifest updates need `SLACK_APP_ID` plus a Slack app configuration token in `SLACK_APP_CONFIG_TOKEN`; trust Slack API errors over token-prefix guesses.
+- Slack scope changes require reinstalling/reauthorizing the workspace; updating the local/remote manifest alone does not grant newly-added bot scopes to an existing installation.
+- Slack agent billing flows through an org-scoped automation API key; existing keys may have `userId: null`, so the agent billing resolver must fall back to the organization owner when an API key has `organizationId`.
+- Slack memory is separate from billing/auth: pass a Slack-scoped `memoryUserId` such as `slack-{team}-{user}` plus current-speaker context so one Slack user's saved name/preferences do not bleed into another user's replies.
+- Slack agent write tools need the integration automation API key to include the matching Databuddy API scopes (currently `read:data`, `read:links`, `write:links`, `manage:websites`, `manage:flags`); older installs may need reconnecting so a new key is minted.
+- Shared agent integrations should call `@databuddy/ai/agent` (`askDatabuddyAgent` / `streamDatabuddyAgent`) instead of importing internal MCP run/history helpers directly.
+- Slack agent evals live in `packages/evals`: use `bun run eval --surface slack` for the whole Slack surface. `--tag slack` is only a tiny smoke subset, and `cost_fallback` in agent telemetry is pricing-catalog fallback, not proof the model request fell back.
+- AI link tools must assign link folders by existing folder `id` or `slug` only; folder names are display text and must not be used for routing or dedupe.
 - `apps/basket`: ingest and LLM tracking service, Elysia app on port `4000`
 - `apps/docs`: Next.js + Fumadocs docs app on port `3005`
 - `apps/links`: redirect/link service
 - `apps/uptime`: uptime monitoring service
+- `apps/uptime` BullMQ worker concurrency defaults high for Bun async I/O; do not lower it just because `10_000` looks large. Verify downstream saturation or lock/timeout evidence first.
 - `packages/db`: Drizzle Postgres schema, client, and ClickHouse helpers
 - `packages/rpc`: shared oRPC router, procedures, auth-aware server context
 - `packages/auth`: Better Auth setup, permissions, organization access
@@ -30,7 +41,7 @@ Keep additions **minimal**: one bullet, a new `rg` hint, or a routing note—eno
 - `packages/shared`: shared types, flags, analytics schemas, utilities
 - `packages/sdk`: published analytics SDK for React, Vue, and Node
 - `packages/tracker`: internal tracker script build and release package
-- `packages/ai`, `packages/notifications`, `packages/cache`, `packages/redis`, `packages/services`, `packages/validation`, `packages/api-keys`: shared infra and domain packages
+- `packages/encryption`, `packages/notifications`, `packages/cache`, `packages/redis`, `packages/services`, `packages/validation`, `packages/api-keys`: shared infra and domain packages
 
 Read [codebase-map.md](./references/codebase-map.md) when you need deeper routing guidance.
 
@@ -50,6 +61,7 @@ Read [codebase-map.md](./references/codebase-map.md) when you need deeper routin
 - Package manager: `bun`
 - Task runner: `turbo`
 - Formatting/linting: `bun run format`, `bun run lint`
+- Lefthook's `no-secrets` guard intentionally ignores the exact `.env.example` template; real `.env`, `.env.*`, key, and credential files should still be blocked.
 - Root dev orchestration: `bun run dev`
 - Dashboard + API together: `bun run dev:dashboard`
 - Tests at root currently target `./apps`: `bun run test`
@@ -65,8 +77,12 @@ Read [codebase-map.md](./references/codebase-map.md) when you need deeper routin
 - For dashboard navigation audits, check all route surfaces: `components/layout/navigation/navigation-config.tsx`, `components/ui/command-search.tsx`, and local `PageNavigation` layouts under `app/**/layout.tsx` before calling a page orphaned.
 - Custom events UI is shared in `apps/dashboard/components/events/custom-events`; keep many-series legends outside the Recharts plot, use compact controls for property-summary event selection, and avoid separate event-count chip/list sections.
 - Insights merged feed (`use-insights-feed`) collapses history + AI by `insightSignalDedupeKey` in `apps/dashboard/lib/insight-signal-key.ts` so the list is one row per signal (latest wins).
+- Insights page (`app/(main)/insights`) should stay focused on the brief + signal queue; do not add generic global analytics KPI cards or top pages/referrers/countries tables there.
 - Theme: `apps/dashboard/app/globals.css`. **`--border` is intentionally subtle**; do not crank it darker for “contrast” unless **iza** asks—prefer text tokens or layout for readability.
+- Integration catalog logos: use filled Simple Icons SVG path data (or equivalent filled brand SVG), store the path on each item as `iconPath`, render it through a shared logo tile with `bg-secondary/60`, `border-border/70`, `text-foreground`, and `fill="currentColor"`, then use brand color only as a small accent bar (`accent` or `accentClassName: "bg-foreground/70"` for black/near-black brands). Avoid raw brand-black icons or mixed line/filled icon sets that disappear in dark mode.
+- Organization integrations settings should stay list-first and operational: coming-soon integrations are static rows, Slack is the only expandable row for now, and connected integrations need obvious lifecycle controls such as uninstall/disconnect in the row details.
 - Dashboard UI must use `apps/dashboard/components/ds` primitives exactly; feature code must not use raw form/control elements (`button`, `input`, `select`, `textarea`, native dialogs), Base UI/Radix primitives, or ad hoc styled controls directly. If a variant is missing, add or extend the DS component first. For menu-style folder/status/filter/sort/action pickers, use `components/ds/dropdown-menu.tsx`; use `Select` only when the established pattern is explicitly a select/combobox. Read `apps/dashboard/components/ds/README.md` before creating new dashboard UI.
+- `DropdownMenu.GroupLabel` must be rendered inside `DropdownMenu.Group`; Base UI throws `MenuGroupRootContext is missing` when labels are placed directly under `DropdownMenu.Content`.
 - Traffic Trends chart annotations should use a chart-adjacent annotation rail for dense data; avoid in-plot labels, tall lines, or floating dots that compete with the chart tooltip/data layer.
 - Flags list rows (`app/(main)/websites/[id]/flags/_components/flags-list.tsx`) are clickable containers with nested controls; mark nested controls with `data-row-interactive="true"` and have the row ignore those targets instead of relying on broad cell-level `stopPropagation`.
 - For data loading and mutations, inspect `apps/dashboard/lib/orpc.ts` and the corresponding hooks/components

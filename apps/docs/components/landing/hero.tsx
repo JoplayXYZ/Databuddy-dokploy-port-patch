@@ -88,17 +88,15 @@ export default function Hero({
 			<div className="mx-auto w-full max-w-400 px-4 pt-26 pb-8 sm:px-14 sm:pt-20 lg:px-20 lg:pt-38">
 				<div className="mx-auto flex max-w-360 flex-col items-start space-y-2 text-left">
 					<h1 className="z-10 font-semibold text-3xl sm:text-5xl md:text-6xl">
-						Stop reading dashboards.
+						One script. Six tools.
 						<br />
-						<span className="text-muted-foreground">
-							Start asking questions.
-						</span>
+						<span className="text-muted-foreground">Under 30 KB.</span>
 					</h1>
 
 					<p className="z-10 max-w-2xl text-muted-foreground text-sm sm:text-base lg:text-lg">
-						Ask questions in plain English. Get charts, reports, and actionable
-						insights - not more tabs to stare at. Privacy-first, under 30 KB, no
-						cookies.
+						Analytics, error tracking, web vitals, feature flags, short links,
+						and an AI agent that answers questions about your data. No cookies,
+						no consent banners, no second script tag.
 					</p>
 
 					<div className="flex items-center gap-3 pt-2">
@@ -170,7 +168,7 @@ export default function Hero({
 							</span>
 						</a>
 						<div className="group relative rounded-sm border border-border/50 bg-card p-1.5 shadow-2xl backdrop-blur-sm sm:p-2">
-							<div className="relative min-h-[400px] overflow-hidden rounded bg-muted sm:min-h-[500px] lg:min-h-[600px]">
+							<div className="relative min-h-[400px] overflow-x-hidden rounded bg-muted sm:min-h-[500px] lg:min-h-[600px]">
 								{tabs.map((tab, i) => {
 									const isActive = activeTab === tab.id;
 									const translateX = isActive

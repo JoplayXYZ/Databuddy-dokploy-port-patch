@@ -15,7 +15,6 @@
     "@databuddy/auth": "workspace:*",
     "@databuddy/db": "workspace:*",
     "@databuddy/devtools": "workspace:*",
-    "@databuddy/env": "workspace:*",
     "@databuddy/redis": "workspace:*",
     "@databuddy/rpc": "workspace:*",
     "@databuddy/sdk": "workspace:*",

@@ -5,7 +5,7 @@ description: Complete SDK documentation for tracking analytics across all platfo
 
 import { Card, Cards, Callout, CodeBlock } from "@/components/docs";
 
-The Databuddy SDK provides framework-specific components, helper functions, and a vanilla JavaScript library for tracking analytics events. Choose your preferred integration method.
+The Databuddy SDK provides framework-specific components, helper functions, native Swift support, and a vanilla JavaScript library for tracking analytics events. Choose your preferred integration method.
 
 <Callout type="info">
   **SDK Version**: 2.0.0+ | **Package**: `@databuddy/sdk` | **CDN**: cdn.databuddy.cc
@@ -37,6 +37,9 @@ For vanilla JavaScript, no installation needed - load directly from CDN.
   </Card>
   <Card title="Node.js / Server" href="/docs/sdk/node">
     Server-side tracking for APIs, webhooks, and background jobs
+  </Card>
+  <Card title="Swift" href="/docs/sdk/swift">
+    Native analytics for iOS, macOS, tvOS, and watchOS apps
   </Card>
 </Cards>
 
@@ -70,6 +73,7 @@ The SDK is organized into submodules for tree-shaking:
 | `@databuddy/sdk/react` | React component and hooks |
 | `@databuddy/sdk/vue` | Vue component and composables |
 | `@databuddy/sdk/node` | Node.js server-side SDK |
+| `Databuddy` | Swift Package Manager product for Apple apps |
 
 ## Example: React/Next.js
 

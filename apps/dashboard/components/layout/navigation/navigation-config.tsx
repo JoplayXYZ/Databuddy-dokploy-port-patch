@@ -23,6 +23,7 @@ import {
 	LinkIcon,
 	LockIcon,
 	MapPinIcon,
+	PlugIcon,
 	ChartActivityIcon as PulseIcon,
 	ReceiptIcon,
 	RobotIcon,
@@ -191,6 +192,12 @@ export const settingsNavigation: NavigationGroup[] = [
 		label: "Organization",
 		items: [
 			createNavItem("General", GearIcon, "/organizations/settings"),
+			createNavItem(
+				"Integrations",
+				PlugIcon,
+				"/organizations/settings/integrations",
+				{ flag: "integrations" }
+			),
 			createNavItem("Members", UserIcon, "/organizations/members"),
 			createNavItem("Billing", CreditCardIcon, "/billing"),
 			createNavItem("Plans", CurrencyDollarIcon, "/billing/plans"),

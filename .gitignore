@@ -26,6 +26,8 @@ coverage
 .vercel
 
 # Build Outputs
+.build/
+.swiftpm/
 .next/
 out/
 build
@@ -67,3 +69,7 @@ tmp
 .next-docs/
 .gstack/
 .superpowers/
+.warden/
+
+# Local reference repositories
+tigerbeetle/

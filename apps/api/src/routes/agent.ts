@@ -5,6 +5,31 @@ import {
 	hasKeyScope,
 	isApiKeyPresent,
 } from "@databuddy/api-keys/resolve";
+import { createConfig as createAgentConfig } from "@databuddy/ai/agents/analytics";
+import {
+	resolveAgentBillingCustomerId,
+	trackAgentUsageAndBill,
+} from "@databuddy/ai/agents/execution";
+import { type AgentTier, tierToModelKey } from "@databuddy/ai/agents/router";
+import {
+	AGENT_THINKING_LEVELS,
+	AGENT_TIERS,
+	type AgentConfig,
+} from "@databuddy/ai/agents/types";
+import {
+	type AgentModelKey,
+	AI_MODEL_MAX_RETRIES,
+	ANTHROPIC_CACHE_1H,
+	modelNames,
+	models,
+} from "@databuddy/ai/config/models";
+import { askDatabuddyAgent, streamDatabuddyAgent } from "@databuddy/ai/agent";
+import {
+	formatMemoryForPrompt,
+	isMemoryEnabled,
+	storeConversation,
+	type MemoryContext,
+} from "@databuddy/ai/lib/supermemory";
 import { auth } from "@databuddy/auth";
 import { db, eq } from "@databuddy/db";
 import { agentChats } from "@databuddy/db/schema";
@@ -32,39 +57,15 @@ import {
 import { Elysia, t } from "elysia";
 import { log, parseError } from "evlog";
 import { useLogger } from "evlog/elysia";
-import { createConfig as createAgentConfig } from "../ai/agents/analytics";
 import {
 	checkWebsiteReadPermissionCached,
 	ensureAgentCreditsAvailableCached,
 	getAgentContextSnapshot,
 	getMemoryContextCached,
 	shouldLoadMemoryContext,
-} from "../ai/agents/cache";
-import {
-	resolveAgentBillingCustomerId,
-	trackAgentUsageAndBill,
-} from "../ai/agents/execution";
-import { type AgentTier, tierToModelKey } from "../ai/agents/router";
-import {
-	AGENT_THINKING_LEVELS,
-	AGENT_TIERS,
-	type AgentConfig,
-} from "../ai/agents/types";
-import {
-	type AgentModelKey,
-	AI_MODEL_MAX_RETRIES,
-	ANTHROPIC_CACHE_1H,
-	modelNames,
-	models,
-} from "../ai/config/models";
+} from "@databuddy/ai/agents/cache";
 import { getAILogger } from "../lib/ai-logger";
 import { trackAgentEvent } from "../lib/databuddy";
-import {
-	formatMemoryForPrompt,
-	isMemoryEnabled,
-	storeConversation,
-	type MemoryContext,
-} from "../lib/supermemory";
 import { getResolvedAuth } from "../lib/auth-wide-event";
 import { captureError, mergeWideEvent } from "../lib/tracing";
 import { validateWebsite } from "../lib/website-utils";
@@ -91,6 +92,20 @@ function getErrorName(error: unknown, fallback = "UnknownError"): string {
 		return error.name;
 	}
 	return fallback;
+}
+
+function createSessionAgentActor(
+	user: { id: string } | null,
+	requestHeaders: Headers
+) {
+	if (!user) {
+		throw new Error("Authenticated session user is required.");
+	}
+	return {
+		requestHeaders,
+		type: "session" as const,
+		userId: user.id,
+	};
 }
 
 function getLastMessagePreview(
@@ -223,6 +238,13 @@ const AgentRequestSchema = t.Object({
 	tier: t.Optional(t.Union(AGENT_TIERS.map((tier) => t.Literal(tier)))),
 });
 
+const AgentAskRequestSchema = t.Object({
+	question: t.String({ minLength: 1, maxLength: 2000 }),
+	id: t.Optional(t.String({ minLength: 1 })),
+	stream: t.Optional(t.Boolean()),
+	timezone: t.Optional(t.String()),
+});
+
 const AGENT_TYPE = "analytics";
 const AGENT_MEMORY_CONTEXT_TIMEOUT_MS = 700;
 const AGENT_ENRICHMENT_CONTEXT_TIMEOUT_MS = 700;
@@ -335,6 +357,34 @@ function createToolLoopAgent(
 	});
 }
 
+function createPlainTextStreamResponse(
+	stream: AsyncIterable<string>
+): Response {
+	const encoder = new TextEncoder();
+	return new Response(
+		new ReadableStream<Uint8Array>({
+			async start(controller) {
+				try {
+					for await (const chunk of stream) {
+						if (chunk) {
+							controller.enqueue(encoder.encode(chunk));
+						}
+					}
+					controller.close();
+				} catch (error) {
+					controller.error(error);
+				}
+			},
+		}),
+		{
+			headers: {
+				"Cache-Control": "no-cache",
+				"Content-Type": "text/plain; charset=utf-8",
+			},
+		}
+	);
+}
+
 export const agent = new Elysia({ prefix: "/v1/agent" })
 	.derive(async ({ request }) => {
 		const preResolved = getResolvedAuth(request.headers);
@@ -370,6 +420,78 @@ export const agent = new Elysia({ prefix: "/v1/agent" })
 			};
 		}
 	})
+	.post(
+		"/ask",
+		async function agentAsk({ body, user, apiKey, request }) {
+			const conversationId = body.id ?? generateId();
+			const userId = user?.id ?? null;
+			const organizationId = apiKey?.organizationId ?? null;
+
+			mergeWideEvent({
+				agent_chat_id: conversationId,
+				agent_user_id: userId ?? `apikey:${apiKey?.id ?? "unknown"}`,
+				...(organizationId ? { organization_id: organizationId } : {}),
+				source: "slack",
+			});
+
+			try {
+				if (!(user || apiKey)) {
+					return jsonError(401, "AUTH_REQUIRED", "Authentication required");
+				}
+
+				const actor = apiKey
+					? {
+							apiKey,
+							requestHeaders: request.headers,
+							type: "api_key" as const,
+							userId,
+						}
+					: createSessionAgentActor(user, request.headers);
+				if (body.stream) {
+					return createPlainTextStreamResponse(
+						streamDatabuddyAgent({
+							actor,
+							conversationId,
+							input: body.question,
+							source: "slack",
+							timezone: body.timezone,
+						})
+					);
+				}
+
+				const result = await askDatabuddyAgent({
+					actor,
+					conversationId,
+					input: body.question,
+					source: "slack",
+					timezone: body.timezone,
+				});
+
+				return {
+					answer: result.answer,
+					conversationId: result.conversationId,
+				};
+			} catch (error) {
+				trackAgentEvent("agent_activity", {
+					action: "chat_error",
+					source: "slack",
+					error_type: getErrorName(error),
+					organization_id: organizationId,
+					user_id: userId,
+				});
+				captureError(error, {
+					agent_error: true,
+					agent_type: AGENT_TYPE,
+					agent_chat_id: conversationId,
+					agent_user_id: userId ?? "unknown",
+					error_type: getErrorName(error),
+					source: "slack",
+				});
+				return jsonError(500, "INTERNAL_ERROR", getErrorMessage(error));
+			}
+		},
+		{ body: AgentAskRequestSchema, idleTimeout: 60_000 }
+	)
 	.post(
 		"/chat",
 		function agentChat({ body, user, apiKey, request }) {
@@ -748,6 +870,7 @@ export const agent = new Elysia({ prefix: "/v1/agent" })
 						}
 					}
 
+					const usagePromise = result.totalUsage;
 					const response = result.toUIMessageStreamResponse({
 						originalMessages: validation.data,
 						onFinish: async ({ messages }) => {
@@ -797,7 +920,37 @@ export const agent = new Elysia({ prefix: "/v1/agent" })
 					});
 
 					if (response.body) {
-						const [forClient, forStorage] = response.body.tee();
+						const encoder = new TextEncoder();
+						const decoder = new TextDecoder();
+						const usageInjector = new TransformStream<Uint8Array, Uint8Array>({
+							async transform(chunk, controller) {
+								const text = decoder.decode(chunk, { stream: true });
+								if (text.includes("data: [DONE]")) {
+									const before = text.replace("data: [DONE]", "").trimEnd();
+									if (before) {
+										controller.enqueue(encoder.encode(before));
+									}
+									try {
+										const usage = await usagePromise;
+										const evt = JSON.stringify({
+											type: "usage",
+											inputTokens: usage.inputTokens,
+											outputTokens: usage.outputTokens,
+										});
+										controller.enqueue(
+											encoder.encode(`\ndata: ${evt}\n\ndata: [DONE]\n`)
+										);
+									} catch {
+										controller.enqueue(encoder.encode("\ndata: [DONE]\n"));
+									}
+								} else {
+									controller.enqueue(chunk);
+								}
+							},
+						});
+
+						const injectedStream = response.body.pipeThrough(usageInjector);
+						const [forClient, forStorage] = injectedStream.tee();
 						(async () => {
 							const reader = forStorage.getReader();
 							try {

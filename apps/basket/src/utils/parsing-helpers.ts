@@ -28,10 +28,6 @@ export function validateEventSchema<T>(
 	clientId: string
 ): Promise<ParseResult<T>> {
 	return record("validateEventSchema", async () => {
-		if (process.env.NODE_ENV === "development") {
-			return { success: true, data: event as T };
-		}
-
 		const parseResult = await schema.safeParseAsync(event);
 
 		if (!parseResult.success) {

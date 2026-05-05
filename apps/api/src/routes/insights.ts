@@ -17,27 +17,27 @@ import { generateText, Output, stepCountIs, ToolLoopAgent } from "ai";
 import dayjs from "dayjs";
 import { Elysia, t } from "elysia";
 import { useLogger } from "evlog/elysia";
-import type { AppContext } from "../ai/config/context";
-import { ANTHROPIC_CACHE_1H, models } from "../ai/config/models";
+import type { AppContext } from "@databuddy/ai/config/context";
+import { ANTHROPIC_CACHE_1H, models } from "@databuddy/ai/config/models";
+import { createInsightsAgentTools } from "@databuddy/ai/tools/insights-agent-tools";
 import {
 	fetchInsightDedupeKeyToIdMap,
 	insightDedupeKey,
-} from "../ai/insights/dedupe";
+} from "@databuddy/ai/insights/dedupe";
 import {
 	fetchWebPeriodData,
 	getWeekOverWeekPeriod,
 	hasWebInsightData,
-} from "../ai/insights/fetch-context";
-import { formatLegacyWebDataForPrompt } from "../ai/insights/normalize";
+} from "@databuddy/ai/insights/fetch-context";
+import { formatLegacyWebDataForPrompt } from "@databuddy/ai/insights/normalize";
 import type {
 	InsightMetricRow,
 	WeekOverWeekPeriod,
-} from "../ai/insights/types";
-import type { ParsedInsight } from "../ai/schemas/smart-insights-output";
-import { insightsOutputSchema } from "../ai/schemas/smart-insights-output";
-import { createInsightsAgentTools } from "../ai/tools/insights-agent-tools";
+} from "@databuddy/ai/insights/types";
+import type { ParsedInsight } from "@databuddy/ai/schemas/smart-insights-output";
+import { insightsOutputSchema } from "@databuddy/ai/schemas/smart-insights-output";
+import { storeAnalyticsSummary } from "@databuddy/ai/lib/supermemory";
 import { getAILogger } from "../lib/ai-logger";
-import { storeAnalyticsSummary } from "../lib/supermemory";
 import { captureError, mergeWideEvent } from "../lib/tracing";
 
 const CACHE_TTL = 900;

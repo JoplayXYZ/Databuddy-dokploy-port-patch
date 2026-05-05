@@ -1,6 +1,11 @@
 import "./polyfills/compression";
 import { auth } from "@databuddy/auth";
-import { setPgTraceFn, warmPool } from "@databuddy/db";
+import {
+	setPgErrorFn,
+	setPgTraceFn,
+	shutdownPostgres,
+	warmPool,
+} from "@databuddy/db";
 import { setChRecordFn } from "@databuddy/db/clickhouse";
 import { setCacheTraceFn } from "@databuddy/redis";
 import {
@@ -34,6 +39,7 @@ import { initTccTracing, shutdownTccTracing } from "@/lib/tcc-otel";
 import { captureError, record } from "@/lib/tracing";
 import { agent } from "./routes/agent";
 import { health } from "./routes/health";
+import { integrations } from "./routes/integrations";
 import { insights } from "./routes/insights";
 import { mcp } from "./routes/mcp";
 import { publicApi } from "./routes/public";
@@ -72,6 +78,14 @@ setPgTraceFn((ms) => {
 			"pg.max_ms": next[2],
 		});
 	} catch {}
+});
+setPgErrorFn((error) => {
+	log.error({
+		service: "api",
+		component: "postgres_pool",
+		error_message: error.message,
+		error_stack: error.stack,
+	});
 });
 setCacheTraceFn((fields) => {
 	try {
@@ -271,7 +285,7 @@ const openApiHandler = new OpenAPIHandler(docsRouter, {
 
 **Scope requirements:** Session auth uses organization membership and roles; no scopes. API key auth may require scopes. The Links router enforces scopes: \`read:links\` for list/get, \`write:links\` for create/update/delete. Operations that require scopes include \`x-required-scopes\` in their schema.
 
-**Available scopes:** read:data | track:events | track:llm | read:links | write:links | manage:websites | manage:flags | manage:config
+**Available scopes:** read:data | track:events | read:links | write:links | manage:websites | manage:flags | manage:config
 
 **Creating keys:** Keys are created in the dashboard (Organization → API Keys) and must be scoped to an organization. Store the secret securely; it is shown only once.`,
 						},
@@ -363,6 +377,7 @@ const app = new Elysia({ precompile: true })
 	)
 	.use(query)
 	.use(agent)
+	.use(integrations)
 	.use(insights)
 	.use(mcp)
 	.all(
@@ -441,6 +456,12 @@ async function shutdown(signal: string) {
 		shutdownRedis().catch((error) =>
 			log.error({
 				lifecycle: "redisShutdown",
+				error_message: error instanceof Error ? error.message : String(error),
+			})
+		),
+		shutdownPostgres().catch((error) =>
+			log.error({
+				lifecycle: "postgresShutdown",
 				error_message: error instanceof Error ? error.message : String(error),
 			})
 		),

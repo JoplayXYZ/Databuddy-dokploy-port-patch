@@ -1,3 +1,4 @@
+import { shutdownPostgres } from "@databuddy/db";
 import { closeUptimeQueue } from "@databuddy/redis";
 import { Elysia } from "elysia";
 import { Effect } from "effect";
@@ -55,6 +56,10 @@ const drainAll = (worker: ReturnType<typeof startUptimeWorker> | null) =>
 			Effect.tryPromise({ try: () => closeUptimeQueue(), catch: (c) => c }),
 			Effect.tryPromise({
 				try: () => flushBatchedUptimeDrain(),
+				catch: (c) => c,
+			}),
+			Effect.tryPromise({
+				try: () => shutdownPostgres(),
 				catch: (c) => c,
 			}),
 			Effect.tryPromise({ try: () => disconnectProducer(), catch: (c) => c }),

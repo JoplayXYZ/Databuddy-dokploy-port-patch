@@ -112,7 +112,13 @@ const createFlagSchema = z
 	.object({
 		websiteId: z.string().optional(),
 		organizationId: z.string().optional(),
-		payload: z.any().optional(),
+		payload: z
+			.record(z.string(), z.unknown())
+			.refine(
+				(obj) => JSON.stringify(obj).length <= 32_768,
+				"Payload too large (max 32KB)"
+			)
+			.optional(),
 		persistAcrossAuth: z.boolean().optional(),
 		...flagFormShape,
 	})
@@ -129,7 +135,13 @@ const updateFlagSchema = z
 		type: z.enum(["boolean", "rollout", "multivariant"]).optional(),
 		status: z.enum(["active", "inactive", "archived"]).optional(),
 		defaultValue: z.boolean().optional(),
-		payload: z.any().optional(),
+		payload: z
+			.record(z.string(), z.unknown())
+			.refine(
+				(obj) => JSON.stringify(obj).length <= 32_768,
+				"Payload too large (max 32KB)"
+			)
+			.optional(),
 		rules: z.array(userRuleSchema).optional(),
 		persistAcrossAuth: z.boolean().optional(),
 		rolloutPercentage: z.number().min(0).max(100).optional(),
@@ -822,8 +834,8 @@ export const flagsRouter = {
 			} else if (flag.organizationId) {
 				workspace = await withWorkspace(context, {
 					organizationId: flag.organizationId,
-					resource: "website",
-					permissions: ["create"],
+					resource: "organization",
+					permissions: ["update"],
 				});
 			} else {
 				throw rpcError.forbidden(
@@ -1007,8 +1019,8 @@ export const flagsRouter = {
 			} else if (flag.organizationId) {
 				workspace = await withWorkspace(context, {
 					organizationId: flag.organizationId,
-					resource: "website",
-					permissions: ["create"],
+					resource: "organization",
+					permissions: ["update"],
 				});
 			} else {
 				throw rpcError.forbidden(

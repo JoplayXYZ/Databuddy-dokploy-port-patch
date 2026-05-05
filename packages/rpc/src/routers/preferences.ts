@@ -1,8 +1,7 @@
 import { userPreferences } from "@databuddy/db/schema";
 import { randomUUIDv7 } from "bun";
 import { z } from "zod";
-import { rpcError } from "..";
-import { protectedProcedure, trackedProcedure } from "../orpc";
+import { sessionProcedure, trackedSessionProcedure } from "../orpc";
 
 const defaultPreferences = {
 	timezone: "auto",
@@ -13,7 +12,7 @@ const defaultPreferences = {
 const preferencesOutputSchema = z.record(z.string(), z.unknown());
 
 export const preferencesRouter = {
-	getUserPreferences: protectedProcedure
+	getUserPreferences: sessionProcedure
 		.route({
 			description: "Returns user preferences.",
 			method: "POST",
@@ -23,9 +22,6 @@ export const preferencesRouter = {
 		})
 		.output(preferencesOutputSchema)
 		.handler(async ({ context }) => {
-			if (!context.user) {
-				throw rpcError.unauthorized("User not authenticated");
-			}
 			let preferences = await context.db.query.userPreferences.findFirst({
 				where: { userId: context.user.id },
 			});
@@ -45,7 +41,7 @@ export const preferencesRouter = {
 			return preferences;
 		}),
 
-	updateUserPreferences: trackedProcedure
+	updateUserPreferences: trackedSessionProcedure
 		.route({
 			description: "Updates user preferences.",
 			method: "POST",
@@ -62,9 +58,6 @@ export const preferencesRouter = {
 		)
 		.output(preferencesOutputSchema)
 		.handler(async ({ context, input }) => {
-			if (!context.user) {
-				throw rpcError.unauthorized("User not authenticated");
-			}
 			const now = new Date();
 
 			const result = await context.db

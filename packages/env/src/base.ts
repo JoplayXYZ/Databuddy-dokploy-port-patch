@@ -25,6 +25,7 @@ export const createEnv = <T extends z.ZodRawShape>(
 export const commonEnvSchema = {
 	NODE_ENV: z.string().default("development"),
 	DATABASE_URL: z.string(),
+	DB_POOL_MAX: z.string().optional(),
 	REDIS_URL: z.string(),
 } as const;
 

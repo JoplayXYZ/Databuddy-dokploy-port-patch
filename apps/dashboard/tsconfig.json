@@ -48,7 +48,6 @@
   "incremental": true,
   "references": [
     { "path": "../../packages/db" },
-    { "path": "../../packages/env" },
     { "path": "../../packages/redis" },
     { "path": "../../packages/sdk" },
     { "path": "../../packages/shared" },

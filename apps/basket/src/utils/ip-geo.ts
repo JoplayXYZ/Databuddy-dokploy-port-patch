@@ -10,6 +10,10 @@ import {
 import { createError, EvlogError, log } from "evlog";
 import { useLogger } from "evlog/elysia";
 
+if (!process.env.IP_HASH_SALT && process.env.NODE_ENV === "production") {
+	log.warn("IP_HASH_SALT is not set — IP hashes will use an insecure default");
+}
+
 interface GeoIPReader extends Reader {
 	city(ip: string): City;
 }
@@ -221,21 +225,22 @@ export function getGeo(ip: string, request?: Request) {
 	});
 }
 
-export function extractIpFromRequest(request: Request): string {
-	const cfIp = request.headers.get("cf-connecting-ip");
-	if (cfIp) {
-		return cfIp.trim();
-	}
+const TRUSTED_IP_HEADER = process.env.TRUSTED_IP_HEADER || "cf-connecting-ip";
 
-	const forwardedFor = request.headers.get("x-forwarded-for");
-	const firstIp = forwardedFor?.split(",")[0]?.trim();
-	if (firstIp) {
-		return firstIp;
-	}
-
-	const realIp = request.headers.get("x-real-ip");
-	if (realIp) {
-		return realIp.trim();
+export function extractIpFromRequest(
+	request: Request,
+	trustedHeader = TRUSTED_IP_HEADER
+): string {
+	const headerName = trustedHeader.toLowerCase();
+	const trusted = request.headers.get(headerName);
+	if (trusted) {
+		const ip =
+			headerName === "x-forwarded-for"
+				? trusted.split(",")[0]?.trim()
+				: trusted.trim();
+		if (ip) {
+			return ip;
+		}
 	}
 
 	return "";

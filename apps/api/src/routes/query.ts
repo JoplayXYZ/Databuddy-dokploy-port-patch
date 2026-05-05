@@ -11,19 +11,19 @@ import { db } from "@databuddy/db";
 import { ratelimit } from "@databuddy/redis/rate-limit";
 import { filterOptions } from "@databuddy/shared/lists/filters";
 import type { CustomQueryRequest } from "@databuddy/shared/types/custom-query";
+import { compileQuery, executeBatch } from "@databuddy/ai/query";
+import { QueryBuilders } from "@databuddy/ai/query/builders";
+import { executeCustomQuery } from "@databuddy/ai/query/custom-query-builder";
+import {
+	isNormalizedQueryDate,
+	normalizeClickHouseDateTime,
+} from "@databuddy/ai/query/date-utils";
+import type { Filter, QueryRequest } from "@databuddy/ai/query/types";
 import { Elysia, t } from "elysia";
 import { getAccessibleWebsites } from "../lib/accessible-websites";
 import { resolveDatePreset } from "../lib/date-presets";
 import { mergeWideEvent } from "../lib/tracing";
 import { getCachedWebsiteDomain, getWebsiteDomain } from "../lib/website-utils";
-import { compileQuery, executeBatch } from "../query";
-import { QueryBuilders } from "../query/builders";
-import { executeCustomQuery } from "../query/custom-query-builder";
-import {
-	isNormalizedQueryDate,
-	normalizeClickHouseDateTime,
-} from "../query/date-utils";
-import type { Filter, QueryRequest } from "../query/types";
 import {
 	CompileRequestSchema,
 	type CompileRequestType,
@@ -309,19 +309,15 @@ function createValidationErrorResponse(
 	);
 }
 
-async function getWebsiteOwnerId(websiteId: string): Promise<string | null> {
-	const website = await db.query.websites.findFirst({
-		where: { id: websiteId },
-		columns: {
-			organizationId: true,
-		},
+async function getOrganizationWebsiteIds(
+	organizationId: string
+): Promise<string[]> {
+	const websites = await db.query.websites.findMany({
+		where: { organizationId, deletedAt: { isNull: true } },
+		columns: { id: true },
 	});
 
-	if (!website) {
-		return null;
-	}
-
-	return website.organizationId ?? null;
+	return websites.map((website) => website.id);
 }
 
 function verifyWebsiteAccess(
@@ -723,7 +719,8 @@ async function executeDynamicQuery(
 	projectId: string,
 	projectType: ProjectType,
 	timezone: string,
-	domainCache?: Record<string, string | null>
+	domainCache?: Record<string, string | null>,
+	scope?: { organizationWebsiteIds?: string[] }
 ): Promise<{
 	queryId: string;
 	data: QueryResult[];
@@ -738,22 +735,14 @@ async function executeDynamicQuery(
 	const { startDate: from, endDate: to } = request;
 
 	const domain =
-		domainCache?.[projectId] ??
-		(await getWebsiteDomain(projectId).catch(() => null));
-
-	// LLM queries are scoped by owner (organizationId/userId), not website_id.
-	const hasLlmQueries = request.parameters.some((param) => {
-		const name = typeof param === "string" ? param : param.name;
-		return name.startsWith("llm_");
-	});
-
-	let ownerId: string | null = null;
-	if (hasLlmQueries) {
-		ownerId =
-			projectType === "organization"
-				? projectId
-				: await getWebsiteOwnerId(projectId);
-	}
+		projectType === "website"
+			? (domainCache?.[projectId] ??
+				(await getWebsiteDomain(projectId).catch(() => null)))
+			: null;
+	const organizationWebsiteIds =
+		projectType === "organization"
+			? (scope?.organizationWebsiteIds ?? [])
+			: undefined;
 
 	// Org-level custom_events queries: builder scans by owner_id (= organizationId
 	// set at ingestion) via primary key instead of matching website_id.
@@ -785,18 +774,11 @@ async function executeDynamicQuery(
 			return { id, error: "Invalid parameter date range" };
 		}
 
-		const isLlmQuery = name.startsWith("llm_");
-		const isCustomEventsQuery = name.startsWith("custom_event");
-		const effectiveProjectId = isLlmQuery ? ownerId : projectId;
-
-		const hasRequiredFields = effectiveProjectId && paramFrom && paramTo;
+		const hasRequiredFields = projectId && paramFrom && paramTo;
 		if (!hasRequiredFields) {
 			return {
 				id,
-				error:
-					isLlmQuery && !ownerId
-						? "Could not resolve owner for LLM query"
-						: "Missing resource identifier, start_date, or end_date",
+				error: "Missing resource identifier, start_date, or end_date",
 			};
 		}
 
@@ -808,7 +790,7 @@ async function executeDynamicQuery(
 		return {
 			id,
 			request: {
-				projectId: effectiveProjectId,
+				projectId,
 				type: name,
 				from: paramFrom,
 				to: paramTo,
@@ -821,8 +803,9 @@ async function executeDynamicQuery(
 				limit: request.limit || 100,
 				offset: request.page ? (request.page - 1) * (request.limit || 100) : 0,
 				timezone,
-				organizationWebsiteIds:
-					isCustomEventsQuery && isOrgCustomEvents ? [] : undefined,
+				organizationWebsiteIds: isOrgCustomEvents
+					? (organizationWebsiteIds ?? [])
+					: organizationWebsiteIds,
 				orderBy,
 			},
 		};
@@ -1079,10 +1062,21 @@ export const query = new Elysia({ prefix: "/v1/query" })
 					);
 				}
 
+				const organizationWebsiteIds =
+					accessResult.projectType === "organization"
+						? await getOrganizationWebsiteIds(accessResult.projectId)
+						: undefined;
+				const organizationScope = organizationWebsiteIds
+					? { organizationWebsiteIds }
+					: undefined;
+
 				const isBatch = Array.isArray(body);
 				mergeWideEvent({
 					query_is_batch: isBatch,
 					query_count: isBatch ? body.length : 1,
+					...(organizationWebsiteIds && {
+						query_organization_website_count: organizationWebsiteIds.length,
+					}),
 				});
 
 				if (isBatch) {
@@ -1129,7 +1123,8 @@ export const query = new Elysia({ prefix: "/v1/query" })
 								accessResult.projectId,
 								accessResult.projectType,
 								timezone,
-								cache
+								cache,
+								organizationScope
 							).catch((e) => ({
 								queryId: req.id,
 								data: [
@@ -1171,7 +1166,9 @@ export const query = new Elysia({ prefix: "/v1/query" })
 						resolvedBody,
 						accessResult.projectId,
 						accessResult.projectType,
-						timezone
+						timezone,
+						undefined,
+						organizationScope
 					)),
 				};
 			})(),

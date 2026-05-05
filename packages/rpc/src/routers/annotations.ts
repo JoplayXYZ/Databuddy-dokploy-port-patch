@@ -324,11 +324,10 @@ export const annotationsRouter = {
 				annotation.websiteId
 			);
 
-			if (
-				!isWebsiteOwner &&
-				context.user &&
-				annotation.createdBy !== context.user.id
-			) {
+			const isOwner = context.user
+				? annotation.createdBy === context.user.id
+				: false;
+			if (!(isWebsiteOwner || isOwner)) {
 				throw rpcError.forbidden("You can only update your own annotations");
 			}
 
@@ -400,11 +399,10 @@ export const annotationsRouter = {
 				annotation.websiteId
 			);
 
-			if (
-				!isWebsiteOwner &&
-				context.user &&
-				annotation.createdBy !== context.user.id
-			) {
+			const isOwner = context.user
+				? annotation.createdBy === context.user.id
+				: false;
+			if (!(isWebsiteOwner || isOwner)) {
 				throw rpcError.forbidden("You can only delete your own annotations");
 			}
 

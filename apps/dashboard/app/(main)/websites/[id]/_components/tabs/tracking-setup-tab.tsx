@@ -21,7 +21,7 @@ import {
 	ADVANCED_TRACKING_OPTIONS,
 	BASIC_TRACKING_OPTIONS,
 	COPY_SUCCESS_TIMEOUT,
-} from "../shared/tracking-constants";
+} from "../constants/settings-constants";
 import {
 	generateNpmCode,
 	generateScriptTag,
