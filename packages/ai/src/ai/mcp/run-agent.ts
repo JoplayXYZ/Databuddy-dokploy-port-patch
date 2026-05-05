@@ -15,16 +15,19 @@ import {
 } from "../agents/execution";
 import { createMcpAgentConfig } from "../agents/mcp";
 import { modelNames } from "../config/models";
+import type { DatabuddyAgentSlackContext } from "./slack-context";
 
 const DEFAULT_MCP_AGENT_TIMEOUT_MS = 45_000;
 
 export interface RunMcpAgentOptions {
+	abortSignal?: AbortSignal;
 	apiKey: ApiKeyRow | null;
 	conversationId?: string;
 	modelOverride?: string | null;
 	priorMessages?: Array<{ role: "user" | "assistant"; content: string }>;
 	question: string;
 	requestHeaders: Headers;
+	slackContext?: DatabuddyAgentSlackContext | null;
 	source?: "dashboard" | "mcp" | "slack";
 	storeMemory?: boolean;
 	timeoutMs?: number;
@@ -52,16 +55,12 @@ export async function runMcpAgent(
 	options: RunMcpAgentOptions
 ): Promise<string> {
 	const prepared = await prepareMcpAgentRun(options);
-	const abortController = new AbortController();
-	const timeout = setTimeout(
-		() => abortController.abort(),
-		getTimeoutMs(options)
-	);
+	const abort = createRunAbortController(options);
 
 	try {
 		const result = await prepared.agent.generate({
 			messages: prepared.messages,
-			abortSignal: abortController.signal,
+			abortSignal: abort.signal,
 		});
 
 		const usage = (result as { usage?: LanguageModelUsage }).usage;
@@ -76,7 +75,7 @@ export async function runMcpAgent(
 
 		return answer;
 	} finally {
-		clearTimeout(timeout);
+		abort.cleanup();
 	}
 }
 
@@ -84,16 +83,12 @@ export async function runMcpAgentWithTrace(
 	options: RunMcpAgentOptions
 ): Promise<RunMcpAgentTraceResult> {
 	const prepared = await prepareMcpAgentRun(options);
-	const abortController = new AbortController();
-	const timeout = setTimeout(
-		() => abortController.abort(),
-		getTimeoutMs(options)
-	);
+	const abort = createRunAbortController(options);
 
 	try {
 		const result = await prepared.agent.generate({
 			messages: prepared.messages,
-			abortSignal: abortController.signal,
+			abortSignal: abort.signal,
 		});
 
 		await trackPreparedUsage(prepared, result.totalUsage);
@@ -109,7 +104,7 @@ export async function runMcpAgentWithTrace(
 			usage: result.totalUsage,
 		};
 	} finally {
-		clearTimeout(timeout);
+		abort.cleanup();
 	}
 }
 
@@ -117,16 +112,12 @@ export async function* streamMcpAgentText(
 	options: RunMcpAgentOptions
 ): AsyncGenerator<string> {
 	const prepared = await prepareMcpAgentRun(options);
-	const abortController = new AbortController();
-	const timeout = setTimeout(
-		() => abortController.abort(),
-		getTimeoutMs(options)
-	);
+	const abort = createRunAbortController(options);
 
 	try {
 		const result = await prepared.agent.stream({
 			messages: prepared.messages,
-			abortSignal: abortController.signal,
+			abortSignal: abort.signal,
 		});
 		let answer = "";
 
@@ -145,8 +136,36 @@ export async function* streamMcpAgentText(
 			);
 		}
 	} finally {
-		clearTimeout(timeout);
+		abort.cleanup();
 	}
+}
+
+function createRunAbortController(options: RunMcpAgentOptions): {
+	cleanup: () => void;
+	signal: AbortSignal;
+} {
+	const controller = new AbortController();
+	const timeout = setTimeout(() => controller.abort(), getTimeoutMs(options));
+	const externalSignal = options.abortSignal;
+	const abortFromExternalSignal = () => {
+		controller.abort(externalSignal?.reason);
+	};
+
+	if (externalSignal?.aborted) {
+		abortFromExternalSignal();
+	} else {
+		externalSignal?.addEventListener("abort", abortFromExternalSignal, {
+			once: true,
+		});
+	}
+
+	return {
+		cleanup: () => {
+			clearTimeout(timeout);
+			externalSignal?.removeEventListener("abort", abortFromExternalSignal);
+		},
+		signal: controller.signal,
+	};
 }
 
 async function prepareMcpAgentRun(options: RunMcpAgentOptions) {
@@ -184,6 +203,7 @@ async function prepareMcpAgentRun(options: RunMcpAgentOptions) {
 				timezone: options.timezone,
 				chatId: sessionId,
 				modelOverride: options.modelOverride,
+				slackContext: options.slackContext,
 				source,
 				websiteDomain: options.websiteDomain,
 				websiteId: options.websiteId,

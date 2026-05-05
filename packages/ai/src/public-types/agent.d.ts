@@ -7,6 +7,34 @@ export interface ConversationMessage {
 	role: "user" | "assistant";
 }
 
+export interface DatabuddyAgentSlackMessage {
+	authorName?: string;
+	text: string;
+	threadTs?: string;
+	ts?: string;
+	userId?: string;
+}
+
+export interface DatabuddyAgentSlackThreadResult {
+	channelId: string;
+	hasMore?: boolean;
+	messages: DatabuddyAgentSlackMessage[];
+	threadTs: string;
+}
+
+export interface DatabuddyAgentSlackChannelHistoryResult {
+	channelId: string;
+	hasMore?: boolean;
+	messages: DatabuddyAgentSlackMessage[];
+}
+
+export interface DatabuddyAgentSlackContext {
+	readCurrentThread?: () => Promise<DatabuddyAgentSlackThreadResult>;
+	readRecentChannelMessages?: (input: {
+		limit?: number;
+	}) => Promise<DatabuddyAgentSlackChannelHistoryResult>;
+}
+
 export type DatabuddyAgentActor =
 	| {
 			apiKey: ApiKeyRow;
@@ -28,12 +56,14 @@ export type DatabuddyAgentActor =
 	  };
 
 export interface DatabuddyAgentOptions {
+	abortSignal?: AbortSignal;
 	actor: DatabuddyAgentActor;
 	conversationId?: string;
 	history?: ConversationMessage[];
 	input: string;
 	modelOverride?: string | null;
 	persistConversation?: boolean;
+	slackContext?: DatabuddyAgentSlackContext | null;
 	source?: DatabuddyAgentSource;
 	timeoutMs?: number;
 	timezone?: string;

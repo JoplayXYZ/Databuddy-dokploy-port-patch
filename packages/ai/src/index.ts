@@ -6,6 +6,10 @@ export {
 	type DatabuddyAgentOptions,
 	type DatabuddyAgentResult,
 	type DatabuddyAgentSource,
+	type DatabuddyAgentSlackChannelHistoryResult,
+	type DatabuddyAgentSlackContext,
+	type DatabuddyAgentSlackMessage,
+	type DatabuddyAgentSlackThreadResult,
 	type DatabuddyAgentToolTrace,
 	type DatabuddyAgentTraceResult,
 } from "./agent";

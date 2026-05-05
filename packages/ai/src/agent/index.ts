@@ -10,8 +10,15 @@ import {
 	runMcpAgentWithTrace,
 	type McpAgentToolTrace,
 } from "../ai/mcp/run-agent";
+import type { DatabuddyAgentSlackContext } from "../ai/mcp/slack-context";
 
 export type { ConversationMessage } from "../ai/mcp/conversation-store";
+export type {
+	DatabuddyAgentSlackChannelHistoryResult,
+	DatabuddyAgentSlackContext,
+	DatabuddyAgentSlackMessage,
+	DatabuddyAgentSlackThreadResult,
+} from "../ai/mcp/slack-context";
 
 export type DatabuddyAgentSource = "dashboard" | "mcp" | "slack";
 
@@ -36,12 +43,14 @@ export type DatabuddyAgentActor =
 	  };
 
 export interface DatabuddyAgentOptions {
+	abortSignal?: AbortSignal;
 	actor: DatabuddyAgentActor;
 	conversationId?: string;
 	history?: ConversationMessage[];
 	input: string;
 	modelOverride?: string | null;
 	persistConversation?: boolean;
+	slackContext?: DatabuddyAgentSlackContext | null;
 	source?: DatabuddyAgentSource;
 	timeoutMs?: number;
 	timezone?: string;
@@ -82,6 +91,8 @@ export async function askDatabuddyAgent(
 		priorMessages: prepared.history,
 		question: options.input,
 		requestHeaders: prepared.actor.requestHeaders,
+		abortSignal: options.abortSignal,
+		slackContext: options.slackContext,
 		source: prepared.source,
 		modelOverride: options.modelOverride,
 		storeMemory: options.persistConversation !== false,
@@ -103,12 +114,14 @@ export async function traceDatabuddyAgent(
 	const prepared = await prepareDatabuddyAgentCall(options);
 	const result = await runMcpAgentWithTrace({
 		apiKey: prepared.actor.apiKey,
+		abortSignal: options.abortSignal,
 		conversationId: prepared.conversationId,
 		modelOverride: options.modelOverride,
 		priorMessages: prepared.history,
 		question: options.input,
 		requestHeaders: prepared.actor.requestHeaders,
 		source: prepared.source,
+		slackContext: options.slackContext,
 		storeMemory: options.persistConversation !== false,
 		timeoutMs: options.timeoutMs,
 		timezone: options.timezone,
@@ -142,11 +155,13 @@ export async function* streamDatabuddyAgent(
 
 	for await (const chunk of streamMcpAgentText({
 		apiKey: prepared.actor.apiKey,
+		abortSignal: options.abortSignal,
 		conversationId: prepared.conversationId,
 		priorMessages: prepared.history,
 		question: options.input,
 		requestHeaders: prepared.actor.requestHeaders,
 		source: prepared.source,
+		slackContext: options.slackContext,
 		modelOverride: options.modelOverride,
 		storeMemory: options.persistConversation !== false,
 		timeoutMs: options.timeoutMs,

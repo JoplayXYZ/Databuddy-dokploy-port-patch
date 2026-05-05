@@ -20,6 +20,10 @@ import { createMemoryTools } from "../tools/memory";
 import { createProfileTools } from "../tools/profiles";
 import { executeTimedQuery } from "../tools/utils";
 import { buildBatchQueryRequests, MCP_DATE_PRESETS } from "./mcp-utils";
+import {
+	createSlackConversationTools,
+	type DatabuddyAgentSlackContext,
+} from "./slack-context";
 import { ensureWebsiteAccess } from "./tool-context";
 
 export interface McpAgentContext {
@@ -57,7 +61,9 @@ function getContext(ctx: unknown): McpAgentContext {
 	return ctx as McpAgentContext;
 }
 
-export function createMcpAgentTools(): ToolSet {
+export function createMcpAgentTools(
+	options: { slackContext?: DatabuddyAgentSlackContext | null } = {}
+): ToolSet {
 	return {
 		list_websites: tool({
 			description:
@@ -260,5 +266,6 @@ export function createMcpAgentTools(): ToolSet {
 		...createGoalTools(),
 		...createAnnotationTools(),
 		...createLinksTools(),
+		...createSlackConversationTools(options.slackContext),
 	};
 }

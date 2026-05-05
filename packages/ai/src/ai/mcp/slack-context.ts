@@ -29,22 +29,24 @@ export interface DatabuddyAgentSlackContext {
 	}) => Promise<DatabuddyAgentSlackChannelHistoryResult>;
 }
 
-export function createSlackContextTools(
+export function createSlackConversationTools(
 	slackContext?: DatabuddyAgentSlackContext | null
 ): ToolSet {
 	const tools: ToolSet = {};
+	const readCurrentThread = slackContext?.readCurrentThread;
+	const readRecentChannelMessages = slackContext?.readRecentChannelMessages;
 
-	if (slackContext?.readCurrentThread) {
+	if (readCurrentThread) {
 		tools.slack_read_current_thread = tool({
 			description:
 				"Read the current Slack thread. Use when the user refers to this thread, above, previous replies, decisions, discussion, context, or asks to summarize/answer based on Slack conversation context.",
 			strict: true,
 			inputSchema: z.object({}),
-			execute: async () => slackContext.readCurrentThread?.(),
+			execute: readCurrentThread,
 		});
 	}
 
-	if (slackContext?.readRecentChannelMessages) {
+	if (readRecentChannelMessages) {
 		tools.slack_read_recent_channel_messages = tool({
 			description:
 				"Read recent messages from the current Slack channel only. Use sparingly for recent channel context, not broad workspace search. Prefer slack_read_current_thread when the user asks about the current thread.",
@@ -53,7 +55,7 @@ export function createSlackContextTools(
 				limit: z.number().int().min(1).max(50).optional(),
 			}),
 			execute: async ({ limit }) =>
-				slackContext.readRecentChannelMessages?.({ limit }),
+				readRecentChannelMessages({ limit }),
 		});
 	}
 

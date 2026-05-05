@@ -5,6 +5,7 @@ import {
 	models,
 } from "../config/models";
 import { createMcpAgentTools } from "../mcp/agent-tools";
+import type { DatabuddyAgentSlackContext } from "../mcp/slack-context";
 import { buildAnalyticsInstructionsForMcp } from "../prompts/analytics";
 import { TIER_CONFIG } from "../config/tiers";
 import type { AgentConfig } from "./types";
@@ -17,6 +18,7 @@ export function createMcpAgentConfig(context: {
 	timezone?: string;
 	chatId?: string;
 	modelOverride?: string | null;
+	slackContext?: DatabuddyAgentSlackContext | null;
 	source?: "dashboard" | "mcp" | "slack";
 	websiteDomain?: string | null;
 	websiteId?: string | null;
@@ -45,7 +47,7 @@ export function createMcpAgentConfig(context: {
 			}),
 			providerOptions: useAnthropicPromptCache ? ANTHROPIC_CACHE_1H : undefined,
 		},
-		tools: createMcpAgentTools(),
+		tools: createMcpAgentTools({ slackContext: context.slackContext }),
 		stopWhen: stepCountIs(TIER_CONFIG.balanced.maxSteps),
 		temperature: 0.1,
 		experimental_context: {

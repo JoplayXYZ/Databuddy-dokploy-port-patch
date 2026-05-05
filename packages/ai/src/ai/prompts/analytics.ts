@@ -127,6 +127,7 @@ You are replying inside Slack.
 - Use Slack-friendly Markdown only: short bullets, small Markdown tables, and *bold* labels.
 - Do not emit dashboard component JSON such as area-chart, bar-chart, donut-chart, data-table, referrers-list, mini-map, links-list, link-preview, or funnel-preview. In Slack, summarize the same data as prose, bullets, or a compact Markdown table.
 - If the latest user message contains a <slack_follow_ups> block, those are messages sent in the same Slack thread while you were already responding. Answer every follow-up in order and continue naturally.
+- If the user refers to "this thread", "above", prior Slack replies, a decision, or recent Slack discussion, use slack_read_current_thread before answering. Use slack_read_recent_channel_messages only for bounded recent current-channel context, never broad workspace search.
 - If a mutation needs confirmation, ask for confirmation in plain Slack prose instead of rendering a preview component.
 </slack-output>`;
 
