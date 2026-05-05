@@ -2,15 +2,15 @@ import type {
 	DatabuddyAgentSlackContext,
 	DatabuddyAgentSlackMessage,
 } from "@databuddy/ai/agent";
-import type { WebClient } from "@slack/web-api";
 import type { SlackAgentRun } from "../agent/agent-client";
+import type { SlackAgentClient } from "./types";
 
 const DEFAULT_CHANNEL_HISTORY_LIMIT = 20;
 const MAX_SLACK_CONTEXT_MESSAGES = 50;
 
-type SlackContextClient = Pick<WebClient, "apiCall">;
+type SlackContextClient = Pick<SlackAgentClient, "conversations">;
 
-export function createSlackAgentContext(
+export function createSlackConversationContext(
 	client: SlackContextClient,
 	run: SlackAgentRun
 ): DatabuddyAgentSlackContext | null {
@@ -21,7 +21,7 @@ export function createSlackAgentContext(
 
 	return {
 		readCurrentThread: async () => {
-			const result = await client.apiCall("conversations.replies", {
+			const result = await client.conversations.replies({
 				channel: run.channelId,
 				inclusive: true,
 				limit: MAX_SLACK_CONTEXT_MESSAGES,
@@ -31,33 +31,33 @@ export function createSlackAgentContext(
 			return {
 				channelId: run.channelId,
 				hasMore: getBoolean(result, "has_more"),
-				messages: mapSlackMessages(result),
+				messages: mapSlackApiMessages(result),
 				threadTs,
 			};
 		},
 		readRecentChannelMessages: async ({ limit }) => {
-			const result = await client.apiCall("conversations.history", {
+			const result = await client.conversations.history({
 				channel: run.channelId,
-				limit: clampLimit(limit),
+				limit: clampSlackMessageLimit(limit),
 			});
 
 			return {
 				channelId: run.channelId,
 				hasMore: getBoolean(result, "has_more"),
-				messages: mapSlackMessages(result),
+				messages: mapSlackApiMessages(result),
 			};
 		},
 	};
 }
 
-function clampLimit(limit: number | undefined): number {
+function clampSlackMessageLimit(limit: number | undefined): number {
 	if (typeof limit !== "number" || !Number.isFinite(limit)) {
 		return DEFAULT_CHANNEL_HISTORY_LIMIT;
 	}
 	return Math.max(1, Math.min(MAX_SLACK_CONTEXT_MESSAGES, Math.floor(limit)));
 }
 
-function mapSlackMessages(result: unknown): DatabuddyAgentSlackMessage[] {
+function mapSlackApiMessages(result: unknown): DatabuddyAgentSlackMessage[] {
 	if (!(isRecord(result) && Array.isArray(result.messages))) {
 		return [];
 	}

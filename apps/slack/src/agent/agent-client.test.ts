@@ -1,22 +1,34 @@
 import { describe, expect, it, mock } from "bun:test";
 import type { SlackAgentRun, SlackRunContext } from "./agent-client";
 
+let capturedSharedAgentOptions: Record<string, unknown> | null = null;
+
 mock.module("@databuddy/ai/agent", () => ({
-	streamDatabuddyAgent: async function* () {
-		yield "";
+	classifySlackThreadReplyRelevance: async () => null,
+	streamDatabuddyAgent: async function* (options: Record<string, unknown>) {
+		capturedSharedAgentOptions = options;
+		yield "Done";
 	},
 }));
 
 const {
-	createSlackChatId,
+	createSlackConversationId,
+	createSlackMemoryUserId,
 	DatabuddyAgentClient,
 	formatSlackAgentInput,
 } = await import("./agent-client");
 
+function expectCapturedSharedAgentOptions(): Record<string, unknown> {
+	if (!capturedSharedAgentOptions) {
+		throw new Error("Expected streamDatabuddyAgent to be called");
+	}
+	return capturedSharedAgentOptions;
+}
+
 describe("Databuddy Slack agent client", () => {
-	it("creates stable Slack-scoped chat ids", () => {
+	it("creates stable Slack-scoped conversation ids", () => {
 		expect(
-			createSlackChatId({
+			createSlackConversationId({
 				channelId: "C123",
 				messageTs: "171234.567",
 				teamId: "T123",
@@ -26,6 +38,55 @@ describe("Databuddy Slack agent client", () => {
 				userId: "U123",
 			})
 		).toBe("slack-T123-C123-171234_000");
+	});
+
+	it("creates stable Slack-user memory ids", () => {
+		expect(
+			createSlackMemoryUserId({
+				channelId: "C123",
+				messageTs: "171234.567",
+				teamId: "T123",
+				text: "hello",
+				threadTs: "171234.000",
+				trigger: "app_mention",
+				userId: "U123",
+			})
+		).toBe("slack-T123-U123");
+	});
+
+	it("passes Slack user-scoped memory identity to the shared agent", async () => {
+		capturedSharedAgentOptions = null;
+		const client = new DatabuddyAgentClient({
+			resolve: async () => ({
+				agentApiKeySecret: "dbdy_secret",
+				organizationId: "org_123",
+				teamId: "T123",
+			}),
+		});
+
+		const chunks: string[] = [];
+		for await (const chunk of client.stream({
+			channelId: "C123",
+			teamId: "T123",
+			text: "say something mean about <@U999>",
+			threadTs: "171234.000",
+			trigger: "thread_follow_up",
+			userId: "U456",
+		})) {
+			chunks.push(chunk);
+		}
+
+		expect(chunks).toEqual(["Done"]);
+		const captured = expectCapturedSharedAgentOptions();
+		expect(captured.memoryUserId).toBe("slack-T123-U456");
+		expect(String(captured.input)).toContain("Current Slack speaker: <@U456>");
+		expect(String(captured.input)).toContain(
+			"Do not apply another Slack user's saved name"
+		);
+		expect(captured.actor).toMatchObject({
+			type: "api_key_secret",
+			userId: null,
+		});
 	});
 
 	it("passes resolved org integration context to the shared Databuddy agent runner", async () => {
@@ -98,6 +159,23 @@ describe("Databuddy Slack agent client", () => {
 		expect(chunks).toEqual(["Hello ", "from stream"]);
 	});
 
+	it("formats a single Slack message with the current speaker", () => {
+		const input = formatSlackAgentInput({
+			channelId: "C123",
+			messageTs: "171234.568",
+			teamId: "T123",
+			text: "what is my name?",
+			threadTs: "171234.000",
+			trigger: "thread_follow_up",
+			userId: "U2",
+		});
+
+		expect(input).toContain("<slack_message_context>");
+		expect(input).toContain("Current Slack speaker: <@U2>");
+		expect(input).toContain("Message from <@U2>:");
+		expect(input).toContain("what is my name?");
+	});
+
 	it("formats queued Slack follow-ups as an ordered continuation", () => {
 		const input = formatSlackAgentInput({
 			channelId: "C123",
@@ -112,6 +190,7 @@ describe("Databuddy Slack agent client", () => {
 			userId: "U2",
 		});
 
+		expect(input).toContain("Current Slack speaker: <@U2>");
 		expect(input).toContain("<slack_follow_ups>");
 		expect(input).toContain("1. <@U1>: also check referrers");
 		expect(input).toContain("2. <@U2>: and compare mobile");
@@ -119,11 +198,9 @@ describe("Databuddy Slack agent client", () => {
 	});
 
 	it("explains missing organization context when no Slack installation resolves", async () => {
-		const client = new DatabuddyAgentClient(
-			{
-				resolve: async () => null,
-			}
-		);
+		const client = new DatabuddyAgentClient({
+			resolve: async () => null,
+		});
 
 		const answer = await client.runToText({
 			channelId: "C123",
@@ -134,7 +211,7 @@ describe("Databuddy Slack agent client", () => {
 		});
 
 		expect(answer).toBe(
-			"Databuddy is not connected to this Slack workspace yet. Open Databuddy organization settings -> Integrations -> Slack, connect the workspace, then run `/bind` in this channel."
+			"I'm not connected to this Slack workspace yet. Connect Slack in Databuddy organization settings, then mention `@Databuddy` again."
 		);
 	});
 });

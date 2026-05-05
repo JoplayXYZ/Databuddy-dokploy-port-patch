@@ -2,21 +2,37 @@ import { describe, expect, it } from "bun:test";
 import type { DatabuddyAgentClient } from "../agent/agent-client";
 import { SLACK_COPY } from "./messages";
 import { streamAgentToSlack } from "./respond";
+import type { SlackAgentClient } from "./types";
+
+function createStreamClient(startTs = "stream_ts") {
+	const calls: Array<{ method: string; options: unknown }> = [];
+	const client: Pick<SlackAgentClient, "chat"> = {
+		chat: {
+			appendStream: async (options) => {
+				calls.push({ method: "chat.appendStream", options });
+				return { ok: true };
+			},
+			startStream: async (options) => {
+				calls.push({ method: "chat.startStream", options });
+				return { ok: true, ts: startTs };
+			},
+			stopStream: async (options) => {
+				calls.push({ method: "chat.stopStream", options });
+				return { ok: true };
+			},
+		},
+	};
+	return {
+		calls,
+		client,
+	};
+}
 
 describe("Databuddy Slack response streaming", () => {
 	it("starts streams with answer text, not a loading placeholder", async () => {
 		const originalDateNow = Date.now;
 		let now = 0;
-		const calls: Array<{ method: string; options: Record<string, unknown> }> = [];
-		const client = {
-			apiCall: async (method: string, options?: Record<string, unknown>) => {
-				calls.push({ method, options: options ?? {} });
-				if (method === "chat.startStream") {
-					return { ok: true, ts: "stream_ts" };
-				}
-				return { ok: true };
-			},
-		};
+		const { calls, client } = createStreamClient();
 		const agent: Pick<DatabuddyAgentClient, "stream"> = {
 			async *stream() {
 				now = 1000;
@@ -60,7 +76,9 @@ describe("Databuddy Slack response streaming", () => {
 				markdown_text: "Traffic is up 12%.",
 			}),
 		});
-		expect(calls[0]?.options.markdown_text).not.toBe(SLACK_COPY.streamOpening);
+		expect(calls[0]?.options).not.toEqual(
+			expect.objectContaining({ markdown_text: SLACK_COPY.streamOpening })
+		);
 		expect(calls.map((call) => call.method)).toEqual([
 			"chat.startStream",
 			"chat.stopStream",
@@ -68,16 +86,7 @@ describe("Databuddy Slack response streaming", () => {
 	});
 
 	it("does not append a failure message after a partial answer streamed", async () => {
-		const calls: Array<{ method: string; options: Record<string, unknown> }> = [];
-		const client = {
-			apiCall: async (method: string, options?: Record<string, unknown>) => {
-				calls.push({ method, options: options ?? {} });
-				if (method === "chat.startStream") {
-					return { ok: true, ts: "stream_ts" };
-				}
-				return { ok: true };
-			},
-		};
+		const { calls, client } = createStreamClient();
 		const agent: Pick<DatabuddyAgentClient, "stream"> = {
 			async *stream() {
 				yield "Qais has great taste in analytics tools.";
@@ -116,14 +125,8 @@ describe("Databuddy Slack response streaming", () => {
 	it("does not start a new Slack response when the run is already aborted", async () => {
 		const controller = new AbortController();
 		controller.abort();
-		const calls: Array<{ method: string; options: Record<string, unknown> }> = [];
+		const { calls, client } = createStreamClient();
 		const sayCalls: unknown[] = [];
-		const client = {
-			apiCall: async (method: string, options?: Record<string, unknown>) => {
-				calls.push({ method, options: options ?? {} });
-				return { ok: true };
-			},
-		};
 		const agent: Pick<DatabuddyAgentClient, "stream"> = {
 			async *stream(_run, options) {
 				if (options?.abortSignal?.aborted) {
@@ -163,16 +166,7 @@ describe("Databuddy Slack response streaming", () => {
 	});
 
 	it("does not stream dashboard component JSON into Slack", async () => {
-		const calls: Array<{ method: string; options: Record<string, unknown> }> = [];
-		const client = {
-			apiCall: async (method: string, options?: Record<string, unknown>) => {
-				calls.push({ method, options: options ?? {} });
-				if (method === "chat.startStream") {
-					return { ok: true, ts: "stream_ts" };
-				}
-				return { ok: true };
-			},
-		};
+		const { calls, client } = createStreamClient();
 		const agent: Pick<DatabuddyAgentClient, "stream"> = {
 			async *stream() {
 				yield "Here are the top pages:\n";
@@ -205,7 +199,7 @@ describe("Databuddy Slack response streaming", () => {
 		});
 
 		const sentText = calls
-			.map((call) => call.options.markdown_text)
+			.map((call) => getStringOption(call.options, "markdown_text"))
 			.filter((value): value is string => typeof value === "string")
 			.join("\n");
 		expect(sentText).toContain("*Top Pages*");
@@ -214,3 +208,13 @@ describe("Databuddy Slack response streaming", () => {
 		expect(sentText).not.toContain('"rows"');
 	});
 });
+
+function getStringOption(value: unknown, key: string): string | undefined {
+	return isRecord(value) && typeof value[key] === "string"
+		? value[key]
+		: undefined;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+	return Boolean(value && typeof value === "object" && !Array.isArray(value));
+}

@@ -61,7 +61,8 @@ export interface SlackThreadQueueStore {
 
 function defaultRedis(): RedisLike | null {
 	try {
-		return getRedisCache() as unknown as RedisLike;
+		// ioredis overloads are wider than the subset this queue needs.
+		return getRedisCache() as RedisLike;
 	} catch {
 		return null;
 	}

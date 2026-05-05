@@ -1,13 +1,19 @@
 import { describe, expect, it } from "bun:test";
-import { createSlackAgentContext } from "./slack-context";
+import { createSlackConversationContext } from "./slack-context";
+import type { SlackAgentClient } from "./types";
 
-describe("Slack agent context", () => {
+describe("Slack conversation context", () => {
 	it("reads the current Slack thread through conversations.replies", async () => {
-		const calls: Array<{ method: string; options: Record<string, unknown> }> = [];
-		const context = createSlackAgentContext(
-			{
-				apiCall: async (method: string, options?: Record<string, unknown>) => {
-					calls.push({ method, options: options ?? {} });
+		const calls: Array<{ method: string; options: unknown }> = [];
+		const client: Pick<SlackAgentClient, "conversations"> = {
+			conversations: {
+				history: async (options) => {
+					calls.push({ method: "conversations.history", options });
+					return { ok: true, messages: [] };
+				},
+				info: async () => ({ ok: true }),
+				replies: async (options) => {
+					calls.push({ method: "conversations.replies", options });
 					return {
 						ok: true,
 						has_more: false,
@@ -22,6 +28,9 @@ describe("Slack agent context", () => {
 					};
 				},
 			},
+		};
+		const context = createSlackConversationContext(
+			client,
 			{
 				channelId: "C123",
 				messageTs: "171234.001",

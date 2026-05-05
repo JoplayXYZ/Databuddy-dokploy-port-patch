@@ -1,5 +1,4 @@
 import type { RequestLogger } from "evlog";
-import type { WebClient } from "@slack/web-api";
 import type {
 	DatabuddyAgentClient,
 	SlackAgentRun,
@@ -13,11 +12,12 @@ import {
 import { cleanupSlackActiveRun, registerSlackActiveRun } from "./active-runs";
 import { SLACK_COPY } from "./messages";
 import { streamAgentToSlack } from "./respond";
-import { createSlackAgentContext } from "./slack-context";
+import { createSlackConversationContext } from "./slack-context";
 import type { SlackAgentClient, SlackLogger, SlackSay } from "./types";
 import type { SlackThreadQueueStore } from "./thread-queue";
 
 const MAX_FOLLOW_UP_ROUNDS = 3;
+const QUEUED_TAKEOVER_RETRY_DELAYS_MS = [0, 25, 75] as const;
 
 export async function handleAgentRun({
 	agent,
@@ -27,7 +27,7 @@ export async function handleAgentRun({
 	say,
 	threadQueue,
 }: {
-	agent: DatabuddyAgentClient;
+	agent: Pick<DatabuddyAgentClient, "stream">;
 	client: SlackAgentClient;
 	logger: SlackLogger;
 	run: SlackAgentRun;
@@ -37,12 +37,13 @@ export async function handleAgentRun({
 	const eventLog = createRunLog(run);
 	const startedAt = performance.now();
 	let lockAcquired = false;
-	const abortController = registerSlackActiveRun(run);
+	let abortController: AbortController | null = null;
+	let registeredRun: SlackAgentRun | null = null;
 
 	try {
-		await addTriggerReaction({ client, eventLog, logger, run });
 		await threadQueue.markEngaged(run);
 		lockAcquired = await threadQueue.tryAcquire(run);
+		let currentRun = run;
 		if (!lockAcquired) {
 			const queued = await threadQueue.enqueue(run);
 			setSlackLog(eventLog, {
@@ -52,12 +53,35 @@ export async function handleAgentRun({
 				slack_followup_truncated: queued.truncated,
 				slack_response_ok: true,
 			});
-			return;
+
+			if (!queued.ok) {
+				return;
+			}
+
+			lockAcquired = await tryAcquireQueuedRun(run, threadQueue);
+			if (!lockAcquired) {
+				return;
+			}
+
+			const followUps = await threadQueue.drain(run);
+			if (followUps.length === 0) {
+				return;
+			}
+
+			setSlackLog(eventLog, {
+				slack_followup_takeover: true,
+				slack_followup_takeover_count: followUps.length,
+			});
+			currentRun = createFollowUpRun(run, followUps);
 		}
 
+		registeredRun = currentRun;
+		abortController = registerSlackActiveRun(registeredRun);
+		await addTriggerReaction({ client, eventLog, logger, run: currentRun });
 		const slackContext =
-			run.slackContext ?? createSlackAgentContext(client, run);
-		let activeRun: SlackAgentRun = { ...run, slackContext };
+			currentRun.slackContext ??
+			createSlackConversationContext(client, currentRun);
+		currentRun = { ...currentRun, slackContext };
 		let totalFollowUps = 0;
 		for (let round = 0; round <= MAX_FOLLOW_UP_ROUNDS; round++) {
 			const result = await streamAgentToSlack({
@@ -66,7 +90,7 @@ export async function handleAgentRun({
 				client,
 				eventLog,
 				logger,
-				run: activeRun,
+				run: currentRun,
 				say,
 			});
 			setSlackLog(eventLog, {
@@ -86,7 +110,7 @@ export async function handleAgentRun({
 			}
 
 			totalFollowUps += followUps.length;
-			activeRun = createFollowUpRun(activeRun, followUps);
+			currentRun = createFollowUpRun(currentRun, followUps);
 		}
 
 		if (totalFollowUps > 0) {
@@ -100,12 +124,32 @@ export async function handleAgentRun({
 				logger.warn("Failed to release Slack thread lock", error);
 			});
 		}
-		cleanupSlackActiveRun(run);
+		cleanupSlackActiveRun(registeredRun ?? run);
 		setSlackLog(eventLog, {
 			"timing.slack_total_ms": Math.round(performance.now() - startedAt),
 		});
 		eventLog.emit();
 	}
+}
+
+async function tryAcquireQueuedRun(
+	run: SlackAgentRun,
+	threadQueue: SlackThreadQueueStore
+): Promise<boolean> {
+	for (const delayMs of QUEUED_TAKEOVER_RETRY_DELAYS_MS) {
+		if (delayMs > 0) {
+			await sleep(delayMs);
+		}
+		if (await threadQueue.tryAcquire(run)) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+function sleep(ms: number): Promise<void> {
+	return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 function createFollowUpRun(
@@ -142,7 +186,7 @@ async function addTriggerReaction({
 	logger,
 	run,
 }: {
-	client: Pick<WebClient, "reactions">;
+	client: Pick<SlackAgentClient, "reactions">;
 	eventLog: RequestLogger;
 	logger: SlackLogger;
 	run: SlackAgentRun;

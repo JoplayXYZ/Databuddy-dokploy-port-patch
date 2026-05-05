@@ -30,6 +30,7 @@ const slackEnvSchema = z.object({
 	SLACK_AXIOM_DATASET: z.string().default("slack"),
 	SLACK_LOG_LEVEL: z.enum(["DEBUG", "INFO", "WARN", "ERROR"]).default("INFO"),
 	DATABUDDY_ENCRYPTION_KEY: optionalString,
+	AXIOM_API_KEY: optionalString,
 	AXIOM_TOKEN: optionalString,
 	AXIOM_ORG_ID: optionalString,
 });

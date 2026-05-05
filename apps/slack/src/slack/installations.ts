@@ -28,6 +28,11 @@ export interface SlackTeamContext {
 	organizationId: string;
 }
 
+export type SlackInstallationServices = Pick<
+	SlackInstallationStore,
+	"bindChannel" | "getChannelReadiness" | "getTeamContext"
+>;
+
 export class SlackInstallationStore implements SlackRunContextResolver {
 	readonly #crypto: TokenCryptoConfig;
 

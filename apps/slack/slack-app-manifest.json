@@ -34,7 +34,7 @@
       {
         "command": "/bind",
         "description": "Approve this channel for Databuddy answers.",
-        "usage_hint": "Use for Slack Connect or channels that need explicit approval.",
+        "usage_hint": "Use when automatic channel approval is unavailable.",
         "should_escape": true
       },
       {

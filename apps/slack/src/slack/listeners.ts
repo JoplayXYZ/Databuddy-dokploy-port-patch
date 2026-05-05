@@ -7,7 +7,7 @@ import { createSlackEventLog } from "../lib/evlog-slack";
 import { abortSlackActiveRun } from "./active-runs";
 import { getSlackChannelMentionPolicy } from "./channel-policy";
 import { logSlackReactionFeedback } from "./feedback";
-import type { SlackInstallationStore } from "./installations";
+import type { SlackInstallationServices } from "./installations";
 import {
 	createRecentDedupe,
 	isPlainChannelThreadFollowUp,
@@ -19,14 +19,21 @@ import {
 } from "./message-routing";
 import { SLACK_COPY, SLACK_SUGGESTED_PROMPTS } from "./messages";
 import { handleAgentRun } from "./run-handler";
+import { createSlackConversationContext } from "./slack-context";
 import { respondToBindCommand, respondToStatusCommand } from "./slash-commands";
 import { slackThreadQueue, type SlackThreadQueueStore } from "./thread-queue";
+import {
+	slackThreadReplyGate,
+	type SlackThreadReplyDecision,
+	type SlackThreadReplyGate,
+} from "./thread-relevance";
 
 export function registerSlackListeners(
 	app: App,
-	agent: DatabuddyAgentClient,
-	installations: SlackInstallationStore,
-	threadQueue: SlackThreadQueueStore = slackThreadQueue
+	agent: Pick<DatabuddyAgentClient, "stream">,
+	installations: SlackInstallationServices,
+	threadQueue: SlackThreadQueueStore = slackThreadQueue,
+	threadReplyGate: SlackThreadReplyGate = slackThreadReplyGate
 ): void {
 	const dedupe = createRecentDedupe();
 
@@ -109,74 +116,99 @@ export function registerSlackListeners(
 
 	app.assistant(assistant);
 
-	app.event("app_mention", async ({ client, context, event, logger, say }) => {
-		const threadTs = event.thread_ts ?? event.ts;
-		const teamId = context.teamId ?? event.team;
-		const text = stripLeadingMention(event.text ?? "").trim();
-		if (!event.user) {
-			return;
-		}
-		if (!dedupe.claim([teamId ?? "", event.channel, event.ts].join(":"))) {
-			return;
-		}
-		if (!text) {
-			await say({
-				text: SLACK_COPY.emptyMention,
-				thread_ts: threadTs,
-			});
-			return;
-		}
+	app.event(
+		"app_mention",
+		async ({ body, client, context, event, logger, say }) => {
+			const threadTs = event.thread_ts ?? event.ts;
+			const teamId = context.teamId ?? event.team;
+			const text = stripLeadingMention(event.text ?? "").trim();
+			if (!event.user) {
+				return;
+			}
+			if (!dedupe.claim([teamId ?? "", event.channel, event.ts].join(":"))) {
+				return;
+			}
+			if (!text) {
+				await say({
+					text: SLACK_COPY.emptyMention,
+					thread_ts: threadTs,
+				});
+				return;
+			}
 
-		const channelPolicy = await getSlackChannelMentionPolicy({
-			channelId: event.channel,
-			client,
-			logger,
-		});
-		const readiness = await installations.getChannelReadiness({
-			autoBind: channelPolicy.autoBind,
-			channelId: event.channel,
-			teamId,
-		});
-		if (!readiness.ok) {
-			logChannelGate({
+			const channelPolicy = await getSlackChannelMentionPolicy({
 				channelId: event.channel,
-				errorCode: channelPolicy.errorCode,
-				messageTs: event.ts,
-				policyReason: channelPolicy.reason,
-				teamId,
-				userId: event.user,
+				client,
+				logger,
 			});
-			await say({
-				text:
-					channelPolicy.reason === "slack_connect"
-						? SLACK_COPY.slackConnectNeedsBind
-						: channelPolicy.reason === "missing_scope"
-							? SLACK_COPY.missingSlackScopes
-							: readiness.message,
-				thread_ts: threadTs,
-			});
-			return;
-		}
+			if (
+				isExternalSlackConnectMention({
+					channelPolicy,
+					isExtSharedEvent: body.is_ext_shared_channel === true,
+					sourceTeamId: getMentionSourceTeamId(event),
+					teamId,
+				})
+			) {
+				logChannelGate({
+					channelId: event.channel,
+					messageTs: event.ts,
+					policyReason: "slack_connect_external_user",
+					teamId,
+					userId: event.user,
+				});
+				await say({
+					text: SLACK_COPY.slackConnectExternalUser,
+					thread_ts: threadTs,
+				});
+				return;
+			}
 
-		const run: SlackAgentRun = {
-			channelId: event.channel,
-			messageTs: event.ts,
-			teamId,
-			text,
-			threadTs,
-			trigger: "app_mention",
-			userId: event.user,
-		};
-		await threadQueue.markEngaged(run);
-		await handleAgentRun({
-			agent,
-			client,
-			threadQueue,
-			logger,
-			run,
-			say,
-		});
-	});
+			const readiness = await installations.getChannelReadiness({
+				autoBind: channelPolicy.autoBind,
+				channelId: event.channel,
+				teamId,
+			});
+			if (!readiness.ok) {
+				logChannelGate({
+					channelId: event.channel,
+					errorCode: channelPolicy.errorCode,
+					messageTs: event.ts,
+					policyReason: channelPolicy.reason,
+					teamId,
+					userId: event.user,
+				});
+				await say({
+					text:
+						channelPolicy.reason === "slack_connect"
+							? SLACK_COPY.slackConnectNeedsBind
+							: channelPolicy.reason === "missing_scope"
+								? SLACK_COPY.missingSlackScopes
+								: readiness.message,
+					thread_ts: threadTs,
+				});
+				return;
+			}
+
+			const run: SlackAgentRun = {
+				channelId: event.channel,
+				messageTs: event.ts,
+				teamId,
+				text,
+				threadTs,
+				trigger: "app_mention",
+				userId: event.user,
+			};
+			await threadQueue.markEngaged(run);
+			await handleAgentRun({
+				agent,
+				client,
+				threadQueue,
+				logger,
+				run,
+				say,
+			});
+		}
+	);
 
 	app.message(async ({ client, context, logger, message, say }) => {
 		const msg = toSlackMessage(message);
@@ -233,6 +265,12 @@ export function registerSlackListeners(
 		}
 
 		if (!isPlainChannelThreadFollowUp(msg)) {
+			logMessageRouteSkipped({
+				botUserId: context.botUserId,
+				message: msg,
+				reason: "not_thread_follow_up",
+				teamId: context.teamId ?? msg?.team,
+			});
 			return;
 		}
 
@@ -247,9 +285,32 @@ export function registerSlackListeners(
 			userId: msg.user,
 		};
 		if (!(await threadQueue.isEngaged(run))) {
+			logMessageRouteSkipped({
+				botUserId: context.botUserId,
+				message: msg,
+				reason: "thread_not_engaged",
+				teamId,
+			});
 			return;
 		}
 		if (!dedupe.claim([teamId ?? "", msg.channel, msg.ts].join(":"))) {
+			logMessageRouteSkipped({
+				botUserId: context.botUserId,
+				message: msg,
+				reason: "duplicate",
+				teamId,
+			});
+			return;
+		}
+
+		const slackContext = createSlackConversationContext(client, run);
+		const replyDecision = await threadReplyGate.shouldReply(run, {
+			botUserId: context.botUserId,
+			readThreadMessages: async () =>
+				(await slackContext?.readCurrentThread?.())?.messages ?? [],
+		});
+		if (!replyDecision.shouldReply) {
+			logThreadReplyIgnored({ decision: replyDecision, run });
 			return;
 		}
 
@@ -258,7 +319,7 @@ export function registerSlackListeners(
 			client,
 			threadQueue,
 			logger,
-			run,
+			run: { ...run, slackContext },
 			say,
 		});
 	});
@@ -317,6 +378,33 @@ export function registerSlackListeners(
 	});
 }
 
+function getMentionSourceTeamId(event: {
+	source_team?: string;
+	team?: string;
+	user_team?: string;
+}): string | undefined {
+	return event.user_team ?? event.source_team ?? event.team;
+}
+
+function isExternalSlackConnectMention({
+	channelPolicy,
+	isExtSharedEvent,
+	sourceTeamId,
+	teamId,
+}: {
+	channelPolicy: { isExtShared?: boolean };
+	isExtSharedEvent: boolean;
+	sourceTeamId?: string;
+	teamId?: string;
+}): boolean {
+	return Boolean(
+		(channelPolicy.isExtShared || isExtSharedEvent) &&
+			sourceTeamId &&
+			teamId &&
+			sourceTeamId !== teamId
+	);
+}
+
 function logChannelGate({
 	channelId,
 	errorCode,
@@ -341,4 +429,72 @@ function logChannelGate({
 		slack_team_id: teamId,
 		slack_user_id: userId,
 	}).emit();
+}
+
+function logThreadReplyIgnored({
+	decision,
+	run,
+}: {
+	decision: SlackThreadReplyDecision;
+	run: SlackAgentRun;
+}) {
+	createSlackEventLog({
+		slack_channel_id: run.channelId,
+		slack_event: "thread_reply_gate",
+		slack_message_ts: run.messageTs,
+		slack_thread_reply_allowed: false,
+		slack_thread_reply_confidence: decision.confidence,
+		slack_thread_reply_reason: decision.reason,
+		slack_thread_reply_source: decision.source,
+		slack_thread_ts: run.threadTs,
+		slack_trigger: run.trigger,
+		slack_user_id: run.userId,
+	}).emit();
+}
+
+function logMessageRouteSkipped({
+	botUserId,
+	message,
+	reason,
+	teamId,
+}: {
+	botUserId?: string;
+	message: ReturnType<typeof toSlackMessage>;
+	reason: "duplicate" | "not_thread_follow_up" | "thread_not_engaged";
+	teamId?: string;
+}) {
+	if (!shouldLogRouteSkip(message, botUserId)) {
+		return;
+	}
+
+	createSlackEventLog({
+		slack_channel_id: message?.channel,
+		slack_channel_type: message?.channel_type,
+		slack_event: "message_route_skip",
+		slack_message_ts: message?.ts,
+		slack_route_skip_reason: reason,
+		slack_team_id: teamId,
+		slack_text_length: message?.text?.length,
+		slack_thread_ts: message?.thread_ts,
+		slack_user_id: message?.user,
+	}).emit();
+}
+
+function shouldLogRouteSkip(
+	message: ReturnType<typeof toSlackMessage>,
+	botUserId?: string
+): boolean {
+	const text = message?.text;
+	if (!(text && message.channel && message.ts && message.user)) {
+		return false;
+	}
+	if (message.channel_type === "im" || message.subtype || message.bot_id) {
+		return false;
+	}
+	const normalized = text.toLowerCase();
+	return (
+		normalized.includes("databuddy") ||
+		normalized.includes("bunny") ||
+		Boolean(botUserId && normalized.includes(`<@${botUserId.toLowerCase()}>`))
+	);
 }

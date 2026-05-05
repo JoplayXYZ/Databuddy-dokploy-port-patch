@@ -1,24 +1,34 @@
+import type {
+	Logger,
+	RespondArguments,
+	SayArguments,
+	SlackCommandMiddlewareArgs,
+} from "@slack/bolt";
 import type { WebClient } from "@slack/web-api";
 
-export interface SlackSlashCommand {
-	channel_id: string;
-	team_id?: string;
-	user_id?: string;
+export type SlackSlashCommand = SlackCommandMiddlewareArgs["command"];
+
+export type SlackLogger = Pick<Logger, "error" | "warn">;
+
+export type SlackSlashRespond = (
+	message: RespondArguments & {
+		response_type: "ephemeral";
+		text: string;
+	}
+) => Promise<unknown>;
+
+export interface SlackAgentClient {
+	chat: Pick<WebClient["chat"], "appendStream" | "startStream" | "stopStream">;
+	conversations: Pick<
+		WebClient["conversations"],
+		"history" | "info" | "replies"
+	>;
+	reactions: Pick<WebClient["reactions"], "add">;
 }
 
-export interface SlackLogger {
-	error(...args: unknown[]): void;
-	warn(...args: unknown[]): void;
-}
-
-export type SlackSlashRespond = (message: {
-	response_type: "ephemeral";
-	text: string;
-}) => Promise<unknown>;
-
-export type SlackAgentClient = Pick<WebClient, "apiCall" | "reactions">;
-
-export type SlackSay = (message: {
-	text: string;
-	thread_ts?: string;
-}) => Promise<unknown>;
+export type SlackSay = (
+	message: SayArguments & {
+		text: string;
+		thread_ts?: string;
+	}
+) => Promise<unknown>;

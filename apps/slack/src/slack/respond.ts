@@ -1,5 +1,4 @@
 import type { RequestLogger } from "evlog";
-import type { WebClient } from "@slack/web-api";
 import type {
 	DatabuddyAgentClient,
 	SlackAgentRun,
@@ -7,6 +6,7 @@ import type {
 import { setSlackLog, toError } from "../lib/evlog-slack";
 import { SLACK_COPY } from "./messages";
 import { renderAgentOutputForSlack } from "./output-adapter";
+import type { SlackAgentClient } from "./types";
 
 const STREAM_FLUSH_INTERVAL_MS = 900;
 const STREAM_FLUSH_CHARS = 1200;
@@ -25,7 +25,7 @@ type SayFn = (message: {
 interface StreamAgentToSlackOptions {
 	abortSignal?: AbortSignal;
 	agent: Pick<DatabuddyAgentClient, "stream">;
-	client: Pick<WebClient, "apiCall">;
+	client: Pick<SlackAgentClient, "chat">;
 	eventLog?: RequestLogger;
 	logger: LoggerLike;
 	run: SlackAgentRun;
@@ -61,7 +61,8 @@ export async function streamAgentToSlack({
 	let lastFlushAt = Date.now();
 	const startedAt = performance.now();
 
-	const shouldStream = Boolean(run.threadTs);
+	const streamThreadTs = run.threadTs;
+	const shouldStream = Boolean(streamThreadTs);
 
 	const flush = async (force = false) => {
 		if (!pending) {
@@ -94,7 +95,7 @@ export async function streamAgentToSlack({
 			lastFlushAt = Date.now();
 
 			if (streamTs) {
-				await client.apiCall("chat.appendStream", {
+				await client.chat.appendStream({
 					channel: run.channelId,
 					markdown_text: chunk,
 					ts: streamTs,
@@ -108,10 +109,19 @@ export async function streamAgentToSlack({
 		if (!initialText.trim()) {
 			return;
 		}
+		if (!streamThreadTs) {
+			return;
+		}
 
 		streamStartAttempted = true;
 		pending = pending.slice(initialText.length);
-		streamTs = await startSlackStream(client, run, logger, initialText);
+		streamTs = await startSlackStream(
+			client,
+			run,
+			logger,
+			initialText,
+			streamThreadTs
+		);
 		if (!streamTs) {
 			pending = initialText + pending;
 		}
@@ -140,7 +150,7 @@ export async function streamAgentToSlack({
 
 		const finalText = safeMarkdown.trim();
 		if (streamTs) {
-			await client.apiCall("chat.stopStream", {
+			await client.chat.stopStream({
 				channel: run.channelId,
 				markdown_text: finalText ? undefined : SLACK_COPY.noAnswer,
 				ts: streamTs,
@@ -193,8 +203,8 @@ export async function streamAgentToSlack({
 				await flush(true).catch((flushError) =>
 					logger.warn("Failed to flush partial Slack stream", flushError)
 				);
-				await client
-					.apiCall("chat.stopStream", {
+				await client.chat
+					.stopStream({
 						channel: run.channelId,
 						ts: streamTs,
 					})
@@ -213,6 +223,10 @@ export async function streamAgentToSlack({
 		}
 
 		const err = toError(error);
+		setSlackLog(eventLog, {
+			slack_agent_error_message: err.message,
+			slack_agent_error_name: err.name,
+		});
 		logger.error("Slack agent response failed", err);
 		eventLog?.error(err, { error_step: "agent_response" });
 		appendSafeSlackMarkdown(false);
@@ -222,8 +236,8 @@ export async function streamAgentToSlack({
 				logger.warn("Failed to flush partial Slack stream", flushError)
 			);
 			if (streamTs) {
-				await client
-					.apiCall("chat.stopStream", {
+				await client.chat
+					.stopStream({
 						channel: run.channelId,
 						ts: streamTs,
 					})
@@ -251,8 +265,8 @@ export async function streamAgentToSlack({
 			};
 		}
 		if (streamTs) {
-			await client
-				.apiCall("chat.stopStream", {
+			await client.chat
+				.stopStream({
 					channel: run.channelId,
 					markdown_text: SLACK_COPY.agentFailure,
 					ts: streamTs,
@@ -283,18 +297,19 @@ export async function streamAgentToSlack({
 }
 
 async function startSlackStream(
-	client: Pick<WebClient, "apiCall">,
+	client: Pick<SlackAgentClient, "chat">,
 	run: SlackAgentRun,
 	logger: LoggerLike,
-	openingText: string
+	openingText: string,
+	threadTs: string
 ): Promise<string | null> {
 	try {
-		const result = await client.apiCall("chat.startStream", {
+		const result = await client.chat.startStream({
 			channel: run.channelId,
 			markdown_text: openingText,
 			recipient_team_id: run.teamId,
 			recipient_user_id: run.userId,
-			thread_ts: run.threadTs,
+			thread_ts: threadTs,
 			task_display_mode: "plan",
 		});
 

@@ -1,18 +1,24 @@
+import type { types } from "@slack/bolt";
+
 const LEADING_APP_MENTION_REGEX = /^<@[A-Z0-9]+>\s*/i;
 
-export interface SlackMessageLike {
-	bot_id?: string;
-	channel?: string;
-	channel_type?: string;
-	client_msg_id?: string;
-	deleted_ts?: string;
-	subtype?: string;
-	team?: string;
-	text?: string;
-	thread_ts?: string;
-	ts?: string;
-	user?: string;
-}
+type SlackMessageFields = Pick<
+	types.GenericMessageEvent,
+	| "bot_id"
+	| "channel"
+	| "channel_type"
+	| "client_msg_id"
+	| "team"
+	| "text"
+	| "thread_ts"
+	| "ts"
+	| "user"
+> & {
+	deleted_ts: types.MessageDeletedEvent["deleted_ts"];
+	subtype: string;
+};
+
+export type SlackMessageLike = Partial<SlackMessageFields>;
 
 export interface SlackDeletedMessage {
 	channel: string;
@@ -27,7 +33,7 @@ export function toSlackMessage(message: unknown): SlackMessageLike | null {
 	return {
 		bot_id: getString(message.bot_id),
 		channel: getString(message.channel),
-		channel_type: getString(message.channel_type),
+		channel_type: getChannelType(message.channel_type),
 		client_msg_id: getString(message.client_msg_id),
 		deleted_ts: getString(message.deleted_ts),
 		subtype: getString(message.subtype),
@@ -131,6 +137,18 @@ export function createRecentDedupe(limit = 500) {
 
 function getString(value: unknown): string | undefined {
 	return typeof value === "string" ? value : undefined;
+}
+
+function getChannelType(
+	value: unknown
+): types.GenericMessageEvent["channel_type"] | undefined {
+	return value === "channel" ||
+		value === "group" ||
+		value === "im" ||
+		value === "mpim" ||
+		value === "app_home"
+		? value
+		: undefined;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

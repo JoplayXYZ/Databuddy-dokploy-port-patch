@@ -1,5 +1,5 @@
 import { createSlackEventLog, setSlackLog, toError } from "../lib/evlog-slack";
-import type { SlackInstallationStore } from "./installations";
+import type { SlackInstallationServices } from "./installations";
 import { SLACK_COPY } from "./messages";
 import type {
 	SlackLogger,
@@ -14,7 +14,7 @@ export async function respondToBindCommand({
 	respond,
 }: {
 	command: SlackSlashCommand;
-	installations: SlackInstallationStore;
+	installations: SlackInstallationServices;
 	logger: SlackLogger;
 	respond: SlackSlashRespond;
 }): Promise<void> {
@@ -59,7 +59,7 @@ export async function respondToStatusCommand({
 	respond,
 }: {
 	command: SlackSlashCommand;
-	installations: SlackInstallationStore;
+	installations: SlackInstallationServices;
 	logger: SlackLogger;
 	respond: SlackSlashRespond;
 }): Promise<void> {

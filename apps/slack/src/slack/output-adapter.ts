@@ -46,7 +46,10 @@ export function renderAgentOutputForSlack(
 	raw: string,
 	options: SlackOutputRenderOptions = {}
 ): SlackRenderedAgentOutput {
-	const { droppedComponents, segments } = parseAgentOutputSegments(raw, options);
+	const { droppedComponents, segments } = parseAgentOutputSegments(
+		raw,
+		options
+	);
 	let convertedComponents = 0;
 	const markdown = segments
 		.map((segment) => {
@@ -92,7 +95,10 @@ function parseAgentOutputSegments(
 			continue;
 		}
 
-		appendTextSegment(segments, stripTrailingJsonFence(raw.slice(index, start)));
+		appendTextSegment(
+			segments,
+			stripTrailingJsonFence(raw.slice(index, start))
+		);
 
 		const end = findBalancedJsonEnd(raw, start);
 		if (end === -1) {
@@ -150,7 +156,9 @@ function findBalancedJsonEnd(input: string, start: number): number {
 	return -1;
 }
 
-function parseDashboardComponent(raw: string): DashboardComponentPayload | null {
+function parseDashboardComponent(
+	raw: string
+): DashboardComponentPayload | null {
 	try {
 		const parsed: unknown = JSON.parse(raw);
 		return isDashboardComponentPayload(parsed) ? parsed : null;
@@ -159,7 +167,9 @@ function parseDashboardComponent(raw: string): DashboardComponentPayload | null 
 	}
 }
 
-function renderDashboardComponent(component: DashboardComponentPayload): string {
+function renderDashboardComponent(
+	component: DashboardComponentPayload
+): string {
 	switch (component.type) {
 		case "line-chart":
 		case "bar-chart":
@@ -209,7 +219,10 @@ function renderDistribution(component: DashboardComponentPayload): string {
 	const rows = getRows(component.rows)
 		.slice(0, MAX_TABLE_ROWS)
 		.map((row) => row.slice(0, 2));
-	return withDashboardTitle(component, renderCodeTable(["Name", "Value"], rows));
+	return withDashboardTitle(
+		component,
+		renderCodeTable(["Name", "Value"], rows)
+	);
 }
 
 function renderDataTable(component: DashboardComponentPayload): string {
@@ -236,7 +249,10 @@ function renderReferrers(component: DashboardComponentPayload): string {
 		const percentage = getNumber(item.percentage);
 		return `${index + 1}. *${escapeSlackText(name)}*${domain ? ` (${escapeSlackText(domain)})` : ""}${visitors === undefined ? "" : ` - ${formatNumber(visitors)} visitors`}${percentage === undefined ? "" : `, ${formatNumber(percentage)}%`}`;
 	});
-	return withDashboardTitle(component, lines.join("\n") || "No referrers returned.");
+	return withDashboardTitle(
+		component,
+		lines.join("\n") || "No referrers returned."
+	);
 }
 
 function renderMiniMap(component: DashboardComponentPayload): string {
@@ -247,7 +263,10 @@ function renderMiniMap(component: DashboardComponentPayload): string {
 		const percentage = getNumber(item.percentage);
 		return `${index + 1}. *${escapeSlackText(name)}*${visitors === undefined ? "" : ` - ${formatNumber(visitors)} visitors`}${percentage === undefined ? "" : `, ${formatNumber(percentage)}%`}`;
 	});
-	return withDashboardTitle(component, lines.join("\n") || "No country data returned.");
+	return withDashboardTitle(
+		component,
+		lines.join("\n") || "No country data returned."
+	);
 }
 
 function renderLinksList(component: DashboardComponentPayload): string {
@@ -261,14 +280,17 @@ function renderLinksList(component: DashboardComponentPayload): string {
 		const shortUrl =
 			baseUrl && slug
 				? `${baseUrl.replace(TRAILING_SLASH_REGEX, "")}/${slug}`
-		: null;
+				: null;
 		const primary = shortUrl ?? targetUrl;
 		const label = primary
 			? slackLink(primary, name)
 			: `*${escapeSlackText(name)}*`;
 		return `- ${label}${targetUrl ? ` -> ${escapeSlackText(targetUrl)}` : ""}`;
 	});
-	return withDashboardTitle(component, lines.join("\n") || "No links returned.");
+	return withDashboardTitle(
+		component,
+		lines.join("\n") || "No links returned."
+	);
 }
 
 function renderLinkPreview(component: DashboardComponentPayload): string {
