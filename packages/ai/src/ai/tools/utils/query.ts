@@ -33,7 +33,12 @@ const MAX_STRING_LENGTH = 2000;
  */
 function sanitizeValue(value: string): string {
 	let cleaned = value.slice(0, MAX_STRING_LENGTH);
-	cleaned = cleaned.replace(/<\/?[a-z_][a-z_0-9-]*(?:\s[^>]*)?\s*\/?>/gi, "");
+	const tagRe = /<\/?[a-z_][a-z_0-9-]*(?:\s[^>]*)?\s*\/?>/gi;
+	let prev: string;
+	do {
+		prev = cleaned;
+		cleaned = cleaned.replace(tagRe, "");
+	} while (cleaned !== prev);
 	return cleaned;
 }
 

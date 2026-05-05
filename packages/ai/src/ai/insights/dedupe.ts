@@ -19,7 +19,8 @@ function normalizeSubjectKey(value: string): string {
 		.trim()
 		.toLowerCase()
 		.replaceAll(/[^a-z0-9]+/g, "_")
-		.replaceAll(/^_+|_+$/g, "")
+		.replace(/^_+/, "")
+		.replace(/_+$/, "")
 		.slice(0, 80);
 }
 

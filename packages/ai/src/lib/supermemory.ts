@@ -25,7 +25,11 @@ export function sanitizeMemoryContent(
 	maxLength = MAX_MEMORY_LENGTH
 ): string {
 	let cleaned = value.slice(0, maxLength);
-	cleaned = cleaned.replace(MEMORY_SANITIZE_RE, "");
+	let prev: string;
+	do {
+		prev = cleaned;
+		cleaned = cleaned.replace(MEMORY_SANITIZE_RE, "");
+	} while (cleaned !== prev);
 	return cleaned;
 }
 
