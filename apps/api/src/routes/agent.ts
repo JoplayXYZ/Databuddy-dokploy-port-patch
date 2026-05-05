@@ -23,11 +23,7 @@ import {
 	modelNames,
 	models,
 } from "@databuddy/ai/config/models";
-import {
-	appendToConversation,
-	getConversationHistory,
-} from "@databuddy/ai/mcp/conversation-store";
-import { runMcpAgent, streamMcpAgentText } from "@databuddy/ai/mcp/run-agent";
+import { askDatabuddyAgent, streamDatabuddyAgent } from "@databuddy/ai/agent";
 import {
 	formatMemoryForPrompt,
 	isMemoryEnabled,
@@ -96,6 +92,20 @@ function getErrorName(error: unknown, fallback = "UnknownError"): string {
 		return error.name;
 	}
 	return fallback;
+}
+
+function createSessionAgentActor(
+	user: { id: string } | null,
+	requestHeaders: Headers
+) {
+	if (!user) {
+		throw new Error("Authenticated session user is required.");
+	}
+	return {
+		requestHeaders,
+		type: "session" as const,
+		userId: user.id,
+	};
 }
 
 function getLastMessagePreview(
@@ -429,50 +439,37 @@ export const agent = new Elysia({ prefix: "/v1/agent" })
 					return jsonError(401, "AUTH_REQUIRED", "Authentication required");
 				}
 
-				const priorMessages = await getConversationHistory(
-					conversationId,
-					userId,
-					apiKey
-				);
+				const actor = apiKey
+					? {
+							apiKey,
+							requestHeaders: request.headers,
+							type: "api_key" as const,
+							userId,
+						}
+					: createSessionAgentActor(user, request.headers);
 				if (body.stream) {
 					return createPlainTextStreamResponse(
-						streamMcpAgentText({
-							apiKey,
+						streamDatabuddyAgent({
+							actor,
 							conversationId,
-							priorMessages:
-								priorMessages.length > 0 ? priorMessages : undefined,
-							question: body.question,
-							requestHeaders: request.headers,
+							input: body.question,
 							source: "slack",
 							timezone: body.timezone,
-							userId,
 						})
 					);
 				}
 
-				const answer = await runMcpAgent({
-					apiKey,
+				const result = await askDatabuddyAgent({
+					actor,
 					conversationId,
-					priorMessages: priorMessages.length > 0 ? priorMessages : undefined,
-					question: body.question,
-					requestHeaders: request.headers,
+					input: body.question,
 					source: "slack",
 					timezone: body.timezone,
-					userId,
 				});
 
-				await appendToConversation(
-					conversationId,
-					userId,
-					apiKey,
-					body.question,
-					answer,
-					priorMessages
-				);
-
 				return {
-					answer,
-					conversationId,
+					answer: result.answer,
+					conversationId: result.conversationId,
 				};
 			} catch (error) {
 				trackAgentEvent("agent_activity", {

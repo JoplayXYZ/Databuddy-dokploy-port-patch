@@ -1,3 +1,11 @@
+export {
+	askDatabuddyAgent,
+	streamDatabuddyAgent,
+	type DatabuddyAgentActor,
+	type DatabuddyAgentOptions,
+	type DatabuddyAgentResult,
+	type DatabuddyAgentSource,
+} from "./agent";
 export { createConfig as createAnalyticsAgentConfig } from "./ai/agents/analytics";
 export {
 	AGENT_THINKING_LEVELS,
@@ -25,16 +33,6 @@ export {
 	models,
 	type AgentModelKey,
 } from "./ai/config/models";
-export {
-	appendToConversation,
-	getConversationHistory,
-	type ConversationMessage,
-} from "./ai/mcp/conversation-store";
-export {
-	runMcpAgent,
-	streamMcpAgentText,
-	type RunMcpAgentOptions,
-} from "./ai/mcp/run-agent";
 export { createMcpTools } from "./ai/mcp/tools";
 export {
 	formatMemoryForPrompt,

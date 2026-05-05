@@ -5,6 +5,10 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
+    "./agent": {
+      "types": "./src/public-types/agent.d.ts",
+      "default": "./src/agent/index.ts"
+    },
     "./agents/analytics": "./src/ai/agents/analytics.ts",
     "./agents/cache": "./src/ai/agents/cache.ts",
     "./agents/execution": "./src/ai/agents/execution.ts",
@@ -17,14 +21,6 @@
     "./insights/normalize": "./src/ai/insights/normalize.ts",
     "./insights/types": "./src/ai/insights/types.ts",
     "./lib/supermemory": "./src/lib/supermemory.ts",
-    "./mcp/conversation-store": {
-      "types": "./src/public-types/conversation-store.d.ts",
-      "default": "./src/ai/mcp/conversation-store.ts"
-    },
-    "./mcp/run-agent": {
-      "types": "./src/public-types/run-agent.d.ts",
-      "default": "./src/ai/mcp/run-agent.ts"
-    },
     "./mcp/tools": "./src/ai/mcp/tools.ts",
     "./schemas/smart-insights-output": "./src/ai/schemas/smart-insights-output.ts",
     "./tools/insights-agent-tools": "./src/ai/tools/insights-agent-tools.ts",

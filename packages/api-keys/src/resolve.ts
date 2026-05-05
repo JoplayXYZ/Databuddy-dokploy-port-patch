@@ -116,6 +116,24 @@ export interface ResolveApiKeyResult {
 	start?: string;
 }
 
+export async function resolveApiKeySecret(
+	secret: string
+): Promise<ResolveApiKeyResult> {
+	const normalizedSecret = secret.trim();
+	if (!isValidFormat(normalizedSecret)) {
+		return { key: null, outcome: "invalid" };
+	}
+	const keyHash = keys.hashKey(normalizedSecret);
+	const result = await getCachedApiKeyByHash(keyHash);
+	const prefix = normalizedSecret.split("_")[0];
+	const start = normalizedSecret.slice(0, 8);
+	if (result.outcome === "ok") {
+		markApiKeyUsed(result.key.id).catch(() => undefined);
+		return { key: result.key, outcome: "ok", prefix, start };
+	}
+	return { key: null, outcome: result.outcome, prefix, start };
+}
+
 export async function resolveApiKey(
 	headers: Headers
 ): Promise<ResolveApiKeyResult> {
@@ -126,15 +144,7 @@ export async function resolveApiKey(
 		}
 		return { key: null, outcome: "missing" };
 	}
-	const keyHash = keys.hashKey(secret);
-	const result = await getCachedApiKeyByHash(keyHash);
-	const prefix = secret.split("_")[0];
-	const start = secret.slice(0, 8);
-	if (result.outcome === "ok") {
-		markApiKeyUsed(result.key.id).catch(() => undefined);
-		return { key: result.key, outcome: "ok", prefix, start };
-	}
-	return { key: null, outcome: result.outcome, prefix, start };
+	return await resolveApiKeySecret(secret);
 }
 
 export async function getApiKeyFromHeader(

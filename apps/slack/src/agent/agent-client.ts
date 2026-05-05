@@ -1,9 +1,4 @@
-import { getApiKeyFromHeader } from "@databuddy/api-keys/resolve";
-import {
-	appendToConversation,
-	getConversationHistory,
-} from "@databuddy/ai/mcp/conversation-store";
-import { streamMcpAgentText } from "@databuddy/ai/mcp/run-agent";
+import { streamDatabuddyAgent } from "@databuddy/ai/agent";
 import { SLACK_COPY } from "../slack/messages";
 
 const DEFAULT_TIMEZONE = "UTC";
@@ -69,42 +64,19 @@ class SharedDatabuddyAgentRunner implements SlackAgentRunner {
 		run: SlackAgentRun,
 		context: SlackRunContext
 	): AsyncGenerator<string> {
-		const requestHeaders = createAgentRequestHeaders(context);
-		const apiKey = await getApiKeyFromHeader(requestHeaders);
-		if (!apiKey) {
-			throw new Error("Slack integration API key is invalid or expired.");
-		}
-
 		const conversationId = createSlackChatId(run);
-		const priorMessages = await getConversationHistory(
+		yield* streamDatabuddyAgent({
+			actor: {
+				expectedOrganizationId: context.organizationId,
+				secret: context.agentApiKeySecret,
+				type: "api_key_secret",
+				userId: null,
+			},
 			conversationId,
-			null,
-			apiKey
-		);
-		let answer = "";
-
-		for await (const chunk of streamMcpAgentText({
-			apiKey,
-			conversationId,
-			priorMessages: priorMessages.length > 0 ? priorMessages : undefined,
-			question: run.text,
-			requestHeaders,
+			input: run.text,
 			source: "slack",
 			timezone: DEFAULT_TIMEZONE,
-			userId: null,
-		})) {
-			answer += chunk;
-			yield chunk;
-		}
-
-		await appendToConversation(
-			conversationId,
-			null,
-			apiKey,
-			run.text,
-			answer.trim() || SLACK_COPY.noAnswer,
-			priorMessages
-		).catch(() => {});
+		});
 	}
 }
 
@@ -125,12 +97,4 @@ export function createSlackChatId(run: SlackAgentRun): string {
 
 function safeId(value: string): string {
 	return value.replace(/[^a-zA-Z0-9_-]/g, "_").slice(0, 160);
-}
-
-function createAgentRequestHeaders(context: SlackRunContext): Headers {
-	return new Headers({
-		Authorization: `Bearer ${context.agentApiKeySecret}`,
-		"x-databuddy-slack-organization-id": context.organizationId,
-		"x-databuddy-slack-team-id": context.teamId,
-	});
 }

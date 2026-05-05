@@ -16,7 +16,7 @@ import {
 import { createMcpAgentConfig } from "../agents/mcp";
 import { modelNames } from "../config/models";
 
-const MCP_AGENT_TIMEOUT_MS = 45_000;
+const DEFAULT_MCP_AGENT_TIMEOUT_MS = 45_000;
 
 export interface RunMcpAgentOptions {
 	apiKey: ApiKeyRow | null;
@@ -24,7 +24,8 @@ export interface RunMcpAgentOptions {
 	priorMessages?: Array<{ role: "user" | "assistant"; content: string }>;
 	question: string;
 	requestHeaders: Headers;
-	source?: "mcp" | "slack";
+	source?: "dashboard" | "mcp" | "slack";
+	timeoutMs?: number;
 	timezone?: string;
 	userId: string | null;
 }
@@ -36,7 +37,7 @@ export async function runMcpAgent(
 	const abortController = new AbortController();
 	const timeout = setTimeout(
 		() => abortController.abort(),
-		MCP_AGENT_TIMEOUT_MS
+		getTimeoutMs(options)
 	);
 
 	try {
@@ -66,7 +67,7 @@ export async function* streamMcpAgentText(
 	const abortController = new AbortController();
 	const timeout = setTimeout(
 		() => abortController.abort(),
-		MCP_AGENT_TIMEOUT_MS
+		getTimeoutMs(options)
 	);
 
 	try {
@@ -222,4 +223,8 @@ function storePreparedConversation(
 			conversationId: prepared.sessionId,
 		}
 	);
+}
+
+function getTimeoutMs(options: RunMcpAgentOptions): number {
+	return options.timeoutMs ?? DEFAULT_MCP_AGENT_TIMEOUT_MS;
 }
