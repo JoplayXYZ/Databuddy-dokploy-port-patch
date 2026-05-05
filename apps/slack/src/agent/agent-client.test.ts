@@ -1,10 +1,17 @@
-import { describe, expect, it } from "bun:test";
-import {
+import { describe, expect, it, mock } from "bun:test";
+import type { SlackAgentRun, SlackRunContext } from "./agent-client";
+
+mock.module("@databuddy/ai/agent", () => ({
+	streamDatabuddyAgent: async function* () {
+		yield "";
+	},
+}));
+
+const {
 	createSlackChatId,
 	DatabuddyAgentClient,
-	type SlackAgentRun,
-	type SlackRunContext,
-} from "./agent-client";
+	formatSlackAgentInput,
+} = await import("./agent-client");
 
 describe("Databuddy Slack agent client", () => {
 	it("creates stable Slack-scoped chat ids", () => {
@@ -89,6 +96,26 @@ describe("Databuddy Slack agent client", () => {
 		}
 
 		expect(chunks).toEqual(["Hello ", "from stream"]);
+	});
+
+	it("formats queued Slack follow-ups as an ordered continuation", () => {
+		const input = formatSlackAgentInput({
+			channelId: "C123",
+			followUpMessages: [
+				{ messageTs: "171234.568", text: "also check referrers", userId: "U1" },
+				{ messageTs: "171234.569", text: "and compare mobile", userId: "U2" },
+			],
+			teamId: "T123",
+			text: "also check referrers\nand compare mobile",
+			threadTs: "171234.000",
+			trigger: "thread_follow_up",
+			userId: "U2",
+		});
+
+		expect(input).toContain("<slack_follow_ups>");
+		expect(input).toContain("1. <@U1>: also check referrers");
+		expect(input).toContain("2. <@U2>: and compare mobile");
+		expect(input).toContain("</slack_follow_ups>");
 	});
 
 	it("explains missing organization context when no Slack installation resolves", async () => {

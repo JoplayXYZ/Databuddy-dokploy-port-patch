@@ -29,6 +29,12 @@ export const SLACK_COPY = {
 		"I need this channel explicitly connected first. Run `/bind` here once, then mention `@Databuddy` with any analytics question.",
 	emptyMention:
 		"Ask a Databuddy analytics question after the mention. Example: `@Databuddy what changed this week?`",
+	help: [
+		"*Databuddy in Slack*",
+		"Mention `@Databuddy` in an approved channel, use the Slack assistant, or DM me to ask about traffic, referrers, pages, conversions, campaigns, links, flags, and product usage.",
+		"Internal channels auto-connect on first mention. For Slack Connect or sensitive channels, run `/bind` first.",
+		"Commands: `/bind`, `/databuddy-status`, `/databuddy-help`.",
+	].join("\n\n"),
 	slackConnectNeedsBind:
 		"This looks like a Slack Connect channel. To avoid sharing analytics with external workspaces by accident, run `/bind` here only if this channel is approved for Databuddy answers.",
 	missingTeam:
@@ -41,5 +47,11 @@ export const SLACK_COPY = {
 		"I reached Databuddy, but no answer came back. Try a narrower question, like `traffic for the last 7 days`.",
 	processingReaction: "rabbit",
 	streamOpening: "Thinking...",
+	statusConnected:
+		"Databuddy is connected to this Slack workspace, but this channel is not explicitly approved yet. Internal channels auto-connect when you mention `@Databuddy`; Slack Connect channels require `/bind`.",
+	statusFailure:
+		"I couldn't check Databuddy's Slack status right now. Try again in a moment.",
+	statusReady:
+		"Databuddy is connected and ready in this channel. Mention `@Databuddy` here or DM me to ask analytics questions.",
 	suggestedPromptsTitle: "Start with Databuddy",
 } as const;

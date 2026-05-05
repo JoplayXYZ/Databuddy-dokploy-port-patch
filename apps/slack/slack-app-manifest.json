@@ -36,6 +36,16 @@
         "description": "Approve this channel for Databuddy answers.",
         "usage_hint": "Use for Slack Connect or channels that need explicit approval.",
         "should_escape": true
+      },
+      {
+        "command": "/databuddy-help",
+        "description": "Show how to use Databuddy in Slack.",
+        "should_escape": false
+      },
+      {
+        "command": "/databuddy-status",
+        "description": "Check whether Databuddy is connected and ready here.",
+        "should_escape": false
       }
     ]
   },
@@ -48,9 +58,11 @@
       "bot": [
         "assistant:write",
         "app_mentions:read",
+        "channels:history",
         "channels:read",
         "chat:write",
         "commands",
+        "groups:history",
         "groups:read",
         "im:history",
         "reactions:read",
@@ -64,6 +76,8 @@
         "app_mention",
         "assistant_thread_context_changed",
         "assistant_thread_started",
+        "message.channels",
+        "message.groups",
         "message.im",
         "reaction_added",
         "reaction_removed"

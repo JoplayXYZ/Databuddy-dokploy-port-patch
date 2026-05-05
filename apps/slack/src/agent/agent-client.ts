@@ -3,10 +3,21 @@ import { SLACK_COPY } from "../slack/messages";
 
 const DEFAULT_TIMEZONE = "UTC";
 
-export type SlackAgentTrigger = "app_mention" | "assistant" | "direct_message";
+export type SlackAgentTrigger =
+	| "app_mention"
+	| "assistant"
+	| "direct_message"
+	| "thread_follow_up";
+
+export interface SlackFollowUpMessage {
+	messageTs?: string;
+	text: string;
+	userId?: string;
+}
 
 export interface SlackAgentRun {
 	channelId: string;
+	followUpMessages?: SlackFollowUpMessage[];
 	messageTs?: string;
 	teamId?: string;
 	text: string;
@@ -73,7 +84,7 @@ class SharedDatabuddyAgentRunner implements SlackAgentRunner {
 				userId: null,
 			},
 			conversationId,
-			input: run.text,
+			input: formatSlackAgentInput(run),
 			source: "slack",
 			timezone: DEFAULT_TIMEZONE,
 		});
@@ -93,6 +104,25 @@ export function createSlackChatId(run: SlackAgentRun): string {
 			run.threadTs ?? run.messageTs ?? Date.now().toString(),
 		].join("-")
 	);
+}
+
+export function formatSlackAgentInput(run: SlackAgentRun): string {
+	const followUps = run.followUpMessages ?? [];
+	if (followUps.length === 0) {
+		return run.text;
+	}
+
+	const lines = followUps.map((followUp, index) => {
+		const author = followUp.userId ? `<@${followUp.userId}>` : "Slack user";
+		return `${index + 1}. ${author}: ${followUp.text}`;
+	});
+
+	return [
+		"<slack_follow_ups>",
+		"These messages arrived in the same Slack thread while you were already responding. Continue the conversation and answer all follow-ups in order.",
+		...lines,
+		"</slack_follow_ups>",
+	].join("\n");
 }
 
 function safeId(value: string): string {

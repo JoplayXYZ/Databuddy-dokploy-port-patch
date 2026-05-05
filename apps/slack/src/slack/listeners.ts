@@ -4,6 +4,7 @@ import type { RequestLogger } from "evlog";
 import type {
 	DatabuddyAgentClient,
 	SlackAgentRun,
+	SlackFollowUpMessage,
 } from "../agent/agent-client";
 import {
 	createSlackEventLog,
@@ -16,8 +17,10 @@ import { logSlackReactionFeedback } from "./feedback";
 import type { SlackInstallationStore } from "./installations";
 import { SLACK_COPY, SLACK_SUGGESTED_PROMPTS } from "./messages";
 import { streamAgentToSlack } from "./respond";
+import { slackThreadQueue, type SlackThreadQueue } from "./thread-queue";
 
 const LEADING_APP_MENTION_REGEX = /^<@[A-Z0-9]+>\s*/i;
+const MAX_FOLLOW_UP_ROUNDS = 3;
 
 interface SlackMessageLike {
 	bot_id?: string;
@@ -58,7 +61,8 @@ type SlackSay = (message: {
 export function registerSlackListeners(
 	app: App,
 	agent: DatabuddyAgentClient,
-	installations: SlackInstallationStore
+	installations: SlackInstallationStore,
+	threadQueue: SlackThreadQueue = slackThreadQueue
 ): void {
 	const dedupe = createRecentDedupe();
 
@@ -118,19 +122,22 @@ export function registerSlackListeners(
 				status: "is thinking...",
 			});
 
+			const run: SlackAgentRun = {
+				channelId,
+				messageTs,
+				teamId: context.teamId,
+				text,
+				threadTs: msg.thread_ts ?? messageTs,
+				trigger: "assistant",
+				userId,
+			};
+			await threadQueue.markEngaged(run);
 			await handleAgentRun({
 				agent,
 				client,
+				threadQueue,
 				logger,
-				run: {
-					channelId,
-					messageTs,
-					teamId: context.teamId,
-					text,
-					threadTs: msg.thread_ts ?? messageTs,
-					trigger: "assistant",
-					userId,
-				},
+				run,
 				say,
 			});
 		},
@@ -187,52 +194,107 @@ export function registerSlackListeners(
 			return;
 		}
 
+		const run: SlackAgentRun = {
+			channelId: event.channel,
+			messageTs: event.ts,
+			teamId,
+			text,
+			threadTs,
+			trigger: "app_mention",
+			userId: event.user,
+		};
+		await threadQueue.markEngaged(run);
 		await handleAgentRun({
 			agent,
 			client,
+			threadQueue,
 			logger,
-			run: {
-				channelId: event.channel,
-				messageTs: event.ts,
-				teamId,
-				text,
-				threadTs,
-				trigger: "app_mention",
-				userId: event.user,
-			},
+			run,
 			say,
 		});
 	});
 
 	app.message(async ({ client, context, logger, message, say }) => {
 		const msg = toSlackMessage(message);
-		if (!isPlainDirectMessage(msg)) {
+		if (isPlainDirectMessage(msg)) {
+			if (
+				!dedupe.claim(
+					[msg.team ?? "", msg.channel, msg.client_msg_id ?? msg.ts].join(":")
+				)
+			) {
+				return;
+			}
+
+			await handleAgentRun({
+				agent,
+				client,
+				threadQueue,
+				logger,
+				run: {
+					channelId: msg.channel,
+					messageTs: msg.ts,
+					teamId: context.teamId ?? msg.team,
+					text: msg.text,
+					threadTs: msg.thread_ts ?? msg.ts,
+					trigger: "direct_message",
+					userId: msg.user,
+				},
+				say,
+			});
 			return;
 		}
-		if (
-			!dedupe.claim(
-				[msg.team ?? "", msg.channel, msg.client_msg_id ?? msg.ts].join(":")
-			)
-		) {
+
+		if (!isPlainChannelThreadFollowUp(msg)) {
+			return;
+		}
+
+		const teamId = context.teamId ?? msg.team;
+		const run: SlackAgentRun = {
+			channelId: msg.channel,
+			messageTs: msg.ts,
+			teamId,
+			text: msg.text,
+			threadTs: msg.thread_ts,
+			trigger: "thread_follow_up",
+			userId: msg.user,
+		};
+		if (!(await threadQueue.isEngaged(run))) {
+			return;
+		}
+		if (!dedupe.claim([teamId ?? "", msg.channel, msg.ts].join(":"))) {
 			return;
 		}
 
 		await handleAgentRun({
 			agent,
 			client,
+			threadQueue,
 			logger,
-			run: {
-				channelId: msg.channel,
-				messageTs: msg.ts,
-				teamId: context.teamId ?? msg.team,
-				text: msg.text,
-				threadTs: msg.thread_ts ?? msg.ts,
-				trigger: "direct_message",
-				userId: msg.user,
-			},
+			run,
 			say,
 		});
 	});
+
+	app.command("/databuddy-help", async ({ ack, respond }) => {
+		await ack();
+		await respond({
+			response_type: "ephemeral",
+			text: SLACK_COPY.help,
+		});
+	});
+
+	app.command(
+		"/databuddy-status",
+		async ({ ack, command, logger, respond }) => {
+			await ack();
+			await respondToStatusCommand({
+				command,
+				installations,
+				logger,
+				respond,
+			});
+		}
+	);
 
 	app.command("/bind", async ({ ack, command, logger, respond }) => {
 		await ack();
@@ -299,37 +361,93 @@ async function handleAgentRun({
 	logger,
 	run,
 	say,
+	threadQueue,
 }: {
 	agent: DatabuddyAgentClient;
 	client: SlackAgentClient;
 	logger: SlackSlashLogger;
 	run: SlackAgentRun;
 	say: SlackSay;
+	threadQueue: SlackThreadQueue;
 }): Promise<void> {
 	const eventLog = createRunLog(run);
 	const startedAt = performance.now();
+	let lockAcquired = false;
 
 	try {
 		await addTriggerReaction({ client, eventLog, logger, run });
-		const result = await streamAgentToSlack({
-			agent,
-			client,
-			eventLog,
-			logger,
-			run,
-			say,
-		});
-		setSlackLog(eventLog, {
-			slack_response_ok: result.ok,
-			slack_response_ts: result.responseTs,
-			slack_response_streamed: result.streamed,
-		});
+		await threadQueue.markEngaged(run);
+		lockAcquired = await threadQueue.tryAcquire(run);
+		if (!lockAcquired) {
+			const queued = await threadQueue.enqueue(run);
+			setSlackLog(eventLog, {
+				slack_followup_queued: queued,
+				slack_response_ok: true,
+			});
+			return;
+		}
+
+		let activeRun = run;
+		let totalFollowUps = 0;
+		for (let round = 0; round <= MAX_FOLLOW_UP_ROUNDS; round++) {
+			const result = await streamAgentToSlack({
+				agent,
+				client,
+				eventLog,
+				logger,
+				run: activeRun,
+				say,
+			});
+			setSlackLog(eventLog, {
+				slack_response_ok: result.ok,
+				slack_response_ts: result.responseTs,
+				slack_response_streamed: result.streamed,
+			});
+
+			if (round >= MAX_FOLLOW_UP_ROUNDS) {
+				break;
+			}
+
+			const followUps = await threadQueue.drain(run);
+			if (followUps.length === 0) {
+				break;
+			}
+
+			totalFollowUps += followUps.length;
+			activeRun = createFollowUpRun(run, followUps);
+		}
+
+		if (totalFollowUps > 0) {
+			setSlackLog(eventLog, {
+				slack_followup_drained_count: totalFollowUps,
+			});
+		}
 	} finally {
+		if (lockAcquired) {
+			await threadQueue.release(run).catch((error) => {
+				logger.warn("Failed to release Slack thread lock", error);
+			});
+		}
 		setSlackLog(eventLog, {
 			"timing.slack_total_ms": Math.round(performance.now() - startedAt),
 		});
 		eventLog.emit();
 	}
+}
+
+function createFollowUpRun(
+	baseRun: SlackAgentRun,
+	followUps: SlackFollowUpMessage[]
+): SlackAgentRun {
+	const lastFollowUp = followUps.at(-1);
+	return {
+		...baseRun,
+		followUpMessages: followUps,
+		messageTs: lastFollowUp?.messageTs ?? baseRun.messageTs,
+		text: followUps.map((followUp) => followUp.text).join("\n"),
+		trigger: "thread_follow_up",
+		userId: lastFollowUp?.userId ?? baseRun.userId,
+	};
 }
 
 function createRunLog(run: SlackAgentRun): RequestLogger {
@@ -429,6 +547,63 @@ async function respondToBindCommand({
 	}
 }
 
+async function respondToStatusCommand({
+	command,
+	installations,
+	logger,
+	respond,
+}: {
+	command: SlackSlashCommand;
+	installations: SlackInstallationStore;
+	logger: SlackSlashLogger;
+	respond: SlackSlashRespond;
+}): Promise<void> {
+	const eventLog = createSlackEventLog({
+		slack_channel_id: command.channel_id,
+		slack_command: "/databuddy-status",
+		slack_event: "slash_command",
+		slack_team_id: command.team_id,
+		slack_user_id: command.user_id,
+	});
+	try {
+		const teamContext = await installations.getTeamContext(command.team_id);
+		if (!teamContext) {
+			await respond({
+				response_type: "ephemeral",
+				text: SLACK_COPY.missingWorkspace,
+			});
+			return;
+		}
+
+		const readiness = await installations.getChannelReadiness({
+			autoBind: false,
+			channelId: command.channel_id,
+			teamId: command.team_id,
+		});
+		await respond({
+			response_type: "ephemeral",
+			text: readiness.ok
+				? SLACK_COPY.statusReady
+				: `${SLACK_COPY.statusConnected}\n\n${readiness.message}`,
+		});
+		setSlackLog(eventLog, {
+			slack_status_ready: readiness.ok,
+			slack_integration_id: teamContext.integrationId,
+			slack_organization_id: teamContext.organizationId,
+		});
+	} catch (error) {
+		const err = toError(error);
+		logger.error(err);
+		eventLog.error(err, { error_step: "status_command" });
+		await respond({
+			response_type: "ephemeral",
+			text: SLACK_COPY.statusFailure,
+		});
+	} finally {
+		eventLog.emit();
+	}
+}
+
 function toSlackMessage(message: unknown): SlackMessageLike | null {
 	if (!isRecord(message)) {
 		return null;
@@ -460,6 +635,28 @@ function isPlainDirectMessage(
 			message.channel_type === "im" &&
 			message.text &&
 			message.ts &&
+			message.user &&
+			!message.subtype &&
+			!message.bot_id
+	);
+}
+
+function isPlainChannelThreadFollowUp(
+	message: SlackMessageLike | null
+): message is SlackMessageLike & {
+	channel: string;
+	text: string;
+	thread_ts: string;
+	ts: string;
+	user: string;
+} {
+	return Boolean(
+		message?.channel &&
+			message.channel_type !== "im" &&
+			message.text &&
+			message.thread_ts &&
+			message.ts &&
+			message.thread_ts !== message.ts &&
 			message.user &&
 			!message.subtype &&
 			!message.bot_id

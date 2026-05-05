@@ -27,6 +27,7 @@
     { "path": "../../packages/db" },
     { "path": "../../packages/email" },
     { "path": "../../packages/encryption" },
-    { "path": "../../packages/env" }
+    { "path": "../../packages/env" },
+    { "path": "../../packages/redis" }
   ]
 }
