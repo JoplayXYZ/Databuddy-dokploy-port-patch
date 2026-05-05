@@ -5,6 +5,7 @@ import {
 	enrichBasketWideEvent,
 	flushBatchedAxiomDrain,
 } from "@lib/evlog-basket";
+import { shutdownPostgres } from "@databuddy/db";
 import { disconnect, disposeRuntime, runPromise } from "@lib/producer";
 import { buildBasketErrorPayload } from "@lib/structured-errors";
 import { captureError } from "@lib/tracing";
@@ -56,6 +57,7 @@ async function gracefulShutdown(signal: string) {
 	const { shutdownRedis } = await import("@databuddy/redis");
 	await Promise.all([
 		shutdownRedis().catch(logErr("redisShutdown")),
+		shutdownPostgres().catch(logErr("postgresShutdown")),
 		flushBatchedAxiomDrain().catch(logErr("drainFlush")),
 		runPromise(disconnect).catch(logErr("shutdown")),
 		disposeRuntime().catch(logErr("runtimeDispose")),
