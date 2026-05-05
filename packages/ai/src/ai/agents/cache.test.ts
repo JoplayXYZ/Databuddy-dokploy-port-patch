@@ -74,12 +74,6 @@ vi.mock("../config/enrich-context", () => ({
 	enrichAgentContext: mockEnrichAgentContext,
 }));
 
-vi.mock("./execution", () => ({
-	ensureAgentCreditsAvailable: vi.fn(async () => true),
-	resolveAgentBillingCustomerId: vi.fn(async () => null),
-	trackAgentUsageAndBill: vi.fn(async () => ({})),
-}));
-
 const { getAgentContextSnapshot, shouldLoadMemoryContext } = await import(
 	"./cache"
 );
