@@ -31,6 +31,7 @@ Keep additions **minimal**: one bullet, a new `rg` hint, or a routing note—eno
 - `apps/docs`: Next.js + Fumadocs docs app on port `3005`
 - `apps/links`: redirect/link service
 - `apps/uptime`: uptime monitoring service
+- `apps/uptime` BullMQ worker concurrency defaults high for Bun async I/O; do not lower it just because `10_000` looks large. Verify downstream saturation or lock/timeout evidence first.
 - `packages/db`: Drizzle Postgres schema, client, and ClickHouse helpers
 - `packages/rpc`: shared oRPC router, procedures, auth-aware server context
 - `packages/auth`: Better Auth setup, permissions, organization access
