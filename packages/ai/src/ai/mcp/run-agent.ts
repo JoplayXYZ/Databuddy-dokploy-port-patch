@@ -7,6 +7,7 @@ import {
 import type { ApiKeyRow } from "@databuddy/api-keys/resolve";
 import type { LanguageModelUsage } from "ai";
 import { ToolLoopAgent } from "ai";
+import { DatabuddyAgentUserError } from "../../agent/errors";
 import { getAILogger } from "../../lib/ai-logger";
 import {
 	ensureAgentCreditsAvailable,
@@ -203,9 +204,11 @@ async function prepareMcpAgentRun(options: RunMcpAgentOptions) {
 		options.billingMode !== "skip" &&
 		!(await ensureAgentCreditsAvailable(billingCustomerId))
 	) {
-		throw new Error(
-			"You're out of Databunny credits this month. Upgrade or wait for the monthly reset."
-		);
+		throw new DatabuddyAgentUserError({
+			code: "agent_credits_exhausted",
+			message:
+				"You're out of Databunny credits this month. Upgrade or wait for the monthly reset.",
+		});
 	}
 
 	const [config, memoryCtx] = await Promise.all([

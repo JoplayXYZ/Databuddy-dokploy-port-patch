@@ -14,6 +14,11 @@ import type { DatabuddyAgentSlackContext } from "../ai/mcp/slack-context";
 
 export type { ConversationMessage } from "../ai/mcp/conversation-store";
 export {
+	DatabuddyAgentUserError,
+	isDatabuddyAgentUserError,
+	type DatabuddyAgentUserErrorCode,
+} from "./errors";
+export {
 	classifySlackThreadReplyRelevance,
 	type SlackThreadReplyMessage,
 	type SlackThreadReplyRelevance,

@@ -4,6 +4,20 @@ export type DatabuddyAgentSource = "dashboard" | "mcp" | "slack";
 export type DatabuddyAgentBillingMode = "bill" | "skip";
 export type DatabuddyAgentMutationMode = "allow" | "dry-run";
 export type DatabuddyAgentToolMode = "live" | "eval-fixtures";
+export type DatabuddyAgentUserErrorCode = "agent_credits_exhausted";
+
+export declare class DatabuddyAgentUserError extends Error {
+	readonly code: DatabuddyAgentUserErrorCode;
+	readonly expose: true;
+	constructor(options: {
+		code: DatabuddyAgentUserErrorCode;
+		message: string;
+	});
+}
+
+export declare function isDatabuddyAgentUserError(
+	error: unknown
+): error is DatabuddyAgentUserError;
 
 export interface ConversationMessage {
 	content: string;

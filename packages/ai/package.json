@@ -9,6 +9,7 @@
       "types": "./src/public-types/agent.d.ts",
       "default": "./src/agent/index.ts"
     },
+    "./agent/errors": "./src/agent/errors.ts",
     "./agent/feedback": "./src/agent/feedback.ts",
     "./agents/analytics": "./src/ai/agents/analytics.ts",
     "./agents/cache": "./src/ai/agents/cache.ts",

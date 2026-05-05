@@ -1,4 +1,5 @@
 import { describe, expect, it } from "bun:test";
+import { DatabuddyAgentUserError } from "@databuddy/ai/agent/errors";
 import type { DatabuddyAgentClient } from "../agent/agent-client";
 import { SLACK_COPY } from "./messages";
 import { streamAgentToSlack } from "./respond";
@@ -120,6 +121,56 @@ describe("Databuddy Slack response streaming", () => {
 		]);
 		expect(calls.at(-1)?.options).not.toHaveProperty("markdown_text");
 		expect(JSON.stringify(calls)).not.toContain(SLACK_COPY.agentFailure);
+	});
+
+	it("surfaces user-facing agent errors instead of the generic failure copy", async () => {
+		const { calls, client } = createStreamClient();
+		const sayCalls: Array<{ text: string; thread_ts?: string }> = [];
+		const agent: Pick<DatabuddyAgentClient, "stream"> = {
+			async *stream() {
+				throw new DatabuddyAgentUserError({
+					code: "agent_credits_exhausted",
+					message:
+						"You're out of Databunny credits this month. Upgrade or wait for the monthly reset.",
+				});
+			},
+		};
+
+		const result = await streamAgentToSlack({
+			agent,
+			client,
+			logger: {
+				error: () => {},
+				warn: () => {},
+			},
+			run: {
+				channelId: "C123",
+				messageTs: "171234.567",
+				teamId: "T123",
+				text: "top pages",
+				threadTs: "171234.567",
+				trigger: "app_mention",
+				userId: "U123",
+			},
+			say: async (message) => {
+				sayCalls.push(message);
+				return { ok: true, ts: "say_ts" };
+			},
+		});
+
+		expect(result).toMatchObject({
+			ok: false,
+			responseTs: "say_ts",
+			streamed: false,
+		});
+		expect(calls).toEqual([]);
+		expect(sayCalls).toEqual([
+			{
+				text: "You're out of Databunny credits this month. Upgrade or wait for the monthly reset.",
+				thread_ts: "171234.567",
+			},
+		]);
+		expect(sayCalls[0]?.text).not.toBe(SLACK_COPY.agentFailure);
 	});
 
 	it("does not start a new Slack response when the run is already aborted", async () => {

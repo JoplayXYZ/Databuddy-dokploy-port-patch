@@ -1,3 +1,4 @@
+import { isDatabuddyAgentUserError } from "@databuddy/ai/agent/errors";
 import type { RequestLogger } from "evlog";
 import type {
 	DatabuddyAgentClient,
@@ -222,15 +223,27 @@ export async function streamAgentToSlack({
 			};
 		}
 
+		const userFacingError = isDatabuddyAgentUserError(error) ? error : null;
 		const err = toError(error);
 		setSlackLog(eventLog, {
+			slack_agent_error_code: userFacingError?.code,
 			slack_agent_error_message: err.message,
 			slack_agent_error_name: err.name,
+			slack_agent_error_user_facing: Boolean(userFacingError),
 		});
-		logger.error("Slack agent response failed", err);
-		eventLog?.error(err, { error_step: "agent_response" });
+		if (userFacingError) {
+			logger.warn("Slack agent returned a user-facing error", err);
+			eventLog?.warn(err.message, {
+				agent_error_code: userFacingError.code,
+				error_step: "agent_response",
+			});
+		} else {
+			logger.error("Slack agent response failed", err);
+			eventLog?.error(err, { error_step: "agent_response" });
+		}
 		appendSafeSlackMarkdown(false);
 		const partialText = safeMarkdown.trim();
+		const failureText = userFacingError?.message ?? SLACK_COPY.agentFailure;
 		if (partialText) {
 			await flush(true).catch((flushError) =>
 				logger.warn("Failed to flush partial Slack stream", flushError)
@@ -268,7 +281,7 @@ export async function streamAgentToSlack({
 			await client.chat
 				.stopStream({
 					channel: run.channelId,
-					markdown_text: SLACK_COPY.agentFailure,
+					markdown_text: failureText,
 					ts: streamTs,
 				})
 				.catch((stopError) =>
@@ -283,7 +296,7 @@ export async function streamAgentToSlack({
 			};
 		}
 		const response = await say({
-			text: SLACK_COPY.agentFailure,
+			text: failureText,
 			thread_ts: run.threadTs,
 		});
 		return {
