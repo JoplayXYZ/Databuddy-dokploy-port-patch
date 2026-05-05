@@ -6,6 +6,7 @@ import type {
 } from "../agent/agent-client";
 import { setSlackLog, toError } from "../lib/evlog-slack";
 import { SLACK_COPY } from "./messages";
+import { renderAgentOutputForSlack } from "./output-adapter";
 
 const STREAM_FLUSH_INTERVAL_MS = 900;
 const STREAM_FLUSH_CHARS = 1200;
@@ -22,6 +23,7 @@ type SayFn = (message: {
 }) => Promise<unknown>;
 
 interface StreamAgentToSlackOptions {
+	abortSignal?: AbortSignal;
 	agent: Pick<DatabuddyAgentClient, "stream">;
 	client: Pick<WebClient, "apiCall">;
 	eventLog?: RequestLogger;
@@ -31,6 +33,7 @@ interface StreamAgentToSlackOptions {
 }
 
 export interface StreamAgentToSlackResult {
+	aborted?: boolean;
 	answerChars: number;
 	chunks: number;
 	ok: boolean;
@@ -39,6 +42,7 @@ export interface StreamAgentToSlackResult {
 }
 
 export async function streamAgentToSlack({
+	abortSignal,
 	agent,
 	client,
 	eventLog,
@@ -50,7 +54,10 @@ export async function streamAgentToSlack({
 	let streamStartAttempted = false;
 	let pending = "";
 	let fullText = "";
+	let safeMarkdown = "";
 	let chunks = 0;
+	let convertedComponentCount = 0;
+	let droppedComponentCount = 0;
 	let lastFlushAt = Date.now();
 	const startedAt = performance.now();
 
@@ -111,16 +118,27 @@ export async function streamAgentToSlack({
 		setSlackLog(eventLog, { slack_stream_started: Boolean(streamTs) });
 	};
 
+	const appendSafeSlackMarkdown = (streaming: boolean) => {
+		const rendered = renderAgentOutputForSlack(fullText, { streaming });
+		convertedComponentCount = rendered.convertedComponents;
+		droppedComponentCount = rendered.droppedComponents;
+		if (rendered.markdown.startsWith(safeMarkdown)) {
+			pending += rendered.markdown.slice(safeMarkdown.length);
+			safeMarkdown = rendered.markdown;
+		}
+	};
+
 	try {
-		for await (const chunk of agent.stream(run)) {
+		for await (const chunk of agent.stream(run, { abortSignal })) {
 			chunks++;
-			pending += chunk;
 			fullText += chunk;
+			appendSafeSlackMarkdown(true);
 			await flush(false);
 		}
+		appendSafeSlackMarkdown(false);
 		await flush(true);
 
-		const finalText = fullText.trim();
+		const finalText = safeMarkdown.trim();
 		if (streamTs) {
 			await client.apiCall("chat.stopStream", {
 				channel: run.channelId,
@@ -129,6 +147,8 @@ export async function streamAgentToSlack({
 			});
 			setSlackLog(eventLog, {
 				slack_answer_chars: finalText.length,
+				slack_components_converted: convertedComponentCount,
+				slack_components_dropped: droppedComponentCount,
 				slack_stream_chunks: chunks,
 				slack_streamed: true,
 				"timing.slack_agent_response_ms": Math.round(
@@ -151,6 +171,8 @@ export async function streamAgentToSlack({
 		const responseTs = getSlackMessageTs(response);
 		setSlackLog(eventLog, {
 			slack_answer_chars: finalText.length,
+			slack_components_converted: convertedComponentCount,
+			slack_components_dropped: droppedComponentCount,
 			slack_response_ts: responseTs,
 			slack_stream_chunks: chunks,
 			slack_streamed: false,
@@ -166,10 +188,35 @@ export async function streamAgentToSlack({
 			streamed: false,
 		};
 	} catch (error) {
+		if (abortSignal?.aborted || isAbortError(error)) {
+			if (streamTs) {
+				await flush(true).catch((flushError) =>
+					logger.warn("Failed to flush partial Slack stream", flushError)
+				);
+				await client
+					.apiCall("chat.stopStream", {
+						channel: run.channelId,
+						ts: streamTs,
+					})
+					.catch((stopError) =>
+						logger.warn("Failed to stop aborted Slack stream", stopError)
+					);
+			}
+			return {
+				answerChars: safeMarkdown.trim().length,
+				aborted: true,
+				chunks,
+				ok: false,
+				responseTs: streamTs ?? undefined,
+				streamed: Boolean(streamTs),
+			};
+		}
+
 		const err = toError(error);
 		logger.error("Slack agent response failed", err);
 		eventLog?.error(err, { error_step: "agent_response" });
-		const partialText = fullText.trim();
+		appendSafeSlackMarkdown(false);
+		const partialText = safeMarkdown.trim();
 		if (partialText) {
 			await flush(true).catch((flushError) =>
 				logger.warn("Failed to flush partial Slack stream", flushError)
@@ -280,4 +327,11 @@ function getSlackMessageTs(response: unknown): string | undefined {
 	return isRecord(response) && typeof response.ts === "string"
 		? response.ts
 		: undefined;
+}
+
+function isAbortError(error: unknown): boolean {
+	return (
+		(error instanceof DOMException && error.name === "AbortError") ||
+		(error instanceof Error && error.name === "AbortError")
+	);
 }

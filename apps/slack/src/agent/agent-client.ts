@@ -1,4 +1,5 @@
 import { streamDatabuddyAgent } from "@databuddy/ai/agent";
+import type { DatabuddyAgentSlackContext } from "@databuddy/ai/agent";
 import { SLACK_COPY } from "../slack/messages";
 
 const DEFAULT_TIMEZONE = "UTC";
@@ -19,6 +20,7 @@ export interface SlackAgentRun {
 	channelId: string;
 	followUpMessages?: SlackFollowUpMessage[];
 	messageTs?: string;
+	slackContext?: DatabuddyAgentSlackContext | null;
 	teamId?: string;
 	text: string;
 	threadTs?: string;
@@ -36,8 +38,16 @@ export interface SlackRunContextResolver {
 	resolve(run: SlackAgentRun): Promise<SlackRunContext | null>;
 }
 
+export interface SlackAgentStreamOptions {
+	abortSignal?: AbortSignal;
+}
+
 export interface SlackAgentRunner {
-	stream(run: SlackAgentRun, context: SlackRunContext): AsyncGenerator<string>;
+	stream(
+		run: SlackAgentRun,
+		context: SlackRunContext,
+		options?: SlackAgentStreamOptions
+	): AsyncGenerator<string>;
 }
 
 export class DatabuddyAgentClient {
@@ -60,23 +70,28 @@ export class DatabuddyAgentClient {
 		return text.trim() || SLACK_COPY.noAnswer;
 	}
 
-	async *stream(run: SlackAgentRun): AsyncGenerator<string> {
+	async *stream(
+		run: SlackAgentRun,
+		options?: SlackAgentStreamOptions
+	): AsyncGenerator<string> {
 		const context = await this.#contexts.resolve(run);
 		if (!context) {
 			yield getMissingAgentContextMessage();
 			return;
 		}
-		yield* this.#runner.stream(run, context);
+		yield* this.#runner.stream(run, context, options);
 	}
 }
 
 class SharedDatabuddyAgentRunner implements SlackAgentRunner {
 	async *stream(
 		run: SlackAgentRun,
-		context: SlackRunContext
+		context: SlackRunContext,
+		options?: SlackAgentStreamOptions
 	): AsyncGenerator<string> {
 		const conversationId = createSlackChatId(run);
 		yield* streamDatabuddyAgent({
+			abortSignal: options?.abortSignal,
 			actor: {
 				expectedOrganizationId: context.organizationId,
 				secret: context.agentApiKeySecret,
@@ -85,6 +100,7 @@ class SharedDatabuddyAgentRunner implements SlackAgentRunner {
 			},
 			conversationId,
 			input: formatSlackAgentInput(run),
+			slackContext: run.slackContext,
 			source: "slack",
 			timezone: DEFAULT_TIMEZONE,
 		});
