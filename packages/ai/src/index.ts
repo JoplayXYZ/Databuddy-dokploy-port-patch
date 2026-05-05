@@ -1,10 +1,13 @@
 export {
 	askDatabuddyAgent,
 	streamDatabuddyAgent,
+	traceDatabuddyAgent,
 	type DatabuddyAgentActor,
 	type DatabuddyAgentOptions,
 	type DatabuddyAgentResult,
 	type DatabuddyAgentSource,
+	type DatabuddyAgentToolTrace,
+	type DatabuddyAgentTraceResult,
 } from "./agent";
 export {
 	classifyAgentFeedbackSentiment,

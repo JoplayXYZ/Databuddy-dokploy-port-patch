@@ -1,5 +1,9 @@
 import { stepCountIs } from "ai";
-import { ANTHROPIC_CACHE_1H, models } from "../config/models";
+import {
+	ANTHROPIC_CACHE_1H,
+	createModelFromId,
+	models,
+} from "../config/models";
 import { createMcpAgentTools } from "../mcp/agent-tools";
 import { buildAnalyticsInstructionsForMcp } from "../prompts/analytics";
 import { TIER_CONFIG } from "../config/tiers";
@@ -12,17 +16,34 @@ export function createMcpAgentConfig(context: {
 	userId: string | null;
 	timezone?: string;
 	chatId?: string;
+	modelOverride?: string | null;
+	source?: "dashboard" | "mcp" | "slack";
+	websiteDomain?: string | null;
+	websiteId?: string | null;
 }): AgentConfig {
 	const timezone = context.timezone ?? "UTC";
 	const currentDateTime = new Date().toISOString();
 	const chatId = context.chatId ?? crypto.randomUUID();
+	const websiteId = context.websiteId ?? "";
+	const websiteDomain = context.websiteDomain ?? "";
+
+	const useAnthropicPromptCache =
+		!context.modelOverride || context.modelOverride.startsWith("anthropic/");
 
 	return {
-		model: models.balanced,
+		model: context.modelOverride
+			? createModelFromId(context.modelOverride)
+			: models.balanced,
 		system: {
 			role: "system" as const,
-			content: buildAnalyticsInstructionsForMcp({ timezone, currentDateTime }),
-			providerOptions: ANTHROPIC_CACHE_1H,
+			content: buildAnalyticsInstructionsForMcp({
+				timezone,
+				currentDateTime,
+				source: context.source,
+				websiteDomain,
+				websiteId,
+			}),
+			providerOptions: useAnthropicPromptCache ? ANTHROPIC_CACHE_1H : undefined,
 		},
 		tools: createMcpAgentTools(),
 		stopWhen: stepCountIs(TIER_CONFIG.balanced.maxSteps),
@@ -35,8 +56,8 @@ export function createMcpAgentConfig(context: {
 			requestHeaders: context.requestHeaders,
 			timezone,
 			userId: context.userId ?? "",
-			websiteId: "",
-			websiteDomain: "",
+			websiteId,
+			websiteDomain,
 		},
 	};
 }

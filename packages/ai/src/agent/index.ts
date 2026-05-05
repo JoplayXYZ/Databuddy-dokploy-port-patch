@@ -4,7 +4,12 @@ import {
 	getConversationHistory,
 	type ConversationMessage,
 } from "../ai/mcp/conversation-store";
-import { runMcpAgent, streamMcpAgentText } from "../ai/mcp/run-agent";
+import {
+	runMcpAgent,
+	streamMcpAgentText,
+	runMcpAgentWithTrace,
+	type McpAgentToolTrace,
+} from "../ai/mcp/run-agent";
 
 export type { ConversationMessage } from "../ai/mcp/conversation-store";
 
@@ -35,15 +40,30 @@ export interface DatabuddyAgentOptions {
 	conversationId?: string;
 	history?: ConversationMessage[];
 	input: string;
+	modelOverride?: string | null;
 	persistConversation?: boolean;
 	source?: DatabuddyAgentSource;
 	timeoutMs?: number;
 	timezone?: string;
+	websiteDomain?: string | null;
+	websiteId?: string | null;
 }
 
 export interface DatabuddyAgentResult {
 	answer: string;
 	conversationId: string;
+}
+
+export type DatabuddyAgentToolTrace = McpAgentToolTrace;
+
+export interface DatabuddyAgentTraceResult extends DatabuddyAgentResult {
+	steps: number;
+	toolCalls: DatabuddyAgentToolTrace[];
+	usage: {
+		inputTokens: number;
+		outputTokens: number;
+		totalTokens?: number;
+	};
 }
 
 interface ResolvedAgentActor {
@@ -63,14 +83,55 @@ export async function askDatabuddyAgent(
 		question: options.input,
 		requestHeaders: prepared.actor.requestHeaders,
 		source: prepared.source,
+		modelOverride: options.modelOverride,
+		storeMemory: options.persistConversation !== false,
 		timeoutMs: options.timeoutMs,
 		timezone: options.timezone,
 		userId: prepared.actor.userId,
+		websiteDomain: options.websiteDomain,
+		websiteId: options.websiteId,
 	});
 
 	await persistAgentConversation(options, prepared, answer);
 
 	return { answer, conversationId: prepared.conversationId };
+}
+
+export async function traceDatabuddyAgent(
+	options: DatabuddyAgentOptions
+): Promise<DatabuddyAgentTraceResult> {
+	const prepared = await prepareDatabuddyAgentCall(options);
+	const result = await runMcpAgentWithTrace({
+		apiKey: prepared.actor.apiKey,
+		conversationId: prepared.conversationId,
+		modelOverride: options.modelOverride,
+		priorMessages: prepared.history,
+		question: options.input,
+		requestHeaders: prepared.actor.requestHeaders,
+		source: prepared.source,
+		storeMemory: options.persistConversation !== false,
+		timeoutMs: options.timeoutMs,
+		timezone: options.timezone,
+		userId: prepared.actor.userId,
+		websiteDomain: options.websiteDomain,
+		websiteId: options.websiteId,
+	});
+
+	await persistAgentConversation(options, prepared, result.answer);
+
+	return {
+		answer: result.answer,
+		conversationId: prepared.conversationId,
+		steps: result.steps,
+		toolCalls: result.toolCalls,
+		usage: {
+			inputTokens: result.usage.inputTokens ?? 0,
+			outputTokens: result.usage.outputTokens ?? 0,
+			...(result.usage.totalTokens === undefined
+				? {}
+				: { totalTokens: result.usage.totalTokens }),
+		},
+	};
 }
 
 export async function* streamDatabuddyAgent(
@@ -86,9 +147,13 @@ export async function* streamDatabuddyAgent(
 		question: options.input,
 		requestHeaders: prepared.actor.requestHeaders,
 		source: prepared.source,
+		modelOverride: options.modelOverride,
+		storeMemory: options.persistConversation !== false,
 		timeoutMs: options.timeoutMs,
 		timezone: options.timezone,
 		userId: prepared.actor.userId,
+		websiteDomain: options.websiteDomain,
+		websiteId: options.websiteId,
 	})) {
 		answer += chunk;
 		yield chunk;

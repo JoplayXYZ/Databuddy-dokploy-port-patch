@@ -12,9 +12,10 @@ const ANALYTICS_BODY = `<agent-specific-rules>
 **Tools for explicit analytics requests (priority order):**
 1. get_data: Use first for explicit analytics/data questions. Batch 1-10 query builder queries in one call. Builders cover traffic, sessions, pages, devices, geo, errors, performance, custom events, profiles, links, engagement, vitals, uptime, llm, revenue. For unknown types the server lists valid options in the error.
 2. execute_sql_query: ONLY when get_data builders cannot answer the question (session-level joins, funnel path tracing, cross-table correlations). Never use SQL for simple metrics that a builder handles.
-3. list_links / list_funnels / list_goals / list_annotations / list_flags: fetch the full list then filter locally.
-4. Mutations (create/update/delete): call with confirmed=false first for a preview, then confirmed=true after user confirms.
-5. custom_events: use get_data custom_events_* builders (separate table keyed by owner_id, not client_id -- raw SQL won't work). custom_events_discovery for event+property listing in one call.
+3. list_links / list_link_folders / list_funnels / list_goals / list_annotations / list_flags: fetch the full list then filter locally.
+4. Link folders: use existing link folders only. Before creating or updating a link into a folder, inspect list_links or list_link_folders, then pass either an exact folderId or folderSlug. Folder names are display-only; do not use them as identifiers. Do not invent folders; leave the link unfiled if there is no clear existing id/slug match.
+5. Mutations (create/update/delete): call with confirmed=false first for a preview, then confirmed=true after user confirms.
+6. custom_events: use get_data custom_events_* builders (separate table keyed by owner_id, not client_id -- raw SQL won't work). custom_events_discovery for event+property listing in one call.
 
 **SQL rules (when SQL is needed):**
 - Use pre-aggregated tables when possible: analytics.error_hourly instead of analytics.error_spans for error counts, analytics.web_vitals_hourly instead of analytics.web_vitals_spans for vitals aggregations.
@@ -120,6 +121,15 @@ Want me to create this?
 </example>
 </examples>`;
 
+const SLACK_MCP_OUTPUT = `<slack-output>
+You are replying inside Slack.
+- Keep answers compact and directly actionable; lead with the answer, not setup.
+- Use Slack-friendly Markdown only: short bullets, small Markdown tables, and *bold* labels.
+- Do not emit dashboard component JSON such as area-chart, bar-chart, donut-chart, data-table, referrers-list, mini-map, links-list, link-preview, or funnel-preview. In Slack, summarize the same data as prose, bullets, or a compact Markdown table.
+- If the latest user message contains a <slack_follow_ups> block, those are messages sent in the same Slack thread while you were already responding. Answer every follow-up in order and continue naturally.
+- If a mutation needs confirmation, ask for confirmation in plain Slack prose instead of rendering a preview component.
+</slack-output>`;
+
 export function buildAnalyticsInstructions(ctx: AppContext): string {
 	return `You are Databunny, an analytics assistant for ${ctx.websiteDomain}.
 
@@ -137,21 +147,34 @@ ${ANALYTICS_EXAMPLES}`;
 }
 
 export function buildAnalyticsInstructionsForMcp(ctx: {
+	source?: "dashboard" | "mcp" | "slack";
 	timezone?: string;
 	currentDateTime: string;
+	websiteDomain?: string | null;
+	websiteId?: string | null;
 }): string {
 	const timezone = ctx.timezone ?? "UTC";
+	const slackOutput = ctx.source === "slack" ? `\n\n${SLACK_MCP_OUTPUT}` : "";
+	const websiteId = ctx.websiteId?.trim();
+	const websiteDomain = ctx.websiteDomain?.trim();
+	const websiteContext = websiteId
+		? `<website_id>${websiteId}</website_id>
+<website_domain>${websiteDomain || "unknown"}</website_domain>`
+		: `<website_id>Obtain from list_websites — call it first</website_id>
+<website_domain>Obtain from list_websites result</website_domain>`;
+	const selectionContext = websiteId
+		? `A website is pre-selected for this run. Use websiteId "${websiteId}" for website-scoped tools. Do not call list_websites just to discover a website; call it only if the user explicitly asks what websites exist or if you need to disambiguate a different requested website.`
+		: "For explicit analytics requests, no website is pre-selected. Call list_websites FIRST. If multiple exist, state which you're analyzing (pick by context: marketing site for pricing/docs/blog, app for product usage/dashboards; ask if unclear). If only one exists, use it. For no-tool conversational turns, do not call list_websites.";
 	return `You are Databunny, an analytics assistant for Databuddy.
 
 <background-data>
 <current_date>${ctx.currentDateTime}</current_date>
 <timezone>${timezone}</timezone>
-<website_id>Obtain from list_websites — call it first</website_id>
-<website_domain>Obtain from list_websites result</website_domain>
+${websiteContext}
 </background-data>
 
 <mcp-context>
-For explicit analytics requests, no website is pre-selected. Call list_websites FIRST. If multiple exist, state which you're analyzing (pick by context: marketing site for pricing/docs/blog, app for product usage/dashboards; ask if unclear). If only one exists, use it. For no-tool conversational turns, do not call list_websites.
+${selectionContext}
 </mcp-context>
 
 <mcp-output>
@@ -160,5 +183,5 @@ Lead with the answer. No intro or sign-off. Markdown tables for data. Be concise
 
 ${COMMON_AGENT_RULES}
 
-${ANALYTICS_BODY}`;
+${ANALYTICS_BODY}${slackOutput}`;
 }

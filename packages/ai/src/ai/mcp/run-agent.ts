@@ -21,13 +21,31 @@ const DEFAULT_MCP_AGENT_TIMEOUT_MS = 45_000;
 export interface RunMcpAgentOptions {
 	apiKey: ApiKeyRow | null;
 	conversationId?: string;
+	modelOverride?: string | null;
 	priorMessages?: Array<{ role: "user" | "assistant"; content: string }>;
 	question: string;
 	requestHeaders: Headers;
 	source?: "dashboard" | "mcp" | "slack";
+	storeMemory?: boolean;
 	timeoutMs?: number;
 	timezone?: string;
 	userId: string | null;
+	websiteDomain?: string | null;
+	websiteId?: string | null;
+}
+
+export interface McpAgentToolTrace {
+	index: number;
+	input: unknown;
+	name: string;
+	output: unknown;
+}
+
+export interface RunMcpAgentTraceResult {
+	answer: string;
+	steps: number;
+	toolCalls: McpAgentToolTrace[];
+	usage: LanguageModelUsage;
 }
 
 export async function runMcpAgent(
@@ -52,9 +70,44 @@ export async function runMcpAgent(
 		}
 
 		const answer = result.text ?? "No response generated.";
-		storePreparedConversation(prepared, options.question, answer);
+		if (options.storeMemory !== false) {
+			storePreparedConversation(prepared, options.question, answer);
+		}
 
 		return answer;
+	} finally {
+		clearTimeout(timeout);
+	}
+}
+
+export async function runMcpAgentWithTrace(
+	options: RunMcpAgentOptions
+): Promise<RunMcpAgentTraceResult> {
+	const prepared = await prepareMcpAgentRun(options);
+	const abortController = new AbortController();
+	const timeout = setTimeout(
+		() => abortController.abort(),
+		getTimeoutMs(options)
+	);
+
+	try {
+		const result = await prepared.agent.generate({
+			messages: prepared.messages,
+			abortSignal: abortController.signal,
+		});
+
+		await trackPreparedUsage(prepared, result.totalUsage);
+		const answer = result.text ?? "No response generated.";
+		if (options.storeMemory !== false) {
+			storePreparedConversation(prepared, options.question, answer);
+		}
+
+		return {
+			answer,
+			steps: result.steps.length,
+			toolCalls: collectToolTrace(result.steps),
+			usage: result.totalUsage,
+		};
 	} finally {
 		clearTimeout(timeout);
 	}
@@ -84,11 +137,13 @@ export async function* streamMcpAgentText(
 
 		const usage = await result.totalUsage;
 		await trackPreparedUsage(prepared, usage);
-		storePreparedConversation(
-			prepared,
-			options.question,
-			answer.trim() || "No response generated."
-		);
+		if (options.storeMemory !== false) {
+			storePreparedConversation(
+				prepared,
+				options.question,
+				answer.trim() || "No response generated."
+			);
+		}
 	} finally {
 		clearTimeout(timeout);
 	}
@@ -128,6 +183,10 @@ async function prepareMcpAgentRun(options: RunMcpAgentOptions) {
 				userId: mcpUserId,
 				timezone: options.timezone,
 				chatId: sessionId,
+				modelOverride: options.modelOverride,
+				source,
+				websiteDomain: options.websiteDomain,
+				websiteId: options.websiteId,
 			})
 		),
 		isMemoryEnabled()
@@ -185,9 +244,12 @@ async function prepareMcpAgentRun(options: RunMcpAgentOptions) {
 		billingCustomerId,
 		mcpUserId,
 		messages,
+		modelId: options.modelOverride ?? modelNames.balanced,
 		organizationId,
 		sessionId,
 		source,
+		websiteDomain: options.websiteDomain ?? undefined,
+		websiteId: options.websiteId ?? undefined,
 	};
 }
 
@@ -197,13 +259,43 @@ async function trackPreparedUsage(
 ): Promise<void> {
 	await trackAgentUsageAndBill({
 		usage,
-		modelId: modelNames.balanced,
+		modelId: prepared.modelId,
 		source: prepared.source,
 		organizationId: prepared.organizationId,
 		userId: prepared.mcpUserId,
 		chatId: prepared.sessionId,
 		billingCustomerId: prepared.billingCustomerId,
 	});
+}
+
+function collectToolTrace(
+	steps: readonly {
+		readonly toolCalls: readonly {
+			readonly input: unknown;
+			readonly toolCallId: string;
+			readonly toolName: string;
+		}[];
+		readonly toolResults: readonly {
+			readonly output: unknown;
+			readonly toolCallId: string;
+		}[];
+	}[]
+): McpAgentToolTrace[] {
+	const traces: McpAgentToolTrace[] = [];
+	for (const step of steps) {
+		const outputs = new Map(
+			step.toolResults.map((result) => [result.toolCallId, result.output])
+		);
+		for (const call of step.toolCalls) {
+			traces.push({
+				index: traces.length,
+				input: call.input,
+				name: call.toolName,
+				output: outputs.get(call.toolCallId) ?? null,
+			});
+		}
+	}
+	return traces;
 }
 
 function storePreparedConversation(
@@ -219,8 +311,10 @@ function storePreparedConversation(
 		prepared.mcpUserId,
 		prepared.apiKeyId,
 		{
+			...(prepared.websiteDomain ? { domain: prepared.websiteDomain } : {}),
 			metadata: { source: prepared.source },
 			conversationId: prepared.sessionId,
+			websiteId: prepared.websiteId,
 		}
 	);
 }

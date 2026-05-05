@@ -32,10 +32,13 @@ export interface DatabuddyAgentOptions {
 	conversationId?: string;
 	history?: ConversationMessage[];
 	input: string;
+	modelOverride?: string | null;
 	persistConversation?: boolean;
 	source?: DatabuddyAgentSource;
 	timeoutMs?: number;
 	timezone?: string;
+	websiteDomain?: string | null;
+	websiteId?: string | null;
 }
 
 export interface DatabuddyAgentResult {
@@ -43,9 +46,30 @@ export interface DatabuddyAgentResult {
 	conversationId: string;
 }
 
+export interface DatabuddyAgentToolTrace {
+	index: number;
+	input: unknown;
+	name: string;
+	output: unknown;
+}
+
+export interface DatabuddyAgentTraceResult extends DatabuddyAgentResult {
+	steps: number;
+	toolCalls: DatabuddyAgentToolTrace[];
+	usage: {
+		inputTokens: number;
+		outputTokens: number;
+		totalTokens?: number;
+	};
+}
+
 export declare function askDatabuddyAgent(
 	options: DatabuddyAgentOptions
 ): Promise<DatabuddyAgentResult>;
+
+export declare function traceDatabuddyAgent(
+	options: DatabuddyAgentOptions
+): Promise<DatabuddyAgentTraceResult>;
 
 export declare function streamDatabuddyAgent(
 	options: DatabuddyAgentOptions
