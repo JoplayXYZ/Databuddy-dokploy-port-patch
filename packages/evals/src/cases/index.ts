@@ -4,6 +4,7 @@ import { behavioralCases } from "./behavioral";
 import { formatCases } from "./format";
 import { integrationCases } from "./integrations";
 import { qualityCases } from "./quality";
+import { slackThreadCases } from "./slack-thread";
 import { toolRoutingCases } from "./tool-routing";
 
 const DEFAULT_SURFACE: EvalSurface = "agent";
@@ -15,6 +16,7 @@ export const allCases: EvalCase[] = [
 	...qualityCases,
 	...formatCases,
 	...integrationCases,
+	...slackThreadCases,
 ];
 
 export function getCasesByCategory(category: string): EvalCase[] {

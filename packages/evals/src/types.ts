@@ -14,17 +14,65 @@ export interface ToolInputExpectation {
 	tool: string;
 }
 
+export interface ResponsePatternExpectation {
+	description?: string;
+	flags?: string;
+	pattern: string;
+}
+
+export interface ToolCallCountExpectation {
+	max?: number;
+	min?: number;
+	tool: string;
+}
+
+export interface SlackEvalMessage {
+	authorName?: string;
+	text: string;
+	threadTs?: string;
+	ts?: string;
+	userId?: string;
+}
+
+export interface SlackEvalThread {
+	botUserId?: string;
+	channelId?: string;
+	currentUserId: string;
+	followUpMessages?: Array<{
+		messageTs?: string;
+		text: string;
+		userId?: string;
+	}>;
+	messageTs?: string;
+	recentChannelMessages?: SlackEvalMessage[];
+	teamId?: string;
+	threadMessages?: SlackEvalMessage[];
+	threadTs?: string;
+	trigger?: "app_mention" | "assistant" | "direct_message" | "thread_follow_up";
+}
+
 export interface EvalCase {
 	category: EvalCategory;
 	expect: {
 		toolsCalled?: string[];
+		toolsCalledInOrder?: string[];
+		toolCallCounts?: ToolCallCountExpectation[];
 		toolsNotCalled?: string[];
 		batchedQueries?: boolean;
 		responseContains?: string[];
+		responseMatches?: ResponsePatternExpectation[];
+		responseNotMatches?: ResponsePatternExpectation[];
 		responseNotContains?: string[];
 		chartType?: string;
 		validChartJSON?: boolean;
 		noRawJSON?: boolean;
+		forbidMarkdownTable?: boolean;
+		maxBulletCount?: number;
+		maxHeadingCount?: number;
+		maxParagraphs?: number;
+		maxResponseChars?: number;
+		maxResponseLines?: number;
+		maxResponseWords?: number;
 		maxSteps?: number;
 		maxLatencyMs?: number;
 		maxInputTokens?: number;
@@ -33,8 +81,10 @@ export interface EvalCase {
 		toolInputs?: ToolInputExpectation[];
 	};
 	id: string;
+	judgeMode?: "analytics" | "slack-teammate";
 	name: string;
 	query: string;
+	slack?: SlackEvalThread;
 	surfaces?: EvalSurface[];
 	tags?: string[];
 	websiteId: string;

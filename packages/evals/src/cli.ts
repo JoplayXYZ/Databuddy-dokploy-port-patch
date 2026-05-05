@@ -20,6 +20,7 @@ import { printReport } from "./report";
 import { runCase } from "./runner";
 import type { ProgressEvent } from "./runner";
 import { scoreCase } from "./scorers";
+import { runSlackAdapterHarness } from "./slack-harness";
 import type {
 	CaseResult,
 	EvalCase,
@@ -55,7 +56,7 @@ interface CliOpts {
 	rejudge: boolean;
 	runner: EvalRunner;
 	skipJudge: boolean;
-	subcommand: "run" | "compare" | "models";
+	subcommand: "run" | "compare" | "models" | "slack-harness";
 	surfaces: Array<EvalSurface | "all">;
 	tags: string[];
 }
@@ -123,6 +124,8 @@ function parseArgs(): CliOpts {
 		subcommand = "compare";
 	} else if (args[0] === "models") {
 		subcommand = "models";
+	} else if (args[0] === "slack-harness") {
+		subcommand = "slack-harness";
 	}
 
 	const remainingArgs = [...args];
@@ -389,9 +392,16 @@ function buildRun(
 	};
 
 	const passedCount = results.filter((r) => r.passed).length;
-	const overallScore = Math.round(
-		Object.values(dimensions).reduce((a, b) => a + b, 0) / 5
-	);
+	const scoredDimensions = (Object.keys(dimensions) as Array<keyof ScoreCard>)
+		.filter((dimension) => dimCounts[dimension] > 0)
+		.map((dimension) => dimensions[dimension]);
+	const overallScore =
+		scoredDimensions.length > 0
+			? Math.round(
+					scoredDimensions.reduce((total, score) => total + score, 0) /
+						scoredDimensions.length
+				)
+			: 0;
 
 	return {
 		timestamp: new Date().toISOString(),
@@ -976,9 +986,13 @@ async function main() {
 		case "models":
 			cmdModels();
 			break;
+		case "slack-harness":
+			await runSlackAdapterHarness();
+			process.exit(process.exitCode ?? 0);
+			return;
 		default:
 			await cmdRun();
-			break;
+			process.exit(process.exitCode ?? 0);
 	}
 }
 

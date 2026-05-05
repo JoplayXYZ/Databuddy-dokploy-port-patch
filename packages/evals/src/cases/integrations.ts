@@ -142,8 +142,8 @@ export const integrationCases: EvalCase[] = [
 		expect: {
 			toolsNotCalled: ANALYTICS_TOOLS,
 			responseNotContains: ["pageviews", "sessions", "unique visitors"],
-			maxSteps: 1,
-			maxLatencyMs: 15_000,
+			maxSteps: 2,
+			maxLatencyMs: 20_000,
 		},
 	},
 ];

@@ -70,12 +70,18 @@ export function printReport(run: EvalRun): void {
 	const s = run.summary;
 	const d = run.dimensions;
 	const grandTotal = totalCost + totalJudgeCost;
+	const passRate = s.total > 0 ? Math.round((s.passed / s.total) * 100) : 0;
+	const runnerErrors = run.cases.filter((c) =>
+		c.failures.some((failure) => failure.startsWith("Runner error:"))
+	).length;
+	const runnerErrorStr =
+		runnerErrors > 0 ? ` | Runner errors: ${runnerErrors}` : "";
 	const costStr =
 		grandTotal > 0
 			? ` | Cost: $${grandTotal.toFixed(4)} (agent: $${totalCost.toFixed(4)}, judge: $${totalJudgeCost.toFixed(4)})`
 			: "";
 	console.log(
-		`${BOLD}Summary:${RESET} ${s.passed}/${s.total} passed (${s.score}%) | Tools: ${d.tool_routing} | Behavioral: ${d.behavioral} | Quality: ${d.quality} | Format: ${d.format} | Perf: ${d.performance}${costStr}`
+		`${BOLD}Summary:${RESET} ${s.passed}/${s.total} passed (${passRate}% pass rate, score ${s.score}) | Tools: ${d.tool_routing} | Behavioral: ${d.behavioral} | Quality: ${d.quality} | Format: ${d.format} | Perf: ${d.performance}${runnerErrorStr}${costStr}`
 	);
 	console.log("");
 }
