@@ -1,64 +1,39 @@
 import { Assistant, type App } from "@slack/bolt";
-import type { WebClient } from "@slack/web-api";
-import type { RequestLogger } from "evlog";
 import type {
 	DatabuddyAgentClient,
 	SlackAgentRun,
 } from "../agent/agent-client";
-import {
-	createSlackEventLog,
-	getSlackApiErrorCode,
-	setSlackLog,
-	toError,
-} from "../lib/evlog-slack";
+import { createSlackEventLog } from "../lib/evlog-slack";
+import { abortSlackActiveRun } from "./active-runs";
 import { getSlackChannelMentionPolicy } from "./channel-policy";
 import { logSlackReactionFeedback } from "./feedback";
-import type { SlackInstallationStore } from "./installations";
+import type { SlackInstallationServices } from "./installations";
+import {
+	createRecentDedupe,
+	isPlainChannelThreadFollowUp,
+	isPlainDirectMessage,
+	stripLeadingMention,
+	toDeletedSlackMessage,
+	toSlackMessage,
+	toThreadTitle,
+} from "./message-routing";
 import { SLACK_COPY, SLACK_SUGGESTED_PROMPTS } from "./messages";
-import { streamAgentToSlack } from "./respond";
-
-const LEADING_APP_MENTION_REGEX = /^<@[A-Z0-9]+>\s*/i;
-
-interface SlackMessageLike {
-	bot_id?: string;
-	channel?: string;
-	channel_type?: string;
-	client_msg_id?: string;
-	subtype?: string;
-	team?: string;
-	text?: string;
-	thread_ts?: string;
-	ts?: string;
-	user?: string;
-}
-
-interface SlackSlashCommand {
-	channel_id: string;
-	team_id?: string;
-	user_id?: string;
-}
-
-interface SlackSlashLogger {
-	error(...args: unknown[]): void;
-	warn(...args: unknown[]): void;
-}
-
-type SlackSlashRespond = (message: {
-	response_type: "ephemeral";
-	text: string;
-}) => Promise<unknown>;
-
-type SlackAgentClient = Pick<WebClient, "apiCall" | "reactions">;
-
-type SlackSay = (message: {
-	text: string;
-	thread_ts?: string;
-}) => Promise<unknown>;
+import { handleAgentRun } from "./run-handler";
+import { createSlackConversationContext } from "./slack-context";
+import { respondToBindCommand, respondToStatusCommand } from "./slash-commands";
+import { slackThreadQueue, type SlackThreadQueueStore } from "./thread-queue";
+import {
+	slackThreadReplyGate,
+	type SlackThreadReplyDecision,
+	type SlackThreadReplyGate,
+} from "./thread-relevance";
 
 export function registerSlackListeners(
 	app: App,
-	agent: DatabuddyAgentClient,
-	installations: SlackInstallationStore
+	agent: Pick<DatabuddyAgentClient, "stream">,
+	installations: SlackInstallationServices,
+	threadQueue: SlackThreadQueueStore = slackThreadQueue,
+	threadReplyGate: SlackThreadReplyGate = slackThreadReplyGate
 ): void {
 	const dedupe = createRecentDedupe();
 
@@ -118,19 +93,22 @@ export function registerSlackListeners(
 				status: "is thinking...",
 			});
 
+			const run: SlackAgentRun = {
+				channelId,
+				messageTs,
+				teamId: context.teamId,
+				text,
+				threadTs: msg.thread_ts ?? messageTs,
+				trigger: "assistant",
+				userId,
+			};
+			await threadQueue.markEngaged(run);
 			await handleAgentRun({
 				agent,
 				client,
+				threadQueue,
 				logger,
-				run: {
-					channelId,
-					messageTs,
-					teamId: context.teamId,
-					text,
-					threadTs: msg.thread_ts ?? messageTs,
-					trigger: "assistant",
-					userId,
-				},
+				run,
 				say,
 			});
 		},
@@ -138,60 +116,80 @@ export function registerSlackListeners(
 
 	app.assistant(assistant);
 
-	app.event("app_mention", async ({ client, context, event, logger, say }) => {
-		const threadTs = event.thread_ts ?? event.ts;
-		const teamId = context.teamId ?? event.team;
-		const text = stripLeadingMention(event.text ?? "").trim();
-		if (!event.user) {
-			return;
-		}
-		if (!dedupe.claim([teamId ?? "", event.channel, event.ts].join(":"))) {
-			return;
-		}
-		if (!text) {
-			await say({
-				text: SLACK_COPY.emptyMention,
-				thread_ts: threadTs,
-			});
-			return;
-		}
+	app.event(
+		"app_mention",
+		async ({ body, client, context, event, logger, say }) => {
+			const threadTs = event.thread_ts ?? event.ts;
+			const teamId = context.teamId ?? event.team;
+			const text = stripLeadingMention(event.text ?? "").trim();
+			if (!event.user) {
+				return;
+			}
+			if (!dedupe.claim([teamId ?? "", event.channel, event.ts].join(":"))) {
+				return;
+			}
+			if (!text) {
+				await say({
+					text: SLACK_COPY.emptyMention,
+					thread_ts: threadTs,
+				});
+				return;
+			}
 
-		const channelPolicy = await getSlackChannelMentionPolicy({
-			channelId: event.channel,
-			client,
-			logger,
-		});
-		const readiness = await installations.getChannelReadiness({
-			autoBind: channelPolicy.autoBind,
-			channelId: event.channel,
-			teamId,
-		});
-		if (!readiness.ok) {
-			logChannelGate({
+			const channelPolicy = await getSlackChannelMentionPolicy({
 				channelId: event.channel,
-				errorCode: channelPolicy.errorCode,
-				messageTs: event.ts,
-				policyReason: channelPolicy.reason,
-				teamId,
-				userId: event.user,
+				client,
+				logger,
 			});
-			await say({
-				text:
-					channelPolicy.reason === "slack_connect"
-						? SLACK_COPY.slackConnectNeedsBind
-						: channelPolicy.reason === "missing_scope"
-							? SLACK_COPY.missingSlackScopes
-							: readiness.message,
-				thread_ts: threadTs,
-			});
-			return;
-		}
+			if (
+				isExternalSlackConnectMention({
+					channelPolicy,
+					isExtSharedEvent: body.is_ext_shared_channel === true,
+					sourceTeamId: getMentionSourceTeamId(event),
+					teamId,
+				})
+			) {
+				logChannelGate({
+					channelId: event.channel,
+					messageTs: event.ts,
+					policyReason: "slack_connect_external_user",
+					teamId,
+					userId: event.user,
+				});
+				await say({
+					text: SLACK_COPY.slackConnectExternalUser,
+					thread_ts: threadTs,
+				});
+				return;
+			}
 
-		await handleAgentRun({
-			agent,
-			client,
-			logger,
-			run: {
+			const readiness = await installations.getChannelReadiness({
+				autoBind: channelPolicy.autoBind,
+				channelId: event.channel,
+				teamId,
+			});
+			if (!readiness.ok) {
+				logChannelGate({
+					channelId: event.channel,
+					errorCode: channelPolicy.errorCode,
+					messageTs: event.ts,
+					policyReason: channelPolicy.reason,
+					teamId,
+					userId: event.user,
+				});
+				await say({
+					text:
+						channelPolicy.reason === "slack_connect"
+							? SLACK_COPY.slackConnectNeedsBind
+							: channelPolicy.reason === "missing_scope"
+								? SLACK_COPY.missingSlackScopes
+								: readiness.message,
+					thread_ts: threadTs,
+				});
+				return;
+			}
+
+			const run: SlackAgentRun = {
 				channelId: event.channel,
 				messageTs: event.ts,
 				teamId,
@@ -199,40 +197,153 @@ export function registerSlackListeners(
 				threadTs,
 				trigger: "app_mention",
 				userId: event.user,
-			},
-			say,
-		});
-	});
+			};
+			await threadQueue.markEngaged(run);
+			await handleAgentRun({
+				agent,
+				client,
+				threadQueue,
+				logger,
+				run,
+				say,
+			});
+		}
+	);
 
 	app.message(async ({ client, context, logger, message, say }) => {
 		const msg = toSlackMessage(message);
-		if (!isPlainDirectMessage(msg)) {
+		const deletedMessage = toDeletedSlackMessage(msg);
+		if (deletedMessage) {
+			const teamId = context.teamId ?? deletedMessage.team;
+			const queuedFollowUpRemoved = await threadQueue.removeDeletedFollowUp({
+				channelId: deletedMessage.channel,
+				messageTs: deletedMessage.deletedTs,
+				teamId,
+			});
+			const activeRunAborted = abortSlackActiveRun({
+				channelId: deletedMessage.channel,
+				messageTs: deletedMessage.deletedTs,
+				teamId,
+			});
+			createSlackEventLog({
+				slack_active_run_aborted: activeRunAborted,
+				slack_channel_id: deletedMessage.channel,
+				slack_deleted_message_ts: deletedMessage.deletedTs,
+				slack_event: "message_deleted",
+				slack_followup_removed: queuedFollowUpRemoved,
+				slack_team_id: teamId,
+			}).emit();
 			return;
 		}
-		if (
-			!dedupe.claim(
-				[msg.team ?? "", msg.channel, msg.client_msg_id ?? msg.ts].join(":")
-			)
-		) {
+
+		if (isPlainDirectMessage(msg)) {
+			if (
+				!dedupe.claim(
+					[msg.team ?? "", msg.channel, msg.client_msg_id ?? msg.ts].join(":")
+				)
+			) {
+				return;
+			}
+
+			await handleAgentRun({
+				agent,
+				client,
+				threadQueue,
+				logger,
+				run: {
+					channelId: msg.channel,
+					messageTs: msg.ts,
+					teamId: context.teamId ?? msg.team,
+					text: msg.text,
+					threadTs: msg.thread_ts ?? msg.ts,
+					trigger: "direct_message",
+					userId: msg.user,
+				},
+				say,
+			});
+			return;
+		}
+
+		if (!isPlainChannelThreadFollowUp(msg)) {
+			logMessageRouteSkipped({
+				botUserId: context.botUserId,
+				message: msg,
+				reason: "not_thread_follow_up",
+				teamId: context.teamId ?? msg?.team,
+			});
+			return;
+		}
+
+		const teamId = context.teamId ?? msg.team;
+		const run: SlackAgentRun = {
+			channelId: msg.channel,
+			messageTs: msg.ts,
+			teamId,
+			text: msg.text,
+			threadTs: msg.thread_ts,
+			trigger: "thread_follow_up",
+			userId: msg.user,
+		};
+		if (!(await threadQueue.isEngaged(run))) {
+			logMessageRouteSkipped({
+				botUserId: context.botUserId,
+				message: msg,
+				reason: "thread_not_engaged",
+				teamId,
+			});
+			return;
+		}
+		if (!dedupe.claim([teamId ?? "", msg.channel, msg.ts].join(":"))) {
+			logMessageRouteSkipped({
+				botUserId: context.botUserId,
+				message: msg,
+				reason: "duplicate",
+				teamId,
+			});
+			return;
+		}
+
+		const slackContext = createSlackConversationContext(client, run);
+		const replyDecision = await threadReplyGate.shouldReply(run, {
+			botUserId: context.botUserId,
+			readThreadMessages: async () =>
+				(await slackContext?.readCurrentThread?.())?.messages ?? [],
+		});
+		if (!replyDecision.shouldReply) {
+			logThreadReplyIgnored({ decision: replyDecision, run });
 			return;
 		}
 
 		await handleAgentRun({
 			agent,
 			client,
+			threadQueue,
 			logger,
-			run: {
-				channelId: msg.channel,
-				messageTs: msg.ts,
-				teamId: context.teamId ?? msg.team,
-				text: msg.text,
-				threadTs: msg.thread_ts ?? msg.ts,
-				trigger: "direct_message",
-				userId: msg.user,
-			},
+			run: { ...run, slackContext },
 			say,
 		});
 	});
+
+	app.command("/databuddy-help", async ({ ack, respond }) => {
+		await ack();
+		await respond({
+			response_type: "ephemeral",
+			text: SLACK_COPY.help,
+		});
+	});
+
+	app.command(
+		"/databuddy-status",
+		async ({ ack, command, logger, respond }) => {
+			await ack();
+			await respondToStatusCommand({
+				command,
+				installations,
+				logger,
+				respond,
+			});
+		}
+	);
 
 	app.command("/bind", async ({ ack, command, logger, respond }) => {
 		await ack();
@@ -267,6 +378,33 @@ export function registerSlackListeners(
 	});
 }
 
+function getMentionSourceTeamId(event: {
+	source_team?: string;
+	team?: string;
+	user_team?: string;
+}): string | undefined {
+	return event.user_team ?? event.source_team ?? event.team;
+}
+
+function isExternalSlackConnectMention({
+	channelPolicy,
+	isExtSharedEvent,
+	sourceTeamId,
+	teamId,
+}: {
+	channelPolicy: { isExtShared?: boolean };
+	isExtSharedEvent: boolean;
+	sourceTeamId?: string;
+	teamId?: string;
+}): boolean {
+	return Boolean(
+		(channelPolicy.isExtShared || isExtSharedEvent) &&
+			sourceTeamId &&
+			teamId &&
+			sourceTeamId !== teamId
+	);
+}
+
 function logChannelGate({
 	channelId,
 	errorCode,
@@ -293,214 +431,70 @@ function logChannelGate({
 	}).emit();
 }
 
-async function handleAgentRun({
-	agent,
-	client,
-	logger,
+function logThreadReplyIgnored({
+	decision,
 	run,
-	say,
 }: {
-	agent: DatabuddyAgentClient;
-	client: SlackAgentClient;
-	logger: SlackSlashLogger;
+	decision: SlackThreadReplyDecision;
 	run: SlackAgentRun;
-	say: SlackSay;
-}): Promise<void> {
-	const eventLog = createRunLog(run);
-	const startedAt = performance.now();
-
-	try {
-		await addTriggerReaction({ client, eventLog, logger, run });
-		const result = await streamAgentToSlack({
-			agent,
-			client,
-			eventLog,
-			logger,
-			run,
-			say,
-		});
-		setSlackLog(eventLog, {
-			slack_response_ok: result.ok,
-			slack_response_ts: result.responseTs,
-			slack_response_streamed: result.streamed,
-		});
-	} finally {
-		setSlackLog(eventLog, {
-			"timing.slack_total_ms": Math.round(performance.now() - startedAt),
-		});
-		eventLog.emit();
-	}
-}
-
-function createRunLog(run: SlackAgentRun): RequestLogger {
-	return createSlackEventLog({
+}) {
+	createSlackEventLog({
 		slack_channel_id: run.channelId,
-		slack_event: "agent_run",
+		slack_event: "thread_reply_gate",
 		slack_message_ts: run.messageTs,
-		slack_team_id: run.teamId,
-		slack_text_length: run.text.length,
+		slack_thread_reply_allowed: false,
+		slack_thread_reply_confidence: decision.confidence,
+		slack_thread_reply_reason: decision.reason,
+		slack_thread_reply_source: decision.source,
 		slack_thread_ts: run.threadTs,
 		slack_trigger: run.trigger,
 		slack_user_id: run.userId,
-	});
+	}).emit();
 }
 
-async function addTriggerReaction({
-	client,
-	eventLog,
-	logger,
-	run,
+function logMessageRouteSkipped({
+	botUserId,
+	message,
+	reason,
+	teamId,
 }: {
-	client: Pick<WebClient, "reactions">;
-	eventLog: RequestLogger;
-	logger: SlackSlashLogger;
-	run: SlackAgentRun;
-}): Promise<void> {
-	if (!run.messageTs) {
+	botUserId?: string;
+	message: ReturnType<typeof toSlackMessage>;
+	reason: "duplicate" | "not_thread_follow_up" | "thread_not_engaged";
+	teamId?: string;
+}) {
+	if (!shouldLogRouteSkip(message, botUserId)) {
 		return;
 	}
 
-	const startedAt = performance.now();
-	try {
-		await client.reactions.add({
-			channel: run.channelId,
-			name: SLACK_COPY.processingReaction,
-			timestamp: run.messageTs,
-		});
-		setSlackLog(eventLog, {
-			slack_reaction_added: true,
-			"timing.slack_reaction_ms": Math.round(performance.now() - startedAt),
-		});
-	} catch (error) {
-		const code = getSlackApiErrorCode(error) ?? "unknown";
-		setSlackLog(eventLog, {
-			slack_reaction_added: code === "already_reacted",
-			slack_reaction_error: code,
-			"timing.slack_reaction_ms": Math.round(performance.now() - startedAt),
-		});
-		if (code !== "already_reacted") {
-			logger.warn("Failed to add Slack trigger reaction", code);
-		}
-	}
+	createSlackEventLog({
+		slack_channel_id: message?.channel,
+		slack_channel_type: message?.channel_type,
+		slack_event: "message_route_skip",
+		slack_message_ts: message?.ts,
+		slack_route_skip_reason: reason,
+		slack_team_id: teamId,
+		slack_text_length: message?.text?.length,
+		slack_thread_ts: message?.thread_ts,
+		slack_user_id: message?.user,
+	}).emit();
 }
 
-async function respondToBindCommand({
-	command,
-	installations,
-	logger,
-	respond,
-}: {
-	command: SlackSlashCommand;
-	installations: SlackInstallationStore;
-	logger: SlackSlashLogger;
-	respond: SlackSlashRespond;
-}): Promise<void> {
-	const eventLog = createSlackEventLog({
-		slack_channel_id: command.channel_id,
-		slack_command: "/bind",
-		slack_event: "slash_command",
-		slack_team_id: command.team_id,
-		slack_user_id: command.user_id,
-	});
-	const startedAt = performance.now();
-	try {
-		const result = await installations.bindChannel({
-			channelId: command.channel_id,
-			teamId: command.team_id,
-		});
-		setSlackLog(eventLog, {
-			slack_bind_ok: result.ok,
-			"timing.slack_bind_ms": Math.round(performance.now() - startedAt),
-		});
-		await respond({
-			response_type: "ephemeral",
-			text: result.message,
-		});
-	} catch (error) {
-		const err = toError(error);
-		logger.error(err);
-		eventLog.error(err, { error_step: "bind_channel" });
-		await respond({
-			response_type: "ephemeral",
-			text: SLACK_COPY.bindFailure,
-		});
-	} finally {
-		eventLog.emit();
+function shouldLogRouteSkip(
+	message: ReturnType<typeof toSlackMessage>,
+	botUserId?: string
+): boolean {
+	const text = message?.text;
+	if (!(text && message.channel && message.ts && message.user)) {
+		return false;
 	}
-}
-
-function toSlackMessage(message: unknown): SlackMessageLike | null {
-	if (!isRecord(message)) {
-		return null;
+	if (message.channel_type === "im" || message.subtype || message.bot_id) {
+		return false;
 	}
-	return {
-		bot_id: getString(message.bot_id),
-		channel: getString(message.channel),
-		channel_type: getString(message.channel_type),
-		client_msg_id: getString(message.client_msg_id),
-		subtype: getString(message.subtype),
-		team: getString(message.team),
-		text: getString(message.text),
-		thread_ts: getString(message.thread_ts),
-		ts: getString(message.ts),
-		user: getString(message.user),
-	};
-}
-
-function isPlainDirectMessage(
-	message: SlackMessageLike | null
-): message is SlackMessageLike & {
-	channel: string;
-	text: string;
-	ts: string;
-	user: string;
-} {
-	return Boolean(
-		message?.channel &&
-			message.channel_type === "im" &&
-			message.text &&
-			message.ts &&
-			message.user &&
-			!message.subtype &&
-			!message.bot_id
+	const normalized = text.toLowerCase();
+	return (
+		normalized.includes("databuddy") ||
+		normalized.includes("bunny") ||
+		Boolean(botUserId && normalized.includes(`<@${botUserId.toLowerCase()}>`))
 	);
-}
-
-function stripLeadingMention(text: string): string {
-	return text.replace(LEADING_APP_MENTION_REGEX, "");
-}
-
-function toThreadTitle(text: string): string {
-	const title = text.replace(/\s+/g, " ").trim();
-	return title.length > 60 ? `${title.slice(0, 57)}...` : title;
-}
-
-function createRecentDedupe(limit = 500) {
-	const seen = new Set<string>();
-	const order: string[] = [];
-
-	return {
-		claim(key: string): boolean {
-			if (seen.has(key)) {
-				return false;
-			}
-			seen.add(key);
-			order.push(key);
-			while (order.length > limit) {
-				const oldest = order.shift();
-				if (oldest) {
-					seen.delete(oldest);
-				}
-			}
-			return true;
-		},
-	};
-}
-
-function getString(value: unknown): string | undefined {
-	return typeof value === "string" ? value : undefined;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-	return Boolean(value && typeof value === "object" && !Array.isArray(value));
 }

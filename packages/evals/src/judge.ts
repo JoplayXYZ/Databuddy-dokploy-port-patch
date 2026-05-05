@@ -1,7 +1,12 @@
 import { createGateway, generateText } from "ai";
-import type { EvalCase, JudgeResult, ToolCallRecord } from "./types";
+import type {
+	EvalCase,
+	JudgeResult,
+	SlackEvalMessage,
+	ToolCallRecord,
+} from "./types";
 
-const JUDGE_PROMPT = `You are a brutally honest evaluator of an analytics AI agent. You have extremely high standards — you are a senior data analyst who has seen hundreds of reports and dashboards. You score like a tough professor: 90+ is exceptional work that would impress a VP, 70 is acceptable but unremarkable, 50 is mediocre, below 40 is bad.
+const ANALYTICS_JUDGE_PROMPT = `You are a brutally honest evaluator of an analytics AI agent. You have extremely high standards — you are a senior data analyst who has seen hundreds of reports and dashboards. You score like a tough professor: 90+ is exceptional work that would impress a VP, 70 is acceptable but unremarkable, 50 is mediocre, below 40 is bad.
 
 You are given the user's query, the agent's response, AND the raw tool outputs the agent received. Use the tool outputs to verify whether the agent's claims are grounded in real data.
 
@@ -79,6 +84,57 @@ Actionability:
 Respond with a JSON object containing scores AND a brief explanation of your reasoning:
 {"data_grounding": N, "analytical_depth": N, "actionability": N, "completeness": N, "communication": N, "explanation": "2-3 sentences on the biggest strengths and weaknesses"}`;
 
+const SLACK_TEAMMATE_JUDGE_PROMPT = `You are a brutally honest evaluator of a Slack analytics teammate. You are grading whether the agent feels like a responsive human data analyst inside a team thread, not a chatbot dumping a report.
+
+Score harshly. Most responses should land 40-70. 90+ is rare and means the message could be shipped as-is into a real founder/team Slack thread.
+
+You are given the current user message, the Slack thread context, the agent response, and any tools the agent used.
+
+Score the response on 5 criteria (0-100 each):
+
+1. **Data Grounding / Context Grounding (0-100)**: Does it correctly use the Slack thread and tool outputs? Deduct heavily for:
+   - Confusing who is speaking now vs who spoke earlier
+   - Treating another user's memory, name, or preference as the current speaker's
+   - Inventing metrics, prior statements, or decisions not in the thread/tools
+   - Pulling fresh analytics when the user only asked about prior thread context
+   - Ignoring available thread context and answering generically
+
+2. **Analytical Depth / Situational Judgment (0-100)**: Does it understand the real implied ask? Deduct for:
+   - Answering the literal words while missing the conversation
+   - Failing to prioritize when the user asks "what matters" or "what first"
+   - Not distinguishing "needs fresh data" from "can answer from the thread"
+   - Overstating certainty when the thread only supports a tentative read
+
+3. **Actionability / Usefulness (0-100)**: Does it give the next useful move? Deduct for:
+   - Vague "let me know if you want..." endings
+   - Generic advice that could apply to any analytics bot
+   - No clear call when the prompt asks for a call
+   - Creating extra work instead of reducing ambiguity
+
+4. **Completeness / Responsiveness (0-100)**: Did it answer exactly the latest Slack message? Deduct for:
+   - Continuing an older analytics report instead of the current message
+   - Ignoring constraints like "one sentence", "3 bullets max", "say less"
+   - Answering multiple imagined questions
+   - Failing to mention the specific person, issue, model, or metric the current message points to
+   - For copy rewrite requests, requiring explanation instead of judging the response as the proposed user-facing copy
+
+5. **Communication Quality / Slack Voice (0-100)**: Is it concise, natural, warm, and not annoying? Deduct hard for:
+   - More than ~90 words unless the user explicitly requested detail
+   - Corporate filler, lecture tone, disclaimers, or "as an AI"
+   - Too many sections, tables, headings, or formal report structure
+   - Forced jokes, cringe, or excessive personality
+   - Robotic phrasing instead of a quick teammate reply
+
+Calibration:
+- 90-100: Crisp, contextual, human, useful, and appropriately brief. Rare.
+- 70-89: Good Slack teammate. Minor verbosity or nuance issues.
+- 50-69: Acceptable but noticeably chatbot-like, verbose, or under-specific.
+- 30-49: Poor. Misses context, rambles, or gives generic filler.
+- 0-29: Bad. Wrong speaker, unsafe data leak, hallucination, or ignores the ask.
+
+Respond with a JSON object containing scores AND a brief explanation of your reasoning:
+{"data_grounding": N, "analytical_depth": N, "actionability": N, "completeness": N, "communication": N, "explanation": "2-3 sentences on the biggest strengths and weaknesses"}`;
+
 const gateway = createGateway({
 	apiKey: process.env.AI_GATEWAY_API_KEY ?? process.env.AI_API_KEY ?? "",
 	headers: {
@@ -123,12 +179,14 @@ export async function judgeQuality(
 
 	const model = judgeModel ?? "zai/glm-5-turbo";
 	const toolSection = formatToolOutputs(toolCalls);
+	const judgePrompt = getJudgePrompt(evalCase);
+	const caseContext = formatCaseContext(evalCase);
 
 	try {
 		const result = await generateText({
 			model: gateway.chat(model),
-			system: JUDGE_PROMPT,
-			prompt: `**User query:** ${evalCase.query}\n\n**Tool outputs the agent received:**\n${toolSection}\n\n**Agent response:**\n${responseText}`,
+			system: judgePrompt,
+			prompt: `**User query:** ${evalCase.query}\n\n${caseContext}\n\n**Tool outputs the agent received:**\n${toolSection}\n\n**Agent response:**\n${responseText}`,
 			maxOutputTokens: 4096,
 			temperature: 0,
 		});
@@ -167,12 +225,50 @@ export async function judgeQuality(
 				explanation: parsed.explanation,
 			},
 			usage: {
-				inputTokens: result.usage?.promptTokens ?? 0,
-				outputTokens: result.usage?.completionTokens ?? 0,
+				inputTokens: result.usage?.inputTokens ?? 0,
+				outputTokens: result.usage?.outputTokens ?? 0,
 			},
 		};
 	} catch (err) {
 		console.error(`  [judge] ${err instanceof Error ? err.message : err}`);
 		return null;
 	}
+}
+
+function getJudgePrompt(evalCase: EvalCase): string {
+	return evalCase.judgeMode === "slack-teammate"
+		? SLACK_TEAMMATE_JUDGE_PROMPT
+		: ANALYTICS_JUDGE_PROMPT;
+}
+
+function formatCaseContext(evalCase: EvalCase): string {
+	if (!evalCase.slack) {
+		return "**Conversation context:** No additional conversation context.";
+	}
+
+	const threadLines = (evalCase.slack.threadMessages ?? [])
+		.map(formatSlackMessage)
+		.join("\n");
+	const followUpLines = (evalCase.slack.followUpMessages ?? [])
+		.map(
+			(message) =>
+				`- ${message.userId ?? evalCase.slack?.currentUserId ?? "unknown"}: ${message.text}`
+		)
+		.join("\n");
+
+	return [
+		"**Slack context:**",
+		`Current user id: ${evalCase.slack.currentUserId}`,
+		`Bot user id: ${evalCase.slack.botUserId ?? "unknown"}`,
+		`Trigger: ${evalCase.slack.trigger ?? "thread_follow_up"}`,
+		"",
+		"Thread messages before/current turn:",
+		threadLines || "(none)",
+		followUpLines ? `\nQueued follow-up messages:\n${followUpLines}` : "",
+	].join("\n");
+}
+
+function formatSlackMessage(message: SlackEvalMessage): string {
+	const author = message.authorName ?? message.userId ?? "unknown";
+	return `- ${author}: ${message.text}`;
 }

@@ -1,10 +1,68 @@
 import type { ApiKeyRow } from "@databuddy/api-keys/resolve";
 
 export type DatabuddyAgentSource = "dashboard" | "mcp" | "slack";
+export type DatabuddyAgentBillingMode = "bill" | "skip";
+export type DatabuddyAgentMutationMode = "allow" | "dry-run";
+export type DatabuddyAgentToolMode = "live" | "eval-fixtures";
 
 export interface ConversationMessage {
 	content: string;
 	role: "user" | "assistant";
+}
+
+export interface DatabuddyAgentSlackMessage {
+	authorName?: string;
+	text: string;
+	threadTs?: string;
+	ts?: string;
+	userId?: string;
+}
+
+export interface DatabuddyAgentSlackThreadResult {
+	channelId: string;
+	hasMore?: boolean;
+	messages: DatabuddyAgentSlackMessage[];
+	threadTs: string;
+}
+
+export interface DatabuddyAgentSlackChannelHistoryResult {
+	channelId: string;
+	hasMore?: boolean;
+	messages: DatabuddyAgentSlackMessage[];
+}
+
+export interface DatabuddyAgentSlackContext {
+	readCurrentThread?: () => Promise<DatabuddyAgentSlackThreadResult>;
+	readRecentChannelMessages?: (input: {
+		limit?: number;
+	}) => Promise<DatabuddyAgentSlackChannelHistoryResult>;
+}
+
+export interface SlackThreadReplyRelevanceInput {
+	botUserId?: string;
+	currentUserId?: string;
+	text: string;
+	threadMessages?: SlackThreadReplyMessage[];
+	timeoutMs?: number;
+}
+
+export interface SlackThreadReplyMessage {
+	authorName?: string;
+	text: string;
+	ts?: string;
+	userId?: string;
+}
+
+export interface SlackThreadReplyRelevance {
+	confidence: number;
+	reason:
+		| "bot_mentioned"
+		| "direct_request"
+		| "analytics_request"
+		| "human_to_human"
+		| "side_chatter"
+		| "ambiguous";
+	shouldReply: boolean;
 }
 
 export type DatabuddyAgentActor =
@@ -28,14 +86,23 @@ export type DatabuddyAgentActor =
 	  };
 
 export interface DatabuddyAgentOptions {
+	abortSignal?: AbortSignal;
 	actor: DatabuddyAgentActor;
+	billingMode?: DatabuddyAgentBillingMode;
 	conversationId?: string;
 	history?: ConversationMessage[];
 	input: string;
+	memoryUserId?: string | null;
+	modelOverride?: string | null;
+	mutationMode?: DatabuddyAgentMutationMode;
 	persistConversation?: boolean;
+	slackContext?: DatabuddyAgentSlackContext | null;
 	source?: DatabuddyAgentSource;
 	timeoutMs?: number;
 	timezone?: string;
+	toolMode?: DatabuddyAgentToolMode;
+	websiteDomain?: string | null;
+	websiteId?: string | null;
 }
 
 export interface DatabuddyAgentResult {
@@ -43,10 +110,35 @@ export interface DatabuddyAgentResult {
 	conversationId: string;
 }
 
+export interface DatabuddyAgentToolTrace {
+	index: number;
+	input: unknown;
+	name: string;
+	output: unknown;
+}
+
+export interface DatabuddyAgentTraceResult extends DatabuddyAgentResult {
+	steps: number;
+	toolCalls: DatabuddyAgentToolTrace[];
+	usage: {
+		inputTokens: number;
+		outputTokens: number;
+		totalTokens?: number;
+	};
+}
+
 export declare function askDatabuddyAgent(
 	options: DatabuddyAgentOptions
 ): Promise<DatabuddyAgentResult>;
 
+export declare function traceDatabuddyAgent(
+	options: DatabuddyAgentOptions
+): Promise<DatabuddyAgentTraceResult>;
+
 export declare function streamDatabuddyAgent(
 	options: DatabuddyAgentOptions
 ): AsyncGenerator<string>;
+
+export declare function classifySlackThreadReplyRelevance(
+	input: SlackThreadReplyRelevanceInput
+): Promise<SlackThreadReplyRelevance | null>;

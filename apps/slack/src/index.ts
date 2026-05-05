@@ -1,3 +1,4 @@
+import { shutdownPostgres } from "@databuddy/db";
 import { App } from "@slack/bolt";
 import { initLogger, log } from "evlog";
 import { DatabuddyAgentClient } from "./agent/agent-client";
@@ -84,6 +85,9 @@ async function shutdown(signal: string) {
 			.catch((error) =>
 				captureSlackError(error, { lifecycle: "slack_stop_failed" })
 			),
+		shutdownPostgres().catch((error) =>
+			captureSlackError(error, { lifecycle: "postgres_shutdown_failed" })
+		),
 		flushBatchedSlackDrain().catch((error) =>
 			captureSlackError(error, { lifecycle: "drain_flush_failed" })
 		),

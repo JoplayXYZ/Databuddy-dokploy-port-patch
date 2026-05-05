@@ -164,14 +164,13 @@ function getTargetDomain(targetUrl: string): string | null {
 	}
 }
 
-async function resolveFolderId(
+async function validateFolderId(
 	db: Context["db"],
 	folderId: string | null | undefined,
-	organizationId: string,
-	linkName: string,
-	createdBy: string
+	organizationId: string
 ): Promise<string | null> {
-	if (!folderId) {
+	const normalizedFolderId = folderId?.trim() || null;
+	if (!normalizedFolderId) {
 		return null;
 	}
 
@@ -180,41 +179,18 @@ async function resolveFolderId(
 		.from(linkFolders)
 		.where(
 			and(
-				eq(linkFolders.id, folderId),
-				eq(linkFolders.organizationId, organizationId)
+				eq(linkFolders.id, normalizedFolderId),
+				eq(linkFolders.organizationId, organizationId),
+				isNull(linkFolders.deletedAt)
 			)
 		)
 		.limit(1);
 
 	if (existing.length > 0) {
-		return folderId;
+		return normalizedFolderId;
 	}
 
-	const folderName = linkName.trim() || "Untitled";
-	const baseSlug =
-		folderName
-			.toLowerCase()
-			.replace(/[^a-z0-9\s_-]/g, "")
-			.replace(/[\s_]+/g, "-")
-			.replace(/-+/g, "-")
-			.replace(/^-|-$/g, "") || "folder";
-
-	const [folder] = await db
-		.insert(linkFolders)
-		.values({
-			id: randomUUIDv7(),
-			organizationId,
-			createdBy,
-			name: folderName,
-			slug: `${baseSlug.slice(0, 59)}-${randomUUIDv7().slice(0, 4)}`,
-		})
-		.returning({ id: linkFolders.id });
-
-	if (!folder) {
-		throw rpcError.internal("Failed to create link folder");
-	}
-
-	return folder.id;
+	throw rpcError.badRequest("Link folder does not exist in this organization");
 }
 
 function toCachedLink(link: {
@@ -366,12 +342,10 @@ export const linksRouter = {
 
 			validateHttpUrl(input.targetUrl);
 			const createdBy = await workspace.getCreatedBy();
-			const resolvedFolderId = await resolveFolderId(
+			const resolvedFolderId = await validateFolderId(
 				context.db,
 				input.folderId,
-				organizationId,
-				input.name,
-				createdBy
+				organizationId
 			);
 			const targetDomain =
 				normalizeTargetDomain(input.targetDomain) ??
@@ -473,12 +447,10 @@ export const linksRouter = {
 
 			let resolvedFolderId: string | null | undefined;
 			if (input.folderId !== undefined) {
-				resolvedFolderId = await resolveFolderId(
+				resolvedFolderId = await validateFolderId(
 					context.db,
 					input.folderId,
-					link.organizationId,
-					input.name ?? link.name,
-					context.user?.id ?? link.createdBy
+					link.organizationId
 				);
 			}
 

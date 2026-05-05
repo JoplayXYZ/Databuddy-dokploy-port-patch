@@ -1,10 +1,17 @@
 export {
 	askDatabuddyAgent,
 	streamDatabuddyAgent,
+	traceDatabuddyAgent,
 	type DatabuddyAgentActor,
 	type DatabuddyAgentOptions,
 	type DatabuddyAgentResult,
 	type DatabuddyAgentSource,
+	type DatabuddyAgentSlackChannelHistoryResult,
+	type DatabuddyAgentSlackContext,
+	type DatabuddyAgentSlackMessage,
+	type DatabuddyAgentSlackThreadResult,
+	type DatabuddyAgentToolTrace,
+	type DatabuddyAgentTraceResult,
 } from "./agent";
 export {
 	classifyAgentFeedbackSentiment,

@@ -195,7 +195,8 @@ export const settingsNavigation: NavigationGroup[] = [
 			createNavItem(
 				"Integrations",
 				PlugIcon,
-				"/organizations/settings/integrations"
+				"/organizations/settings/integrations",
+				{ flag: "integrations" }
 			),
 			createNavItem("Members", UserIcon, "/organizations/members"),
 			createNavItem("Billing", CreditCardIcon, "/billing"),

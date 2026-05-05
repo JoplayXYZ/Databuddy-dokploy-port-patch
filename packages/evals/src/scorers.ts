@@ -1,5 +1,16 @@
 import type { EvalCase, ParsedAgentResponse, ScoreCard } from "./types";
 
+const TOOL_ERROR_TEXT_REGEX =
+	/\b(error|forbidden|unauthorized|permission denied)\b/i;
+const WORD_SPLIT_REGEX = /\s+/;
+const LINE_SPLIT_REGEX = /\r?\n/;
+const PARAGRAPH_SPLIT_REGEX = /\n\s*\n/;
+const BULLET_LINE_REGEX = /^\s*(?:[-*+]|\d+[.)])\s+/;
+const ATX_HEADING_REGEX = /^\s{0,3}#{1,6}\s+\S/;
+const BOLD_HEADING_REGEX = /^\s*\*\*[^*]{2,80}\*\*:?\s*$/;
+const MARKDOWN_TABLE_SEPARATOR_REGEX =
+	/^\s*\|?\s*:?-{3,}:?\s*(?:\|\s*:?-{3,}:?\s*)+\|?\s*$/;
+
 interface ScoreResult {
 	failures: string[];
 	score: number;
@@ -13,13 +24,44 @@ export function scoreToolRouting(
 	const failures: string[] = [];
 	let score = 100;
 	const called = new Set(response.toolCalls.map((tc) => tc.name));
+	const failedCalls = response.toolCalls.filter((call) =>
+		toolOutputLooksFailed(call.output)
+	);
 
 	if (evalCase.expect.toolsCalled) {
 		for (const tool of evalCase.expect.toolsCalled) {
-			if (!called.has(tool)) {
+			const calls = response.toolCalls.filter((call) => call.name === tool);
+			if (calls.length === 0) {
 				score -= Math.floor(100 / evalCase.expect.toolsCalled.length);
 				failures.push(`Expected tool '${tool}' not called`);
+				continue;
 			}
+			if (calls.some((call) => toolOutputLooksFailed(call.output))) {
+				score -= 25;
+				failures.push(`Expected tool '${tool}' returned an error`);
+			}
+		}
+	}
+
+	if (evalCase.expect.toolsCalledInOrder) {
+		let searchFrom = 0;
+		for (const tool of evalCase.expect.toolsCalledInOrder) {
+			const foundAt = response.toolCalls.findIndex(
+				(call, index) => index >= searchFrom && call.name === tool
+			);
+			if (foundAt === -1) {
+				score -= 20;
+				failures.push(`Expected tool '${tool}' in call order`);
+				continue;
+			}
+			searchFrom = foundAt + 1;
+		}
+	}
+
+	for (const call of failedCalls) {
+		if (!evalCase.expect.toolsCalled?.includes(call.name)) {
+			score -= 10;
+			failures.push(`Tool '${call.name}' returned an error`);
 		}
 	}
 
@@ -32,9 +74,54 @@ export function scoreToolRouting(
 		}
 	}
 
+	if (evalCase.expect.toolCallCounts) {
+		for (const expectation of evalCase.expect.toolCallCounts) {
+			const count = response.toolCalls.filter(
+				(call) => call.name === expectation.tool
+			).length;
+			if (expectation.min !== undefined && count < expectation.min) {
+				score -= 15;
+				failures.push(
+					`Expected at least ${expectation.min} '${expectation.tool}' calls, got ${count}`
+				);
+			}
+			if (expectation.max !== undefined && count > expectation.max) {
+				score -= 15;
+				failures.push(
+					`Expected at most ${expectation.max} '${expectation.tool}' calls, got ${count}`
+				);
+			}
+		}
+	}
+
 	if (evalCase.expect.batchedQueries && !called.has("get_data")) {
 		score -= 25;
 		failures.push("Expected batched queries via get_data");
+	}
+
+	if (evalCase.expect.toolInputs) {
+		for (const expectation of evalCase.expect.toolInputs) {
+			const calls = response.toolCalls.filter(
+				(call) => call.name === expectation.tool
+			);
+			if (calls.length === 0) {
+				score -= 25;
+				failures.push(
+					`Expected tool '${expectation.tool}' input could not be checked because the tool was not called`
+				);
+				continue;
+			}
+
+			const matched = calls.some((call) =>
+				toolInputMatches(call.input, expectation)
+			);
+			if (!matched) {
+				score -= 25;
+				failures.push(
+					`No '${expectation.tool}' call matched expected input constraints`
+				);
+			}
+		}
 	}
 
 	return { score: Math.max(0, Math.min(100, score)), failures };
@@ -57,6 +144,18 @@ export function scoreBehavioral(
 		}
 	}
 
+	if (evalCase.expect.responseMatches) {
+		for (const expectation of evalCase.expect.responseMatches) {
+			const regex = toRegExp(expectation.pattern, expectation.flags);
+			if (!regex.test(response.textContent)) {
+				score -= Math.floor(25 / evalCase.expect.responseMatches.length);
+				failures.push(
+					`Response missing expected pattern: '${expectation.description ?? expectation.pattern}'`
+				);
+			}
+		}
+	}
+
 	if (evalCase.expect.responseNotContains) {
 		const lower = response.textContent.toLowerCase();
 		for (const term of evalCase.expect.responseNotContains) {
@@ -67,8 +166,24 @@ export function scoreBehavioral(
 		}
 	}
 
+	if (evalCase.expect.responseNotMatches) {
+		for (const expectation of evalCase.expect.responseNotMatches) {
+			const regex = toRegExp(expectation.pattern, expectation.flags);
+			if (regex.test(response.textContent)) {
+				score -= 25;
+				failures.push(
+					`Response matched forbidden pattern: '${expectation.description ?? expectation.pattern}'`
+				);
+			}
+		}
+	}
+
 	if (evalCase.expect.confirmationFlow) {
-		const hasConfirmFalse = response.textContent.includes("confirmed");
+		const hasConfirmFalse =
+			response.textContent.includes("confirmed") ||
+			response.toolCalls.some((call) =>
+				hasNestedValue(call.input, "confirmed", false)
+			);
 		if (!hasConfirmFalse) {
 			score -= 25;
 			failures.push(
@@ -80,12 +195,120 @@ export function scoreBehavioral(
 	return { score: Math.max(0, Math.min(100, score)), failures };
 }
 
+function toRegExp(pattern: string, flags?: string): RegExp {
+	const normalizedFlags = flags?.includes("i") ? flags : `${flags ?? ""}i`;
+	return new RegExp(pattern, normalizedFlags);
+}
+
+function toolInputMatches(
+	input: unknown,
+	expectation: NonNullable<EvalCase["expect"]["toolInputs"]>[number]
+): boolean {
+	if (expectation.excludes) {
+		for (const key of expectation.excludes) {
+			if (hasNestedKey(input, key)) {
+				return false;
+			}
+		}
+	}
+
+	if (expectation.includes) {
+		for (const [key, expected] of Object.entries(expectation.includes)) {
+			if (!hasNestedValue(input, key, expected)) {
+				return false;
+			}
+		}
+	}
+
+	return true;
+}
+
+function hasNestedKey(value: unknown, key: string): boolean {
+	if (!value || typeof value !== "object") {
+		return false;
+	}
+	if (Object.hasOwn(value, key)) {
+		return true;
+	}
+	return Object.values(value).some((child) => hasNestedKey(child, key));
+}
+
+function hasNestedValue(
+	value: unknown,
+	key: string,
+	expected: unknown
+): boolean {
+	if (!value || typeof value !== "object") {
+		return false;
+	}
+	if (
+		Object.hasOwn(value, key) &&
+		(value as Record<string, unknown>)[key] === expected
+	) {
+		return true;
+	}
+	return Object.values(value).some((child) =>
+		hasNestedValue(child, key, expected)
+	);
+}
+
+function toolOutputLooksFailed(output: unknown): boolean {
+	if (output === null || output === undefined) {
+		return false;
+	}
+	if (typeof output === "string") {
+		return stringOutputLooksFailed(output);
+	}
+	if (Array.isArray(output)) {
+		return output.some(toolOutputLooksFailed);
+	}
+	if (typeof output !== "object") {
+		return false;
+	}
+
+	const record = output as Record<string, unknown>;
+	if (
+		record.isError === true ||
+		record.ok === false ||
+		record.success === false ||
+		record.error !== undefined
+	) {
+		return true;
+	}
+
+	if (
+		Array.isArray(record.content) &&
+		record.content.some(toolOutputLooksFailed)
+	) {
+		return true;
+	}
+
+	if (typeof record.text === "string") {
+		return stringOutputLooksFailed(record.text);
+	}
+
+	return false;
+}
+
+function stringOutputLooksFailed(output: string): boolean {
+	const trimmed = output.trim();
+	if (!trimmed) {
+		return false;
+	}
+	try {
+		return toolOutputLooksFailed(JSON.parse(trimmed));
+	} catch {
+		return TOOL_ERROR_TEXT_REGEX.test(trimmed);
+	}
+}
+
 export function scoreFormat(
 	evalCase: EvalCase,
 	response: ParsedAgentResponse
 ): ScoreResult {
 	const failures: string[] = [];
 	let score = 100;
+	const text = response.textContent.trim();
 
 	if (evalCase.expect.chartType) {
 		const hasChart = response.chartJSONs.some(
@@ -138,7 +361,108 @@ export function scoreFormat(
 		);
 	}
 
+	if (
+		evalCase.expect.maxResponseChars !== undefined &&
+		text.length > evalCase.expect.maxResponseChars
+	) {
+		score -= 20;
+		failures.push(
+			`Response has ${text.length} chars, exceeds budget ${evalCase.expect.maxResponseChars}`
+		);
+	}
+
+	if (evalCase.expect.maxResponseWords !== undefined) {
+		const words = countWords(text);
+		if (words > evalCase.expect.maxResponseWords) {
+			score -= 25;
+			failures.push(
+				`Response has ${words} words, exceeds budget ${evalCase.expect.maxResponseWords}`
+			);
+		}
+	}
+
+	if (evalCase.expect.maxResponseLines !== undefined) {
+		const lines = countNonEmptyLines(text);
+		if (lines > evalCase.expect.maxResponseLines) {
+			score -= 15;
+			failures.push(
+				`Response has ${lines} non-empty lines, exceeds budget ${evalCase.expect.maxResponseLines}`
+			);
+		}
+	}
+
+	if (evalCase.expect.maxParagraphs !== undefined) {
+		const paragraphs = countParagraphs(text);
+		if (paragraphs > evalCase.expect.maxParagraphs) {
+			score -= 15;
+			failures.push(
+				`Response has ${paragraphs} paragraphs, exceeds budget ${evalCase.expect.maxParagraphs}`
+			);
+		}
+	}
+
+	if (evalCase.expect.maxBulletCount !== undefined) {
+		const bullets = countBulletLines(text);
+		if (bullets > evalCase.expect.maxBulletCount) {
+			score -= 15;
+			failures.push(
+				`Response has ${bullets} bullet lines, exceeds budget ${evalCase.expect.maxBulletCount}`
+			);
+		}
+	}
+
+	if (evalCase.expect.maxHeadingCount !== undefined) {
+		const headings = countHeadingLines(text);
+		if (headings > evalCase.expect.maxHeadingCount) {
+			score -= 15;
+			failures.push(
+				`Response has ${headings} heading lines, exceeds budget ${evalCase.expect.maxHeadingCount}`
+			);
+		}
+	}
+
+	if (evalCase.expect.forbidMarkdownTable && containsMarkdownTable(text)) {
+		score -= 25;
+		failures.push("Response includes a markdown table despite table ban");
+	}
+
 	return { score: Math.max(0, Math.min(100, score)), failures };
+}
+
+function countWords(text: string): number {
+	return text ? text.split(WORD_SPLIT_REGEX).filter(Boolean).length : 0;
+}
+
+function countNonEmptyLines(text: string): number {
+	return text.split(LINE_SPLIT_REGEX).filter((line) => line.trim()).length;
+}
+
+function countParagraphs(text: string): number {
+	return text.split(PARAGRAPH_SPLIT_REGEX).filter((part) => part.trim()).length;
+}
+
+function countBulletLines(text: string): number {
+	return text
+		.split(LINE_SPLIT_REGEX)
+		.filter((line) => BULLET_LINE_REGEX.test(line)).length;
+}
+
+function countHeadingLines(text: string): number {
+	return text
+		.split(LINE_SPLIT_REGEX)
+		.filter(
+			(line) => ATX_HEADING_REGEX.test(line) || BOLD_HEADING_REGEX.test(line)
+		).length;
+}
+
+function containsMarkdownTable(text: string): boolean {
+	const lines = text.split(LINE_SPLIT_REGEX);
+	return lines.some((line, index) => {
+		if (!(line.includes("|") && lines[index + 1]?.includes("|"))) {
+			return false;
+		}
+		return MARKDOWN_TABLE_SEPARATOR_REGEX.test(lines[index + 1]);
+	});
 }
 
 export function scorePerformance(

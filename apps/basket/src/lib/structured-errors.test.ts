@@ -19,6 +19,7 @@ describe("basketErrors", () => {
 		["trackMissingCredentials", "trackMissingCredentials", 401],
 		["trackWebsiteNotFound", "trackWebsiteNotFound", 404],
 		["trackWebsiteNoOrganization", "trackWebsiteNoOrganization", 400],
+		["trackWebsiteScopeMismatch", "trackWebsiteScopeMismatch", 403],
 		["ingestPayloadTooLarge", "ingestPayloadTooLarge", 413],
 		["ingestMissingClientId", "ingestMissingClientId", 400],
 		["ingestInvalidClientId", "ingestInvalidClientId", 400],
@@ -32,6 +33,8 @@ describe("basketErrors", () => {
 		["ingestUnknownEventType", "ingestUnknownEventType", 400],
 		["ingestBatchNotArray", "ingestBatchNotArray", 400],
 		["ingestBatchTooLarge", "ingestBatchTooLarge", 400],
+		["billingLimitExceeded", "billingLimitExceeded", 402],
+		["billingCheckUnavailable", "billingCheckUnavailable", 503],
 	];
 
 	for (const [label, key, expectedStatus] of errorTable) {

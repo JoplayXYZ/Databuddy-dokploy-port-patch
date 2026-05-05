@@ -70,3 +70,6 @@ tmp
 .gstack/
 .superpowers/
 .warden/
+
+# Local reference repositories
+tigerbeetle/

@@ -1,10 +1,15 @@
+export type AppMutationMode = "allow" | "dry-run";
+export type AppToolMode = "live" | "eval-fixtures";
+
 export interface AppContext {
 	billingCustomerId?: string | null;
 	chatId: string;
 	currentDateTime: string;
+	mutationMode?: AppMutationMode;
 	organizationId?: string | null;
 	requestHeaders?: Headers;
 	timezone: string;
+	toolMode?: AppToolMode;
 	userId: string;
 	websiteDomain: string;
 	websiteId: string;

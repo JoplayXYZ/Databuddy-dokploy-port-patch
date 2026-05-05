@@ -1,9 +1,13 @@
 import type {
 	EvalCase,
 	EvalConfig,
+	EvalSurface,
 	ParsedAgentResponse,
+	SlackEvalMessage,
 	ToolCallRecord,
 } from "./types";
+
+type PackageAgentSource = "dashboard" | "mcp" | "slack";
 
 export type ProgressEvent =
 	| { kind: "step"; step: number }
@@ -11,7 +15,18 @@ export type ProgressEvent =
 	| { kind: "text"; chars: number }
 	| { kind: "done" };
 
-export async function runCase(
+export function runCase(
+	evalCase: EvalCase,
+	config: EvalConfig,
+	onProgress?: (evt: ProgressEvent) => void
+): Promise<ParsedAgentResponse> {
+	if (config.runner === "package") {
+		return runPackageCase(evalCase, config, onProgress);
+	}
+	return runApiCase(evalCase, config, onProgress);
+}
+
+async function runApiCase(
 	evalCase: EvalCase,
 	config: EvalConfig,
 	onProgress?: (evt: ProgressEvent) => void
@@ -56,6 +71,165 @@ export async function runCase(
 	}
 
 	return streamSSE(response, startTime, onProgress);
+}
+
+async function runPackageCase(
+	evalCase: EvalCase,
+	config: EvalConfig,
+	onProgress?: (evt: ProgressEvent) => void
+): Promise<ParsedAgentResponse> {
+	if (!config.apiKey) {
+		throw new Error("Package runner requires EVAL_API_KEY.");
+	}
+
+	const startTime = Date.now();
+	const prepared = await preparePackageCase(evalCase, config);
+	const { traceDatabuddyAgent } = await import("@databuddy/ai/agent");
+	const result = await traceDatabuddyAgent({
+		actor: {
+			secret: config.apiKey,
+			type: "api_key_secret",
+			userId: null,
+		},
+		billingMode: "skip",
+		conversationId: prepared.conversationId,
+		input: prepared.input,
+		memoryUserId: prepared.memoryUserId,
+		modelOverride: config.modelOverride,
+		mutationMode: "dry-run",
+		persistConversation: false,
+		slackContext: prepared.slackContext,
+		source: prepared.source,
+		timeoutMs: evalCase.expect.maxLatencyMs
+			? Math.max(evalCase.expect.maxLatencyMs, 45_000)
+			: undefined,
+		timezone: "UTC",
+		toolMode: "eval-fixtures",
+		websiteId: evalCase.websiteId,
+	});
+
+	for (let step = 1; step <= result.steps; step++) {
+		onProgress?.({ kind: "step", step });
+	}
+	for (const call of result.toolCalls) {
+		onProgress?.({ kind: "tool", name: call.name, index: call.index });
+	}
+	onProgress?.({ kind: "text", chars: result.answer.length });
+	onProgress?.({ kind: "done" });
+
+	return {
+		textContent: result.answer,
+		toolCalls: result.toolCalls,
+		...extractChartJSONs(result.answer),
+		steps: result.steps,
+		latencyMs: Date.now() - startTime,
+		inputTokens: result.usage.inputTokens,
+		outputTokens: result.usage.outputTokens,
+	};
+}
+
+async function preparePackageCase(evalCase: EvalCase, config: EvalConfig) {
+	const source = getAgentSource(evalCase, config.surface);
+	if (!(source === "slack" && evalCase.slack)) {
+		return {
+			conversationId: `eval-${source}-${evalCase.id}-${Date.now()}`,
+			input: evalCase.query,
+			memoryUserId: undefined,
+			slackContext: undefined,
+			source,
+		};
+	}
+
+	const {
+		createSlackConversationId,
+		createSlackMemoryUserId,
+		formatSlackAgentInput,
+	} = await import("../../../apps/slack/src/agent/agent-client");
+	const slack = evalCase.slack;
+	const threadTs = slack.threadTs ?? "1778005033.664559";
+	const messageTs = slack.messageTs ?? nextSlackTs(threadTs, 99);
+	const run = {
+		channelId: slack.channelId ?? "C_EVAL_THREAD",
+		followUpMessages: slack.followUpMessages,
+		messageTs,
+		teamId: slack.teamId ?? "T_EVAL",
+		text: evalCase.query,
+		threadTs,
+		trigger: slack.trigger ?? "thread_follow_up",
+		userId: slack.currentUserId,
+	};
+	const threadMessages = withCurrentSlackMessage(
+		slack.threadMessages ?? [],
+		run
+	);
+	const recentChannelMessages =
+		slack.recentChannelMessages && slack.recentChannelMessages.length > 0
+			? slack.recentChannelMessages
+			: threadMessages;
+
+	return {
+		conversationId: createSlackConversationId(run),
+		input: formatSlackAgentInput(run),
+		memoryUserId: createSlackMemoryUserId(run),
+		slackContext: {
+			readCurrentThread: async () => ({
+				channelId: run.channelId,
+				hasMore: false,
+				messages: threadMessages,
+				threadTs,
+			}),
+			readRecentChannelMessages: async ({ limit }: { limit?: number }) => ({
+				channelId: run.channelId,
+				hasMore: false,
+				messages: recentChannelMessages.slice(-(limit ?? 20)),
+			}),
+		},
+		source,
+	};
+}
+
+function withCurrentSlackMessage(
+	messages: SlackEvalMessage[],
+	run: {
+		messageTs?: string;
+		text: string;
+		threadTs?: string;
+		userId: string;
+	}
+): SlackEvalMessage[] {
+	const currentTs = run.messageTs ?? nextSlackTs(run.threadTs ?? "1", 99);
+	if (
+		messages.some(
+			(message) => message.ts === currentTs || message.text === run.text
+		)
+	) {
+		return messages;
+	}
+	return [
+		...messages,
+		{
+			text: run.text,
+			threadTs: run.threadTs,
+			ts: currentTs,
+			userId: run.userId,
+		},
+	];
+}
+
+function nextSlackTs(threadTs: string, offset: number): string {
+	const [seconds = "1778005033", micros = "000000"] = threadTs.split(".");
+	return `${seconds}.${String(Number(micros) + offset).padStart(6, "0")}`;
+}
+
+function getAgentSource(
+	evalCase: EvalCase,
+	selectedSurface: EvalSurface | "all" | undefined
+): PackageAgentSource {
+	const surface =
+		selectedSurface && selectedSurface !== "all"
+			? selectedSurface
+			: (evalCase.surfaces?.[0] ?? "agent");
+	return surface === "agent" ? "dashboard" : surface;
 }
 
 async function streamSSE(
@@ -192,6 +366,23 @@ async function streamSSE(
 
 	const latencyMs = Date.now() - startTime;
 
+	const { chartJSONs, rawJSONLeaks } = extractChartJSONs(textContent);
+
+	return {
+		textContent,
+		toolCalls,
+		chartJSONs,
+		rawJSONLeaks,
+		steps,
+		latencyMs,
+		inputTokens,
+		outputTokens,
+	};
+}
+
+function extractChartJSONs(
+	textContent: string
+): Pick<ParsedAgentResponse, "chartJSONs" | "rawJSONLeaks"> {
 	const chartJSONs: ParsedAgentResponse["chartJSONs"] = [];
 	const rawJSONLeaks: string[] = [];
 	let searchIdx = 0;
@@ -231,13 +422,7 @@ async function streamSSE(
 	}
 
 	return {
-		textContent,
-		toolCalls,
 		chartJSONs,
 		rawJSONLeaks,
-		steps,
-		latencyMs,
-		inputTokens,
-		outputTokens,
 	};
 }

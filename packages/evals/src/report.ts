@@ -20,10 +20,19 @@ function padNum(n: number | undefined, len = 5): string {
 }
 
 export function printReport(run: EvalRun): void {
+	const runner = run.runner ?? "api";
 	console.log("");
 	console.log(`${BOLD}Agent Eval - ${run.timestamp}${RESET}`);
 	console.log(`Model: ${run.model}`);
-	console.log(`API: ${run.apiUrl}`);
+	console.log(`Runner: ${runner}${runner === "api" ? ` (${run.apiUrl})` : ""}`);
+	if (run.filters?.surfaces?.length) {
+		console.log(`Surfaces: ${run.filters.surfaces.join(", ")}`);
+	}
+	if (run.filters?.tags?.length || run.filters?.excludeTags?.length) {
+		console.log(
+			`Tags: ${run.filters.tags?.join(", ") || "any"}${run.filters.excludeTags?.length ? ` | exclude: ${run.filters.excludeTags.join(", ")}` : ""}`
+		);
+	}
 	console.log(`Duration: ${(run.duration / 1000).toFixed(1)}s`);
 	console.log("");
 
@@ -61,12 +70,18 @@ export function printReport(run: EvalRun): void {
 	const s = run.summary;
 	const d = run.dimensions;
 	const grandTotal = totalCost + totalJudgeCost;
+	const passRate = s.total > 0 ? Math.round((s.passed / s.total) * 100) : 0;
+	const runnerErrors = run.cases.filter((c) =>
+		c.failures.some((failure) => failure.startsWith("Runner error:"))
+	).length;
+	const runnerErrorStr =
+		runnerErrors > 0 ? ` | Runner errors: ${runnerErrors}` : "";
 	const costStr =
 		grandTotal > 0
 			? ` | Cost: $${grandTotal.toFixed(4)} (agent: $${totalCost.toFixed(4)}, judge: $${totalJudgeCost.toFixed(4)})`
 			: "";
 	console.log(
-		`${BOLD}Summary:${RESET} ${s.passed}/${s.total} passed (${s.score}%) | Tools: ${d.tool_routing} | Behavioral: ${d.behavioral} | Quality: ${d.quality} | Format: ${d.format} | Perf: ${d.performance}${costStr}`
+		`${BOLD}Summary:${RESET} ${s.passed}/${s.total} passed (${passRate}% pass rate, score ${s.score}) | Tools: ${d.tool_routing} | Behavioral: ${d.behavioral} | Quality: ${d.quality} | Format: ${d.format} | Perf: ${d.performance}${runnerErrorStr}${costStr}`
 	);
 	console.log("");
 }

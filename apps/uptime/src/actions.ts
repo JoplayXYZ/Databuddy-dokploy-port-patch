@@ -199,55 +199,56 @@ async function pingWebsite(
 }
 
 const checkCertificate = (url: string) =>
-	Effect.async<{ valid: boolean; expiry: number }>((resume) => {
-		try {
-			const parsed = new URL(url);
+	Effect.promise<{ valid: boolean; expiry: number }>(
+		() =>
+			new Promise((resolve) => {
+				try {
+					const parsed = new URL(url);
 
-			if (parsed.protocol !== "https:") {
-				resume(Effect.succeed({ valid: false, expiry: 0 }));
-				return;
-			}
-
-			const port = parsed.port ? Number.parseInt(parsed.port, 10) : 443;
-			const socket = connect(
-				{
-					host: parsed.hostname,
-					port,
-					servername: parsed.hostname,
-					timeout: 5000,
-				},
-				() => {
-					const cert = socket.getPeerCertificate();
-					socket.destroy();
-
-					if (!cert?.valid_to) {
-						resume(Effect.succeed({ valid: false, expiry: 0 }));
+					if (parsed.protocol !== "https:") {
+						resolve({ valid: false, expiry: 0 });
 						return;
 					}
 
-					const expiry = new Date(cert.valid_to);
-					resume(
-						Effect.succeed({
-							valid: expiry > new Date(),
-							expiry: expiry.getTime(),
-						})
+					const port = parsed.port ? Number.parseInt(parsed.port, 10) : 443;
+					const socket = connect(
+						{
+							host: parsed.hostname,
+							port,
+							servername: parsed.hostname,
+							timeout: 5000,
+						},
+						() => {
+							const cert = socket.getPeerCertificate();
+							socket.destroy();
+
+							if (!cert?.valid_to) {
+								resolve({ valid: false, expiry: 0 });
+								return;
+							}
+
+							const expiry = new Date(cert.valid_to);
+							resolve({
+								valid: expiry > new Date(),
+								expiry: expiry.getTime(),
+							});
+						}
 					);
+
+					socket.on("error", () => {
+						socket.destroy();
+						resolve({ valid: false, expiry: 0 });
+					});
+
+					socket.on("timeout", () => {
+						socket.destroy();
+						resolve({ valid: false, expiry: 0 });
+					});
+				} catch {
+					resolve({ valid: false, expiry: 0 });
 				}
-			);
-
-			socket.on("error", () => {
-				socket.destroy();
-				resume(Effect.succeed({ valid: false, expiry: 0 }));
-			});
-
-			socket.on("timeout", () => {
-				socket.destroy();
-				resume(Effect.succeed({ valid: false, expiry: 0 }));
-			});
-		} catch {
-			resume(Effect.succeed({ valid: false, expiry: 0 }));
-		}
-	});
+			})
+	);
 
 let cachedProbeIp: string | null = null;
 

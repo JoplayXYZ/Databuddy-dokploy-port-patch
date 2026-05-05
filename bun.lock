@@ -123,7 +123,6 @@
         "@databuddy/auth": "workspace:*",
         "@databuddy/db": "workspace:*",
         "@databuddy/devtools": "workspace:*",
-        "@databuddy/env": "workspace:*",
         "@databuddy/redis": "workspace:*",
         "@databuddy/rpc": "workspace:*",
         "@databuddy/sdk": "workspace:*",
@@ -350,10 +349,10 @@
       "version": "0.1.0",
       "dependencies": {
         "@databuddy/ai": "workspace:*",
-        "@databuddy/api-keys": "workspace:*",
         "@databuddy/db": "workspace:*",
         "@databuddy/encryption": "workspace:*",
         "@databuddy/env": "workspace:*",
+        "@databuddy/redis": "workspace:*",
         "@slack/bolt": "^4.7.2",
         "@slack/web-api": "^7.15.1",
         "evlog": "catalog:",
@@ -557,6 +556,7 @@
       "name": "@databuddy/evals",
       "version": "0.0.1",
       "dependencies": {
+        "@databuddy/ai": "workspace:*",
         "ai": "^6.0.78",
       },
     },

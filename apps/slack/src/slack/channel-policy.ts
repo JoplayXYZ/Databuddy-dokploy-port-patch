@@ -1,5 +1,5 @@
-import type { WebClient } from "@slack/web-api";
 import { getSlackApiErrorCode } from "../lib/evlog-slack";
+import type { SlackAgentClient } from "./types";
 
 export type SlackChannelPolicyReason =
 	| "internal"
@@ -26,11 +26,11 @@ export async function getSlackChannelMentionPolicy({
 	logger,
 }: {
 	channelId: string;
-	client: Pick<WebClient, "apiCall">;
+	client: Pick<SlackAgentClient, "conversations">;
 	logger: SlackPolicyLogger;
 }): Promise<SlackChannelMentionPolicy> {
 	try {
-		const result = await client.apiCall("conversations.info", {
+		const result = await client.conversations.info({
 			channel: channelId,
 		});
 
@@ -47,7 +47,7 @@ export async function getSlackChannelMentionPolicy({
 		const isOrgShared = channel.is_org_shared === true;
 
 		return {
-			autoBind: !isExtShared,
+			autoBind: true,
 			channelName: getString(channel.name),
 			isExtShared,
 			isOrgShared,

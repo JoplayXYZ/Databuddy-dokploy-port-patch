@@ -290,6 +290,35 @@ describe("validateRequest", () => {
 		}
 	});
 
+	test("IP allowlist rejects missing trusted IP header", async () => {
+		mockGetWebsiteByIdV2.mockResolvedValue({
+			id: "ws_1",
+			domain: "example.com",
+			name: "Example",
+			status: "ACTIVE",
+			ownerId: "user_1",
+			organizationId: "org_1",
+			settings: { allowedIps: ["10.0.0.1"] },
+		} as any);
+		mockIsValidIpFromSettings.mockReturnValue(true);
+
+		try {
+			await validateRequest(
+				{},
+				{ client_id: "ws_1" },
+				makeReq("https://example.com", {
+					"cf-connecting-ip": "",
+					"x-forwarded-for": "10.0.0.1",
+				})
+			);
+			expect.unreachable("should have thrown");
+		} catch (e) {
+			expect(e).toBeInstanceOf(EvlogError);
+			expect((e as EvlogError).status).toBe(403);
+			expect(mockIsValidIpFromSettings).not.toHaveBeenCalled();
+		}
+	});
+
 	test("logs blocked traffic on client_id miss", async () => {
 		try {
 			await validateRequest({}, {}, makeReq("https://example.com"));

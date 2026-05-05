@@ -2,28 +2,23 @@ import { tool } from "ai";
 import dayjs from "dayjs";
 import { z } from "zod";
 import { getCachedWebsite } from "../../lib/website-utils";
+import {
+	LinkFolderSelectorSchema,
+	hasLinkFolderSelector,
+	listLinkFolders,
+	listLinks,
+	parseLinkRow,
+	resolveLinkFolder,
+	resolveLinkFolderFromList,
+	summarizeLink,
+	summarizeLinkFolder,
+	summarizeLinkFoldersWithUsage,
+} from "./link-catalog";
 import { callRPCProcedure, createToolLogger, getAppContext } from "./utils";
 
 const logger = createToolLogger("Links Tools");
 
 const SLUG_REGEX = /^[a-zA-Z0-9_-]+$/;
-
-interface LinkData {
-	clickCount?: number;
-	createdAt: string;
-	expiredRedirectUrl: string | null;
-	expiresAt: string | null;
-	externalId: string | null;
-	id: string;
-	name: string;
-	ogDescription: string | null;
-	ogImageUrl: string | null;
-	ogTitle: string | null;
-	organizationId: string;
-	slug: string;
-	targetUrl: string;
-	updatedAt: string;
-}
 
 async function getOrganizationIdFromWebsite(
 	websiteId: string
@@ -41,34 +36,54 @@ async function getOrganizationIdFromWebsite(
 }
 
 export function createLinksTools() {
-	const listLinksTool = tool({
+	const listLinkFoldersTool = tool({
 		description:
-			"List short links for the website org (slug, target URL, metadata).",
+			"List existing short-link folders for the website organization, including how many links are filed in each folder. Use this before choosing a folder for link creation or updates.",
 		inputSchema: z.object({ websiteId: z.string() }),
 		execute: async ({ websiteId }, options) => {
 			const context = getAppContext(options);
 			try {
 				const organizationId = await getOrganizationIdFromWebsite(websiteId);
-				const result = (await callRPCProcedure(
-					"links",
-					"list",
-					{ organizationId },
-					context
-				)) as LinkData[];
-				const links = Array.isArray(result) ? result : [];
+				const [folders, links] = await Promise.all([
+					listLinkFolders(context, organizationId),
+					listLinks(context, organizationId),
+				]);
+
 				return {
-					links: links.map((link) => ({
-						id: link.id,
-						name: link.name,
-						slug: link.slug,
-						targetUrl: link.targetUrl,
-						externalId: link.externalId,
-						expiresAt: link.expiresAt,
-						createdAt: link.createdAt,
-						ogTitle: link.ogTitle,
-						ogDescription: link.ogDescription,
-					})),
+					folders: summarizeLinkFoldersWithUsage(folders, links),
+					count: folders.length,
+					unfiledCount: links.filter((link) => !link.folderId).length,
+					hint:
+						folders.length === 0
+							? "No link folders exist yet. Leave links unfiled unless the user creates a folder in Databuddy."
+							: "Use folderId or folderSlug from this list. Do not invent new folders from the agent.",
+				};
+			} catch (error) {
+				logger.error("Failed to list link folders", { websiteId, error });
+				throw error instanceof Error
+					? error
+					: new Error("Failed to retrieve link folders. Please try again.");
+			}
+		},
+	});
+
+	const listLinksTool = tool({
+		description:
+			"List short links and existing folders for the website org (slug, target URL, folder, metadata).",
+		inputSchema: z.object({ websiteId: z.string() }),
+		execute: async ({ websiteId }, options) => {
+			const context = getAppContext(options);
+			try {
+				const organizationId = await getOrganizationIdFromWebsite(websiteId);
+				const [links, folders] = await Promise.all([
+					listLinks(context, organizationId),
+					listLinkFolders(context, organizationId),
+				]);
+				return {
+					links: links.map((link) => summarizeLink(link, folders)),
 					count: links.length,
+					folders: summarizeLinkFoldersWithUsage(folders, links),
+					unfiledCount: links.filter((link) => !link.folderId).length,
 				};
 			} catch (error) {
 				logger.error("Failed to list links", { websiteId, error });
@@ -93,6 +108,7 @@ export function createLinksTools() {
 			ogDescription: z.string().max(500).optional(),
 			ogImageUrl: z.string().url().optional(),
 			externalId: z.string().max(255).optional(),
+			...LinkFolderSelectorSchema.shape,
 			deepLinkApp: z
 				.string()
 				.optional()
@@ -113,6 +129,8 @@ export function createLinksTools() {
 				ogDescription,
 				ogImageUrl,
 				externalId,
+				folderId,
+				folderSlug,
 				deepLinkApp,
 				confirmed,
 			},
@@ -120,6 +138,20 @@ export function createLinksTools() {
 		) => {
 			const context = getAppContext(options);
 			try {
+				const organizationId = await getOrganizationIdFromWebsite(websiteId);
+				const folderSelection = await resolveLinkFolder(
+					context,
+					organizationId,
+					{ folderId, folderSlug }
+				);
+				if (!folderSelection.ok) {
+					return {
+						success: false,
+						message: folderSelection.message,
+						folders: summarizeLinkFoldersWithUsage(folderSelection.folders, []),
+					};
+				}
+
 				if (!confirmed) {
 					return {
 						preview: true,
@@ -135,38 +167,43 @@ export function createLinksTools() {
 							ogDescription: ogDescription ?? "None",
 							ogImageUrl: ogImageUrl ?? "None",
 							externalId: externalId ?? "None",
+							folder: folderSelection.folder
+								? summarizeLinkFolder(folderSelection.folder)
+								: "Unfiled",
 						},
+						availableFolders: folderSelection.folders.map(summarizeLinkFolder),
 						confirmationRequired: true,
 						instruction:
 							"To create this link, the user must explicitly confirm (e.g., 'yes', 'create it', 'confirm'). Only then call this tool again with confirmed=true.",
 					};
 				}
 
-				const organizationId = await getOrganizationIdFromWebsite(websiteId);
-
-				const newLink = (await callRPCProcedure(
-					"links",
-					"create",
-					{
-						organizationId,
-						name,
-						targetUrl,
-						slug,
-						expiresAt: expiresAt ? new Date(expiresAt) : null,
-						expiredRedirectUrl: expiredRedirectUrl ?? null,
-						ogTitle: ogTitle ?? null,
-						ogDescription: ogDescription ?? null,
-						ogImageUrl: ogImageUrl ?? null,
-						externalId: externalId ?? null,
-						deepLinkApp: deepLinkApp ?? null,
-					},
-					context
-				)) as LinkData;
+				const newLink = parseLinkRow(
+					await callRPCProcedure(
+						"links",
+						"create",
+						{
+							organizationId,
+							name,
+							targetUrl,
+							slug,
+							folderId: folderSelection.folderId ?? null,
+							expiresAt: expiresAt ? new Date(expiresAt) : null,
+							expiredRedirectUrl: expiredRedirectUrl ?? null,
+							ogTitle: ogTitle ?? null,
+							ogDescription: ogDescription ?? null,
+							ogImageUrl: ogImageUrl ?? null,
+							externalId: externalId ?? null,
+							deepLinkApp: deepLinkApp ?? null,
+						},
+						context
+					)
+				);
 
 				return {
 					success: true,
 					message: `Link "${name}" created successfully!`,
-					link: newLink,
+					link: summarizeLink(newLink, folderSelection.folders),
 					shortUrl: `/${newLink.slug}`,
 				};
 			} catch (error) {
@@ -192,19 +229,45 @@ export function createLinksTools() {
 			ogDescription: z.string().max(500).nullable().optional(),
 			ogImageUrl: z.string().url().nullable().optional(),
 			externalId: z.string().max(255).nullable().optional(),
+			...LinkFolderSelectorSchema.shape,
 			deepLinkApp: z.string().nullable().optional(),
 			confirmed: z.boolean().describe("false=preview, true=apply"),
 		}),
-		execute: async ({ id, websiteId, confirmed, ...updates }, options) => {
+		execute: async (
+			{ id, websiteId, confirmed, folderId, folderSlug, ...updates },
+			options
+		) => {
 			const context = getAppContext(options);
 			try {
 				const organizationId = await getOrganizationIdFromWebsite(websiteId);
-				const currentLink = (await callRPCProcedure(
-					"links",
-					"get",
-					{ id, organizationId },
-					context
-				)) as LinkData;
+				const [currentLink, folders] = await Promise.all([
+					callRPCProcedure(
+						"links",
+						"get",
+						{ id, organizationId },
+						context
+					).then(parseLinkRow),
+					listLinkFolders(context, organizationId),
+				]);
+				const folderSelection = hasLinkFolderSelector({
+					folderId,
+					folderSlug,
+				})
+					? resolveLinkFolderFromList(folders, {
+							folderId,
+							folderSlug,
+						})
+					: { folder: null, folderId: undefined, folders, ok: true as const };
+				if (!folderSelection.ok) {
+					return {
+						success: false,
+						message: folderSelection.message,
+						folders: summarizeLinkFoldersWithUsage(folderSelection.folders, []),
+					};
+				}
+
+				const currentFolder =
+					folders.find((folder) => folder.id === currentLink.folderId) ?? null;
 
 				const changes: string[] = [];
 				if (updates.name && updates.name !== currentLink.name) {
@@ -237,6 +300,14 @@ export function createLinksTools() {
 						`External ID: ${currentLink.externalId ?? "None"} → ${updates.externalId ?? "None"}`
 					);
 				}
+				if (
+					folderSelection.folderId !== undefined &&
+					folderSelection.folderId !== currentLink.folderId
+				) {
+					changes.push(
+						`Folder: ${currentFolder?.name ?? "Unfiled"} → ${folderSelection.folder?.name ?? "Unfiled"}`
+					);
+				}
 
 				if (!confirmed) {
 					return {
@@ -246,8 +317,12 @@ export function createLinksTools() {
 							name: currentLink.name,
 							slug: currentLink.slug,
 							targetUrl: currentLink.targetUrl,
+							folder: currentFolder
+								? summarizeLinkFolder(currentFolder)
+								: "Unfiled",
 						},
 						changes: changes.length > 0 ? changes : ["No changes detected"],
+						availableFolders: folders.map(summarizeLinkFolder),
 						confirmationRequired: true,
 						instruction:
 							"To apply these changes, the user must explicitly confirm. Only then call this tool again with confirmed=true.",
@@ -255,20 +330,25 @@ export function createLinksTools() {
 				}
 
 				const cleanUpdates = Object.fromEntries(
-					Object.entries(updates).filter(([_, v]) => v !== undefined)
+					Object.entries(updates).filter(([, value]) => value !== undefined)
 				);
+				if (folderSelection.folderId !== undefined) {
+					cleanUpdates.folderId = folderSelection.folderId;
+				}
 
-				const updatedLink = (await callRPCProcedure(
-					"links",
-					"update",
-					{ id, ...cleanUpdates },
-					context
-				)) as LinkData;
+				const updatedLink = parseLinkRow(
+					await callRPCProcedure(
+						"links",
+						"update",
+						{ id, ...cleanUpdates },
+						context
+					)
+				);
 
 				return {
 					success: true,
 					message: `Link "${updatedLink.name}" updated successfully!`,
-					link: updatedLink,
+					link: summarizeLink(updatedLink, folderSelection.folders),
 					changes,
 				};
 			} catch (error) {
@@ -292,12 +372,14 @@ export function createLinksTools() {
 			try {
 				const organizationId = await getOrganizationIdFromWebsite(websiteId);
 
-				const link = (await callRPCProcedure(
-					"links",
-					"get",
-					{ id, organizationId },
-					context
-				)) as LinkData;
+				const link = parseLinkRow(
+					await callRPCProcedure(
+						"links",
+						"get",
+						{ id, organizationId },
+						context
+					)
+				);
 
 				if (!confirmed) {
 					return {
@@ -331,6 +413,7 @@ export function createLinksTools() {
 	});
 
 	return {
+		list_link_folders: listLinkFoldersTool,
 		list_links: listLinksTool,
 		create_link: createLinkTool,
 		update_link: updateLinkTool,

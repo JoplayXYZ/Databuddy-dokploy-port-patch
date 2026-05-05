@@ -1,3 +1,4 @@
+import { shutdownPostgres } from "@databuddy/db";
 import { Elysia, redirect } from "elysia";
 import { initLogger, log } from "evlog";
 import { evlog } from "evlog/elysia";
@@ -60,6 +61,12 @@ async function shutdown(signal: string) {
 		shutdownRedis().catch((error) =>
 			log.error({
 				lifecycle: "redisShutdown",
+				error_message: error instanceof Error ? error.message : String(error),
+			})
+		),
+		shutdownPostgres().catch((error) =>
+			log.error({
+				lifecycle: "postgresShutdown",
 				error_message: error instanceof Error ? error.message : String(error),
 			})
 		),

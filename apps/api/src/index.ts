@@ -1,6 +1,11 @@
 import "./polyfills/compression";
 import { auth } from "@databuddy/auth";
-import { setPgErrorFn, setPgTraceFn, warmPool } from "@databuddy/db";
+import {
+	setPgErrorFn,
+	setPgTraceFn,
+	shutdownPostgres,
+	warmPool,
+} from "@databuddy/db";
 import { setChRecordFn } from "@databuddy/db/clickhouse";
 import { setCacheTraceFn } from "@databuddy/redis";
 import {
@@ -451,6 +456,12 @@ async function shutdown(signal: string) {
 		shutdownRedis().catch((error) =>
 			log.error({
 				lifecycle: "redisShutdown",
+				error_message: error instanceof Error ? error.message : String(error),
+			})
+		),
+		shutdownPostgres().catch((error) =>
+			log.error({
+				lifecycle: "postgresShutdown",
 				error_message: error instanceof Error ? error.message : String(error),
 			})
 		),

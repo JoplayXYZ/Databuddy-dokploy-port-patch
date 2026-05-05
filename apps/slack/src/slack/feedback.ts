@@ -4,24 +4,23 @@ import {
 	recordAgentFeedback,
 	type AgentFeedbackSentiment,
 } from "@databuddy/ai/agent/feedback";
+import type { types } from "@slack/bolt";
 import { createSlackEventLog, setSlackLog, toError } from "../lib/evlog-slack";
-import type { SlackInstallationStore } from "./installations";
+import type { SlackInstallationServices } from "./installations";
 import { SLACK_COPY } from "./messages";
 
 export type SlackFeedbackAction = "added" | "removed";
 export type SlackFeedbackSentiment = AgentFeedbackSentiment;
 
+type SlackReactionEvent = types.ReactionAddedEvent | types.ReactionRemovedEvent;
+
 interface SlackReactionEventLike {
-	eventTs?: string;
-	item?: {
-		channel?: string;
-		ts?: string;
-		type?: string;
-	};
-	itemUser?: string;
-	reaction?: string;
+	eventTs?: SlackReactionEvent["event_ts"];
+	item?: SlackReactionEvent["item"];
+	itemUser?: SlackReactionEvent["item_user"];
+	reaction?: SlackReactionEvent["reaction"];
 	team?: string;
-	user?: string;
+	user?: SlackReactionEvent["user"];
 }
 
 interface SlackFeedbackLogger {
@@ -40,7 +39,7 @@ export async function logSlackReactionFeedback({
 	action: SlackFeedbackAction;
 	botUserId?: string;
 	event: unknown;
-	installations: SlackInstallationStore;
+	installations: Pick<SlackInstallationServices, "getTeamContext">;
 	logger: SlackFeedbackLogger;
 	teamId?: string;
 }): Promise<void> {
@@ -133,21 +132,28 @@ function toSlackReactionEvent(event: unknown): SlackReactionEventLike | null {
 	if (!isRecord(event)) {
 		return null;
 	}
-	const item = isRecord(event.item) ? event.item : null;
+	const item = toSlackReactionMessageItem(event.item);
 	return {
 		eventTs: getString(event.event_ts),
-		item: item
-			? {
-					channel: getString(item.channel),
-					ts: getString(item.ts),
-					type: getString(item.type),
-				}
-			: undefined,
+		item,
 		itemUser: getString(event.item_user),
 		reaction: getString(event.reaction),
 		team: getString(event.team),
 		user: getString(event.user),
 	};
+}
+
+function toSlackReactionMessageItem(
+	item: unknown
+): SlackReactionEvent["item"] | undefined {
+	if (!isRecord(item)) {
+		return;
+	}
+	const channel = getString(item.channel);
+	const ts = getString(item.ts);
+	return item.type === "message" && channel && ts
+		? { channel, ts, type: "message" }
+		: undefined;
 }
 
 function getString(value: unknown): string | undefined {

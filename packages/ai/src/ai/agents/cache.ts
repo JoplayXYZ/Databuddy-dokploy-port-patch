@@ -11,7 +11,6 @@ import {
 	type MemoryContext,
 } from "../../lib/supermemory";
 import { captureError } from "../../lib/tracing";
-import { ensureAgentCreditsAvailable } from "./execution";
 
 const PERM_TTL_SEC = 60;
 const PERM_KEY_PREFIX = "cacheable:agent:perm:website-read";
@@ -117,7 +116,10 @@ function refreshAgentContextSnapshot(
 }
 
 export const ensureAgentCreditsAvailableCached = cacheable(
-	ensureAgentCreditsAvailable,
+	async (billingCustomerId: string | null) => {
+		const { ensureAgentCreditsAvailable } = await import("./execution");
+		return ensureAgentCreditsAvailable(billingCustomerId);
+	},
 	{
 		expireInSec: 30,
 		prefix: "agent:credits",
