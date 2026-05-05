@@ -2,12 +2,13 @@ import { stepCountIs } from "ai";
 import {
 	ANTHROPIC_CACHE_1H,
 	createModelFromId,
-	models,
+	getDefaultAgentModelId,
 } from "../config/models";
 import { createMcpAgentTools } from "../mcp/agent-tools";
 import type { DatabuddyAgentSlackContext } from "../mcp/slack-context";
 import { buildAnalyticsInstructionsForMcp } from "../prompts/analytics";
 import { TIER_CONFIG } from "../config/tiers";
+import type { AppMutationMode, AppToolMode } from "../config/context";
 import type { AgentConfig } from "./types";
 
 export function createMcpAgentConfig(context: {
@@ -17,9 +18,12 @@ export function createMcpAgentConfig(context: {
 	userId: string | null;
 	timezone?: string;
 	chatId?: string;
+	memoryUserId?: string | null;
 	modelOverride?: string | null;
+	mutationMode?: AppMutationMode;
 	slackContext?: DatabuddyAgentSlackContext | null;
 	source?: "dashboard" | "mcp" | "slack";
+	toolMode?: AppToolMode;
 	websiteDomain?: string | null;
 	websiteId?: string | null;
 }): AgentConfig {
@@ -28,14 +32,13 @@ export function createMcpAgentConfig(context: {
 	const chatId = context.chatId ?? crypto.randomUUID();
 	const websiteId = context.websiteId ?? "";
 	const websiteDomain = context.websiteDomain ?? "";
+	const selectedModelId =
+		context.modelOverride ?? getDefaultAgentModelId(context.source);
 
-	const useAnthropicPromptCache =
-		!context.modelOverride || context.modelOverride.startsWith("anthropic/");
+	const useAnthropicPromptCache = selectedModelId.startsWith("anthropic/");
 
 	return {
-		model: context.modelOverride
-			? createModelFromId(context.modelOverride)
-			: models.balanced,
+		model: createModelFromId(selectedModelId),
 		system: {
 			role: "system" as const,
 			content: buildAnalyticsInstructionsForMcp({
@@ -55,8 +58,11 @@ export function createMcpAgentConfig(context: {
 			billingCustomerId: context.billingCustomerId,
 			chatId,
 			currentDateTime,
+			memoryUserId: context.memoryUserId ?? "",
+			mutationMode: context.mutationMode ?? "allow",
 			requestHeaders: context.requestHeaders,
 			timezone,
+			toolMode: context.toolMode ?? "live",
 			userId: context.userId ?? "",
 			websiteId,
 			websiteDomain,

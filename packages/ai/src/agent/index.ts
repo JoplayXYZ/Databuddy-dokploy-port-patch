@@ -13,6 +13,12 @@ import {
 import type { DatabuddyAgentSlackContext } from "../ai/mcp/slack-context";
 
 export type { ConversationMessage } from "../ai/mcp/conversation-store";
+export {
+	classifySlackThreadReplyRelevance,
+	type SlackThreadReplyMessage,
+	type SlackThreadReplyRelevance,
+	type SlackThreadReplyRelevanceInput,
+} from "./slack-relevance";
 export type {
 	DatabuddyAgentSlackChannelHistoryResult,
 	DatabuddyAgentSlackContext,
@@ -21,6 +27,9 @@ export type {
 } from "../ai/mcp/slack-context";
 
 export type DatabuddyAgentSource = "dashboard" | "mcp" | "slack";
+export type DatabuddyAgentBillingMode = "bill" | "skip";
+export type DatabuddyAgentMutationMode = "allow" | "dry-run";
+export type DatabuddyAgentToolMode = "live" | "eval-fixtures";
 
 export type DatabuddyAgentActor =
 	| {
@@ -45,15 +54,19 @@ export type DatabuddyAgentActor =
 export interface DatabuddyAgentOptions {
 	abortSignal?: AbortSignal;
 	actor: DatabuddyAgentActor;
+	billingMode?: DatabuddyAgentBillingMode;
 	conversationId?: string;
 	history?: ConversationMessage[];
 	input: string;
+	memoryUserId?: string | null;
 	modelOverride?: string | null;
+	mutationMode?: DatabuddyAgentMutationMode;
 	persistConversation?: boolean;
 	slackContext?: DatabuddyAgentSlackContext | null;
 	source?: DatabuddyAgentSource;
 	timeoutMs?: number;
 	timezone?: string;
+	toolMode?: DatabuddyAgentToolMode;
 	websiteDomain?: string | null;
 	websiteId?: string | null;
 }
@@ -92,12 +105,16 @@ export async function askDatabuddyAgent(
 		question: options.input,
 		requestHeaders: prepared.actor.requestHeaders,
 		abortSignal: options.abortSignal,
+		billingMode: options.billingMode,
+		memoryUserId: prepared.memoryUserId,
+		mutationMode: options.mutationMode,
 		slackContext: options.slackContext,
 		source: prepared.source,
 		modelOverride: options.modelOverride,
 		storeMemory: options.persistConversation !== false,
 		timeoutMs: options.timeoutMs,
 		timezone: options.timezone,
+		toolMode: options.toolMode,
 		userId: prepared.actor.userId,
 		websiteDomain: options.websiteDomain,
 		websiteId: options.websiteId,
@@ -116,7 +133,10 @@ export async function traceDatabuddyAgent(
 		apiKey: prepared.actor.apiKey,
 		abortSignal: options.abortSignal,
 		conversationId: prepared.conversationId,
+		billingMode: options.billingMode,
 		modelOverride: options.modelOverride,
+		memoryUserId: prepared.memoryUserId,
+		mutationMode: options.mutationMode,
 		priorMessages: prepared.history,
 		question: options.input,
 		requestHeaders: prepared.actor.requestHeaders,
@@ -125,6 +145,7 @@ export async function traceDatabuddyAgent(
 		storeMemory: options.persistConversation !== false,
 		timeoutMs: options.timeoutMs,
 		timezone: options.timezone,
+		toolMode: options.toolMode,
 		userId: prepared.actor.userId,
 		websiteDomain: options.websiteDomain,
 		websiteId: options.websiteId,
@@ -157,15 +178,19 @@ export async function* streamDatabuddyAgent(
 		apiKey: prepared.actor.apiKey,
 		abortSignal: options.abortSignal,
 		conversationId: prepared.conversationId,
+		billingMode: options.billingMode,
+		memoryUserId: prepared.memoryUserId,
 		priorMessages: prepared.history,
 		question: options.input,
 		requestHeaders: prepared.actor.requestHeaders,
 		source: prepared.source,
 		slackContext: options.slackContext,
 		modelOverride: options.modelOverride,
+		mutationMode: options.mutationMode,
 		storeMemory: options.persistConversation !== false,
 		timeoutMs: options.timeoutMs,
 		timezone: options.timezone,
+		toolMode: options.toolMode,
 		userId: prepared.actor.userId,
 		websiteDomain: options.websiteDomain,
 		websiteId: options.websiteId,
@@ -180,14 +205,16 @@ export async function* streamDatabuddyAgent(
 async function prepareDatabuddyAgentCall(options: DatabuddyAgentOptions) {
 	const actor = await resolveDatabuddyAgentActor(options.actor);
 	const conversationId = options.conversationId ?? crypto.randomUUID();
+	const memoryUserId = options.memoryUserId ?? actor.userId;
 	const history =
 		options.history ??
-		(await getConversationHistory(conversationId, actor.userId, actor.apiKey));
+		(await getConversationHistory(conversationId, memoryUserId, actor.apiKey));
 
 	return {
 		actor,
 		conversationId,
 		history: history.length > 0 ? history : undefined,
+		memoryUserId,
 		source: options.source ?? "mcp",
 	};
 }
@@ -242,7 +269,7 @@ async function persistAgentConversation(
 
 	await appendToConversation(
 		prepared.conversationId,
-		prepared.actor.userId,
+		prepared.memoryUserId,
 		prepared.actor.apiKey,
 		options.input,
 		answer.trim() || "No response generated.",

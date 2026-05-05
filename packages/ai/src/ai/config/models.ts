@@ -24,6 +24,7 @@ export const modelNames = {
 } as const;
 
 export type AgentModelKey = "quick" | "balanced" | "deep";
+export type AgentSource = "dashboard" | "mcp" | "slack";
 
 export const models = {
 	tiny: gateway.chat(modelNames.tiny),
@@ -42,4 +43,8 @@ export const AI_MODEL_MAX_RETRIES = 3;
 
 export function createModelFromId(modelId: string) {
 	return gateway.chat(modelId);
+}
+
+export function getDefaultAgentModelId(source?: AgentSource): string {
+	return source === "slack" ? modelNames.deep : modelNames.balanced;
 }

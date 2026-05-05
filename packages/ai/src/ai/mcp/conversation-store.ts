@@ -31,13 +31,18 @@ export async function getConversationHistory(
 	userId: string | null,
 	apiKey: { id: string } | null
 ): Promise<ConversationMessage[]> {
-	const redis = getRedisCache();
+	const redis = getConversationRedis();
 	if (!redis) {
 		return [];
 	}
 	const scope = scopeFor(userId, apiKey);
 	const key = redisKey(scope, conversationId);
-	const raw = await redis.get(key);
+	let raw: string | null;
+	try {
+		raw = await redis.get(key);
+	} catch {
+		return [];
+	}
 	if (!raw) {
 		return [];
 	}
@@ -66,7 +71,7 @@ export async function appendToConversation(
 	assistantMessage: string,
 	existingMessages?: ConversationMessage[]
 ): Promise<void> {
-	const redis = getRedisCache();
+	const redis = getConversationRedis();
 	if (!redis) {
 		return;
 	}
@@ -82,5 +87,17 @@ export async function appendToConversation(
 		{ role: "assistant" as const, content: assistantMessage },
 	].slice(-MAX_MESSAGES);
 
-	await redis.setex(key, TTL_SEC, JSON.stringify(updated));
+	try {
+		await redis.setex(key, TTL_SEC, JSON.stringify(updated));
+	} catch {
+		// Conversation history is an optimization; Slack/API answers should survive Redis blips.
+	}
+}
+
+function getConversationRedis(): ReturnType<typeof getRedisCache> | null {
+	try {
+		return getRedisCache();
+	} catch {
+		return null;
+	}
 }

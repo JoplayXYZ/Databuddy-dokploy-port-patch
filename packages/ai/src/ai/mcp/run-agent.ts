@@ -14,16 +14,21 @@ import {
 	trackAgentUsageAndBill,
 } from "../agents/execution";
 import { createMcpAgentConfig } from "../agents/mcp";
-import { modelNames } from "../config/models";
+import { getDefaultAgentModelId } from "../config/models";
+import type { AppMutationMode, AppToolMode } from "../config/context";
 import type { DatabuddyAgentSlackContext } from "./slack-context";
 
 const DEFAULT_MCP_AGENT_TIMEOUT_MS = 45_000;
+export type AgentBillingMode = "bill" | "skip";
 
 export interface RunMcpAgentOptions {
 	abortSignal?: AbortSignal;
 	apiKey: ApiKeyRow | null;
+	billingMode?: AgentBillingMode;
 	conversationId?: string;
+	memoryUserId?: string | null;
 	modelOverride?: string | null;
+	mutationMode?: AppMutationMode;
 	priorMessages?: Array<{ role: "user" | "assistant"; content: string }>;
 	question: string;
 	requestHeaders: Headers;
@@ -32,6 +37,7 @@ export interface RunMcpAgentOptions {
 	storeMemory?: boolean;
 	timeoutMs?: number;
 	timezone?: string;
+	toolMode?: AppToolMode;
 	userId: string | null;
 	websiteDomain?: string | null;
 	websiteId?: string | null;
@@ -171,8 +177,11 @@ function createRunAbortController(options: RunMcpAgentOptions): {
 async function prepareMcpAgentRun(options: RunMcpAgentOptions) {
 	const sessionId = options.conversationId ?? crypto.randomUUID();
 	const mcpUserId = options.userId ?? options.apiKey?.userId ?? null;
+	const memoryUserId = options.memoryUserId ?? mcpUserId;
 	const organizationId = options.apiKey?.organizationId ?? null;
 	const source = options.source ?? "mcp";
+	const selectedModelId =
+		options.modelOverride ?? getDefaultAgentModelId(source);
 
 	const apiKeyId =
 		options.apiKey &&
@@ -181,13 +190,19 @@ async function prepareMcpAgentRun(options: RunMcpAgentOptions) {
 			? (options.apiKey as { id: string }).id
 			: null;
 
-	const billingCustomerId = await resolveAgentBillingCustomerId({
-		userId: mcpUserId,
-		apiKey: options.apiKey,
-		organizationId,
-	});
+	const billingCustomerId =
+		options.billingMode === "skip"
+			? null
+			: await resolveAgentBillingCustomerId({
+					userId: mcpUserId,
+					apiKey: options.apiKey,
+					organizationId,
+				});
 
-	if (!(await ensureAgentCreditsAvailable(billingCustomerId))) {
+	if (
+		options.billingMode !== "skip" &&
+		!(await ensureAgentCreditsAvailable(billingCustomerId))
+	) {
 		throw new Error(
 			"You're out of Databunny credits this month. Upgrade or wait for the monthly reset."
 		);
@@ -203,14 +218,17 @@ async function prepareMcpAgentRun(options: RunMcpAgentOptions) {
 				timezone: options.timezone,
 				chatId: sessionId,
 				modelOverride: options.modelOverride,
+				memoryUserId,
+				mutationMode: options.mutationMode,
 				slackContext: options.slackContext,
 				source,
+				toolMode: options.toolMode,
 				websiteDomain: options.websiteDomain,
 				websiteId: options.websiteId,
 			})
 		),
 		isMemoryEnabled()
-			? getMemoryContext(options.question, mcpUserId, apiKeyId)
+			? getMemoryContext(options.question, memoryUserId, apiKeyId)
 			: Promise.resolve(null),
 	]);
 
@@ -262,9 +280,10 @@ async function prepareMcpAgentRun(options: RunMcpAgentOptions) {
 		agent,
 		apiKeyId,
 		billingCustomerId,
+		memoryUserId,
 		mcpUserId,
 		messages,
-		modelId: options.modelOverride ?? modelNames.balanced,
+		modelId: selectedModelId,
 		organizationId,
 		sessionId,
 		source,
@@ -328,7 +347,7 @@ function storePreparedConversation(
 			{ role: "user", content: question },
 			{ role: "assistant", content: answer },
 		],
-		prepared.mcpUserId,
+		prepared.memoryUserId,
 		prepared.apiKeyId,
 		{
 			...(prepared.websiteDomain ? { domain: prepared.websiteDomain } : {}),

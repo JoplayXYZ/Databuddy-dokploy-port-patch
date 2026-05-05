@@ -42,7 +42,7 @@ export function createSlackConversationTools(
 				"Read the current Slack thread. Use when the user refers to this thread, above, previous replies, decisions, discussion, context, or asks to summarize/answer based on Slack conversation context.",
 			strict: true,
 			inputSchema: z.object({}),
-			execute: readCurrentThread,
+			execute: async () => readCurrentThread(),
 		});
 	}
 
@@ -54,8 +54,7 @@ export function createSlackConversationTools(
 			inputSchema: z.object({
 				limit: z.number().int().min(1).max(50).optional(),
 			}),
-			execute: async ({ limit }) =>
-				readRecentChannelMessages({ limit }),
+			execute: async ({ limit }) => readRecentChannelMessages({ limit }),
 		});
 	}
 
