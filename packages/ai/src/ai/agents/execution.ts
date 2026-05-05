@@ -1,9 +1,9 @@
 import type { ApiKeyRow } from "@databuddy/api-keys/resolve";
+import { getAutumn } from "@databuddy/rpc/autumn";
 import {
-	getAutumn,
 	getBillingCustomerId,
 	getOrganizationOwnerId,
-} from "@databuddy/rpc";
+} from "@databuddy/rpc/billing";
 import type { LanguageModelUsage } from "ai";
 import { trackAgentEvent } from "../../lib/databuddy";
 import { captureError, mergeWideEvent } from "../../lib/tracing";

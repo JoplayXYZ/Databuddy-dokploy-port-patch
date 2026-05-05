@@ -22,6 +22,7 @@
     "./insights/normalize": "./src/ai/insights/normalize.ts",
     "./insights/types": "./src/ai/insights/types.ts",
     "./lib/supermemory": "./src/lib/supermemory.ts",
+    "./lib/request-logger": "./src/lib/request-logger.ts",
     "./mcp/http": "./src/mcp/http.ts",
     "./mcp/tools": "./src/ai/mcp/tools.ts",
     "./schemas/smart-insights-output": "./src/ai/schemas/smart-insights-output.ts",

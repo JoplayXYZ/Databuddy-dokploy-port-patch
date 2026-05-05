@@ -12,7 +12,8 @@
   },
   "exports": {
     ".": "./src/index.ts",
-    "./autumn": "./src/lib/autumn-client.ts"
+    "./autumn": "./src/lib/autumn-client.ts",
+    "./billing": "./src/utils/billing.ts"
   },
   "dependencies": {
     "@databuddy/api-keys": "workspace:*",

@@ -18,6 +18,8 @@ COPY turbo.json turbo.json
 
 ENV NODE_ENV=production
 
+RUN bunx turbo run build --filter=@databuddy/slack...
+
 WORKDIR /app/apps/slack
 
 RUN bun build \

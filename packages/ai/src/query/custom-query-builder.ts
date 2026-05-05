@@ -16,7 +16,8 @@ import type {
 	CustomQueryResponse,
 	CustomQuerySelect,
 } from "@databuddy/shared/types/custom-query";
-import { useLogger as getRequestLogger } from "evlog/elysia";
+import { log } from "evlog";
+import { getActiveAiRequestLogger } from "../lib/request-logger";
 
 const IDENTIFIER_PATTERN = /^[a-zA-Z_][a-zA-Z0-9_]*$/u;
 
@@ -379,10 +380,18 @@ export async function executeCustomQuery(
 			};
 		}
 
-		getRequestLogger().error(
-			error instanceof Error ? error : new Error(String(error)),
-			{ customQuery: true }
-		);
+		const err = error instanceof Error ? error : new Error(String(error));
+		const requestLogger = getActiveAiRequestLogger();
+		if (requestLogger) {
+			requestLogger.error(err, { customQuery: true });
+		} else {
+			log.error({
+				service: "api",
+				customQuery: true,
+				error_message: err.message,
+				error_stack: err.stack,
+			});
+		}
 		const isDevelopment = process.env.NODE_ENV === "development";
 		return {
 			success: false,

@@ -7,6 +7,7 @@ export {
 	createAbortSignalInterceptor,
 	enrichRpcWideEventContext,
 	recordORPCError,
+	setRpcRequestLoggerProvider,
 	setRpcProcedureType,
 } from "./lib/rpc-log-context";
 export { setTrackProperties, setTrackingFn } from "./middleware/track-mutation";

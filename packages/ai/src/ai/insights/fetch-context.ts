@@ -1,5 +1,6 @@
 import dayjs from "dayjs";
-import { useLogger as getRequestLogger } from "evlog/elysia";
+import { log } from "evlog";
+import { getActiveAiRequestLogger } from "../../lib/request-logger";
 import { executeQuery } from "../../query";
 import type { WebPeriodData, WeekOverWeekPeriod } from "./types";
 
@@ -50,9 +51,22 @@ export async function fetchWebPeriodData(
 			const value = await runQueryWithTimeout(label, run);
 			return Array.isArray(value) ? value : [];
 		} catch (error) {
-			getRequestLogger().warn("Insights period query failed or timed out", {
+			const context = {
 				insights: { websiteId, label, error },
-			});
+			};
+			const requestLogger = getActiveAiRequestLogger();
+			if (requestLogger) {
+				requestLogger.warn(
+					"Insights period query failed or timed out",
+					context
+				);
+			} else {
+				log.warn({
+					service: "api",
+					message: "Insights period query failed or timed out",
+					...context,
+				});
+			}
 			return [];
 		}
 	};

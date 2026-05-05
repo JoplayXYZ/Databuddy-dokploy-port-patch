@@ -1,5 +1,5 @@
 import { EvlogError, log } from "evlog";
-import { useLogger as getRequestLogger } from "evlog/elysia";
+import { getActiveAiRequestLogger } from "./request-logger";
 
 /**
  * Merge structured fields into the active request wide event (evlog).
@@ -7,11 +7,12 @@ import { useLogger as getRequestLogger } from "evlog/elysia";
 export function mergeWideEvent(
 	fields: Record<string, string | number | boolean>
 ): void {
-	try {
-		getRequestLogger().set(fields as Record<string, unknown>);
-	} catch {
-		log.info({ service: "api", ...fields });
+	const requestLogger = getActiveAiRequestLogger();
+	if (requestLogger) {
+		requestLogger.set(fields as Record<string, unknown>);
+		return;
 	}
+	log.info({ service: "api", ...fields });
 }
 
 /**
@@ -28,9 +29,7 @@ export async function record<T>(
 		return await fn();
 	} finally {
 		const ms = Math.round((performance.now() - start) * 100) / 100;
-		try {
-			getRequestLogger().set({ [`timing.${name}`]: ms });
-		} catch {}
+		getActiveAiRequestLogger()?.set({ [`timing.${name}`]: ms });
 	}
 }
 
@@ -43,31 +42,36 @@ export function captureError(
 	fields?: Record<string, string | number | boolean>
 ): void {
 	const err = error instanceof Error ? error : new Error(String(error));
-	try {
-		const requestLog = getRequestLogger();
-		if (err instanceof EvlogError && err.status >= 400 && err.status < 500) {
-			requestLog.set({
-				client_http_error: true,
-				http_status: err.status,
-				error_message: err.message,
-			});
-			if (fields) {
-				requestLog.warn(err.message, fields as Record<string, unknown>);
-			} else {
-				requestLog.warn(err.message);
-			}
-			return;
+	const requestLog = getActiveAiRequestLogger();
+	if (
+		requestLog &&
+		err instanceof EvlogError &&
+		err.status >= 400 &&
+		err.status < 500
+	) {
+		requestLog.set({
+			client_http_error: true,
+			http_status: err.status,
+			error_message: err.message,
+		});
+		if (fields) {
+			requestLog.warn(err.message, fields as Record<string, unknown>);
+		} else {
+			requestLog.warn(err.message);
 		}
+		return;
+	}
+	if (requestLog) {
 		if (fields) {
 			requestLog.error(err, fields as Record<string, unknown>);
 		} else {
 			requestLog.error(err);
 		}
-	} catch {
-		log.error({
-			service: "api",
-			error_message: err.message,
-			...(fields ?? {}),
-		});
+		return;
 	}
+	log.error({
+		service: "api",
+		error_message: err.message,
+		...(fields ?? {}),
+	});
 }

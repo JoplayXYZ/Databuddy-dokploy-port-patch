@@ -6,6 +6,7 @@ import {
 	shutdownPostgres,
 	warmPool,
 } from "@databuddy/db";
+import { setAiRequestLoggerProvider } from "@databuddy/ai/lib/request-logger";
 import { setChRecordFn } from "@databuddy/db/clickhouse";
 import { setCacheTraceFn } from "@databuddy/redis";
 import {
@@ -14,6 +15,7 @@ import {
 	createRPCContext,
 	getBillingCustomerId,
 	recordORPCError,
+	setRpcRequestLoggerProvider,
 	setRpcRecordFn,
 	setTrackingFn,
 } from "@databuddy/rpc";
@@ -58,6 +60,8 @@ initLogger({
 setChRecordFn(record);
 setRpcRecordFn(record);
 setTrackingFn(trackMutationEvent);
+setRpcRequestLoggerProvider(useLogger);
+setAiRequestLoggerProvider(useLogger);
 const pgAcc = new WeakMap<
 	object,
 	[count: number, totalMs: number, maxMs: number]

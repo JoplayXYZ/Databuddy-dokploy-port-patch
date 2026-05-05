@@ -8,11 +8,14 @@ const mockGetOrganizationOwnerId = mock(async (organizationId: string) =>
 	organizationId === "org_missing" ? null : `owner:${organizationId}`
 );
 
-mock.module("@databuddy/rpc", () => ({
+mock.module("@databuddy/rpc/autumn", () => ({
 	getAutumn: () => ({
 		check: mock(async () => ({ allowed: true })),
 		track: mock(async () => undefined),
 	}),
+}));
+
+mock.module("@databuddy/rpc/billing", () => ({
 	getBillingCustomerId: mockGetBillingCustomerId,
 	getOrganizationOwnerId: mockGetOrganizationOwnerId,
 }));

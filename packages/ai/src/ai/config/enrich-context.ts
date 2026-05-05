@@ -6,7 +6,7 @@ import {
 	goals,
 	links,
 } from "@databuddy/db/schema";
-import { getBillingOwner } from "@databuddy/rpc";
+import { getBillingOwner } from "@databuddy/rpc/billing";
 import {
 	getPlanCapabilities,
 	type PlanId,
