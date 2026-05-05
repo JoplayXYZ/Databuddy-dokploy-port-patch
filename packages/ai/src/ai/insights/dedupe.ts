@@ -4,9 +4,6 @@ import dayjs from "dayjs";
 import type { ParsedInsight } from "../schemas/smart-insights-output";
 
 const GENERATION_COOLDOWN_HOURS = 6;
-const NON_ALNUM_RE = /[^a-z0-9]+/g;
-const LEADING_UNDERSCORES_RE = /^_+/;
-const TRAILING_UNDERSCORES_RE = /_+$/;
 
 export interface InsightDedupeInput {
 	changePercent: number | null | undefined;
@@ -18,13 +15,21 @@ export interface InsightDedupeInput {
 }
 
 function normalizeSubjectKey(value: string): string {
-	return value
-		.trim()
-		.toLowerCase()
-		.replaceAll(NON_ALNUM_RE, "_")
-		.replace(LEADING_UNDERSCORES_RE, "")
-		.replace(TRAILING_UNDERSCORES_RE, "")
-		.slice(0, 80);
+	let key = "";
+	let lastWasUnderscore = true;
+	for (const ch of value.trim().toLowerCase()) {
+		if ((ch >= "a" && ch <= "z") || (ch >= "0" && ch <= "9")) {
+			key += ch;
+			lastWasUnderscore = false;
+		} else if (!lastWasUnderscore) {
+			key += "_";
+			lastWasUnderscore = true;
+		}
+	}
+	if (key.endsWith("_")) {
+		key = key.slice(0, -1);
+	}
+	return key.slice(0, 80);
 }
 
 export function deriveInsightSubjectKey(input: {

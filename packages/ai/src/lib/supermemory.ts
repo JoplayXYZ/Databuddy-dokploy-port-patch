@@ -1,7 +1,7 @@
 import Supermemory from "supermemory";
+import { stripHtmlTags } from "./sanitize";
 
 const apiKey = process.env.SUPERMEMORY_API_KEY;
-const MEMORY_SANITIZE_RE = /<\/?[a-z_][a-z_0-9-]*(?:\s[^>]*)?\s*\/?>/gi;
 const MAX_MEMORY_LENGTH = 2000;
 
 let _client: Supermemory | null = null;
@@ -24,13 +24,7 @@ export function sanitizeMemoryContent(
 	value: string,
 	maxLength = MAX_MEMORY_LENGTH
 ): string {
-	let cleaned = value.slice(0, maxLength);
-	let prev: string;
-	do {
-		prev = cleaned;
-		cleaned = cleaned.replace(MEMORY_SANITIZE_RE, "");
-	} while (cleaned !== prev);
-	return cleaned;
+	return stripHtmlTags(value, maxLength);
 }
 
 function buildContainerTags(

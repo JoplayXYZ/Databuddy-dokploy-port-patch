@@ -1,4 +1,5 @@
 import { chQuery } from "@databuddy/db/clickhouse";
+import { stripHtmlTags } from "../../../lib/sanitize";
 import { createToolLogger } from "./logger";
 
 export interface QueryResult<T = unknown> {
@@ -26,20 +27,8 @@ const USER_CONTENT_FIELDS = new Set([
 
 const MAX_STRING_LENGTH = 2000;
 
-/**
- * Strips XML-like tags and known prompt injection preambles from user-controlled
- * string fields. Not a silver bullet — defense in depth alongside tenant isolation
- * and table allowlisting.
- */
 function sanitizeValue(value: string): string {
-	let cleaned = value.slice(0, MAX_STRING_LENGTH);
-	const tagRe = /<\/?[a-z_][a-z_0-9-]*(?:\s[^>]*)?\s*\/?>/gi;
-	let prev: string;
-	do {
-		prev = cleaned;
-		cleaned = cleaned.replace(tagRe, "");
-	} while (cleaned !== prev);
-	return cleaned;
+	return stripHtmlTags(value, MAX_STRING_LENGTH);
 }
 
 function sanitizeRow<T extends Record<string, unknown>>(row: T): T {

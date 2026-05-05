@@ -58,7 +58,15 @@ export interface AgentFeedbackEvent {
 }
 
 export function normalizeAgentFeedbackSignal(signal: string): string {
-	return signal.replace(/^:+|:+$/g, "").toLowerCase();
+	let start = 0;
+	let end = signal.length;
+	while (start < end && signal[start] === ":") {
+		start++;
+	}
+	while (end > start && signal[end - 1] === ":") {
+		end--;
+	}
+	return signal.slice(start, end).toLowerCase();
 }
 
 export function classifyAgentFeedbackSentiment(
