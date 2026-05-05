@@ -6,6 +6,15 @@ export {
 	type DatabuddyAgentResult,
 	type DatabuddyAgentSource,
 } from "./agent";
+export {
+	classifyAgentFeedbackSentiment,
+	normalizeAgentFeedbackSignal,
+	recordAgentFeedback,
+	type AgentFeedbackAction,
+	type AgentFeedbackEvent,
+	type AgentFeedbackInput,
+	type AgentFeedbackSentiment,
+} from "./agent/feedback";
 export { createConfig as createAnalyticsAgentConfig } from "./ai/agents/analytics";
 export {
 	AGENT_THINKING_LEVELS,
@@ -41,3 +50,8 @@ export {
 	storeConversation,
 	type MemoryContext,
 } from "./lib/supermemory";
+export {
+	createMcpUnauthorizedResponse,
+	handleDatabuddyMcpRequest,
+	type DatabuddyMcpHttpOptions,
+} from "./mcp/http";

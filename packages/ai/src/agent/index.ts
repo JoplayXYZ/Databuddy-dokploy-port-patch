@@ -1,7 +1,4 @@
-import {
-	resolveApiKeySecret,
-	type ApiKeyRow,
-} from "@databuddy/api-keys/resolve";
+import { resolveApiKey, type ApiKeyRow } from "@databuddy/api-keys/resolve";
 import {
 	appendToConversation,
 	getConversationHistory,
@@ -134,7 +131,9 @@ async function resolveDatabuddyAgentActor(
 		};
 	}
 
-	const result = await resolveApiKeySecret(actor.secret);
+	const requestHeaders =
+		actor.requestHeaders ?? createApiKeyHeaders(actor.secret);
+	const result = await resolveApiKey(requestHeaders);
 	if (!result.key) {
 		throw new Error(`Databuddy API key is ${result.outcome}.`);
 	}
@@ -147,7 +146,7 @@ async function resolveDatabuddyAgentActor(
 
 	return {
 		apiKey: result.key,
-		requestHeaders: actor.requestHeaders ?? new Headers(),
+		requestHeaders,
 		userId: "userId" in actor ? (actor.userId ?? null) : result.key.userId,
 	};
 }
@@ -169,4 +168,8 @@ async function persistAgentConversation(
 		answer.trim() || "No response generated.",
 		prepared.history
 	);
+}
+
+function createApiKeyHeaders(secret: string): Headers {
+	return new Headers({ Authorization: `Bearer ${secret}` });
 }

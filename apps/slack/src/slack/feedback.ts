@@ -1,36 +1,15 @@
+import {
+	classifyAgentFeedbackSentiment,
+	normalizeAgentFeedbackSignal,
+	recordAgentFeedback,
+	type AgentFeedbackSentiment,
+} from "@databuddy/ai/agent/feedback";
 import { createSlackEventLog, setSlackLog, toError } from "../lib/evlog-slack";
 import type { SlackInstallationStore } from "./installations";
 import { SLACK_COPY } from "./messages";
 
-const POSITIVE_REACTIONS = new Set([
-	"+1",
-	"thumbsup",
-	"white_check_mark",
-	"heavy_check_mark",
-	"heart",
-	"green_heart",
-	"blue_heart",
-	"raised_hands",
-	"clap",
-	"tada",
-	"fire",
-	"rocket",
-]);
-
-const NEGATIVE_REACTIONS = new Set([
-	"-1",
-	"thumbsdown",
-	"x",
-	"heavy_multiplication_x",
-	"confused",
-	"face_with_raised_eyebrow",
-	"warning",
-	"rotating_light",
-	"broken_heart",
-]);
-
 export type SlackFeedbackAction = "added" | "removed";
-export type SlackFeedbackSentiment = "positive" | "negative" | "neutral";
+export type SlackFeedbackSentiment = AgentFeedbackSentiment;
 
 interface SlackReactionEventLike {
 	eventTs?: string;
@@ -87,16 +66,21 @@ export async function logSlackReactionFeedback({
 		return;
 	}
 
-	const normalizedReaction = normalizeReaction(reactionEvent.reaction);
+	const normalizedReaction = normalizeAgentFeedbackSignal(
+		reactionEvent.reaction
+	);
 	if (
 		action === "added" &&
-		normalizedReaction === normalizeReaction(SLACK_COPY.processingReaction)
+		normalizedReaction ===
+			normalizeAgentFeedbackSignal(SLACK_COPY.processingReaction)
 	) {
 		return;
 	}
 
 	const resolvedTeamId = teamId ?? reactionEvent.team;
 	const sentiment = classifySlackReactionSentiment(normalizedReaction);
+	let integrationId: string | undefined;
+	let organizationId: string | undefined;
 	const eventLog = createSlackEventLog({
 		slack_channel_id: reactionEvent.item.channel,
 		slack_event: "feedback_reaction",
@@ -112,15 +96,29 @@ export async function logSlackReactionFeedback({
 
 	try {
 		const teamContext = await installations.getTeamContext(resolvedTeamId);
+		integrationId = teamContext?.integrationId;
+		organizationId = teamContext?.organizationId;
 		setSlackLog(eventLog, {
-			slack_integration_id: teamContext?.integrationId,
-			slack_organization_id: teamContext?.organizationId,
+			slack_integration_id: integrationId,
+			slack_organization_id: organizationId,
 		});
 	} catch (error) {
 		const err = toError(error);
 		logger.warn("Failed to resolve Slack feedback context", err.message);
 		eventLog.error(err, { error_step: "feedback_context" });
 	} finally {
+		const feedback = recordAgentFeedback({
+			action,
+			integrationId,
+			organizationId,
+			responseId: reactionEvent.item.ts,
+			signal: normalizedReaction,
+			source: "slack",
+			sourceEventId: reactionEvent.eventTs,
+			targetId: reactionEvent.item.channel,
+			userId: reactionEvent.user,
+		});
+		setSlackLog(eventLog, feedback.wideEvent);
 		eventLog.emit();
 	}
 }
@@ -128,14 +126,7 @@ export async function logSlackReactionFeedback({
 export function classifySlackReactionSentiment(
 	reaction: string
 ): SlackFeedbackSentiment {
-	const normalized = normalizeReaction(reaction);
-	if (POSITIVE_REACTIONS.has(normalized)) {
-		return "positive";
-	}
-	if (NEGATIVE_REACTIONS.has(normalized)) {
-		return "negative";
-	}
-	return "neutral";
+	return classifyAgentFeedbackSentiment(reaction);
 }
 
 function toSlackReactionEvent(event: unknown): SlackReactionEventLike | null {
@@ -157,10 +148,6 @@ function toSlackReactionEvent(event: unknown): SlackReactionEventLike | null {
 		team: getString(event.team),
 		user: getString(event.user),
 	};
-}
-
-function normalizeReaction(reaction: string): string {
-	return reaction.replace(/^:+|:+$/g, "").toLowerCase();
 }
 
 function getString(value: unknown): string | undefined {

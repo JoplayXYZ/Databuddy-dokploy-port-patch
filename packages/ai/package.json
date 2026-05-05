@@ -9,6 +9,7 @@
       "types": "./src/public-types/agent.d.ts",
       "default": "./src/agent/index.ts"
     },
+    "./agent/feedback": "./src/agent/feedback.ts",
     "./agents/analytics": "./src/ai/agents/analytics.ts",
     "./agents/cache": "./src/ai/agents/cache.ts",
     "./agents/execution": "./src/ai/agents/execution.ts",
@@ -21,6 +22,7 @@
     "./insights/normalize": "./src/ai/insights/normalize.ts",
     "./insights/types": "./src/ai/insights/types.ts",
     "./lib/supermemory": "./src/lib/supermemory.ts",
+    "./mcp/http": "./src/mcp/http.ts",
     "./mcp/tools": "./src/ai/mcp/tools.ts",
     "./schemas/smart-insights-output": "./src/ai/schemas/smart-insights-output.ts",
     "./tools/insights-agent-tools": "./src/ai/tools/insights-agent-tools.ts",
