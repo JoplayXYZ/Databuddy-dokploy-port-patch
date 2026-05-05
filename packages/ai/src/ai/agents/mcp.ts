@@ -3,6 +3,7 @@ import { ANTHROPIC_CACHE_1H, models } from "../config/models";
 import { createMcpAgentTools } from "../mcp/agent-tools";
 import { buildAnalyticsInstructionsForMcp } from "../prompts/analytics";
 import { TIER_CONFIG } from "../config/tiers";
+import type { AgentConfig } from "./types";
 
 export function createMcpAgentConfig(context: {
 	billingCustomerId?: string | null;
@@ -11,7 +12,7 @@ export function createMcpAgentConfig(context: {
 	userId: string | null;
 	timezone?: string;
 	chatId?: string;
-}) {
+}): AgentConfig {
 	const timezone = context.timezone ?? "UTC";
 	const currentDateTime = new Date().toISOString();
 	const chatId = context.chatId ?? crypto.randomUUID();

@@ -45,7 +45,7 @@ function createBuilder(
 	websiteDomain?: string | null,
 	timezone?: string
 ) {
-	const validated = QuerySchema.parse(request);
+	const validated = QuerySchema.parse(request) as QueryRequest;
 	const config = QueryBuilders[validated.type];
 	if (!config) {
 		throw new Error(`Unknown query type: ${validated.type}`);

@@ -1,22 +1,25 @@
 import {
 	type SchemaDocOptions,
 	generateSchemaDocumentation,
-} from "@/ai/prompts/clickhouse-schema";
-import { MCP_DATE_PRESETS, resolveDatePreset } from "@/lib/date-presets";
-import { QueryBuilders } from "@/query/builders";
-import type { QueryRequest } from "@/query/types";
-import type { DatePreset } from "@/schemas/query-schemas";
+} from "../prompts/clickhouse-schema";
+import {
+	type DatePreset,
+	MCP_DATE_PRESETS,
+	resolveDatePreset,
+} from "../../lib/date-presets";
+import { QueryBuilders } from "../../query/builders";
+import type { QueryRequest } from "../../query/types";
 
 export {
 	MCP_DATE_PRESETS,
 	resolveDatePreset as resolveDatePresetForMcp,
-} from "@/lib/date-presets";
+} from "../../lib/date-presets";
 
 export {
 	CLICKHOUSE_SCHEMA_DOCS,
 	SCHEMA_SECTIONS,
 	type SchemaSection,
-} from "@/ai/prompts/clickhouse-schema";
+} from "../prompts/clickhouse-schema";
 
 export interface McpQueryItem {
 	filters?: Array<{

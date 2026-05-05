@@ -1,9 +1,9 @@
-import { trackAgentEvent } from "@/lib/databuddy";
-import { captureError, mergeWideEvent } from "@/lib/tracing";
 import type { ApiKeyRow } from "@databuddy/api-keys/resolve";
 import { getRateLimitHeaders, ratelimit } from "@databuddy/redis/rate-limit";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
+import { trackAgentEvent } from "../../lib/databuddy";
+import { captureError, mergeWideEvent } from "../../lib/tracing";
 import {
 	ensureWebsiteAccess,
 	resolveWebsiteId,

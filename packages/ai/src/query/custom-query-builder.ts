@@ -16,7 +16,7 @@ import type {
 	CustomQueryResponse,
 	CustomQuerySelect,
 } from "@databuddy/shared/types/custom-query";
-import { useLogger } from "evlog/elysia";
+import { useLogger as getRequestLogger } from "evlog/elysia";
 
 const IDENTIFIER_PATTERN = /^[a-zA-Z_][a-zA-Z0-9_]*$/u;
 
@@ -379,7 +379,7 @@ export async function executeCustomQuery(
 			};
 		}
 
-		useLogger().error(
+		getRequestLogger().error(
 			error instanceof Error ? error : new Error(String(error)),
 			{ customQuery: true }
 		);

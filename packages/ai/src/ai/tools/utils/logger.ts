@@ -1,5 +1,5 @@
 import { log } from "evlog";
-import { useLogger } from "evlog/elysia";
+import { useLogger as getRequestLogger } from "evlog/elysia";
 
 /**
  * Request-scoped logger for AI tools (wide event via evlog).
@@ -9,7 +9,10 @@ export function createToolLogger(toolName: string) {
 	return {
 		info: (message: string, context?: Record<string, unknown>) => {
 			try {
-				useLogger().info(message, { aiTool: { name: toolName }, ...context });
+				getRequestLogger().info(message, {
+					aiTool: { name: toolName },
+					...context,
+				});
 			} catch {
 				log.info({ service: "api", aiTool: toolName, message, ...context });
 			}
@@ -17,7 +20,7 @@ export function createToolLogger(toolName: string) {
 		error: (message: string, context?: Record<string, unknown>) => {
 			const err = new Error(message);
 			try {
-				useLogger().error(err, {
+				getRequestLogger().error(err, {
 					aiTool: { name: toolName },
 					...context,
 				});
@@ -32,14 +35,17 @@ export function createToolLogger(toolName: string) {
 		},
 		warn: (message: string, context?: Record<string, unknown>) => {
 			try {
-				useLogger().warn(message, { aiTool: { name: toolName }, ...context });
+				getRequestLogger().warn(message, {
+					aiTool: { name: toolName },
+					...context,
+				});
 			} catch {
 				log.warn({ service: "api", aiTool: toolName, message, ...context });
 			}
 		},
 		debug: (message: string, context?: Record<string, unknown>) => {
 			try {
-				useLogger().set({
+				getRequestLogger().set({
 					aiTool: { name: toolName, level: "debug", message, ...context },
 				});
 			} catch {

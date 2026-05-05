@@ -323,7 +323,7 @@ const getDataTool = defineMcpTool(
 			rawQueries && rawQueries.length >= 2
 				? (rawQueries as McpQueryItem[])
 				: input.type
-					? [
+					? ([
 							{
 								type: input.type,
 								preset: input.preset,
@@ -335,7 +335,7 @@ const getDataTool = defineMcpTool(
 								groupBy: input.groupBy,
 								orderBy: input.orderBy,
 							},
-						]
+						] as McpQueryItem[])
 					: [];
 
 		if (items.length === 0) {

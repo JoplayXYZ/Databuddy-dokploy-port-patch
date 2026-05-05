@@ -56,7 +56,7 @@ export function createProfileTools() {
 					from,
 					to,
 					limit,
-					filters,
+					filters: filters as QueryRequest["filters"],
 					timezone: "UTC",
 				};
 

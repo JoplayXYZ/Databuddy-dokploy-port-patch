@@ -11,19 +11,19 @@ import { db } from "@databuddy/db";
 import { ratelimit } from "@databuddy/redis/rate-limit";
 import { filterOptions } from "@databuddy/shared/lists/filters";
 import type { CustomQueryRequest } from "@databuddy/shared/types/custom-query";
+import { compileQuery, executeBatch } from "@databuddy/ai/query";
+import { QueryBuilders } from "@databuddy/ai/query/builders";
+import { executeCustomQuery } from "@databuddy/ai/query/custom-query-builder";
+import {
+	isNormalizedQueryDate,
+	normalizeClickHouseDateTime,
+} from "@databuddy/ai/query/date-utils";
+import type { Filter, QueryRequest } from "@databuddy/ai/query/types";
 import { Elysia, t } from "elysia";
 import { getAccessibleWebsites } from "../lib/accessible-websites";
 import { resolveDatePreset } from "../lib/date-presets";
 import { mergeWideEvent } from "../lib/tracing";
 import { getCachedWebsiteDomain, getWebsiteDomain } from "../lib/website-utils";
-import { compileQuery, executeBatch } from "../query";
-import { QueryBuilders } from "../query/builders";
-import { executeCustomQuery } from "../query/custom-query-builder";
-import {
-	isNormalizedQueryDate,
-	normalizeClickHouseDateTime,
-} from "../query/date-utils";
-import type { Filter, QueryRequest } from "../query/types";
 import {
 	CompileRequestSchema,
 	type CompileRequestType,

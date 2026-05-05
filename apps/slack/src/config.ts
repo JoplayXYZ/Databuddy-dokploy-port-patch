@@ -1,22 +1,16 @@
 import { env } from "@databuddy/env/slack";
 import { LogLevel } from "@slack/bolt";
 
-export interface AgentBridgeConfig {
-	apiUrl: string;
-}
-
 export interface TokenCryptoConfig {
 	encryptionKey: string;
 }
 
 export type SlackRuntimeConfig =
 	| {
-			agent: AgentBridgeConfig;
 			enabled: false;
 			reason: string;
 	  }
 	| {
-			agent: AgentBridgeConfig;
 			appToken?: string;
 			crypto: TokenCryptoConfig;
 			enabled: true;
@@ -37,9 +31,6 @@ export function resolveSlackConfig(): SlackRuntimeConfig {
 			throw new Error(reason);
 		}
 		return {
-			agent: {
-				apiUrl: env.DATABUDDY_API_URL,
-			},
 			enabled: false,
 			reason,
 		};
@@ -52,9 +43,6 @@ export function resolveSlackConfig(): SlackRuntimeConfig {
 	}
 
 	return {
-		agent: {
-			apiUrl: env.DATABUDDY_API_URL,
-		},
 		appToken: env.SLACK_APP_TOKEN,
 		crypto: {
 			encryptionKey: env.DATABUDDY_ENCRYPTION_KEY,

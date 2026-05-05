@@ -1,8 +1,12 @@
-import type { AgentBridgeConfig } from "../config";
+import { getApiKeyFromHeader } from "@databuddy/api-keys/resolve";
+import {
+	appendToConversation,
+	getConversationHistory,
+} from "@databuddy/ai/mcp/conversation-store";
+import { streamMcpAgentText } from "@databuddy/ai/mcp/run-agent";
 import { SLACK_COPY } from "../slack/messages";
 
 const DEFAULT_TIMEZONE = "UTC";
-const AGENT_REQUEST_TIMEOUT_MS = 120_000;
 
 export type SlackAgentTrigger = "app_mention" | "assistant" | "direct_message";
 
@@ -26,13 +30,20 @@ export interface SlackRunContextResolver {
 	resolve(run: SlackAgentRun): Promise<SlackRunContext | null>;
 }
 
-export class DatabuddyAgentClient {
-	readonly #config: AgentBridgeConfig;
-	readonly #contexts: SlackRunContextResolver;
+export interface SlackAgentRunner {
+	stream(run: SlackAgentRun, context: SlackRunContext): AsyncGenerator<string>;
+}
 
-	constructor(config: AgentBridgeConfig, contexts: SlackRunContextResolver) {
-		this.#config = config;
+export class DatabuddyAgentClient {
+	readonly #contexts: SlackRunContextResolver;
+	readonly #runner: SlackAgentRunner;
+
+	constructor(
+		contexts: SlackRunContextResolver,
+		runner: SlackAgentRunner = new SharedDatabuddyAgentRunner()
+	) {
 		this.#contexts = contexts;
+		this.#runner = runner;
 	}
 
 	async runToText(run: SlackAgentRun): Promise<string> {
@@ -49,39 +60,51 @@ export class DatabuddyAgentClient {
 			yield getMissingAgentContextMessage();
 			return;
 		}
+		yield* this.#runner.stream(run, context);
+	}
+}
 
-		const response = await fetch(`${this.#config.apiUrl}/v1/agent/ask`, {
-			body: JSON.stringify({
-				id: createSlackChatId(run),
-				question: run.text,
-				stream: true,
-				timezone: DEFAULT_TIMEZONE,
-			}),
-			headers: {
-				Authorization: `Bearer ${context.agentApiKeySecret}`,
-				"Content-Type": "application/json",
-				"x-databuddy-slack-organization-id": context.organizationId,
-				"x-databuddy-slack-team-id": context.teamId,
-			},
-			method: "POST",
-			signal: AbortSignal.timeout(AGENT_REQUEST_TIMEOUT_MS),
-		});
-
-		if (!response.ok) {
-			throw new Error(
-				`Databuddy agent API returned ${response.status} ${response.statusText}`.trim()
-			);
+class SharedDatabuddyAgentRunner implements SlackAgentRunner {
+	async *stream(
+		run: SlackAgentRun,
+		context: SlackRunContext
+	): AsyncGenerator<string> {
+		const requestHeaders = createAgentRequestHeaders(context);
+		const apiKey = await getApiKeyFromHeader(requestHeaders);
+		if (!apiKey) {
+			throw new Error("Slack integration API key is invalid or expired.");
 		}
 
-		if (isPlainTextStream(response)) {
-			yield* streamResponseText(response);
-			return;
+		const conversationId = createSlackChatId(run);
+		const priorMessages = await getConversationHistory(
+			conversationId,
+			null,
+			apiKey
+		);
+		let answer = "";
+
+		for await (const chunk of streamMcpAgentText({
+			apiKey,
+			conversationId,
+			priorMessages: priorMessages.length > 0 ? priorMessages : undefined,
+			question: run.text,
+			requestHeaders,
+			source: "slack",
+			timezone: DEFAULT_TIMEZONE,
+			userId: null,
+		})) {
+			answer += chunk;
+			yield chunk;
 		}
 
-		const payload = (await response.json()) as { answer?: unknown };
-		yield typeof payload.answer === "string"
-			? payload.answer
-			: SLACK_COPY.noAnswer;
+		await appendToConversation(
+			conversationId,
+			null,
+			apiKey,
+			run.text,
+			answer.trim() || SLACK_COPY.noAnswer,
+			priorMessages
+		).catch(() => {});
 	}
 }
 
@@ -104,38 +127,10 @@ function safeId(value: string): string {
 	return value.replace(/[^a-zA-Z0-9_-]/g, "_").slice(0, 160);
 }
 
-function isPlainTextStream(response: Response): boolean {
-	return (
-		Boolean(response.body) &&
-		(response.headers.get("content-type") ?? "")
-			.toLowerCase()
-			.startsWith("text/plain")
-	);
-}
-
-async function* streamResponseText(response: Response): AsyncGenerator<string> {
-	const reader = response.body?.getReader();
-	if (!reader) {
-		return;
-	}
-
-	const decoder = new TextDecoder();
-	try {
-		while (true) {
-			const { done, value } = await reader.read();
-			if (done) {
-				break;
-			}
-			if (value) {
-				yield decoder.decode(value, { stream: true });
-			}
-		}
-
-		const tail = decoder.decode();
-		if (tail) {
-			yield tail;
-		}
-	} finally {
-		reader.releaseLock();
-	}
+function createAgentRequestHeaders(context: SlackRunContext): Headers {
+	return new Headers({
+		Authorization: `Bearer ${context.agentApiKeySecret}`,
+		"x-databuddy-slack-organization-id": context.organizationId,
+		"x-databuddy-slack-team-id": context.teamId,
+	});
 }

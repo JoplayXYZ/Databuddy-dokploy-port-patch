@@ -149,7 +149,7 @@ export const getDataTool = tool({
 					from,
 					to,
 					timeUnit: item.timeUnit,
-					filters: item.filters,
+					filters: item.filters as QueryRequest["filters"],
 					groupBy: item.groupBy,
 					orderBy: item.orderBy,
 					limit: item.limit,

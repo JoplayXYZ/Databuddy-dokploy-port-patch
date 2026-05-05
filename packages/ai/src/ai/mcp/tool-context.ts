@@ -1,7 +1,7 @@
 import {
 	getAccessibleWebsites,
 	type WebsiteSummary,
-} from "@/lib/accessible-websites";
+} from "../../lib/accessible-websites";
 import {
 	type ApiKeyRow,
 	getAccessibleWebsiteIds,
@@ -9,11 +9,11 @@ import {
 	hasKeyScope,
 	hasWebsiteScope,
 } from "@databuddy/api-keys/resolve";
-import { getCachedWebsite, validateWebsite } from "@/lib/website-utils";
 import { websitesApi } from "@databuddy/auth";
 import { db } from "@databuddy/db";
 import { getRedisCache } from "@databuddy/redis";
 import type { AppContext } from "../config/context";
+import { getCachedWebsite, validateWebsite } from "../../lib/website-utils";
 
 const PROTOCOL_RE = /^https?:\/\//;
 const ACCESSIBLE_WEBSITES_TTL_SEC = 30;

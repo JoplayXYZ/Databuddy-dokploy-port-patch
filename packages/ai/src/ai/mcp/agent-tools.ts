@@ -5,7 +5,7 @@ import {
 	requiresTenantFilter,
 	validateAgentSQL,
 } from "@databuddy/db/clickhouse";
-import { tool } from "ai";
+import { tool, type ToolSet } from "ai";
 import { z } from "zod";
 import { getAccessibleWebsites } from "../../lib/accessible-websites";
 import { getWebsiteDomain } from "../../lib/website-utils";
@@ -18,7 +18,11 @@ import { createLinksTools } from "../tools/links";
 import { createMemoryTools } from "../tools/memory";
 import { createProfileTools } from "../tools/profiles";
 import { executeTimedQuery } from "../tools/utils";
-import { buildBatchQueryRequests, MCP_DATE_PRESETS } from "./mcp-utils";
+import {
+	buildBatchQueryRequests,
+	MCP_DATE_PRESETS,
+	type McpQueryItem,
+} from "./mcp-utils";
 import { ensureWebsiteAccess } from "./tool-context";
 
 export interface McpAgentContext {
@@ -36,7 +40,7 @@ function getContext(ctx: unknown): McpAgentContext {
 	return ctx as McpAgentContext;
 }
 
-export function createMcpAgentTools() {
+export function createMcpAgentTools(): ToolSet {
 	return {
 		list_websites: tool({
 			description:
@@ -111,7 +115,7 @@ export function createMcpAgentTools() {
 					from: args.from,
 					to: args.to,
 					timeUnit: args.timeUnit,
-					filters: args.filters as QueryRequest["filters"],
+					filters: args.filters as unknown as QueryRequest["filters"],
 					groupBy: args.groupBy,
 					orderBy: args.orderBy,
 					limit: args.limit,
@@ -230,7 +234,7 @@ export function createMcpAgentTools() {
 					throw new Error(access.message);
 				}
 				const buildResult = buildBatchQueryRequests(
-					args.queries,
+					args.queries as unknown as McpQueryItem[],
 					args.websiteId,
 					args.timezone ?? "UTC"
 				);

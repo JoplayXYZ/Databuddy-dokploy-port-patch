@@ -1,5 +1,5 @@
 import dayjs from "dayjs";
-import { useLogger } from "evlog/elysia";
+import { useLogger as getRequestLogger } from "evlog/elysia";
 import { executeQuery } from "../../query";
 import type { WebPeriodData, WeekOverWeekPeriod } from "./types";
 
@@ -50,7 +50,7 @@ export async function fetchWebPeriodData(
 			const value = await runQueryWithTimeout(label, run);
 			return Array.isArray(value) ? value : [];
 		} catch (error) {
-			useLogger().warn("Insights period query failed or timed out", {
+			getRequestLogger().warn("Insights period query failed or timed out", {
 				insights: { websiteId, label, error },
 			});
 			return [];
