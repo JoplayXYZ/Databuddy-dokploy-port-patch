@@ -26,6 +26,7 @@ Keep additions **minimal**: one bullet, a new `rg` hint, or a routing note—eno
 - Slack agent billing flows through an org-scoped automation API key; existing keys may have `userId: null`, so the agent billing resolver must fall back to the organization owner when an API key has `organizationId`.
 - Slack agent write tools need the integration automation API key to include the matching Databuddy API scopes (currently `read:data`, `read:links`, `write:links`, `manage:websites`, `manage:flags`); older installs may need reconnecting so a new key is minted.
 - Shared agent integrations should call `@databuddy/ai/agent` (`askDatabuddyAgent` / `streamDatabuddyAgent`) instead of importing internal MCP run/history helpers directly.
+- AI link tools must assign link folders by existing folder `id` or `slug` only; folder names are display text and must not be used for routing or dedupe.
 - `apps/basket`: ingest and LLM tracking service, Elysia app on port `4000`
 - `apps/docs`: Next.js + Fumadocs docs app on port `3005`
 - `apps/links`: redirect/link service

@@ -12,6 +12,18 @@ import { executeBatch } from "../../query";
 import { isAiGatewayConfigured } from "../config/models";
 import { callRPCProcedure } from "../tools/utils";
 import {
+	LinkFolderSelectorSchema,
+	LinkFolderWithUsageSchema,
+	LinkRowOutputSchema,
+	listLinkFolders,
+	listLinks,
+	parseLinkRow,
+	resolveLinkFolder,
+	summarizeLink,
+	summarizeLinkFolder,
+	summarizeLinkFoldersWithUsage,
+} from "../tools/link-catalog";
+import {
 	appendToConversation,
 	getConversationHistory,
 } from "./conversation-store";
@@ -88,28 +100,6 @@ const WebsiteSummarySchema = z.object({
 	name: z.string().nullable(),
 	domain: z.string().nullable(),
 	isPublic: z.boolean().nullable(),
-});
-
-const DateStringSchema = z
-	.union([z.string(), z.date()])
-	.transform((value) => (value instanceof Date ? value.toISOString() : value));
-
-const LinkRowOutputSchema = z.object({
-	id: z.string(),
-	name: z.string(),
-	slug: z.string(),
-	targetUrl: z.string(),
-	externalId: z.string().nullable(),
-	expiresAt: DateStringSchema.nullable().optional(),
-	createdAt: DateStringSchema.optional(),
-	ogTitle: z.string().nullable().optional(),
-	ogDescription: z.string().nullable().optional(),
-});
-
-const LinkRowSchema = LinkRowOutputSchema.extend({
-	externalId: z.string().nullable().optional(),
-	ogDescription: z.string().nullable().optional(),
-	ogTitle: z.string().nullable().optional(),
 });
 
 const WorkflowFilterSchema = z.object({
@@ -204,11 +194,6 @@ function createChartContext(input: {
 
 function parseFlagRules(value: unknown): z.infer<typeof FlagRuleSchema>[] {
 	const result = z.array(FlagRuleSchema).safeParse(value);
-	return result.success ? result.data : [];
-}
-
-function parseLinkRows(value: unknown): z.infer<typeof LinkRowSchema>[] {
-	const result = z.array(LinkRowSchema).safeParse(value);
 	return result.success ? result.data : [];
 }
 
@@ -1028,17 +1013,60 @@ const createGoalTool = defineMcpTool(
 	}
 );
 
+const listLinkFoldersTool = defineMcpTool(
+	{
+		name: "list_link_folders",
+		description:
+			"List existing short-link folders for the website organization, including link counts. Use this before assigning a link to a folder.",
+		inputSchema: z.object({
+			websiteId: z.string().describe("Website ID from list_websites"),
+		}),
+		outputSchema: z.object({
+			folders: z.array(LinkFolderWithUsageSchema),
+			count: z.number(),
+			unfiledCount: z.number(),
+			hint: z.string(),
+		}),
+		resolveWebsite: true,
+		ratelimit: { limit: 60, windowSec: 60 },
+	},
+	async (input, ctx) => {
+		const orgId = await getOrganizationId(input.websiteId);
+		if (orgId instanceof Error) {
+			throw new McpToolError("not_found", orgId.message);
+		}
+
+		const rpcContext = buildRpcContext(ctx);
+		const [folders, links] = await Promise.all([
+			listLinkFolders(rpcContext, orgId),
+			listLinks(rpcContext, orgId),
+		]);
+
+		return {
+			folders: summarizeLinkFoldersWithUsage(folders, links),
+			count: folders.length,
+			unfiledCount: links.filter((link) => !link.folderId).length,
+			hint:
+				folders.length === 0
+					? "No link folders exist yet. Leave links unfiled unless the user creates a folder in Databuddy."
+					: "Use folderId or folderSlug from this list. Do not invent new folders from the agent.",
+		};
+	}
+);
+
 const listLinksTool = defineMcpTool(
 	{
 		name: "list_links",
 		description:
-			"List short links for the website's organization. Use to enumerate all links before referencing one.",
+			"List short links and existing folders for the website's organization. Use to enumerate all links before referencing one or choosing where a new link should go.",
 		inputSchema: z.object({
 			websiteId: z.string().describe("Website ID from list_websites"),
 		}),
 		outputSchema: z.object({
 			links: z.array(LinkRowOutputSchema),
 			count: z.number(),
+			folders: z.array(LinkFolderWithUsageSchema),
+			unfiledCount: z.number(),
 			hint: z.string().optional(),
 		}),
 		resolveWebsite: true,
@@ -1049,33 +1077,25 @@ const listLinksTool = defineMcpTool(
 		if (orgId instanceof Error) {
 			throw new McpToolError("not_found", orgId.message);
 		}
-		const result = await callRPCProcedure(
-			"links",
-			"list",
-			{ organizationId: orgId },
-			buildRpcContext(ctx)
-		);
-		const links = parseLinkRows(result);
+		const rpcContext = buildRpcContext(ctx);
+		const [links, folders] = await Promise.all([
+			listLinks(rpcContext, orgId),
+			listLinkFolders(rpcContext, orgId),
+		]);
 		if (links.length === 0) {
 			return {
 				links,
 				count: 0,
+				folders: summarizeLinkFoldersWithUsage(folders, links),
+				unfiledCount: 0,
 				hint: "No links yet for this organization.",
 			};
 		}
 		return {
-			links: links.map((link) => ({
-				id: link.id,
-				name: link.name,
-				slug: link.slug,
-				targetUrl: link.targetUrl,
-				externalId: link.externalId,
-				expiresAt: link.expiresAt,
-				createdAt: link.createdAt,
-				ogTitle: link.ogTitle,
-				ogDescription: link.ogDescription,
-			})),
+			links: links.map((link) => summarizeLink(link, folders)),
 			count: links.length,
+			folders: summarizeLinkFoldersWithUsage(folders, links),
+			unfiledCount: links.filter((link) => !link.folderId).length,
 		};
 	}
 );
@@ -1099,6 +1119,8 @@ const searchLinksTool = defineMcpTool(
 					name: z.string(),
 					slug: z.string(),
 					targetUrl: z.string(),
+					folderId: z.string().nullable(),
+					folder: LinkRowOutputSchema.shape.folder,
 					externalId: z.string().nullable(),
 				})
 			),
@@ -1112,14 +1134,11 @@ const searchLinksTool = defineMcpTool(
 		if (orgId instanceof Error) {
 			throw new McpToolError("not_found", orgId.message);
 		}
-		const allLinks = parseLinkRows(
-			await callRPCProcedure(
-				"links",
-				"list",
-				{ organizationId: orgId },
-				buildRpcContext(ctx)
-			)
-		);
+		const rpcContext = buildRpcContext(ctx);
+		const [allLinks, folders] = await Promise.all([
+			listLinks(rpcContext, orgId),
+			listLinkFolders(rpcContext, orgId),
+		]);
 		const queryLower = input.query.toLowerCase();
 		const matches = allLinks.filter(
 			(link) =>
@@ -1134,6 +1153,8 @@ const searchLinksTool = defineMcpTool(
 				name: link.name,
 				slug: link.slug,
 				targetUrl: link.targetUrl,
+				folderId: link.folderId ?? null,
+				folder: summarizeLink(link, folders).folder,
 				externalId: link.externalId,
 			})),
 			count: matches.length,
@@ -1167,6 +1188,7 @@ const createLinkTool = defineMcpTool(
 			ogDescription: z.string().max(500).optional(),
 			ogImageUrl: z.string().url().optional(),
 			externalId: z.string().max(255).optional(),
+			...LinkFolderSelectorSchema.shape,
 			deepLinkApp: z.string().optional(),
 			confirmed: ConfirmedSchema,
 		}),
@@ -1177,6 +1199,20 @@ const createLinkTool = defineMcpTool(
 	},
 	async (input, ctx) => {
 		validateDate(input.expiresAt, "expiresAt");
+		const orgId = await getOrganizationId(getResolvedWebsiteId(ctx));
+		if (orgId instanceof Error) {
+			throw new McpToolError("not_found", orgId.message);
+		}
+
+		const rpcContext = buildRpcContext(ctx);
+		const folderSelection = await resolveLinkFolder(rpcContext, orgId, {
+			folderId: input.folderId,
+			folderSlug: input.folderSlug,
+		});
+		if (!folderSelection.ok) {
+			throw new McpToolError("invalid_input", folderSelection.message);
+		}
+
 		if (!input.confirmed) {
 			return {
 				preview: true,
@@ -1190,37 +1226,39 @@ const createLinkTool = defineMcpTool(
 					ogTitle: input.ogTitle ?? null,
 					ogDescription: input.ogDescription ?? null,
 					externalId: input.externalId ?? null,
+					folder: folderSelection.folder
+						? summarizeLinkFolder(folderSelection.folder)
+						: "Unfiled",
 				},
+				availableFolders: folderSelection.folders.map(summarizeLinkFolder),
 			};
 		}
 
-		const orgId = await getOrganizationId(getResolvedWebsiteId(ctx));
-		if (orgId instanceof Error) {
-			throw new McpToolError("not_found", orgId.message);
-		}
-
-		const result = await callRPCProcedure(
-			"links",
-			"create",
-			{
-				organizationId: orgId,
-				name: input.name,
-				targetUrl: input.targetUrl,
-				slug: input.slug,
-				expiresAt: input.expiresAt ? new Date(input.expiresAt) : null,
-				expiredRedirectUrl: input.expiredRedirectUrl ?? null,
-				ogTitle: input.ogTitle ?? null,
-				ogDescription: input.ogDescription ?? null,
-				ogImageUrl: input.ogImageUrl ?? null,
-				externalId: input.externalId ?? null,
-				deepLinkApp: input.deepLinkApp ?? null,
-			},
-			buildRpcContext(ctx)
+		const result = parseLinkRow(
+			await callRPCProcedure(
+				"links",
+				"create",
+				{
+					organizationId: orgId,
+					name: input.name,
+					targetUrl: input.targetUrl,
+					slug: input.slug,
+					folderId: folderSelection.folderId ?? null,
+					expiresAt: input.expiresAt ? new Date(input.expiresAt) : null,
+					expiredRedirectUrl: input.expiredRedirectUrl ?? null,
+					ogTitle: input.ogTitle ?? null,
+					ogDescription: input.ogDescription ?? null,
+					ogImageUrl: input.ogImageUrl ?? null,
+					externalId: input.externalId ?? null,
+					deepLinkApp: input.deepLinkApp ?? null,
+				},
+				rpcContext
+			)
 		);
 		return {
 			success: true,
 			message: `Link "${input.name}" created successfully.`,
-			link: result,
+			link: summarizeLink(result, folderSelection.folders),
 		};
 	}
 );
@@ -1751,6 +1789,7 @@ const TOOL_REGISTRY = createToolRegistry([
 	listGoalsTool,
 	getGoalAnalyticsTool,
 	createGoalTool,
+	listLinkFoldersTool,
 	listLinksTool,
 	searchLinksTool,
 	createLinkTool,
