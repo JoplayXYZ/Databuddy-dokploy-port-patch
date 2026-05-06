@@ -25,6 +25,90 @@ function makeConfig(overrides: Partial<SimpleQueryConfig> = {}): SimpleQueryConf
 	};
 }
 
+const FILTER_OPERATORS = [
+	"eq",
+	"ne",
+	"contains",
+	"not_contains",
+	"starts_with",
+	"in",
+	"not_in",
+] as const satisfies readonly Filter["op"][];
+
+const TIME_UNITS: NonNullable<QueryRequest["timeUnit"]>[] = [
+	"minute",
+	"hour",
+	"day",
+	"week",
+	"month",
+	"hourly",
+	"daily",
+];
+
+const GLOBAL_FILTER_FIELDS = [
+	"path",
+	"query_string",
+	"country",
+	"region",
+	"city",
+	"timezone",
+	"language",
+	"device_type",
+	"browser_name",
+	"os_name",
+	"referrer",
+	"utm_source",
+	"utm_medium",
+	"utm_campaign",
+] as const;
+
+const QUERY_BUILDER_ENTRIES = Object.entries(QueryBuilders);
+const FILTERABLE_BUILDER_CASES = QUERY_BUILDER_ENTRIES.flatMap(
+	([type, config]) =>
+		(config.allowedFilters ?? []).flatMap((field) =>
+			FILTER_OPERATORS.filter((op) => isSensibleFilterOperator(field, op)).map(
+				(op) => ({ config, field, op, type })
+			)
+		)
+);
+
+function filterValueForOperator(op: Filter["op"]): Filter["value"] {
+	return op === "in" || op === "not_in"
+		? ["dynamic-value-a", "dynamic-value-b"]
+		: "dynamic-value";
+}
+
+function makeRequiredFilters(config: SimpleQueryConfig): Filter[] {
+	return (config.requiredFilters ?? []).map((field) => ({
+		field,
+		op: "eq",
+		value: `${field}-required-value`,
+	}));
+}
+
+function isSensibleFilterOperator(field: string, op: Filter["op"]): boolean {
+	// These builders fetch a single entity from a scalar id read directly by customSql.
+	if ((field === "anonymous_id" || field === "session_id") && op !== "eq") {
+		return false;
+	}
+	return true;
+}
+
+function compileBuilder(
+	type: string,
+	config: SimpleQueryConfig,
+	overrides: Partial<QueryRequest> = {}
+) {
+	return new SimpleQueryBuilder(
+		config,
+		makeRequest({
+			filters: makeRequiredFilters(config),
+			type,
+			...overrides,
+		})
+	).compile();
+}
+
 function compile(
 	config: Partial<SimpleQueryConfig> = {},
 	request: Partial<QueryRequest> = {},
@@ -38,6 +122,77 @@ function compile(
 }
 
 describe("SimpleQueryBuilder.compile", () => {
+	it.each(QUERY_BUILDER_ENTRIES)(
+		"compiles %s with its required filters",
+		(type, config) => {
+			const { params, sql } = compileBuilder(type, config);
+
+			expect(sql).toContain("SELECT");
+			expect(Object.values(params)).toContain("test-site-id");
+			for (const filter of makeRequiredFilters(config)) {
+				expect(Object.values(params)).toContain(filter.value);
+			}
+		}
+	);
+
+	it.each(QUERY_BUILDER_ENTRIES)(
+		"compiles %s for organization-scoped website ids",
+		(type, config) => {
+			const { params, sql } = compileBuilder(type, config, {
+				organizationWebsiteIds: ["site-a", "site-b"],
+				projectId: "org-id",
+			});
+
+			expect(sql).toContain("SELECT");
+			expect(params.websiteIds).toEqual(["site-a", "site-b"]);
+		}
+	);
+
+	it.each(
+		QUERY_BUILDER_ENTRIES.flatMap(([type, config]) =>
+			TIME_UNITS.map((timeUnit) => ({ config, timeUnit, type }))
+		)
+	)("compiles $type with $timeUnit granularity", ({ config, timeUnit, type }) => {
+		const { sql } = compileBuilder(type, config, { timeUnit });
+		expect(sql).toContain("SELECT");
+	});
+
+	it.each(
+		GLOBAL_FILTER_FIELDS.flatMap((field) =>
+			FILTER_OPERATORS.map((op) => ({ field, op }))
+		)
+	)("allows global filter $field with $op", ({ field, op }) => {
+		const filters: Filter[] = [
+			{ field, op, value: filterValueForOperator(op) },
+		];
+
+		expect(() => compile({}, { filters })).not.toThrow();
+	});
+
+	it.each(FILTERABLE_BUILDER_CASES)(
+		"allows $type filter $field with $op",
+		({ config, field, op, type }) => {
+			const filters: Filter[] = [
+				...makeRequiredFilters(config),
+				{ field, op, value: filterValueForOperator(op) },
+			];
+
+			const { sql } = compileBuilder(type, config, { filters });
+			expect(sql).toContain("SELECT");
+		}
+	);
+
+	it.each(
+		QUERY_BUILDER_ENTRIES.filter(([, config]) => config.requiredFilters?.length)
+	)(
+		"rejects %s when any required filter is missing",
+		(type, config) => {
+			expect(() =>
+				new SimpleQueryBuilder(config, makeRequest({ type })).compile()
+			).toThrow("Missing required filter");
+		}
+	);
+
 	it("produces a valid SELECT with tenant filter and date range", () => {
 		const { sql, params } = compile();
 		expect(sql).toContain("client_id = {websiteId:String}");
