@@ -1,6 +1,8 @@
 # Dashboard E2E plumbing
 
-This folder contains the local DB/session plumbing used by future dashboard E2E tests.
+This folder contains the local DB/session plumbing used by dashboard E2E tests.
+
+Read [`STANDARDS.md`](./STANDARDS.md) before adding or changing E2E tests.
 
 ## Isolated database
 
