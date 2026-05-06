@@ -7,7 +7,8 @@
     "build": "bun run --bun next build",
     "start": "next start -p 3000",
     "check-types": "tsc --noEmit",
-    "test:e2e:local": "./test/e2e/run-local.sh"
+    "test:e2e:local": "./test/e2e/run-local.sh bun run --cwd apps/dashboard test:e2e",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@ai-sdk/react": "^3.0.118",
@@ -115,7 +116,8 @@
     "lint-staged": "^16.4.0",
     "tailwindcss": "^4.2.2",
     "typescript": "^5.9.3",
-    "ultracite": "catalog:"
+    "ultracite": "catalog:",
+    "@playwright/test": "^1.58.2"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx,json,jsonc,css,scss}": [

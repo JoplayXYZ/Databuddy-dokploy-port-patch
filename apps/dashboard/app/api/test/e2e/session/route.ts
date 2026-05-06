@@ -192,6 +192,7 @@ export async function POST(request: Request): Promise<Response> {
 	return new Response(
 		JSON.stringify({
 			email: identity.email,
+			name: identity.name,
 			organizationId,
 			userId,
 			websiteId,
