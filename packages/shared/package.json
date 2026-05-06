@@ -38,7 +38,8 @@
     "./constants/deep-link-apps": "./src/constants/deep-link-apps.ts"
   },
   "scripts": {
-    "check-types": "tsc --noEmit"
+    "check-types": "tsc --noEmit",
+    "test": "bun test src"
   },
   "dependencies": {
     "@databuddy/redis": "workspace:*",

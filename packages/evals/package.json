@@ -6,7 +6,8 @@
   "main": "./src/cli.ts",
   "scripts": {
     "eval": "bun run src/cli.ts",
-    "eval:ui": "bun run ui/serve.ts"
+    "eval:ui": "bun run ui/serve.ts",
+    "test": "bun test src"
   },
   "dependencies": {
     "@databuddy/ai": "workspace:*",
