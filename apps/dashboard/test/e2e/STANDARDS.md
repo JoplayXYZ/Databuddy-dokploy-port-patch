@@ -156,8 +156,33 @@ Avoid implementation-oriented names:
 test("mutation works", async ({ page }) => {});
 ```
 
+## Suite layout and tags
+
+Keep specs grouped by intent:
+
+```txt
+specs/smoke/        # fast shell/session/account checks
+specs/regressions/  # focused coverage for bugs that should never return
+specs/core/         # broader product journeys as they are added
+```
+
+Use tags consistently:
+
+- `@smoke` for the smallest always-useful suite.
+- `@regression` for recent or historically brittle behavior.
+- `@core` for important product flows that are broader than smoke.
+
+Run tagged suites locally with:
+
+```bash
+bun run --cwd apps/dashboard test:e2e:local:smoke
+bun run --cwd apps/dashboard test:e2e:local:regression
+bun run --cwd apps/dashboard test:e2e:local:core
+bun run --cwd apps/dashboard test:e2e:local:pr
+```
+
 ## CI expectations
 
-Pull requests should run a small, reliable dashboard E2E suite. Broader suites can run on `staging`, `main`, or nightly schedules.
+Pull requests run the PR suite (`@smoke` and `@regression`). Pushes to `staging` and `main` run the full dashboard E2E suite. Broader suites can also run on nightly schedules as coverage grows.
 
 CI should upload Playwright traces, screenshots, and videos on failure.
