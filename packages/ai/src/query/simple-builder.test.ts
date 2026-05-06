@@ -277,6 +277,39 @@ describe("SimpleQueryBuilder.compile", () => {
 		expect(params.visitorId).toBe("visitor-1");
 	});
 
+	it("requires anonymous_id for profile detail queries", () => {
+		const config = QueryBuilders.profile_detail;
+		if (!config) {
+			throw new Error("profile_detail builder is missing");
+		}
+
+		expect(() =>
+			new SimpleQueryBuilder(
+				config,
+				makeRequest({ type: "profile_detail" })
+			).compile()
+		).toThrow("Missing required filter: 'anonymous_id'.");
+	});
+
+	it("allows anonymous_id for the profile_sessions builder", () => {
+		const config = QueryBuilders.profile_sessions;
+		if (!config) {
+			throw new Error("profile_sessions builder is missing");
+		}
+
+		const builder = new SimpleQueryBuilder(
+			config,
+			makeRequest({
+				filters: [{ field: "anonymous_id", op: "eq", value: "visitor-1" }],
+				type: "profile_sessions",
+			})
+		);
+
+		const { params, sql } = builder.compile();
+		expect(sql).toContain("anonymous_id = {visitorId:String}");
+		expect(params.visitorId).toBe("visitor-1");
+	});
+
 	it("requires session_id for the session_events builder", () => {
 		const config = QueryBuilders.session_events;
 		if (!config) {
