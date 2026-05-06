@@ -11,7 +11,9 @@ import { createError, EvlogError, log } from "evlog";
 import { useLogger } from "evlog/elysia";
 
 if (!process.env.IP_HASH_SALT && process.env.NODE_ENV === "production") {
-	log.warn("IP_HASH_SALT is not set — IP hashes will use an insecure default");
+	log.warn({
+		message: "IP_HASH_SALT is not set — IP hashes will use an insecure default",
+	});
 }
 
 interface GeoIPReader extends Reader {

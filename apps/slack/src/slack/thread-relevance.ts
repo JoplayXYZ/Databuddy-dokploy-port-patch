@@ -3,7 +3,7 @@ import {
 	type SlackThreadReplyMessage,
 	type SlackThreadReplyRelevance,
 } from "@databuddy/ai/agent";
-import type { SlackAgentRun } from "../agent/agent-client";
+import type { SlackAgentRun } from "@/agent/agent-client";
 
 const MODEL_TIMEOUT_MS = 900;
 const MENTION_REGEX = /<@([a-z0-9]+)>/gi;

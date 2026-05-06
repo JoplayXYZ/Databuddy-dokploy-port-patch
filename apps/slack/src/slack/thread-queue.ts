@@ -1,8 +1,5 @@
 import { getRedisCache } from "@databuddy/redis";
-import type {
-	SlackAgentRun,
-	SlackFollowUpMessage,
-} from "../agent/agent-client";
+import type { SlackAgentRun, SlackFollowUpMessage } from "@/agent/agent-client";
 
 const THREAD_LOCK_TTL_SECONDS = 5 * 60;
 const FOLLOW_UP_QUEUE_TTL_SECONDS = THREAD_LOCK_TTL_SECONDS;

@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "bun --watch run src/index.ts",
     "build": "bun build src/index.ts --compile --target bun --outfile dist/server --minify-syntax --minify-whitespace",
-    "start": "./dist/server"
+    "start": "./dist/server",
+    "check-types": "tsc --noEmit"
   },
   "dependencies": {
     "@databuddy/db": "workspace:*",

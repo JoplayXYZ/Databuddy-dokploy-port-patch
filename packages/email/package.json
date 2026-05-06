@@ -10,7 +10,8 @@
   },
   "scripts": {
     "dev": "email dev --dir src/emails --port 3001",
-    "preview": "email dev --dir src/emails --port 3001"
+    "preview": "email dev --dir src/emails --port 3001",
+    "check-types": "tsc --noEmit"
   },
   "main": "./src/emails/index.ts",
   "dependencies": {

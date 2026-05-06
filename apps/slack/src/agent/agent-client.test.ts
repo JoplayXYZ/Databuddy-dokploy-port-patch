@@ -1,22 +1,14 @@
-import { describe, expect, it, mock } from "bun:test";
-import type { SlackAgentRun, SlackRunContext } from "./agent-client";
+import { describe, expect, it } from "bun:test";
+import type { SlackAgentRun, SlackRunContext } from "@/agent/agent-client";
 
 let capturedSharedAgentOptions: Record<string, unknown> | null = null;
 
-mock.module("@databuddy/ai/agent", () => ({
-	classifySlackThreadReplyRelevance: async () => null,
-	streamDatabuddyAgent: async function* (options: Record<string, unknown>) {
-		capturedSharedAgentOptions = options;
-		yield "Done";
-	},
-}));
-
-const {
+import {
 	createSlackConversationId,
 	createSlackMemoryUserId,
 	DatabuddyAgentClient,
 	formatSlackAgentInput,
-} = await import("./agent-client");
+} from "./agent-client";
 
 function expectCapturedSharedAgentOptions(): Record<string, unknown> {
 	if (!capturedSharedAgentOptions) {
@@ -56,13 +48,29 @@ describe("Databuddy Slack agent client", () => {
 
 	it("passes Slack user-scoped memory identity to the shared agent", async () => {
 		capturedSharedAgentOptions = null;
-		const client = new DatabuddyAgentClient({
-			resolve: async () => ({
-				agentApiKeySecret: "dbdy_secret",
-				organizationId: "org_123",
-				teamId: "T123",
-			}),
-		});
+		const client = new DatabuddyAgentClient(
+			{
+				resolve: async () => ({
+					agentApiKeySecret: "dbdy_secret",
+					organizationId: "org_123",
+					teamId: "T123",
+				}),
+			},
+			{
+				async *stream(_run, _context, options) {
+					capturedSharedAgentOptions = {
+						...options,
+						actor: {
+							type: "api_key_secret",
+							userId: null,
+						},
+						input: formatSlackAgentInput(_run),
+						memoryUserId: createSlackMemoryUserId(_run),
+					};
+					yield "Done";
+				},
+			}
+		);
 
 		const chunks: string[] = [];
 		for await (const chunk of client.stream({

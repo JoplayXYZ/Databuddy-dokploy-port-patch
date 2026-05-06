@@ -1,9 +1,9 @@
 import { describe, expect, it } from "bun:test";
 import { DatabuddyAgentUserError } from "@databuddy/ai/agent/errors";
-import type { DatabuddyAgentClient } from "../agent/agent-client";
-import { SLACK_COPY } from "./messages";
-import { streamAgentToSlack } from "./respond";
-import type { SlackAgentClient } from "./types";
+import type { DatabuddyAgentClient } from "@/agent/agent-client";
+import { SLACK_COPY } from "@/slack/messages";
+import { streamAgentToSlack } from "@/slack/respond";
+import type { SlackAgentClient } from "@/slack/types";
 
 function createStreamClient(startTs = "stream_ts") {
 	const calls: Array<{ method: string; options: unknown }> = [];

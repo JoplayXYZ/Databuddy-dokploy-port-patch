@@ -7,10 +7,10 @@ import type {
 	SlackAgentRun,
 	SlackRunContext,
 	SlackRunContextResolver,
-} from "../agent/agent-client";
-import type { TokenCryptoConfig } from "../config";
-import { createSlackEventLog, setSlackLog, toError } from "../lib/evlog-slack";
-import { SLACK_COPY } from "./messages";
+} from "@/agent/agent-client";
+import type { TokenCryptoConfig } from "@/config";
+import { createSlackEventLog, setSlackLog, toError } from "@/lib/evlog-slack";
+import { SLACK_COPY } from "@/slack/messages";
 
 export interface SlackChannelBindingCommand {
 	channelId: string;
@@ -184,6 +184,7 @@ export class SlackInstallationStore implements SlackRunContextResolver {
 
 	private toRunContext(installation: ActiveSlackIntegration): SlackRunContext {
 		return {
+			agentApiKeyId: installation.agentApiKeyId,
 			agentApiKeySecret: decrypt(
 				installation.agentApiKeyCiphertext,
 				this.#crypto.encryptionKey
@@ -233,6 +234,7 @@ function findActiveIntegration(teamId: string) {
 		.select({
 			id: slackIntegrations.id,
 			agentApiKeyCiphertext: slackIntegrations.agentApiKeyCiphertext,
+			agentApiKeyId: slackIntegrations.agentApiKeyId,
 			botId: slackIntegrations.botId,
 			botTokenCiphertext: slackIntegrations.botTokenCiphertext,
 			botUserId: slackIntegrations.botUserId,

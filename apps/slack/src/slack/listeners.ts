@@ -1,13 +1,10 @@
 import { Assistant, type App } from "@slack/bolt";
-import type {
-	DatabuddyAgentClient,
-	SlackAgentRun,
-} from "../agent/agent-client";
-import { createSlackEventLog } from "../lib/evlog-slack";
-import { abortSlackActiveRun } from "./active-runs";
-import { getSlackChannelMentionPolicy } from "./channel-policy";
-import { logSlackReactionFeedback } from "./feedback";
-import type { SlackInstallationServices } from "./installations";
+import type { DatabuddyAgentClient, SlackAgentRun } from "@/agent/agent-client";
+import { createSlackEventLog } from "@/lib/evlog-slack";
+import { abortSlackActiveRun } from "@/slack/active-runs";
+import { getSlackChannelMentionPolicy } from "@/slack/channel-policy";
+import { logSlackReactionFeedback } from "@/slack/feedback";
+import type { SlackInstallationServices } from "@/slack/installations";
 import {
 	createRecentDedupe,
 	isPlainChannelThreadFollowUp,
@@ -16,17 +13,23 @@ import {
 	toDeletedSlackMessage,
 	toSlackMessage,
 	toThreadTitle,
-} from "./message-routing";
-import { SLACK_COPY, SLACK_SUGGESTED_PROMPTS } from "./messages";
-import { handleAgentRun } from "./run-handler";
-import { createSlackConversationContext } from "./slack-context";
-import { respondToBindCommand, respondToStatusCommand } from "./slash-commands";
-import { slackThreadQueue, type SlackThreadQueueStore } from "./thread-queue";
+} from "@/slack/message-routing";
+import { SLACK_COPY, SLACK_SUGGESTED_PROMPTS } from "@/slack/messages";
+import { handleAgentRun } from "@/slack/run-handler";
+import { createSlackConversationContext } from "@/slack/slack-context";
+import {
+	respondToBindCommand,
+	respondToStatusCommand,
+} from "@/slack/slash-commands";
+import {
+	slackThreadQueue,
+	type SlackThreadQueueStore,
+} from "@/slack/thread-queue";
 import {
 	slackThreadReplyGate,
 	type SlackThreadReplyDecision,
 	type SlackThreadReplyGate,
-} from "./thread-relevance";
+} from "@/slack/thread-relevance";
 
 export function registerSlackListeners(
 	app: App,

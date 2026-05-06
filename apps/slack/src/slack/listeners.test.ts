@@ -1,14 +1,14 @@
 import { describe, expect, it } from "bun:test";
 import type { App } from "@slack/bolt";
-import type { DatabuddyAgentClient, SlackAgentRun } from "../agent/agent-client";
-import type { SlackInstallationServices } from "./installations";
-import { registerSlackListeners } from "./listeners";
-import { SLACK_COPY } from "./messages";
-import type { SlackThreadReplyGate } from "./thread-relevance";
+import type { DatabuddyAgentClient, SlackAgentRun } from "@/agent/agent-client";
+import type { SlackInstallationServices } from "@/slack/installations";
+import { registerSlackListeners } from "@/slack/listeners";
+import { SLACK_COPY } from "@/slack/messages";
+import type { SlackThreadReplyGate } from "@/slack/thread-relevance";
 import type {
 	SlackFollowUpQueueResult,
 	SlackThreadQueueStore,
-} from "./thread-queue";
+} from "@/slack/thread-queue";
 
 type Handler = (input: Record<string, unknown>) => Promise<void>;
 

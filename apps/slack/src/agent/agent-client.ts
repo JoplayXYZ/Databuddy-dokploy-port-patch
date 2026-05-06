@@ -1,8 +1,6 @@
-import {
-	streamDatabuddyAgent,
-	type DatabuddyAgentSlackContext,
-} from "@databuddy/ai/agent";
-import { SLACK_COPY } from "../slack/messages";
+import type { DatabuddyAgentSlackContext } from "@databuddy/ai/agent";
+import { setActiveSlackLog } from "@/lib/evlog-slack";
+import { SLACK_COPY } from "@/slack/messages";
 
 const DEFAULT_TIMEZONE = "UTC";
 
@@ -31,6 +29,7 @@ export interface SlackAgentRun {
 }
 
 export interface SlackRunContext {
+	agentApiKeyId?: string;
 	agentApiKeySecret: string;
 	organizationId: string;
 	teamId: string;
@@ -92,6 +91,14 @@ class SharedDatabuddyAgentRunner implements SlackAgentRunner {
 		options?: SlackAgentStreamOptions
 	): AsyncGenerator<string> {
 		const conversationId = createSlackConversationId(run);
+		setActiveSlackLog({
+			agent_chat_id: conversationId,
+			agent_source: "slack",
+			organization_id: context.organizationId,
+			slack_agent_api_key_id: context.agentApiKeyId,
+		});
+		const { streamDatabuddyAgent } = await import("@databuddy/ai/agent");
+
 		yield* streamDatabuddyAgent({
 			abortSignal: options?.abortSignal,
 			actor: {

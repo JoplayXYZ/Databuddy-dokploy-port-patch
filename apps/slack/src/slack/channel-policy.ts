@@ -1,5 +1,5 @@
-import { getSlackApiErrorCode } from "../lib/evlog-slack";
-import type { SlackAgentClient } from "./types";
+import { getSlackApiErrorCode } from "@/lib/evlog-slack";
+import type { SlackAgentClient } from "@/slack/types";
 
 export type SlackChannelPolicyReason =
 	| "internal"

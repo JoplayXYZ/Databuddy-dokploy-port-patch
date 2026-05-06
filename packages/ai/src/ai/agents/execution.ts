@@ -29,26 +29,109 @@ export async function resolveAgentBillingCustomerId(principal: {
 	organizationId?: string | null;
 	userId?: string | null;
 }): Promise<string | null> {
-	const organizationId =
-		principal.organizationId ?? principal.apiKey?.organizationId ?? null;
+	const apiKeyOrganizationId = principal.apiKey?.organizationId ?? null;
+	const organizationId = principal.organizationId ?? apiKeyOrganizationId;
+	if (apiKeyOrganizationId) {
+		const customerId = await getOrganizationOwnerId(apiKeyOrganizationId);
+		mergeAgentBillingFields({
+			apiKeyId: principal.apiKey?.id,
+			apiKeyUserId: principal.apiKey?.userId,
+			billingCustomerId: customerId,
+			organizationId: apiKeyOrganizationId,
+			resolution: customerId
+				? "api_key_org_owner"
+				: "api_key_org_owner_missing",
+		});
+		return customerId;
+	}
+
 	const ownerUserId = principal.userId ?? principal.apiKey?.userId ?? null;
 	if (!ownerUserId) {
-		return organizationId ? await getOrganizationOwnerId(organizationId) : null;
+		const customerId = organizationId
+			? await getOrganizationOwnerId(organizationId)
+			: null;
+		mergeAgentBillingFields({
+			billingCustomerId: customerId,
+			organizationId,
+			resolution: customerId ? "org_owner" : "missing_principal",
+		});
+		return customerId;
 	}
-	return await getBillingCustomerId(ownerUserId, organizationId);
+	const customerId = await getBillingCustomerId(ownerUserId, organizationId);
+	mergeAgentBillingFields({
+		apiKeyId: principal.apiKey?.id,
+		apiKeyUserId: principal.apiKey?.userId,
+		billingCustomerId: customerId,
+		organizationId,
+		resolution: organizationId ? "session_org_owner" : "user",
+	});
+	return customerId;
 }
 
 export async function ensureAgentCreditsAvailable(
 	billingCustomerId: string | null
 ): Promise<boolean> {
 	if (!billingCustomerId) {
+		mergeWideEvent({
+			agent_credits_allowed: true,
+			agent_credits_check_skipped: true,
+		});
 		return true;
 	}
-	const allowed = await getAutumn().check({
-		customerId: billingCustomerId,
-		featureId: "agent_credits",
+
+	const startedAt = performance.now();
+	try {
+		const result = await getAutumn().check({
+			customerId: billingCustomerId,
+			featureId: "agent_credits",
+		});
+		const allowed = result.allowed !== false;
+		const balance = result.balance;
+		mergeWideEvent({
+			agent_credits_allowed: allowed,
+			agent_credits_feature_id: "agent_credits",
+			billing_customer_id: billingCustomerId,
+			"timing.autumn_agent_credits_check_ms": Math.round(
+				performance.now() - startedAt
+			),
+			...(balance
+				? {
+						agent_credits_granted: balance.granted,
+						agent_credits_remaining: balance.remaining,
+						agent_credits_unlimited: balance.unlimited,
+						agent_credits_usage: balance.usage,
+					}
+				: {}),
+		});
+		return allowed;
+	} catch (error) {
+		captureError(error, {
+			agent_credit_check_error: true,
+			agent_credits_feature_id: "agent_credits",
+			billing_customer_id: billingCustomerId,
+		});
+		throw error;
+	}
+}
+
+function mergeAgentBillingFields(input: {
+	apiKeyId?: string | null;
+	apiKeyUserId?: string | null;
+	billingCustomerId: string | null;
+	organizationId?: string | null;
+	resolution: string;
+}): void {
+	mergeWideEvent({
+		agent_billing_resolution: input.resolution,
+		...(input.apiKeyId ? { agent_api_key_id: input.apiKeyId } : {}),
+		...(input.apiKeyUserId
+			? { agent_api_key_user_id: input.apiKeyUserId }
+			: {}),
+		...(input.billingCustomerId
+			? { billing_customer_id: input.billingCustomerId }
+			: {}),
+		...(input.organizationId ? { organization_id: input.organizationId } : {}),
 	});
-	return allowed.allowed !== false;
 }
 
 export async function trackAgentUsageAndBill(
@@ -72,6 +155,7 @@ export async function trackAgentUsageAndBill(
 	}
 
 	const autumn = getAutumn();
+	const billingCustomerId = input.billingCustomerId;
 	const tokenTracks: [string, number][] = [
 		["agent_input_tokens", summary.fresh_input_tokens],
 		["agent_output_tokens", summary.output_tokens],
@@ -93,7 +177,7 @@ export async function trackAgentUsageAndBill(
 			.map(([featureId, value]) =>
 				autumn
 					.track({
-						customerId: input.billingCustomerId as string,
+						customerId: billingCustomerId,
 						featureId,
 						value,
 					})

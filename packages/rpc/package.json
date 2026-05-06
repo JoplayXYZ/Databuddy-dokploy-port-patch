@@ -13,7 +13,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./autumn": "./src/lib/autumn-client.ts",
-    "./billing": "./src/utils/billing.ts"
+    "./billing": "./src/utils/billing.ts",
+    "./log-context": "./src/lib/rpc-log-context.ts"
   },
   "dependencies": {
     "@databuddy/api-keys": "workspace:*",

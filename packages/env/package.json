@@ -37,8 +37,7 @@
     "src"
   ],
   "scripts": {
-    "build": "tsc --build",
-    "check-types": "tsc --build"
+    "check-types": "tsc --noEmit"
   },
   "dependencies": {
     "zod": "catalog:"

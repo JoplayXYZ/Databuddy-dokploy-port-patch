@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { renderAgentOutputForSlack } from "./output-adapter";
+import { renderAgentOutputForSlack } from "@/slack/output-adapter";
 
 describe("Slack output adapter", () => {
 	it("renders dashboard data tables as Slack-safe markdown", () => {

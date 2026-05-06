@@ -1,11 +1,11 @@
 import { describe, expect, it } from "bun:test";
-import type { DatabuddyAgentClient, SlackAgentRun } from "../agent/agent-client";
-import { handleAgentRun } from "./run-handler";
-import type { SlackAgentClient, SlackSay } from "./types";
+import type { DatabuddyAgentClient, SlackAgentRun } from "@/agent/agent-client";
+import { handleAgentRun } from "@/slack/run-handler";
+import type { SlackAgentClient, SlackSay } from "@/slack/types";
 import type {
 	SlackFollowUpQueueResult,
 	SlackThreadQueueStore,
-} from "./thread-queue";
+} from "@/slack/thread-queue";
 
 function createClient() {
 	const chatCalls: Array<{ method: string; options: unknown }> = [];

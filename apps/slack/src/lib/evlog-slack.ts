@@ -1,3 +1,4 @@
+import { AsyncLocalStorage } from "node:async_hooks";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { env } from "@databuddy/env/slack";
@@ -9,6 +10,8 @@ import { createDrainPipeline } from "evlog/pipeline";
 
 type SlackLogValue = string | number | boolean;
 type SlackLogFields = Record<string, SlackLogValue | null | undefined>;
+
+const activeSlackLog = new AsyncLocalStorage<RequestLogger>();
 
 const axiomApiKey = env.AXIOM_API_KEY ?? env.AXIOM_TOKEN;
 
@@ -49,7 +52,11 @@ export async function slackLoggerDrain(ctx: DrainContext): Promise<void> {
 	if (fsDrain) {
 		await fsDrain(ctx);
 	}
-	batchedAxiomDrain?.(ctx);
+	try {
+		await batchedAxiomDrain?.(ctx);
+	} catch {
+		// Drain failures must not break Slack event handling.
+	}
 }
 
 export async function flushBatchedSlackDrain(): Promise<void> {
@@ -58,6 +65,25 @@ export async function flushBatchedSlackDrain(): Promise<void> {
 
 export function createSlackEventLog(fields: SlackLogFields): RequestLogger {
 	return createLogger(cleanFields({ service: "slack", ...fields }));
+}
+
+export function getActiveSlackLog(): RequestLogger {
+	const logger = activeSlackLog.getStore();
+	if (!logger) {
+		throw new Error("No active Slack evlog context");
+	}
+	return logger;
+}
+
+export function setActiveSlackLog(fields: SlackLogFields): void {
+	activeSlackLog.getStore()?.set(cleanFields(fields));
+}
+
+export async function withSlackLogContext<T>(
+	logger: RequestLogger,
+	fn: () => Promise<T>
+): Promise<T> {
+	return await activeSlackLog.run(logger, fn);
 }
 
 export function setSlackLog(

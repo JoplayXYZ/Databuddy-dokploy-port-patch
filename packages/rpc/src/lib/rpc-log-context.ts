@@ -1,7 +1,9 @@
 import { log, type RequestLogger } from "evlog";
-import type { Context } from "../orpc";
 
 type RequestLoggerProvider = () => RequestLogger;
+interface RpcContextWithHeaders {
+	headers?: Headers | null;
+}
 
 let requestLoggerProvider: RequestLoggerProvider | null = null;
 
@@ -26,7 +28,9 @@ function getActiveRpcRequestLogger(): RequestLogger | null {
  * Merge RPC-specific fields into the active request wide event.
  * Auth and API key context is handled globally by applyAuthWideEvent.
  */
-export function enrichRpcWideEventContext(context: Context): void {
+export function enrichRpcWideEventContext(
+	context: RpcContextWithHeaders
+): void {
 	if (!context.headers) {
 		return;
 	}

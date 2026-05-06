@@ -105,7 +105,7 @@ const app = new Elysia()
 	.use(stripeWebhook)
 	.use(paddleWebhook)
 	.get("/health/status", async function basketHealthStatus() {
-		const { clickHouseOG } = await import("@databuddy/db");
+		const { clickHouseOG } = await import("@databuddy/db/clickhouse");
 		const { Kafka } = await import("kafkajs");
 
 		async function ping(probe: () => Promise<void>) {
