@@ -515,7 +515,7 @@ const runtime = ManagedRuntime.make(ProducerLive);
 const withFx = <A, E>(
 	fn: (f: NonNullable<typeof fx>) => Effect.Effect<A, E>
 ): Effect.Effect<A | undefined, E> =>
-	Effect.suspend(() => (fx ? fn(fx) : Effect.void));
+	Effect.suspend(() => (fx ? fn(fx) : Effect.succeed(undefined)));
 
 export const send = (topic: string, event: unknown, key?: string) =>
 	withFx((f) => f.sendOne(topic, event, key));

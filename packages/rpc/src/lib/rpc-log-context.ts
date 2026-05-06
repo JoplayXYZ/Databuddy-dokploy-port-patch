@@ -1,7 +1,9 @@
 import { log, type RequestLogger } from "evlog";
 
 type RequestLoggerProvider = () => RequestLogger;
-type RpcContextWithHeaders = { headers?: Headers | null };
+interface RpcContextWithHeaders {
+	headers?: Headers | null;
+}
 
 let requestLoggerProvider: RequestLoggerProvider | null = null;
 

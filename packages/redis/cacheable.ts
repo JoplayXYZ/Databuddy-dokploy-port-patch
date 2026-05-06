@@ -63,7 +63,7 @@ function markRedisUnhealthy() {
 }
 
 function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
-	let timer: Timer;
+	let timer: ReturnType<typeof setTimeout>;
 	return Promise.race([
 		promise,
 		new Promise<never>((_, reject) => {
