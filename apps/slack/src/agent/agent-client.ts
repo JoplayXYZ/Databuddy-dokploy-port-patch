@@ -1,7 +1,4 @@
-import {
-	streamDatabuddyAgent,
-	type DatabuddyAgentSlackContext,
-} from "@databuddy/ai/agent";
+import type { DatabuddyAgentSlackContext } from "@databuddy/ai/agent";
 import { setActiveSlackLog } from "@/lib/evlog-slack";
 import { SLACK_COPY } from "@/slack/messages";
 
@@ -100,6 +97,8 @@ class SharedDatabuddyAgentRunner implements SlackAgentRunner {
 			organization_id: context.organizationId,
 			slack_agent_api_key_id: context.agentApiKeyId,
 		});
+		const { streamDatabuddyAgent } = await import("@databuddy/ai/agent");
+
 		yield* streamDatabuddyAgent({
 			abortSignal: options?.abortSignal,
 			actor: {
