@@ -242,6 +242,9 @@ export function ApiKeySheet({
 	}, [apiKey, open, form]);
 
 	const handleClose = () => {
+		setShowDeleteConfirm(false);
+		setShowRotateConfirm(false);
+		setShowRevokeConfirm(false);
 		onOpenChangeAction(false);
 		setTimeout(() => {
 			lastResetKeyId.current = null;
@@ -345,6 +348,7 @@ export function ApiKeySheet({
 		onSuccess: () => {
 			invalidateQueries();
 			toast.success("API key deleted");
+			setShowDeleteConfirm(false);
 			handleClose();
 		},
 		onError: (err: Error) => {
