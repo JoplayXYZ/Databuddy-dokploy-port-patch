@@ -2,7 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import { authClient } from "@databuddy/auth/client";
-import { Skeleton, Tooltip } from "@databuddy/ui";
+import { Skeleton, Tooltip, useHydrated } from "@databuddy/ui";
 import { Avatar, DropdownMenu } from "@databuddy/ui/client";
 import {
 	BugIcon,
@@ -136,11 +136,12 @@ function ThemeCycleButton({ collapsed }: { collapsed: boolean }) {
 }
 
 function AccountMenu({ collapsed }: { collapsed: boolean }) {
+	const isHydrated = useHydrated();
 	const { data: session, isPending } = authClient.useSession();
 	const user = session?.user ?? null;
 	const [isOpen, setIsOpen] = useState(false);
 
-	if (isPending) {
+	if (!isHydrated || isPending) {
 		return (
 			<div className={cn("px-2", collapsed && "px-1.5")}>
 				<Skeleton

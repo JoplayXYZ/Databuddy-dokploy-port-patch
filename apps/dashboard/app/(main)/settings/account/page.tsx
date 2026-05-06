@@ -343,6 +343,7 @@ export default function AccountSettingsPage() {
 
 	const [name, setName] = useState("");
 	const [imageUrl, setImageUrl] = useState("");
+	const [isProfileInitialized, setIsProfileInitialized] = useState(false);
 	const [showPasswordDialog, setShowPasswordDialog] = useState(false);
 	const [showTwoFactorDialog, setShowTwoFactorDialog] = useState(false);
 	const [unlinkProvider, setUnlinkProvider] = useState<SocialProvider | null>(
@@ -354,6 +355,7 @@ export default function AccountSettingsPage() {
 		if (user) {
 			setName(user.name ?? "");
 			setImageUrl(user.image ?? "");
+			setIsProfileInitialized(true);
 		}
 	}, [user]);
 
@@ -416,7 +418,8 @@ export default function AccountSettingsPage() {
 		(acc) => acc.providerId === "credential"
 	);
 	const hasChanges =
-		name !== (user?.name ?? "") || imageUrl !== (user?.image ?? "");
+		isProfileInitialized &&
+		(name !== (user?.name ?? "") || imageUrl !== (user?.image ?? ""));
 
 	const isLoading = isSessionLoading || isAccountsLoading;
 
