@@ -17,6 +17,7 @@
     "@databuddy/encryption": "workspace:*",
     "@databuddy/env": "workspace:*",
     "@databuddy/redis": "workspace:*",
+    "@databuddy/rpc": "workspace:*",
     "@slack/bolt": "^4.7.2",
     "@slack/web-api": "^7.15.1",
     "evlog": "catalog:"

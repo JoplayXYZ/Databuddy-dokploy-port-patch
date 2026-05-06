@@ -1,24 +1,30 @@
+import { setAiRequestLoggerProvider } from "@databuddy/ai/lib/request-logger";
 import { shutdownPostgres } from "@databuddy/db";
+import { setRpcRequestLoggerProvider } from "@databuddy/rpc/log-context";
 import { App } from "@slack/bolt";
 import { initLogger, log } from "evlog";
-import { DatabuddyAgentClient } from "./agent/agent-client";
-import { resolveSlackConfig } from "./config";
+import { DatabuddyAgentClient } from "@/agent/agent-client";
+import { resolveSlackConfig } from "@/config";
 import {
 	captureSlackError,
 	flushBatchedSlackDrain,
+	getActiveSlackLog,
 	slackLoggerDrain,
-} from "./lib/evlog-slack";
+} from "@/lib/evlog-slack";
 import {
 	createSlackAuthorize,
 	SlackInstallationStore,
-} from "./slack/installations";
-import { registerSlackListeners } from "./slack/listeners";
+} from "@/slack/installations";
+import { registerSlackListeners } from "@/slack/listeners";
 
 initLogger({
 	env: { service: "slack" },
 	drain: slackLoggerDrain,
 	sampling: {},
 });
+
+setAiRequestLoggerProvider(getActiveSlackLog);
+setRpcRequestLoggerProvider(getActiveSlackLog);
 
 process.on("unhandledRejection", (reason) => {
 	captureSlackError(reason, { process: "unhandledRejection" });

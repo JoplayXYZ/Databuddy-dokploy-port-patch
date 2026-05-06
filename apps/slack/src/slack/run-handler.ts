@@ -3,18 +3,22 @@ import type {
 	DatabuddyAgentClient,
 	SlackAgentRun,
 	SlackFollowUpMessage,
-} from "../agent/agent-client";
+} from "@/agent/agent-client";
 import {
 	createSlackEventLog,
 	getSlackApiErrorCode,
 	setSlackLog,
-} from "../lib/evlog-slack";
-import { cleanupSlackActiveRun, registerSlackActiveRun } from "./active-runs";
-import { SLACK_COPY } from "./messages";
-import { streamAgentToSlack } from "./respond";
-import { createSlackConversationContext } from "./slack-context";
-import type { SlackAgentClient, SlackLogger, SlackSay } from "./types";
-import type { SlackThreadQueueStore } from "./thread-queue";
+	withSlackLogContext,
+} from "@/lib/evlog-slack";
+import {
+	cleanupSlackActiveRun,
+	registerSlackActiveRun,
+} from "@/slack/active-runs";
+import { SLACK_COPY } from "@/slack/messages";
+import { streamAgentToSlack } from "@/slack/respond";
+import { createSlackConversationContext } from "@/slack/slack-context";
+import type { SlackAgentClient, SlackLogger, SlackSay } from "@/slack/types";
+import type { SlackThreadQueueStore } from "@/slack/thread-queue";
 
 const MAX_FOLLOW_UP_ROUNDS = 3;
 const QUEUED_TAKEOVER_RETRY_DELAYS_MS = [0, 25, 75] as const;
@@ -40,96 +44,97 @@ export async function handleAgentRun({
 	let abortController: AbortController | null = null;
 	let registeredRun: SlackAgentRun | null = null;
 
-	try {
-		await threadQueue.markEngaged(run);
-		lockAcquired = await threadQueue.tryAcquire(run);
-		let currentRun = run;
-		if (!lockAcquired) {
-			const queued = await threadQueue.enqueue(run);
-			setSlackLog(eventLog, {
-				slack_followup_queued: queued.ok,
-				slack_followup_queue_reason: queued.reason,
-				slack_followup_queue_size: queued.queuedCount,
-				slack_followup_truncated: queued.truncated,
-				slack_response_ok: true,
-			});
-
-			if (!queued.ok) {
-				return;
-			}
-
-			lockAcquired = await tryAcquireQueuedRun(run, threadQueue);
+	await withSlackLogContext(eventLog, async () => {
+		try {
+			await threadQueue.markEngaged(run);
+			lockAcquired = await threadQueue.tryAcquire(run);
+			let currentRun = run;
 			if (!lockAcquired) {
-				return;
+				const queued = await threadQueue.enqueue(run);
+				setSlackLog(eventLog, {
+					slack_followup_queued: queued.ok,
+					slack_followup_queue_reason: queued.reason,
+					slack_followup_queue_size: queued.queuedCount,
+					slack_followup_truncated: queued.truncated,
+				});
+
+				if (!queued.ok) {
+					return;
+				}
+
+				lockAcquired = await tryAcquireQueuedRun(run, threadQueue);
+				if (!lockAcquired) {
+					return;
+				}
+
+				const followUps = await threadQueue.drain(run);
+				if (followUps.length === 0) {
+					return;
+				}
+
+				setSlackLog(eventLog, {
+					slack_followup_takeover: true,
+					slack_followup_takeover_count: followUps.length,
+				});
+				currentRun = createFollowUpRun(run, followUps);
 			}
 
-			const followUps = await threadQueue.drain(run);
-			if (followUps.length === 0) {
-				return;
+			registeredRun = currentRun;
+			abortController = registerSlackActiveRun(registeredRun);
+			await addTriggerReaction({ client, eventLog, logger, run: currentRun });
+			const slackContext =
+				currentRun.slackContext ??
+				createSlackConversationContext(client, currentRun);
+			currentRun = { ...currentRun, slackContext };
+			let totalFollowUps = 0;
+			for (let round = 0; round <= MAX_FOLLOW_UP_ROUNDS; round++) {
+				const result = await streamAgentToSlack({
+					abortSignal: abortController?.signal,
+					agent,
+					client,
+					eventLog,
+					logger,
+					run: currentRun,
+					say,
+				});
+				setSlackLog(eventLog, {
+					slack_response_aborted: result.aborted,
+					slack_response_ok: result.ok,
+					slack_response_ts: result.responseTs,
+					slack_response_streamed: result.streamed,
+				});
+
+				if (result.aborted || round >= MAX_FOLLOW_UP_ROUNDS) {
+					break;
+				}
+
+				const followUps = await threadQueue.drain(run);
+				if (followUps.length === 0) {
+					break;
+				}
+
+				totalFollowUps += followUps.length;
+				currentRun = createFollowUpRun(currentRun, followUps);
 			}
 
+			if (totalFollowUps > 0) {
+				setSlackLog(eventLog, {
+					slack_followup_drained_count: totalFollowUps,
+				});
+			}
+		} finally {
+			if (lockAcquired) {
+				await threadQueue.release(run).catch((error) => {
+					logger.warn("Failed to release Slack thread lock", error);
+				});
+			}
+			cleanupSlackActiveRun(registeredRun ?? run);
 			setSlackLog(eventLog, {
-				slack_followup_takeover: true,
-				slack_followup_takeover_count: followUps.length,
+				"timing.slack_total_ms": Math.round(performance.now() - startedAt),
 			});
-			currentRun = createFollowUpRun(run, followUps);
+			eventLog.emit();
 		}
-
-		registeredRun = currentRun;
-		abortController = registerSlackActiveRun(registeredRun);
-		await addTriggerReaction({ client, eventLog, logger, run: currentRun });
-		const slackContext =
-			currentRun.slackContext ??
-			createSlackConversationContext(client, currentRun);
-		currentRun = { ...currentRun, slackContext };
-		let totalFollowUps = 0;
-		for (let round = 0; round <= MAX_FOLLOW_UP_ROUNDS; round++) {
-			const result = await streamAgentToSlack({
-				abortSignal: abortController?.signal,
-				agent,
-				client,
-				eventLog,
-				logger,
-				run: currentRun,
-				say,
-			});
-			setSlackLog(eventLog, {
-				slack_response_aborted: result.aborted,
-				slack_response_ok: result.ok,
-				slack_response_ts: result.responseTs,
-				slack_response_streamed: result.streamed,
-			});
-
-			if (result.aborted || round >= MAX_FOLLOW_UP_ROUNDS) {
-				break;
-			}
-
-			const followUps = await threadQueue.drain(run);
-			if (followUps.length === 0) {
-				break;
-			}
-
-			totalFollowUps += followUps.length;
-			currentRun = createFollowUpRun(currentRun, followUps);
-		}
-
-		if (totalFollowUps > 0) {
-			setSlackLog(eventLog, {
-				slack_followup_drained_count: totalFollowUps,
-			});
-		}
-	} finally {
-		if (lockAcquired) {
-			await threadQueue.release(run).catch((error) => {
-				logger.warn("Failed to release Slack thread lock", error);
-			});
-		}
-		cleanupSlackActiveRun(registeredRun ?? run);
-		setSlackLog(eventLog, {
-			"timing.slack_total_ms": Math.round(performance.now() - startedAt),
-		});
-		eventLog.emit();
-	}
+	});
 }
 
 async function tryAcquireQueuedRun(
