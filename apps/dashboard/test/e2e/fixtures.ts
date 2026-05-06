@@ -31,6 +31,29 @@ function testScope(testTitle: string): string {
 		.slice(0, 48);
 }
 
+async function seedClickHouse(
+	request: import("@playwright/test").APIRequestContext,
+	websiteId: string
+): Promise<void> {
+	if (process.env.DATABUDDY_E2E_SEED_CLICKHOUSE !== "1") {
+		return;
+	}
+
+	const response = await request.post("/api/test/e2e/clickhouse", {
+		data: {
+			eventCount: process.env.DATABUDDY_E2E_CLICKHOUSE_EVENTS ?? "250",
+			websiteId,
+		},
+		headers: { "x-e2e-test-key": e2eTestKey() },
+	});
+
+	if (!response.ok()) {
+		throw new Error(
+			`E2E ClickHouse seed failed with ${response.status()}: ${await response.text()}`
+		);
+	}
+}
+
 export const test = base.extend<E2EFixtures>({
 	e2eSession: async ({ page }, use, testInfo) => {
 		const response = await page
@@ -49,7 +72,11 @@ export const test = base.extend<E2EFixtures>({
 				`E2E session bootstrap failed with ${response.status()}: ${await response.text()}`
 			);
 		}
-		await use((await response.json()) as E2ESession);
+		const session = (await response.json()) as E2ESession;
+		if (session.websiteId) {
+			await seedClickHouse(page.context().request, session.websiteId);
+		}
+		await use(session);
 	},
 	authenticatedPage: async ({ e2eSession: _session, page }, use) => {
 		await use(page);
