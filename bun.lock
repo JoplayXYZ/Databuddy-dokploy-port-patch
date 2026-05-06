@@ -45,6 +45,7 @@
         "@databuddy/db": "workspace:*",
         "@databuddy/email": "workspace:*",
         "@databuddy/encryption": "workspace:*",
+        "@databuddy/env": "workspace:*",
         "@databuddy/notifications": "workspace:*",
         "@databuddy/redis": "workspace:*",
         "@databuddy/rpc": "workspace:*",
@@ -123,6 +124,7 @@
         "@databuddy/auth": "workspace:*",
         "@databuddy/db": "workspace:*",
         "@databuddy/devtools": "workspace:*",
+        "@databuddy/env": "workspace:*",
         "@databuddy/redis": "workspace:*",
         "@databuddy/rpc": "workspace:*",
         "@databuddy/sdk": "workspace:*",
@@ -331,6 +333,7 @@
       "version": "1.0.0",
       "dependencies": {
         "@databuddy/db": "workspace:*",
+        "@databuddy/env": "workspace:*",
         "@databuddy/redis": "workspace:*",
         "@databuddy/shared": "workspace:*",
         "@maxmind/geoip2-node": "^6.3.4",
@@ -367,6 +370,7 @@
       "name": "@databuddy/status",
       "version": "0.1.0",
       "dependencies": {
+        "@databuddy/env": "workspace:*",
         "@databuddy/rpc": "workspace:*",
         "@databuddy/ui": "workspace:*",
         "@orpc/client": "^1.14.0",
@@ -389,6 +393,7 @@
       "version": "1.0.0",
       "dependencies": {
         "@databuddy/db": "workspace:*",
+        "@databuddy/env": "workspace:*",
         "@databuddy/notifications": "workspace:*",
         "@databuddy/redis": "workspace:*",
         "@databuddy/shared": "workspace:*",
@@ -453,6 +458,7 @@
         "@better-auth/sso": "^1.4.10",
         "@databuddy/db": "*",
         "@databuddy/email": "*",
+        "@databuddy/env": "workspace:*",
         "@databuddy/notifications": "workspace:*",
         "@databuddy/redis": "*",
         "@databuddy/shared": "*",

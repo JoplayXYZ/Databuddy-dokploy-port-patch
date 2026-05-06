@@ -1,3 +1,4 @@
+import { publicConfig } from "@databuddy/env/public";
 import type { DateRange } from "@databuddy/shared/types/analytics";
 import type {
 	DynamicQueryFilter,
@@ -57,7 +58,7 @@ interface WidgetWithSettings extends DashboardWidgetBase {
 	filters?: CardFilter[];
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const API_BASE_URL = publicConfig.urls.api;
 
 function toQueryFilters(filters?: CardFilter[]): DynamicQueryFilter[] {
 	if (!filters || filters.length === 0) {

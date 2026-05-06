@@ -1,6 +1,7 @@
 import { db, eq, withTransaction } from "@databuddy/db";
-import { uptimeSchedules } from "@databuddy/db/schema";
 import { chQuery } from "@databuddy/db/clickhouse";
+import { uptimeSchedules } from "@databuddy/db/schema";
+import { config } from "@databuddy/env/app";
 import {
 	NotificationClient,
 	buildAlarmNotificationConfig,
@@ -38,8 +39,6 @@ const NO_TRANSITION: TransitionResult = {
 	alarms_fired: 0,
 	transition_kind: null,
 };
-
-const TRAILING_SLASH = /\/$/;
 
 export function resolveTransitionKind(
 	previous: number | undefined,
@@ -243,8 +242,7 @@ const handleTransition = (options: {
 		}
 
 		const siteLabel = buildSiteLabel(options.schedule);
-		const baseUrl = process.env.DASHBOARD_APP_URL ?? "https://app.databuddy.cc";
-		const dashboardUrl = `${baseUrl.replace(TRAILING_SLASH, "")}/monitors/${options.schedule.id}`;
+		const dashboardUrl = `${config.urls.dashboard}/monitors/${options.schedule.id}`;
 
 		const httpInfo = options.data.http_code
 			? ` (HTTP ${options.data.http_code})`

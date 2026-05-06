@@ -3,6 +3,7 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { APP_URL } from "@/lib/app-url";
 import { DatabuddyDevtools } from "@databuddy/devtools/react";
+import { publicConfig } from "@databuddy/env/public";
 import { Databuddy } from "@databuddy/sdk/react";
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
@@ -131,11 +132,7 @@ export default function RootLayout({
 				</Providers>
 				<Toaster />
 				<Databuddy
-					apiUrl={
-						isLocalhost
-							? "http://localhost:4000"
-							: "https://basket.databuddy.cc"
-					}
+					apiUrl={publicConfig.urls.basket}
 					clientId={
 						isLocalhost
 							? "5ced32e5-0219-4e75-a18a-ad9826f85698"

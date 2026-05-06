@@ -1,5 +1,6 @@
 "use client";
 
+import { publicConfig } from "@databuddy/env/public";
 import type { SlackIntegrationOutput } from "@databuddy/rpc";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "next/navigation";
@@ -174,10 +175,7 @@ const COMING_SOON_INTEGRATIONS: IntegrationCatalogItem[] = [
 ];
 
 function slackInstallUrl(organizationId: string): string {
-	const url = new URL(
-		"/v1/integrations/slack/install",
-		process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"
-	);
+	const url = new URL("/v1/integrations/slack/install", publicConfig.urls.api);
 	url.searchParams.set("organizationId", organizationId);
 	return url.toString();
 }

@@ -1,4 +1,5 @@
 import { db } from "@databuddy/db";
+import { config } from "@databuddy/env/app";
 import {
 	type CachedLink,
 	getCachedLink,
@@ -16,9 +17,9 @@ import { captureError, mergeWideEvent, record } from "../lib/logging";
 import { sendLinkVisit } from "../lib/producer";
 import { extractIp, getGeo } from "../utils/geo";
 
-const EXPIRED_URL = "https://app.databuddy.cc/dby/expired";
-const NOT_FOUND_URL = "https://app.databuddy.cc/dby/not-found";
-const OG_PROXY_URL = "https://app.databuddy.cc/dby/l";
+const EXPIRED_URL = `${config.urls.dashboard}/dby/expired`;
+const NOT_FOUND_URL = `${config.urls.dashboard}/dby/not-found`;
+const OG_PROXY_URL = `${config.urls.dashboard}/dby/l`;
 
 const NULL_SENTINEL = Object.freeze({ __null: true }) as unknown as CachedLink;
 const linkCache = new LRUCache<string, CachedLink>({ max: 1000, ttl: 5000 });

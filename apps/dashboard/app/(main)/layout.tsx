@@ -1,3 +1,4 @@
+import { publicConfig } from "@databuddy/env/public";
 import { FeedbackPrompt } from "@/components/feedback-prompt";
 import { GlobalAgentProvider } from "@/components/agent/global-agent-provider";
 import { Sidebar } from "@/components/layout/sidebar";
@@ -40,10 +41,7 @@ export default function MainLayout({
 	children: React.ReactNode;
 }) {
 	return (
-		<AutumnProvider
-			backendUrl={process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}
-			includeCredentials
-		>
+		<AutumnProvider backendUrl={publicConfig.urls.api} includeCredentials>
 			<BillingProvider>
 				<CommandSearchProvider>
 					<SidebarNavigationProvider>

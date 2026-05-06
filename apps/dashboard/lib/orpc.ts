@@ -1,3 +1,4 @@
+import { publicConfig } from "@databuddy/env/public";
 import type { AppRouter } from "@databuddy/rpc";
 import { createORPCClient, onError } from "@orpc/client";
 import { RPCLink } from "@orpc/client/fetch";
@@ -6,7 +7,7 @@ import { createTanstackQueryUtils } from "@orpc/tanstack-query";
 import { isAbortError } from "@/lib/is-abort-error";
 
 const link = new RPCLink({
-	url: `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/rpc`,
+	url: `${publicConfig.urls.api}/rpc`,
 	fetch: (request, init) => {
 		const headers = new Headers(request.headers);
 

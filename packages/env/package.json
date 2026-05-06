@@ -4,6 +4,14 @@
   "private": true,
   "type": "module",
   "exports": {
+    "./app": {
+      "types": "./src/app.ts",
+      "default": "./src/app.ts"
+    },
+    "./public": {
+      "types": "./src/public.ts",
+      "default": "./src/public.ts"
+    },
     "./dashboard": {
       "types": "./src/dashboard.ts",
       "default": "./src/dashboard.ts"

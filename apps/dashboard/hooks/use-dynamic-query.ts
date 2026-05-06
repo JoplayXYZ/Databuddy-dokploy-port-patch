@@ -1,3 +1,4 @@
+import { publicConfig } from "@databuddy/env/public";
 import type { DateRange } from "@databuddy/shared/types/analytics";
 import type {
 	BatchQueryResponse,
@@ -12,7 +13,7 @@ import { type UseQueryOptions, useQuery } from "@tanstack/react-query";
 import { useCallback, useMemo } from "react";
 import { guessTimezone } from "@databuddy/ui";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const API_BASE_URL = publicConfig.urls.api;
 
 export const dynamicQueryKeys = {
 	all: () => ["dynamic-query"] as const,

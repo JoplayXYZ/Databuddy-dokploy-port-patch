@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@databuddy/db": "workspace:*",
+    "@databuddy/env": "workspace:*",
     "@databuddy/notifications": "workspace:*",
     "@databuddy/redis": "workspace:*",
     "@databuddy/shared": "workspace:*",
