@@ -39,6 +39,7 @@
     "src"
   ],
   "scripts": {
+    "check-types": "tsc --noEmit",
     "test": "bun test"
   },
   "dependencies": {

@@ -9,6 +9,7 @@ import type { LanguageModelUsage } from "ai";
 import { ToolLoopAgent } from "ai";
 import { DatabuddyAgentUserError } from "../../agent/errors";
 import { getAILogger } from "../../lib/ai-logger";
+import { mergeWideEvent } from "../../lib/tracing";
 import {
 	ensureAgentCreditsAvailable,
 	resolveAgentBillingCustomerId,
@@ -199,6 +200,9 @@ async function prepareMcpAgentRun(options: RunMcpAgentOptions) {
 					apiKey: options.apiKey,
 					organizationId,
 				});
+	mergeWideEvent({
+		agent_billing_mode: options.billingMode === "skip" ? "skip" : "bill",
+	});
 
 	if (
 		options.billingMode !== "skip" &&
