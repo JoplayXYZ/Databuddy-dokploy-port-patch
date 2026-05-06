@@ -1,4 +1,4 @@
-import type { SlackAgentRun } from "../agent/agent-client";
+import type { SlackAgentRun } from "@/agent/agent-client";
 
 interface SlackMessageRef {
 	channelId: string;

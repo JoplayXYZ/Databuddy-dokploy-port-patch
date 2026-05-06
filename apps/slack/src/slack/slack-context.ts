@@ -2,8 +2,8 @@ import type {
 	DatabuddyAgentSlackContext,
 	DatabuddyAgentSlackMessage,
 } from "@databuddy/ai/agent";
-import type { SlackAgentRun } from "../agent/agent-client";
-import type { SlackAgentClient } from "./types";
+import type { SlackAgentRun } from "@/agent/agent-client";
+import type { SlackAgentClient } from "@/slack/types";
 
 const DEFAULT_CHANNEL_HISTORY_LIMIT = 20;
 const MAX_SLACK_CONTEXT_MESSAGES = 50;

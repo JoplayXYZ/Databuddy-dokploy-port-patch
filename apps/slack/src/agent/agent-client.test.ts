@@ -1,5 +1,5 @@
 import { describe, expect, it, mock } from "bun:test";
-import type { SlackAgentRun, SlackRunContext } from "./agent-client";
+import type { SlackAgentRun, SlackRunContext } from "@/agent/agent-client";
 
 let capturedSharedAgentOptions: Record<string, unknown> | null = null;
 

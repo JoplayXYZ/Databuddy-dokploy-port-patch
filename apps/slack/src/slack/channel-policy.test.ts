@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
-import { getSlackChannelMentionPolicy } from "./channel-policy";
-import type { SlackAgentClient } from "./types";
+import { getSlackChannelMentionPolicy } from "@/slack/channel-policy";
+import type { SlackAgentClient } from "@/slack/types";
 
 const logger = {
 	warn: () => undefined,

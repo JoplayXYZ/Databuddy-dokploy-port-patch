@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { classifySlackReactionSentiment } from "./feedback";
+import { classifySlackReactionSentiment } from "@/slack/feedback";
 
 describe("Slack feedback reactions", () => {
 	it("classifies explicit positive reactions", () => {

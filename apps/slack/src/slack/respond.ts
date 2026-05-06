@@ -1,13 +1,10 @@
 import { isDatabuddyAgentUserError } from "@databuddy/ai/agent/errors";
 import type { RequestLogger } from "evlog";
-import type {
-	DatabuddyAgentClient,
-	SlackAgentRun,
-} from "../agent/agent-client";
-import { setSlackLog, toError } from "../lib/evlog-slack";
-import { SLACK_COPY } from "./messages";
-import { renderAgentOutputForSlack } from "./output-adapter";
-import type { SlackAgentClient } from "./types";
+import type { DatabuddyAgentClient, SlackAgentRun } from "@/agent/agent-client";
+import { setSlackLog, toError } from "@/lib/evlog-slack";
+import { SLACK_COPY } from "@/slack/messages";
+import { renderAgentOutputForSlack } from "@/slack/output-adapter";
+import type { SlackAgentClient } from "@/slack/types";
 
 const STREAM_FLUSH_INTERVAL_MS = 900;
 const STREAM_FLUSH_CHARS = 1200;

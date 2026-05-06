@@ -4,7 +4,7 @@ import type {
 	SlackThreadReplyRelevance,
 	SlackThreadReplyRelevanceInput,
 } from "@databuddy/ai/agent";
-import type { SlackAgentRun } from "../agent/agent-client";
+import type { SlackAgentRun } from "@/agent/agent-client";
 
 let capturedModelInput: SlackThreadReplyRelevanceInput | null = null;
 let modelDecision: SlackThreadReplyRelevance | null = null;

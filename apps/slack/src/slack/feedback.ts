@@ -5,9 +5,9 @@ import {
 	type AgentFeedbackSentiment,
 } from "@databuddy/ai/agent/feedback";
 import type { types } from "@slack/bolt";
-import { createSlackEventLog, setSlackLog, toError } from "../lib/evlog-slack";
-import type { SlackInstallationServices } from "./installations";
-import { SLACK_COPY } from "./messages";
+import { createSlackEventLog, setSlackLog, toError } from "@/lib/evlog-slack";
+import type { SlackInstallationServices } from "@/slack/installations";
+import { SLACK_COPY } from "@/slack/messages";
 
 export type SlackFeedbackAction = "added" | "removed";
 export type SlackFeedbackSentiment = AgentFeedbackSentiment;

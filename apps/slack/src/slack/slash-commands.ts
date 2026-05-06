@@ -1,11 +1,11 @@
-import { createSlackEventLog, setSlackLog, toError } from "../lib/evlog-slack";
-import type { SlackInstallationServices } from "./installations";
-import { SLACK_COPY } from "./messages";
+import { createSlackEventLog, setSlackLog, toError } from "@/lib/evlog-slack";
+import type { SlackInstallationServices } from "@/slack/installations";
+import { SLACK_COPY } from "@/slack/messages";
 import type {
 	SlackLogger,
 	SlackSlashCommand,
 	SlackSlashRespond,
-} from "./types";
+} from "@/slack/types";
 
 export async function respondToBindCommand({
 	command,

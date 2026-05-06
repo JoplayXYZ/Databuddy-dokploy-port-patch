@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
-import type { SlackAgentRun } from "../agent/agent-client";
-import { SlackThreadQueue } from "./thread-queue";
+import type { SlackAgentRun } from "@/agent/agent-client";
+import { SlackThreadQueue } from "@/slack/thread-queue";
 
 function createRun(overrides: Partial<SlackAgentRun> = {}): SlackAgentRun {
 	return {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
-import { createSlackConversationContext } from "./slack-context";
-import type { SlackAgentClient } from "./types";
+import { createSlackConversationContext } from "@/slack/slack-context";
+import type { SlackAgentClient } from "@/slack/types";
 
 describe("Slack conversation context", () => {
 	it("reads the current Slack thread through conversations.replies", async () => {
