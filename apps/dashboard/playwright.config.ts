@@ -17,9 +17,11 @@ export default defineConfig({
 		video: "retain-on-failure",
 	},
 	webServer: {
-		command: `bun next dev -p ${PORT}`,
+		command: `bash -lc 'bun --cwd ../api src/index.ts --port 3001 & api_pid=$!; trap "kill $api_pid 2>/dev/null || true" EXIT; until curl -sf http://localhost:3001/health >/dev/null; do sleep 0.2; done; bun next dev -p ${PORT}'`,
 		env: {
 			DATABUDDY_E2E_MODE: process.env.DATABUDDY_E2E_MODE ?? "1",
+			NEXT_PUBLIC_DATABUDDY_E2E_MODE:
+				process.env.NEXT_PUBLIC_DATABUDDY_E2E_MODE ?? "1",
 			DATABUDDY_E2E_TEST_KEY: process.env.DATABUDDY_E2E_TEST_KEY ?? "",
 			DATABASE_URL: process.env.DATABASE_URL ?? "",
 			REDIS_URL: process.env.REDIS_URL ?? "redis://localhost:6379",
@@ -33,11 +35,14 @@ export default defineConfig({
 			BETTER_AUTH_SECRET:
 				process.env.BETTER_AUTH_SECRET ??
 				"databuddy-e2e-secret-at-least-32-bytes",
+			RESEND_API_KEY: process.env.RESEND_API_KEY ?? "re_e2e_dummy",
+			AUTUMN_SECRET_KEY: process.env.AUTUMN_SECRET_KEY ?? "e2e-autumn-secret",
 			BETTER_AUTH_URL: baseURL,
 			DASHBOARD_URL: baseURL,
-			API_URL: process.env.API_URL ?? baseURL,
+			API_URL: process.env.API_URL ?? "http://localhost:3001",
 			NEXT_PUBLIC_APP_URL: baseURL,
-			NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL ?? baseURL,
+			NEXT_PUBLIC_API_URL:
+				process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001",
 		},
 		reuseExistingServer: process.env.DATABUDDY_E2E_REUSE_SERVER === "1",
 		timeout: 120_000,
