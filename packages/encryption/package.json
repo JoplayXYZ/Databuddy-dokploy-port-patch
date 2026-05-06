@@ -10,8 +10,7 @@
     "src"
   ],
   "scripts": {
-    "build": "tsc --build",
-    "check-types": "tsc --build",
+    "check-types": "tsc --noEmit",
     "test": "bun test"
   },
   "devDependencies": {

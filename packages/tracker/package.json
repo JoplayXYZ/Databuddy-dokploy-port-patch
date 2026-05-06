@@ -1,7 +1,7 @@
 {
   "name": "@databuddy/tracker",
+  "private": true,
   "version": "0.0.1",
-  "description": "Databuddy Analytics Tracker Scripts",
   "type": "module",
   "scripts": {
     "build": "bun build.ts",
@@ -14,6 +14,9 @@
     "test:unit": "bun test tests/unit",
     "serve": "bun --watch --hot test-server.ts"
   },
+  "dependencies": {
+    "web-vitals": "^5.1.0"
+  },
   "devDependencies": {
     "@databuddy/db": "workspace:*",
     "@inquirer/prompts": "^8.0.1",
@@ -23,7 +26,5 @@
     "commander": "^14.0.2",
     "typescript": "^5.9.3"
   },
-  "dependencies": {
-    "web-vitals": "^5.1.0"
-  }
+  "description": "Databuddy Analytics Tracker Scripts"
 }

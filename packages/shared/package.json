@@ -1,14 +1,14 @@
 {
   "name": "@databuddy/shared",
-  "version": "0.0.1",
   "private": true,
+  "version": "0.0.1",
+  "type": "module",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts",
     "./country-codes": "./src/country-codes.ts",
     "./crypto-utils": "./src/crypto-utils.ts",
-
     "./billing/credit-schema": "./src/billing/credit-schema.ts",
     "./billing/topup-math": "./src/billing/topup-math.ts",
     "./lists/filters": "./src/lists/filters.ts",
@@ -38,8 +38,7 @@
     "./constants/deep-link-apps": "./src/constants/deep-link-apps.ts"
   },
   "scripts": {
-    "build": "tsc --build",
-    "check-types": "tsc --build"
+    "check-types": "tsc --noEmit"
   },
   "dependencies": {
     "@databuddy/redis": "workspace:*",
