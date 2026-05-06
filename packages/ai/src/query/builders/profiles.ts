@@ -311,6 +311,8 @@ export const ProfilesBuilders: Record<string, SimpleQueryConfig> = {
 	},
 
 	profile_detail: {
+		allowedFilters: ["anonymous_id"],
+		requiredFilters: ["anonymous_id"],
 		customSql: (
 			websiteId: string,
 			startDate: string,
@@ -398,6 +400,8 @@ export const ProfilesBuilders: Record<string, SimpleQueryConfig> = {
 	},
 
 	profile_sessions: {
+		allowedFilters: ["anonymous_id"],
+		requiredFilters: ["anonymous_id"],
 		customSql: (
 			websiteId: string,
 			startDate: string,
