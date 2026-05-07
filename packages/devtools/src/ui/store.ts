@@ -66,7 +66,7 @@ const STORAGE_KEY = "databuddy:devtools:v5";
 const ADMIN_KEY_STORAGE_KEY = "databuddy:devtools:admin-key";
 const ADMIN_URL_STORAGE_KEY = "databuddy:devtools:admin-url";
 const TRAILING_SLASH_RE = /\/+$/;
-export const DEFAULT_ADMIN_API_URL = "http://localhost:3001";
+export const DEFAULT_ADMIN_API_URL = "https://api.databuddy.cc";
 const DEFAULT_SIZE: Size = { w: 460, h: 560 };
 const SNAPSHOT_POLL_MS = 750;
 const TRACKER_EVENTS = ["scroll", "click", "keydown", "touchstart"] as const;
@@ -154,7 +154,16 @@ function loadAdminKey(): string | null {
 		return null;
 	}
 	try {
-		return window.localStorage.getItem(ADMIN_KEY_STORAGE_KEY);
+		const sessionKey = window.sessionStorage.getItem(ADMIN_KEY_STORAGE_KEY);
+		if (sessionKey) {
+			return sessionKey;
+		}
+		const legacyLocalKey = window.localStorage.getItem(ADMIN_KEY_STORAGE_KEY);
+		if (legacyLocalKey) {
+			window.localStorage.removeItem(ADMIN_KEY_STORAGE_KEY);
+			window.sessionStorage.setItem(ADMIN_KEY_STORAGE_KEY, legacyLocalKey);
+		}
+		return legacyLocalKey;
 	} catch {
 		return null;
 	}
@@ -165,11 +174,12 @@ function saveAdminKey(key: string | null) {
 		return;
 	}
 	try {
+		window.localStorage.removeItem(ADMIN_KEY_STORAGE_KEY);
 		if (key === null) {
-			window.localStorage.removeItem(ADMIN_KEY_STORAGE_KEY);
+			window.sessionStorage.removeItem(ADMIN_KEY_STORAGE_KEY);
 			return;
 		}
-		window.localStorage.setItem(ADMIN_KEY_STORAGE_KEY, key);
+		window.sessionStorage.setItem(ADMIN_KEY_STORAGE_KEY, key);
 	} catch {
 		// non-fatal
 	}
@@ -293,6 +303,29 @@ function diagnosticsChanged(a: DiagnosticItem[], b: DiagnosticItem[]) {
 	return false;
 }
 
+function stableJson(value: unknown): string {
+	try {
+		return JSON.stringify(value);
+	} catch {
+		return "";
+	}
+}
+
+function identityChanged(
+	a: DatabuddyIdentitySnapshot,
+	b: DatabuddyIdentitySnapshot
+) {
+	return (
+		a.anonymousId !== b.anonymousId ||
+		a.sessionId !== b.sessionId ||
+		a.sessionAgeMs !== b.sessionAgeMs ||
+		a.sessionStartedAt !== b.sessionStartedAt ||
+		stableJson(a.urlParams) !== stableJson(b.urlParams) ||
+		stableJson(a.globalProperties) !== stableJson(b.globalProperties) ||
+		stableJson(a.storageKeys) !== stableJson(b.storageKeys)
+	);
+}
+
 export type RuntimeTone = "ok" | "warn" | "destructive";
 
 export function runtimeStatus(snapshot: DatabuddyTrackerSnapshot): {
@@ -316,6 +349,7 @@ class DevtoolsStore {
 	private adapterUnsub: (() => void) | null = null;
 	private rafHandle: number | null = null;
 	private domEventCleanup: (() => void) | null = null;
+	private catalogFetchSeq = 0;
 
 	constructor() {
 		this.adapter = createDatabuddyDevtoolsAdapter();
@@ -400,6 +434,7 @@ class DevtoolsStore {
 		saveAdminKey(next);
 		this.commit({ adminKey: next });
 		if (next === null) {
+			this.catalogFetchSeq += 1;
 			this.commit({
 				catalog: {
 					status: "idle",
@@ -439,7 +474,10 @@ class DevtoolsStore {
 		if (!clientId) {
 			return { ok: false, error: "Tracker has no clientId — reload the page." };
 		}
-		const baseUrl = this.state.adminApiUrl ?? DEFAULT_ADMIN_API_URL;
+		const baseUrl =
+			this.state.adminApiUrl ??
+			this.state.flags.config?.apiUrl ??
+			DEFAULT_ADMIN_API_URL;
 		return { baseUrl, clientId, key: adminKey };
 	}
 
@@ -481,6 +519,7 @@ class DevtoolsStore {
 					type: input.type,
 					defaultValue: input.defaultValue,
 					description: input.description,
+					environment: this.state.flags.config?.environment ?? undefined,
 					variants: input.variants,
 				}),
 			});
@@ -577,7 +616,9 @@ class DevtoolsStore {
 
 		const flagsConfig = this.state.flags.config;
 		const clientId = flagsConfig?.clientId ?? this.state.snapshot.clientId;
-		const baseUrl = this.state.adminApiUrl ?? DEFAULT_ADMIN_API_URL;
+		const baseUrl =
+			this.state.adminApiUrl ?? flagsConfig?.apiUrl ?? DEFAULT_ADMIN_API_URL;
+		const requestSeq = ++this.catalogFetchSeq;
 		if (!clientId) {
 			this.commit({
 				catalog: {
@@ -610,6 +651,9 @@ class DevtoolsStore {
 				credentials: "omit",
 			});
 			if (!res.ok) {
+				if (requestSeq !== this.catalogFetchSeq) {
+					return;
+				}
 				const message =
 					res.status === 401
 						? "Invalid API key."
@@ -629,6 +673,9 @@ class DevtoolsStore {
 			const body = (await res.json()) as {
 				flags?: DatabuddyFlagCatalogEntry[];
 			};
+			if (requestSeq !== this.catalogFetchSeq) {
+				return;
+			}
 			this.commit({
 				catalog: {
 					status: "ready",
@@ -638,6 +685,9 @@ class DevtoolsStore {
 				},
 			});
 		} catch (err) {
+			if (requestSeq !== this.catalogFetchSeq) {
+				return;
+			}
 			this.commit({
 				catalog: {
 					status: "error",
@@ -747,8 +797,18 @@ class DevtoolsStore {
 			this.state.diagnostics,
 			nextDiagnostics
 		);
+		const iChanged = identityChanged(this.state.identity, nextIdentity);
 
-		if (!(eventsChanged || snapChanged || qChanged || fChanged || dChanged)) {
+		if (
+			!(
+				eventsChanged ||
+				snapChanged ||
+				qChanged ||
+				fChanged ||
+				dChanged ||
+				iChanged
+			)
+		) {
 			return;
 		}
 
