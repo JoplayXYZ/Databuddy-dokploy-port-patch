@@ -1,4 +1,4 @@
-import type { Locator, Page } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 
 interface ScopedSession {
 	userId: string;
@@ -6,8 +6,7 @@ interface ScopedSession {
 
 const SAFE_SCOPE_CHARS_RE = /[^a-z0-9]/gi;
 const SHORT_LINK_LABEL_RE = /Short Link/;
-const WORKSPACE_BUTTON_RE = /Workspace|organization/i;
-
+const ORGANIZATION_TRIGGER_RE = /^Organization:/;
 export function scopeSuffix(session: ScopedSession): string {
 	return session.userId
 		.replaceAll(SAFE_SCOPE_CHARS_RE, "")
@@ -35,10 +34,42 @@ export function idFromPath(url: string, segment: "links" | "websites"): string {
 	return match[1];
 }
 
+export function organizationSelector(page: Page): Locator {
+	return page.getByRole("button", { name: ORGANIZATION_TRIGGER_RE });
+}
+
 export async function expectDashboardReady(page: Page): Promise<void> {
+	await organizationSelector(page).waitFor({ state: "visible" });
+}
+
+export async function createOrganization(
+	page: Page,
+	input: { name: string; slug: string }
+): Promise<void> {
+	await organizationSelector(page).click();
+	await page.getByRole("menuitem", { name: "Create Organization" }).click();
 	await page
-		.getByRole("button", { name: WORKSPACE_BUTTON_RE })
-		.waitFor({ state: "visible" });
+		.getByRole("heading", { name: "Create New Organization" })
+		.waitFor();
+	await page
+		.getByRole("textbox", { name: "Organization Name" })
+		.fill(input.name);
+	await page
+		.getByRole("textbox", { name: "Organization Slug" })
+		.fill(input.slug);
+	await page.getByRole("button", { name: "Create Organization" }).click();
+	await organizationSelector(page).filter({ hasText: input.name }).waitFor();
+}
+
+export async function switchOrganization(
+	page: Page,
+	organizationName: string
+): Promise<void> {
+	await organizationSelector(page).click();
+	await page.getByRole("menuitem", { name: organizationName }).click();
+	await organizationSelector(page)
+		.filter({ hasText: organizationName })
+		.waitFor();
 }
 
 export async function createWebsite(
@@ -46,10 +77,14 @@ export async function createWebsite(
 	input: { domain: string; name: string }
 ): Promise<Locator> {
 	await page.getByRole("button", { name: "New Website" }).click();
-	await page.getByRole("heading", { name: "Create a new website" }).waitFor();
-	await page.getByRole("textbox", { name: "Name" }).fill(input.name);
-	await page.getByRole("textbox", { name: "Domain" }).fill(input.domain);
-	await page.getByRole("button", { name: "Create website" }).click();
+	const dialog = page.getByRole("dialog", { name: "Create a new website" });
+	await dialog.waitFor();
+	await dialog.getByRole("textbox", { name: "Name" }).fill(input.name);
+	await dialog.getByRole("textbox", { name: "Domain" }).fill(input.domain);
+	const submitButton = dialog.getByRole("button", { name: "Create website" });
+	await expect(submitButton).toBeEnabled();
+	await submitButton.click();
+	await expect(dialog).toBeHidden({ timeout: 15_000 });
 	return websiteCard(page, input.name);
 }
 

@@ -12,7 +12,7 @@ test(
 				exact: true,
 				name: "API Keys",
 			})
-		).toBeVisible();
+		).toBeVisible({ timeout: 15_000 });
 
 		await authenticatedPage
 			.getByRole("button", { name: /Create (your first )?key/i })

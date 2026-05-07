@@ -15,6 +15,7 @@ interface E2ESession {
 	email: string;
 	name: string;
 	organizationId: string;
+	organizationName: string;
 	userId: string;
 	websiteId: string | null;
 }

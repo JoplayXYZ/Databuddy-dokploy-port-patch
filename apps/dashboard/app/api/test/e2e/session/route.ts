@@ -104,14 +104,15 @@ async function ensureUser(email: string, name: string): Promise<string> {
 async function ensureOrganization(
 	userId: string,
 	orgName: string
-): Promise<string> {
+): Promise<{ id: string; name: string }> {
 	const [existing] = await db
-		.select({ organizationId: member.organizationId })
+		.select({ organizationId: member.organizationId, name: organization.name })
 		.from(member)
+		.innerJoin(organization, eq(member.organizationId, organization.id))
 		.where(eq(member.userId, userId))
 		.limit(1);
 	if (existing) {
-		return existing.organizationId;
+		return { id: existing.organizationId, name: existing.name };
 	}
 
 	const orgId = createId();
@@ -127,7 +128,7 @@ async function ensureOrganization(
 		role: "owner",
 		createdAt: new Date(),
 	});
-	return orgId;
+	return { id: orgId, name: orgName };
 }
 
 async function ensureWebsite(organizationId: string) {
@@ -177,7 +178,11 @@ export async function POST(request: Request): Promise<Response> {
 	const body = (await request.json().catch(() => ({}))) as SessionBody;
 	const identity = identityFromBody(body);
 	const userId = await ensureUser(identity.email, identity.name);
-	const organizationId = await ensureOrganization(userId, identity.orgName);
+	const primaryOrganization = await ensureOrganization(
+		userId,
+		identity.orgName
+	);
+	const organizationId = primaryOrganization.id;
 	const websiteId =
 		body.withWebsite === false ? null : await ensureWebsite(organizationId);
 	const signInResponse = await signIn(identity.email);
@@ -204,6 +209,7 @@ export async function POST(request: Request): Promise<Response> {
 			email: identity.email,
 			name: identity.name,
 			organizationId,
+			organizationName: primaryOrganization.name,
 			userId,
 			websiteId,
 		}),
