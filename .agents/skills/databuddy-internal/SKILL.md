@@ -17,6 +17,7 @@ Keep additions **minimal**: one bullet, a new `rg` hint, or a routing note—eno
 
 ## Quick Map
 
+- Prod infrastructure repo is local at `/Users/iza/Documents/GitHub/databuddy-infra` (`databuddy-analytics/infra`); ClickHouse cluster inventory is `clickhouse/ansible/inventory.yml`, not `/Users/iza/Dev/Databuddy/infra` or `DatabuddyOPS`.
 - `apps/dashboard`: Next.js app on port `3000` (per-website **agent** chat: `@ai-sdk/react` `useChat` via `contexts/chat-context.tsx` — not the separate `chat-sdk` package; overlapping sends while streaming are queued client-side to mirror a “queue latest” strategy.)
 - `apps/api`: Elysia API on port `3001`
 - `apps/slack`: Slack agent adapter; Slack installs must resolve through org-scoped DB integration records, not a single env bot token/default website. Agent calls must use an encrypted per-integration Databuddy API key secret as a normal bearer token, never a global internal secret.
