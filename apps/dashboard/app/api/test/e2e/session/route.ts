@@ -1,6 +1,12 @@
 import { auth } from "@databuddy/auth";
 import { and, db, eq } from "@databuddy/db";
-import { member, organization, user, websites } from "@databuddy/db/schema";
+import {
+	member,
+	organization,
+	session,
+	user,
+	websites,
+} from "@databuddy/db/schema";
 import { createId } from "@databuddy/shared/utils/ids";
 
 export const runtime = "nodejs";
@@ -175,6 +181,10 @@ export async function POST(request: Request): Promise<Response> {
 	const websiteId =
 		body.withWebsite === false ? null : await ensureWebsite(organizationId);
 	const signInResponse = await signIn(identity.email);
+	await db
+		.update(session)
+		.set({ activeOrganizationId: organizationId })
+		.where(eq(session.userId, userId));
 
 	const headers = new Headers({ "content-type": "application/json" });
 	const cookies = signInResponse.headers.getSetCookie?.() ?? [];

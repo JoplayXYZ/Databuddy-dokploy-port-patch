@@ -1,6 +1,6 @@
 import { db } from "@databuddy/db";
 import { chQuery } from "@databuddy/db/clickhouse";
-import { cacheable } from "@databuddy/redis";
+import { cacheable, invalidateCacheableKey } from "@databuddy/redis";
 import {
 	DuplicateDomainError,
 	ValidationError,
@@ -30,6 +30,15 @@ import {
 
 const websiteService = new WebsiteService(db);
 const TREND_THRESHOLD = 5;
+
+async function invalidateWorkspaceWebsiteById(websiteId: string) {
+	await invalidateCacheableKey("website_by_id", websiteId).catch((error) => {
+		logger.warn(
+			{ error, websiteId },
+			"Failed to invalidate workspace website cache"
+		);
+	});
+}
 
 function handleServiceError(error: unknown): never {
 	if (error instanceof ValidationError) {
@@ -497,6 +506,8 @@ export const websitesRouter = {
 				);
 			}
 
+			await invalidateWorkspaceWebsiteById(input.id);
+
 			if (changes.length > 0) {
 				logger.info(
 					{ websiteId: updatedWebsite.id, userId: context.user?.id },
@@ -534,6 +545,8 @@ export const websitesRouter = {
 				handleServiceError(error);
 			}
 
+			await invalidateWorkspaceWebsiteById(input.id);
+
 			logger.info(
 				{
 					websiteId: input.id,
@@ -568,6 +581,8 @@ export const websitesRouter = {
 			} catch (error) {
 				handleServiceError(error);
 			}
+
+			await invalidateWorkspaceWebsiteById(input.id);
 
 			logger.warn(
 				{
