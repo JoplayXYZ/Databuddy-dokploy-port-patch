@@ -21,7 +21,7 @@ import {
 } from "@/components/providers/organizations-provider";
 import { cn } from "@/lib/utils";
 import { Avatar, DropdownMenu } from "@databuddy/ui/client";
-import { Badge, Skeleton, Tooltip } from "@databuddy/ui";
+import { Badge, Skeleton, Tooltip, useHydrated } from "@databuddy/ui";
 
 const getDicebearUrl = (seed: string | undefined) =>
 	`https://api.dicebear.com/9.x/glass/svg?seed=${encodeURIComponent(seed || "")}`;
@@ -121,6 +121,7 @@ export function OrganizationSelector({
 	const { organizations, activeOrganization, isLoading } =
 		useOrganizationsContext();
 	const { currentPlanId } = useBillingContext();
+	const hydrated = useHydrated();
 	const [isOpen, setIsOpen] = useState(false);
 	const [showCreateDialog, setShowCreateDialog] = useState(false);
 	const [query, setQuery] = useState("");
@@ -182,7 +183,7 @@ export function OrganizationSelector({
 		/>
 	);
 
-	if (isLoading) {
+	if (!hydrated || isLoading) {
 		return (
 			<div className={cn("px-2 py-2", collapsed && "px-1.5")}>
 				<div
