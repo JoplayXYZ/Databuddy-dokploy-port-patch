@@ -7,6 +7,7 @@ import {
 	createShortLink,
 	createWebsite,
 	expectDashboardReady,
+	idFromPath,
 	linkRow,
 	scopeSuffix,
 	switchOrganization,
@@ -84,14 +85,21 @@ test(
 		await authenticatedPage.goto("/websites");
 		await expectDashboardReady(authenticatedPage);
 		await expect(websiteCard(authenticatedPage, SEEDED_WEBSITE_NAME)).toBeVisible();
-		await expect(
-			await createWebsite(authenticatedPage, primary.website)
-		).toBeVisible();
+		const primaryWebsiteCard = await createWebsite(
+			authenticatedPage,
+			primary.website
+		);
+		await expect(primaryWebsiteCard).toBeVisible();
+		await primaryWebsiteCard.click();
+		await expect(authenticatedPage).toHaveURL(/\/websites\/[A-Za-z0-9_-]+/);
+		const primaryWebsiteId = idFromPath(authenticatedPage.url(), "websites");
 
 		await authenticatedPage.goto("/links");
-		await expect(
-			await createShortLink(authenticatedPage, primary.link)
-		).toBeVisible();
+		const primaryLinkRow = await createShortLink(authenticatedPage, primary.link);
+		await expect(primaryLinkRow).toBeVisible();
+		await primaryLinkRow.click();
+		await expect(authenticatedPage).toHaveURL(/\/links\/[A-Za-z0-9_-]+/);
+		const primaryLinkId = idFromPath(authenticatedPage.url(), "links");
 
 		await createOrganization(authenticatedPage, {
 			name: secondary.name,
@@ -114,6 +122,17 @@ test(
 		await expectScopedWebsitesAndLinks(authenticatedPage, secondary, primary, {
 			seededWebsiteVisible: false,
 		});
+
+		await authenticatedPage.goto(`/websites/${primaryWebsiteId}`);
+		await expect(
+			authenticatedPage.getByRole("heading", { name: "Access Denied" })
+		).toBeVisible();
+		await expect(authenticatedPage.getByText(primary.website.domain)).toBeHidden();
+		await authenticatedPage.goto(`/links/${primaryLinkId}`);
+		await expect(
+			authenticatedPage.getByRole("heading", { name: "Link not found" })
+		).toBeVisible();
+		await expect(linkRow(authenticatedPage, primary.link.name)).toBeHidden();
 
 		await switchOrganization(authenticatedPage, e2eSession.organizationName);
 		await expectScopedWebsitesAndLinks(authenticatedPage, primary, secondary, {
