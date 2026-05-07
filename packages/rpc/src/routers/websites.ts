@@ -440,11 +440,7 @@ export const websitesRouter = {
 		.input(createWebsiteSchema)
 		.output(websiteOutputSchema)
 		.handler(async ({ context, input }) => {
-			if (!input.organizationId) {
-				throw rpcError.badRequest("Website must belong to a workspace");
-			}
-
-			await withWorkspace(context, {
+			const workspace = await withWorkspace(context, {
 				organizationId: input.organizationId,
 				resource: "website",
 				permissions: ["create"],
@@ -454,7 +450,7 @@ export const websitesRouter = {
 				return await websiteService.create({
 					name: input.name,
 					domain: input.domain,
-					organizationId: input.organizationId,
+					organizationId: workspace.organizationId,
 					status: "ACTIVE" as const,
 				});
 			} catch (error) {

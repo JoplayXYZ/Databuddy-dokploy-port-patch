@@ -165,6 +165,8 @@ export function OrganizationSelector({
 
 	const filteredOrganizations = filterOrganizations(organizations, query);
 
+	const activeOrganizationName = activeOrganization?.name ?? "Organization";
+	const organizationTriggerLabel = `Organization: ${activeOrganizationName}`;
 	const avatarUrl = getDicebearUrl(
 		activeOrganization?.logo || activeOrganization?.id
 	);
@@ -217,6 +219,7 @@ export function OrganizationSelector({
 							side="right"
 						>
 							<DropdownMenu.Trigger
+								aria-label={organizationTriggerLabel}
 								className="flex size-9 items-center justify-center rounded bg-sidebar-accent/50 hover:bg-sidebar-accent"
 								disabled={isSwitching}
 								render={<button type="button" />}
@@ -259,6 +262,7 @@ export function OrganizationSelector({
 					open={isOpen}
 				>
 					<DropdownMenu.Trigger
+						aria-label={organizationTriggerLabel}
 						className={cn(
 							"flex h-9 w-full items-center gap-2.5 rounded bg-sidebar-accent/50 px-2.5",
 							"hover:bg-sidebar-accent",

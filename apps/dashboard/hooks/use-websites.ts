@@ -138,6 +138,9 @@ export function useCreateWebsite() {
 	return useMutation({
 		...orpc.websites.create.mutationOptions(),
 		meta: { suppressGlobalErrorToast: true },
+		onMutate: async () => {
+			await queryClient.cancelQueries({ queryKey: getWebsitesListKey() });
+		},
 		onSuccess: (data) => {
 			const newWebsite = data as Website;
 			const listKey = getWebsitesListKey();
