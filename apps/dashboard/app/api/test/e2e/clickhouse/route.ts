@@ -109,6 +109,24 @@ export async function POST(request: Request): Promise<Response> {
 		};
 	});
 
+	const screenViewEvents = events.filter(
+		(event) => event.event_name === "screen_view"
+	);
+	const screenViewsByCountry = screenViewEvents.reduce<Record<string, number>>(
+		(acc, event) => {
+			acc[event.country] = (acc[event.country] ?? 0) + 1;
+			return acc;
+		},
+		{}
+	);
+	const screenViewsByPath = screenViewEvents.reduce<Record<string, number>>(
+		(acc, event) => {
+			acc[event.path] = (acc[event.path] ?? 0) + 1;
+			return acc;
+		},
+		{}
+	);
+
 	const outgoingLinks = sessions
 		.slice(0, Math.ceil(eventCount / 20))
 		.map((session) => ({
@@ -138,6 +156,9 @@ export async function POST(request: Request): Promise<Response> {
 	return Response.json({
 		events: events.length,
 		outgoingLinks: outgoingLinks.length,
+		screenViews: screenViewEvents.length,
+		screenViewsByCountry,
+		screenViewsByPath,
 		seeded: true,
 		websiteId: body.websiteId,
 	});

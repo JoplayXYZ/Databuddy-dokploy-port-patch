@@ -1,6 +1,17 @@
 import { test as base } from "@playwright/test";
 
+interface E2EAnalyticsSeed {
+	events: number;
+	outgoingLinks: number;
+	screenViews: number;
+	screenViewsByCountry: Record<string, number>;
+	screenViewsByPath: Record<string, number>;
+	seeded: true;
+	websiteId: string;
+}
+
 interface E2ESession {
+	analyticsSeed: E2EAnalyticsSeed | null;
 	email: string;
 	name: string;
 	organizationId: string;
@@ -34,9 +45,9 @@ function testScope(testTitle: string): string {
 async function seedClickHouse(
 	request: import("@playwright/test").APIRequestContext,
 	websiteId: string
-): Promise<void> {
+): Promise<E2EAnalyticsSeed | null> {
 	if (process.env.DATABUDDY_E2E_SEED_CLICKHOUSE !== "1") {
-		return;
+		return null;
 	}
 
 	const response = await request.post("/api/test/e2e/clickhouse", {
@@ -52,6 +63,8 @@ async function seedClickHouse(
 			`E2E ClickHouse seed failed with ${response.status()}: ${await response.text()}`
 		);
 	}
+
+	return (await response.json()) as E2EAnalyticsSeed;
 }
 
 export const test = base.extend<E2EFixtures>({
@@ -72,11 +85,14 @@ export const test = base.extend<E2EFixtures>({
 				`E2E session bootstrap failed with ${response.status()}: ${await response.text()}`
 			);
 		}
-		const session = (await response.json()) as E2ESession;
-		if (session.websiteId) {
-			await seedClickHouse(page.context().request, session.websiteId);
-		}
-		await use(session);
+		const session = (await response.json()) as Omit<
+			E2ESession,
+			"analyticsSeed"
+		>;
+		const analyticsSeed = session.websiteId
+			? await seedClickHouse(page.context().request, session.websiteId)
+			: null;
+		await use({ ...session, analyticsSeed });
 	},
 	authenticatedPage: async ({ e2eSession: _session, page }, use) => {
 		await use(page);

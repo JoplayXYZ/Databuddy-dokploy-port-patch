@@ -1,5 +1,9 @@
 import { expect, test } from "@/test/e2e/fixtures";
 
+function formattedCount(value: number): string {
+	return new Intl.NumberFormat("en-US").format(value);
+}
+
 test(
 	"renders analytics controls in the website topbar",
 	{ tag: ["@regression", "@core"] },
@@ -32,10 +36,22 @@ test(
 
 		await authenticatedPage.goto(`/demo/${e2eSession.websiteId}`);
 
-		await expect(authenticatedPage.getByText("187").first()).toBeVisible({
-			timeout: 20_000,
-		});
-		await expect(authenticatedPage.getByText("/pricing").first()).toBeVisible();
+		expect(e2eSession.analyticsSeed).toBeTruthy();
+		const seed = e2eSession.analyticsSeed;
+		if (!seed) {
+			throw new Error("Expected E2E analytics seed metadata");
+		}
+
+		await expect(
+			authenticatedPage.getByText(formattedCount(seed.screenViews)).first()
+		).toBeVisible({ timeout: 20_000 });
+		const topSeededPath = Object.entries(seed.screenViewsByPath).sort(
+			([, a], [, b]) => b - a
+		)[0]?.[0];
+		expect(topSeededPath).toBeTruthy();
+		await expect(
+			authenticatedPage.getByText(topSeededPath ?? "/").first()
+		).toBeVisible();
 
 		const topbar = authenticatedPage.getByRole("toolbar", {
 			name: "Dashboard top bar",
@@ -50,5 +66,8 @@ test(
 		const main = authenticatedPage.getByRole("main");
 		await expect(main.getByText("Country")).toBeVisible();
 		await expect(main.getByText("US", { exact: true })).toBeVisible();
+		await expect(
+			main.getByText(formattedCount(seed.screenViewsByCountry.US ?? 0)).first()
+		).toBeVisible({ timeout: 20_000 });
 	}
 );
