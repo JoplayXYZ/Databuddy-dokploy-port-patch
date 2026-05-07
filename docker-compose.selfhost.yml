@@ -91,6 +91,9 @@ services:
       BETTER_AUTH_URL: ${BETTER_AUTH_URL:?Set BETTER_AUTH_URL in your environment}
       BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?Set BETTER_AUTH_SECRET in your environment}
       DASHBOARD_URL: ${DASHBOARD_URL:-}
+      API_URL: ${API_URL:-}
+      EMAIL_FROM: ${EMAIL_FROM:-}
+      ALERTS_EMAIL_FROM: ${ALERTS_EMAIL_FROM:-}
       AI_API_KEY: ${AI_API_KEY:-}
       RESEND_API_KEY: ${RESEND_API_KEY:-}
     healthcheck:

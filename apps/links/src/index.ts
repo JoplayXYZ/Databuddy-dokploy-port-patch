@@ -5,6 +5,7 @@ import { evlog } from "evlog/elysia";
 import { drain, enrich, flushDrain } from "./lib/logging";
 import { disconnectProducer } from "./lib/producer";
 import { redirectRoute } from "./routes/redirect";
+import { preloadGeoDatabase } from "./utils/geo";
 
 initLogger({
 	env: { service: "links" },
@@ -15,9 +16,12 @@ initLogger({
 	},
 });
 
+const rootRedirectUrl = process.env.LINKS_ROOT_REDIRECT_URL || "https://databuddy.cc";
+preloadGeoDatabase();
+
 const app = new Elysia()
 	.use(evlog({ enrich }))
-	.get("/", () => redirect("https://databuddy.cc", 302))
+	.get("/", () => redirect(rootRedirectUrl, 302))
 	.get("/health", () => Response.json({ status: "ok" }))
 	.get("/health/status", async () => {
 		const { db, sql } = await import("@databuddy/db");

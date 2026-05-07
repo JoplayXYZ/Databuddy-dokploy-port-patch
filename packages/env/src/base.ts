@@ -27,6 +27,16 @@ export const commonEnvSchema = {
 	DATABASE_URL: z.string(),
 	DB_POOL_MAX: z.string().optional(),
 	REDIS_URL: z.string(),
+	ALERTS_EMAIL_FROM: z.string().optional(),
+	API_URL: z.string().optional(),
+	BASKET_URL: z.string().optional(),
+	DASHBOARD_URL: z.string().optional(),
+	EMAIL_FROM: z.string().optional(),
+	NEXT_PUBLIC_API_URL: z.string().optional(),
+	NEXT_PUBLIC_APP_URL: z.string().optional(),
+	NEXT_PUBLIC_BASKET_URL: z.string().optional(),
+	NEXT_PUBLIC_STATUS_URL: z.string().optional(),
+	STATUS_URL: z.string().optional(),
 } as const;
 
 /**

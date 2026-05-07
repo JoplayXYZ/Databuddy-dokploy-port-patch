@@ -27,6 +27,7 @@ export const TABLE_NAMES = {
 	web_vitals_spans: "analytics.web_vitals_spans",
 	custom_events: "analytics.custom_events",
 	ai_traffic_spans: "analytics.ai_traffic_spans",
+	link_visits: "analytics.link_visits",
 };
 
 const logger = console;

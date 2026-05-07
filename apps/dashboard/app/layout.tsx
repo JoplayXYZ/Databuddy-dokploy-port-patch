@@ -3,6 +3,7 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { APP_URL } from "@/lib/app-url";
 import { DatabuddyDevtools } from "@databuddy/devtools/react";
+import { publicConfig } from "@databuddy/env/public";
 import { Databuddy } from "@databuddy/sdk/react";
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
@@ -116,10 +117,12 @@ export default function RootLayout({
 	children: React.ReactNode;
 }>) {
 	const isLocalhost = process.env.NODE_ENV === "development";
+	const isE2E = process.env.DATABUDDY_E2E_MODE === "1";
 
 	return (
 		<html
 			className={`${ltSuperior.className} ${ltSuperior.variable} ${ltSuperiorMono.variable} h-full overflow-hidden`}
+			data-scroll-behavior="smooth"
 			lang="en"
 			suppressHydrationWarning
 		>
@@ -130,24 +133,22 @@ export default function RootLayout({
 					</main>
 				</Providers>
 				<Toaster />
-				<Databuddy
-					apiUrl={
-						isLocalhost
-							? "http://localhost:4000"
-							: "https://basket.databuddy.cc"
-					}
-					clientId={
-						isLocalhost
-							? "5ced32e5-0219-4e75-a18a-ad9826f85698"
-							: "3ed1fce1-5a56-4cb6-a977-66864f6d18e3"
-					}
-					scriptUrl="https://cdn.databuddy.cc/databuddy-debug.js"
-					trackAttributes={true}
-					trackErrors={true}
-					trackPerformance={true}
-					trackWebVitals={true}
-				/>
-				{isLocalhost ? <DatabuddyDevtools /> : null}
+				{isE2E ? null : (
+					<Databuddy
+						apiUrl={publicConfig.urls.basket}
+						clientId={
+							isLocalhost
+								? "5ced32e5-0219-4e75-a18a-ad9826f85698"
+								: "3ed1fce1-5a56-4cb6-a977-66864f6d18e3"
+						}
+						scriptUrl="https://cdn.databuddy.cc/databuddy-debug.js"
+						trackAttributes={true}
+						trackErrors={true}
+						trackPerformance={true}
+						trackWebVitals={true}
+					/>
+				)}
+				{isLocalhost && !isE2E ? <DatabuddyDevtools /> : null}
 			</body>
 		</html>
 	);

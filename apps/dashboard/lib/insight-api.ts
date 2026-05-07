@@ -1,3 +1,4 @@
+import { publicConfig } from "@databuddy/env/public";
 import {
 	infiniteQueryOptions,
 	keepPreviousData,
@@ -6,7 +7,7 @@ import {
 import { guessTimezone } from "@databuddy/ui";
 import type { HistoryInsightRow, Insight } from "@/lib/insight-types";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const API_URL = publicConfig.urls.api;
 
 export const INSIGHT_CACHE = {
 	staleTime: 15 * 60 * 1000,

@@ -7,6 +7,7 @@ import { parseAsBoolean, useQueryState } from "nuqs";
 import { useEffect } from "react";
 import { toast } from "sonner";
 import { LiveUserIndicator } from "@/components/analytics";
+import { TopBar } from "@/components/layout/top-bar";
 import { WebsiteErrorState } from "@/components/website-error-state";
 import {
 	batchDynamicQueryKeys,
@@ -19,6 +20,7 @@ import {
 	currentFilterWebsiteIdAtom,
 	isAnalyticsRefreshingAtom,
 } from "@/stores/jotai/filterAtoms";
+import { AnalyticsDateControls } from "./_components/analytics-date-controls";
 import { AnalyticsToolbar } from "./_components/analytics-toolbar";
 import { AddFilterForm } from "./_components/filters/add-filters";
 import { FiltersSection } from "./_components/filters/filters-section";
@@ -71,14 +73,6 @@ export default function WebsiteLayout({ children }: WebsiteLayoutProps) {
 	const { isTrackingSetup, isTrackingSetupLoading } =
 		useTrackingSetup(websiteId);
 
-	if (!id) {
-		return <WebsiteErrorState error={{ data: { code: "NOT_FOUND" } }} />;
-	}
-
-	if (!isWebsiteLoading && isWebsiteError) {
-		return <WebsiteErrorState error={websiteError} websiteId={websiteId} />;
-	}
-
 	const isToolbarLoading =
 		isWebsiteLoading ||
 		(!isDemoRoute && (isTrackingSetupLoading || isTrackingSetup === null));
@@ -112,42 +106,49 @@ export default function WebsiteLayout({ children }: WebsiteLayoutProps) {
 		setIsRefreshing(false);
 	};
 
-	const toolbarActions = (
-		<>
-			<AddFilterForm
-				addFilter={addFilter}
-				buttonText="Filter"
-				disabled={isToolbarDisabled}
-			/>
-			<SavedFiltersToolbar />
-			<LiveUserIndicator websiteId={websiteId} />
-			<Button
-				aria-label="Refresh data"
-				disabled={isRefreshing || isToolbarDisabled}
-				onClick={handleRefresh}
-				size="sm"
-				variant="secondary"
-			>
-				<ArrowClockwiseIcon
-					aria-hidden
-					className={cn(
-						"size-4 shrink-0",
-						isRefreshing || isToolbarLoading ? "animate-spin" : ""
-					)}
-				/>
-			</Button>
-		</>
-	);
+	if (!id) {
+		return <WebsiteErrorState error={{ data: { code: "NOT_FOUND" } }} />;
+	}
+
+	if (!isWebsiteLoading && isWebsiteError) {
+		return <WebsiteErrorState error={websiteError} websiteId={websiteId} />;
+	}
 
 	return (
 		<div className="flex h-full flex-col overflow-hidden">
 			{!hideToolbar && (
 				<>
-					<AnalyticsToolbar
-						actions={toolbarActions}
-						className="hidden md:flex"
-						isDisabled={isToolbarDisabled}
-					/>
+					<TopBar.Title>
+						<AnalyticsDateControls
+							isDisabled={isToolbarDisabled}
+							variant="topbar"
+						/>
+					</TopBar.Title>
+
+					<TopBar.Actions>
+						<AddFilterForm
+							addFilter={addFilter}
+							buttonText="Filter"
+							disabled={isToolbarDisabled}
+						/>
+						<SavedFiltersToolbar />
+						<LiveUserIndicator websiteId={websiteId} />
+						<Button
+							aria-label="Refresh data"
+							disabled={isRefreshing || isToolbarDisabled}
+							onClick={handleRefresh}
+							size="sm"
+							variant="secondary"
+						>
+							<ArrowClockwiseIcon
+								aria-hidden
+								className={cn(
+									"size-4 shrink-0",
+									isRefreshing || isToolbarLoading ? "animate-spin" : ""
+								)}
+							/>
+						</Button>
+					</TopBar.Actions>
 
 					<AnalyticsToolbar
 						className="md:hidden"

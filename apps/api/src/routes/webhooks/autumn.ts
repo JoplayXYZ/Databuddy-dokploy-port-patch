@@ -1,6 +1,7 @@
 import { db } from "@databuddy/db";
 import { usageAlertLog } from "@databuddy/db/schema";
 import { render, UsageAlertEmail, UsageLimitEmail } from "@databuddy/email";
+import { config } from "@databuddy/env/app";
 import { SlackProvider } from "@databuddy/notifications";
 import {
 	cacheable,
@@ -129,7 +130,7 @@ async function sendAlertEmail(opts: {
 
 	const html = await render(react);
 	const result = await resend.emails.send({
-		from: "Databuddy <alerts@databuddy.cc>",
+		from: config.email.alertsFrom,
 		to: email,
 		subject,
 		html,

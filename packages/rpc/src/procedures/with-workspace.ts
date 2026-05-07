@@ -238,6 +238,16 @@ export async function withWorkspace<R extends ResourceType = "organization">(
 	const effectivePermissions = permissions as string[];
 	const getCreatedBy = () => _resolveCreatedBy(context, organizationId);
 
+	if (
+		context.user &&
+		context.organizationId &&
+		organizationId !== context.organizationId
+	) {
+		throw rpcError.forbidden(
+			"Resource does not belong to the active organization"
+		);
+	}
+
 	if (context.user) {
 		const userId = context.user.id;
 		const [plan, role] = await Promise.all([

@@ -1,5 +1,7 @@
 "use client";
 
+import { publicConfig } from "@databuddy/env/public";
+
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAtom } from "jotai";
 import { AnimatePresence, motion } from "motion/react";
@@ -68,8 +70,7 @@ interface RevenueTimeSeries {
 	transactions: number;
 }
 
-const BASKET_URL =
-	process.env.NEXT_PUBLIC_BASKET_URL || "https://basket.databuddy.cc";
+const BASKET_URL = publicConfig.urls.basket;
 
 const STRIPE_EVENTS = {
 	required: ["payment_intent.succeeded", "charge.refunded"],

@@ -3,6 +3,7 @@ import { auth } from "@databuddy/auth";
 import { and, db, eq } from "@databuddy/db";
 import { apikey, member, slackIntegrations } from "@databuddy/db/schema";
 import { encrypt } from "@databuddy/encryption";
+import { config } from "@databuddy/env/app";
 import { invalidateCacheableKey } from "@databuddy/redis/cache-invalidation";
 import { randomUUIDv7 } from "bun";
 import { Elysia, t } from "elysia";
@@ -77,7 +78,7 @@ function integrationsRedirect(
 ): Response {
 	const url = new URL(
 		"/organizations/settings/integrations",
-		process.env.BETTER_AUTH_URL || "http://localhost:3000"
+		config.urls.dashboard
 	);
 	url.searchParams.set("slack", status);
 	if (message) {

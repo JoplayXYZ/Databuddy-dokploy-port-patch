@@ -1,5 +1,6 @@
 import "./polyfills/compression";
 import { auth } from "@databuddy/auth";
+import { config } from "@databuddy/env/app";
 import {
 	setPgErrorFn,
 	setPgTraceFn,
@@ -192,7 +193,7 @@ const openApiHandler = new OpenAPIHandler(docsRouter, {
 			docsTitle: "Databuddy API",
 			docsConfig: { theme: "deepSpace" },
 			specGenerateOptions: {
-				servers: [{ url: "https://api.databuddy.cc" }],
+				servers: [{ url: config.urls.api }],
 				info: {
 					title: "Databuddy API",
 					version: "1.0.0",
@@ -323,12 +324,7 @@ const app = new Elysia({ precompile: true })
 	.use(
 		cors({
 			credentials: true,
-			origin: [
-				/(?:^|\.)databuddy\.cc$/,
-				...(process.env.NODE_ENV === "development"
-					? ["http://localhost:3000"]
-					: []),
-			],
+			origin: [/(?:^|\.)databuddy\.cc$/, config.urls.dashboard],
 		})
 	)
 	.use(publicApi)

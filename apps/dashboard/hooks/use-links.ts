@@ -104,6 +104,19 @@ const removeLinkFromList = (
 	return old.filter((l) => l.id !== linkId);
 };
 
+const addFolderToList = (
+	old: LinkFolder[] | undefined,
+	newFolder: LinkFolder
+): LinkFolder[] => {
+	if (!old) {
+		return [newFolder];
+	}
+	if (old.some((folder) => folder.id === newFolder.id)) {
+		return old;
+	}
+	return [...old, newFolder].sort((a, b) => a.name.localeCompare(b.name));
+};
+
 export function useLinks(options?: {
 	enabled?: boolean;
 	input?: LinkListInput;
@@ -364,7 +377,10 @@ export function useCreateLinkFolder() {
 
 	return useMutation({
 		...orpc.linkFolders.create.mutationOptions(),
-		onSuccess: () => {
+		onSuccess: (newFolder: LinkFolder) => {
+			queryClient.setQueryData<LinkFolder[]>(getLinkFoldersListKey(), (old) =>
+				addFolderToList(old, newFolder)
+			);
 			queryClient.invalidateQueries({
 				queryKey: orpc.linkFolders.list.key(),
 			});

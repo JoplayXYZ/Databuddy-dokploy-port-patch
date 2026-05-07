@@ -106,7 +106,7 @@ export function BillingProvider({
 	public: isPublic,
 	websiteId,
 }: BillingProviderProps) {
-	if (isPublic) {
+	if (isPublic || process.env.NEXT_PUBLIC_DATABUDDY_E2E_MODE === "1") {
 		return <PublicBillingProvider>{children}</PublicBillingProvider>;
 	}
 	return (

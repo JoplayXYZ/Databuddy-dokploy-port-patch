@@ -16,6 +16,7 @@ import {
 	Input,
 	Spinner,
 	Text,
+	useHydrated,
 } from "@databuddy/ui";
 
 function LoginPage() {
@@ -28,8 +29,9 @@ function LoginPage() {
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
 	const [showPassword, setShowPassword] = useState(false);
+	const isHydrated = useHydrated();
 
-	const lastUsed = authClient.getLastUsedLoginMethod();
+	const lastUsed = isHydrated ? authClient.getLastUsedLoginMethod() : null;
 
 	const getProviderLabel = (provider: "github" | "google") =>
 		provider === "github" ? "GitHub" : "Google";

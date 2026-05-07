@@ -150,7 +150,10 @@ export function LinkRow({
 
 			<div className="flex shrink-0 items-center pr-4">
 				<DropdownMenu>
-					<DropdownMenu.Trigger className="inline-flex size-7 cursor-pointer items-center justify-center rounded-md text-muted-foreground opacity-0 transition-all hover:bg-interactive-hover hover:text-foreground group-hover:opacity-100 data-[state=open]:opacity-100">
+					<DropdownMenu.Trigger
+						aria-label={`Actions for ${link.name}`}
+						className="inline-flex size-7 cursor-pointer items-center justify-center rounded-md text-muted-foreground opacity-0 transition-all hover:bg-interactive-hover hover:text-foreground group-hover:opacity-100 data-[state=open]:opacity-100"
+					>
 						<DotsThreeIcon className="size-4" weight="bold" />
 					</DropdownMenu.Trigger>
 					<DropdownMenu.Content align="end" className="w-40">

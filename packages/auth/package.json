@@ -17,6 +17,7 @@
     "@better-auth/sso": "^1.4.10",
     "@databuddy/db": "*",
     "@databuddy/email": "*",
+    "@databuddy/env": "workspace:*",
     "@databuddy/notifications": "workspace:*",
     "@databuddy/redis": "*",
     "@databuddy/shared": "*",

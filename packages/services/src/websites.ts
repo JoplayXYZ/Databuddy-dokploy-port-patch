@@ -223,6 +223,7 @@ export class WebsiteService {
 				throw new WebsiteNotFoundError();
 			}
 
+			await this.cache?.deleteWebsiteById(id);
 			await this.cache?.setWebsite(updated);
 
 			const scopeChanged = before.organizationId !== updated.organizationId;
@@ -233,6 +234,11 @@ export class WebsiteService {
 				await this.cache?.deleteWebsiteByDomain(
 					before.domain,
 					before.organizationId
+				);
+			} else {
+				await this.cache?.deleteWebsiteByDomain(
+					updated.domain,
+					updated.organizationId
 				);
 			}
 

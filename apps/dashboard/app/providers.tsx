@@ -1,5 +1,7 @@
 "use client";
 
+import { publicConfig } from "@databuddy/env/public";
+
 import { authClient } from "@databuddy/auth/client";
 import { FlagsProvider } from "@databuddy/sdk/react";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -32,8 +34,9 @@ export default function Providers({ children }: { children: React.ReactNode }) {
 
 function FlagsProviderWrapper({ children }: { children: React.ReactNode }) {
 	const { data: session, isPending } = authClient.useSession();
+	const isE2E = process.env.NEXT_PUBLIC_DATABUDDY_E2E_MODE === "1";
 
-	const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
+	const apiUrl = publicConfig.urls.api;
 	const clientId =
 		process.env.NEXT_PUBLIC_DATABUDDY_CLIENT_ID ?? "OXmNQsViBT-FOS_wZCTHc";
 
@@ -47,8 +50,11 @@ function FlagsProviderWrapper({ children }: { children: React.ReactNode }) {
 	return (
 		<FlagsProvider
 			apiUrl={apiUrl}
+			autoFetch={!isE2E}
 			clientId={clientId}
+			disabled={isE2E}
 			isPending={isPending}
+			skipStorage={isE2E}
 			user={user}
 		>
 			{children}

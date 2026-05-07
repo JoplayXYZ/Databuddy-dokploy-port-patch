@@ -157,6 +157,23 @@ describe("cross-tenant isolation", () => {
 				"FORBIDDEN",
 			);
 		});
+
+		iit("cannot read another membership's website while a different org is active", async () => {
+			const user = await signUp();
+			const orgA = await insertOrganization();
+			const orgB = await insertOrganization();
+			await addToOrganization(user.id, orgA.id, "owner");
+			await addToOrganization(user.id, orgB.id, "owner");
+			const siteB = await insertWebsite({ organizationId: orgB.id });
+
+			await expectCode(
+				withWorkspace(userContext(user, orgA.id), {
+					websiteId: siteB.id,
+					permissions: ["read"],
+				}),
+				"FORBIDDEN",
+			);
+		});
 	});
 
 	describe("correct org access still works", () => {

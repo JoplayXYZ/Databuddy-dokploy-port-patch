@@ -16,6 +16,7 @@ import {
 	ResetPasswordEmail,
 	VerificationEmail,
 } from "@databuddy/email";
+import { config } from "@databuddy/env/app";
 import { SlackProvider } from "@databuddy/notifications";
 import { getRedisCache, ratelimit } from "@databuddy/redis";
 import { createId } from "@databuddy/shared/utils/ids";
@@ -228,7 +229,7 @@ export const auth = betterAuth({
 			sendDeleteAccountVerification: async ({ user: targetUser, url }) => {
 				const resend = new Resend(process.env.RESEND_API_KEY as string);
 				await resend.emails.send({
-					from: "no-reply@databuddy.cc",
+					from: config.email.from,
 					to: targetUser.email,
 					subject: "[Action required] Confirm account deletion",
 					html: await render(DeleteAccountEmail({ url })),
@@ -266,8 +267,8 @@ export const auth = betterAuth({
 	},
 	trustedOrigins: [
 		"https://databuddy.cc",
-		"https://app.databuddy.cc",
-		"https://api.databuddy.cc",
+		config.urls.dashboard,
+		config.urls.api,
 	],
 	socialProviders: {
 		google: {
@@ -299,7 +300,7 @@ export const auth = betterAuth({
 
 			const resend = new Resend(process.env.RESEND_API_KEY as string);
 			await resend.emails.send({
-				from: "no-reply@databuddy.cc",
+				from: config.email.from,
 				to: user.email,
 				subject: "[Action required] Reset your password",
 				html: await render(ResetPasswordEmail({ url })),
@@ -330,7 +331,7 @@ export const auth = betterAuth({
 
 			const resend = new Resend(process.env.RESEND_API_KEY as string);
 			await resend.emails.send({
-				from: "no-reply@databuddy.cc",
+				from: config.email.from,
 				to: user.email,
 				subject: "[Action required] Verify your email to get started",
 				html: await render(VerificationEmail({ url })),
@@ -380,7 +381,7 @@ export const auth = betterAuth({
 				const otpHtml = await render(OtpEmail({ otp }));
 				resend.emails
 					.send({
-						from: "no-reply@databuddy.cc",
+						from: config.email.from,
 						to: email,
 						subject,
 						html: otpHtml,
@@ -405,7 +406,7 @@ export const auth = betterAuth({
 
 				const resend = new Resend(process.env.RESEND_API_KEY as string);
 				resend.emails.send({
-					from: "no-reply@databuddy.cc",
+					from: config.email.from,
 					to: email,
 					subject: "Your sign-in link for Databuddy",
 					html: await render(MagicLinkEmail({ url })),
@@ -452,10 +453,10 @@ export const auth = betterAuth({
 					return;
 				}
 
-				const invitationLink = `https://app.databuddy.cc/invitations/${invitation.id}`;
+				const invitationLink = `${config.urls.dashboard}/invitations/${invitation.id}`;
 				const resend = new Resend(process.env.RESEND_API_KEY as string);
 				await resend.emails.send({
-					from: "no-reply@databuddy.cc",
+					from: config.email.from,
 					to: email,
 					subject: `${inviter.user.name ?? "Someone"} invited you to join ${organization.name}`,
 					html: await render(

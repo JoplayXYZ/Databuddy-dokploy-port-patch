@@ -1,3 +1,4 @@
+import { publicConfig } from "@databuddy/env/public";
 import type { AppRouter } from "@databuddy/rpc";
 import { createORPCClient, onError } from "@orpc/client";
 import { RPCLink } from "@orpc/client/fetch";
@@ -5,8 +6,10 @@ import type { RouterClient } from "@orpc/server";
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
 import { isAbortError } from "@/lib/is-abort-error";
 
+const isE2E = process.env.NEXT_PUBLIC_DATABUDDY_E2E_MODE === "1";
+
 const link = new RPCLink({
-	url: `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/rpc`,
+	url: `${publicConfig.urls.api}/rpc`,
 	fetch: (request, init) => {
 		const headers = new Headers(request.headers);
 
@@ -28,7 +31,7 @@ const link = new RPCLink({
 	},
 	interceptors: [
 		onError((error) => {
-			if (isAbortError(error)) {
+			if (isE2E || isAbortError(error)) {
 				return;
 			}
 			if (
