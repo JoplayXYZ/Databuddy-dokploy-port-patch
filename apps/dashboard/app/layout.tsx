@@ -122,6 +122,7 @@ export default function RootLayout({
 	return (
 		<html
 			className={`${ltSuperior.className} ${ltSuperior.variable} ${ltSuperiorMono.variable} h-full overflow-hidden`}
+			data-scroll-behavior="smooth"
 			lang="en"
 			suppressHydrationWarning
 		>

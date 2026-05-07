@@ -26,3 +26,21 @@ test(
 		);
 	}
 );
+
+test(
+	"signs out and protects authenticated routes",
+	{ tag: ["@smoke", "@core"] },
+	async ({ authenticatedPage }) => {
+		await authenticatedPage.goto("/settings/account");
+		await expect(
+			authenticatedPage.getByRole("heading", { name: "Basic Information" })
+		).toBeVisible();
+
+		await authenticatedPage.getByLabel("Account", { exact: true }).click();
+		await authenticatedPage.getByRole("menuitem", { name: "Sign out" }).click();
+		await expect(authenticatedPage).toHaveURL(/login|sign-in|auth/);
+
+		await authenticatedPage.goto("/settings/account");
+		await expect(authenticatedPage).toHaveURL(/login|sign-in|auth/);
+	}
+);
