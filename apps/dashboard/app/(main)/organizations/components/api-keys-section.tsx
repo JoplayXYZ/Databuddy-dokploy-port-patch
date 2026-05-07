@@ -134,8 +134,8 @@ export function ApiKeysSection({
 					<Card.Title>API Keys</Card.Title>
 					<Card.Description>
 						{isEmpty
-							? "Create keys for programmatic access to your organization"
-							: `${activeCount} active of ${items.length} key${items.length === 1 ? "" : "s"}`}
+							? `Create keys for programmatic access to ${organization.name}`
+							: `${activeCount} active of ${items.length} key${items.length === 1 ? "" : "s"} for ${organization.name}`}
 					</Card.Description>
 				</div>
 				<Button onClick={openCreate} size="sm" variant="secondary">
@@ -215,9 +215,9 @@ export function ApiKeysSection({
 									Create your first key
 								</Button>
 							}
-							description="API keys authenticate requests to the Databuddy API. Keys are shown once at creation."
+							description={`API keys created here only authenticate requests for ${organization.name}. Keys are shown once at creation.`}
 							icon={<LockSimpleIcon />}
-							title="No API keys"
+							title="No API keys in this workspace"
 						/>
 					</div>
 				) : filtered.length === 0 ? (

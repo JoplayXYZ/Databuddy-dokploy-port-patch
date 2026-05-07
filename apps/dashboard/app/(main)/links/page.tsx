@@ -1,6 +1,7 @@
 "use client";
 
 import { ErrorBoundary } from "@/components/error-boundary";
+import { useOrganizationsContext } from "@/components/providers/organizations-provider";
 import {
 	type Link,
 	useCreateLinkFolder,
@@ -48,6 +49,8 @@ export default function LinksPage() {
 	const [search, setSearch] = useState("");
 	const [sort, setSort] = useState<SortOption>("newest");
 	const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
+	const { activeOrganization } = useOrganizationsContext();
+	const workspaceName = activeOrganization?.name ?? "this workspace";
 
 	const { isOn } = useFlags();
 	const deepLinksEnabled = isOn("deeplinks");
@@ -118,8 +121,8 @@ export default function LinksPage() {
 								</div>
 								<Card.Description>
 									{hasLinks
-										? `${links.length} link${links.length === 1 ? "" : "s"} · Free while in beta`
-										: "Create and manage short links with analytics. Free while in beta."}
+										? `${links.length} link${links.length === 1 ? "" : "s"} in ${workspaceName} · Free while in beta`
+										: `${workspaceName} does not have any links yet. Create short links with workspace-scoped analytics.`}
 								</Card.Description>
 							</div>
 							<div className="flex shrink-0 items-center gap-2">

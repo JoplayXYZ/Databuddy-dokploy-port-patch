@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import { useState } from "react";
 import { TopBar } from "@/components/layout/top-bar";
+import { useOrganizationsContext } from "@/components/providers/organizations-provider";
 import { useWebsites } from "@/hooks/use-websites";
 import { cn } from "@/lib/utils";
 import { WebsiteCard } from "./_components/website-card";
@@ -48,6 +49,8 @@ function LoadingSkeleton() {
 
 export default function WebsitesPage() {
 	const [dialogOpen, setDialogOpen] = useState(false);
+	const { activeOrganization } = useOrganizationsContext();
+	const workspaceName = activeOrganization?.name ?? "this workspace";
 
 	const {
 		websites,
@@ -114,9 +117,9 @@ export default function WebsitesPage() {
 							onClick: () => setDialogOpen(true),
 						}}
 						className="h-full"
-						description="Start tracking your website analytics by adding your first website. Get insights into visitors, pageviews, and performance."
+						description={`${workspaceName} does not have any websites yet. Add one to start collecting analytics for this workspace.`}
 						icon={<GlobeIcon weight="duotone" />}
-						title="No websites yet"
+						title="No websites in this workspace"
 						variant="minimal"
 					/>
 				)}
