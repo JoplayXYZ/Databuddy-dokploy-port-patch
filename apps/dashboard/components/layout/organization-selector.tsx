@@ -2,6 +2,7 @@
 
 import { authClient } from "@databuddy/auth/client";
 import { useQueryClient } from "@tanstack/react-query";
+import { useSetAtom } from "jotai";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -19,7 +20,9 @@ import {
 	AUTH_QUERY_KEYS,
 	useOrganizationsContext,
 } from "@/components/providers/organizations-provider";
+import { orpc } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
+import { pendingActiveOrganizationIdAtom } from "@/stores/jotai/organizationsAtoms";
 import { Avatar, DropdownMenu } from "@databuddy/ui/client";
 import { Badge, Skeleton, Tooltip, useHydrated } from "@databuddy/ui";
 
@@ -118,14 +121,20 @@ export function OrganizationSelector({
 }) {
 	const queryClient = useQueryClient();
 	const router = useRouter();
-	const { organizations, activeOrganization, isLoading } =
-		useOrganizationsContext();
+	const {
+		organizations,
+		activeOrganization,
+		isLoading,
+		isSwitchingOrganization,
+	} = useOrganizationsContext();
 	const { currentPlanId } = useBillingContext();
 	const hydrated = useHydrated();
 	const [isOpen, setIsOpen] = useState(false);
 	const [showCreateDialog, setShowCreateDialog] = useState(false);
 	const [query, setQuery] = useState("");
-	const [isSwitching, setIsSwitching] = useState(false);
+	const setPendingActiveOrganizationId = useSetAtom(
+		pendingActiveOrganizationIdAtom
+	);
 
 	const planLabel = currentPlanId
 		? currentPlanId.charAt(0).toUpperCase() + currentPlanId.slice(1)
@@ -141,7 +150,7 @@ export function OrganizationSelector({
 			return;
 		}
 
-		setIsSwitching(true);
+		setPendingActiveOrganizationId(organizationId);
 		setIsOpen(false);
 
 		const { error } = await authClient.organization.setActive({
@@ -150,23 +159,30 @@ export function OrganizationSelector({
 
 		if (error) {
 			toast.error(error.message || "Failed to switch organization");
-			setIsSwitching(false);
+			setPendingActiveOrganizationId(null);
 			return;
 		}
+
+		queryClient.removeQueries({ queryKey: orpc.websites.key() });
+		queryClient.removeQueries({ queryKey: orpc.links.list.key() });
+		queryClient.removeQueries({ queryKey: orpc.linkFolders.list.key() });
+		queryClient.removeQueries({ queryKey: orpc.apikeys.list.key() });
 
 		await queryClient.invalidateQueries({
 			queryKey: AUTH_QUERY_KEYS.activeOrganization,
 		});
 		queryClient.invalidateQueries();
 
-		setIsSwitching(false);
 		toast.success("Organization updated");
 	};
 
 	const filteredOrganizations = filterOrganizations(organizations, query);
 
+	const isSwitching = isSwitchingOrganization;
 	const activeOrganizationName = activeOrganization?.name ?? "Organization";
-	const organizationTriggerLabel = `Organization: ${activeOrganizationName}`;
+	const organizationTriggerLabel = isSwitching
+		? `Switching workspace from ${activeOrganizationName}`
+		: `Organization: ${activeOrganizationName}`;
 	const avatarUrl = getDicebearUrl(
 		activeOrganization?.logo || activeOrganization?.id
 	);
@@ -278,7 +294,9 @@ export function OrganizationSelector({
 							src={avatarUrl}
 						/>
 						<span className="min-w-0 flex-1 truncate text-left font-semibold text-sidebar-foreground text-sm">
-							{activeOrganization?.name ?? "Select organization"}
+							{isSwitching
+								? "Switching workspace…"
+								: (activeOrganization?.name ?? "Select organization")}
 						</span>
 						{isSwitching ? (
 							<SpinnerGapIcon className="size-3.5 shrink-0 animate-spin text-sidebar-foreground/30" />
