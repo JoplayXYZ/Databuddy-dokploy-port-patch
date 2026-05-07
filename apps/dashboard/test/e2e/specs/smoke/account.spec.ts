@@ -1,4 +1,4 @@
-import { expect, test } from "../../fixtures";
+import { expect, test } from "@/test/e2e/fixtures";
 
 test(
 	"updates the signed-in user's profile name",

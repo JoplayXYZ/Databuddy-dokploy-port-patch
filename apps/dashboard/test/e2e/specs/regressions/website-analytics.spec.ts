@@ -1,4 +1,4 @@
-import { expect, test } from "../../fixtures";
+import { expect, test } from "@/test/e2e/fixtures";
 
 test(
 	"renders analytics controls in the website topbar",

@@ -28,6 +28,7 @@ Every E2E test must be safe to run in parallel.
 Required:
 
 - Use `apps/dashboard/test/e2e/fixtures.ts` unless there is a clear reason not to.
+- Import local E2E fixtures/helpers through the dashboard `@/test/e2e/...` alias, not deep `../../` paths.
 - Create isolated users, organizations, websites, and seeded analytics data through the E2E bootstrap fixtures.
 - Keep tests independent. No test may depend on another test's data or execution order.
 - Prefer per-test state over shared mutable fixtures.

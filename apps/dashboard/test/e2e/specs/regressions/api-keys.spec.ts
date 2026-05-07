@@ -1,4 +1,4 @@
-import { expect, test } from "../../fixtures";
+import { expect, test } from "@/test/e2e/fixtures";
 
 test(
 	"creates and deletes an API key without leaving confirmation dialogs open",

@@ -1,46 +1,36 @@
-import { expect, test } from "../../fixtures";
+import { expect, test } from "@/test/e2e/fixtures";
+import {
+	createWebsite,
+	expectDashboardReady,
+	idFromPath,
+	scopeSuffix,
+	websiteCard,
+} from "@/test/e2e/utils/dashboard";
 
-function websiteIdFromUrl(url: string): string {
-	const match = new URL(url).pathname.match(/\/websites\/([^/]+)/);
-	if (!match?.[1]) {
-		throw new Error(`Could not read website id from URL: ${url}`);
-	}
-	return match[1];
-}
+const DUPLICATE_DOMAIN_RE = /domain.*already exists/i;
 
 test(
 	"creates, updates, and deletes a website",
 	{ tag: "@core" },
 	async ({ authenticatedPage, e2eSession }) => {
-		const suffix = e2eSession.userId.slice(0, 8);
+		const suffix = scopeSuffix(e2eSession);
 		const websiteName = `E2E Website ${suffix}`;
 		const updatedName = `${websiteName} Updated`;
 		const domain = `e2e-${suffix}.local`;
 
 		await authenticatedPage.goto("/websites");
-		await expect(
-			authenticatedPage.getByRole("button", { name: /Workspace|organization/i })
-		).toBeVisible();
-		await authenticatedPage.getByRole("button", { name: "New Website" }).click();
-		await expect(
-			authenticatedPage.getByRole("heading", { name: "Create a new website" })
-		).toBeVisible();
+		await expectDashboardReady(authenticatedPage);
 
-		await authenticatedPage.getByRole("textbox", { name: "Name" }).fill(websiteName);
-		await authenticatedPage.getByRole("textbox", { name: "Domain" }).fill(domain);
-		await authenticatedPage
-			.getByRole("button", { name: "Create website" })
-			.click();
-
-		const websiteLink = authenticatedPage.getByRole("link", {
-			name: `Open ${websiteName} analytics`,
+		const createdWebsite = await createWebsite(authenticatedPage, {
+			domain,
+			name: websiteName,
 		});
-		await expect(websiteLink).toBeVisible();
+		await expect(createdWebsite).toBeVisible();
 		await expect(authenticatedPage.getByText(domain)).toBeVisible();
 
-		await websiteLink.click();
+		await createdWebsite.click();
 		await expect(authenticatedPage).toHaveURL(/\/websites\/[A-Za-z0-9_-]+/);
-		const websiteId = websiteIdFromUrl(authenticatedPage.url());
+		const websiteId = idFromPath(authenticatedPage.url(), "websites");
 
 		await authenticatedPage.goto(`/websites/${websiteId}/settings/general`);
 		await expect(authenticatedPage.getByText(websiteName)).toBeVisible();
@@ -50,7 +40,9 @@ test(
 		await expect(
 			authenticatedPage.getByRole("heading", { name: "Edit Website" })
 		).toBeVisible();
-		await authenticatedPage.getByRole("textbox", { name: "Name" }).fill(updatedName);
+		await authenticatedPage
+			.getByRole("textbox", { name: "Name" })
+			.fill(updatedName);
 		await authenticatedPage.getByRole("button", { name: "Save changes" }).click();
 		await expect(
 			authenticatedPage.getByRole("heading", { name: "Edit Website" })
@@ -71,5 +63,60 @@ test(
 
 		await expect(authenticatedPage).toHaveURL(/\/websites$/);
 		await expect(authenticatedPage.getByText(updatedName)).toBeHidden();
+	}
+);
+
+test(
+	"validates, normalizes, and rejects duplicate website domains",
+	{ tag: "@core" },
+	async ({ authenticatedPage, e2eSession }) => {
+		const suffix = scopeSuffix(e2eSession);
+		const domain = `edge-${suffix}.local`;
+		const firstName = `Edge Website ${suffix}`;
+		const duplicateName = `Duplicate Website ${suffix}`;
+
+		await authenticatedPage.goto("/websites");
+		await expectDashboardReady(authenticatedPage);
+		await authenticatedPage.getByRole("button", { name: "New Website" }).click();
+
+		const dialog = authenticatedPage.getByRole("dialog", {
+			name: "Create a new website",
+		});
+		await dialog.getByRole("textbox", { name: "Name" }).fill("Bad !");
+		await dialog.getByRole("textbox", { name: "Domain" }).fill("not-a-domain");
+		await expect(dialog.getByText("Use alphanumeric, spaces, -, _")).toBeVisible();
+		await expect(dialog.getByText("Invalid domain format")).toBeVisible();
+		await expect(
+			dialog.getByRole("button", { name: "Create website" })
+		).toBeDisabled();
+
+		await dialog.getByRole("textbox", { name: "Name" }).fill(firstName);
+		await dialog
+			.getByRole("textbox", { name: "Domain" })
+			.fill(`https://www.${domain}/ignored-path?utm=e2e`);
+		await expect(dialog.getByRole("textbox", { name: "Domain" })).toHaveValue(
+			domain
+		);
+		await dialog.getByRole("button", { name: "Create website" }).click();
+		await expect(websiteCard(authenticatedPage, firstName)).toBeVisible();
+		await expect(authenticatedPage.getByText(domain)).toBeVisible();
+
+		await authenticatedPage.getByRole("button", { name: "New Website" }).click();
+		await authenticatedPage
+			.getByRole("dialog", { name: "Create a new website" })
+			.getByRole("textbox", { name: "Name" })
+			.fill(duplicateName);
+		await authenticatedPage
+			.getByRole("dialog", { name: "Create a new website" })
+			.getByRole("textbox", { name: "Domain" })
+			.fill(domain);
+		await authenticatedPage
+			.getByRole("dialog", { name: "Create a new website" })
+			.getByRole("button", { name: "Create website" })
+			.click();
+		await expect(
+			authenticatedPage.getByText(DUPLICATE_DOMAIN_RE).first()
+		).toBeVisible();
+		await expect(websiteCard(authenticatedPage, duplicateName)).toBeHidden();
 	}
 );
