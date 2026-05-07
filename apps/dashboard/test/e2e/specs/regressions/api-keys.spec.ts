@@ -1,4 +1,5 @@
 import { expect, test } from "@/test/e2e/fixtures";
+import { apiKeyRow, createApiKey } from "@/test/e2e/utils/dashboard";
 
 test(
 	"creates and deletes an API key without leaving confirmation dialogs open",
@@ -7,32 +8,8 @@ test(
 		const keyName = `E2E key ${e2eSession.userId.slice(0, 8)}`;
 
 		await authenticatedPage.goto("/organizations/settings");
-		await expect(
-			authenticatedPage.getByRole("heading", {
-				exact: true,
-				name: "API Keys",
-			})
-		).toBeVisible({ timeout: 15_000 });
-
-		await authenticatedPage
-			.getByRole("button", { name: /Create (your first )?key/i })
-			.first()
-			.click();
-		await expect(
-			authenticatedPage.getByRole("heading", { name: "Create API Key" })
-		).toBeVisible();
-
-		await authenticatedPage
-			.getByRole("textbox", { exact: true, name: "Name" })
-			.fill(keyName);
-		await authenticatedPage.getByRole("button", { name: "Create Key" }).click();
-		await expect(
-			authenticatedPage.getByText("Secret key", { exact: true })
-		).toBeVisible();
-		await authenticatedPage.getByRole("button", { name: "Done" }).click();
-
-		await expect(authenticatedPage.getByText(keyName)).toBeVisible();
-		await authenticatedPage.getByText(keyName).click();
+		await expect(await createApiKey(authenticatedPage, keyName)).toBeVisible();
+		await apiKeyRow(authenticatedPage, keyName).click();
 		await expect(
 			authenticatedPage.getByRole("heading", { name: keyName })
 		).toBeVisible();
@@ -55,6 +32,6 @@ test(
 		await expect(
 			authenticatedPage.getByRole("heading", { name: keyName })
 		).toBeHidden();
-		await expect(authenticatedPage.getByText(keyName)).toBeHidden();
+		await expect(apiKeyRow(authenticatedPage, keyName)).toBeHidden();
 	}
 );

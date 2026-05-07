@@ -6,6 +6,7 @@ interface ScopedSession {
 
 const SAFE_SCOPE_CHARS_RE = /[^a-z0-9]/gi;
 const SHORT_LINK_LABEL_RE = /Short Link/;
+const CREATE_API_KEY_BUTTON_RE = /Create (your first )?key/i;
 const ORGANIZATION_TRIGGER_RE = /^Organization:/;
 export function scopeSuffix(session: ScopedSession): string {
 	return session.userId
@@ -16,6 +17,10 @@ export function scopeSuffix(session: ScopedSession): string {
 
 export function escapedText(value: string): RegExp {
 	return new RegExp(value.replaceAll(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+}
+
+export function apiKeyRow(page: Page, name: string): Locator {
+	return page.getByText(name, { exact: true });
 }
 
 export function linkRow(page: Page, name: string): Locator {
@@ -47,6 +52,7 @@ export async function createOrganization(
 	input: { name: string; slug: string }
 ): Promise<void> {
 	await organizationSelector(page).click();
+	await page.getByRole("menu").waitFor();
 	await page.getByRole("menuitem", { name: "Create Organization" }).click();
 	await page
 		.getByRole("heading", { name: "Create New Organization" })
@@ -66,6 +72,7 @@ export async function switchOrganization(
 	organizationName: string
 ): Promise<void> {
 	await organizationSelector(page).click();
+	await page.getByRole("menu").waitFor();
 	await page.getByRole("menuitem", { name: organizationName }).click();
 	await organizationSelector(page)
 		.filter({ hasText: organizationName })
@@ -86,6 +93,30 @@ export async function createWebsite(
 	await submitButton.click();
 	await expect(dialog).toBeHidden({ timeout: 15_000 });
 	return websiteCard(page, input.name);
+}
+
+export async function createApiKey(
+	page: Page,
+	keyName: string
+): Promise<Locator> {
+	await expect(
+		page.getByRole("heading", { exact: true, name: "API Keys" })
+	).toBeVisible({ timeout: 15_000 });
+	await page
+		.getByRole("button", { name: CREATE_API_KEY_BUTTON_RE })
+		.first()
+		.click();
+
+	const dialog = page.getByRole("dialog", { name: "Create API Key" });
+	await dialog.waitFor();
+	await dialog
+		.getByRole("textbox", { exact: true, name: "Name" })
+		.fill(keyName);
+	await dialog.getByRole("button", { name: "Create Key" }).click();
+	await expect(page.getByText("Secret key", { exact: true })).toBeVisible();
+	await page.getByRole("button", { name: "Done" }).click();
+	await expect(dialog).toBeHidden();
+	return apiKeyRow(page, keyName);
 }
 
 export async function createLinkFolder(
