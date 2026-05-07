@@ -6,6 +6,8 @@ import type { RouterClient } from "@orpc/server";
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
 import { isAbortError } from "@/lib/is-abort-error";
 
+const isE2E = process.env.NEXT_PUBLIC_DATABUDDY_E2E_MODE === "1";
+
 const link = new RPCLink({
 	url: `${publicConfig.urls.api}/rpc`,
 	fetch: (request, init) => {
@@ -29,7 +31,7 @@ const link = new RPCLink({
 	},
 	interceptors: [
 		onError((error) => {
-			if (isAbortError(error)) {
+			if (isE2E || isAbortError(error)) {
 				return;
 			}
 			if (

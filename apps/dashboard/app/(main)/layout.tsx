@@ -40,34 +40,42 @@ export default function MainLayout({
 }: {
 	children: React.ReactNode;
 }) {
+	const content = (
+		<BillingProvider>
+			<CommandSearchProvider>
+				<SidebarNavigationProvider>
+					<SessionGuard>
+						<SidebarLayout>
+							<TopBarProvider>
+								<GlobalAgentProvider>
+									<div className="flex min-h-0 flex-1 flex-col overflow-hidden text-foreground">
+										<Suspense fallback={<SidebarFallback />}>
+											<Sidebar />
+										</Suspense>
+										<SidebarInset>
+											<TopBar />
+											<div className="flex min-h-0 flex-1 flex-col overflow-hidden overflow-x-hidden overscroll-y-none pt-12 md:pt-0">
+												{children}
+											</div>
+										</SidebarInset>
+										<FeedbackPrompt />
+									</div>
+								</GlobalAgentProvider>
+							</TopBarProvider>
+						</SidebarLayout>
+					</SessionGuard>
+				</SidebarNavigationProvider>
+			</CommandSearchProvider>
+		</BillingProvider>
+	);
+
+	if (process.env.NEXT_PUBLIC_DATABUDDY_E2E_MODE === "1") {
+		return content;
+	}
+
 	return (
 		<AutumnProvider backendUrl={publicConfig.urls.api} includeCredentials>
-			<BillingProvider>
-				<CommandSearchProvider>
-					<SidebarNavigationProvider>
-						<SessionGuard>
-							<SidebarLayout>
-								<TopBarProvider>
-									<GlobalAgentProvider>
-										<div className="flex min-h-0 flex-1 flex-col overflow-hidden text-foreground">
-											<Suspense fallback={<SidebarFallback />}>
-												<Sidebar />
-											</Suspense>
-											<SidebarInset>
-												<TopBar />
-												<div className="flex min-h-0 flex-1 flex-col overflow-hidden overflow-x-hidden overscroll-y-none pt-12 md:pt-0">
-													{children}
-												</div>
-											</SidebarInset>
-											<FeedbackPrompt />
-										</div>
-									</GlobalAgentProvider>
-								</TopBarProvider>
-							</SidebarLayout>
-						</SessionGuard>
-					</SidebarNavigationProvider>
-				</CommandSearchProvider>
-			</BillingProvider>
+			{content}
 		</AutumnProvider>
 	);
 }
