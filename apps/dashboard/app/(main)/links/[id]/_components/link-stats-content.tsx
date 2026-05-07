@@ -1,8 +1,9 @@
 "use client";
 
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { useMemo } from "react";
 import { StatCard } from "@/components/analytics";
+import { ResourceUnavailableState } from "@/components/resource-unavailable-state";
 import { DataTable } from "@/components/table/data-table";
 import { createReferrerColumns as createReferrerSourceColumns } from "@/components/table/rows/referrer-row";
 import { useDateFilters } from "@/hooks/use-date-filters";
@@ -16,13 +17,8 @@ import {
 	type GeoEntry,
 	type SourceEntry,
 } from "./link-stats-columns";
-import {
-	CursorClickIcon,
-	GlobeIcon,
-	LinkIcon,
-	UsersIcon,
-} from "@databuddy/ui/icons";
-import { EmptyState, dayjs } from "@databuddy/ui";
+import { CursorClickIcon, GlobeIcon, UsersIcon } from "@databuddy/ui/icons";
+import { dayjs } from "@databuddy/ui";
 
 interface MiniChartDataPoint {
 	date: string;
@@ -31,7 +27,6 @@ interface MiniChartDataPoint {
 
 export function LinkStatsContent() {
 	const params = useParams();
-	const router = useRouter();
 	const linkId = params.id as string;
 	const { dateRange, currentGranularity } = useDateFilters();
 
@@ -143,18 +138,11 @@ export function LinkStatsContent() {
 
 	if (!(isLoading || link)) {
 		return (
-			<div className="flex h-full items-center justify-center p-6">
-				<EmptyState
-					action={{
-						label: "Back to Links",
-						onClick: () => router.push("/links"),
-					}}
-					description="The link you're looking for doesn't exist or has been deleted."
-					icon={<LinkIcon />}
-					title="Link not found"
-					variant="error"
-				/>
-			</div>
+			<ResourceUnavailableState
+				backHref="/links"
+				backLabel="Back to Links"
+				className="h-full p-6"
+			/>
 		);
 	}
 

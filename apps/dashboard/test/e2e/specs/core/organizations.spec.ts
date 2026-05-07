@@ -125,12 +125,22 @@ test(
 
 		await authenticatedPage.goto(`/websites/${primaryWebsiteId}`);
 		await expect(
-			authenticatedPage.getByRole("heading", { name: "Access Denied" })
+			authenticatedPage.getByRole("heading", {
+				name: "Resource unavailable",
+			})
+		).toBeVisible();
+		await expect(
+			authenticatedPage.getByText("current workspace")
 		).toBeVisible();
 		await expect(authenticatedPage.getByText(primary.website.domain)).toBeHidden();
 		await authenticatedPage.goto(`/links/${primaryLinkId}`);
 		await expect(
-			authenticatedPage.getByRole("heading", { name: "Link not found" })
+			authenticatedPage.getByRole("heading", {
+				name: "Resource unavailable",
+			})
+		).toBeVisible();
+		await expect(
+			authenticatedPage.getByText("current workspace")
 		).toBeVisible();
 		await expect(linkRow(authenticatedPage, primary.link.name)).toBeHidden();
 
