@@ -17,6 +17,7 @@ vi.mock("@databuddy/db/clickhouse", () => ({
 		blocked_traffic: "analytics.blocked_traffic",
 		custom_events: "analytics.custom_events",
 		error_spans: "analytics.error_spans",
+		link_visits: "analytics.link_visits",
 		events: "analytics.events",
 		outgoing_links: "analytics.outgoing_links",
 		web_vitals_spans: "analytics.web_vitals_spans",
