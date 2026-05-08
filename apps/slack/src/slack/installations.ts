@@ -1,6 +1,7 @@
 import { and, db, eq } from "@databuddy/db";
 import { slackChannelBindings, slackIntegrations } from "@databuddy/db/schema";
 import { decrypt } from "@databuddy/encryption";
+import { cacheable, invalidateCacheableKey } from "@databuddy/redis";
 import type { Authorize } from "@slack/bolt";
 import { randomUUIDv7 } from "bun";
 import type {
@@ -206,6 +207,58 @@ export function createSlackAuthorize(
 	};
 }
 
+const SLACK_INTEGRATION_CACHE_PREFIX = "slack-integration-by-team";
+const SLACK_CHANNEL_BINDING_CACHE_PREFIX = "slack-channel-binding";
+const SLACK_INTEGRATION_CACHE_TTL_SEC = 300;
+const SLACK_CHANNEL_BINDING_CACHE_TTL_SEC = 300;
+
+const findActiveIntegration = cacheable(
+	(teamId: string) =>
+		db
+			.select({
+				id: slackIntegrations.id,
+				agentApiKeyCiphertext: slackIntegrations.agentApiKeyCiphertext,
+				agentApiKeyId: slackIntegrations.agentApiKeyId,
+				botId: slackIntegrations.botId,
+				botTokenCiphertext: slackIntegrations.botTokenCiphertext,
+				botUserId: slackIntegrations.botUserId,
+				organizationId: slackIntegrations.organizationId,
+				teamId: slackIntegrations.teamId,
+			})
+			.from(slackIntegrations)
+			.where(
+				and(
+					eq(slackIntegrations.teamId, teamId),
+					eq(slackIntegrations.status, "active")
+				)
+			)
+			.limit(1)
+			.then(([installation]) => installation ?? null),
+	{
+		expireInSec: SLACK_INTEGRATION_CACHE_TTL_SEC,
+		prefix: SLACK_INTEGRATION_CACHE_PREFIX,
+	}
+);
+
+const findChannelBinding = cacheable(
+	(integrationId: string, channelId: string) =>
+		db
+			.select({ id: slackChannelBindings.id })
+			.from(slackChannelBindings)
+			.where(
+				and(
+					eq(slackChannelBindings.integrationId, integrationId),
+					eq(slackChannelBindings.slackChannelId, channelId)
+				)
+			)
+			.limit(1)
+			.then(([binding]) => binding ?? null),
+	{
+		expireInSec: SLACK_CHANNEL_BINDING_CACHE_TTL_SEC,
+		prefix: SLACK_CHANNEL_BINDING_CACHE_PREFIX,
+	}
+);
+
 async function upsertChannelBinding(
 	integrationId: string,
 	channelId: string
@@ -227,43 +280,11 @@ async function upsertChannelBinding(
 				slackChannelBindings.slackChannelId,
 			],
 		});
-}
-
-function findActiveIntegration(teamId: string) {
-	return db
-		.select({
-			id: slackIntegrations.id,
-			agentApiKeyCiphertext: slackIntegrations.agentApiKeyCiphertext,
-			agentApiKeyId: slackIntegrations.agentApiKeyId,
-			botId: slackIntegrations.botId,
-			botTokenCiphertext: slackIntegrations.botTokenCiphertext,
-			botUserId: slackIntegrations.botUserId,
-			organizationId: slackIntegrations.organizationId,
-			teamId: slackIntegrations.teamId,
-		})
-		.from(slackIntegrations)
-		.where(
-			and(
-				eq(slackIntegrations.teamId, teamId),
-				eq(slackIntegrations.status, "active")
-			)
-		)
-		.limit(1)
-		.then(([installation]) => installation ?? null);
-}
-
-function findChannelBinding(integrationId: string, channelId: string) {
-	return db
-		.select({ id: slackChannelBindings.id })
-		.from(slackChannelBindings)
-		.where(
-			and(
-				eq(slackChannelBindings.integrationId, integrationId),
-				eq(slackChannelBindings.slackChannelId, channelId)
-			)
-		)
-		.limit(1)
-		.then(([binding]) => binding ?? null);
+	await invalidateCacheableKey(
+		SLACK_CHANNEL_BINDING_CACHE_PREFIX,
+		integrationId,
+		channelId
+	);
 }
 
 type ActiveSlackIntegration = NonNullable<

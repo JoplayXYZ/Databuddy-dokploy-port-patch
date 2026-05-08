@@ -422,11 +422,12 @@ async function saveSlackInstallationOnce({
 		});
 	});
 
-	await Promise.all(
-		revokedKeyHashes.map((hash) =>
+	await Promise.all([
+		invalidateCacheableKey("slack-integration-by-team", teamId),
+		...revokedKeyHashes.map((hash) =>
 			invalidateCacheableKey("api-key-by-hash", hash)
-		)
-	);
+		),
+	]);
 }
 
 export const integrations = new Elysia({ prefix: "/v1/integrations" })

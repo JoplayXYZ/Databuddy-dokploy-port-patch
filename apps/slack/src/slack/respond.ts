@@ -1,7 +1,7 @@
 import { isDatabuddyAgentUserError } from "@databuddy/ai/agent/errors";
 import type { RequestLogger } from "evlog";
 import type { DatabuddyAgentClient, SlackAgentRun } from "@/agent/agent-client";
-import { setSlackLog, toError } from "@/lib/evlog-slack";
+import { getSlackApiErrorCode, setSlackLog, toError } from "@/lib/evlog-slack";
 import { SLACK_COPY } from "@/slack/messages";
 import { renderAgentOutputForSlack } from "@/slack/output-adapter";
 import type { SlackAgentClient } from "@/slack/types";
@@ -9,6 +9,18 @@ import type { SlackAgentClient } from "@/slack/types";
 const STREAM_FLUSH_INTERVAL_MS = 900;
 const STREAM_FLUSH_CHARS = 1200;
 const STREAM_APPEND_LIMIT_CHARS = 3500;
+
+const SLACK_USER_CANCELLED_CODES = new Set([
+	"message_not_found",
+	"channel_not_found",
+	"is_archived",
+	"thread_not_found",
+]);
+
+function isSlackUserCancellation(error: unknown): boolean {
+	const code = getSlackApiErrorCode(error);
+	return Boolean(code && SLACK_USER_CANCELLED_CODES.has(code));
+}
 
 interface LoggerLike {
 	error(...args: unknown[]): void;
@@ -92,7 +104,7 @@ export async function streamAgentToSlack({
 			pending = pending.slice(chunk.length);
 			lastFlushAt = Date.now();
 
-			if (streamTs) {
+			if (streamTs && chunk.trim()) {
 				await client.chat.appendStream({
 					channel: run.channelId,
 					markdown_text: chunk,
@@ -220,19 +232,42 @@ export async function streamAgentToSlack({
 			};
 		}
 
+		if (isSlackUserCancellation(error)) {
+			setSlackLog(eventLog, {
+				slack_stream_cancelled: true,
+				slack_stream_cancelled_code: getSlackApiErrorCode(error),
+			});
+			return {
+				answerChars: safeMarkdown.trim().length,
+				aborted: true,
+				chunks,
+				ok: false,
+				responseTs: streamTs ?? undefined,
+				streamed: Boolean(streamTs),
+			};
+		}
+
 		const userFacingError = isDatabuddyAgentUserError(error) ? error : null;
 		const err = toError(error);
+		const slackApiCode = getSlackApiErrorCode(error);
 		setSlackLog(eventLog, {
 			slack_agent_error_code: userFacingError?.code,
 			slack_agent_error_message: err.message,
 			slack_agent_error_name: err.name,
 			slack_agent_error_user_facing: Boolean(userFacingError),
+			slack_api_error_code: slackApiCode,
 		});
 		if (userFacingError) {
 			logger.warn("Slack agent returned a user-facing error", err);
 			eventLog?.warn(err.message, {
 				agent_error_code: userFacingError.code,
 				error_step: "agent_response",
+			});
+		} else if (slackApiCode) {
+			logger.warn("Slack API rejected stream payload", err);
+			eventLog?.warn(err.message, {
+				error_step: "slack_api",
+				slack_api_error_code: slackApiCode,
 			});
 		} else {
 			logger.error("Slack agent response failed", err);

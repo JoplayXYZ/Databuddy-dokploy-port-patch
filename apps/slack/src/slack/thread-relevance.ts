@@ -5,7 +5,7 @@ import {
 } from "@databuddy/ai/agent";
 import type { SlackAgentRun } from "@/agent/agent-client";
 
-const MODEL_TIMEOUT_MS = 900;
+const MODEL_TIMEOUT_MS = 2500;
 const MENTION_REGEX = /<@([a-z0-9]+)>/gi;
 const WHITESPACE_REGEX = /\s+/g;
 const WORD_SEPARATOR_REGEX = /\s+/;
@@ -219,6 +219,13 @@ function getFallbackDecision(
 		isContextualThreadQuestion(requestText, botUserId, context)
 	) {
 		return decision(true, "direct_request", 0.62, "fallback");
+	}
+
+	if (
+		!isShortChatter(normalized) &&
+		getRecentBotMessage(context.threadMessages, botUserId)
+	) {
+		return decision(true, "ambiguous", 0.55, "fallback");
 	}
 
 	return decision(

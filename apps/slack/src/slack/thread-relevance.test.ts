@@ -186,6 +186,21 @@ describe("Slack thread reply relevance", () => {
 			});
 	});
 
+	it("falls back to reply when the bot already engaged in the thread", async () => {
+		await expect(
+			decideWithThread("makes sense, looks good for now", [
+				{
+					text: "Top pages this week are pricing, blog, and home.",
+					userId: "UBOT",
+				},
+			])
+		).resolves.toMatchObject({
+			reason: "ambiguous",
+			shouldReply: true,
+			source: "fallback",
+		});
+	});
+
 	it("uses thread context for ambiguous conversational continuations", async () => {
 		await expect(
 			decideWithThread("yes please do that", [

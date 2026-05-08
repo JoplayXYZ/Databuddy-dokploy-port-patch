@@ -140,6 +140,7 @@ export const integrationsRouter = {
 			});
 
 			let revokedKeyHash: string | undefined;
+			let revokedTeamId: string | undefined;
 
 			try {
 				await context.db.transaction(async (tx) => {
@@ -147,6 +148,7 @@ export const integrationsRouter = {
 						.select({
 							agentApiKeyId: slackIntegrations.agentApiKeyId,
 							id: slackIntegrations.id,
+							teamId: slackIntegrations.teamId,
 						})
 						.from(slackIntegrations)
 						.where(
@@ -168,6 +170,7 @@ export const integrationsRouter = {
 						.limit(1);
 
 					revokedKeyHash = agentKey?.keyHash;
+					revokedTeamId = integration.teamId;
 					const now = new Date();
 
 					await tx
@@ -186,9 +189,17 @@ export const integrationsRouter = {
 				throw error;
 			}
 
-			if (revokedKeyHash) {
-				await invalidateCacheableKey("api-key-by-hash", revokedKeyHash);
-			}
+			await Promise.all([
+				revokedKeyHash
+					? invalidateCacheableKey("api-key-by-hash", revokedKeyHash)
+					: Promise.resolve(),
+				revokedTeamId
+					? invalidateCacheableKey(
+							"slack-integration-by-team",
+							revokedTeamId
+						)
+					: Promise.resolve(),
+			]);
 
 			return { success: true };
 		}),
