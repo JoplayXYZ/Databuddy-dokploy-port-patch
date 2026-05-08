@@ -75,9 +75,9 @@
       "packages/*"
     ],
     "catalog": {
-      "react": "19.2.4",
-      "react-dom": "19.2.4",
-      "next": "16.2.3",
+      "react": "19.2.6",
+      "react-dom": "19.2.6",
+      "next": "16.2.6",
       "typescript": "^5.9.3",
       "zod": "4.1.12",
       "tailwindcss": "^4.1.4",
@@ -107,7 +107,7 @@
       "@logtail/pino": "^0.5.5",
       "@biomejs/biome": "2.4.10",
       "@types/bun": "latest",
-      "@types/react": "19.2.3",
+      "@types/react": "19.2.14",
       "@types/react-dom": "19.2.3",
       "bun-types": "latest",
       "ultracite": "^7.4.3",
