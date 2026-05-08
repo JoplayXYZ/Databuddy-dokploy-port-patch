@@ -7,7 +7,6 @@ import {
 	timestamp,
 	uniqueIndex,
 } from "drizzle-orm/pg-core";
-import { apikey } from "./api-keys";
 import { organization, user } from "./auth";
 
 export const slackIntegrationStatus = pgEnum("slack_integration_status", [
@@ -27,8 +26,6 @@ export const slackIntegrations = pgTable(
 		botId: text("bot_id"),
 		botUserId: text("bot_user_id"),
 		botTokenCiphertext: text("bot_token_ciphertext").notNull(),
-		agentApiKeyCiphertext: text("agent_api_key_ciphertext").notNull(),
-		agentApiKeyId: text("agent_api_key_id").notNull(),
 		status: slackIntegrationStatus().default("active").notNull(),
 		installedByUserId: text("installed_by_user_id"),
 		createdAt: timestamp("created_at", { precision: 3, withTimezone: true })
@@ -47,11 +44,6 @@ export const slackIntegrations = pgTable(
 			foreignColumns: [organization.id],
 			name: "slack_integrations_organization_id_fkey",
 		}).onDelete("cascade"),
-		foreignKey({
-			columns: [table.agentApiKeyId],
-			foreignColumns: [apikey.id],
-			name: "slack_integrations_agent_api_key_id_fkey",
-		}).onDelete("restrict"),
 		foreignKey({
 			columns: [table.installedByUserId],
 			foreignColumns: [user.id],

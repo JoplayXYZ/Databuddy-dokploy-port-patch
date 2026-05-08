@@ -1,7 +1,6 @@
-import { keys } from "@databuddy/api-keys/resolve";
 import { auth } from "@databuddy/auth";
 import { and, db, eq } from "@databuddy/db";
-import { apikey, member, slackIntegrations } from "@databuddy/db/schema";
+import { member, slackIntegrations } from "@databuddy/db/schema";
 import { encrypt } from "@databuddy/encryption";
 import { config } from "@databuddy/env/app";
 import { invalidateCacheableKey } from "@databuddy/redis/cache-invalidation";
@@ -29,14 +28,6 @@ const SLACK_OAUTH_SCOPES = [
 ] as const;
 
 const SLACK_STATE_TTL_MS = 10 * 60 * 1000;
-const SLACK_API_KEY_SCOPES = [
-	"read:data",
-	"read:links",
-	"write:links",
-	"manage:websites",
-	"manage:flags",
-] as const;
-const SLACK_API_KEY_RESOURCES = { global: [...SLACK_API_KEY_SCOPES] };
 const CONNECTION_DROP_MESSAGE_RE =
 	/connection (terminated|ended|timeout|reset)/i;
 const ECONNRESET_RE = /econnreset/i;
@@ -327,22 +318,11 @@ async function saveSlackInstallationOnce({
 }): Promise<void> {
 	const teamId = identity.teamId ?? access.teamId;
 	const teamName = identity.teamName ?? access.teamName ?? teamId;
-	const keyName = `Slack Agent - ${teamName}`.slice(0, 100);
-	const { key: agentApiKeySecret, record } = await keys.create({
-		expiresAt: null,
-		name: keyName,
-		ownerId: state.organizationId,
-		resources: SLACK_API_KEY_RESOURCES,
-		scopes: [...SLACK_API_KEY_SCOPES],
-		tags: ["slack", "integration"],
-	});
 	const now = new Date();
-	const revokedKeyHashes: string[] = [];
 
 	await db.transaction(async (tx) => {
 		const [existing] = await tx
 			.select({
-				agentApiKeyId: slackIntegrations.agentApiKeyId,
 				id: slackIntegrations.id,
 				organizationId: slackIntegrations.organizationId,
 			})
@@ -356,30 +336,7 @@ async function saveSlackInstallationOnce({
 			);
 		}
 
-		await tx.insert(apikey).values({
-			enabled: true,
-			expiresAt: null,
-			id: record.id,
-			keyHash: record.keyHash,
-			metadata: {
-				description:
-					"Used by the Slack integration to answer Databuddy analytics questions.",
-				resources: SLACK_API_KEY_RESOURCES,
-				tags: ["slack", "integration"],
-			},
-			name: keyName,
-			organizationId: state.organizationId,
-			prefix: agentApiKeySecret.split("_")[0] ?? "dbdy",
-			rateLimitEnabled: true,
-			scopes: [...SLACK_API_KEY_SCOPES],
-			start: agentApiKeySecret.slice(0, 8),
-			type: "automation",
-			userId: state.userId,
-		});
-
 		const values = {
-			agentApiKeyCiphertext: encrypt(agentApiKeySecret, config.encryptionKey),
-			agentApiKeyId: record.id,
 			appId: access.appId,
 			botId: identity.botId,
 			botTokenCiphertext: encrypt(access.accessToken, config.encryptionKey),
@@ -394,20 +351,6 @@ async function saveSlackInstallationOnce({
 		};
 
 		if (existing) {
-			if (existing.agentApiKeyId !== record.id) {
-				const [oldApiKey] = await tx
-					.select({ keyHash: apikey.keyHash })
-					.from(apikey)
-					.where(eq(apikey.id, existing.agentApiKeyId))
-					.limit(1);
-				if (oldApiKey?.keyHash) {
-					revokedKeyHashes.push(oldApiKey.keyHash);
-				}
-				await tx
-					.update(apikey)
-					.set({ enabled: false, revokedAt: now, updatedAt: now })
-					.where(eq(apikey.id, existing.agentApiKeyId));
-			}
 			await tx
 				.update(slackIntegrations)
 				.set(values)
@@ -422,12 +365,7 @@ async function saveSlackInstallationOnce({
 		});
 	});
 
-	await Promise.all([
-		invalidateCacheableKey("slack-integration-by-team", teamId),
-		...revokedKeyHashes.map((hash) =>
-			invalidateCacheableKey("api-key-by-hash", hash)
-		),
-	]);
+	await invalidateCacheableKey("slack-integration-by-team", teamId);
 }
 
 export const integrations = new Elysia({ prefix: "/v1/integrations" })

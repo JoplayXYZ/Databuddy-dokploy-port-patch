@@ -1,3 +1,4 @@
+import type { ApiKeyRow } from "@databuddy/api-keys/resolve";
 import { and, db, eq } from "@databuddy/db";
 import { slackChannelBindings, slackIntegrations } from "@databuddy/db/schema";
 import { decrypt } from "@databuddy/encryption";
@@ -12,6 +13,43 @@ import type {
 import type { TokenCryptoConfig } from "@/config";
 import { createSlackEventLog, setSlackLog, toError } from "@/lib/evlog-slack";
 import { SLACK_COPY } from "@/slack/messages";
+
+const SLACK_AGENT_SCOPES = [
+	"read:data",
+	"read:links",
+	"write:links",
+	"manage:websites",
+	"manage:flags",
+] as const;
+const SLACK_AGENT_RESOURCES = { global: [...SLACK_AGENT_SCOPES] };
+
+function buildSlackApiKey(installation: ActiveSlackIntegration): ApiKeyRow {
+	return {
+		createdAt: installation.createdAt,
+		enabled: true,
+		expiresAt: null,
+		id: `slack:${installation.id}`,
+		keyHash: `slack:${installation.id}`,
+		lastUsedAt: null,
+		metadata: {
+			description: "Slack integration agent identity.",
+			resources: SLACK_AGENT_RESOURCES,
+			tags: ["slack", "integration"],
+		},
+		name: `Slack Agent - ${installation.teamId}`,
+		organizationId: installation.organizationId,
+		prefix: "slack",
+		rateLimitEnabled: true,
+		rateLimitMax: null,
+		rateLimitTimeWindow: null,
+		revokedAt: null,
+		scopes: [...SLACK_AGENT_SCOPES],
+		start: installation.id.slice(0, 8),
+		type: "automation",
+		updatedAt: installation.updatedAt,
+		userId: installation.installedByUserId,
+	};
+}
 
 export interface SlackChannelBindingCommand {
 	channelId: string;
@@ -185,11 +223,7 @@ export class SlackInstallationStore implements SlackRunContextResolver {
 
 	private toRunContext(installation: ActiveSlackIntegration): SlackRunContext {
 		return {
-			agentApiKeyId: installation.agentApiKeyId,
-			agentApiKeySecret: decrypt(
-				installation.agentApiKeyCiphertext,
-				this.#crypto.encryptionKey
-			),
+			apiKey: buildSlackApiKey(installation),
 			organizationId: installation.organizationId,
 			teamId: installation.teamId,
 		};
@@ -217,13 +251,14 @@ const findActiveIntegration = cacheable(
 		db
 			.select({
 				id: slackIntegrations.id,
-				agentApiKeyCiphertext: slackIntegrations.agentApiKeyCiphertext,
-				agentApiKeyId: slackIntegrations.agentApiKeyId,
 				botId: slackIntegrations.botId,
 				botTokenCiphertext: slackIntegrations.botTokenCiphertext,
 				botUserId: slackIntegrations.botUserId,
+				createdAt: slackIntegrations.createdAt,
+				installedByUserId: slackIntegrations.installedByUserId,
 				organizationId: slackIntegrations.organizationId,
 				teamId: slackIntegrations.teamId,
+				updatedAt: slackIntegrations.updatedAt,
 			})
 			.from(slackIntegrations)
 			.where(

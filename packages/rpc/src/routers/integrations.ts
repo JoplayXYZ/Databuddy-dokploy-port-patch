@@ -1,6 +1,5 @@
 import { and, desc, eq } from "@databuddy/db";
 import {
-	apikey,
 	slackChannelBindings,
 	slackIntegrations,
 } from "@databuddy/db/schema";
@@ -123,8 +122,7 @@ export const integrationsRouter = {
 
 	uninstallSlack: trackedProcedure
 		.route({
-			description:
-				"Disconnects a Slack workspace integration and revokes its Databuddy agent API key.",
+			description: "Disconnects a Slack workspace integration.",
 			method: "POST",
 			path: "/integrations/uninstallSlack",
 			summary: "Uninstall Slack",
@@ -139,49 +137,32 @@ export const integrationsRouter = {
 				permissions: ["update"],
 			});
 
-			let revokedKeyHash: string | undefined;
 			let revokedTeamId: string | undefined;
 
 			try {
-				await context.db.transaction(async (tx) => {
-					const [integration] = await tx
-						.select({
-							agentApiKeyId: slackIntegrations.agentApiKeyId,
-							id: slackIntegrations.id,
-							teamId: slackIntegrations.teamId,
-						})
-						.from(slackIntegrations)
-						.where(
-							and(
-								eq(slackIntegrations.id, input.integrationId),
-								eq(slackIntegrations.organizationId, input.organizationId)
-							)
+				const [integration] = await context.db
+					.select({
+						id: slackIntegrations.id,
+						teamId: slackIntegrations.teamId,
+					})
+					.from(slackIntegrations)
+					.where(
+						and(
+							eq(slackIntegrations.id, input.integrationId),
+							eq(slackIntegrations.organizationId, input.organizationId)
 						)
-						.limit(1);
+					)
+					.limit(1);
 
-					if (!integration) {
-						throw rpcError.notFound("Slack integration", input.integrationId);
-					}
+				if (!integration) {
+					throw rpcError.notFound("Slack integration", input.integrationId);
+				}
 
-					const [agentKey] = await tx
-						.select({ keyHash: apikey.keyHash })
-						.from(apikey)
-						.where(eq(apikey.id, integration.agentApiKeyId))
-						.limit(1);
+				revokedTeamId = integration.teamId;
 
-					revokedKeyHash = agentKey?.keyHash;
-					revokedTeamId = integration.teamId;
-					const now = new Date();
-
-					await tx
-						.delete(slackIntegrations)
-						.where(eq(slackIntegrations.id, integration.id));
-
-					await tx
-						.update(apikey)
-						.set({ enabled: false, revokedAt: now, updatedAt: now })
-						.where(eq(apikey.id, integration.agentApiKeyId));
-				});
+				await context.db
+					.delete(slackIntegrations)
+					.where(eq(slackIntegrations.id, integration.id));
 			} catch (error) {
 				if (isMissingSlackSchemaError(error)) {
 					throw rpcError.notFound("Slack integration", input.integrationId);
@@ -189,17 +170,12 @@ export const integrationsRouter = {
 				throw error;
 			}
 
-			await Promise.all([
-				revokedKeyHash
-					? invalidateCacheableKey("api-key-by-hash", revokedKeyHash)
-					: Promise.resolve(),
-				revokedTeamId
-					? invalidateCacheableKey(
-							"slack-integration-by-team",
-							revokedTeamId
-						)
-					: Promise.resolve(),
-			]);
+			if (revokedTeamId) {
+				await invalidateCacheableKey(
+					"slack-integration-by-team",
+					revokedTeamId
+				);
+			}
 
 			return { success: true };
 		}),

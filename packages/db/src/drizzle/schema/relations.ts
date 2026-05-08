@@ -228,18 +228,12 @@ export const relations = defineRelations(schema, (r) => ({
 			from: r.apikey.organizationId,
 			to: r.organization.id,
 		}),
-		slackIntegrations: r.many.slackIntegrations(),
 	},
 
 	slackIntegrations: {
 		organization: r.one.organization({
 			from: r.slackIntegrations.organizationId,
 			to: r.organization.id,
-			optional: false,
-		}),
-		agentApiKey: r.one.apikey({
-			from: r.slackIntegrations.agentApiKeyId,
-			to: r.apikey.id,
 			optional: false,
 		}),
 		installedByUser: r.one.user({

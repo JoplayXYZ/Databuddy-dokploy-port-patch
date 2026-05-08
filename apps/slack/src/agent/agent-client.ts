@@ -1,4 +1,5 @@
 import type { DatabuddyAgentSlackContext } from "@databuddy/ai/agent";
+import type { ApiKeyRow } from "@databuddy/api-keys/resolve";
 import { setActiveSlackLog } from "@/lib/evlog-slack";
 import { SLACK_COPY } from "@/slack/messages";
 
@@ -29,8 +30,7 @@ export interface SlackAgentRun {
 }
 
 export interface SlackRunContext {
-	agentApiKeyId?: string;
-	agentApiKeySecret: string;
+	apiKey: ApiKeyRow;
 	organizationId: string;
 	teamId: string;
 }
@@ -95,17 +95,16 @@ class SharedDatabuddyAgentRunner implements SlackAgentRunner {
 			agent_chat_id: conversationId,
 			agent_source: "slack",
 			organization_id: context.organizationId,
-			slack_agent_api_key_id: context.agentApiKeyId,
+			slack_agent_api_key_id: context.apiKey.id,
 		});
 		const { streamDatabuddyAgent } = await import("@databuddy/ai/agent");
 
 		yield* streamDatabuddyAgent({
 			abortSignal: options?.abortSignal,
 			actor: {
-				expectedOrganizationId: context.organizationId,
-				secret: context.agentApiKeySecret,
-				type: "api_key_secret",
-				userId: null,
+				apiKey: context.apiKey,
+				type: "api_key",
+				userId: context.apiKey.userId,
 			},
 			conversationId,
 			input: formatSlackAgentInput(run),
