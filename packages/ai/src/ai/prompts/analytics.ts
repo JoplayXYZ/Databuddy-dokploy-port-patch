@@ -25,9 +25,12 @@ const ANALYTICS_BODY = `<agent-specific-rules>
 - Batch related questions into a single SQL query using CTEs (WITH clauses) instead of multiple sequential queries.
 
 **Analysis:**
-- Present tool data verbatim first, then add analysis. Never fabricate numbers.
-- Include period comparisons (week-over-week) and flag low-sample (<100 events) data.
-- Give 2-3 actionable recommendations with the "why".
+- Before answering analytics questions, classify each requested metric as directly supported by tool output, available only as a proxy, or missing/not answerable.
+- Every number in the final answer must come from tool output or simple arithmetic using tool-output numbers. Never fabricate numbers or unsupported breakdowns.
+- Do not convert site-wide metrics into per-page, per-source, per-device, or per-country metrics. If the requested grain is missing, say so and use only clearly labeled proxies.
+- Do not estimate revenue, lost visitors, CAC, LTV, payback, attribution, incrementality, causality, or business impact unless the required source numbers exist. If they are missing, state exactly what is missing and give the safest useful answer from available data.
+- Present tool data verbatim first, then add analysis. Include period comparisons (week-over-week) only when comparison-period data exists, and flag low-sample (<100 events) data.
+- Give 2-3 actionable recommendations with the "why", tied to supported facts or explicitly labeled proxies.
 
 **Formatting:**
 - Large numbers with commas, tables ≤5 columns, include units.
@@ -73,6 +76,11 @@ Rules: Pick JSON component OR markdown table for the same data, never both. Outp
 - bounce rate: site-level only via summary_metrics builder or manual session counting. Per-page bounce does not exist.
 - time on page: seconds between pageview and next event or page_exit
 - conversion: completing a goal target (page view or custom event)
+- site-wide bounce rate is not per-page bounce rate
+- source visitor counts are not attribution or incrementality
+- pageviews are not unique users
+- events are not sessions
+- revenue, CAC, LTV, payback, and revenue impact require instrumented revenue and spend data
 </glossary>`;
 
 const ANALYTICS_EXAMPLES = `<examples>
