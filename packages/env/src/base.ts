@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { readBooleanEnv } from "./boolean";
 
 /**
  * Base environment validation utility
@@ -63,4 +64,4 @@ export const isDevelopment = () => process.env.NODE_ENV === "development";
  * Skip validation check
  */
 export const shouldSkipValidation = () =>
-	isDevelopment() || process.env.SKIP_VALIDATION === "true";
+	isDevelopment() || readBooleanEnv("SKIP_VALIDATION");

@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { createEnv } from "./base";
+import { readBooleanEnv } from "./boolean";
 
 const emptyToUndefined = (value: unknown) => (value === "" ? undefined : value);
 
@@ -38,7 +39,7 @@ const slackEnvSchema = z.object({
 });
 
 export const env = createEnv(slackEnvSchema, {
-	skipValidation: process.env.SKIP_VALIDATION === "true",
+	skipValidation: readBooleanEnv("SKIP_VALIDATION"),
 });
 
 export type SlackEnv = typeof env;

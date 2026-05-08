@@ -1,5 +1,6 @@
 import { mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { readBooleanEnv } from "@databuddy/env/boolean";
 import {
 	getCaseById,
 	getCasesByFilters,
@@ -111,7 +112,7 @@ function parseArgs(): CliOpts {
 	let filter: string | undefined;
 	let runner = (process.env.EVAL_RUNNER as EvalRunner | undefined) ?? "package";
 	let noSave = false;
-	let skipJudge = process.env.EVAL_SKIP_JUDGE === "true";
+	let skipJudge = readBooleanEnv("EVAL_SKIP_JUDGE");
 	let rejudge = false;
 	let diff = false;
 	let apiUrl = process.env.EVAL_API_URL ?? "http://localhost:3001";

@@ -1,3 +1,4 @@
+import { readBooleanEnv } from "@databuddy/env/boolean";
 import { publicConfig } from "@databuddy/env/public";
 import { FeedbackPrompt } from "@/components/feedback-prompt";
 import { GlobalAgentProvider } from "@/components/agent/global-agent-provider";
@@ -69,7 +70,7 @@ export default function MainLayout({
 		</BillingProvider>
 	);
 
-	if (process.env.NEXT_PUBLIC_DATABUDDY_E2E_MODE === "1") {
+	if (readBooleanEnv("NEXT_PUBLIC_DATABUDDY_E2E_MODE")) {
 		return content;
 	}
 

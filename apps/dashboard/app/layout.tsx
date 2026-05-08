@@ -5,6 +5,7 @@ import { APP_URL } from "@/lib/app-url";
 import { DatabuddyDevtools } from "@databuddy/devtools/react";
 import { publicConfig } from "@databuddy/env/public";
 import { Databuddy } from "@databuddy/sdk/react";
+import { readBooleanEnv } from "@databuddy/env/boolean";
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import Providers from "./providers";
@@ -117,7 +118,7 @@ export default function RootLayout({
 	children: React.ReactNode;
 }>) {
 	const isLocalhost = process.env.NODE_ENV === "development";
-	const isE2E = process.env.DATABUDDY_E2E_MODE === "1";
+	const isE2E = readBooleanEnv("DATABUDDY_E2E_MODE");
 
 	return (
 		<html

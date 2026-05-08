@@ -16,6 +16,7 @@
     "@clickhouse/client": "^1.14.0",
     "@databuddy/auth": "workspace:*",
     "@databuddy/db": "workspace:*",
+    "@databuddy/env": "workspace:*",
     "@databuddy/rpc": "workspace:*",
     "drizzle-orm": "catalog:",
     "ioredis": "^5.8.2",

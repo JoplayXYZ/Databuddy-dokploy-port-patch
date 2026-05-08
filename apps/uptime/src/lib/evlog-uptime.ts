@@ -1,5 +1,6 @@
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { readBooleanEnv } from "@databuddy/env/boolean";
 import type { DrainContext, EnrichContext } from "evlog";
 import { createAxiomDrain } from "evlog/axiom";
 import {
@@ -28,7 +29,7 @@ const devFsLogsDir = join(
 );
 
 const useLocalEvlogFiles =
-	process.env.NODE_ENV === "development" || process.env.UPTIME_EVLOG_FS === "1";
+	process.env.NODE_ENV === "development" || readBooleanEnv("UPTIME_EVLOG_FS");
 
 const devFsDrain = useLocalEvlogFiles
 	? createFsDrain({ dir: devFsLogsDir, pretty: false })

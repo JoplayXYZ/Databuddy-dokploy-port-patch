@@ -1,5 +1,6 @@
 import type { ClickHouseClient } from "@clickhouse/client";
 import { clickHouse, TABLE_NAMES } from "@databuddy/db/clickhouse";
+import { readBooleanEnv } from "@databuddy/env/boolean";
 import { captureError, record } from "@lib/tracing";
 import { Data, Effect, Layer, ManagedRuntime, Ref, Schedule } from "effect";
 import { createError } from "evlog";
@@ -468,7 +469,7 @@ const CONFIG: ProducerConfig = {
 	broker: process.env.REDPANDA_BROKER,
 	username: process.env.REDPANDA_USER,
 	password: process.env.REDPANDA_PASSWORD,
-	selfHost: process.env.SELFHOST === "true",
+	selfHost: readBooleanEnv("SELFHOST"),
 	reconnectCooldown: 60_000,
 	kafkaTimeout: 10_000,
 	maxProducerRetries: 3,

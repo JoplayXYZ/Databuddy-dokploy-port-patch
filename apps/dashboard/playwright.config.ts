@@ -1,3 +1,4 @@
+import { readBooleanEnv } from "@databuddy/env/boolean";
 import { defineConfig, devices } from "@playwright/test";
 
 const PORT = Number(process.env.DATABUDDY_E2E_PORT ?? 3000);
@@ -19,9 +20,9 @@ export default defineConfig({
 	webServer: {
 		command: `bash -lc 'bun --cwd ../api src/index.ts --port 3001 & api_pid=$!; trap "kill $api_pid 2>/dev/null || true" EXIT; until curl -sf http://localhost:3001/health >/dev/null; do sleep 0.2; done; bun next dev -p ${PORT}'`,
 		env: {
-			DATABUDDY_E2E_MODE: process.env.DATABUDDY_E2E_MODE ?? "1",
+			DATABUDDY_E2E_MODE: process.env.DATABUDDY_E2E_MODE ?? "true",
 			NEXT_PUBLIC_DATABUDDY_E2E_MODE:
-				process.env.NEXT_PUBLIC_DATABUDDY_E2E_MODE ?? "1",
+				process.env.NEXT_PUBLIC_DATABUDDY_E2E_MODE ?? "true",
 			DATABUDDY_E2E_TEST_KEY: process.env.DATABUDDY_E2E_TEST_KEY ?? "",
 			DATABASE_URL: process.env.DATABASE_URL ?? "",
 			REDIS_URL: process.env.REDIS_URL ?? "redis://localhost:6379",
@@ -50,7 +51,7 @@ export default defineConfig({
 			NEXT_PUBLIC_API_URL:
 				process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001",
 		},
-		reuseExistingServer: process.env.DATABUDDY_E2E_REUSE_SERVER === "1",
+		reuseExistingServer: readBooleanEnv("DATABUDDY_E2E_REUSE_SERVER"),
 		timeout: 120_000,
 		url: baseURL,
 	},

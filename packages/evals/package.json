@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@databuddy/ai": "workspace:*",
+    "@databuddy/env": "workspace:*",
     "ai": "^6.0.78"
   }
 }

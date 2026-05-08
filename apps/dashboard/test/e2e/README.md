@@ -28,14 +28,14 @@ Useful toggles:
 
 ```bash
 DATABUDDY_E2E_START_CLICKHOUSE=0      # do not start docker compose clickhouse
-DATABUDDY_E2E_SEED_CLICKHOUSE=0       # do not seed per-test analytics data
+DATABUDDY_E2E_SEED_CLICKHOUSE=false  # do not seed per-test analytics data
 DATABUDDY_E2E_CLICKHOUSE_EVENTS=500   # seed size per test website
 CLICKHOUSE_URL=http://default:@localhost:8123/databuddy_analytics
 ```
 
 ## Session bootstrap
 
-When `DATABUDDY_E2E_MODE=1` and `DATABUDDY_E2E_TEST_KEY` is set, tests can create a signed-in user via:
+When `DATABUDDY_E2E_MODE=true` and `DATABUDDY_E2E_TEST_KEY` is set, tests can create a signed-in user via:
 
 ```http
 POST /api/test/e2e/session

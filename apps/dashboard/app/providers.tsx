@@ -3,6 +3,7 @@
 import { publicConfig } from "@databuddy/env/public";
 
 import { authClient } from "@databuddy/auth/client";
+import { readBooleanEnv } from "@databuddy/env/boolean";
 import { FlagsProvider } from "@databuddy/sdk/react";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "next-themes";
@@ -34,7 +35,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
 
 function FlagsProviderWrapper({ children }: { children: React.ReactNode }) {
 	const { data: session, isPending } = authClient.useSession();
-	const isE2E = process.env.NEXT_PUBLIC_DATABUDDY_E2E_MODE === "1";
+	const isE2E = readBooleanEnv("NEXT_PUBLIC_DATABUDDY_E2E_MODE");
 
 	const apiUrl = publicConfig.urls.api;
 	const clientId =

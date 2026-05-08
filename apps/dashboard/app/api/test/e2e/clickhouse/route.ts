@@ -1,4 +1,5 @@
 import { clickHouse, TABLE_NAMES } from "@databuddy/db/clickhouse";
+import { readBooleanEnv } from "@databuddy/env/boolean";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -13,8 +14,7 @@ interface SeedBody {
 }
 
 function isE2EModeEnabled(): boolean {
-	const value = process.env.DATABUDDY_E2E_MODE?.toLowerCase();
-	return value === "1" || value === "true" || value === "yes";
+	return readBooleanEnv("DATABUDDY_E2E_MODE");
 }
 
 function notFound(): Response {
@@ -57,7 +57,7 @@ export async function POST(request: Request): Promise<Response> {
 		return denied;
 	}
 
-	if (process.env.DATABUDDY_E2E_SEED_CLICKHOUSE !== "1") {
+	if (!readBooleanEnv("DATABUDDY_E2E_SEED_CLICKHOUSE")) {
 		return Response.json({ seeded: false, reason: "disabled" });
 	}
 

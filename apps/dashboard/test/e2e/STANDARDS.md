@@ -54,7 +54,7 @@ Useful debugging flags:
 ```bash
 DATABUDDY_E2E_KEEP_DB=1 bun run --cwd apps/dashboard test:e2e:local
 DATABUDDY_E2E_CLICKHOUSE_EVENTS=1000 bun run --cwd apps/dashboard test:e2e:local
-DATABUDDY_E2E_SEED_CLICKHOUSE=0 bun run --cwd apps/dashboard test:e2e:local
+DATABUDDY_E2E_SEED_CLICKHOUSE=false bun run --cwd apps/dashboard test:e2e:local
 ```
 
 ## Selectors

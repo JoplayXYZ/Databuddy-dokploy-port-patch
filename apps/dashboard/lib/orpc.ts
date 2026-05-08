@@ -1,3 +1,4 @@
+import { readBooleanEnv } from "@databuddy/env/boolean";
 import { publicConfig } from "@databuddy/env/public";
 import type { AppRouter } from "@databuddy/rpc";
 import { createORPCClient, onError } from "@orpc/client";
@@ -6,7 +7,7 @@ import type { RouterClient } from "@orpc/server";
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
 import { isAbortError } from "@/lib/is-abort-error";
 
-const isE2E = process.env.NEXT_PUBLIC_DATABUDDY_E2E_MODE === "1";
+const isE2E = readBooleanEnv("NEXT_PUBLIC_DATABUDDY_E2E_MODE");
 
 const link = new RPCLink({
 	url: `${publicConfig.urls.api}/rpc`,

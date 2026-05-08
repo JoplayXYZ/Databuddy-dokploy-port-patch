@@ -1,5 +1,6 @@
 import { auth } from "@databuddy/auth";
 import { and, db, eq } from "@databuddy/db";
+import { readBooleanEnv } from "@databuddy/env/boolean";
 import {
 	member,
 	organization,
@@ -23,8 +24,7 @@ interface SessionBody {
 }
 
 function isE2EModeEnabled(): boolean {
-	const value = process.env.DATABUDDY_E2E_MODE?.toLowerCase();
-	return value === "1" || value === "true" || value === "yes";
+	return readBooleanEnv("DATABUDDY_E2E_MODE");
 }
 
 function notFound(): Response {

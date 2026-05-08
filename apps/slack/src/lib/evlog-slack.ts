@@ -1,6 +1,7 @@
 import { AsyncLocalStorage } from "node:async_hooks";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { readBooleanEnv } from "@databuddy/env/boolean";
 import { env } from "@databuddy/env/slack";
 import type { DrainContext, RequestLogger } from "evlog";
 import { createLogger, log } from "evlog";
@@ -29,7 +30,7 @@ const batchedAxiomDrain = axiomApiKey
 	: null;
 
 const fsDrain =
-	env.NODE_ENV === "development" || env.SLACK_EVLOG_FS === "1"
+	env.NODE_ENV === "development" || readBooleanEnv("SLACK_EVLOG_FS")
 		? createFsDrain({
 				dir: join(
 					dirname(fileURLToPath(import.meta.url)),

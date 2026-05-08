@@ -11,6 +11,7 @@ import {
 	type PlanCapabilities,
 	type PlanId,
 } from "@databuddy/shared/types/features";
+import { readBooleanEnv } from "@databuddy/env/boolean";
 import { useQuery } from "@tanstack/react-query";
 import { useCustomer, useListPlans } from "autumn-js/react";
 import { useParams, usePathname } from "next/navigation";
@@ -106,7 +107,7 @@ export function BillingProvider({
 	public: isPublic,
 	websiteId,
 }: BillingProviderProps) {
-	if (isPublic || process.env.NEXT_PUBLIC_DATABUDDY_E2E_MODE === "1") {
+	if (isPublic || readBooleanEnv("NEXT_PUBLIC_DATABUDDY_E2E_MODE")) {
 		return <PublicBillingProvider>{children}</PublicBillingProvider>;
 	}
 	return (

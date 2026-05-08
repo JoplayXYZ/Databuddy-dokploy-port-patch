@@ -1,3 +1,4 @@
+import { readBooleanEnv } from "@databuddy/env/boolean";
 import { test as base } from "@playwright/test";
 
 interface E2EAnalyticsSeed {
@@ -47,7 +48,7 @@ async function seedClickHouse(
 	request: import("@playwright/test").APIRequestContext,
 	websiteId: string
 ): Promise<E2EAnalyticsSeed | null> {
-	if (process.env.DATABUDDY_E2E_SEED_CLICKHOUSE !== "1") {
+	if (!readBooleanEnv("DATABUDDY_E2E_SEED_CLICKHOUSE")) {
 		return null;
 	}
 

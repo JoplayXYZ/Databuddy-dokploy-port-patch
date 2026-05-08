@@ -1,6 +1,7 @@
 import "@databuddy/test/env";
 
 import { flags, uptimeSchedules } from "@databuddy/db/schema";
+import { readBooleanEnv } from "@databuddy/env/boolean";
 import {
 	closeUptimeQueue,
 	getUptimeQueue,
@@ -30,7 +31,7 @@ import type { Job } from "bullmq";
 const canRun =
 	hasTestDb &&
 	Boolean(process.env.BULLMQ_REDIS_URL) &&
-	process.env.UPTIME_ROUTER_INTEGRATION === "true";
+	readBooleanEnv("UPTIME_ROUTER_INTEGRATION");
 const iit = canRun ? it : it.skip;
 const scheduleIds = new Set<string>();
 
