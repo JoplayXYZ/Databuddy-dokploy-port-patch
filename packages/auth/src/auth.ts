@@ -17,6 +17,7 @@ import {
 	VerificationEmail,
 } from "@databuddy/email";
 import { config } from "@databuddy/env/app";
+import { readBooleanEnv } from "@databuddy/env/boolean";
 import { SlackProvider } from "@databuddy/notifications";
 import { getRedisCache, ratelimit } from "@databuddy/redis";
 import { createId } from "@databuddy/shared/utils/ids";
@@ -55,6 +56,17 @@ function getOrgNameFromUser(userName: string, email: string): string {
 
 function isProduction() {
 	return process.env.NODE_ENV === "production";
+}
+
+function isSelfHosted() {
+	return readBooleanEnv("SELFHOST");
+}
+
+function shouldRequireEmailVerification() {
+	if (process.env.REQUIRE_EMAIL_VERIFICATION != null) {
+		return readBooleanEnv("REQUIRE_EMAIL_VERIFICATION");
+	}
+	return isProduction() && !isSelfHosted();
 }
 
 const SLACK_WEBHOOK_URL = process.env.SLACK_WEBHOOK_URL ?? "";
@@ -259,8 +271,8 @@ export const auth = betterAuth({
 	},
 	advanced: {
 		crossSubDomainCookies: {
-			enabled: isProduction(),
-			domain: ".databuddy.cc",
+			enabled: isProduction() && !isSelfHosted(),
+			domain: process.env.BETTER_AUTH_COOKIE_DOMAIN ?? ".databuddy.cc",
 		},
 		cookiePrefix: isProduction() ? "databuddy" : "databuddy-dev",
 		useSecureCookies: isProduction(),
@@ -285,7 +297,7 @@ export const auth = betterAuth({
 		minPasswordLength: 8,
 		maxPasswordLength: 32,
 		autoSignIn: false,
-		requireEmailVerification: process.env.NODE_ENV === "production",
+		requireEmailVerification: shouldRequireEmailVerification(),
 		sendResetPassword: async ({ user, url }: { user: any; url: string }) => {
 			const { success } = await ratelimit(`reset:${user.email}`, 3, 3600);
 			if (!success) {

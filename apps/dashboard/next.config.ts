@@ -1,6 +1,12 @@
+import path from "node:path";
 import type { NextConfig } from "next";
 
+function joinCspSources(...sources: (string | false)[]): string {
+	return sources.filter(Boolean).join(" ");
+}
+
 const nextConfig: NextConfig = {
+	outputFileTracingRoot: path.join(process.cwd(), "../.."),
 	experimental: {
 		optimizePackageImports: ["@phosphor-icons/react"],
 	},
@@ -67,12 +73,15 @@ const nextConfig: NextConfig = {
 		];
 
 		const isDev = process.env.NODE_ENV === "development";
-		const localhostConnectSrc = isDev
+		const localhostSources = isDev
 			? "http://localhost:* http://127.0.0.1:*"
-			: "";
-		const localhostFrameAncestors = isDev
-			? "http://localhost:* http://127.0.0.1:*"
-			: "";
+			: false;
+		const connectSources = joinCspSources(
+			"'self'",
+			localhostSources,
+			"https:",
+			"wss:"
+		);
 
 		const cspDirectives = [
 			"default-src 'self'",
@@ -80,7 +89,7 @@ const nextConfig: NextConfig = {
 			"style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
 			"font-src 'self' https://fonts.gstatic.com",
 			"img-src 'self' data: blob: https://cdn.databuddy.cc https://www.google.com https://flagcdn.com https://api.dicebear.com https://avatars.githubusercontent.com https://lh3.googleusercontent.com",
-			`connect-src 'self' ${localhostConnectSrc} https://cdn.databuddy.cc https://*.databuddy.cc wss://*.databuddy.cc https://api.microlink.io`.trim(),
+			`connect-src ${connectSources}`,
 			"frame-ancestors 'none'",
 			"base-uri 'self'",
 			"form-action 'self'",
@@ -92,8 +101,8 @@ const nextConfig: NextConfig = {
 			"style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
 			"font-src 'self' https://fonts.gstatic.com",
 			"img-src 'self' data: blob: https://cdn.databuddy.cc https://www.google.com https://flagcdn.com https://api.dicebear.com https://avatars.githubusercontent.com https://lh3.googleusercontent.com",
-			`connect-src 'self' ${localhostConnectSrc} https://cdn.databuddy.cc https://*.databuddy.cc wss://*.databuddy.cc`.trim(),
-			`frame-ancestors 'self' ${localhostFrameAncestors} https://*.databuddy.cc https://databuddy.cc`.trim(),
+			`connect-src ${connectSources}`,
+			`frame-ancestors ${joinCspSources("'self'", localhostSources, "https:")}`,
 			"base-uri 'self'",
 			"form-action 'self'",
 		];
