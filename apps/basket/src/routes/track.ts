@@ -9,7 +9,11 @@ import {
 import { checkAutumnUsage } from "@lib/billing";
 import { insertCustomEvents } from "@lib/event-service";
 import { summarizeRejectedBody } from "@lib/rejection-summary";
-import { basketErrors, rethrowOrWrap } from "@lib/structured-errors";
+import {
+	basketErrors,
+	createIngestSchemaValidationError,
+	rethrowOrWrap,
+} from "@lib/structured-errors";
 import { record } from "@lib/tracing";
 import { VALIDATION_LIMITS, validatePayloadSize } from "@utils/validation";
 import { Elysia } from "elysia";
@@ -165,7 +169,7 @@ export const trackRoute = new Elysia().post(
 			if (!parseResult.success) {
 				log.set({ rejected: "schema" });
 				captureRejectedBody();
-				throw basketErrors.trackInvalidBody();
+				throw createIngestSchemaValidationError(parseResult.error.issues);
 			}
 
 			const events = Array.isArray(parseResult.data)

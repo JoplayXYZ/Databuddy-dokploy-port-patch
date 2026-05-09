@@ -368,6 +368,58 @@ describe("POST /events", () => {
 		]);
 		expect(res.status).toBe(400);
 	});
+
+	test("schema rejection wide-event includes event names + property keys", async () => {
+		mockLogger.set.mockClear();
+		const res = await post(basketApp, "/events", [
+			{
+				timestamp: now,
+				path: "https://example.com",
+				eventName: "purchase",
+				properties: { plan: "pro", source: "homepage" },
+			},
+			{ timestamp: now, path: "https://example.com", eventName: "" },
+		]);
+		expect(res.status).toBe(400);
+		const setCalls = mockLogger.set.mock.calls.map((c: unknown[]) => c[0]);
+		const summaryCall = setCalls.find(
+			(c: Record<string, unknown>) => c.rejectedEventCount !== undefined
+		) as Record<string, unknown>;
+		expect(summaryCall).toBeDefined();
+		expect(summaryCall.rejectedEventCount).toBe(2);
+		expect(summaryCall.rejectedEventNames).toEqual(["purchase"]);
+		expect(summaryCall.rejectedPropertyKeys).toEqual(
+			expect.arrayContaining(["plan", "source"])
+		);
+	});
+
+	test("missing-organization rejection captures event-name summary", async () => {
+		mockLogger.set.mockClear();
+		mockValidateRequest.mockResolvedValueOnce({
+			clientId: "ws_test",
+			userAgent: "TestAgent/1.0",
+			ip: "1.2.3.4",
+			ownerId: "user_1",
+			organizationId: undefined,
+		} as any);
+		const res = await post(basketApp, "/events", [
+			{
+				timestamp: now,
+				path: "https://example.com",
+				eventName: "signup",
+				properties: { plan: "free" },
+			},
+		]);
+		expect(res.status).toBe(400);
+		const setCalls = mockLogger.set.mock.calls.map((c: unknown[]) => c[0]);
+		const summaryCall = setCalls.find(
+			(c: Record<string, unknown>) => c.rejectedEventCount !== undefined
+		) as Record<string, unknown>;
+		expect(summaryCall).toBeDefined();
+		expect(summaryCall.rejectedEventCount).toBe(1);
+		expect(summaryCall.rejectedEventNames).toEqual(["signup"]);
+		expect(summaryCall.rejectedPropertyKeys).toEqual(["plan"]);
+	});
 });
 
 // ── POST /batch ──
@@ -794,6 +846,19 @@ describe("POST /track", () => {
 			websiteId: "ws_test",
 		});
 		expect(res.status).toBe(400);
+	});
+
+	test("schema failure response exposes Zod issues to client", async () => {
+		const res = await post(trackRoute, "/track", {
+			namespace: "x",
+			websiteId: "ws_test",
+		});
+		expect(res.status).toBe(400);
+		const body = await json(res);
+		expect(Array.isArray(body.errors)).toBe(true);
+		const issues = body.errors as Array<Record<string, unknown>>;
+		expect(issues.length).toBeGreaterThan(0);
+		expect(JSON.stringify(issues)).toContain("name");
 	});
 
 	test("invalid timestamp → 400 and no insert", async () => {

@@ -21,6 +21,7 @@ import {
 	insertTrackEvent,
 	insertTrackEventsBatch,
 } from "@lib/event-service";
+import { summarizeRejectedBody } from "@lib/rejection-summary";
 import {
 	checkForBot,
 	type ValidatedRequest,
@@ -264,6 +265,13 @@ const app = new Elysia()
 		const log = useLogger();
 		log.set({ route: "events" });
 
+		const captureRejectedBody = () => {
+			const summary = summarizeRejectedBody(body);
+			if (summary) {
+				log.set(summary);
+			}
+		};
+
 		try {
 			const { clientId, userAgent, organizationId } = await validateRequest(
 				body,
@@ -274,12 +282,14 @@ const app = new Elysia()
 
 			if (!organizationId) {
 				log.set({ rejected: "missing_organization" });
+				captureRejectedBody();
 				throw basketErrors.ingestWebsiteMissingOrganization();
 			}
 
 			const parseResult = batchedCustomEventSpansSchema.safeParse(body);
 			if (!parseResult.success) {
 				log.set({ rejected: "schema" });
+				captureRejectedBody();
 				throw createIngestSchemaValidationError(parseResult.error.issues);
 			}
 
