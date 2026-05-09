@@ -56,168 +56,85 @@ describe("Slack thread reply relevance", () => {
 		modelDecision = null;
 	});
 
-	it("allows explicit bot mentions", async () => {
+	it("uses the model gate for explicit bot mentions", async () => {
+		modelDecision = {
+			confidence: 0.99,
+			reason: "bot_mentioned",
+			shouldReply: true,
+		};
+
 		await expect(decide("<@UBOT> what now?")).resolves.toMatchObject({
 			reason: "bot_mentioned",
 			shouldReply: true,
-			source: "rules",
+			source: "model",
 		});
+		expect(capturedModelInput?.text).toBe("<@UBOT> what now?");
 	});
 
-	it("allows analytics follow-up questions", async () => {
-		await expect(decide("What's my top page today?")).resolves.toMatchObject({
-			reason: "analytics_request",
-			shouldReply: true,
-			source: "rules",
-		});
-	});
-
-	it("allows affirmative analytics follow-ups without a mention", async () => {
-		await expect(decide("sure, what's our top pages")).resolves.toMatchObject({
-			reason: "analytics_request",
-			shouldReply: true,
-			source: "rules",
-		});
-	});
-
-	it("allows requests addressed by bot name", async () => {
-		await expect(
-			decide("bunny can you remember that the demo pages are noisy?")
-		).resolves.toMatchObject({
+	it("lets the model allow the exact short clarification answer from thread context", async () => {
+		modelDecision = {
+			confidence: 0.92,
 			reason: "direct_request",
 			shouldReply: true,
-			source: "rules",
-		});
-	});
+		};
 
-	it("allows conversational questions addressed to the bot by name", async () => {
-		await expect(decide("do you agree databuddy?")).resolves.toMatchObject({
-			reason: "direct_request",
-			shouldReply: true,
-			source: "rules",
-		});
-	});
-
-	it("allows Slack setup questions without needing the model gate", async () => {
 		await expect(
-			decide("how does linear just work without bind")
-		).resolves.toMatchObject({
-			reason: "direct_request",
-			shouldReply: true,
-			source: "rules",
-		});
-	});
-
-	it("allows terse fix requests", async () => {
-		await expect(decide("can you fix it")).resolves.toMatchObject({
-			reason: "direct_request",
-			shouldReply: true,
-			source: "rules",
-		});
-	});
-
-	it("ignores short side chatter", async () => {
-		await expect(decide("He just call u")).resolves.toMatchObject({
-			reason: "side_chatter",
-			shouldReply: false,
-			source: "rules",
-		});
-	});
-
-	it("ignores human-directed product feedback prompts", async () => {
-		await expect(
-			decide("what do you think <@UQ>, anything we should change?")
-		).resolves.toMatchObject({
-			reason: "human_to_human",
-			shouldReply: false,
-			source: "rules",
-		});
-	});
-
-	it("ignores meta reactions about the bot", async () => {
-		await expect(decide("WHERE DID IT GET A MEMORY?")).resolves.toMatchObject({
-			reason: "side_chatter",
-			shouldReply: false,
-			source: "rules",
-		});
-	});
-
-	it("ignores Slack setup commentary that is not a question", async () => {
-		await expect(
-			decide("yea databuddy doesn't exist for u yet")
-		).resolves.toMatchObject({
-			reason: "side_chatter",
-			shouldReply: false,
-			source: "rules",
-		});
-	});
-
-	it("ignores questions addressed to another human", async () => {
-		await expect(decide("whta model is it <@UISSA>")).resolves.toMatchObject({
-			reason: "human_to_human",
-			shouldReply: false,
-			source: "rules",
-		});
-	});
-
-	it("ignores memory and leak-test commentary", async () => {
-		await expect(
-			decide("it also has full, permanent memory")
-		).resolves.toMatchObject({
-			reason: "side_chatter",
-			shouldReply: false,
-			source: "rules",
-		});
-		await expect(
-			decide("try ask about our analytics lol, see if it leaks")
-		).resolves.toMatchObject({
-			reason: "side_chatter",
-			shouldReply: false,
-			source: "rules",
-		});
-	});
-
-	it("uses a routing reason when falling back without the model", async () => {
-		await expect(decide("this probably belongs in a separate test")).resolves
-			.toMatchObject({
-				reason: "ambiguous",
-				shouldReply: false,
-				source: "fallback",
-			});
-	});
-
-	it("falls back to reply when the bot already engaged in the thread", async () => {
-		await expect(
-			decideWithThread("makes sense, looks good for now", [
+			decideWithThread("both", [
 				{
-					text: "Top pages this week are pricing, blog, and home.",
+					text: "hey <@UBOT> can you tell me my top pages, and tell <@UQAIS> to do a better j*b",
+					userId: "U123",
+				},
+				{
+					text: "I see two websites — Databuddy (app.databuddy.cc) and Landing Page (databuddy.cc). Which one's top pages would you like me to pull?",
 					userId: "UBOT",
 				},
 			])
 		).resolves.toMatchObject({
-			reason: "ambiguous",
+			reason: "direct_request",
+			shouldReply: true,
+			source: "model",
+		});
+		expect(capturedModelInput).toMatchObject({
+			currentUserId: "U123",
+			text: "both",
+		});
+		expect(capturedModelInput?.threadMessages).toHaveLength(2);
+	});
+
+	it("lets the model block side chatter", async () => {
+		modelDecision = {
+			confidence: 0.94,
+			reason: "side_chatter",
+			shouldReply: false,
+		};
+
+		await expect(decide("He just call u")).resolves.toMatchObject({
+			reason: "side_chatter",
+			shouldReply: false,
+			source: "model",
+		});
+	});
+
+	it("falls back to explicit mentions when the model is unavailable", async () => {
+		await expect(decide("<@UBOT> what now?")).resolves.toMatchObject({
+			reason: "bot_mentioned",
 			shouldReply: true,
 			source: "fallback",
 		});
 	});
 
-	it("uses thread context for ambiguous conversational continuations", async () => {
+	it("falls back conservatively for very short replies when the model is unavailable", async () => {
 		await expect(
-			decideWithThread("yes please do that", [
+			decideWithThread("both", [
 				{
-					text: "Want me to pull the top pages next?",
+					text: "Which website should I use?",
 					userId: "UBOT",
-				},
-				{
-					text: "yes please do that",
-					userId: "U123",
 				},
 			])
 		).resolves.toMatchObject({
-			reason: "direct_request",
-			shouldReply: true,
-			source: "rules",
+			reason: "ambiguous",
+			shouldReply: false,
+			source: "fallback",
 		});
-		expect(capturedModelInput).toBeNull();
 	});
 });

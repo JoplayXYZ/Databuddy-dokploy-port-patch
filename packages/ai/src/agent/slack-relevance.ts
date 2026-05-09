@@ -61,7 +61,7 @@ export async function classifySlackThreadReplyRelevance({
 			model: models.quick,
 			schema: SlackThreadReplyRelevanceSchema,
 			system:
-				"You decide whether a Slack analytics bot named Databuddy should reply to the latest message in a thread it previously joined. Use the thread context, not just the latest message. Reply when the latest message continues Databuddy's prior exchange, answers a question Databuddy asked, asks Databuddy for help, asks an analytics/product/data question, asks about Databuddy's Slack setup or permissions, gives a direct bot command, or explicitly mentions the bot. Do not reply to human side chatter, jokes, praise, fragments, status comments, or messages clearly addressed to another person.",
+				"You decide whether a Slack analytics bot named Databuddy should reply to the latest Message in a thread it previously joined. Use Thread context to understand the latest Message, but classify only the latest Message. Reply when the latest Message continues Databuddy's prior exchange, answers a question Databuddy asked, asks Databuddy for help, asks an analytics/product/data question, asks about Databuddy's Slack setup or permissions, gives a direct bot command, or explicitly mentions the bot. Short answers such as 'both', 'the first one', 'yes', or a website/name/value should reply when they answer a prior Databuddy clarification question. Do not reply to human side chatter, jokes, praise, fragments unrelated to Databuddy's prior question, status comments, or messages clearly addressed to another person. Use reason 'bot_mentioned' only when the latest Message itself contains the bot mention token.",
 			prompt: [
 				`Bot mention token: ${botUserId ? `<@${botUserId}>` : "unknown"}`,
 				`Latest message author: ${currentUserId ? `<@${currentUserId}>` : "unknown"}`,
@@ -94,7 +94,12 @@ function formatThreadMessages(
 				? `<@${message.userId}>`
 				: (message.authorName ?? "unknown");
 			const text = message.text
-				.replace(/\s+/g, " ")
+				.replaceAll("\n", " ")
+				.replaceAll("\r", " ")
+				.replaceAll("\t", " ")
+				.split(" ")
+				.filter(Boolean)
+				.join(" ")
 				.trim()
 				.slice(0, MAX_THREAD_MESSAGE_CHARS);
 			return `${index + 1}. ${author}: ${text}`;

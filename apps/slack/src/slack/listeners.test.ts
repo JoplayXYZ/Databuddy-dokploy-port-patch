@@ -306,7 +306,21 @@ describe("Slack listeners", () => {
 		const { agent, runs } = createAgent();
 		const queue = createQueue({ tryAcquire: async () => false });
 		const { client } = createClient();
-		registerFakeSlackListeners(app, agent, createInstallations(), queue);
+		const threadReplyGate: SlackThreadReplyGate = {
+			shouldReply: async () => ({
+				confidence: 0.9,
+				reason: "direct_request",
+				shouldReply: true,
+				source: "model",
+			}),
+		};
+		registerFakeSlackListeners(
+			app,
+			agent,
+			createInstallations(),
+			queue,
+			threadReplyGate
+		);
 
 		await app.messages[0]?.({
 			client,
@@ -345,7 +359,7 @@ describe("Slack listeners", () => {
 				confidence: 0.95,
 				reason: "side_chatter",
 				shouldReply: false,
-				source: "rules",
+				source: "model",
 			}),
 		};
 		registerFakeSlackListeners(
