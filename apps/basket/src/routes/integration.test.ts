@@ -533,6 +533,137 @@ describe("POST /track", () => {
 		expect(mockInsertCustomEvents).not.toHaveBeenCalled();
 	});
 
+	test("schema rejection wide-event includes event names + property keys", async () => {
+		mockLogger.set.mockClear();
+		const res = await post(trackRoute, "/track", [
+			{ name: "signup", properties: { plan: "pro", source: "homepage" } },
+			{ name: "purchase", properties: { plan: "pro", amount: 42 } },
+			{ namespace: "no_name_here" },
+		]);
+		expect(res.status).toBe(400);
+
+		const setCalls = mockLogger.set.mock.calls.map((c: unknown[]) => c[0]);
+		const rejectedCall = setCalls.find(
+			(c: Record<string, unknown>) => c.rejected === "schema"
+		);
+		expect(rejectedCall).toBeDefined();
+		const summaryCall = setCalls.find(
+			(c: Record<string, unknown>) => c.rejectedEventCount !== undefined
+		) as Record<string, unknown>;
+		expect(summaryCall).toBeDefined();
+		expect(summaryCall.rejectedEventCount).toBe(3);
+		expect(summaryCall.rejectedEventNames).toEqual(["signup", "purchase"]);
+		expect(summaryCall.rejectedPropertyKeys).toEqual(
+			expect.arrayContaining(["plan", "source", "amount"])
+		);
+		expect(summaryCall.rejectedHasWebsiteId).toBe(false);
+	});
+
+	test("scope rejection wide-event includes event names", async () => {
+		mockLogger.set.mockClear();
+		const res = await post(trackRoute, "/track", {
+			name: "purchase",
+			websiteId: "ws_other",
+			properties: { sku: "abc" },
+		});
+		expect(res.status).toBe(403);
+
+		const setCalls = mockLogger.set.mock.calls.map((c: unknown[]) => c[0]);
+		const summaryCall = setCalls.find(
+			(c: Record<string, unknown>) => c.rejectedEventCount !== undefined
+		) as Record<string, unknown>;
+		expect(summaryCall).toBeDefined();
+		expect(summaryCall.rejectedEventCount).toBe(1);
+		expect(summaryCall.rejectedEventNames).toEqual(["purchase"]);
+		expect(summaryCall.rejectedPropertyKeys).toEqual(["sku"]);
+		expect(summaryCall.rejectedHasWebsiteId).toBe(true);
+	});
+
+	test("payload-too-large rejection captures rejection summary", async () => {
+		mockLogger.set.mockClear();
+		const events: unknown[] = [];
+		for (let i = 0; i < 5; i++) {
+			events.push({
+				name: `ev_${i}`,
+				websiteId: "ws_test",
+				properties: { blob: "a".repeat(250_000) },
+			});
+		}
+		const res = await post(trackRoute, "/track", events);
+		expect(res.status).toBe(413);
+		const setCalls = mockLogger.set.mock.calls.map((c: unknown[]) => c[0]);
+		const rejectedCall = setCalls.find(
+			(c: Record<string, unknown>) => c.rejected === "payload_too_large"
+		);
+		expect(rejectedCall).toBeDefined();
+		const summaryCall = setCalls.find(
+			(c: Record<string, unknown>) => c.rejectedEventCount !== undefined
+		) as Record<string, unknown>;
+		expect(summaryCall).toBeDefined();
+		expect(summaryCall.rejectedEventCount).toBe(5);
+		expect(summaryCall.rejectedEventNames).toEqual([
+			"ev_0",
+			"ev_1",
+			"ev_2",
+			"ev_3",
+			"ev_4",
+		]);
+	});
+
+	test("rejection summary truncates large name and property sets", async () => {
+		mockLogger.set.mockClear();
+		const events: unknown[] = [];
+		for (let i = 0; i < 80; i++) {
+			const props: Record<string, string> = {};
+			for (let j = 0; j < 10; j++) {
+				props[`p_${i}_${j}`] = "v";
+			}
+			events.push({ namespace: "x", properties: props });
+		}
+		const res = await post(trackRoute, "/track", events);
+		expect(res.status).toBe(400);
+		const setCalls = mockLogger.set.mock.calls.map((c: unknown[]) => c[0]);
+		const summaryCall = setCalls.find(
+			(c: Record<string, unknown>) => c.rejectedEventCount !== undefined
+		) as Record<string, unknown>;
+		expect(summaryCall).toBeDefined();
+		expect(summaryCall.rejectedEventCount).toBe(80);
+		expect((summaryCall.rejectedEventNames as string[]).length).toBe(0);
+		expect(
+			(summaryCall.rejectedPropertyKeys as string[]).length
+		).toBeLessThanOrEqual(50);
+	});
+
+	test("rejection summary handles non-object body (string)", async () => {
+		mockLogger.set.mockClear();
+		const res = await post(trackRoute, "/track", "not an object" as never);
+		expect(res.status).toBe(400);
+		const setCalls = mockLogger.set.mock.calls.map((c: unknown[]) => c[0]);
+		const summaryCall = setCalls.find(
+			(c: Record<string, unknown>) => c.rejectedEventCount !== undefined
+		) as Record<string, unknown>;
+		expect(summaryCall).toBeDefined();
+		expect(summaryCall.rejectedEventCount).toBe(1);
+		expect(summaryCall.rejectedEventNames).toEqual([]);
+		expect(summaryCall.rejectedPropertyKeys).toEqual([]);
+	});
+
+	test("rejection summary skips event names exceeding max length", async () => {
+		mockLogger.set.mockClear();
+		const longName = "x".repeat(257);
+		const res = await post(trackRoute, "/track", [
+			{ name: longName, properties: { k: "v" } },
+			{ name: "ok_name", properties: { k: "v" } },
+		]);
+		expect(res.status).toBe(400);
+		const setCalls = mockLogger.set.mock.calls.map((c: unknown[]) => c[0]);
+		const summaryCall = setCalls.find(
+			(c: Record<string, unknown>) => c.rejectedEventCount !== undefined
+		) as Record<string, unknown>;
+		expect(summaryCall).toBeDefined();
+		expect(summaryCall.rejectedEventNames).toEqual(["ok_name"]);
+	});
+
 	test("global api key + websiteId in event still allowed (not scope-checked)", async () => {
 		mockHasGlobalAccess.mockReturnValue(true);
 		const res = await post(trackRoute, "/track", {
