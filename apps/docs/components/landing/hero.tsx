@@ -88,21 +88,22 @@ export default function Hero({
 			<div className="mx-auto w-full max-w-400 px-4 pt-26 pb-8 sm:px-14 sm:pt-20 lg:px-20 lg:pt-38">
 				<div className="mx-auto flex max-w-360 flex-col items-start space-y-2 text-left">
 					<h1 className="z-10 font-semibold text-3xl sm:text-5xl md:text-6xl">
-						One script. Six tools.
+						Track every click
 						<br />
-						<span className="text-muted-foreground">Under 30 KB.</span>
+						<span className="text-muted-foreground">to conversion.</span>
 					</h1>
 
 					<p className="z-10 max-w-2xl text-muted-foreground text-sm sm:text-base lg:text-lg">
-						Analytics, error tracking, web vitals, feature flags, short links,
-						and an AI agent that answers questions about your data. No cookies,
-						no consent banners, no second script tag.
+						See which campaigns and links bring users in, how they move through
+						your funnel, where errors or slow pages cost conversions, and which
+						feature rollouts move the numbers. Then ask the AI agent what to
+						fix next.
 					</p>
 
 					<div className="flex items-center gap-3 pt-2">
 						<SciFiButton asChild className="px-6 py-5">
 							<a href="https://app.databuddy.cc/register">
-								See your analytics in 5 minutes
+								Find what drives growth
 							</a>
 						</SciFiButton>
 
