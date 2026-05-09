@@ -90,6 +90,7 @@ Read [codebase-map.md](./references/codebase-map.md) when you need deeper routin
 - `DropdownMenu.GroupLabel` must be rendered inside `DropdownMenu.Group`; Base UI throws `MenuGroupRootContext is missing` when labels are placed directly under `DropdownMenu.Content`.
 - Traffic Trends chart annotations should use a chart-adjacent annotation rail for dense data; avoid in-plot labels, tall lines, or floating dots that compete with the chart tooltip/data layer.
 - Flags list rows (`app/(main)/websites/[id]/flags/_components/flags-list.tsx`) are clickable containers with nested controls; mark nested controls with `data-row-interactive="true"` and have the row ignore those targets instead of relying on broad cell-level `stopPropagation`.
+- Never put interactive controls inside another `<button>` on dashboard rows. If a row has actions/menus, make the main row content a sibling `Button` and keep action buttons as separate siblings; do not use a `div` with click/key handlers as a fake button.
 - For data loading and mutations, inspect `apps/dashboard/lib/orpc.ts` and the corresponding hooks/components
 - Many changes require matching edits in `packages/rpc`
 
