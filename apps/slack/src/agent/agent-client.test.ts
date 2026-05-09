@@ -87,7 +87,13 @@ describe("Databuddy Slack agent client", () => {
 		expect(chunks).toEqual(["Done"]);
 		const captured = expectCapturedSharedAgentOptions();
 		expect(captured.memoryUserId).toBe("slack-T123-U456");
-		expect(String(captured.input)).toContain("Current Slack speaker: <@U456>");
+		expect(String(captured.input)).toContain("current_speaker: <@U456>");
+		expect(String(captured.input)).toContain(
+			"current_speaker_memory_scope: slack-T123-U456"
+		);
+		expect(String(captured.input)).toContain(
+			"other_people_mentioned_in_latest_message: <@U999>"
+		);
 		expect(String(captured.input)).toContain(
 			"Do not apply another Slack user's saved name"
 		);
@@ -179,8 +185,11 @@ describe("Databuddy Slack agent client", () => {
 		});
 
 		expect(input).toContain("<slack_message_context>");
-		expect(input).toContain("Current Slack speaker: <@U2>");
-		expect(input).toContain("Message from <@U2>:");
+		expect(input).toContain("current_speaker: <@U2>");
+		expect(input).toContain("current_speaker_memory_scope: slack-T123-U2");
+		expect(input).toContain("<slack_latest_message>");
+		expect(input).toContain("author: <@U2>");
+		expect(input).toContain("author_memory_scope: slack-T123-U2");
 		expect(input).toContain("what is my name?");
 	});
 
@@ -198,10 +207,15 @@ describe("Databuddy Slack agent client", () => {
 			userId: "U2",
 		});
 
-		expect(input).toContain("Current Slack speaker: <@U2>");
+		expect(input).toContain("current_speaker: <@U2>");
+		expect(input).toContain("current_speaker_memory_scope: slack-T123-U2");
 		expect(input).toContain("<slack_follow_ups>");
-		expect(input).toContain("1. <@U1>: also check referrers");
-		expect(input).toContain("2. <@U2>: and compare mobile");
+		expect(input).toContain("<slack_follow_up index=\"1\">");
+		expect(input).toContain("author: <@U1>");
+		expect(input).toContain("author_memory_scope: slack-T123-U1");
+		expect(input).toContain("<slack_follow_up index=\"2\">");
+		expect(input).toContain("author: <@U2>");
+		expect(input).toContain("author_memory_scope: slack-T123-U2");
 		expect(input).toContain("</slack_follow_ups>");
 	});
 

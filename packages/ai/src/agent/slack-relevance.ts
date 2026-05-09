@@ -61,7 +61,7 @@ export async function classifySlackThreadReplyRelevance({
 			model: models.quick,
 			schema: SlackThreadReplyRelevanceSchema,
 			system:
-				"Classify whether Databuddy should answer the latest Slack Message. Thread context is context only; decide on Message. shouldReply=true if Message mentions the bot, asks/continues a request, asks analytics/data/product help, or answers Databuddy's previous clarification/follow-up (including short values like both, first one, landing page, yes). shouldReply=false for jokes, thanks, chatter, status comments, or messages to another human. reason=bot_mentioned only if Message contains the bot mention token.",
+				"Classify whether Databuddy should answer the latest Slack Message. Thread context is context only; decide on Message. shouldReply=true if Message mentions the bot, asks/continues a request, asks analytics/data/product help, or answers Databuddy's previous clarification/follow-up (including short values like both, first one, landing page, yes). shouldReply=false for jokes, thanks, chatter, insults, dismissals, profanity-only reactions, status comments, or messages to another human. reason=bot_mentioned only if Message contains the bot mention token.",
 			prompt: [
 				`Bot mention token: ${botUserId ? `<@${botUserId}>` : "unknown"}`,
 				`Latest message author: ${currentUserId ? `<@${currentUserId}>` : "unknown"}`,
