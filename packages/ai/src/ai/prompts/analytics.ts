@@ -190,7 +190,9 @@ export function buildAnalyticsInstructionsForMcp(ctx: {
 <website_domain>Obtain from list_websites result</website_domain>`;
 	const selectionContext = websiteId
 		? `A website is pre-selected for this run. Use websiteId "${websiteId}" for website-scoped tools. Do not call list_websites just to discover a website; call it only if the user explicitly asks what websites exist or if you need to disambiguate a different requested website.`
-		: "For explicit analytics requests, no website is pre-selected. Call list_websites FIRST. If multiple exist, state which you're analyzing (pick by context: marketing site for pricing/docs/blog, app for product usage/dashboards; ask if unclear). If only one exists, use it. For no-tool conversational turns, do not call list_websites.";
+		: ctx.source === "slack"
+			? "For explicit analytics requests, no website is pre-selected. Call list_websites FIRST. If exactly one website exists, use it. If multiple websites exist and the Slack message does not name a domain or website, ask which website to analyze instead of guessing."
+			: "For explicit analytics requests, no website is pre-selected. Call list_websites FIRST. If multiple exist, state which you're analyzing (pick by context: marketing site for pricing/docs/blog, app for product usage/dashboards; ask if unclear). If only one exists, use it. For no-tool conversational turns, do not call list_websites.";
 	return `You are Databunny, an analytics assistant for Databuddy.
 
 <background-data>

@@ -9,8 +9,8 @@ export const LinkFolderSummarySchema = z.object({
 	id: z.string(),
 	name: z.string(),
 	slug: z.string(),
-	createdAt: DateStringSchema.optional(),
-	updatedAt: DateStringSchema.optional(),
+	createdAt: z.string().optional(),
+	updatedAt: z.string().optional(),
 });
 
 export const LinkFolderWithUsageSchema = LinkFolderSummarySchema.extend({
@@ -25,25 +25,37 @@ export const LinkRowOutputSchema = z.object({
 	folderId: z.string().nullable(),
 	folder: LinkFolderSummarySchema.nullable().optional(),
 	externalId: z.string().nullable(),
-	expiresAt: DateStringSchema.nullable().optional(),
-	createdAt: DateStringSchema.optional(),
-	updatedAt: DateStringSchema.optional(),
+	expiresAt: z.string().nullable().optional(),
+	createdAt: z.string().optional(),
+	updatedAt: z.string().optional(),
 	ogTitle: z.string().nullable().optional(),
 	ogDescription: z.string().nullable().optional(),
 });
 
-const LinkFolderSchema = LinkFolderSummarySchema.extend({
+const LinkFolderSchema = z.object({
+	id: z.string(),
+	name: z.string(),
+	slug: z.string(),
+	createdAt: DateStringSchema.optional(),
+	updatedAt: DateStringSchema.optional(),
 	organizationId: z.string(),
 	createdBy: z.string().optional(),
 	deletedAt: DateStringSchema.nullable().optional(),
 });
 
-const LinkRowSchema = LinkRowOutputSchema.omit({ folder: true }).extend({
-	organizationId: z.string().optional(),
-	externalId: z.string().nullable().optional(),
+const LinkRowSchema = z.object({
+	id: z.string(),
+	name: z.string(),
+	slug: z.string(),
+	targetUrl: z.string(),
 	folderId: z.string().nullable().optional(),
-	ogDescription: z.string().nullable().optional(),
+	externalId: z.string().nullable().optional(),
+	expiresAt: DateStringSchema.nullable().optional(),
+	createdAt: DateStringSchema.optional(),
+	updatedAt: DateStringSchema.optional(),
 	ogTitle: z.string().nullable().optional(),
+	ogDescription: z.string().nullable().optional(),
+	organizationId: z.string().optional(),
 });
 
 export const LinkFolderSelectorSchema = z.object({

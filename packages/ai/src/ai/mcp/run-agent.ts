@@ -227,6 +227,7 @@ async function prepareMcpAgentRun(options: RunMcpAgentOptions) {
 				modelOverride: options.modelOverride,
 				memoryUserId,
 				mutationMode: options.mutationMode,
+				organizationId,
 				slackContext: options.slackContext,
 				source,
 				toolMode: options.toolMode,

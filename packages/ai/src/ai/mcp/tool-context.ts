@@ -10,7 +10,6 @@ import {
 	hasWebsiteScope,
 } from "@databuddy/api-keys/resolve";
 import { websitesApi } from "@databuddy/auth";
-import { db } from "@databuddy/db";
 import { getRedisCache } from "@databuddy/redis";
 import type { AppContext } from "../config/context";
 import { getCachedWebsite, validateWebsite } from "../../lib/website-utils";
@@ -27,6 +26,7 @@ export interface WebsiteSelectorInput {
 
 export interface RequestPrincipal {
 	apiKey: ApiKeyRow | null;
+	organizationId?: string | null;
 	userId: string | null;
 }
 
@@ -81,11 +81,12 @@ export async function ensureWebsiteAccess(
 function accessibleWebsitesCacheKey(
 	principal: RequestPrincipal
 ): string | null {
+	const organizationId = principal.organizationId ?? principal.apiKey?.organizationId;
 	if (principal.apiKey) {
-		return `apikey:${(principal.apiKey as { id: string }).id}`;
+		return `apikey:${(principal.apiKey as { id: string }).id}:org:${organizationId ?? "none"}`;
 	}
-	if (principal.userId) {
-		return `user:${principal.userId}`;
+	if (principal.userId && organizationId) {
+		return `user:${principal.userId}:org:${organizationId}`;
 	}
 	return null;
 }
@@ -99,8 +100,9 @@ export async function getCachedAccessibleWebsites(
 	principal: RequestPrincipal
 ): Promise<WebsiteSummary[]> {
 	const authCtx = {
-		user: principal.userId ? { id: principal.userId } : null,
 		apiKey: principal.apiKey,
+		organizationId: principal.organizationId ?? principal.apiKey?.organizationId,
+		user: principal.userId ? { id: principal.userId } : null,
 	};
 	const cacheKey = accessibleWebsitesCacheKey(principal);
 	const redis = cacheKey ? getRedisCache() : null;
@@ -187,8 +189,9 @@ export async function getOrganizationId(
  *
  * Resolution order:
  * 1. If websiteId provided → resolve via getOrganizationId (single org)
- * 2. If API key → use apiKey.organizationId (single org)
- * 3. If session user → list all org memberships (multi-org)
+ * 2. If an organization is scoped on the request → use that organization
+ * 3. If API key → use apiKey.organizationId (single org)
+ * Session users must have an active organization; never fan out across all memberships.
  */
 export async function resolveOrganizationIds(
 	websiteId: string | undefined,
@@ -201,6 +204,12 @@ export async function resolveOrganizationIds(
 		}
 		return [orgId];
 	}
+	if (principal.organizationId) {
+		if (principal.apiKey && principal.apiKey.organizationId !== principal.organizationId) {
+			return new Error("API key does not belong to the requested organization");
+		}
+		return [principal.organizationId];
+	}
 	if (principal.apiKey?.organizationId && hasGlobalAccess(principal.apiKey)) {
 		return [principal.apiKey.organizationId];
 	}
@@ -210,14 +219,7 @@ export async function resolveOrganizationIds(
 		);
 	}
 	if (principal.userId) {
-		const memberships = await db.query.member.findMany({
-			where: { userId: principal.userId },
-			columns: { organizationId: true },
-		});
-		if (memberships.length === 0) {
-			return new Error("User has no organization memberships");
-		}
-		return memberships.map((m) => m.organizationId);
+		return new Error("Session requests require an active organization");
 	}
 	return new Error("Could not determine organization");
 }
@@ -234,6 +236,7 @@ export function buildRpcContext(
 		timezone: "UTC",
 		currentDateTime: new Date().toISOString(),
 		chatId: "",
+		organizationId: principal.organizationId ?? principal.apiKey?.organizationId,
 		requestHeaders: principal.requestHeaders,
 	};
 }

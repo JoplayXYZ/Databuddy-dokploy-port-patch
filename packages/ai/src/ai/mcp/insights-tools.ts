@@ -480,7 +480,7 @@ const listInsightsTool = defineMcpTool(
 				.describe(
 					"Subset of insight fields to return. Default returns all. Use ['id','title','severity','priority'] for slim output."
 				),
-			limit: z.coerce
+			limit: z
 				.number()
 				.int()
 				.min(1)
@@ -569,7 +569,7 @@ const summarizeInsightsTool = defineMcpTool(
 				.optional()
 				.default("last_7d")
 				.describe("How far back to look (default last_7d)"),
-			topN: z.coerce
+			topN: z
 				.number()
 				.int()
 				.min(0)
@@ -923,7 +923,7 @@ const topMoversTool = defineMcpTool(
 				.object({ from: z.string(), to: z.string() })
 				.optional()
 				.describe("Custom comparison window. Default = previous period."),
-			limit: z.coerce
+			limit: z
 				.number()
 				.int()
 				.min(1)
@@ -935,7 +935,7 @@ const topMoversTool = defineMcpTool(
 				.optional()
 				.default("both")
 				.describe("Filter to gainers / losers / both"),
-			minDeltaPercent: z.coerce
+			minDeltaPercent: z
 				.number()
 				.min(0)
 				.optional()
@@ -1157,7 +1157,7 @@ const detectAnomaliesTool = defineMcpTool(
 				.describe(
 					`Which metrics to check. Omit for all. Subset of: ${ANOMALY_METRIC_KEYS.join(", ")}`
 				),
-			lookbackDays: z.coerce
+			lookbackDays: z
 				.number()
 				.int()
 				.min(7)
@@ -1167,14 +1167,14 @@ const detectAnomaliesTool = defineMcpTool(
 				.describe(
 					"Days of history (7-60, default 14). WoW splits this in half (e.g. 14 → last 7d vs prior 7d)."
 				),
-			threshold: z.coerce
+			threshold: z
 				.number()
 				.min(1.0)
 				.max(5.0)
 				.optional()
 				.default(2.0)
 				.describe("Absolute z-score threshold for zscore arm (default 2.0)"),
-			minDeltaPercent: z.coerce
+			minDeltaPercent: z
 				.number()
 				.min(0)
 				.max(1000)

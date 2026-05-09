@@ -89,7 +89,7 @@ const QueryItemSchema = z.object({
 	from: z.string().optional(),
 	to: z.string().optional(),
 	timeUnit: z.enum(TIME_UNIT).optional(),
-	limit: z.coerce.number().int().min(1).max(1000).optional(),
+	limit: z.number().int().min(1).max(1000).optional(),
 	filters: z.array(FilterSchema).optional(),
 	groupBy: z.array(z.string()).optional(),
 	orderBy: z.string().optional(),
@@ -383,7 +383,7 @@ const getDataTool = defineMcpTool(
 				.enum(TIME_UNIT)
 				.optional()
 				.describe("Time granularity for time-series data."),
-			limit: z.coerce
+			limit: z
 				.number()
 				.int()
 				.min(1)

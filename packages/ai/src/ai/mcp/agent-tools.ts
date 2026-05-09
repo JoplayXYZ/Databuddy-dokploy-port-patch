@@ -29,6 +29,7 @@ import { ensureWebsiteAccess } from "./tool-context";
 
 export interface McpAgentContext {
 	apiKey: ApiKeyRow | null;
+	organizationId?: string | null;
 	requestHeaders: Headers;
 	toolMode?: AppToolMode;
 	userId: string | null;
@@ -100,6 +101,8 @@ export function createMcpAgentTools(
 					? await auth.api.getSession({ headers: ctx.requestHeaders })
 					: null;
 				const authCtx = {
+					apiKey: ctx.apiKey,
+					organizationId: ctx.organizationId ?? ctx.apiKey?.organizationId,
 					user: session?.user
 						? {
 								id: session.user.id,
@@ -108,7 +111,6 @@ export function createMcpAgentTools(
 						: ctx.userId
 							? { id: ctx.userId }
 							: null,
-					apiKey: ctx.apiKey,
 				};
 				const list = await getAccessibleWebsites(authCtx);
 				return {

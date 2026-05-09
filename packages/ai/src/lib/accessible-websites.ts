@@ -3,8 +3,8 @@ import {
 	getAccessibleWebsiteIds,
 	hasGlobalAccess,
 } from "@databuddy/api-keys/resolve";
-import { db, eq, inArray } from "@databuddy/db";
-import { websites } from "@databuddy/db/schema";
+import { and, db, eq, inArray, isNull } from "@databuddy/db";
+import { member, websites } from "@databuddy/db/schema";
 
 export interface WebsiteSummary {
 	createdAt: Date | null;
@@ -15,7 +15,9 @@ export interface WebsiteSummary {
 }
 
 export interface AccessibleWebsitesAuth {
+	activeOrganizationId?: string | null;
 	apiKey: ApiKeyRow | null;
+	organizationId?: string | null;
 	user: { id: string; role?: string } | null;
 }
 
@@ -29,22 +31,37 @@ export async function getAccessibleWebsites(
 		isPublic: websites.isPublic,
 		createdAt: websites.createdAt,
 	};
+	const organizationId = authCtx.organizationId ?? authCtx.activeOrganizationId;
 
-	if (authCtx.user) {
-		const userMemberships = await db.query.member.findMany({
-			where: { userId: authCtx.user.id },
-			columns: { organizationId: true },
-		});
-		const orgIds = userMemberships.map((m) => m.organizationId);
-
-		if (orgIds.length === 0) {
+	if (organizationId) {
+		if (authCtx.apiKey) {
+			if (authCtx.apiKey.organizationId !== organizationId) {
+				return [];
+			}
+		} else if (authCtx.user) {
+			const [membership] = await db
+				.select({ organizationId: member.organizationId })
+				.from(member)
+				.where(
+					and(
+						eq(member.userId, authCtx.user.id),
+						eq(member.organizationId, organizationId)
+					)
+				)
+				.limit(1);
+			if (!membership) {
+				return [];
+			}
+		} else {
 			return [];
 		}
 
 		return db
 			.select(select)
 			.from(websites)
-			.where(inArray(websites.organizationId, orgIds))
+			.where(
+				and(eq(websites.organizationId, organizationId), isNull(websites.deletedAt))
+			)
 			.orderBy((t) => t.createdAt);
 	}
 
@@ -56,7 +73,12 @@ export async function getAccessibleWebsites(
 			return db
 				.select(select)
 				.from(websites)
-				.where(eq(websites.organizationId, authCtx.apiKey.organizationId))
+				.where(
+					and(
+						eq(websites.organizationId, authCtx.apiKey.organizationId),
+						isNull(websites.deletedAt)
+					)
+				)
 				.orderBy((t) => t.createdAt);
 		}
 
@@ -67,7 +89,7 @@ export async function getAccessibleWebsites(
 		return db
 			.select(select)
 			.from(websites)
-			.where(inArray(websites.id, ids))
+			.where(and(inArray(websites.id, ids), isNull(websites.deletedAt)))
 			.orderBy((t) => t.createdAt);
 	}
 

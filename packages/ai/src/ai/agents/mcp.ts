@@ -21,6 +21,7 @@ export function createMcpAgentConfig(context: {
 	memoryUserId?: string | null;
 	modelOverride?: string | null;
 	mutationMode?: AppMutationMode;
+	organizationId?: string | null;
 	slackContext?: DatabuddyAgentSlackContext | null;
 	source?: "dashboard" | "mcp" | "slack";
 	toolMode?: AppToolMode;
@@ -60,6 +61,7 @@ export function createMcpAgentConfig(context: {
 			currentDateTime,
 			memoryUserId: context.memoryUserId ?? "",
 			mutationMode: context.mutationMode ?? "allow",
+			organizationId: context.organizationId ?? null,
 			requestHeaders: context.requestHeaders,
 			timezone,
 			toolMode: context.toolMode ?? "live",
