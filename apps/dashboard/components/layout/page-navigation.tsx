@@ -1,15 +1,19 @@
 "use client";
 
-import type { Icon } from "@phosphor-icons/react";
+import type { ComponentType, SVGProps } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { ArrowLeftIcon } from "@databuddy/ui/icons";
 
+type IconComponent = ComponentType<
+	SVGProps<SVGSVGElement> & { size?: number | string; weight?: string }
+>;
+
 interface TabItem {
 	count?: number;
 	href: string;
-	icon?: Icon;
+	icon?: IconComponent;
 	id: string;
 	label: string;
 }

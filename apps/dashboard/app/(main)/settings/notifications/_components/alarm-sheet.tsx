@@ -8,8 +8,8 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { useOrganizationsContext } from "@/components/providers/organizations-provider";
 import { orpc } from "@/lib/orpc";
-import { SlackLogoIcon } from "@phosphor-icons/react/dist/ssr";
 import {
+	BellIcon as SlackLogoIcon,
 	EnvelopeSimpleIcon,
 	GlobeSimpleIcon,
 	PlusIcon,

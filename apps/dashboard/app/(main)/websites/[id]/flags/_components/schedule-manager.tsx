@@ -10,7 +10,6 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import type { ScheduleManagerProps } from "./types";
-import { XIcon } from "@phosphor-icons/react/dist/ssr";
 import {
 	CalendarIcon,
 	ClockIcon,
@@ -18,6 +17,7 @@ import {
 	PlusIcon,
 	PowerIcon,
 	TrashIcon,
+	XMarkIcon as XIcon,
 } from "@databuddy/ui/icons";
 import { Button, Input } from "@databuddy/ui";
 import { Calendar } from "@databuddy/ui/client";

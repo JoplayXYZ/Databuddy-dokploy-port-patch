@@ -21,7 +21,6 @@ import {
 import { TopBar } from "@/components/layout/top-bar";
 import { RevenueAttributionTables } from "./revenue-attribution-tables";
 import { RevenueChart } from "./revenue-chart";
-import { StripeLogoIcon } from "@phosphor-icons/react/dist/ssr";
 import {
 	ArrowClockwiseIcon,
 	ArrowSquareOutIcon,
@@ -29,6 +28,7 @@ import {
 	CheckCircleIcon,
 	CheckIcon,
 	ClipboardIcon,
+	CreditCardIcon as StripeLogoIcon,
 	CreditCardIcon,
 	CurrencyDollarIcon,
 	EyeIcon,

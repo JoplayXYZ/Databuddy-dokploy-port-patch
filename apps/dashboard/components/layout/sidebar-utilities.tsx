@@ -111,8 +111,12 @@ function SupportMenu({ collapsed }: { collapsed: boolean }) {
 }
 
 function ThemeCycleButton({ collapsed }: { collapsed: boolean }) {
+	const isHydrated = useHydrated();
 	const { theme, setTheme } = useTheme();
-	const currentIndex = THEMES.findIndex((t) => t.value === (theme ?? "light"));
+	const renderedTheme = isHydrated ? theme : "light";
+	const currentIndex = THEMES.findIndex(
+		(t) => t.value === (renderedTheme ?? "light")
+	);
 	const nextIndex = (currentIndex + 1) % THEMES.length;
 	const current = THEMES[currentIndex === -1 ? 0 : currentIndex];
 	const CurrentIcon = current.icon;

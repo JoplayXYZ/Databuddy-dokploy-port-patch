@@ -1,8 +1,12 @@
 "use client";
 
-import type { Icon } from "@phosphor-icons/react";
 import { useParams } from "next/navigation";
-import { useCallback, useState } from "react";
+import {
+	type ComponentType,
+	type SVGProps,
+	useCallback,
+	useState,
+} from "react";
 import { toast } from "sonner";
 import { EditFunnelDialog } from "@/app/(main)/websites/[id]/funnels/_components/edit-funnel-dialog";
 import { useChat } from "@/contexts/chat-context";
@@ -18,6 +22,10 @@ import {
 } from "@databuddy/ui/icons";
 import { Badge, Button, Card } from "@databuddy/ui";
 
+type IconComponent = ComponentType<
+	SVGProps<SVGSVGElement> & { size?: number | string; weight?: string }
+>;
+
 interface FunnelPreviewData {
 	description?: string | null;
 	ignoreHistoricData?: boolean;
@@ -32,7 +40,7 @@ export interface FunnelPreviewProps extends BaseComponentProps {
 
 interface ModeConfig {
 	accent: string;
-	ButtonIcon: Icon;
+	ButtonIcon: IconComponent;
 	confirmLabel: string;
 	confirmMessage: string;
 	title: string;

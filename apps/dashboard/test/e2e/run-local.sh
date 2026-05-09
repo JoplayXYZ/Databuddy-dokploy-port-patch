@@ -4,8 +4,8 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." && pwd)"
 RUN_ID="${DATABUDDY_E2E_RUN_ID:-$(date +%Y%m%d%H%M%S)-$$}"
 BASE_DSN="${DATABUDDY_E2E_BASE_DATABASE_URL:-postgres://databuddy:databuddy_dev_password@localhost:5432/databuddy}"
-KEEP_DB="${DATABUDDY_E2E_KEEP_DB:-0}"
-START_CLICKHOUSE="${DATABUDDY_E2E_START_CLICKHOUSE:-1}"
+KEEP_DB="${DATABUDDY_E2E_KEEP_DB:-false}"
+START_CLICKHOUSE="${DATABUDDY_E2E_START_CLICKHOUSE:-true}"
 
 cd "$ROOT_DIR"
 
@@ -25,12 +25,12 @@ wait_for_clickhouse() {
 }
 
 start_clickhouse() {
-  if [[ "$START_CLICKHOUSE" != "1" ]]; then
+  if [[ "$START_CLICKHOUSE" != "true" ]]; then
     return
   fi
 
   if ! command -v docker >/dev/null; then
-    echo "Docker is required to start ClickHouse for local E2E. Set DATABUDDY_E2E_START_CLICKHOUSE=0 to skip." >&2
+    echo "Docker is required to start ClickHouse for local E2E. Set DATABUDDY_E2E_START_CLICKHOUSE=false to skip." >&2
     exit 1
   fi
 
@@ -49,7 +49,7 @@ export DATABUDDY_E2E_SEED_CLICKHOUSE="${DATABUDDY_E2E_SEED_CLICKHOUSE:-true}"
 export DATABUDDY_E2E_CLICKHOUSE_EVENTS="${DATABUDDY_E2E_CLICKHOUSE_EVENTS:-250}"
 
 cleanup() {
-  if [[ "$KEEP_DB" == "1" ]]; then
+  if [[ "$KEEP_DB" == "true" ]]; then
     echo "Keeping E2E database: $DATABUDDY_E2E_DB_NAME"
     return
   fi

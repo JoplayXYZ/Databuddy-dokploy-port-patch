@@ -14,7 +14,6 @@ import {
 	useState,
 } from "react";
 import { InsightCard } from "./insight-card";
-import { XIcon } from "@phosphor-icons/react/dist/ssr";
 import {
 	ArrowClockwiseIcon,
 	ArrowsDownUpIcon,
@@ -23,6 +22,7 @@ import {
 	FunnelIcon,
 	LightbulbIcon,
 	WarningCircleIcon,
+	XMarkIcon as XIcon,
 } from "@databuddy/ui/icons";
 import { Button, Card, GhostTriggerButton } from "@databuddy/ui";
 import { DropdownMenu } from "@databuddy/ui/client";

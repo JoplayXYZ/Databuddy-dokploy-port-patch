@@ -11,8 +11,7 @@ import {
 	type Website,
 } from "@/hooks/use-websites";
 import { orpc } from "@/lib/orpc";
-import { XIcon } from "@phosphor-icons/react/dist/ssr";
-import { LockIcon, PlusIcon } from "@databuddy/ui/icons";
+import { LockIcon, PlusIcon, XMarkIcon as XIcon } from "@databuddy/ui/icons";
 import { Badge, Button, Card, Input } from "@databuddy/ui";
 
 const ipv4Regex =

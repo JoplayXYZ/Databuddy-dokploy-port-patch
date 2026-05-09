@@ -1,9 +1,8 @@
 "use client";
 
-import type { IconProps } from "@phosphor-icons/react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
-import type { ForwardRefExoticComponent, RefAttributes } from "react";
+import type { ForwardRefExoticComponent, RefAttributes, SVGProps } from "react";
 import { useCallback } from "react";
 import {
 	getFeatureDescription,
@@ -25,11 +24,14 @@ import {
 } from "@databuddy/ui/icons";
 import { Button } from "@databuddy/ui";
 
-type PhosphorIcon = ForwardRefExoticComponent<
-	IconProps & RefAttributes<SVGSVGElement>
+type NucleoIcon = ForwardRefExoticComponent<
+	SVGProps<SVGSVGElement> & {
+		size?: number | string;
+		weight?: string;
+	} & RefAttributes<SVGSVGElement>
 >;
 
-const FLAG_KEY_ICONS: Record<string, PhosphorIcon> = {
+const FLAG_KEY_ICONS: Record<string, NucleoIcon> = {
 	insights: LightbulbFilamentIcon,
 	revenue: TrendUpIcon,
 	anomalies: WaveformIcon,
@@ -37,7 +39,7 @@ const FLAG_KEY_ICONS: Record<string, PhosphorIcon> = {
 	agent: RobotIcon,
 };
 
-function getFeatureIcon(flagKey: string): PhosphorIcon {
+function getFeatureIcon(flagKey: string): NucleoIcon {
 	return FLAG_KEY_ICONS[flagKey] ?? LightningIcon;
 }
 

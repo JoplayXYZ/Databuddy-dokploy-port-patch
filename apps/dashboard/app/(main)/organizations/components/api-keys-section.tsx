@@ -163,7 +163,7 @@ export function ApiKeysSection({
 						<input
 							className="w-full bg-transparent text-foreground text-xs outline-none placeholder:text-muted-foreground"
 							onChange={(e) => setQuery(e.target.value)}
-							placeholder="Search name or tag…"
+							placeholder="Search name, key start, or tag…"
 							value={query}
 						/>
 					</div>

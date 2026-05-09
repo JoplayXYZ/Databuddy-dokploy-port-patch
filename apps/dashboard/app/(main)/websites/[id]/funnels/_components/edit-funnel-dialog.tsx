@@ -21,10 +21,12 @@ import {
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
 	DotsNineIcon,
-	FunnelSimpleIcon,
-	XIcon,
-} from "@phosphor-icons/react/dist/ssr";
-import { FunnelIcon, GearIcon, PlusIcon } from "@databuddy/ui/icons";
+	FunnelIcon as FunnelSimpleIcon,
+	FunnelIcon,
+	GearIcon,
+	PlusIcon,
+	XMarkIcon as XIcon,
+} from "@databuddy/ui/icons";
 import { Button, Divider, Field, Input, Text } from "@databuddy/ui";
 import { Accordion, DropdownMenu, Sheet, Switch } from "@databuddy/ui/client";
 

@@ -46,7 +46,6 @@ import type {
 	CreateAnnotationData,
 } from "@/types/annotations";
 import type { DateRange } from "../../../utils/types";
-import { XIcon } from "@phosphor-icons/react/dist/ssr";
 import {
 	ChartLineIcon,
 	EyeIcon,
@@ -54,6 +53,7 @@ import {
 	NoteIcon,
 	WarningCircleIcon,
 	WarningIcon,
+	XMarkIcon as XIcon,
 } from "@databuddy/ui/icons";
 import { Button, Skeleton, dayjs, usePersistentState } from "@databuddy/ui";
 

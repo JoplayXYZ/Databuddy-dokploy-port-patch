@@ -1,7 +1,6 @@
 "use client";
 
-import type { Icon } from "@phosphor-icons/react";
-import { useState } from "react";
+import { type ComponentType, type SVGProps, useState } from "react";
 import { LinkSheet } from "@/app/(main)/links/_components/link-sheet";
 import { useChat } from "@/contexts/chat-context";
 import type { Link } from "@/hooks/use-links";
@@ -14,6 +13,10 @@ import {
 	TrashIcon,
 } from "@databuddy/ui/icons";
 import { Badge, Button, Card } from "@databuddy/ui";
+
+type IconComponent = ComponentType<
+	SVGProps<SVGSVGElement> & { size?: number | string; weight?: string }
+>;
 
 interface LinkPreviewData {
 	expiredRedirectUrl?: string | null;
@@ -33,7 +36,7 @@ export interface LinkPreviewProps extends BaseComponentProps {
 
 interface ModeConfig {
 	accent: string;
-	ButtonIcon: Icon;
+	ButtonIcon: IconComponent;
 	confirmLabel: string;
 	confirmMessage: string;
 	title: string;

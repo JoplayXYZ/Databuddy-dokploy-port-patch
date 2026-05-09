@@ -12,10 +12,10 @@ import {
 import { StatusPageSheet } from "@/components/status-pages/status-page-sheet";
 import { orpc } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
-import { BrowserIcon } from "@phosphor-icons/react/dist/ssr";
 import {
 	ArrowClockwiseIcon,
 	MagnifyingGlassIcon,
+	OpenExternalIcon as BrowserIcon,
 	PlusIcon,
 } from "@databuddy/ui/icons";
 import { DeleteDialog } from "@databuddy/ui/client";

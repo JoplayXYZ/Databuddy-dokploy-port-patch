@@ -10,6 +10,26 @@ export const SCOPE_OPTIONS: { value: ApiScope; label: string }[] = [
 	{ value: "manage:config", label: "Manage Config" },
 ] as const satisfies { value: (typeof API_SCOPES)[number]; label: string }[];
 
+export const SCOPE_PRESETS: { label: string; scopes: readonly ApiScope[] }[] = [
+	{ label: "Analytics", scopes: ["read:data"] },
+	{ label: "Tracking", scopes: ["track:events"] },
+	{ label: "Links", scopes: ["read:links", "write:links"] },
+	{
+		label: "Config",
+		scopes: ["manage:websites", "manage:flags", "manage:config"],
+	},
+] as const satisfies { label: string; scopes: readonly ApiScope[] }[];
+
+export function formatMaskedApiKey({
+	prefix,
+	start,
+}: Pick<ApiKeyListItem, "prefix" | "start">) {
+	const cleanPrefix = prefix.endsWith("_") ? prefix.slice(0, -1) : prefix;
+	const startIncludesPrefix =
+		start === cleanPrefix || start.startsWith(`${cleanPrefix}_`);
+	return `${startIncludesPrefix ? start : `${cleanPrefix}_${start}`}••••`;
+}
+
 export type ApiResourceType =
 	| "global"
 	| "website"

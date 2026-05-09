@@ -9,11 +9,11 @@ import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
 import { getStatusPageUrl } from "@/lib/app-url";
 import { orpc } from "@/lib/orpc";
 import { cn } from "@/lib/utils";
-import { BrowserIcon } from "@phosphor-icons/react/dist/ssr";
 import {
 	ArrowSquareOutIcon,
 	CopyIcon,
 	DotsThreeIcon,
+	OpenExternalIcon as BrowserIcon,
 	PencilSimpleIcon,
 	TrashIcon,
 } from "@databuddy/ui/icons";

@@ -1,8 +1,12 @@
 "use client";
 
-import type { Icon } from "@phosphor-icons/react";
 import { useParams } from "next/navigation";
-import { useCallback, useState } from "react";
+import {
+	type ComponentType,
+	type SVGProps,
+	useCallback,
+	useState,
+} from "react";
 import { toast } from "sonner";
 import { EditGoalDialog } from "@/app/(main)/websites/[id]/goals/_components/edit-goal-dialog";
 import { useChat } from "@/contexts/chat-context";
@@ -16,6 +20,10 @@ import {
 	TrashIcon,
 } from "@databuddy/ui/icons";
 import { Badge, Button, Card } from "@databuddy/ui";
+
+type IconComponent = ComponentType<
+	SVGProps<SVGSVGElement> & { size?: number | string; weight?: string }
+>;
 
 interface GoalPreviewData {
 	description?: string | null;
@@ -32,7 +40,7 @@ export interface GoalPreviewProps extends BaseComponentProps {
 
 interface ModeConfig {
 	accent: string;
-	ButtonIcon: Icon;
+	ButtonIcon: IconComponent;
 	confirmLabel: string;
 	confirmMessage: string;
 	title: string;

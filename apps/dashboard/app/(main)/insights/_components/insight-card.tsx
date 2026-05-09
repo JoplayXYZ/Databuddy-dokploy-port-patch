@@ -24,7 +24,6 @@ import type {
 	InsightType,
 } from "@/lib/insight-types";
 import { cn } from "@/lib/utils";
-import { XIcon } from "@phosphor-icons/react/dist/ssr";
 import {
 	ArrowRightIcon,
 	BugIcon,
@@ -42,6 +41,7 @@ import {
 	TrendDownIcon,
 	TrendUpIcon,
 	WarningCircleIcon,
+	XMarkIcon as XIcon,
 } from "@databuddy/ui/icons";
 import { DropdownMenu } from "@databuddy/ui/client";
 

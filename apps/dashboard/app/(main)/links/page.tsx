@@ -28,9 +28,9 @@ import {
 	type TypeFilter,
 	useFilteredLinks,
 } from "./_components/use-filtered-links";
-import { LinkSimpleIcon } from "@phosphor-icons/react/dist/ssr";
 import {
 	ArchiveIcon,
+	LinkIcon as LinkSimpleIcon,
 	LinkIcon,
 	MagnifyingGlassIcon,
 	PlusIcon,

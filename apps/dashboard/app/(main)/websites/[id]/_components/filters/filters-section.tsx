@@ -16,8 +16,11 @@ import {
 	removeDynamicFilterAtom,
 } from "@/stores/jotai/filterAtoms";
 import { SaveFilterDialog } from "./save-filter-dialog";
-import { XIcon } from "@phosphor-icons/react/dist/ssr";
-import { FloppyDiskIcon, PencilIcon } from "@databuddy/ui/icons";
+import {
+	FloppyDiskIcon,
+	PencilIcon,
+	XMarkIcon as XIcon,
+} from "@databuddy/ui/icons";
 import { Button } from "@databuddy/ui";
 
 export function FiltersSection() {

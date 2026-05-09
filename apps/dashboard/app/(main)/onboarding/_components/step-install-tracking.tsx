@@ -106,16 +106,6 @@ Enable what makes sense for this website. A good starting point:
 
 \`\`\`tsx
 import { track } from "@databuddy/sdk";
-import {
-	ArrowClockwiseIcon,
-	CheckIcon,
-	ClipboardIcon,
-	CodeIcon,
-	PackageIcon,
-	PulseIcon,
-	RobotIcon,
-	WarningCircleIcon,
-} from "@databuddy/ui/icons";
 track("signup_completed", { method: "google", plan: "pro" });
 \`\`\`
 

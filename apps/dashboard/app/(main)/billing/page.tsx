@@ -21,14 +21,15 @@ import { UsageRow } from "./components/usage-row";
 import { useBilling, useBillingData } from "./hooks/use-billing";
 import type { CustomerWithPaymentMethod } from "./types/billing";
 import type { OverageInfo } from "./utils/billing-utils";
-import { PuzzlePieceIcon, XIcon } from "@phosphor-icons/react/dist/ssr";
 import {
 	ArrowSquareOutIcon,
 	CalendarIcon,
+	CommandIcon as PuzzlePieceIcon,
 	CreditCardIcon,
 	CrownIcon,
 	PlusIcon,
 	TrendUpIcon,
+	XMarkIcon as XIcon,
 } from "@databuddy/ui/icons";
 import {
 	Badge,

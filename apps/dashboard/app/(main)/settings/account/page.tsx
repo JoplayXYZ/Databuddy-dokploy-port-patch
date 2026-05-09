@@ -1,8 +1,8 @@
 "use client";
 
 import { authClient } from "@databuddy/auth/client";
-import { GithubLogo, GoogleLogo } from "@phosphor-icons/react/dist/ssr";
 import {
+	GlobeIcon,
 	KeyIcon,
 	LinkBreakIcon,
 	LinkIcon,
@@ -47,8 +47,8 @@ type IconComponent = React.ComponentType<
 >;
 
 const PROVIDER_CONFIG: Record<string, { icon: IconComponent; name: string }> = {
-	google: { icon: GoogleLogo, name: "Google" },
-	github: { icon: GithubLogo, name: "GitHub" },
+	google: { icon: GlobeIcon, name: "Google" },
+	github: { icon: GlobeIcon, name: "GitHub" },
 	credential: { icon: KeyIcon, name: "Password" },
 };
 

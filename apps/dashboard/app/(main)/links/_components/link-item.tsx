@@ -8,13 +8,13 @@ import NextLink from "next/link";
 import { toast } from "sonner";
 import { DeepLinkAppIcon } from "./deep-link-icons";
 import { LINKS_BASE_URL, LINKS_FULL_URL } from "./link-constants";
-import { QrCodeIcon } from "@phosphor-icons/react/dist/ssr";
 import {
 	ClockCountdownIcon,
 	CopyIcon,
 	DotsThreeIcon,
 	LinkIcon,
 	PencilSimpleIcon,
+	QrCodeIcon,
 	TrashIcon,
 } from "@databuddy/ui/icons";
 import { DropdownMenu } from "@databuddy/ui/client";

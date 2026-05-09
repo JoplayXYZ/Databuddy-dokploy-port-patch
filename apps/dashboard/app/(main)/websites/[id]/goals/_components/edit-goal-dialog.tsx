@@ -8,8 +8,12 @@ import type { CreateGoalData, Goal } from "@/hooks/use-goals";
 import { filterOptions } from "@databuddy/shared/lists/filters";
 import type { GoalFilter } from "@databuddy/shared/types/api";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { FunnelSimpleIcon } from "@phosphor-icons/react/dist/ssr";
-import { GearIcon, PlusIcon, TargetIcon as Target } from "@databuddy/ui/icons";
+import {
+	FunnelIcon as FunnelSimpleIcon,
+	GearIcon,
+	PlusIcon,
+	TargetIcon as Target,
+} from "@databuddy/ui/icons";
 import { Button, Divider, Field, Input, Text } from "@databuddy/ui";
 import { Accordion, DropdownMenu, Sheet, Switch } from "@databuddy/ui/client";
 

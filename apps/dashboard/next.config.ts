@@ -7,9 +7,6 @@ function joinCspSources(...sources: (string | false)[]): string {
 
 const nextConfig: NextConfig = {
 	outputFileTracingRoot: path.join(process.cwd(), "../.."),
-	experimental: {
-		optimizePackageImports: ["@phosphor-icons/react"],
-	},
 	serverExternalPackages: ["pg"],
 	typescript: {
 		ignoreBuildErrors: true,

@@ -33,8 +33,6 @@ import {
 	SelectValue,
 } from "../ui/select";
 import { Separator } from "../ui/separator";
-import { XIcon } from "@phosphor-icons/react/dist/ssr";
-import type { NavIcon } from "@/components/layout/navigation/types";
 import {
 	BugIcon,
 	CaretDownIcon,
@@ -58,7 +56,9 @@ import {
 	SunIcon,
 	TrashIcon,
 	WarningCircleIcon,
+	XMarkIcon as XIcon,
 } from "@databuddy/ui/icons";
+import type { NavIcon } from "@/components/layout/navigation/types";
 
 function InfoSection({
 	title,

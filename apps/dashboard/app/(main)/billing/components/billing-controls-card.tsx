@@ -13,11 +13,11 @@ import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
-	BellRingingIcon,
+	BellIcon,
+	GearIcon,
+	InfinityIcon,
 	ShieldCheckIcon,
-	SlidersHorizontalIcon,
-} from "@phosphor-icons/react/dist/ssr";
-import { InfinityIcon } from "@databuddy/ui/icons";
+} from "@databuddy/ui/icons";
 import { Badge, Button, Card, Divider, Input, Text } from "@databuddy/ui";
 import { Switch } from "@databuddy/ui/client";
 
@@ -71,7 +71,7 @@ export function BillingControlsCard() {
 		<Card>
 			<Card.Header>
 				<Card.Title className="flex items-center gap-2">
-					<SlidersHorizontalIcon
+					<GearIcon
 						className="text-muted-foreground"
 						size={14}
 						weight="duotone"
@@ -143,7 +143,7 @@ export function BillingControlsCard() {
 					}}
 					defaults={ALERT_DEFAULTS}
 					description="Get an email when your monthly event usage crosses a threshold — no more surprises."
-					icon={<BellRingingIcon size={16} weight="duotone" />}
+					icon={<BellIcon size={16} weight="duotone" />}
 					initial={alert}
 					limits={ALERT_LIMITS}
 					messages={{
