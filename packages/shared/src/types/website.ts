@@ -17,32 +17,10 @@ export interface ProcessedMiniChartData {
 	} | null;
 }
 
-export interface CreateWebsiteData {
-	domain: string;
-	name: string;
-	subdomain?: string;
-}
-
-export interface UpdateWebsiteData {
-	name: string;
-}
-
 export interface WebsiteBasic {
 	domain: string;
 	id: string;
 	name?: string | null;
-}
-
-export interface WebsiteApiResponse {
-	data?: Website;
-	error?: string;
-	success: boolean;
-}
-
-export interface WebsitesApiResponse {
-	data?: Website[];
-	error?: string;
-	success: boolean;
 }
 
 export interface CountryData {
@@ -52,7 +30,7 @@ export interface CountryData {
 	visitors: number;
 }
 
-export interface RegionData {
+interface RegionData {
 	country: string;
 	pageviews: number;
 	visitors: number;

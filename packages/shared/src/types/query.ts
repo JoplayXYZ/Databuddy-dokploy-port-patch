@@ -37,11 +37,3 @@ export interface QueryBuilderMeta {
 	title: string;
 	version?: string;
 }
-
-export interface QueryBuilderCatalogItem {
-	allowedFilters: string[];
-	customizable?: boolean;
-	defaultLimit?: number;
-	key: string;
-	meta?: QueryBuilderMeta;
-}

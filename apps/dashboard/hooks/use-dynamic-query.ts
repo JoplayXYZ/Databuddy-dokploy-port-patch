@@ -5,10 +5,6 @@ import type {
 	DynamicQueryRequest,
 	DynamicQueryResponse,
 } from "@databuddy/shared/types/api";
-import type {
-	ExtractDataTypes,
-	ParameterDataMap,
-} from "@databuddy/shared/types/parameters";
 import { type UseQueryOptions, useQuery } from "@tanstack/react-query";
 import { useCallback, useMemo } from "react";
 import { guessTimezone } from "@databuddy/ui";
@@ -169,7 +165,12 @@ async function fetchDynamicQuery(
 	return data;
 }
 
-export function useDynamicQuery<T extends (keyof ParameterDataMap)[]>(
+export function useDynamicQuery<
+	TData extends Record<string, unknown[] | undefined> = Record<
+		string,
+		Record<string, unknown>[] | undefined
+	>,
+>(
 	websiteId: string,
 	dateRange: DateRange,
 	queryData: DynamicQueryRequest,
@@ -225,7 +226,7 @@ export function useDynamicQuery<T extends (keyof ParameterDataMap)[]>(
 	);
 
 	return {
-		data: processedData as ExtractDataTypes<T>,
+		data: processedData as TData,
 		meta: query.data?.meta,
 		errors,
 		isLoading: query.isLoading || query.isFetching || query.isPending,

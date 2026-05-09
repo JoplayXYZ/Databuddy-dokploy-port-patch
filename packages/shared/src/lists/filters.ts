@@ -22,14 +22,3 @@ export const filterOptions = [
 	{ value: "user_id", label: "User ID" },
 	{ value: "trace_id", label: "Trace ID" },
 ] as const;
-
-export const tableFilterMapping: Record<string, string> = {
-	"Traffic Sources": "referrer",
-	Pages: "path",
-	Devices: "device_type",
-	Browsers: "browser_name",
-	"Operating Systems": "os_name",
-	Regions: "region",
-	Cities: "city",
-	Countries: "country",
-};

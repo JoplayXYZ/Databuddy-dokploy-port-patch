@@ -1,6 +1,9 @@
 import type { DateRange } from "@databuddy/shared/types/analytics";
 import type { DynamicQueryResponse } from "@databuddy/shared/types/api";
-import type { ProfileSession } from "@databuddy/shared/types/sessions";
+import type {
+	ProfileDetail,
+	ProfileSession,
+} from "@databuddy/shared/types/sessions";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { useDynamicQuery } from "@/hooks/use-dynamic-query";
@@ -30,7 +33,7 @@ export function useUserProfile(
 		enabled: Boolean(userId && websiteId),
 	};
 
-	const profileQuery = useDynamicQuery<["profile_detail"]>(
+	const profileQuery = useDynamicQuery<{ profile_detail: ProfileDetail[] }>(
 		websiteId,
 		dateRange,
 		{
@@ -47,7 +50,7 @@ export function useUserProfile(
 		sharedOptions
 	);
 
-	const sessionsQuery = useDynamicQuery<["profile_sessions"]>(
+	const sessionsQuery = useDynamicQuery<{ profile_sessions: ProfileSession[] }>(
 		websiteId,
 		dateRange,
 		{

@@ -252,19 +252,3 @@ export function isValidColumn(
 	const table = getTableDefinition(tableName);
 	return table?.columns.some((c) => c.name === columnName) ?? false;
 }
-
-/**
- * Get filterable columns for a table
- */
-export function getFilterableColumns(tableName: string): TableColumn[] {
-	const table = getTableDefinition(tableName);
-	return table?.columns.filter((c) => c.filterable) ?? [];
-}
-
-/**
- * Get aggregatable columns for a table
- */
-export function getAggregatableColumns(tableName: string): TableColumn[] {
-	const table = getTableDefinition(tableName);
-	return table?.columns.filter((c) => c.aggregatable) ?? [];
-}

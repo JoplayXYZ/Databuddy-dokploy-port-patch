@@ -1,4 +1,3 @@
-import { formatDate } from "@databuddy/shared/utils/date-utils";
 import {
 	ArrowLeftIcon,
 	CalendarIcon,
@@ -25,6 +24,14 @@ import {
 
 const STRIP_HTML_REGEX = /<[^>]+>/g;
 const WORD_SPLIT_REGEX = /\s+/;
+
+function formatDate(date: Date | string): string {
+	return new Intl.DateTimeFormat("en", {
+		day: "numeric",
+		month: "short",
+		year: "numeric",
+	}).format(new Date(date));
+}
 
 export const revalidate = 300;
 
