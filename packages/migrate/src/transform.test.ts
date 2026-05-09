@@ -216,10 +216,10 @@ describe("transform", () => {
 			changes: 0,
 		},
 		{
-			name: "edge: vendor name with hyphenated substring (e.g. data-not-rybbit-event) is matched (codemod is anchor-free)",
+			name: "edge: hyphenated prefix (data-not-rybbit-event) is NOT matched because codemod requires literal data-rybbit-event substring",
 			in: '<a data-not-rybbit-event="x">',
-			out: '<a data-not-data-track="x">',
-			changes: 1,
+			out: '<a data-not-rybbit-event="x">',
+			changes: 0,
 		},
 		{
 			name: "edge: complex JSX block with multiple Tracking dialects on same element",
