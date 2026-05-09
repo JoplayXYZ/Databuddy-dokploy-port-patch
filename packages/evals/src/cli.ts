@@ -60,6 +60,7 @@ interface CliOpts {
 	excludeTags: string[];
 	file?: string;
 	filter?: string;
+	limit?: number;
 	model?: string;
 	noSave: boolean;
 	rejudge: boolean;
@@ -73,9 +74,16 @@ interface CliOpts {
 const STRUCTURAL_PASS_THRESHOLD = 60;
 const DEFAULT_JUDGED_QUALITY_THRESHOLD = 60;
 const QUALITY_GATE_FAILURE_PREFIX = "Quality judge score";
+const RUNNER_ERROR_PREFIX = "Runner error:";
 
 function shouldJudgeCase(evalCase: EvalCase): boolean {
 	return evalCase.category === "quality" || evalCase.category === "attribution";
+}
+
+function countRunnerErrors(run: EvalRun): number {
+	return run.cases.filter((c) =>
+		c.failures.some((failure) => failure.startsWith(RUNNER_ERROR_PREFIX))
+	).length;
 }
 
 function averageScore(scores: Partial<ScoreCard>): number {
@@ -118,6 +126,7 @@ function parseArgs(): CliOpts {
 	let model: string | undefined;
 	let file: string | undefined;
 	let filter: string | undefined;
+	let limit: number | undefined;
 	let runner = (process.env.EVAL_RUNNER as EvalRunner | undefined) ?? "package";
 	let noSave = false;
 	let skipJudge = readBooleanEnv("EVAL_SKIP_JUDGE");
@@ -174,6 +183,13 @@ function parseArgs(): CliOpts {
 			case "--filter":
 				filter = remainingArgs.shift();
 				break;
+			case "--limit": {
+				const value = Number.parseInt(remainingArgs.shift() ?? "", 10);
+				if (Number.isFinite(value) && value > 0) {
+					limit = value;
+				}
+				break;
+			}
 			case "--runner": {
 				const value = remainingArgs.shift();
 				if (value === "api" || value === "package") {
@@ -202,6 +218,7 @@ function parseArgs(): CliOpts {
 		model,
 		file,
 		filter,
+		limit,
 		runner,
 		noSave,
 		skipJudge,
@@ -519,6 +536,8 @@ async function cmdRun() {
 			process.exit(1);
 		}
 		cases = [c];
+	} else if (opts.limit && cases.length > opts.limit) {
+		cases = cases.slice(0, opts.limit);
 	} else if (cases.length === 0) {
 		console.error("No cases match the selected filters");
 		console.error(
@@ -778,12 +797,20 @@ async function runModelSuite(
 	printReport(run);
 
 	if (!opts.noSave) {
-		const resultsDir = join(import.meta.dir, "..", "results");
-		const filepath = saveRun(run, resultsDir);
-		console.log(`Saved: ${filepath}`);
-		console.log(
-			`Latest: ${join(resultsDir, modelSlug(run.model), "latest.json")}`
-		);
+		const runnerErrors = countRunnerErrors(run);
+		const saveFailedRuns = readBooleanEnv("EVAL_SAVE_FAILED_RUNS");
+		if (runnerErrors === run.summary.total && !saveFailedRuns) {
+			console.log(
+				`${YELLOW}Not saved:${RESET} every case failed with a runner error. Fix the runner environment and rerun, or set EVAL_SAVE_FAILED_RUNS=1 to keep diagnostic failures.`
+			);
+		} else {
+			const resultsDir = join(import.meta.dir, "..", "results");
+			const filepath = saveRun(run, resultsDir);
+			console.log(`Saved: ${filepath}`);
+			console.log(
+				`Latest: ${join(resultsDir, modelSlug(run.model), "latest.json")}`
+			);
+		}
 	}
 
 	return run;

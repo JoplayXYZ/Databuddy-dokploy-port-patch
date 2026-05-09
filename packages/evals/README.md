@@ -5,6 +5,7 @@ Run agent benchmarks from the repo root so `.env` is loaded:
 ```bash
 bun run eval -- --model deepseek/deepseek-v4-flash
 bun run eval -- --model google/gemini-3.1-flash-lite --concurrency 5
+bun run eval -- --model anthropic/claude-sonnet-4.6 --limit 5 --concurrency 5
 ```
 
 Open the local benchmark UI:

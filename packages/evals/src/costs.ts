@@ -25,6 +25,11 @@ interface ModelEntry {
 }
 
 const MODELS: Record<string, ModelEntry> = {
+	"anthropic/claude-sonnet-4": {
+		inputPerMToken: 3.0,
+		outputPerMToken: 15.0,
+		tags: ["premium", "anthropic"],
+	},
 	"anthropic/claude-sonnet-4.6": {
 		inputPerMToken: 3.0,
 		outputPerMToken: 15.0,
@@ -145,6 +150,11 @@ const MODELS: Record<string, ModelEntry> = {
 		tags: ["budget", "minimax", "open-weight", "reasoning"],
 	},
 
+	"moonshotai/kimi-k2.5": {
+		inputPerMToken: 0.44,
+		outputPerMToken: 2.0,
+		tags: ["budget", "moonshotai", "open-weight"],
+	},
 	"moonshotai/kimi-k2.6": {
 		inputPerMToken: 0.6,
 		outputPerMToken: 2.5,
