@@ -48,20 +48,69 @@ const passthroughCacheable = <T extends (...args: never[]) => unknown>(fn: T) =>
 	fn;
 
 vi.mock("@databuddy/auth", () => ({
+	auth: {},
 	websitesApi: {
 		hasPermission: vi.fn(async () => ({ success: true })),
 	},
 }));
 
 vi.mock("@databuddy/redis", () => ({
+	AGENT_CONTEXT_SNAPSHOT_PREFIX: "agent:context-snapshot",
+	UPTIME_CHECK_JOB_NAME: "uptime-check",
+	UPTIME_JOB_OPTIONS: {},
+	UPTIME_JOB_TIMEOUT_MS: 60_000,
+	UPTIME_QUEUE_NAME: "uptime-checks",
+	activeStreamKey: (id: string) => `active:${id}`,
+	appendStreamChunk: vi.fn(async () => undefined),
 	cacheable: passthroughCacheable,
+	clearActiveStream: vi.fn(async () => undefined),
+	closeUptimeQueue: vi.fn(async () => undefined),
+	createDrizzleCache: () => ({}),
+	getActiveStream: vi.fn(async () => null),
 	getAgentContextSnapshotKey: getSnapshotKey,
+	getBullMQConnectionOptions: vi.fn(() => ({})),
+	getBullMQWorkerConnectionOptions: vi.fn(() => ({})),
+	getCachedLink: vi.fn(async () => null),
+	getCacheableKey: vi.fn((prefix: string, args: unknown[]) => `${prefix}:${JSON.stringify(args)}`),
+	getLinkCacheKey: vi.fn((slug: string) => `link:${slug}`),
+	getRateLimitHeaders: vi.fn(() => ({})),
 	getRedisCache: () => mockRedisClient,
+	getUptimeQueue: vi.fn(() => ({})),
+	invalidateAgentContextSnapshot: vi.fn(async () => 0),
+	invalidateAgentContextSnapshotsForOwner: vi.fn(async () => 0),
+	invalidateAgentContextSnapshotsForWebsite: vi.fn(async () => 0),
+	invalidateCacheableKey: vi.fn(async () => 0),
+	invalidateCacheablePattern: vi.fn(async () => 0),
+	invalidateCacheablePrefix: vi.fn(async () => 0),
+	invalidateCacheableWithArgs: vi.fn(async () => 0),
+	invalidateLinkCache: vi.fn(async () => undefined),
+	invalidateLinkCaches: vi.fn(async () => undefined),
+	isClickRecorded: vi.fn(async () => false),
+	markStreamDone: vi.fn(async () => undefined),
+	ratelimit: vi.fn(async () => ({ success: true })),
+	readStreamHistory: vi.fn(async () => []),
+	redis: mockRedisClient,
+	setActiveStream: vi.fn(async () => undefined),
+	setCacheTraceFn: vi.fn(() => undefined),
+	setCachedLink: vi.fn(async () => undefined),
+	setCachedLinkNotFound: vi.fn(async () => undefined),
+	shouldRecordClick: vi.fn(async () => true),
+	shutdownRedis: vi.fn(async () => undefined),
+	streamBufferKey: (id: string) => `stream:${id}`,
+	uptimeImmediateJobId: (id: string) => `uptime:immediate:${id}`,
+	uptimeSchedulerId: (id: string) => `uptime:scheduler:${id}`,
 }));
 
 vi.mock("../../lib/supermemory", () => ({
+	formatMemoryForPrompt: vi.fn(() => ""),
+	forgetMemory: vi.fn(async () => ({ success: true })),
 	getMemoryContext: vi.fn(async () => null),
 	isMemoryEnabled: () => memoryEnabled,
+	sanitizeMemoryContent: vi.fn((content: string) => content),
+	saveCuratedMemory: vi.fn(async () => ({ id: "memory-1" })),
+	searchMemories: vi.fn(async () => []),
+	storeAnalyticsSummary: vi.fn(async () => undefined),
+	storeConversation: vi.fn(async () => undefined),
 }));
 
 vi.mock("../../lib/tracing", () => ({
