@@ -6,7 +6,15 @@ import {
 	isApiKeyPresent,
 } from "@databuddy/api-keys/resolve";
 import { mergeWideEvent, record } from "@/lib/tracing";
-import { and, db, eq, isNull, or, withTransaction } from "@databuddy/db";
+import {
+	and,
+	db,
+	eq,
+	inArray,
+	isNull,
+	or,
+	withTransaction,
+} from "@databuddy/db";
 import {
 	flagChangeEvents,
 	type FlagVariant,
@@ -58,7 +66,7 @@ interface FlagResult {
 	enabled: boolean;
 	payload: unknown;
 	reason: string;
-	value: boolean | string | number | unknown;
+	value: unknown;
 	variant?: string;
 }
 
@@ -66,7 +74,7 @@ interface Variant {
 	description?: string;
 	key: string;
 	type: "string" | "number";
-	value: string | number;
+	value: unknown;
 	weight?: number;
 }
 
@@ -77,6 +85,7 @@ interface TargetGroupData {
 
 interface EvaluableFlag {
 	defaultValue: string | number | boolean | unknown;
+	dependencies?: string[] | null;
 	key: string;
 	payload?: unknown;
 	resolvedTargetGroups?: TargetGroupData[];
@@ -123,6 +132,7 @@ const getCachedFlag = cacheable(
 							: isNull(t.environment),
 						isNull(t.deletedAt),
 						eq(t.status, "active"),
+						isNull(t.userId),
 						or(eq(t.websiteId, clientId), eq(t.organizationId, clientId))
 					),
 			},
@@ -167,6 +177,7 @@ const getCachedFlagsForClient = cacheable(
 					and(
 						isNull(t.deletedAt),
 						eq(t.status, "active"),
+						isNull(t.userId),
 						environment
 							? eq(t.environment, environment)
 							: isNull(t.environment),
@@ -199,6 +210,33 @@ const getCachedFlagsForClient = cacheable(
 	{
 		expireInSec: 30,
 		prefix: "flags-client",
+		staleWhileRevalidate: true,
+		staleTime: 15,
+	}
+);
+
+const getCachedFlagDefinitionsForClient = cacheable(
+	async (clientId: string, environment?: string) => {
+		const flagsList = await db.query.flags.findMany({
+			where: {
+				RAW: (t) =>
+					and(
+						isNull(t.deletedAt),
+						isNull(t.userId),
+						environment
+							? eq(t.environment, environment)
+							: isNull(t.environment),
+						or(eq(t.websiteId, clientId), eq(t.organizationId, clientId))
+					),
+			},
+			orderBy: { createdAt: "desc" },
+		});
+
+		return flagsList;
+	},
+	{
+		expireInSec: 30,
+		prefix: "flags-definitions",
 		staleWhileRevalidate: true,
 		staleTime: 15,
 	}
@@ -397,7 +435,7 @@ export function evaluateRule(rule: FlagRule, context: UserContext): boolean {
 export function selectVariant(
 	flag: EvaluableFlag,
 	context: UserContext
-): { value: string | number | boolean | unknown; variant: string } {
+): { value: unknown; variant: string } {
 	if (!flag.variants || flag.variants.length === 0) {
 		return { value: flag.defaultValue, variant: "default" };
 	}
@@ -432,6 +470,55 @@ export function selectVariant(
 		return { value: flag.defaultValue, variant: "default" };
 	}
 	return { value: lastVariant.value, variant: lastVariant.key };
+}
+
+function dependencyFailure(): FlagResult {
+	return {
+		enabled: false,
+		value: false,
+		payload: null,
+		reason: "DEPENDENCY_NOT_SATISFIED",
+	};
+}
+
+function dependenciesSatisfiedFromList(
+	flag: EvaluableFlag,
+	flagsList: EvaluableFlag[]
+): boolean {
+	const dependencies = flag.dependencies ?? [];
+	if (dependencies.length === 0) {
+		return true;
+	}
+	const byKey = new Map(flagsList.map((item) => [item.key, item]));
+	return dependencies.every((key) => byKey.get(key)?.status === "active");
+}
+
+async function dependenciesSatisfied(
+	flag: EvaluableFlag,
+	clientId: string,
+	environment?: string
+): Promise<boolean> {
+	const dependencies = flag.dependencies ?? [];
+	if (dependencies.length === 0) {
+		return true;
+	}
+
+	const rows = await db
+		.select({ key: flags.key })
+		.from(flags)
+		.where(
+			and(
+				isNull(flags.deletedAt),
+				eq(flags.status, "active"),
+				environment
+					? eq(flags.environment, environment)
+					: isNull(flags.environment),
+				inArray(flags.key, dependencies),
+				or(eq(flags.websiteId, clientId), eq(flags.organizationId, clientId))
+			)
+		);
+
+	return rows.length === new Set(dependencies).size;
 }
 
 export function evaluateFlag(
@@ -575,7 +662,10 @@ function invalidateMemCacheForClient(clientId: string) {
 	const clientFragment = `:${clientId}:`;
 	for (const key of memCache.keys()) {
 		if (
-			(key.startsWith("fc:") || key.startsWith("f:")) &&
+			(key.startsWith("fc:") ||
+				key.startsWith("fd:") ||
+				key.startsWith("f:") ||
+				key.startsWith("fu:")) &&
 			key.includes(clientFragment)
 		) {
 			memCache.delete(key);
@@ -616,7 +706,7 @@ function buildFlagChangeSnapshot(flag: typeof flags.$inferSelect) {
 const variantBodySchema = t.Object({
 	key: t.String({ minLength: 1 }),
 	type: t.Union([t.Literal("string"), t.Literal("number"), t.Literal("json")]),
-	value: t.Union([t.String(), t.Number()]),
+	value: t.Any(),
 	description: t.Optional(t.String()),
 	weight: t.Optional(t.Number()),
 });
@@ -691,7 +781,14 @@ export const flagsRoute = new Elysia({ prefix: "/v1/flags" })
 					};
 				}
 
-				const result = evaluateFlag(flag as unknown as EvaluableFlag, context);
+				const evaluableFlag = flag as unknown as EvaluableFlag;
+				const result = (await dependenciesSatisfied(
+					evaluableFlag,
+					query.clientId,
+					query.environment
+				))
+					? evaluateFlag(evaluableFlag, context)
+					: dependencyFailure();
 				mergeWideEvent({
 					flag_found: true,
 					flag_type: flag.type,
@@ -788,11 +885,15 @@ export const flagsRoute = new Elysia({ prefix: "/v1/flags" })
 					: allFlags;
 
 				const results: Record<string, FlagResult> = {};
+				const evaluableFlags = allFlags as unknown as EvaluableFlag[];
 				for (const flag of flagsToEvaluate) {
-					results[flag.key] = evaluateFlag(
-						flag as unknown as EvaluableFlag,
-						context
-					);
+					const evaluableFlag = flag as unknown as EvaluableFlag;
+					results[flag.key] = dependenciesSatisfiedFromList(
+						evaluableFlag,
+						evaluableFlags
+					)
+						? evaluateFlag(evaluableFlag, context)
+						: dependencyFailure();
 				}
 
 				const count = Object.keys(results).length;
@@ -840,8 +941,9 @@ export const flagsRoute = new Elysia({ prefix: "/v1/flags" })
 				}
 
 				const clientFlags = await fromMemory(
-					`fc:${query.clientId}:${query.environment || ""}`,
-					() => getCachedFlagsForClient(query.clientId, query.environment)
+					`fd:${query.clientId}:${query.environment || ""}`,
+					() =>
+						getCachedFlagDefinitionsForClient(query.clientId, query.environment)
 				);
 
 				mergeWideEvent({ flag_total_flags: clientFlags.length });
@@ -850,10 +952,17 @@ export const flagsRoute = new Elysia({ prefix: "/v1/flags" })
 					flags: clientFlags.map((flag) => ({
 						id: flag.id,
 						key: flag.key,
+						name: flag.name,
 						description: flag.description,
 						type: flag.type,
 						status: flag.status,
 						defaultValue: flag.defaultValue,
+						payload: flag.payload,
+						rules: flag.rules,
+						rolloutPercentage: flag.rolloutPercentage,
+						rolloutBy: flag.rolloutBy,
+						dependencies: flag.dependencies,
+						environment: flag.environment,
 						variants: flag.variants,
 						createdAt: flag.createdAt,
 						updatedAt: flag.updatedAt,
@@ -927,16 +1036,42 @@ export const flagsRoute = new Elysia({ prefix: "/v1/flags" })
 
 				const createdBy = auth.apiKey.userId;
 				const variants = (body.variants ?? []) as FlagVariant[];
+				const dependencies = body.dependencies ?? [];
+				if (dependencies.length > 0) {
+					const dependencyRows = await db
+						.select({ key: flags.key })
+						.from(flags)
+						.where(
+							and(
+								inArray(flags.key, dependencies),
+								isNull(flags.deletedAt),
+								or(
+									eq(flags.websiteId, scope.websiteId ?? ""),
+									eq(flags.organizationId, scope.organizationId ?? "")
+								)
+							)
+						);
+					if (dependencyRows.length !== dependencies.length) {
+						set.status = 400;
+						return { error: "One or more dependency flags were not found" };
+					}
+				}
 
 				const result = await withTransaction(async (tx) => {
 					if (existing) {
 						const restoredRows = await tx
 							.update(flags)
 							.set({
+								name: body.name ?? null,
 								description: body.description ?? null,
 								type: body.type,
-								status: "active",
+								status: body.status ?? "active",
 								defaultValue: body.defaultValue,
+								payload: body.payload ?? null,
+								rules: body.rules ?? [],
+								rolloutPercentage: body.rolloutPercentage ?? 0,
+								rolloutBy: body.rolloutBy ?? null,
+								dependencies,
 								variants,
 								environment: body.environment ?? null,
 								deletedAt: null,
@@ -970,10 +1105,16 @@ export const flagsRoute = new Elysia({ prefix: "/v1/flags" })
 						.values({
 							id,
 							key: body.key,
+							name: body.name ?? null,
 							description: body.description ?? null,
 							type: body.type,
-							status: "active",
+							status: body.status ?? "active",
 							defaultValue: body.defaultValue,
+							payload: body.payload ?? null,
+							rules: body.rules ?? [],
+							rolloutPercentage: body.rolloutPercentage ?? 0,
+							rolloutBy: body.rolloutBy ?? null,
+							dependencies,
 							variants,
 							environment: body.environment ?? null,
 							websiteId: scope.websiteId,
@@ -1036,9 +1177,22 @@ export const flagsRoute = new Elysia({ prefix: "/v1/flags" })
 			body: t.Object({
 				clientId: t.String({ minLength: 1 }),
 				key: t.String({ minLength: 1, maxLength: 128 }),
-				type: t.Union([t.Literal("boolean"), t.Literal("multivariant")]),
+				name: t.Optional(t.String({ maxLength: 100 })),
+				type: t.Union([
+					t.Literal("boolean"),
+					t.Literal("rollout"),
+					t.Literal("multivariant"),
+				]),
+				status: t.Optional(
+					t.Union([t.Literal("active"), t.Literal("inactive")])
+				),
 				defaultValue: t.Boolean(),
 				description: t.Optional(t.String({ maxLength: 500 })),
+				payload: t.Optional(t.Record(t.String(), t.Unknown())),
+				rules: t.Optional(t.Array(t.Any())),
+				rolloutPercentage: t.Optional(t.Number({ minimum: 0, maximum: 100 })),
+				rolloutBy: t.Optional(t.String()),
+				dependencies: t.Optional(t.Array(t.String())),
 				environment: t.Optional(t.String()),
 				variants: t.Optional(t.Array(variantBodySchema, { maxItems: 32 })),
 			}),

@@ -7,7 +7,6 @@ import {
 	redis,
 } from "@databuddy/redis";
 import { userRuleSchema } from "@databuddy/shared/flags";
-import { GATED_FEATURES } from "@databuddy/shared/types/features";
 import { randomUUIDv7 } from "bun";
 import { z } from "zod";
 import { rpcError } from "../errors";
@@ -17,7 +16,6 @@ import {
 	withWebsiteRead,
 	withWorkspace,
 } from "../procedures/with-workspace";
-import { requireFeatureWithLimit } from "../types/billing";
 
 const targetGroupsCache = createDrizzleCache({
 	redis,
@@ -204,22 +202,6 @@ export const targetGroupsRouter = {
 
 			const createdBy = await workspace.getCreatedBy();
 
-			const existingGroups = await context.db
-				.select({ id: targetGroups.id })
-				.from(targetGroups)
-				.where(
-					and(
-						eq(targetGroups.websiteId, input.websiteId),
-						isNull(targetGroups.deletedAt)
-					)
-				);
-
-			requireFeatureWithLimit(
-				workspace.plan,
-				GATED_FEATURES.TARGET_GROUPS,
-				existingGroups.length
-			);
-
 			const [newGroup] = await context.db
 				.insert(targetGroups)
 				.values({
@@ -283,6 +265,9 @@ export const targetGroupsRouter = {
 
 			await invalidateCacheablePattern(`cacheable:flag:*${group.websiteId}*`);
 			await invalidateCacheableWithArgs("flags-client", [group.websiteId]);
+			await invalidateCacheablePattern(
+				`cacheable:flags-user:*${group.websiteId}*`
+			);
 
 			return updatedGroup;
 		}),
@@ -334,6 +319,9 @@ export const targetGroupsRouter = {
 			await targetGroupsCache.invalidateByTables(["target_groups"]);
 			await flagsCache.invalidateByTables(["flags", "flags_to_target_groups"]);
 			await invalidateCacheableWithArgs("flags-client", [group.websiteId]);
+			await invalidateCacheablePattern(
+				`cacheable:flags-user:*${group.websiteId}*`
+			);
 
 			return { success: true };
 		}),

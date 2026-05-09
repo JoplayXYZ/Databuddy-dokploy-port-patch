@@ -277,7 +277,7 @@ function buildFlagChangeSnapshot(flag: {
 		description?: string;
 		key: string;
 		type: "string" | "number" | "json";
-		value: string | number;
+		value: unknown;
 		weight?: number;
 	}> | null;
 }) {
@@ -613,16 +613,25 @@ export const flagsRouter = {
 				);
 			}
 
-			const dependencyFlags = await context.db
-				.select()
-				.from(flags)
-				.where(
-					and(
-						inArray(flags.key, input.dependencies || []),
-						getScopeCondition(input.websiteId, input.organizationId),
-						isNull(flags.deletedAt)
-					)
+			const dependencyKeys = input.dependencies ?? [];
+			const dependencyFlags = dependencyKeys.length
+				? await context.db
+						.select()
+						.from(flags)
+						.where(
+							and(
+								inArray(flags.key, dependencyKeys),
+								getScopeCondition(input.websiteId, input.organizationId),
+								isNull(flags.deletedAt)
+							)
+						)
+				: [];
+
+			if (dependencyFlags.length !== dependencyKeys.length) {
+				throw rpcError.badRequest(
+					"One or more dependency flags were not found in this scope"
 				);
+			}
 
 			const existingFlag = await context.db
 				.select()
@@ -882,22 +891,30 @@ export const flagsRouter = {
 				);
 			}
 
-			const dependencyFlags = await context.db
-				.select()
-				.from(flags)
-				.where(
-					and(
-						inArray(flags.key, input.dependencies || []),
-						getScopeCondition(
-							flag.websiteId || undefined,
-							flag.organizationId || undefined
-						),
-						isNull(flags.deletedAt)
-					)
-				);
-
 			const nextDependencies =
 				input.dependencies ?? (flag.dependencies as string[]) ?? [];
+
+			const dependencyFlags = nextDependencies.length
+				? await context.db
+						.select()
+						.from(flags)
+						.where(
+							and(
+								inArray(flags.key, nextDependencies),
+								getScopeCondition(
+									flag.websiteId || undefined,
+									flag.organizationId || undefined
+								),
+								isNull(flags.deletedAt)
+							)
+						)
+				: [];
+
+			if (dependencyFlags.length !== nextDependencies.length) {
+				throw rpcError.badRequest(
+					"One or more dependency flags were not found in this scope"
+				);
+			}
 
 			if (nextDependencies.length > 0 && input.status === "active") {
 				const hasInactiveDependency = dependencyFlags.some(

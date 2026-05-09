@@ -2,6 +2,7 @@ import { and, arrayContains, db, eq, inArray, isNull } from "@databuddy/db";
 import { flagChangeEvents, flags } from "@databuddy/db/schema";
 import {
 	createDrizzleCache,
+	invalidateCacheablePattern,
 	invalidateCacheableWithArgs,
 	redis,
 } from "@databuddy/redis";
@@ -19,18 +20,21 @@ export const invalidateFlagCache = async (
 	id: string,
 	websiteId?: string | null,
 	organizationId?: string | null,
-	flagKey?: string
+	flagKey?: string,
+	userId?: string | null
 ) => {
 	const clientId = websiteId || organizationId;
 
 	let key = flagKey;
-	if (!key && clientId) {
+	let scopedUserId = userId;
+	if ((!key || scopedUserId === undefined) && clientId) {
 		const result = await db
-			.select({ key: flags.key })
+			.select({ key: flags.key, userId: flags.userId })
 			.from(flags)
 			.where(eq(flags.id, id))
 			.limit(1);
-		key = result[0]?.key;
+		key = key ?? result[0]?.key;
+		scopedUserId = scopedUserId ?? result[0]?.userId;
 	}
 
 	const scope = getScope(websiteId, organizationId);
@@ -44,6 +48,18 @@ export const invalidateFlagCache = async (
 			invalidations.push(invalidateCacheableWithArgs("flag", [key, clientId]));
 		}
 		invalidations.push(invalidateCacheableWithArgs("flags-client", [clientId]));
+		invalidations.push(
+			invalidateCacheableWithArgs("flags-definitions", [clientId])
+		);
+		if (scopedUserId) {
+			invalidations.push(
+				invalidateCacheableWithArgs("flags-user", [scopedUserId, clientId])
+			);
+		} else {
+			invalidations.push(
+				invalidateCacheablePattern(`cacheable:flags-user:*${clientId}*`)
+			);
+		}
 	}
 
 	await Promise.allSettled(invalidations);
@@ -83,7 +99,7 @@ function buildFlagChangeSnapshot(flag: {
 		description?: string;
 		key: string;
 		type: "string" | "number" | "json";
-		value: string | number;
+		value: unknown;
 		weight?: number;
 	}> | null;
 }) {

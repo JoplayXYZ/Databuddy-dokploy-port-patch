@@ -29,8 +29,6 @@ export const GATED_FEATURES = {
 	WEB_VITALS: "web_vitals",
 	ERROR_TRACKING: "error_tracking",
 	GEOGRAPHIC: "geographic",
-	TEAM_ROLES: "team_roles",
-	TARGET_GROUPS: "target_groups",
 } as const;
 
 export type GatedFeatureId =
@@ -38,8 +36,6 @@ export type GatedFeatureId =
 
 export const HIDDEN_PRICING_FEATURES: GatedFeatureId[] = [
 	GATED_FEATURES.ERROR_TRACKING,
-	GATED_FEATURES.TEAM_ROLES,
-	GATED_FEATURES.TARGET_GROUPS,
 ];
 
 export type FeatureLimit = number | "unlimited" | false;
@@ -56,8 +52,6 @@ export const PLAN_FEATURE_LIMITS: Record<
 		[GATED_FEATURES.WEB_VITALS]: "unlimited",
 		[GATED_FEATURES.ERROR_TRACKING]: false, // Hobby+
 		[GATED_FEATURES.GEOGRAPHIC]: "unlimited",
-		[GATED_FEATURES.TEAM_ROLES]: "unlimited",
-		[GATED_FEATURES.TARGET_GROUPS]: false, // Hobby+
 	},
 	[PLAN_IDS.HOBBY]: {
 		[GATED_FEATURES.FUNNELS]: 5, // 5 funnels
@@ -67,8 +61,6 @@ export const PLAN_FEATURE_LIMITS: Record<
 		[GATED_FEATURES.WEB_VITALS]: "unlimited",
 		[GATED_FEATURES.ERROR_TRACKING]: "unlimited",
 		[GATED_FEATURES.GEOGRAPHIC]: "unlimited",
-		[GATED_FEATURES.TEAM_ROLES]: "unlimited",
-		[GATED_FEATURES.TARGET_GROUPS]: 5, // 5 target groups
 	},
 	[PLAN_IDS.PRO]: {
 		[GATED_FEATURES.FUNNELS]: 50, // 50 funnels
@@ -78,8 +70,6 @@ export const PLAN_FEATURE_LIMITS: Record<
 		[GATED_FEATURES.WEB_VITALS]: "unlimited",
 		[GATED_FEATURES.ERROR_TRACKING]: "unlimited",
 		[GATED_FEATURES.GEOGRAPHIC]: "unlimited",
-		[GATED_FEATURES.TEAM_ROLES]: "unlimited",
-		[GATED_FEATURES.TARGET_GROUPS]: 25, // 25 target groups
 	},
 	[PLAN_IDS.SCALE]: {
 		[GATED_FEATURES.FUNNELS]: "unlimited",
@@ -89,8 +79,6 @@ export const PLAN_FEATURE_LIMITS: Record<
 		[GATED_FEATURES.WEB_VITALS]: "unlimited",
 		[GATED_FEATURES.ERROR_TRACKING]: "unlimited",
 		[GATED_FEATURES.GEOGRAPHIC]: "unlimited",
-		[GATED_FEATURES.TEAM_ROLES]: "unlimited",
-		[GATED_FEATURES.TARGET_GROUPS]: "unlimited",
 	},
 };
 
@@ -178,12 +166,6 @@ export const FEATURE_METADATA: Record<FeatureId | GatedFeatureId, FeatureMeta> =
 			upgradeMessage: "Upgrade for more feature flags",
 			unit: "flags",
 		},
-		[GATED_FEATURES.TARGET_GROUPS]: {
-			name: "Target Groups",
-			description: "Create target groups to target your users",
-			upgradeMessage: "Upgrade for more target groups",
-			unit: "groups",
-		},
 		[GATED_FEATURES.WEB_VITALS]: {
 			name: "Web Vitals",
 			description: "Monitor Core Web Vitals and performance",
@@ -199,12 +181,6 @@ export const FEATURE_METADATA: Record<FeatureId | GatedFeatureId, FeatureMeta> =
 			name: "Geographic",
 			description: "View visitor locations on a map",
 			upgradeMessage: "Geographic is available on all plans",
-		},
-		[GATED_FEATURES.TEAM_ROLES]: {
-			name: "Team Roles",
-			description: "Assign roles and permissions to team members",
-			upgradeMessage: "Team members are unlimited on all plans",
-			unit: "members",
 		},
 	};
 
