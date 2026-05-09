@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Footer } from "@/components/footer";
+import { TrackOnMount } from "@/components/track-on-mount";
 import { CELL_TITLE_CLASS } from "@/components/landing/demo-constants";
 import {
 	FeatureHero,
@@ -65,6 +66,10 @@ const container = "mx-auto w-full max-w-400 px-4 sm:px-14 lg:px-20";
 export default function WebVitalsPage() {
 	return (
 		<>
+			<TrackOnMount
+				event="feature_landing_viewed"
+				properties={{ feature: "vitals" }}
+			/>
 			<StructuredData
 				elements={[{ type: "faq", items: [...FAQ_ITEMS] }]}
 				page={{

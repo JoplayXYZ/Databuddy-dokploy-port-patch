@@ -3,12 +3,13 @@
 import { Button } from "@databuddy/ui";
 import Image from "next/image";
 import Link from "next/link";
-import { FaDiscord, FaXTwitter } from "react-icons/fa6";
-import { IoMdMail } from "react-icons/io";
+import { SiDiscord, SiX } from "@icons-pack/react-simple-icons";
+import { EnvelopeIcon } from "@databuddy/ui/icons";
 import { CCPAIcon } from "./icons/ccpa";
 import { GDPRIcon } from "./icons/gdpr";
 import { Wordmark } from "./landing/wordmark";
 import { LogoContent } from "./logo";
+import { NavLink } from "./nav-link";
 import { NewsletterForm } from "./newsletter-form";
 
 export function Footer() {
@@ -45,7 +46,14 @@ export function Footer() {
 								className="bg-white text-black hover:bg-white/90"
 								size="sm"
 							>
-								<a href="https://app.databuddy.cc/register">Start free</a>
+								<a
+									data-destination="register"
+									data-placement="footer_hero"
+									data-track="cta_clicked"
+									href="https://app.databuddy.cc/register"
+								>
+									Start free
+								</a>
 							</Button>
 							<Button
 								asChild
@@ -53,7 +61,14 @@ export function Footer() {
 								size="sm"
 								variant="secondary"
 							>
-								<Link href="/demo">Try the live demo</Link>
+								<Link
+									data-destination="demo"
+									data-placement="footer_hero"
+									data-track="cta_clicked"
+									href="/demo"
+								>
+									Try the live demo
+								</Link>
 							</Button>
 						</div>
 					</div>
@@ -68,7 +83,7 @@ export function Footer() {
 							<p className="font-medium text-foreground text-sm">
 								Get product updates
 							</p>
-							<NewsletterForm />
+							<NewsletterForm source="footer" />
 						</div>
 					</div>
 
@@ -76,44 +91,54 @@ export function Footer() {
 						<h3 className="font-semibold text-base sm:text-lg">Product</h3>
 						<ul className="space-y-2 text-sm sm:text-base">
 							<li>
-								<Link
+								<NavLink
 									className="text-muted-foreground hover:text-foreground"
 									href="/docs"
+									navItem="docs"
+									section="footer"
 								>
 									Docs
-								</Link>
+								</NavLink>
 							</li>
 							<li>
-								<Link
+								<NavLink
 									className="text-muted-foreground hover:text-foreground"
 									href="/pricing"
+									navItem="pricing"
+									section="footer"
 								>
 									Pricing
-								</Link>
+								</NavLink>
 							</li>
 							<li>
-								<Link
+								<NavLink
 									className="text-muted-foreground hover:text-foreground"
 									href="/calculator"
+									navItem="calculator"
+									section="footer"
 								>
 									Cookie cost calculator
-								</Link>
+								</NavLink>
 							</li>
 							<li>
-								<Link
+								<NavLink
 									className="text-muted-foreground hover:text-foreground"
 									href="/compare"
+									navItem="compare"
+									section="footer"
 								>
 									Compare
-								</Link>
+								</NavLink>
 							</li>
 							<li>
-								<Link
+								<NavLink
 									className="text-muted-foreground hover:text-foreground"
 									href="/changelog"
+									navItem="changelog"
+									section="footer"
 								>
 									Changelog
-								</Link>
+								</NavLink>
 							</li>
 						</ul>
 					</div>
@@ -122,38 +147,45 @@ export function Footer() {
 						<h3 className="font-semibold text-base sm:text-lg">Company</h3>
 						<ul className="space-y-2 text-sm sm:text-base">
 							<li>
-								<Link
+								<NavLink
 									className="text-muted-foreground hover:text-foreground"
 									href="/blog"
+									navItem="blog"
+									section="footer"
 								>
 									Blog
-								</Link>
+								</NavLink>
 							</li>
 							<li>
-								<Link
+								<NavLink
 									className="text-muted-foreground hover:text-foreground"
 									href="/manifesto"
+									navItem="manifesto"
+									section="footer"
 								>
 									Manifesto
-								</Link>
+								</NavLink>
 							</li>
 							<li>
-								<Link
+								<NavLink
 									className="text-muted-foreground hover:text-foreground"
 									href="/contact"
+									navItem="contact"
+									section="footer"
 								>
 									Contact
-								</Link>
+								</NavLink>
 							</li>
 							<li>
-								<Link
+								<NavLink
 									className="text-muted-foreground hover:text-foreground"
+									external
 									href="https://github.com/databuddy-analytics/Databuddy"
-									rel="noopener"
-									target="_blank"
+									navItem="github"
+									section="footer"
 								>
 									GitHub
-								</Link>
+								</NavLink>
 							</li>
 						</ul>
 					</div>
@@ -162,34 +194,38 @@ export function Footer() {
 						<h3 className="font-semibold text-base sm:text-lg">Connect</h3>
 						<ul className="space-y-3 text-sm sm:text-base">
 							<li>
-								<Link
+								<NavLink
 									className="group flex items-center gap-3 text-muted-foreground hover:text-foreground"
 									href="mailto:support@databuddy.cc"
+									navItem="email"
+									section="footer"
 								>
-									<IoMdMail className="size-5" />
+									<EnvelopeIcon className="size-5" />
 									support@databuddy.cc
-								</Link>
+								</NavLink>
 							</li>
 							<li>
-								<Link
+								<NavLink
 									className="group flex items-center gap-3 text-muted-foreground hover:text-foreground"
+									external
 									href="https://discord.gg/JTk7a38tCZ"
-									rel="noopener"
-									target="_blank"
+									navItem="discord"
+									section="footer"
 								>
-									<FaDiscord className="size-5" />
+									<SiDiscord className="size-5" />
 									Discord
-								</Link>
+								</NavLink>
 							</li>
 							<li>
-								<Link
+								<NavLink
 									className="group flex items-center gap-3 text-muted-foreground hover:text-foreground"
+									external
 									href="https://x.com/trydatabuddy"
-									rel="noopener"
-									target="_blank"
+									navItem="twitter"
+									section="footer"
 								>
-									<FaXTwitter className="size-5" />X
-								</Link>
+									<SiX className="size-5" />X
+								</NavLink>
 							</li>
 						</ul>
 					</div>

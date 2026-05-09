@@ -5,7 +5,7 @@ import {
 	ClockIcon,
 	UserIcon,
 	WarningCircleIcon,
-} from "@phosphor-icons/react/ssr";
+} from "@databuddy/ui/icons";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";

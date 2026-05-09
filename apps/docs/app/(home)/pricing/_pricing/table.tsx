@@ -1,4 +1,4 @@
-import { CheckIcon, XIcon } from "@phosphor-icons/react";
+import { CheckIcon, XMarkIcon as XIcon } from "@databuddy/ui/icons";
 import Link from "next/link";
 import { SciFiButton } from "@/components/landing/scifi-btn";
 import { GatedFeaturePricingRows } from "./gated-feature-rows";
@@ -233,9 +233,17 @@ export function PlansComparisonTable({ plans }: Props) {
 								<td className={planComparisonTdClass(p.id)} key={`cta-${p.id}`}>
 									<SciFiButton asChild>
 										{p.id === "enterprise" ? (
-											<Link href="/contact">CONTACT US</Link>
+											<Link
+												data-plan={p.id}
+												data-track="pricing_plan_clicked"
+												href="/contact"
+											>
+												CONTACT US
+											</Link>
 										) : (
 											<Link
+												data-plan={p.id}
+												data-track="pricing_plan_clicked"
 												href={`https://app.databuddy.cc/register?plan=${p.id}`}
 												rel="noopener noreferrer"
 												target="_blank"

@@ -1,11 +1,11 @@
 "use client";
 
 import { Button } from "@databuddy/ui";
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { BrandContextMenu } from "@/components/brand-context-menu";
 import { Logo } from "./logo";
+import { NavLink } from "./nav-link";
 import {
 	NavbarFeaturesMenu,
 	NavbarFeaturesMobileMenu,
@@ -54,19 +54,24 @@ export const Navbar = ({ stars }: NavbarProps) => {
 					<div className="flex items-center gap-0.5">
 						<NavbarFeaturesMenu />
 						{navMenu.map((menu) => (
-							<Link className={navLink} href={menu.path} key={menu.path}>
+							<NavLink
+								className={navLink}
+								href={menu.path}
+								key={menu.path}
+								navItem={menu.trackId}
+							>
 								{menu.name}
-							</Link>
+							</NavLink>
 						))}
 					</div>
 				</div>
 
 				<div className="ml-auto flex items-center gap-1 md:ml-0">
-					<a
+					<NavLink
 						className="hidden h-8 items-center gap-1.5 rounded-md px-2 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground md:inline-flex"
+						external
 						href={githubRepoUrl}
-						rel="noopener noreferrer"
-						target="_blank"
+						navItem="github"
 					>
 						<GithubNavMark className="size-4" />
 						{typeof stars === "number" && (
@@ -74,10 +79,17 @@ export const Navbar = ({ stars }: NavbarProps) => {
 								{stars.toLocaleString()}
 							</span>
 						)}
-					</a>
+					</NavLink>
 
 					<Button asChild className="hidden md:inline-flex" size="sm">
-						<a href="https://app.databuddy.cc/register">Start free</a>
+						<a
+							data-destination="register"
+							data-placement="navbar"
+							data-track="cta_clicked"
+							href="https://app.databuddy.cc/register"
+						>
+							Start free
+						</a>
 					</Button>
 
 					<NavbarMobileMenuButton
@@ -102,7 +114,7 @@ export const Navbar = ({ stars }: NavbarProps) => {
 							onCloseAction={() => setIsMobileMenuOpen(false)}
 						/>
 						{navMenu.map((menu, i) => (
-							<Link
+							<NavLink
 								className={cn(
 									"block rounded-md px-3 py-2 font-medium text-sm transition-all duration-200 hover:bg-muted",
 									isMobileMenuOpen
@@ -111,7 +123,9 @@ export const Navbar = ({ stars }: NavbarProps) => {
 								)}
 								href={menu.path}
 								key={menu.path}
+								navItem={menu.trackId}
 								onClick={() => setIsMobileMenuOpen(false)}
+								section="navbar_mobile"
 								style={{
 									transitionDelay: isMobileMenuOpen
 										? `${(i + 1) * 40}ms`
@@ -119,25 +133,26 @@ export const Navbar = ({ stars }: NavbarProps) => {
 								}}
 							>
 								{menu.name}
-							</Link>
+							</NavLink>
 						))}
 
-						<a
+						<NavLink
 							className={cn(
 								"flex items-center gap-2 rounded-md px-3 py-2 font-medium text-sm transition-all duration-200 hover:bg-muted",
 								isMobileMenuOpen
 									? "translate-x-0 opacity-100"
 									: "-translate-x-4 opacity-0"
 							)}
+							external
 							href={githubRepoUrl}
+							navItem="github"
 							onClick={() => setIsMobileMenuOpen(false)}
-							rel="noopener noreferrer"
+							section="navbar_mobile"
 							style={{
 								transitionDelay: isMobileMenuOpen
 									? `${(navMenu.length + 1) * 40}ms`
 									: "0ms",
 							}}
-							target="_blank"
 						>
 							<GithubNavMark className="size-4" />
 							GitHub
@@ -146,7 +161,7 @@ export const Navbar = ({ stars }: NavbarProps) => {
 									{stars.toLocaleString()}
 								</span>
 							)}
-						</a>
+						</NavLink>
 
 						<div className="pt-2">
 							<Button
@@ -155,7 +170,14 @@ export const Navbar = ({ stars }: NavbarProps) => {
 								onClick={() => setIsMobileMenuOpen(false)}
 								size="sm"
 							>
-								<a href="https://app.databuddy.cc/register">Start free</a>
+								<a
+									data-destination="register"
+									data-placement="navbar_mobile"
+									data-track="cta_clicked"
+									href="https://app.databuddy.cc/register"
+								>
+									Start free
+								</a>
 							</Button>
 						</div>
 					</div>
@@ -170,11 +192,12 @@ export { iconBtn as navIconBtn };
 export interface NavMenuItem {
 	name: string;
 	path: string;
+	trackId: string;
 }
 
 export const navMenu: NavMenuItem[] = [
-	{ name: "Docs", path: "/docs" },
-	{ name: "Pricing", path: "/pricing" },
-	{ name: "Compare", path: "/compare" },
-	{ name: "Changelog", path: "/changelog" },
+	{ name: "Docs", path: "/docs", trackId: "docs" },
+	{ name: "Pricing", path: "/pricing", trackId: "pricing" },
+	{ name: "Compare", path: "/compare", trackId: "compare" },
+	{ name: "Changelog", path: "/changelog", trackId: "changelog" },
 ];

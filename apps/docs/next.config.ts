@@ -142,8 +142,6 @@ const config: NextConfig = {
 		optimizePackageImports: [
 			"@databuddy/ui/icons",
 			"fumadocs-ui",
-			"lucide-react",
-			"@phosphor-icons/react",
 			"@databuddy/ui",
 		],
 	},

@@ -9,7 +9,7 @@ import {
 	PLAN_IDS,
 	type PlanId,
 } from "@databuddy/shared/types/features";
-import { XIcon } from "@phosphor-icons/react";
+import { XMarkIcon as XIcon } from "@databuddy/ui/icons";
 import type { ReactNode } from "react";
 
 /** Docs pricing column ids → shared plan ids (enterprise maps to Scale limits). */

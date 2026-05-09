@@ -1,6 +1,6 @@
 "use client";
 
-import { ListIcon, XIcon } from "@phosphor-icons/react";
+import { ListIcon, XMarkIcon as XIcon } from "@databuddy/ui/icons";
 
 interface NavbarMobileMenuButtonProps {
 	className?: string;
