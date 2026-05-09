@@ -8,8 +8,9 @@ Keep it boring: fewer services, readable names, shared variables, and no custom 
 | Template service name | Source | Public domain | Purpose |
 | --- | --- | --- | --- |
 | `Dashboard` | GitHub repo + `dashboard.Dockerfile` | Yes, port `3000` | Web UI and Better Auth routes |
-| `API` | `ghcr.io/databuddy-analytics/databuddy-api:latest` | Yes, port `3001` | RPC/API, auth callbacks, AI, admin APIs |
+| `API` | `ghcr.io/databuddy-analytics/databuddy-api:latest` after CI publish, or repo + `api.Dockerfile` for seed testing | Yes, port `3001` | RPC/API, auth callbacks, AI, admin APIs |
 | `Events` | `ghcr.io/databuddy-analytics/databuddy-basket:latest` | Yes, port `4000` | Analytics event ingestion/webhooks |
+| `Init` | GitHub repo + `init.Dockerfile` | No | One-shot Postgres/ClickHouse schema setup |
 | `Postgres` | Railway Postgres | No | Relational app data |
 | `Redis` | Railway Redis | No | Cache, sessions, queues |
 | `ClickHouse` | ClickHouse template/image with `/var/lib/clickhouse` volume | No | Analytics warehouse |
@@ -76,6 +77,8 @@ NEXT_PUBLIC_STATUS_URL=https://${{Dashboard.RAILWAY_PUBLIC_DOMAIN}}
 
 ### API
 
+Use the GHCR image once the template changes are published. During seed testing, build from the repo with `RAILWAY_DOCKERFILE_PATH=api.Dockerfile` so local template changes are included.
+
 ```txt
 PORT=3001
 DATABASE_URL=${{Postgres.DATABASE_URL}}
@@ -88,6 +91,9 @@ SELFHOST=${{shared.SELFHOST}}
 REQUIRE_EMAIL_VERIFICATION=${{shared.REQUIRE_EMAIL_VERIFICATION}}
 DASHBOARD_URL=https://${{Dashboard.RAILWAY_PUBLIC_DOMAIN}}
 API_URL=https://${{API.RAILWAY_PUBLIC_DOMAIN}}
+API_CORS_ORIGINS=https://${{Dashboard.RAILWAY_PUBLIC_DOMAIN}}
+# Seed testing only when building API from repo:
+# RAILWAY_DOCKERFILE_PATH=api.Dockerfile
 BASKET_URL=https://${{Events.RAILWAY_PUBLIC_DOMAIN}}
 AI_API_KEY=unset
 RESEND_API_KEY=unset
@@ -103,6 +109,23 @@ DATABASE_URL=${{Postgres.DATABASE_URL}}
 REDIS_URL=${{Redis.REDIS_URL}}
 CLICKHOUSE_URL=${{ClickHouse.DATABASE_URL}}
 SELFHOST=${{shared.SELFHOST}}
+```
+
+### Init
+
+Run once after Postgres and ClickHouse are available. It is safe to re-run after schema changes.
+
+```txt
+RAILWAY_DOCKERFILE_PATH=init.Dockerfile
+DATABASE_URL=${{Postgres.DATABASE_URL}}
+CLICKHOUSE_URL=${{ClickHouse.DATABASE_URL}}
+NODE_ENV=production
+```
+
+Command:
+
+```bash
+bun run --cwd packages/db db:push && bun --cwd packages/db src/clickhouse/setup.ts
 ```
 
 ### Links (optional)
@@ -124,16 +147,10 @@ LINKS_ROOT_REDIRECT_URL=https://${{Dashboard.RAILWAY_PUBLIC_DOMAIN}}
 
 ## First-run schema setup
 
-Current seed project was initialized with:
+Use the `Init` service for first-run setup instead of asking users to run commands locally. It runs:
 
 ```bash
-DATABASE_URL=<Postgres.DATABASE_PUBLIC_URL> \
-CLICKHOUSE_URL=<ClickHouse.PUBLIC_DATABASE_URL> \
-bun run db:push
-
-DATABASE_URL=<Postgres.DATABASE_PUBLIC_URL> \
-CLICKHOUSE_URL=<ClickHouse.PUBLIC_DATABASE_URL> \
-bun run clickhouse:init
+bun run --cwd packages/db db:push && bun --cwd packages/db src/clickhouse/setup.ts
 ```
 
-For a fully one-click public template, add a tiny one-shot `Init` service later. Do not add it until the rest of the template is stable.
+Keep it as a manual one-shot service/job in Railway. Do not add custom wait loops or runtime migration logic to the app services unless Railway template testing proves it is necessary.
