@@ -49,6 +49,9 @@ type UrlConfig = (typeof URLS)[keyof typeof URLS];
 type EmailConfig = (typeof EMAIL)[keyof typeof EMAIL];
 
 export interface Config {
+	cors: {
+		apiOrigins: string[];
+	};
 	email: {
 		alertsFrom: string;
 		from: string;
@@ -81,6 +84,10 @@ function normalizeUrl(value: string): string {
 	return new URL(value).toString().replace(TRAILING_SLASH, "");
 }
 
+function normalizeOrigin(value: string): string {
+	return new URL(value.includes("://") ? value : `https://${value}`).origin;
+}
+
 function readUrl(env: Env, setting: UrlConfig): string {
 	const fallback = defaultUrl(env, setting);
 	const value = readFirst(env, setting.env);
@@ -100,8 +107,30 @@ function readEmail(env: Env, setting: EmailConfig): string {
 	return readFirst(env, setting.env) ?? setting.default;
 }
 
+function readList(value: string | undefined): string[] {
+	return (
+		value
+			?.split(",")
+			.map((item) => item.trim())
+			.filter(Boolean) ?? []
+	);
+}
+
+function readOrigins(values: Array<string | undefined>): string[] {
+	return [...new Set(values.flatMap(readList).map(normalizeOrigin))];
+}
+
 export function createConfig(env: Env = process.env): Config {
+	const dashboardUrl = readUrl(env, URLS.dashboard);
+
 	return {
+		cors: {
+			apiOrigins: readOrigins([
+				dashboardUrl,
+				env.RAILWAY_SERVICE_DASHBOARD_URL,
+				env.API_CORS_ORIGINS,
+			]),
+		},
 		email: {
 			alertsFrom: readEmail(env, EMAIL.alertsFrom),
 			from: readEmail(env, EMAIL.from),
@@ -109,7 +138,7 @@ export function createConfig(env: Env = process.env): Config {
 		urls: {
 			api: readUrl(env, URLS.api),
 			basket: readUrl(env, URLS.basket),
-			dashboard: readUrl(env, URLS.dashboard),
+			dashboard: dashboardUrl,
 			status: readUrl(env, URLS.status),
 		},
 	};

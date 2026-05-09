@@ -78,6 +78,25 @@ describe("createConfig", () => {
 		});
 	});
 
+	it("deduplicates API CORS origins from dashboard URLs", () => {
+		expect(
+			createConfig({
+				API_CORS_ORIGINS: "https://extra.example.com/path, extra.example.com/",
+				DASHBOARD_URL: "https://dashboard.example.com/",
+				NODE_ENV: "production",
+				RAILWAY_SERVICE_DASHBOARD_URL: "dashboard-production.up.railway.app",
+			})
+		).toMatchObject({
+			cors: {
+				apiOrigins: [
+					"https://dashboard.example.com",
+					"https://dashboard-production.up.railway.app",
+					"https://extra.example.com",
+				],
+			},
+		});
+	});
+
 	it("uses email sender overrides with alert-specific precedence", () => {
 		expect(
 			createConfig({

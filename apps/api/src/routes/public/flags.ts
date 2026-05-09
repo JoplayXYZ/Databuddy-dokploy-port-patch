@@ -11,6 +11,7 @@ import {
 	flagChangeEvents,
 	type FlagVariant,
 	flags,
+	websites,
 } from "@databuddy/db/schema";
 import { cacheable } from "@databuddy/redis";
 import { invalidateFlagCache } from "@databuddy/shared/flags/utils";
@@ -548,9 +549,22 @@ async function resolveFlagAdmin(
 	if (!apiKey) {
 		return { ok: false, status: 401, error: "Invalid or expired API key" };
 	}
-	const hasWebsiteAccess = hasWebsiteScope(apiKey, clientId, "manage:flags");
 	const hasOrgAccess =
 		apiKey.organizationId === clientId && hasKeyScope(apiKey, "manage:flags");
+	let hasWebsiteAccess = false;
+	if (hasWebsiteScope(apiKey, clientId, "manage:flags")) {
+		const [website] = await db
+			.select({ id: websites.id })
+			.from(websites)
+			.where(
+				and(
+					eq(websites.id, clientId),
+					eq(websites.organizationId, apiKey.organizationId ?? "")
+				)
+			)
+			.limit(1);
+		hasWebsiteAccess = Boolean(website);
+	}
 	if (!(hasWebsiteAccess || hasOrgAccess)) {
 		return { ok: false, status: 403, error: "Insufficient permissions" };
 	}

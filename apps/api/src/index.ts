@@ -58,6 +58,26 @@ initLogger({
 	},
 });
 
+const DATABUDDY_HOST_RE = /(?:^|\.)databuddy\.cc$/;
+
+const allowedCorsOrigins = new Set(config.cors.apiOrigins);
+
+function isAllowedCorsOrigin(request: Request): boolean {
+	const origin = request.headers.get("Origin");
+	if (!origin) {
+		return false;
+	}
+
+	try {
+		const url = new URL(origin);
+		return (
+			DATABUDDY_HOST_RE.test(url.hostname) || allowedCorsOrigins.has(url.origin)
+		);
+	} catch {
+		return false;
+	}
+}
+
 setChRecordFn(record);
 setRpcRecordFn(record);
 setTrackingFn(trackMutationEvent);
@@ -324,7 +344,7 @@ const app = new Elysia({ precompile: true })
 	.use(
 		cors({
 			credentials: true,
-			origin: [/(?:^|\.)databuddy\.cc$/, config.urls.dashboard],
+			origin: isAllowedCorsOrigin,
 		})
 	)
 	.use(publicApi)

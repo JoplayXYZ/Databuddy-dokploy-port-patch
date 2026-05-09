@@ -13,6 +13,7 @@ const apiEnvSchema = z.object({
 	...commonEnvSchema,
 	...authEnvSchema,
 	AI_API_KEY: z.string(),
+	API_CORS_ORIGINS: z.string().optional(),
 	BULLMQ_REDIS_URL: z.string(),
 	PORT: z.string().default("3001"),
 	CLICKHOUSE_URL: z.string(),

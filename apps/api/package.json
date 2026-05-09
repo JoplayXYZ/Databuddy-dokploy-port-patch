@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "NODE_ENV=development dotenv -- bun --hot src/index.ts --port 3001",
     "test": "TZ=UTC bunx --bun vitest run",
+    "test:integration": "TZ=UTC bunx --bun vitest run --config vitest.integration.config.ts",
     "test:watch": "TZ=UTC bunx --bun vitest"
   },
   "dependencies": {
