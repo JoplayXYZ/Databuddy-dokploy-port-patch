@@ -181,26 +181,28 @@ export const trackRoute = new Elysia().post(
 				});
 			}
 
-			const allowedApiKeyWebsiteIds = auth.apiKey
-				? hasGlobalAccess(auth.apiKey)
-					? null
-					: new Set(getAccessibleWebsiteIds(auth.apiKey))
-				: undefined;
+			const allowedApiKeyWebsiteIds =
+				auth.apiKey && !hasGlobalAccess(auth.apiKey)
+					? new Set(getAccessibleWebsiteIds(auth.apiKey))
+					: null;
 
 			for (const event of events) {
 				const targetId = event.websiteId ?? auth.websiteId;
-				if (!targetId) {
-					throw basketErrors.trackInvalidBody();
-				}
+
 				if (auth.apiKey) {
 					if (
+						targetId &&
 						allowedApiKeyWebsiteIds &&
 						!allowedApiKeyWebsiteIds.has(targetId)
 					) {
 						log.set({ rejected: "website_scope", targetWebsiteId: targetId });
-						throw basketErrors.trackMissingCredentials();
+						throw basketErrors.trackWebsiteScopeMismatch();
 					}
 					continue;
+				}
+
+				if (!targetId) {
+					throw basketErrors.trackInvalidBody();
 				}
 
 				if (auth.websiteId && targetId !== auth.websiteId) {

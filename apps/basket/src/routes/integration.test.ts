@@ -500,6 +500,130 @@ describe("POST /track", () => {
 		expect(body.count).toBe(2);
 	});
 
+	test("api key + no websiteId → 200 (org-scoped event)", async () => {
+		mockHasGlobalAccess.mockReturnValue(true);
+		const res = await post(trackRoute, "/track", { name: "org_event" });
+		expect(res.status).toBe(200);
+		expect(mockInsertCustomEvents).toHaveBeenCalledWith([
+			expect.objectContaining({
+				event_name: "org_event",
+				website_id: undefined,
+				owner_id: "org_1",
+			}),
+		]);
+	});
+
+	test("website-scoped api key + no websiteId → 200 (org-scoped event)", async () => {
+		const res = await post(trackRoute, "/track", { name: "org_event" });
+		expect(res.status).toBe(200);
+		expect(mockInsertCustomEvents).toHaveBeenCalledWith([
+			expect.objectContaining({
+				event_name: "org_event",
+				website_id: undefined,
+			}),
+		]);
+	});
+
+	test("website-scoped api key + websiteId outside scope → 403", async () => {
+		const res = await post(trackRoute, "/track", {
+			name: "signup",
+			websiteId: "ws_other",
+		});
+		expect(res.status).toBe(403);
+		expect(mockInsertCustomEvents).not.toHaveBeenCalled();
+	});
+
+	test("global api key + websiteId in event still allowed (not scope-checked)", async () => {
+		mockHasGlobalAccess.mockReturnValue(true);
+		const res = await post(trackRoute, "/track", {
+			name: "any_event",
+			websiteId: "ws_anywhere",
+		});
+		expect(res.status).toBe(200);
+		expect(mockInsertCustomEvents).toHaveBeenCalledWith([
+			expect.objectContaining({
+				event_name: "any_event",
+				website_id: "ws_anywhere",
+			}),
+		]);
+	});
+
+	test("api key with no scope → 403 (regression: trackMissingScope)", async () => {
+		mockHasKeyScope.mockReturnValue(false);
+		const res = await post(trackRoute, "/track", {
+			name: "signup",
+			websiteId: "ws_test",
+		});
+		expect(res.status).toBe(403);
+		expect(mockInsertCustomEvents).not.toHaveBeenCalled();
+	});
+
+	test("api key without owner → 400 (regression: trackMissingOwner)", async () => {
+		mockGetApiKeyFromHeader.mockResolvedValueOnce({
+			id: "key_x",
+			organizationId: null,
+			userId: null,
+			scopes: ["track:events"],
+		} as never);
+		const res = await post(trackRoute, "/track", {
+			name: "signup",
+			websiteId: "ws_test",
+		});
+		expect(res.status).toBe(400);
+		expect(mockInsertCustomEvents).not.toHaveBeenCalled();
+	});
+
+	test("no api key + no website_id query → 401 (regression: missing credentials)", async () => {
+		mockGetApiKeyFromHeader.mockResolvedValueOnce(null);
+		const res = await post(trackRoute, "/track", { name: "signup" });
+		expect(res.status).toBe(401);
+		expect(mockInsertCustomEvents).not.toHaveBeenCalled();
+	});
+
+	test("no api key + website not found → 404", async () => {
+		mockGetApiKeyFromHeader.mockResolvedValueOnce(null);
+		mockGetWebsiteByIdV2.mockResolvedValueOnce(null as never);
+		const res = await post(trackRoute, "/track?website_id=ws_missing", {
+			name: "signup",
+		});
+		expect(res.status).toBe(404);
+		expect(mockInsertCustomEvents).not.toHaveBeenCalled();
+	});
+
+	test("global api key insert sets owner_id from organization", async () => {
+		mockHasGlobalAccess.mockReturnValue(true);
+		mockInsertCustomEvents.mockClear();
+		await post(trackRoute, "/track", { name: "org_event" });
+		expect(mockInsertCustomEvents).toHaveBeenCalledWith([
+			expect.objectContaining({
+				owner_id: "org_1",
+				website_id: undefined,
+				event_name: "org_event",
+			}),
+		]);
+	});
+
+	test("preserves namespace, source, anonymousId, sessionId on insert", async () => {
+		mockInsertCustomEvents.mockClear();
+		await post(trackRoute, "/track", {
+			name: "signup",
+			websiteId: "ws_test",
+			namespace: "auth",
+			source: "node",
+			anonymousId: "anon_123",
+			sessionId: "sess_456",
+		});
+		expect(mockInsertCustomEvents).toHaveBeenCalledWith([
+			expect.objectContaining({
+				event_name: "signup",
+				namespace: "auth",
+				source: "node",
+				anonymous_id: "anon_123",
+				session_id: "sess_456",
+			}),
+		]);
+	});
+
 	test("website_id auth accepts matching website batch → 200", async () => {
 		mockGetApiKeyFromHeader.mockResolvedValueOnce(null);
 		const res = await post(trackRoute, "/track?website_id=ws_test", [
