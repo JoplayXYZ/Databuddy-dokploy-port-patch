@@ -286,22 +286,22 @@ function createSlackHarnessCases(): SlackHarnessCase[] {
 		),
 		threadRelevanceCase(
 			"hostile-dismissal",
-			"Ignores hostile dismissals with no request",
+			"Replies briefly to dismissals clearly directed at Databuddy",
 			"shut up",
 			{
-				reason: "side_chatter",
-				shouldReply: false,
+				reason: "direct_request",
+				shouldReply: true,
 				source: "model",
 			},
 			[botMessage("You've got impressive multitasking energy.")]
 		),
 		threadRelevanceCase(
 			"hostile-reaction",
-			"Ignores hostile reactions with no request",
+			"Replies briefly to hostile reactions clearly directed at Databuddy",
 			"i hate you",
 			{
-				reason: "side_chatter",
-				shouldReply: false,
+				reason: "direct_request",
+				shouldReply: true,
 				source: "model",
 			},
 			[botMessage("You've got impressive multitasking energy.")]
