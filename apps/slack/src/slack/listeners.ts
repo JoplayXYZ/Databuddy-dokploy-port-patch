@@ -277,6 +277,16 @@ export function registerSlackListeners(
 			return;
 		}
 
+		if (mentionsBot(msg.text, context.botUserId)) {
+			logMessageRouteSkipped({
+				botUserId: context.botUserId,
+				message: msg,
+				reason: "app_mention_event_handles_bot_mention",
+				teamId: context.teamId ?? msg.team,
+			});
+			return;
+		}
+
 		const teamId = context.teamId ?? msg.team;
 		const run: SlackAgentRun = {
 			channelId: msg.channel,
@@ -463,7 +473,11 @@ function logMessageRouteSkipped({
 }: {
 	botUserId?: string;
 	message: ReturnType<typeof toSlackMessage>;
-	reason: "duplicate" | "not_thread_follow_up" | "thread_not_engaged";
+	reason:
+		| "app_mention_event_handles_bot_mention"
+		| "duplicate"
+		| "not_thread_follow_up"
+		| "thread_not_engaged";
 	teamId?: string;
 }) {
 	if (!shouldLogRouteSkip(message, botUserId)) {
@@ -481,6 +495,10 @@ function logMessageRouteSkipped({
 		slack_thread_ts: message?.thread_ts,
 		slack_user_id: message?.user,
 	}).emit();
+}
+
+function mentionsBot(text: string, botUserId?: string): boolean {
+	return Boolean(botUserId && text.includes(`<@${botUserId}>`));
 }
 
 function shouldLogRouteSkip(

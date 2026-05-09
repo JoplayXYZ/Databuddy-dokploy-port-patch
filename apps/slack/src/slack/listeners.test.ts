@@ -301,6 +301,44 @@ describe("Slack listeners", () => {
 		expect(queue.enqueuedRuns).toEqual([]);
 	});
 
+	it("lets app_mention handle threaded messages that mention Databuddy", async () => {
+		const app = new FakeSlackApp();
+		const { agent, runs } = createAgent();
+		const queue = createQueue();
+		const { client } = createClient();
+		const threadReplyGate: SlackThreadReplyGate = {
+			shouldReply: async () => {
+				throw new Error("message event should not reach the thread reply gate");
+			},
+		};
+		registerFakeSlackListeners(
+			app,
+			agent,
+			createInstallations(),
+			queue,
+			threadReplyGate
+		);
+
+		await app.messages[0]?.({
+			client,
+			context: { botUserId: "UBOT", teamId: "T123" },
+			logger,
+			message: {
+				channel: "C123",
+				channel_type: "channel",
+				client_msg_id: "client-message-id",
+				text: "whats up <@UBOT>",
+				thread_ts: "171234.000",
+				ts: "171234.568",
+				user: "U123",
+			},
+			say: async () => undefined,
+		});
+
+		expect(runs).toEqual([]);
+		expect(queue.enqueuedRuns).toEqual([]);
+	});
+
 	it("queues engaged thread follow-ups when another response is active", async () => {
 		const app = new FakeSlackApp();
 		const { agent, runs } = createAgent();
