@@ -158,6 +158,42 @@ const MODELS: Record<string, ModelEntry> = {
 	},
 };
 
+function modelEnvKey(modelId: string, suffix: "INPUT" | "OUTPUT"): string {
+	return `EVAL_PRICE_${modelId.replace(/[^a-zA-Z0-9]/g, "_").toUpperCase()}_${suffix}_PER_MTOKEN`;
+}
+
+function getModelPricing(modelId: string): ModelEntry | undefined {
+	const configured = MODELS[modelId];
+	if (configured) {
+		return configured;
+	}
+
+	const input = Number.parseFloat(
+		process.env[modelEnvKey(modelId, "INPUT")] ?? ""
+	);
+	const output = Number.parseFloat(
+		process.env[modelEnvKey(modelId, "OUTPUT")] ?? ""
+	);
+	if (!(Number.isFinite(input) && Number.isFinite(output))) {
+		return;
+	}
+	return { inputPerMToken: input, outputPerMToken: output, tags: [] };
+}
+
+export function getPricingEnvKeys(modelId: string): {
+	input: string;
+	output: string;
+} {
+	return {
+		input: modelEnvKey(modelId, "INPUT"),
+		output: modelEnvKey(modelId, "OUTPUT"),
+	};
+}
+
+export function hasModelPricing(modelId: string): boolean {
+	return !!getModelPricing(modelId);
+}
+
 export function computeCaseCost(
 	modelId: string,
 	inputTokens: number,
@@ -166,7 +202,7 @@ export function computeCaseCost(
 	if (inputTokens === 0 && outputTokens === 0) {
 		return 0;
 	}
-	const entry = MODELS[modelId];
+	const entry = getModelPricing(modelId);
 	if (!entry) {
 		return 0;
 	}

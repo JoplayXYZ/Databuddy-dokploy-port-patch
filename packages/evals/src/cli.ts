@@ -1,4 +1,10 @@
-import { mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
+import {
+	copyFileSync,
+	mkdirSync,
+	readFileSync,
+	readdirSync,
+	writeFileSync,
+} from "node:fs";
 import { join } from "node:path";
 import { readBooleanEnv } from "@databuddy/env/boolean";
 import {
@@ -14,6 +20,8 @@ import {
 	computeCaseCost,
 	filterModels,
 	getModelTags,
+	getPricingEnvKeys,
+	hasModelPricing,
 	listTags,
 } from "./costs";
 import { judgeQuality } from "./judge";
@@ -424,15 +432,58 @@ function buildRun(
 }
 
 function modelSlug(model: string): string {
-	return model.replace(/\//g, "--");
+	return model.replace(/[^a-zA-Z0-9._-]+/g, "--");
+}
+
+function timestampSlug(timestamp: string): string {
+	return timestamp.replace(/[:.]/g, "-");
 }
 
 function saveRun(run: EvalRun, resultsDir: string): string {
 	const modelDir = join(resultsDir, modelSlug(run.model));
-	mkdirSync(modelDir, { recursive: true });
-	const filepath = join(modelDir, "latest.json");
-	writeFileSync(filepath, JSON.stringify(run, null, 2));
-	return filepath;
+	const historyDir = join(modelDir, "runs");
+	mkdirSync(historyDir, { recursive: true });
+
+	const content = JSON.stringify(run, null, 2);
+	const historyPath = join(historyDir, `${timestampSlug(run.timestamp)}.json`);
+	writeFileSync(historyPath, content);
+
+	const latestPath = join(modelDir, "latest.json");
+	writeFileSync(latestPath, content);
+	return historyPath;
+}
+
+function archiveExistingFile(filepath: string): string | null {
+	let content: string;
+	try {
+		content = readFileSync(filepath, "utf-8");
+	} catch {
+		return null;
+	}
+
+	try {
+		const run = JSON.parse(content) as Partial<EvalRun>;
+		const model = typeof run.model === "string" ? run.model : "unknown";
+		const timestamp =
+			typeof run.timestamp === "string"
+				? run.timestamp
+				: new Date().toISOString();
+		const historyDir = join(
+			import.meta.dir,
+			"..",
+			"results",
+			modelSlug(model),
+			"runs"
+		);
+		mkdirSync(historyDir, { recursive: true });
+		const archivePath = join(historyDir, `${timestampSlug(timestamp)}.json`);
+		writeFileSync(archivePath, content);
+		return archivePath;
+	} catch {
+		const archivePath = `${filepath}.${Date.now()}.bak`;
+		copyFileSync(filepath, archivePath);
+		return archivePath;
+	}
 }
 
 async function cmdRun() {
@@ -522,6 +573,12 @@ async function runModelSuite(
 		`${BOLD}Running ${cases.length} evals${RESET} with ${config.runner} runner${config.runner === "api" ? ` against ${config.apiUrl}` : ""} (concurrency: ${concurrency})`
 	);
 	console.log(`Model: ${modelId}`);
+	if (!hasModelPricing(modelId)) {
+		const keys = getPricingEnvKeys(modelId);
+		console.log(
+			`${YELLOW}Warning:${RESET} no pricing entry for ${modelId}; agent cost will be reported as $0. Add it to packages/evals/src/costs.ts or set ${keys.input} and ${keys.output}.`
+		);
+	}
 	if (opts.surfaces.length > 0) {
 		console.log(`Surfaces: ${opts.surfaces.join(", ")}`);
 	}
@@ -724,6 +781,9 @@ async function runModelSuite(
 		const resultsDir = join(import.meta.dir, "..", "results");
 		const filepath = saveRun(run, resultsDir);
 		console.log(`Saved: ${filepath}`);
+		console.log(
+			`Latest: ${join(resultsDir, modelSlug(run.model), "latest.json")}`
+		);
 	}
 
 	return run;
@@ -801,6 +861,11 @@ async function rejudgeFromFile(opts: CliOpts, judgeModel: string) {
 
 	const judged = results.filter(Boolean).length;
 	if (judged > 0) {
+		const archivePath = archiveExistingFile(filepath);
+		if (archivePath) {
+			console.log(`Archived previous result: ${archivePath}`);
+		}
+
 		const updated = buildRun(
 			run.cases,
 			run.model,
@@ -839,18 +904,49 @@ function loadAllResults(resultsDir: string): Map<string, EvalRun> {
 	return latestByModel;
 }
 
+function selectCompareModels(
+	latestByModel: Map<string, EvalRun>,
+	opts: CliOpts
+): string[] {
+	let models = [...latestByModel.keys()].sort();
+	if (opts.filter) {
+		const allowed = new Set(filterModels(opts.filter));
+		models = models.filter((model) => allowed.has(model));
+	}
+	if (opts.model) {
+		const requested = parseCsv(opts.model);
+		models = requested.flatMap((needle) => {
+			const exact = models.find((model) => model === needle);
+			if (exact) {
+				return [exact];
+			}
+			const slug = modelSlug(needle);
+			return models.filter(
+				(model) => modelSlug(model) === slug || model.includes(needle)
+			);
+		});
+	}
+	return [...new Set(models)];
+}
+
 function cmdCompare() {
 	const opts = parseArgs();
 	const resultsDir = join(import.meta.dir, "..", "results");
 	const latestByModel = loadAllResults(resultsDir);
 
-	const models = [...latestByModel.keys()].sort();
-	const firstRun = latestByModel.values().next().value;
+	const models = selectCompareModels(latestByModel, opts);
+	const firstRun = models.length > 0 ? latestByModel.get(models[0]) : undefined;
 	if (!firstRun) {
 		console.log("No results to compare");
 		return;
 	}
-	const caseIds = firstRun.cases.map((c: CaseResult) => c.id);
+	const caseIds = [
+		...new Set(
+			models.flatMap((model) =>
+				(latestByModel.get(model)?.cases ?? []).map((c) => c.id)
+			)
+		),
+	];
 
 	const COL = 20;
 	const pad = (s: string, n: number) =>
