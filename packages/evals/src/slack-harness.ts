@@ -107,7 +107,7 @@ function createSlackHarnessCases(): SlackHarnessCase[] {
 			{
 				reason: "bot_mentioned",
 				shouldReply: true,
-				source: "rules",
+				source: "model",
 			}
 		),
 		threadRelevanceCase(
@@ -117,8 +117,27 @@ function createSlackHarnessCases(): SlackHarnessCase[] {
 			{
 				reason: "analytics_request",
 				shouldReply: true,
-				source: "rules",
+				source: "model",
 			}
+		),
+		threadRelevanceCase(
+			"short-answer-to-website-choice",
+			"Replies when a short answer resolves Databuddy's website clarification",
+			"both",
+			{
+				reason: "direct_request",
+				shouldReply: true,
+				source: "model",
+			},
+			[
+				{
+					text: "hey <@UBOT> can you tell me my top pages, and tell <@UQAIS> to do a better j*b",
+					userId: "U_ISSSA",
+				},
+				botMessage(
+					"I see two websites — Databuddy (app.databuddy.cc) and Landing Page (databuddy.cc). Which one's top pages would you like me to pull?"
+				),
+			]
 		),
 		threadRelevanceCase(
 			"greeting-plus-bot-address",
@@ -127,7 +146,7 @@ function createSlackHarnessCases(): SlackHarnessCase[] {
 			{
 				reason: "analytics_request",
 				shouldReply: true,
-				source: "rules",
+				source: "model",
 			}
 		),
 		threadRelevanceCase(
@@ -137,7 +156,7 @@ function createSlackHarnessCases(): SlackHarnessCase[] {
 			{
 				reason: "analytics_request",
 				shouldReply: true,
-				source: "rules",
+				source: "model",
 			}
 		),
 		threadRelevanceCase(
@@ -147,7 +166,7 @@ function createSlackHarnessCases(): SlackHarnessCase[] {
 			{
 				reason: "direct_request",
 				shouldReply: true,
-				source: "rules",
+				source: "model",
 			}
 		),
 		threadRelevanceCase(
@@ -157,7 +176,7 @@ function createSlackHarnessCases(): SlackHarnessCase[] {
 			{
 				reason: "direct_request",
 				shouldReply: true,
-				source: "rules",
+				source: "model",
 			}
 		),
 		threadRelevanceCase(
@@ -167,13 +186,13 @@ function createSlackHarnessCases(): SlackHarnessCase[] {
 			{
 				reason: "direct_request",
 				shouldReply: true,
-				source: "rules",
+				source: "model",
 			}
 		),
 		threadRelevanceCase("dead-side-chatter", "Ignores side chatter", "DEAD", {
 			reason: "side_chatter",
 			shouldReply: false,
-			source: "rules",
+			source: "model",
 		}),
 		threadRelevanceCase(
 			"murdered-side-chatter",
@@ -182,7 +201,7 @@ function createSlackHarnessCases(): SlackHarnessCase[] {
 			{
 				reason: "side_chatter",
 				shouldReply: false,
-				source: "rules",
+				source: "model",
 			}
 		),
 		threadRelevanceCase(
@@ -192,7 +211,7 @@ function createSlackHarnessCases(): SlackHarnessCase[] {
 			{
 				reason: "human_to_human",
 				shouldReply: false,
-				source: "rules",
+				source: "model",
 			}
 		),
 		threadRelevanceCase(
@@ -202,7 +221,7 @@ function createSlackHarnessCases(): SlackHarnessCase[] {
 			{
 				reason: "side_chatter",
 				shouldReply: false,
-				source: "rules",
+				source: "model",
 			}
 		),
 		threadRelevanceCase(
@@ -212,7 +231,7 @@ function createSlackHarnessCases(): SlackHarnessCase[] {
 			{
 				reason: "human_to_human",
 				shouldReply: false,
-				source: "rules",
+				source: "model",
 			}
 		),
 		threadRelevanceCase(
@@ -222,7 +241,7 @@ function createSlackHarnessCases(): SlackHarnessCase[] {
 			{
 				reason: "side_chatter",
 				shouldReply: false,
-				source: "rules",
+				source: "model",
 			}
 		),
 		threadRelevanceCase(
@@ -232,7 +251,7 @@ function createSlackHarnessCases(): SlackHarnessCase[] {
 			{
 				reason: "side_chatter",
 				shouldReply: false,
-				source: "rules",
+				source: "model",
 			}
 		),
 		threadRelevanceCase(
@@ -242,7 +261,7 @@ function createSlackHarnessCases(): SlackHarnessCase[] {
 			{
 				reason: "side_chatter",
 				shouldReply: false,
-				source: "rules",
+				source: "model",
 			}
 		),
 		threadRelevanceCase(
@@ -252,7 +271,7 @@ function createSlackHarnessCases(): SlackHarnessCase[] {
 			{
 				reason: "side_chatter",
 				shouldReply: false,
-				source: "rules",
+				source: "model",
 			}
 		),
 		threadRelevanceCase(
@@ -262,7 +281,7 @@ function createSlackHarnessCases(): SlackHarnessCase[] {
 			{
 				reason: "side_chatter",
 				shouldReply: false,
-				source: "rules",
+				source: "model",
 			}
 		),
 		...dynamicThreadRelevanceCases(),
@@ -633,7 +652,7 @@ function buildBotQuestionReplyCase(
 		`dynamic-bot-question-reply-${index}`,
 		"Replies to a terse answer to Databuddy's prior question",
 		reply,
-		{ reason: "direct_request", shouldReply: true, source: "rules" },
+		{ reason: "direct_request", shouldReply: true, source: "model" },
 		[botMessage(botQuestion)]
 	);
 }
@@ -658,7 +677,7 @@ function buildContextualAnalyticsQuestionCase(
 		`dynamic-contextual-analytics-question-${index}`,
 		"Replies to a contextual analytics question after a Databuddy report",
 		question,
-		{ reason: "analytics_request", shouldReply: true, source: "rules" },
+		{ reason: "analytics_request", shouldReply: true, source: "model" },
 		[botMessage(report)]
 	);
 }
@@ -679,7 +698,7 @@ function buildHumanDirectedChatterCase(
 		`dynamic-human-directed-chatter-${index}`,
 		"Ignores human-to-human prompts even after Databuddy spoke",
 		message,
-		{ reason: "human_to_human", shouldReply: false, source: "rules" },
+		{ reason: "human_to_human", shouldReply: false, source: "model" },
 		[botMessage("I can keep digging if useful.")]
 	);
 }
@@ -696,7 +715,7 @@ function buildThreadSideChatterCase(
 		`dynamic-thread-side-chatter-${index}`,
 		"Ignores side chatter after Databuddy spoke",
 		message,
-		{ reason: "side_chatter", shouldReply: false, source: "rules" },
+		{ reason: "side_chatter", shouldReply: false, source: "model" },
 		[botMessage("The main issue is pricing errors.")]
 	);
 }
