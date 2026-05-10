@@ -3,7 +3,7 @@
 import {
 	ANALYTICS_TABLES,
 	getTableDefinition,
-} from "@databuddy/shared/schema/analytics-tables";
+} from "./schema/analytics-tables";
 import type {
 	AggregateFunction,
 	CustomQueryConfig,

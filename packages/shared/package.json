@@ -8,7 +8,6 @@
     "./billing/credit-schema": "./src/billing/credit-schema.ts",
     "./billing/topup-math": "./src/billing/topup-math.ts",
     "./lists/referrers": "./src/lists/referrers.ts",
-    "./schema/analytics-tables": "./src/schema/analytics-tables.ts",
     "./types/features": "./src/types/features.ts",
     "./flags": "./src/flags/index.ts",
     "./utils/referrer": "./src/utils/referrer.ts",
@@ -25,9 +24,6 @@
     "test": "bun test src"
   },
   "dependencies": {
-    "@databuddy/redis": "workspace:*",
-    "@databuddy/db": "workspace:*",
-    "evlog": "catalog:",
     "nanoid": "catalog:",
     "tokenlens": "catalog:",
     "ua-parser-js": "catalog:",
