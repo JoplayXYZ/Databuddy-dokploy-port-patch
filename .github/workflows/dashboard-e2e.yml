@@ -36,8 +36,8 @@ jobs:
     timeout-minutes: 20
     env:
       DATABUDDY_E2E_BASE_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres
-      DATABUDDY_E2E_START_CLICKHOUSE: "0"
-      DATABUDDY_E2E_SEED_CLICKHOUSE: "1"
+      DATABUDDY_E2E_START_CLICKHOUSE: "false"
+      DATABUDDY_E2E_SEED_CLICKHOUSE: "true"
       DATABUDDY_E2E_CLICKHOUSE_EVENTS: "150"
       CLICKHOUSE_URL: http://default:@localhost:8123/databuddy_analytics
       REDIS_URL: redis://localhost:6379

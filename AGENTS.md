@@ -166,7 +166,7 @@ For picker controls, use the component that matches the interaction:
 - Empty `catch {}` blocks need a reason comment or minimal logging, especially in instrumentation paths.
 - Eval guardrail regexes should be precise and bounded; avoid broad `.*` patterns that can fail unrelated output.
 - CI service containers should mirror local Docker requirements; ClickHouse needs the high `nofile` ulimit, generous health startup time, and a health command supported inside the ClickHouse image.
-- Dashboard Playwright web servers should not use `bash -lc`; login shells can reset PATH on CI and hide Bun. Use `bash -c` or an explicit Bun path, and build dist-only workspace packages such as `@databuddy/sdk`/`@databuddy/devtools` before starting the API/dashboard.
+- Dashboard Playwright web servers should not use `bash -lc`; login shells can reset PATH on CI and hide Bun. Use `bash -c` or an explicit Bun path, build dist-only workspace packages such as `@databuddy/sdk`/`@databuddy/devtools` before starting the API/dashboard, and set E2E boolean env vars as `"true"`/`"false"` because `readBooleanEnv` does not treat `"1"` as enabled.
 - Bun `mock.module` state can affect files in the same package test command; mocks for shared modules like `../lib/logger` must include every method later tests may call.
 - Client-side `NEXT_PUBLIC_*` checks must use direct `process.env.NEXT_PUBLIC_NAME` access (or a helper that does); dynamic helpers like `readBooleanEnv("NEXT_PUBLIC_...")` are not inlined into the browser bundle.
 
