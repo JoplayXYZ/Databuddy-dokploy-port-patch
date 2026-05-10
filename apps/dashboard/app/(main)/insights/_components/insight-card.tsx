@@ -12,7 +12,7 @@ import {
 	formatInsightFreshness,
 } from "@/app/(main)/insights/lib/insight-meta";
 import { InsightMetrics } from "@/components/insight-metrics";
-import { Skeleton } from "@databuddy/ui";
+import { Button, Skeleton } from "@databuddy/ui";
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
 import {
 	changePercentChipClassName,
@@ -219,105 +219,89 @@ export function InsightCard({
 			)}
 			id={`insight-${insight.id}`}
 		>
-			{/* biome-ignore lint/a11y/useSemanticElements: full-row toggle cannot use <button> because of nested dismiss control */}
 			<div
 				className={cn(
-					"flex cursor-pointer items-start gap-3 px-5",
+					"flex items-start gap-3 px-5",
 					isCompact ? "py-3" : "py-3.5"
 				)}
-				onClick={onToggleAction}
-				onKeyDown={(e) => {
-					if (e.key === "Enter" || e.key === " ") {
-						e.preventDefault();
-						onToggleAction();
-					}
-				}}
-				role="button"
-				tabIndex={0}
 			>
-				<div
-					className={cn(
-						"mt-0.5 flex size-7 shrink-0 items-center justify-center rounded",
-						typeStyle.bg,
-						typeStyle.color
-					)}
+				<Button
+					className="min-w-0 flex-1 items-start justify-start gap-3 rounded-none bg-transparent p-0 text-left font-normal text-foreground hover:bg-transparent active:scale-100"
+					onClick={onToggleAction}
+					variant="ghost"
 				>
-					{typeStyle.icon}
-				</div>
-				<div className="min-w-0 flex-1">
-					<div className="flex items-center justify-between gap-2">
-						<p className="truncate font-medium text-foreground text-sm">
-							{insight.title}
-						</p>
-						<div className="flex shrink-0 items-center gap-1.5">
-							{!isCompact && onDismissAction && (
-								<button
-									aria-label="Dismiss insight"
-									className="flex size-6 items-center justify-center rounded text-muted-foreground opacity-0 transition-all hover:bg-accent hover:text-foreground group-hover:opacity-100"
-									onClick={(e) => {
-										e.stopPropagation();
-										onDismissAction();
-									}}
-									type="button"
-								>
-									<XIcon className="size-3" weight="bold" />
-								</button>
-							)}
-							<span className="font-mono text-[11px] text-muted-foreground tabular-nums">
-								{insight.priority}/10
+					<span
+						className={cn(
+							"mt-0.5 flex size-7 shrink-0 items-center justify-center rounded",
+							typeStyle.bg,
+							typeStyle.color
+						)}
+					>
+						{typeStyle.icon}
+					</span>
+					<span className="min-w-0 flex-1">
+						<span className="flex items-center justify-between gap-2">
+							<span className="truncate font-medium text-foreground text-sm">
+								{insight.title}
 							</span>
-							<CaretDownIcon
-								className={cn(
-									"size-3 text-muted-foreground transition-transform",
-									expanded && "rotate-180"
-								)}
-								weight="fill"
-							/>
-						</div>
-					</div>
-					<div className="mt-0.5 flex items-center gap-1.5 text-xs">
-						<span className="truncate text-muted-foreground">
-							{insight.websiteName ?? insight.websiteDomain}
+							<span className="flex shrink-0 items-center gap-1.5">
+								<span className="font-mono text-[11px] text-muted-foreground tabular-nums">
+									{insight.priority}/10
+								</span>
+								<CaretDownIcon
+									className={cn(
+										"size-3 text-muted-foreground transition-transform",
+										expanded && "rotate-180"
+									)}
+									weight="fill"
+								/>
+							</span>
 						</span>
-						<span className="text-muted-foreground/30">&middot;</span>
-						<span className={sentimentStyle.color}>{sentimentStyle.label}</span>
-						{insight.changePercent !== undefined &&
-							insight.changePercent !== 0 && (
-								<>
-									<span className="text-muted-foreground/30">&middot;</span>
-									<span
-										className={cn(
-											"tabular-nums",
-											changePercentChipClassName(insight.changePercent)
-										)}
-									>
-										{formatSignedChangePercent(insight.changePercent)}
-									</span>
-								</>
-							)}
-					</div>
-					{!expanded && (
-						<p className="mt-1 line-clamp-1 text-muted-foreground text-xs">
-							{insight.description}
-						</p>
-					)}
-				</div>
+						<span className="mt-0.5 flex items-center gap-1.5 text-xs">
+							<span className="truncate text-muted-foreground">
+								{insight.websiteName ?? insight.websiteDomain}
+							</span>
+							<span className="text-muted-foreground/30">&middot;</span>
+							<span className={sentimentStyle.color}>
+								{sentimentStyle.label}
+							</span>
+							{insight.changePercent !== undefined &&
+								insight.changePercent !== 0 && (
+									<>
+										<span className="text-muted-foreground/30">&middot;</span>
+										<span
+											className={cn(
+												"tabular-nums",
+												changePercentChipClassName(insight.changePercent)
+											)}
+										>
+											{formatSignedChangePercent(insight.changePercent)}
+										</span>
+									</>
+								)}
+						</span>
+						{!expanded && (
+							<span className="mt-1 line-clamp-1 block text-muted-foreground text-xs">
+								{insight.description}
+							</span>
+						)}
+					</span>
+				</Button>
+				{!isCompact && onDismissAction && (
+					<Button
+						aria-label="Dismiss insight"
+						className="size-6 text-muted-foreground opacity-0 transition-all hover:bg-accent hover:text-foreground group-hover:opacity-100"
+						onClick={onDismissAction}
+						size="icon"
+						variant="ghost"
+					>
+						<XIcon className="size-3" weight="bold" />
+					</Button>
+				)}
 			</div>
 
 			{expanded && (
-				/* biome-ignore lint/a11y/useSemanticElements: expanded panel toggle; nested links/buttons prevent a single <button> wrapper */
-				<div
-					className="space-y-4 border-border/60 border-t px-5 pt-4 pb-5"
-					onClick={onToggleAction}
-					onKeyDown={(e) => {
-						if (e.key === "Enter" || e.key === " ") {
-							e.preventDefault();
-							onToggleAction();
-						}
-					}}
-					role="button"
-					tabIndex={-1}
-				>
+				<div className="space-y-4 border-border/60 border-t px-5 pt-4 pb-5">
 					<p className="text-pretty text-[13px] text-foreground/80 leading-relaxed">
 						{insight.description}
 					</p>
@@ -343,7 +327,6 @@ export function InsightCard({
 							<Link
 								className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 font-medium text-primary-foreground text-xs transition-opacity hover:opacity-90"
 								href={agentHref}
-								onClick={(e) => e.stopPropagation()}
 							>
 								Ask agent
 								<ArrowRightIcon className="size-3" weight="fill" />
@@ -351,7 +334,6 @@ export function InsightCard({
 							<Link
 								className="inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-muted-foreground text-xs transition-colors hover:bg-accent hover:text-foreground"
 								href={analyticsHref}
-								onClick={(e) => e.stopPropagation()}
 							>
 								{analyticsLabel}
 							</Link>
@@ -365,7 +347,6 @@ export function InsightCard({
 									aria-label="Open AI agent with this insight as context"
 									className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 font-medium text-primary-foreground text-xs transition-opacity hover:opacity-90"
 									href={agentHref}
-									onClick={(e) => e.stopPropagation()}
 								>
 									Ask agent
 									<ArrowRightIcon className="size-3" weight="fill" />
@@ -378,7 +359,6 @@ export function InsightCard({
 									}
 									className="inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-muted-foreground text-xs transition-colors hover:bg-accent hover:text-foreground"
 									href={analyticsHref}
-									onClick={(e) => e.stopPropagation()}
 								>
 									{analyticsLabel}
 								</Link>
@@ -386,14 +366,12 @@ export function InsightCard({
 									<DropdownMenu.Trigger
 										aria-label="More actions"
 										className="flex size-7 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-										onClick={(e) => e.stopPropagation()}
 									>
 										<DotsThreeIcon className="size-4" weight="bold" />
 									</DropdownMenu.Trigger>
 									<DropdownMenu.Content align="start" className="w-44">
 										<DropdownMenu.Item
-											onClick={(e) => {
-												e.stopPropagation();
+											onClick={() => {
 												copyPrompt(buildInsightAgentCopyText(insight));
 											}}
 										>
@@ -423,42 +401,42 @@ export function InsightCard({
 								)}
 								{onFeedbackAction && (
 									<div className="flex items-center gap-1">
-										<button
+										<Button
 											aria-label="Mark as helpful"
 											aria-pressed={feedbackVote === "up"}
 											className={cn(
-												"flex size-7 items-center justify-center rounded-md border transition-colors",
+												"size-7 rounded-md border",
 												feedbackVote === "up"
 													? "border-primary bg-primary/10 text-primary"
 													: "text-muted-foreground hover:bg-accent hover:text-foreground"
 											)}
-											onClick={(e) => {
-												e.stopPropagation();
-												onFeedbackAction(feedbackVote === "up" ? null : "up");
-											}}
-											type="button"
+											onClick={() =>
+												onFeedbackAction(feedbackVote === "up" ? null : "up")
+											}
+											size="icon"
+											variant="ghost"
 										>
 											<ThumbsUpIcon className="size-3.5" weight="duotone" />
-										</button>
-										<button
+										</Button>
+										<Button
 											aria-label="Mark as not helpful"
 											aria-pressed={feedbackVote === "down"}
 											className={cn(
-												"flex size-7 items-center justify-center rounded-md border transition-colors",
+												"size-7 rounded-md border",
 												feedbackVote === "down"
 													? "border-destructive bg-destructive/10 text-destructive"
 													: "text-muted-foreground hover:bg-accent hover:text-foreground"
 											)}
-											onClick={(e) => {
-												e.stopPropagation();
+											onClick={() =>
 												onFeedbackAction(
 													feedbackVote === "down" ? null : "down"
-												);
-											}}
-											type="button"
+												)
+											}
+											size="icon"
+											variant="ghost"
 										>
 											<ThumbsDownIcon className="size-3.5" weight="duotone" />
-										</button>
+										</Button>
 									</div>
 								)}
 							</div>
