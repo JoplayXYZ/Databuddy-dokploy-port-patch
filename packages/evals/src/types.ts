@@ -3,7 +3,8 @@ export type EvalCategory =
 	| "behavioral"
 	| "quality"
 	| "format"
-	| "attribution";
+	| "attribution"
+	| "insights";
 
 export type EvalSurface = "agent" | "mcp" | "slack";
 export type EvalRunner = "api" | "package";

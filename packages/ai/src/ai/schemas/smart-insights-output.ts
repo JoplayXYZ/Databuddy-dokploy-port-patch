@@ -76,6 +76,14 @@ export const insightSchema = z.object({
 		"positive_trend",
 		"performance",
 		"uptime_issue",
+		"conversion_leak",
+		"funnel_regression",
+		"channel_concentration",
+		"reliability_improved",
+		"persistent_error_hotspot",
+		"quality_shift",
+		"cross_property_dependency",
+		"performance_improved",
 	]),
 	changePercent: z
 		.number()

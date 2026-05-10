@@ -30,6 +30,7 @@ import {
 	hasWebInsightData,
 } from "@databuddy/ai/insights/fetch-context";
 import { formatLegacyWebDataForPrompt } from "@databuddy/ai/insights/normalize";
+import { validateInsights } from "@databuddy/ai/insights/validate";
 import type {
 	InsightMetricRow,
 	WeekOverWeekPeriod,
@@ -77,6 +78,41 @@ function dedupeKeyFor(insight: WebsiteInsight): string {
 		...insight,
 		changePercent: insight.changePercent ?? null,
 	});
+}
+
+function buildInsightLink(websiteId: string, insight: ParsedInsight): string {
+	const base = `/websites/${websiteId}`;
+	if (
+		[
+			"error_spike",
+			"new_errors",
+			"persistent_error_hotspot",
+			"reliability_improved",
+		].includes(insight.type)
+	) {
+		return `${base}/errors`;
+	}
+	if (
+		["vitals_degraded", "performance", "performance_improved"].includes(
+			insight.type
+		)
+	) {
+		return `${base}/vitals`;
+	}
+	if (["conversion_leak", "funnel_regression"].includes(insight.type)) {
+		return `${base}/funnels`;
+	}
+	if (
+		["custom_event_spike", "engagement_change", "quality_shift"].includes(
+			insight.type
+		)
+	) {
+		return `${base}/events/stream`;
+	}
+	if (insight.type === "uptime_issue") {
+		return `${base}/anomalies`;
+	}
+	return base;
 }
 
 interface RawInsightShape {
@@ -242,8 +278,9 @@ You are an analytics insights engine. Return 1-3 week-over-week insights ranked 
 
 <writing_rules>
 - Metrics belong in the metrics array. Description and suggestion should reference metric labels, not repeat the numbers.
-- Keep the description analytical: explain why the change matters, likely context, and implications.
+- Keep the description to 1-2 concise sentences: what changed, why it matters, and whether the cause is direct evidence or a hypothesis.
 - Keep the suggestion concrete and specific. Avoid generic advice such as "monitor this" or "keep an eye on it".
+- Use cautious language for correlations. Say "may" or "should be checked" unless the segment-level data directly proves the cause.
 - Never use raw opaque URL slugs in titles. Use the provided human page labels.
 - If the week is mostly positive, still include one real risk or watch item when supported by the data.
 - If the same narrative already appears in recently reported insights, avoid repeating it unless the change is materially new.
@@ -260,6 +297,7 @@ You are an analytics insights engine. Return 1-3 week-over-week insights ranked 
 - sources must list only the evidence domains actually used: web, product, ops, business.
 - confidence should be between 0 and 1 based on how directly the data supports the conclusion.
 - impactSummary is optional and should briefly state user or business impact when the impact is clear. Keep it to a single sentence under 220 characters.
+- Prefer specific types when they fit: conversion_leak, funnel_regression, channel_concentration, reliability_improved, persistent_error_hotspot, quality_shift, cross_property_dependency, performance_improved.
 </metrics_rules>
 
 <examples>
@@ -428,7 +466,16 @@ async function analyzeWebsiteLegacy(
 			return [];
 		}
 
-		return result.output.insights;
+		const validated = validateInsights(result.output.insights);
+		if (validated.warnings.length > 0) {
+			useLogger().warn(
+				"Insights validation repaired or dropped legacy output",
+				{
+					insights: { websiteId, warnings: validated.warnings },
+				}
+			);
+		}
+		return validated.insights;
 	} catch (error) {
 		useLogger().warn("Failed to generate insights (legacy)", {
 			insights: { websiteId, error },
@@ -557,7 +604,16 @@ ${orgContext}${annotationContext}${recentInsightsBlock}`;
 		});
 
 		if (result.output?.insights?.length) {
-			return result.output.insights;
+			const validated = validateInsights(result.output.insights);
+			if (validated.warnings.length > 0) {
+				useLogger().warn(
+					"Insights validation repaired or dropped agent output",
+					{
+						insights: { websiteId, warnings: validated.warnings },
+					}
+				);
+			}
+			return validated.insights;
 		}
 
 		useLogger().warn("Insights agent finished without structured output", {
@@ -1174,7 +1230,7 @@ export const insights = new Elysia({ prefix: "/v1/insights" })
 								websiteId: site.id,
 								websiteName: site.name,
 								websiteDomain: site.domain,
-								link: `/websites/${site.id}`,
+								link: buildInsightLink(site.id, insight),
 							})
 						);
 					},

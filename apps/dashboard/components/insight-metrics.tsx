@@ -1,4 +1,8 @@
-import { computeMetricChange, formatMetric } from "@/lib/format-insight-metric";
+import {
+	computeMetricChange,
+	formatMetric,
+	metricChangeTone,
+} from "@/lib/format-insight-metric";
 import type { InsightMetric } from "@/lib/insight-types";
 import { cn } from "@/lib/utils";
 import { ArrowDownIcon, ArrowUpIcon } from "@databuddy/ui/icons";
@@ -7,6 +11,7 @@ function MetricItem({ metric }: { metric: InsightMetric }) {
 	const change = computeMetricChange(metric);
 	const formatted = formatMetric(metric.current, metric.format);
 	const hasPrevious = metric.previous !== undefined;
+	const tone = metricChangeTone(metric);
 
 	return (
 		<div className="flex min-w-0 flex-col gap-1 rounded-md border border-border/60 bg-card px-3 py-2.5">
@@ -21,8 +26,9 @@ function MetricItem({ metric }: { metric: InsightMetric }) {
 					<span
 						className={cn(
 							"inline-flex items-center gap-0.5 rounded-sm px-1 py-0.5 text-[11px] tabular-nums leading-none",
-							change > 0 && "bg-emerald-500/10 text-emerald-600",
-							change < 0 && "bg-red-500/10 text-red-500"
+							tone === "positive" && "bg-emerald-500/10 text-emerald-600",
+							tone === "negative" && "bg-red-500/10 text-red-500",
+							tone === "neutral" && "bg-muted text-muted-foreground"
 						)}
 					>
 						{change > 0 ? (
