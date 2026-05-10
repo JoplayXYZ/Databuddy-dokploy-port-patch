@@ -97,7 +97,7 @@ const BUILDER_CATEGORIES = `Builder types by category:
 - Errors: recent_errors, error_types, error_trends, errors_by_page, error_frequency, error_summary, error_chart_data, errors_by_type
 - Performance: slow_pages, performance_by_browser, performance_by_country, performance_by_os, performance_by_region, performance_time_series, load_time_performance, performance_overview
 - Vitals: web_vitals_by_page, web_vitals_by_browser, web_vitals_by_country, web_vitals_by_os, web_vitals_by_region, web_vitals_time_series, vitals_overview, vitals_time_series, vitals_by_page, vitals_by_country, vitals_by_browser, vitals_by_region, vitals_by_city
-- Sessions: session_metrics, session_duration_distribution, sessions_by_device, sessions_by_browser, sessions_time_series, session_flow, session_list, session_events
+- Sessions: session_metrics, session_duration_distribution, sessions_by_device, sessions_by_browser, sessions_time_series, session_flow, session_pages, interesting_sessions, session_list, session_events
 - Custom Events: custom_events, custom_event_properties, custom_events_by_path, custom_events_trends, custom_events_trends_by_event, custom_events_summary, custom_events_property_cardinality, custom_events_recent, custom_events_property_classification, custom_events_property_top_values, custom_events_property_distribution, custom_events_discovery
 - Profiles: profile_list, profile_detail, profile_sessions
 - Links: outbound_links, outbound_domains, link_total_clicks, link_clicks_by_day, link_referrers_by_day, link_countries_by_day, link_top_referrers, link_top_countries, link_top_regions, link_top_cities, link_top_devices, link_top_browsers

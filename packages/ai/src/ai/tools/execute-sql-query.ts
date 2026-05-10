@@ -10,7 +10,11 @@ import { executeTimedQuery, type QueryResult } from "./utils";
 export const executeSqlQueryTool = tool({
 	description: `Use only for explicit analytics questions that cannot be answered by get_data query builders, such as session-level joins, ordered path analysis, or cross-table correlations. Do not use for greetings, thanks, acknowledgments, short reactions, clarification-only replies, frustration, or meta-conversation about the assistant/chat. Read-only ClickHouse SQL (SELECT/WITH only). Must use {paramName:Type} placeholders (no string interpolation) and filter by client_id = {websiteId:String}. websiteId is auto-added to params.
 
-Tables: analytics.events (client_id, anonymous_id, session_id, time, path, referrer, browser_name, os_name, device_type, country, region, city, utm_*, load_time, time_on_page, scroll_depth, properties), analytics.error_spans (message, filename, lineno, stack, error_type), analytics.web_vitals_spans (metric_name FCP/LCP/CLS/INP/TTFB/FPS, metric_value), analytics.outgoing_links (href, text). Custom events are in analytics.custom_events (keyed by owner_id, not client_id) — use get_data custom_events_* builders instead. Prefer get_data query builders for anything they cover.`,
+Canonical analytics.events schema: client_id, anonymous_id, session_id, time, path, referrer, browser_name, os_name, device_type, country, region, city, utm_source, utm_medium, utm_campaign, utm_term, utm_content, load_time, time_on_page, scroll_depth, properties, event_name.
+
+Critical schema footguns: website id column is client_id (not website_id); timestamp is time (not created_at); page URL path is path (not page_path); event discriminator is event_name (not event_type); pageviews are event_name = 'screen_view' (never 'pageview').
+
+Other tables: analytics.error_spans (client_id, session_id, timestamp, path, message, filename, lineno, stack, error_type), analytics.web_vitals_spans (client_id, timestamp, path, metric_name FCP/LCP/CLS/INP/TTFB/FPS, metric_value), analytics.outgoing_links (client_id, timestamp, path, href, text). Custom events are in analytics.custom_events and are easy to query incorrectly — use get_data custom_events_* builders instead. Prefer get_data query builders for anything they cover.`,
 	strict: true,
 	inputSchema: z.object({
 		websiteId: z

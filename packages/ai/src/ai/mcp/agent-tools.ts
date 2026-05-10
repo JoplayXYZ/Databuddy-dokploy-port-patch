@@ -64,6 +64,27 @@ function getContext(ctx: unknown): McpAgentContext {
 	return ctx as McpAgentContext;
 }
 
+function getToolContext(options: unknown): McpAgentContext {
+	return getContext(
+		(options as { experimental_context?: unknown }).experimental_context
+	);
+}
+
+const EVAL_WEBSITES = [
+	{
+		domain: "databuddy.cc",
+		id: "OXmNQsViBT-FOS_wZCTHc",
+		isPublic: false,
+		name: "Databuddy",
+	},
+	{
+		domain: "docs.databuddy.cc",
+		id: "eval_docs_website",
+		isPublic: true,
+		name: "Databuddy Docs",
+	},
+] as const;
+
 export function createMcpAgentTools(
 	options: { slackContext?: DatabuddyAgentSlackContext | null } = {}
 ): ToolSet {
@@ -74,28 +95,9 @@ export function createMcpAgentTools(
 			strict: true,
 			inputSchema: z.object({}),
 			execute: async (_args, options) => {
-				const experimental_context = (
-					options as { experimental_context?: unknown }
-				).experimental_context;
-				const ctx = getContext(experimental_context);
+				const ctx = getToolContext(options);
 				if (ctx.toolMode === "eval-fixtures") {
-					return {
-						total: 2,
-						websites: [
-							{
-								domain: "databuddy.cc",
-								id: "OXmNQsViBT-FOS_wZCTHc",
-								isPublic: false,
-								name: "Databuddy",
-							},
-							{
-								domain: "docs.databuddy.cc",
-								id: "eval_docs_website",
-								isPublic: true,
-								name: "Databuddy Docs",
-							},
-						],
-					};
+					return { total: EVAL_WEBSITES.length, websites: EVAL_WEBSITES };
 				}
 				const session = ctx.userId
 					? await auth.api.getSession({ headers: ctx.requestHeaders })
@@ -125,7 +127,8 @@ export function createMcpAgentTools(
 			},
 		}),
 		execute_query_builder: tool({
-			description: `Pre-built analytics queries. Types: ${Object.keys(QueryBuilders).join(", ")}. Preferred for traffic, sessions, devices, etc.`,
+			description:
+				"Single pre-built analytics query. Prefer get_data for analytics requests because it batches 1-10 builders. Covers traffic, pages, sessions, errors, performance, vitals, custom events, profiles, links, uptime, LLM, and revenue. If a type is invalid, the server returns valid options.",
 			strict: true,
 			inputSchema: z.object({
 				websiteId: z.string(),
@@ -141,10 +144,7 @@ export function createMcpAgentTools(
 				timezone: z.string().optional(),
 			}),
 			execute: async (args, options) => {
-				const experimental_context = (
-					options as { experimental_context?: unknown }
-				).experimental_context;
-				const ctx = getContext(experimental_context);
+				const ctx = getToolContext(options);
 				if (ctx.toolMode === "eval-fixtures") {
 					const data = getEvalAnalyticsRows(args.type);
 					return { data, rowCount: data.length, type: args.type };
@@ -181,8 +181,11 @@ export function createMcpAgentTools(
 			},
 		}),
 		execute_sql_query: tool({
-			description:
-				"Custom read-only ClickHouse SQL. SELECT/WITH only. Use {paramName:Type} for parameters. websiteId is auto-included.",
+			description: `Custom read-only ClickHouse SQL. SELECT/WITH only. Use {paramName:Type} for parameters. websiteId is auto-included. Use only when get_data/query builders cannot answer.
+
+Canonical analytics.events schema: client_id, anonymous_id, session_id, time, path, referrer, browser_name, os_name, device_type, country, region, city, utm_source, utm_medium, utm_campaign, utm_term, utm_content, load_time, time_on_page, scroll_depth, properties, event_name.
+
+Critical schema footguns: website id column is client_id (not website_id); timestamp is time (not created_at); page URL path is path (not page_path); event discriminator is event_name (not event_type); pageviews are event_name = 'screen_view' (never 'pageview'). Custom events are easy to query incorrectly; use get_data custom_events_* builders instead.`,
 			strict: true,
 			inputSchema: z.object({
 				websiteId: z.string(),
@@ -191,10 +194,16 @@ export function createMcpAgentTools(
 			}),
 			execute: async (args, options) => {
 				const { websiteId, sql, params } = args;
-				const experimental_context = (
-					options as { experimental_context?: unknown }
-				).experimental_context;
-				const ctx = getContext(experimental_context);
+				const ctx = getToolContext(options);
+				const validation = validateAgentSQL(sql);
+				if (!validation.valid) {
+					throw new Error(validation.reason ?? AGENT_SQL_VALIDATION_ERROR);
+				}
+				if (!requiresTenantFilter(sql)) {
+					throw new Error(
+						"Query must include tenant isolation: WHERE client_id = {websiteId:String}"
+					);
+				}
 				if (ctx.toolMode === "eval-fixtures") {
 					return {
 						data: [
@@ -215,15 +224,6 @@ export function createMcpAgentTools(
 				if (access instanceof Error) {
 					throw new Error(access.message);
 				}
-				const validation = validateAgentSQL(sql);
-				if (!validation.valid) {
-					throw new Error(validation.reason ?? AGENT_SQL_VALIDATION_ERROR);
-				}
-				if (!requiresTenantFilter(sql)) {
-					throw new Error(
-						"Query must include tenant isolation: WHERE client_id = {websiteId:String}"
-					);
-				}
 				const result = await executeTimedQuery(
 					"MCP Agent SQL",
 					sql,
@@ -234,7 +234,8 @@ export function createMcpAgentTools(
 			},
 		}),
 		get_data: tool({
-			description: `Run 1-10 analytics queries in one call. PREFERRED when user asks for one or many metrics (traffic + top pages + referrers, etc). Types: ${Object.keys(QueryBuilders).join(", ")}. Use preset (e.g. last_7d, last_30d) or from/to dates. Supports filters (e.g. os_name eq "Mac" for slowest page for Mac users), groupBy, orderBy.`,
+			description:
+				"Run 1-10 pre-built analytics queries in one call. Preferred for explicit analytics requests. Covers traffic, pages, sessions, errors, performance, vitals, custom events, profiles, links, uptime, LLM, and revenue. Use preset (last_7d/last_30d/etc.) or from/to dates. Supports filters, groupBy, orderBy. If a type is invalid, the server returns valid options.",
 			strict: true,
 			inputSchema: z.object({
 				websiteId: z.string(),
@@ -261,10 +262,7 @@ export function createMcpAgentTools(
 				timezone: z.string().optional().default("UTC"),
 			}),
 			execute: async (args, options) => {
-				const experimental_context = (
-					options as { experimental_context?: unknown }
-				).experimental_context;
-				const ctx = getContext(experimental_context);
+				const ctx = getToolContext(options);
 				if (ctx.toolMode === "eval-fixtures") {
 					return {
 						batch: true,

@@ -5,6 +5,27 @@ import { callRPCProcedure, createToolLogger, getAppContext } from "./utils";
 
 const logger = createToolLogger("Goals Tools");
 
+const goalTypeSchema = z.enum(["PAGE_VIEW", "EVENT", "CUSTOM"]);
+const goalFilterSchema = z.object({
+	field: z.string(),
+	operator: z.enum(["equals", "contains", "not_equals", "in", "not_in"]),
+	value: z.union([z.string(), z.array(z.string())]),
+});
+const createGoalInputSchema = z.object({
+	websiteId: z.string(),
+	name: z.string().min(1).max(100),
+	description: z.string().optional(),
+	type: goalTypeSchema,
+	target: z.string().min(1),
+	filters: z.array(goalFilterSchema).optional(),
+	ignoreHistoricData: z.boolean().optional(),
+	confirmed: z.boolean().describe("false=preview, true=apply"),
+});
+const updateGoalInputSchema = createGoalInputSchema
+	.omit({ confirmed: true, websiteId: true })
+	.partial()
+	.extend({ id: z.string(), isActive: z.boolean().optional() });
+
 export function createGoalTools() {
 	const listGoalsTool = tool({
 		description: "List goals with type, target, filters, metadata.",
@@ -78,30 +99,7 @@ export function createGoalTools() {
 	const createGoalTool = tool({
 		description:
 			"Create a single-step conversion goal. Target is a page path (PAGE_VIEW) or event name (EVENT/CUSTOM).",
-		inputSchema: z.object({
-			websiteId: z.string(),
-			name: z.string().min(1).max(100),
-			description: z.string().optional(),
-			type: z.enum(["PAGE_VIEW", "EVENT", "CUSTOM"]),
-			target: z.string().min(1),
-			filters: z
-				.array(
-					z.object({
-						field: z.string(),
-						operator: z.enum([
-							"equals",
-							"contains",
-							"not_equals",
-							"in",
-							"not_in",
-						]),
-						value: z.union([z.string(), z.array(z.string())]),
-					})
-				)
-				.optional(),
-			ignoreHistoricData: z.boolean().optional(),
-			confirmed: z.boolean().describe("false=preview, true=apply"),
-		}),
+		inputSchema: createGoalInputSchema,
 		execute: async (
 			{
 				websiteId,
@@ -117,7 +115,6 @@ export function createGoalTools() {
 		) => {
 			const context = getAppContext(options);
 			try {
-				// If not confirmed, return preview and ask for confirmation
 				if (!confirmed) {
 					const filtersPreview =
 						filters && filters.length > 0
@@ -147,7 +144,6 @@ export function createGoalTools() {
 					};
 				}
 
-				// User confirmed - create the goal
 				const result = await callRPCProcedure(
 					"goals",
 					"create",
@@ -183,30 +179,7 @@ export function createGoalTools() {
 
 	const updateGoalTool = tool({
 		description: "Update a goal.",
-		inputSchema: z.object({
-			id: z.string(),
-			name: z.string().min(1).max(100).optional(),
-			description: z.string().optional(),
-			type: z.enum(["PAGE_VIEW", "EVENT", "CUSTOM"]).optional(),
-			target: z.string().min(1).optional(),
-			filters: z
-				.array(
-					z.object({
-						field: z.string(),
-						operator: z.enum([
-							"equals",
-							"contains",
-							"not_equals",
-							"in",
-							"not_in",
-						]),
-						value: z.union([z.string(), z.array(z.string())]),
-					})
-				)
-				.optional(),
-			ignoreHistoricData: z.boolean().optional(),
-			isActive: z.boolean().optional(),
-		}),
+		inputSchema: updateGoalInputSchema,
 		execute: async (
 			{
 				id,

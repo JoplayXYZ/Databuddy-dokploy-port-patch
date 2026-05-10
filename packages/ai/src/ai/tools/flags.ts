@@ -1,18 +1,16 @@
 import { tool } from "ai";
 import {
 	flagFormSchema,
+	flagFormShape,
 	userRuleSchema,
-	variantSchema,
 } from "@databuddy/shared/flags";
 import { z } from "zod";
 import { createUserTargetRule, type FlagTargetRule } from "./flag-rules";
 import { callRPCProcedure, createToolLogger, getAppContext } from "./utils";
 
 const logger = createToolLogger("Flags Tools");
-const FLAG_KEY_RE = /^[a-zA-Z0-9_-]+$/;
-
-const flagStatusSchema = z.enum(["active", "inactive", "archived"]);
-const flagTypeSchema = z.enum(["boolean", "rollout", "multivariant"]);
+const flagStatusSchema = flagFormShape.status;
+const flagTypeSchema = flagFormShape.type;
 
 const flagRecordSchema = z
 	.object({
@@ -26,14 +24,49 @@ const flagRecordSchema = z
 
 const flagTargetRuleSchema = userRuleSchema;
 
+const listFlagsInputSchema = z.object({
+	websiteId: z.string(),
+	status: flagStatusSchema.optional(),
+});
+
+const createFlagInputSchema = z.object({
+	websiteId: z.string(),
+	key: flagFormShape.key,
+	name: flagFormShape.name,
+	description: flagFormShape.description,
+	type: flagTypeSchema.optional(),
+	status: flagStatusSchema.optional(),
+	defaultValue: flagFormShape.defaultValue.optional(),
+	payload: z.record(z.string(), z.unknown()).optional(),
+	persistAcrossAuth: z.boolean().optional(),
+	rolloutPercentage: flagFormShape.rolloutPercentage.optional(),
+	rolloutBy: flagFormShape.rolloutBy,
+	rules: flagFormShape.rules,
+	variants: flagFormShape.variants,
+	dependencies: flagFormShape.dependencies,
+	environment: flagFormShape.environment,
+	targetGroupIds: flagFormShape.targetGroupIds,
+	confirmed: z.boolean().describe("false=preview, true=apply"),
+});
+
+const updateFlagInputSchema = createFlagInputSchema
+	.omit({ key: true, websiteId: true })
+	.extend({ environment: z.string().optional(), id: z.string() });
+
+const addUsersToFlagInputSchema = z.object({
+	flagId: z.string(),
+	websiteId: z.string(),
+	users: z.array(z.string().min(1)).min(1).max(500),
+	matchBy: z.enum(["user_id", "email"]).optional().default("email"),
+	mode: z.enum(["append", "replace"]).optional().default("append"),
+	confirmed: z.boolean().describe("false=preview, true=apply"),
+});
+
 export function createFlagTools() {
 	const listFlagsTool = tool({
 		description:
 			"List feature flags for a website. Use before updating or targeting a flag.",
-		inputSchema: z.object({
-			websiteId: z.string(),
-			status: flagStatusSchema.optional(),
-		}),
+		inputSchema: listFlagsInputSchema,
 		execute: async ({ websiteId, status }, options) => {
 			const context = getAppContext(options);
 			try {
@@ -59,25 +92,7 @@ export function createFlagTools() {
 	const createFlagTool = tool({
 		description:
 			"Create a feature flag. Defaults to inactive boolean flag until explicitly configured.",
-		inputSchema: z.object({
-			websiteId: z.string(),
-			key: z.string().min(1).max(100).regex(FLAG_KEY_RE),
-			name: z.string().min(1).max(100).optional(),
-			description: z.string().optional(),
-			type: flagTypeSchema.optional(),
-			status: flagStatusSchema.optional(),
-			defaultValue: z.boolean().optional(),
-			payload: z.record(z.string(), z.unknown()).optional(),
-			persistAcrossAuth: z.boolean().optional(),
-			rolloutPercentage: z.number().min(0).max(100).optional(),
-			rolloutBy: z.string().optional(),
-			rules: z.array(flagTargetRuleSchema).optional(),
-			variants: z.array(variantSchema).optional(),
-			dependencies: z.array(z.string()).optional(),
-			environment: z.string().nullable().optional(),
-			targetGroupIds: z.array(z.string()).optional(),
-			confirmed: z.boolean().describe("false=preview, true=apply"),
-		}),
+		inputSchema: createFlagInputSchema,
 		execute: async ({ confirmed, ...input }, options) => {
 			const context = getAppContext(options);
 			const payload = {
@@ -145,24 +160,7 @@ export function createFlagTools() {
 	const updateFlagTool = tool({
 		description:
 			"Update feature flag config, status, rollout, rules, or variants.",
-		inputSchema: z.object({
-			id: z.string(),
-			name: z.string().min(1).max(100).optional(),
-			description: z.string().optional(),
-			type: flagTypeSchema.optional(),
-			status: flagStatusSchema.optional(),
-			defaultValue: z.boolean().optional(),
-			payload: z.record(z.string(), z.unknown()).optional(),
-			rules: z.array(flagTargetRuleSchema).optional(),
-			persistAcrossAuth: z.boolean().optional(),
-			rolloutPercentage: z.number().min(0).max(100).optional(),
-			rolloutBy: z.string().optional(),
-			variants: z.array(variantSchema).optional(),
-			dependencies: z.array(z.string()).optional(),
-			environment: z.string().optional(),
-			targetGroupIds: z.array(z.string()).optional(),
-			confirmed: z.boolean().describe("false=preview, true=apply"),
-		}),
+		inputSchema: updateFlagInputSchema,
 		execute: async ({ confirmed, id, ...updates }, options) => {
 			const context = getAppContext(options);
 			const cleanUpdates = omitUndefined(updates);
@@ -204,14 +202,7 @@ export function createFlagTools() {
 	const addUsersToFlagTool = tool({
 		description:
 			"Add user IDs or emails to a feature flag targeting rule. Reads the current flag and appends or replaces user targeting rules.",
-		inputSchema: z.object({
-			flagId: z.string(),
-			websiteId: z.string(),
-			users: z.array(z.string().min(1)).min(1).max(500),
-			matchBy: z.enum(["user_id", "email"]).optional().default("email"),
-			mode: z.enum(["append", "replace"]).optional().default("append"),
-			confirmed: z.boolean().describe("false=preview, true=apply"),
-		}),
+		inputSchema: addUsersToFlagInputSchema,
 		execute: async (
 			{ flagId, websiteId, users, matchBy, mode, confirmed },
 			options

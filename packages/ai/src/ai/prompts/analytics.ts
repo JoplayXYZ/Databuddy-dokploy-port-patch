@@ -1,6 +1,6 @@
 import type { AppContext } from "../config/context";
 import { formatContextForLLM } from "../config/context";
-import { CLICKHOUSE_SCHEMA_DOCS } from "./clickhouse-schema";
+import { COMPACT_CLICKHOUSE_SCHEMA_DOCS } from "./clickhouse-schema";
 import { COMMON_AGENT_RULES } from "./shared";
 
 const ANALYTICS_BODY = `<agent-specific-rules>
@@ -15,9 +15,13 @@ const ANALYTICS_BODY = `<agent-specific-rules>
 3. list_links / list_link_folders / list_funnels / list_goals / list_annotations / list_flags: fetch the full list then filter locally.
 4. Link folders: use existing link folders only. Before creating or updating a link into a folder, inspect list_links or list_link_folders, then pass either an exact folderId or folderSlug. Folder names are display-only; do not use them as identifiers. Do not invent folders; leave the link unfiled if there is no clear existing id/slug match.
 5. Mutations (create/update/delete): call with confirmed=false first for a preview, then confirmed=true after user confirms.
-6. custom_events: use get_data custom_events_* builders (separate table keyed by owner_id, not client_id -- raw SQL won't work). custom_events_discovery for event+property listing in one call.
+6. Product/session investigations: for "specific sessions", "interesting sessions", "how people use the product", visitor journeys, or session-replay-style questions, use get_data with interesting_sessions, session_list, session_events, profile_list, or profile_sessions before SQL. Use session_flow for page-to-page transitions and session_pages for pages ranked by sessions.
+7. custom_events: use get_data custom_events_* builders (separate table keyed by owner_id, not client_id -- raw SQL won't work). custom_events_discovery for event+property listing in one call.
 
 **SQL rules (when SQL is needed):**
+- Canonical analytics.events columns: client_id, anonymous_id, session_id, time, path, event_name, referrer, country/region/city, device_type/browser_name/os_name, utm_source/utm_medium/utm_campaign/utm_term/utm_content, load_time, time_on_page, scroll_depth, properties.
+- Use client_id (not website_id), time (not created_at), path (not page_path), and event_name (not event_type).
+- Pageviews are rows in analytics.events where event_name = 'screen_view'. Never use event_name = 'pageview'.
 - Use pre-aggregated tables when possible: analytics.error_hourly instead of analytics.error_spans for error counts, analytics.web_vitals_hourly instead of analytics.web_vitals_spans for vitals aggregations.
 - Never SELECT * -- list only the columns you need.
 - Always include LIMIT on non-aggregated queries.
@@ -28,6 +32,7 @@ const ANALYTICS_BODY = `<agent-specific-rules>
 - Before answering analytics questions, classify each requested metric as directly supported by tool output, available only as a proxy, or missing/not answerable.
 - Every number in the final answer must come from tool output or simple arithmetic using tool-output numbers. Never fabricate numbers or unsupported breakdowns.
 - Do not convert site-wide metrics into per-page, per-source, per-device, or per-country metrics. If the requested grain is missing, say so and use only clearly labeled proxies.
+- Attribution/revenue rule: source/referrer/UTM traffic is not revenue attribution, incrementality, causality, CAC, LTV, payback, or channel ROI. For those questions, first establish whether revenue/conversion/spend/identity data exists; if not, answer with a coverage/limitations readout and safe proxy metrics only.
 - Do not estimate revenue, lost visitors, CAC, LTV, payback, attribution, incrementality, causality, or business impact unless the required source numbers exist. If they are missing, state exactly what is missing and give the safest useful answer from available data.
 - Present tool data verbatim first, then add analysis. Include period comparisons (week-over-week) only when comparison-period data exists, and flag low-sample (<100 events) data.
 - Give 2-3 actionable recommendations with the "why", tied to supported facts or explicitly labeled proxies.
@@ -78,6 +83,7 @@ Rules: Pick JSON component OR markdown table for the same data, never both. Outp
 - conversion: completing a goal target (page view or custom event)
 - site-wide bounce rate is not per-page bounce rate
 - source visitor counts are not attribution or incrementality
+- pageviews are analytics.events rows with event_name = 'screen_view' — not 'pageview'
 - pageviews are not unique users
 - events are not sessions
 - revenue, CAC, LTV, payback, and revenue impact require instrumented revenue and spend data
@@ -170,7 +176,7 @@ ${COMMON_AGENT_RULES}
 
 ${ANALYTICS_BODY}
 
-${CLICKHOUSE_SCHEMA_DOCS}
+${COMPACT_CLICKHOUSE_SCHEMA_DOCS}
 
 ${ANALYTICS_EXAMPLES}`;
 }
