@@ -165,7 +165,7 @@ For picker controls, use the component that matches the interaction:
 - Avoid O(n²) accumulator patterns such as spreading arrays inside loops; mutate local arrays with `push` when grouping buffered items.
 - Empty `catch {}` blocks need a reason comment or minimal logging, especially in instrumentation paths.
 - Eval guardrail regexes should be precise and bounded; avoid broad `.*` patterns that can fail unrelated output.
-- CI service containers should mirror local Docker requirements; ClickHouse needs the high `nofile` ulimit and generous health startup time in E2E workflows.
+- CI service containers should mirror local Docker requirements; ClickHouse needs the high `nofile` ulimit, generous health startup time, and a health command supported inside the ClickHouse image.
 
 ## AI Policy Note
 
