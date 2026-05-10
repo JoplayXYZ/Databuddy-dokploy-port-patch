@@ -683,9 +683,6 @@
       "name": "@databuddy/shared",
       "version": "0.0.1",
       "dependencies": {
-        "@databuddy/db": "workspace:*",
-        "@databuddy/redis": "workspace:*",
-        "evlog": "catalog:",
         "nanoid": "catalog:",
         "tokenlens": "catalog:",
         "ua-parser-js": "catalog:",
