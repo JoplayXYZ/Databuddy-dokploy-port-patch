@@ -285,7 +285,7 @@ export async function handleFlagUpdateDependencyCascading(
 		}
 	} catch (error) {
 		log.error({
-			service: "shared-flags",
+			service: "flag-service",
 			message: "Failed to cascade flag updates",
 			error,
 			flagId: updatedFlag.id,

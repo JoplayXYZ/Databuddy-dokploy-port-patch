@@ -23,7 +23,7 @@ import {
 	getScopeCondition,
 	handleFlagUpdateDependencyCascading,
 	invalidateFlagCache,
-} from "@databuddy/shared/flags/utils";
+} from "@databuddy/services/flags";
 import { GATED_FEATURES } from "@databuddy/shared/types/features";
 import { randomUUIDv7 } from "bun";
 import { z } from "zod";

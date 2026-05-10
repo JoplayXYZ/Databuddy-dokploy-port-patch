@@ -50,6 +50,7 @@
         "@databuddy/redis": "workspace:*",
         "@databuddy/rpc": "workspace:*",
         "@databuddy/sdk": "workspace:*",
+        "@databuddy/services": "workspace:*",
         "@databuddy/shared": "workspace:*",
         "@databuddy/validation": "workspace:*",
         "@elysiajs/cors": "^1.4.1",
@@ -674,6 +675,8 @@
       "version": "1.0.0",
       "dependencies": {
         "@databuddy/db": "workspace:*",
+        "@databuddy/redis": "workspace:*",
+        "evlog": "catalog:",
       },
       "devDependencies": {
         "typescript": "^5.9.3",
