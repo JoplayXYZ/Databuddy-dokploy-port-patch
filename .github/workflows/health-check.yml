@@ -2,7 +2,7 @@ name: Health Check
 
 on:
   push:
-    branches: [main, staging]
+    branches: [main]
     paths:
       - "*.Dockerfile"
       - ".dockerignore"

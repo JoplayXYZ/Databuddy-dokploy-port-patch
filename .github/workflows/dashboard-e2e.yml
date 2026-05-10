@@ -2,7 +2,7 @@ name: Dashboard E2E
 
 on:
   push:
-    branches: [main, staging]
+    branches: [main]
     paths:
       - ".github/workflows/dashboard-e2e.yml"
       - "apps/api/**"
