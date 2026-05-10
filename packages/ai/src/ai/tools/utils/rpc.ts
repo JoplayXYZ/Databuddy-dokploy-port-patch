@@ -18,12 +18,6 @@ export async function callRPCProcedure(
 	context: AppContext
 ) {
 	try {
-		if (context.toolMode === "eval-fixtures") {
-			const fixture = getEvalFixtureRPCResult(routerName, method, input);
-			if (fixture.found) {
-				return fixture.value;
-			}
-		}
 
 		if (context.mutationMode === "dry-run" && isMutationMethod(method)) {
 			return {
@@ -98,95 +92,4 @@ export async function callRPCProcedure(
 
 function isMutationMethod(method: string): boolean {
 	return MUTATION_METHOD_RE.test(method);
-}
-
-function getEvalFixtureRPCResult(
-	routerName: string,
-	method: string,
-	input: unknown
-): { found: true; value: unknown } | { found: false } {
-	const organizationId = getInputString(input, "organizationId") ?? "org_eval";
-	const now = new Date("2026-05-05T00:00:00.000Z").toISOString();
-
-	if (routerName === "linkFolders" && method === "list") {
-		return {
-			found: true,
-			value: [
-				{
-					createdAt: now,
-					deletedAt: null,
-					id: "folder-growth",
-					name: "Growth",
-					organizationId,
-					slug: "growth",
-					updatedAt: now,
-				},
-				{
-					createdAt: now,
-					deletedAt: null,
-					id: "folder-docs",
-					name: "Docs",
-					organizationId,
-					slug: "docs",
-					updatedAt: now,
-				},
-			],
-		};
-	}
-
-	if (routerName === "links" && method === "list") {
-		return {
-			found: true,
-			value: [
-				{
-					createdAt: now,
-					externalId: null,
-					folderId: "folder-growth",
-					id: "link-waitlist",
-					name: "Waitlist",
-					ogDescription: null,
-					ogTitle: null,
-					organizationId,
-					slug: "waitlist",
-					targetUrl: "https://www.databuddy.cc/waitlist",
-					updatedAt: now,
-				},
-				{
-					createdAt: now,
-					externalId: null,
-					folderId: null,
-					id: "link-home",
-					name: "Homepage",
-					ogDescription: null,
-					ogTitle: null,
-					organizationId,
-					slug: "home",
-					targetUrl: "https://www.databuddy.cc/",
-					updatedAt: now,
-				},
-			],
-		};
-	}
-
-	if (isMutationMethod(method)) {
-		return {
-			found: true,
-			value: {
-				dryRun: true,
-				message: `Eval fixture mode blocked ${routerName}.${method}; no data was changed.`,
-				mutationBlocked: true,
-				success: false,
-			},
-		};
-	}
-
-	return { found: false };
-}
-
-function getInputString(input: unknown, key: string): string | null {
-	return input &&
-		typeof input === "object" &&
-		typeof (input as Record<string, unknown>)[key] === "string"
-		? ((input as Record<string, string>)[key] ?? null)
-		: null;
 }

@@ -11,7 +11,6 @@ import { getAccessibleWebsites } from "../../lib/accessible-websites";
 import { getWebsiteDomain } from "../../lib/website-utils";
 import { executeBatch, executeQuery, QueryBuilders } from "../../query";
 import type { Filter, QueryRequest } from "../../query/types";
-import type { AppToolMode } from "../config/context";
 import { createAnnotationTools } from "../tools/annotations";
 import { createFlagTools } from "../tools/flags";
 import { createFunnelTools } from "../tools/funnels";
@@ -31,7 +30,6 @@ export interface McpAgentContext {
 	apiKey: ApiKeyRow | null;
 	organizationId?: string | null;
 	requestHeaders: Headers;
-	toolMode?: AppToolMode;
 	userId: string | null;
 }
 
@@ -70,21 +68,6 @@ function getToolContext(options: unknown): McpAgentContext {
 	);
 }
 
-const EVAL_WEBSITES = [
-	{
-		domain: "databuddy.cc",
-		id: "OXmNQsViBT-FOS_wZCTHc",
-		isPublic: false,
-		name: "Databuddy",
-	},
-	{
-		domain: "docs.databuddy.cc",
-		id: "eval_docs_website",
-		isPublic: true,
-		name: "Databuddy Docs",
-	},
-] as const;
-
 export function createMcpAgentTools(
 	options: { slackContext?: DatabuddyAgentSlackContext | null } = {}
 ): ToolSet {
@@ -96,9 +79,6 @@ export function createMcpAgentTools(
 			inputSchema: z.object({}),
 			execute: async (_args, options) => {
 				const ctx = getToolContext(options);
-				if (ctx.toolMode === "eval-fixtures") {
-					return { total: EVAL_WEBSITES.length, websites: EVAL_WEBSITES };
-				}
 				const session = ctx.userId
 					? await auth.api.getSession({ headers: ctx.requestHeaders })
 					: null;
@@ -145,10 +125,6 @@ export function createMcpAgentTools(
 			}),
 			execute: async (args, options) => {
 				const ctx = getToolContext(options);
-				if (ctx.toolMode === "eval-fixtures") {
-					const data = getEvalAnalyticsRows(args.type);
-					return { data, rowCount: data.length, type: args.type };
-				}
 				const access = await ensureWebsiteAccess(
 					args.websiteId,
 					ctx.requestHeaders,
@@ -204,18 +180,6 @@ Critical schema footguns: website id column is client_id (not website_id); times
 						"Query must include tenant isolation: WHERE client_id = {websiteId:String}"
 					);
 				}
-				if (ctx.toolMode === "eval-fixtures") {
-					return {
-						data: [
-							{
-								note: "Eval fixture SQL result",
-								page: "/pricing",
-								value: 42,
-							},
-						],
-						rowCount: 1,
-					};
-				}
 				const access = await ensureWebsiteAccess(
 					websiteId,
 					ctx.requestHeaders,
@@ -263,19 +227,6 @@ Critical schema footguns: website id column is client_id (not website_id); times
 			}),
 			execute: async (args, options) => {
 				const ctx = getToolContext(options);
-				if (ctx.toolMode === "eval-fixtures") {
-					return {
-						batch: true,
-						results: args.queries.map((query) => {
-							const data = getEvalAnalyticsRows(query.type);
-							return {
-								type: query.type,
-								data,
-								rowCount: data.length,
-							};
-						}),
-					};
-				}
 				const access = await ensureWebsiteAccess(
 					args.websiteId,
 					ctx.requestHeaders,
@@ -318,79 +269,4 @@ Critical schema footguns: website id column is client_id (not website_id); times
 		...createLinksTools(),
 		...createSlackConversationTools(options.slackContext),
 	};
-}
-
-function getEvalAnalyticsRows(type: string): Record<string, unknown>[] {
-	switch (type) {
-		case "summary_metrics":
-			return [
-				{
-					bounce_rate: 5.02,
-					pageviews: 11_375,
-					sessions: 1992,
-					unique_visitors: 1465,
-				},
-			];
-		case "top_pages":
-			return [
-				{ page: "/demo", pageviews: 1342, visitors: 914 },
-				{ page: "/demo/errors", pageviews: 1070, visitors: 809 },
-				{ page: "/pricing", pageviews: 319, visitors: 218 },
-			];
-		case "top_referrers":
-		case "traffic_sources":
-			return [
-				{ referrer: "databuddy.cc", visitors: 850 },
-				{ referrer: "direct", visitors: 570 },
-				{ referrer: "google", visitors: 42 },
-			];
-		case "device_types":
-			return [
-				{ device_type: "mobile", visitors: 610 },
-				{ device_type: "desktop", visitors: 520 },
-				{ device_type: "tablet", visitors: 35 },
-			];
-		case "error_summary":
-			return [
-				{
-					affected_users: 109,
-					error_rate: 6.08,
-					total_errors: 199,
-					unique_errors: 5,
-				},
-			];
-		case "errors_by_page":
-			return [
-				{ errors: 37, page: "/pricing" },
-				{ errors: 22, page: "/demo/errors" },
-			];
-		case "error_types":
-		case "errors_by_type":
-			return [
-				{ count: 88, type: "HydrationError" },
-				{ count: 43, type: "PaymentFormError" },
-			];
-		case "vitals_overview":
-		case "vitals_by_page":
-		case "slow_pages":
-		case "page_performance":
-			return [
-				{ lcp_p75: 4.9, page: "/", visitors: 610 },
-				{ lcp_p75: 3.8, page: "/pricing", visitors: 218 },
-			];
-		case "custom_events_summary":
-		case "events_by_date":
-			return [
-				{ count: 420, event: "signup_started" },
-				{ count: 184, event: "signup_completed" },
-			];
-		default:
-			return [
-				{
-					label: type,
-					note: "Eval fixture analytics row",
-					value: 1,
-				},
-			];
-	}
 }

@@ -39,6 +39,7 @@ export interface AgentContext {
 }
 
 export interface AgentConfig {
+	activeTools?: string[];
 	experimental_context?: unknown;
 	model: LanguageModelV3;
 	providerOptions?: ProviderOptions;

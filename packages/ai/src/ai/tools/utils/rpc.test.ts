@@ -24,24 +24,6 @@ const BASE_CONTEXT: AppContext = {
 };
 
 describe("AI tool RPC helper", () => {
-	it("returns eval fixtures without requiring live RPC scopes", async () => {
-		const result = await callRPCProcedure(
-			"linkFolders",
-			"list",
-			{ organizationId: "org_eval" },
-			{ ...BASE_CONTEXT, toolMode: "eval-fixtures" }
-		);
-
-		expect(result).toEqual(
-			expect.arrayContaining([
-				expect.objectContaining({
-					id: "folder-growth",
-					slug: "growth",
-				}),
-			])
-		);
-	});
-
 	it("blocks mutation RPC calls in dry-run mode", async () => {
 		const result = await callRPCProcedure(
 			"links",

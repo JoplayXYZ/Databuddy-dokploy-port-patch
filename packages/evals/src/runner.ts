@@ -104,7 +104,6 @@ async function runPackageCase(
 			? Math.max(evalCase.expect.maxLatencyMs, 45_000)
 			: undefined,
 		timezone: "UTC",
-		toolMode: "eval-fixtures",
 		websiteId: evalCase.websiteId,
 	});
 
