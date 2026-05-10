@@ -94,7 +94,12 @@ function groupBufferedEvents(
 ): Map<string, BufferedEvent[]> {
 	const grouped = new Map<string, BufferedEvent[]>();
 	for (const item of items) {
-		grouped.set(item.table, [...(grouped.get(item.table) ?? []), item]);
+		const tableEvents = grouped.get(item.table);
+		if (tableEvents) {
+			tableEvents.push(item);
+			continue;
+		}
+		grouped.set(item.table, [item]);
 	}
 	return grouped;
 }

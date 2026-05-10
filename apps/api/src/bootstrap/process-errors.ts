@@ -20,5 +20,6 @@ export function registerProcessErrorHandlers() {
 			error_stack: error.stack,
 			error_source: "process",
 		});
+		process.exit(1);
 	});
 }

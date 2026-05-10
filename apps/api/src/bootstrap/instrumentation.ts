@@ -45,7 +45,9 @@ function recordPostgresQueryTiming(ms: number) {
 			"pg.total_ms": Math.round(next[1] * 100) / 100,
 			"pg.max_ms": next[2],
 		});
-	} catch {}
+	} catch {
+		// Query traces can run outside an Elysia request context; skip enrichment then.
+	}
 }
 
 function recordPostgresPoolError(error: Error) {
@@ -60,7 +62,9 @@ function recordPostgresPoolError(error: Error) {
 function enrichRequestWithCacheTrace(fields: Record<string, unknown>) {
 	try {
 		useLogger().set(fields);
-	} catch {}
+	} catch {
+		// Cache traces can run outside an Elysia request context; skip enrichment then.
+	}
 }
 
 function startTccTracing() {

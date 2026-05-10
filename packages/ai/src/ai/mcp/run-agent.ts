@@ -325,10 +325,12 @@ const THREAD_REFERENCE_PATTERN =
 const FRESH_ANALYTICS_PATTERN =
 	/\b(fresh|current|latest|live|now|metrics?|analytics|top pages?|last \d+|last week|last month|pull|rerun|check)\b/i;
 const COPY_ONLY_PATTERN = /\b(exact copy|copy only)\b/i;
-const SLACK_FOLLOW_UP_TEXT_PATTERN =
-	/<slack_follow_up[^>]*>[\s\S]*?text:\n([\s\S]*?)\n<\/slack_follow_up>/g;
-const SLACK_LATEST_MESSAGE_TEXT_PATTERN =
-	/<slack_latest_message>[\s\S]*?text:\n([\s\S]*?)\n<\/slack_latest_message>/;
+const SLACK_FOLLOW_UP_OPEN_TAG = "<slack_follow_up";
+const SLACK_FOLLOW_UP_CLOSE_TAG = "</slack_follow_up>";
+const SLACK_LATEST_MESSAGE_OPEN_TAG = "<slack_latest_message>";
+const SLACK_LATEST_MESSAGE_CLOSE_TAG = "</slack_latest_message>";
+const SLACK_TEXT_MARKER = "\ntext:\n";
+const SLACK_TEXT_PREFIX = "text:\n";
 const ANALYTICS_ACTIVE_TOOLS = [
 	"list_websites",
 	"get_data",
@@ -340,12 +342,96 @@ const ANALYTICS_ACTIVE_TOOLS = [
 ];
 
 function latestSlackText(input: string): string {
-	const followUps = [...input.matchAll(SLACK_FOLLOW_UP_TEXT_PATTERN)];
-	const lastFollowUp = followUps.at(-1)?.[1];
-	if (lastFollowUp) {
-		return lastFollowUp;
+	const lastFollowUp = getLastTaggedBlock(
+		input,
+		SLACK_FOLLOW_UP_OPEN_TAG,
+		SLACK_FOLLOW_UP_CLOSE_TAG
+	);
+	if (lastFollowUp !== undefined) {
+		return getSlackBlockText(lastFollowUp) ?? lastFollowUp;
 	}
-	return input.match(SLACK_LATEST_MESSAGE_TEXT_PATTERN)?.[1] ?? input;
+
+	const latestMessage = getFirstTaggedBlock(
+		input,
+		SLACK_LATEST_MESSAGE_OPEN_TAG,
+		SLACK_LATEST_MESSAGE_CLOSE_TAG
+	);
+	return latestMessage === undefined
+		? input
+		: (getSlackBlockText(latestMessage) ?? latestMessage);
+}
+
+function getFirstTaggedBlock(
+	input: string,
+	openTagPrefix: string,
+	closeTag: string
+): string | undefined {
+	const openStart = input.indexOf(openTagPrefix);
+	return openStart === -1
+		? undefined
+		: getTaggedBlockAfterOpen(input, openStart, openTagPrefix, closeTag)?.block;
+}
+
+function getLastTaggedBlock(
+	input: string,
+	openTagPrefix: string,
+	closeTag: string
+): string | undefined {
+	let searchFrom = 0;
+	let lastBlock: string | undefined;
+	while (searchFrom < input.length) {
+		const openStart = input.indexOf(openTagPrefix, searchFrom);
+		if (openStart === -1) {
+			return lastBlock;
+		}
+
+		const parsed = getTaggedBlockAfterOpen(
+			input,
+			openStart,
+			openTagPrefix,
+			closeTag
+		);
+		if (!parsed) {
+			return lastBlock;
+		}
+
+		lastBlock = parsed.block;
+		searchFrom = parsed.nextIndex;
+	}
+	return lastBlock;
+}
+
+function getTaggedBlockAfterOpen(
+	input: string,
+	openStart: number,
+	openTagPrefix: string,
+	closeTag: string
+): { block: string; nextIndex: number } | undefined {
+	const openEnd = input.indexOf(">", openStart + openTagPrefix.length);
+	if (openEnd === -1) {
+		return;
+	}
+
+	const bodyStart = openEnd + 1;
+	const closeStart = input.indexOf(closeTag, bodyStart);
+	if (closeStart === -1) {
+		return;
+	}
+
+	return {
+		block: input.slice(bodyStart, closeStart),
+		nextIndex: closeStart + closeTag.length,
+	};
+}
+
+function getSlackBlockText(block: string): string | undefined {
+	const textIndex = block.indexOf(SLACK_TEXT_MARKER);
+	if (textIndex !== -1) {
+		return block.slice(textIndex + SLACK_TEXT_MARKER.length);
+	}
+	return block.startsWith(SLACK_TEXT_PREFIX)
+		? block.slice(SLACK_TEXT_PREFIX.length)
+		: undefined;
 }
 
 function selectActiveToolsForQuestion(options: {
