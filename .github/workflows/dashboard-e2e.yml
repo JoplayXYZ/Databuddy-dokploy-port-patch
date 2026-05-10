@@ -97,6 +97,8 @@ jobs:
           key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
           restore-keys: ${{ runner.os }}-bun-
       - run: bun install --frozen-lockfile
+      - name: Build SDK packages
+        run: bun run sdk:build
       - run: bunx playwright install --with-deps chromium
       - name: Run dashboard E2E
         run: |
