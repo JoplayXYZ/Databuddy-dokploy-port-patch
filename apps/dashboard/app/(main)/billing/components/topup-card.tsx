@@ -12,7 +12,7 @@ import {
 	TOPUP_MIN_QUANTITY,
 	TOPUP_PRODUCT_ID,
 	TOPUP_TIERS,
-} from "@databuddy/shared/billing/topup-math";
+} from "@/lib/topup-math";
 import { useCustomer } from "autumn-js/react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";

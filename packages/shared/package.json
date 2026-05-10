@@ -5,13 +5,9 @@
   "type": "module",
   "exports": {
     "./country-codes": "./src/country-codes.ts",
-    "./billing/credit-schema": "./src/billing/credit-schema.ts",
-    "./billing/topup-math": "./src/billing/topup-math.ts",
-    "./lists/referrers": "./src/lists/referrers.ts",
     "./types/features": "./src/types/features.ts",
     "./flags": "./src/flags/index.ts",
     "./utils/referrer": "./src/utils/referrer.ts",
-    "./utils/ids": "./src/utils/ids.ts",
     "./bot-detection": "./src/utils/bot-detection/index.ts",
     "./bot-detection/detector": "./src/utils/bot-detection/detector.ts",
     "./bot-detection/types": "./src/utils/bot-detection/types.ts",
@@ -24,8 +20,6 @@
     "test": "bun test src"
   },
   "dependencies": {
-    "nanoid": "catalog:",
-    "tokenlens": "catalog:",
     "ua-parser-js": "catalog:",
     "zod": "catalog:"
   }

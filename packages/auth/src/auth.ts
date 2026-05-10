@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { redisStorage } from "@better-auth/redis-storage";
 import { sso } from "@better-auth/sso";
 import { db } from "@databuddy/db";
@@ -20,7 +21,6 @@ import { config } from "@databuddy/env/app";
 import { readBooleanEnv } from "@databuddy/env/boolean";
 import { SlackProvider } from "@databuddy/notifications";
 import { getRedisCache, ratelimit } from "@databuddy/redis";
-import { createId } from "@databuddy/shared/utils/ids";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { betterAuth } from "better-auth/minimal";
 import {
@@ -42,7 +42,7 @@ function generateOrgSlug(name: string): string {
 		.replace(/\s+/g, "-")
 		.replace(/-+/g, "-")
 		.slice(0, 48);
-	const suffix = createId().slice(0, 6);
+	const suffix = randomUUID().slice(0, 6);
 	return `${base}-${suffix}`;
 }
 
@@ -157,7 +157,7 @@ export const auth = betterAuth({
 		user: {
 			create: {
 				after: async (createdUser) => {
-					const orgId = createId();
+					const orgId = randomUUID();
 					const orgName = getOrgNameFromUser(
 						createdUser.name,
 						createdUser.email
@@ -173,7 +173,7 @@ export const auth = betterAuth({
 							});
 
 							await tx.insert(memberTable).values({
-								id: createId(),
+								id: randomUUID(),
 								organizationId: orgId,
 								userId: createdUser.id,
 								role: "owner",

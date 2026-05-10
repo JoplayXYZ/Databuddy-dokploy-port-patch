@@ -1,5 +1,4 @@
 import { chQuery } from "@databuddy/db/clickhouse";
-import { TOPUP_MAX_QUANTITY } from "@databuddy/shared/billing/topup-math";
 import { z } from "zod";
 import { rpcError } from "../errors";
 import { getAutumn } from "../lib/autumn-client";
@@ -161,7 +160,7 @@ const SPEND_LIMIT_FEATURE_ID = "agent_credits";
 const MIN_AUTO_TOPUP_THRESHOLD = 10;
 const MAX_AUTO_TOPUP_THRESHOLD = 50_000;
 const MIN_AUTO_TOPUP_QUANTITY = 100;
-const MAX_AUTO_TOPUP_QUANTITY = TOPUP_MAX_QUANTITY;
+const MAX_AUTO_TOPUP_QUANTITY = 75_000;
 const MIN_ALERT_PERCENTAGE = 1;
 const MAX_ALERT_PERCENTAGE = 99;
 const MIN_SPEND_LIMIT_USD = 1;

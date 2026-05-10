@@ -1,6 +1,6 @@
+import { randomUUID } from "node:crypto";
 import { eq } from "@databuddy/db";
 import { revenueConfig } from "@databuddy/db/schema";
-import { createId } from "@databuddy/shared/utils/ids";
 import { z } from "zod";
 import { rpcError } from "../errors";
 import { sessionProcedure } from "../orpc";
@@ -123,7 +123,7 @@ export const revenueRouter = {
 			const [created] = await context.db
 				.insert(revenueConfig)
 				.values({
-					id: createId(),
+					id: randomUUID(),
 					ownerId,
 					websiteId: input.websiteId || null,
 					webhookHash: generateHash(),
