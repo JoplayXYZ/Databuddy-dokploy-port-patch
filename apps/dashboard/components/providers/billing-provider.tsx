@@ -11,11 +11,11 @@ import {
 	type PlanCapabilities,
 	type PlanId,
 } from "@databuddy/shared/types/features";
-import { readBooleanEnv } from "@databuddy/env/boolean";
 import { useQuery } from "@tanstack/react-query";
 import { useCustomer, useListPlans } from "autumn-js/react";
 import { useParams, usePathname } from "next/navigation";
 import { createContext, type ReactNode, useContext, useMemo } from "react";
+import { isDashboardE2E } from "@/lib/e2e-mode";
 import { orpc } from "@/lib/orpc";
 
 type HookCustomer = NonNullable<ReturnType<typeof useCustomer>["data"]>;
@@ -107,7 +107,7 @@ export function BillingProvider({
 	public: isPublic,
 	websiteId,
 }: BillingProviderProps) {
-	if (isPublic || readBooleanEnv("NEXT_PUBLIC_DATABUDDY_E2E_MODE")) {
+	if (isPublic || isDashboardE2E) {
 		return <PublicBillingProvider>{children}</PublicBillingProvider>;
 	}
 	return (

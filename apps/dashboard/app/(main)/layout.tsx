@@ -1,7 +1,7 @@
-import { readBooleanEnv } from "@databuddy/env/boolean";
 import { publicConfig } from "@databuddy/env/public";
 import { FeedbackPrompt } from "@/components/feedback-prompt";
 import { GlobalAgentProvider } from "@/components/agent/global-agent-provider";
+import { isDashboardE2E } from "@/lib/e2e-mode";
 import { Sidebar } from "@/components/layout/sidebar";
 import {
 	SidebarInset,
@@ -70,7 +70,7 @@ export default function MainLayout({
 		</BillingProvider>
 	);
 
-	if (readBooleanEnv("NEXT_PUBLIC_DATABUDDY_E2E_MODE")) {
+	if (isDashboardE2E) {
 		return content;
 	}
 
