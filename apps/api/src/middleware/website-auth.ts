@@ -10,11 +10,31 @@ import { getResolvedAuth } from "../lib/auth-wide-event";
 import { record } from "../lib/tracing";
 import { getCachedWebsite, getTimezone } from "../lib/website-utils";
 
+interface SessionUser {
+	email: string;
+	id: string;
+	name: string;
+}
+
 function json(status: number, body: unknown) {
 	return new Response(JSON.stringify(body), {
 		status,
 		headers: { "Content-Type": "application/json" },
 	});
+}
+
+function getSessionUser(
+	session: Awaited<ReturnType<typeof auth.api.getSession>> | null
+): SessionUser | null {
+	if (!session?.user) {
+		return null;
+	}
+
+	return {
+		email: session.user.email,
+		id: session.user.id,
+		name: session.user.name,
+	};
 }
 
 export function websiteAuth() {
@@ -26,6 +46,8 @@ export function websiteAuth() {
 					session: null,
 					website: undefined,
 					timezone: "UTC",
+					_apiKey: null,
+					_apiKeyPresent: false,
 					_authChecked: true,
 				} as const;
 			}
@@ -34,8 +56,7 @@ export function websiteAuth() {
 			const websiteId = url.searchParams.get("website_id");
 
 			const preResolved = getResolvedAuth(request.headers);
-			let sessionUser: { id: string; name: string; email: string } | null =
-				null;
+			let sessionUser: SessionUser | null = null;
 			let session: Awaited<ReturnType<typeof auth.api.getSession>> | null =
 				null;
 			let apiKey: Awaited<ReturnType<typeof getApiKeyFromHeader>> | null = null;
@@ -43,7 +64,7 @@ export function websiteAuth() {
 
 			if (preResolved) {
 				session = preResolved.session;
-				sessionUser = (session?.user as typeof sessionUser) ?? null;
+				sessionUser = getSessionUser(session);
 				apiKey = preResolved.apiKeyResult?.key ?? null;
 			} else {
 				const [resolvedApiKey, resolvedSession] = await record(
@@ -55,7 +76,7 @@ export function websiteAuth() {
 						])
 				);
 				session = resolvedSession;
-				sessionUser = (session?.user as typeof sessionUser) ?? null;
+				sessionUser = getSessionUser(session);
 				apiKey = resolvedApiKey;
 			}
 
@@ -112,7 +133,7 @@ function isPreflight(request: Request): boolean {
 
 async function checkWebsiteAuth(
 	websiteId: string,
-	sessionUser: { id: string; name: string; email: string } | null,
+	sessionUser: SessionUser | null,
 	website: Awaited<ReturnType<typeof getCachedWebsite>> | null,
 	apiKey: Awaited<ReturnType<typeof getApiKeyFromHeader>> | null,
 	apiKeyPresent: boolean

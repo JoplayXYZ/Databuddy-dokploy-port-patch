@@ -68,6 +68,11 @@ interface ValidationError {
 	suggestion?: string;
 }
 
+interface ResolvedDateRange {
+	endDate?: string;
+	startDate?: string;
+}
+
 function findClosestMatch(input: string, options: string[]): string | null {
 	const inputLower = input.toLowerCase();
 	let bestMatch: string | null = null;
@@ -111,65 +116,121 @@ function validateQueryRequest(
 ):
 	| { valid: true; startDate: string; endDate: string }
 	| { valid: false; errors: ValidationError[] } {
-	const errors: ValidationError[] = [];
+	const errors = validateQueryParameters(request.parameters);
+	const dateRange = validateDateRange(request, timezone);
+	const { startDate, endDate } = dateRange;
+	errors.push(...dateRange.errors);
+	errors.push(
+		...validateRequiredDateFields(startDate, endDate, Boolean(request.preset))
+	);
+	errors.push(...validateParsedDateFields(request, { startDate, endDate }));
+	errors.push(...validatePaginationFields(request));
+
+	if (errors.length > 0) {
+		return { valid: false, errors };
+	}
+
+	return {
+		valid: true,
+		startDate: startDate as string,
+		endDate: endDate as string,
+	};
+}
+
+function validateQueryParameters(
+	parameters: DynamicQueryRequestType["parameters"]
+): ValidationError[] {
+	if (!parameters || parameters.length === 0) {
+		return [
+			{
+				field: "parameters",
+				message: "At least one parameter is required",
+			},
+		];
+	}
+
 	const queryTypes = Object.keys(QueryBuilders);
-
-	if (!request.parameters || request.parameters.length === 0) {
-		errors.push({
-			field: "parameters",
-			message: "At least one parameter is required",
-		});
-	} else {
-		for (let i = 0; i < request.parameters.length; i++) {
-			const param = request.parameters[i];
-			const name = typeof param === "string" ? param : param?.name;
-			if (name && !QueryBuilders[name]) {
-				const suggestion = findClosestMatch(name, queryTypes);
-				errors.push({
-					field: `parameters[${i}]`,
-					message: `Unknown query type: ${name}`,
-					suggestion: suggestion ? `Did you mean '${suggestion}'?` : undefined,
-				});
-			}
+	return parameters.flatMap((param, index) => {
+		const name = typeof param === "string" ? param : param?.name;
+		if (!(name && !QueryBuilders[name])) {
+			return [];
 		}
+
+		const suggestion = findClosestMatch(name, queryTypes);
+		return [
+			{
+				field: `parameters[${index}]`,
+				message: `Unknown query type: ${name}`,
+				suggestion: suggestion ? `Did you mean '${suggestion}'?` : undefined,
+			},
+		];
+	});
+}
+
+function validateDateRange(
+	request: DynamicQueryRequestType,
+	timezone: string
+): ResolvedDateRange & { errors: ValidationError[] } {
+	const dates = getExplicitDateRange(request);
+	if (!request.preset) {
+		return { ...dates, errors: [] };
 	}
 
-	let startDate = request.startDate
-		? normalizeDate(request.startDate)
-		: undefined;
-	let endDate = request.endDate ? normalizeDate(request.endDate) : undefined;
-
-	if (request.preset) {
-		if (DatePresets[request.preset]) {
-			const resolved = resolveDatePreset(request.preset, timezone);
-			startDate = resolved.startDate;
-			endDate = resolved.endDate;
-		} else {
-			const validPresets = Object.keys(DatePresets);
-			const suggestion = findClosestMatch(request.preset, validPresets);
-			errors.push({
-				field: "preset",
-				message: `Invalid date preset: ${request.preset}`,
-				suggestion: suggestion
-					? `Did you mean '${suggestion}'? Valid presets: ${validPresets.join(", ")}`
-					: `Valid presets: ${validPresets.join(", ")}`,
-			});
-		}
+	if (DatePresets[request.preset]) {
+		return { ...resolveDatePreset(request.preset, timezone), errors: [] };
 	}
 
-	if (!(startDate || request.preset)) {
+	return { ...dates, errors: [buildInvalidPresetError(request.preset)] };
+}
+
+function getExplicitDateRange(
+	request: DynamicQueryRequestType
+): ResolvedDateRange {
+	return {
+		startDate: request.startDate ? normalizeDate(request.startDate) : undefined,
+		endDate: request.endDate ? normalizeDate(request.endDate) : undefined,
+	};
+}
+
+function buildInvalidPresetError(preset: string): ValidationError {
+	const validPresets = Object.keys(DatePresets);
+	const suggestion = findClosestMatch(preset, validPresets);
+
+	return {
+		field: "preset",
+		message: `Invalid date preset: ${preset}`,
+		suggestion: suggestion
+			? `Did you mean '${suggestion}'? Valid presets: ${validPresets.join(", ")}`
+			: `Valid presets: ${validPresets.join(", ")}`,
+	};
+}
+
+function validateRequiredDateFields(
+	startDate: string | undefined,
+	endDate: string | undefined,
+	hasPreset: boolean
+): ValidationError[] {
+	const errors: ValidationError[] = [];
+	if (!(startDate || hasPreset)) {
 		errors.push({
 			field: "startDate",
 			message: "Either startDate or preset is required",
 		});
 	}
-	if (!(endDate || request.preset)) {
+	if (!(endDate || hasPreset)) {
 		errors.push({
 			field: "endDate",
 			message: "Either endDate or preset is required",
 		});
 	}
+	return errors;
+}
 
+function validateParsedDateFields(
+	request: DynamicQueryRequestType,
+	{ startDate, endDate }: ResolvedDateRange
+): ValidationError[] {
+	const errors: ValidationError[] = [];
 	if (startDate && !isNormalizedQueryDate(startDate)) {
 		errors.push({
 			field: "startDate",
@@ -182,37 +243,23 @@ function validateQueryRequest(
 			message: `Invalid date: ${request.endDate}. Could not parse as a valid date`,
 		});
 	}
+	return errors;
+}
 
-	if (request.limit !== undefined) {
-		if (request.limit < 1) {
-			errors.push({
-				field: "limit",
-				message: "Limit must be at least 1",
-			});
-		} else if (request.limit > 10_000) {
-			errors.push({
-				field: "limit",
-				message: "Limit cannot exceed 10000",
-			});
-		}
+function validatePaginationFields(
+	request: DynamicQueryRequestType
+): ValidationError[] {
+	const errors: ValidationError[] = [];
+	if (request.limit !== undefined && request.limit < 1) {
+		errors.push({ field: "limit", message: "Limit must be at least 1" });
 	}
-
+	if (request.limit !== undefined && request.limit > 10_000) {
+		errors.push({ field: "limit", message: "Limit cannot exceed 10000" });
+	}
 	if (request.page !== undefined && request.page < 1) {
-		errors.push({
-			field: "page",
-			message: "Page must be at least 1",
-		});
+		errors.push({ field: "page", message: "Page must be at least 1" });
 	}
-
-	if (errors.length > 0) {
-		return { valid: false, errors };
-	}
-
-	return {
-		valid: true,
-		startDate: startDate as string,
-		endDate: endDate as string,
-	};
+	return errors;
 }
 
 function generateRequestId(): string {
