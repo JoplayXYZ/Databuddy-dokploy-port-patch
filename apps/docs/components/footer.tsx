@@ -230,7 +230,7 @@ function ComplianceLinks() {
 				</div>
 				<div className="flex flex-wrap items-center gap-4">
 					{legalLinks.map((link, index) => (
-						<LegalLink key={link.href} index={index} link={link} />
+						<LegalLink index={index} key={link.href} link={link} />
 					))}
 				</div>
 			</div>

@@ -44,8 +44,7 @@ const ACTION_VERB_PATTERN =
 	/\b(inspect|review|compare|segment|drill|open|fix|audit|trace|check|verify|validate|filter|investigate|rollback|hotfix|profile|diagnose)\b/i;
 const GENERIC_MONITORING_PATTERN =
 	/\b(monitor|keep an eye|watch this|track closely|continue tracking)\b/i;
-const HARD_CAUSALITY_PATTERN =
-	/\b(caused by|because of|due to|driven by)\b/i;
+const HARD_CAUSALITY_PATTERN = /\b(caused by|because of|due to|driven by)\b/i;
 const ATTRIBUTION_CONTEXT_PATTERN =
 	/\b(referrer|source|utm|campaign|channel|twitter|google|bing|toolfolio)\b/i;
 const BUSINESS_CLAIM_PATTERN =
@@ -261,7 +260,10 @@ export function validateInsight(input: ParsedInsight): InsightValidationResult {
 		};
 	}
 
-	if (BUSINESS_CLAIM_PATTERN.test(narrative) && !insight.sources.includes("business")) {
+	if (
+		BUSINESS_CLAIM_PATTERN.test(narrative) &&
+		!insight.sources.includes("business")
+	) {
 		return {
 			insight: null,
 			warnings: [

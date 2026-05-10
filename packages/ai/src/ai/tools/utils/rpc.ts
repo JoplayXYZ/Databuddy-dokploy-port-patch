@@ -18,7 +18,6 @@ export async function callRPCProcedure(
 	context: AppContext
 ) {
 	try {
-
 		if (context.mutationMode === "dry-run" && isMutationMethod(method)) {
 			return {
 				dryRun: true,

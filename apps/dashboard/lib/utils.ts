@@ -44,4 +44,3 @@ export function getDefaultDateRange() {
 		granularity: "daily" as "hourly" | "daily",
 	};
 }
-

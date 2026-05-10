@@ -240,7 +240,7 @@ async function serveDistFile(pathname: string): Promise<Response> {
 	return new Response(`File not found: ${filePath}`, { status: 404 });
 }
 
-async function handleRequest(req: Request): Promise<Response> {
+function handleRequest(req: Request): Response | Promise<Response> {
 	const url = new URL(req.url);
 	console.log(`[Test Server] Request: ${req.method} ${url.pathname}`);
 

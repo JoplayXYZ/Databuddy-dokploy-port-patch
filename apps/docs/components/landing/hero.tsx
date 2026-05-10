@@ -96,8 +96,8 @@ export default function Hero({
 					<p className="z-10 max-w-2xl text-muted-foreground text-sm sm:text-base lg:text-lg">
 						See which campaigns and links bring users in, how they move through
 						your funnel, where errors or slow pages cost conversions, and which
-						feature rollouts move the numbers. Then ask the AI agent what to
-						fix next.
+						feature rollouts move the numbers. Then ask the AI agent what to fix
+						next.
 					</p>
 
 					<div className="flex items-center gap-3 pt-2">

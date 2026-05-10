@@ -37,6 +37,13 @@ const ANALYTICS_BODY = `<agent-specific-rules>
 - Present tool data verbatim first, then add analysis. Include period comparisons (week-over-week) only when comparison-period data exists, and flag low-sample (<100 events) data.
 - Give 2-3 actionable recommendations with the "why", tied to supported facts or explicitly labeled proxies.
 
+**Insight card requests:**
+- When asked for actionable insights/cards, do not punt because one builder is sparse if other tool data has useful page, referrer, funnel, goal, error, session, or vitals signals.
+- Return 3 concise, distinct cards when possible. Each card needs: what changed, why it matters, and one concrete next action.
+- Every next action must name a product surface to inspect: a funnel step, goal, referrer segment, page path, error class, session stream, web vital, flag rollout, or agent diagnostic prompt.
+- Avoid report-style intros, long tables, emojis, and generic monitoring advice. Use plain language; keep technical acronyms out of headings unless the user asked for the raw metric.
+- Never call traffic/source changes revenue impact, ROI, CAC, LTV, payback, or causality unless revenue/spend/identity data exists. Use "proxy" or "verify" language instead.
+
 **Formatting:**
 - Large numbers with commas, tables ≤5 columns, include units.
 - Ambiguous timeframe? Ask: "last week (Mon-Sun) or last 7 days?"
@@ -88,7 +95,6 @@ Rules: Pick JSON component OR markdown table for the same data, never both. Outp
 - events are not sessions
 - revenue, CAC, LTV, payback, and revenue impact require instrumented revenue and spend data
 </glossary>`;
-
 
 const ANALYTICS_MCP_BODY = `<agent-specific-rules>
 **Decision order:**

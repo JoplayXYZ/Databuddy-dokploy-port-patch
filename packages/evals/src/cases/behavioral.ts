@@ -118,7 +118,8 @@ export const behavioralCases: EvalCase[] = [
 			responseMatches: [
 				{
 					description: "mentions reinstalling Slack app for scopes",
-					pattern: "Slack app.+reinstalled.+scopes|reinstalled.+Slack app.+scopes",
+					pattern:
+						"Slack app.+reinstalled.+scopes|reinstalled.+Slack app.+scopes",
 				},
 			],
 		},

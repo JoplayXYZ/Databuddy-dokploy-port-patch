@@ -34,6 +34,11 @@ export const insightsCases: EvalCase[] = [
 						"error(s)? (fell|dropped|declined).{0,120}(bad|worse|warning|problem)",
 				},
 				{
+					description: "does not call traffic loss positive",
+					pattern:
+						"(page-?views? (fell|dropped|declined)[^.]{0,120}positive|reduction in .*page-?views? is a positive)",
+				},
+				{
 					description: "does not punt on available eval data",
 					pattern:
 						"(can't produce|couldn.?t generate|cannot produce|can.?t reliably generate|no real signal|need working metrics|queries failed|returned no rows|data is unavailable)",
@@ -138,6 +143,11 @@ export const insightsCases: EvalCase[] = [
 					pattern: "(^|\\n)#{0,3}\\s*[^\\n]*\\b(INP|LCP|FCP|TTFB|CLS|p75)\\b",
 				},
 				{
+					description: "does not render cards as markdown tables",
+					pattern:
+						"\\|\\s*(Insight|Metric|Card|Observation|Suggested Next Check|Evidence)\\s*\\|",
+				},
+				{
 					description: "avoids report-style verbosity",
 					pattern: "[\\s\\S]{3500,}",
 				},
@@ -177,7 +187,13 @@ export const insightsCases: EvalCase[] = [
 				},
 				{
 					description: "avoids generic monitoring advice",
-					pattern: "\\b(monitor|keep an eye|watch this|track closely)\\b",
+					pattern:
+						"\\b(monitor|monitoring|keep an eye|watch this|track closely|add an alert|enable an alert)\\b",
+				},
+				{
+					description: "does not render cards as markdown tables",
+					pattern:
+						"\\|\\s*(Insight|Metric|Card|Observation|Suggested Next Check|Evidence)\\s*\\|",
 				},
 				{
 					description: "does not produce report-style verbosity",
@@ -219,7 +235,8 @@ export const insightsCases: EvalCase[] = [
 				},
 				{
 					description: "avoids generic monitoring advice",
-					pattern: "\\b(monitor|keep an eye|watch this|track closely)\\b",
+					pattern:
+						"\\b(monitor|monitoring|keep an eye|watch this|track closely|add an alert|enable an alert)\\b",
 				},
 			],
 		},

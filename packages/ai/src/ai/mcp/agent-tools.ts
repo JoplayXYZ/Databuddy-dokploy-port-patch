@@ -9,7 +9,7 @@ import { tool, type ToolSet } from "ai";
 import { z } from "zod";
 import { getAccessibleWebsites } from "../../lib/accessible-websites";
 import { getWebsiteDomain } from "../../lib/website-utils";
-import { executeBatch, executeQuery, QueryBuilders } from "../../query";
+import { executeBatch, executeQuery } from "../../query";
 import type { Filter, QueryRequest } from "../../query/types";
 import { createAnnotationTools } from "../tools/annotations";
 import { createFlagTools } from "../tools/flags";

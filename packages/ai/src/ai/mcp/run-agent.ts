@@ -325,6 +325,10 @@ const THREAD_REFERENCE_PATTERN =
 const FRESH_ANALYTICS_PATTERN =
 	/\b(fresh|current|latest|live|now|metrics?|analytics|top pages?|last \d+|last week|last month|pull|rerun|check)\b/i;
 const COPY_ONLY_PATTERN = /\b(exact copy|copy only)\b/i;
+const SLACK_FOLLOW_UP_TEXT_PATTERN =
+	/<slack_follow_up[^>]*>[\s\S]*?text:\n([\s\S]*?)\n<\/slack_follow_up>/g;
+const SLACK_LATEST_MESSAGE_TEXT_PATTERN =
+	/<slack_latest_message>[\s\S]*?text:\n([\s\S]*?)\n<\/slack_latest_message>/;
 const ANALYTICS_ACTIVE_TOOLS = [
 	"list_websites",
 	"get_data",
@@ -336,24 +340,22 @@ const ANALYTICS_ACTIVE_TOOLS = [
 ];
 
 function latestSlackText(input: string): string {
-	const followUps = [...input.matchAll(/<slack_follow_up[^>]*>[\s\S]*?text:\n([\s\S]*?)\n<\/slack_follow_up>/g)];
+	const followUps = [...input.matchAll(SLACK_FOLLOW_UP_TEXT_PATTERN)];
 	const lastFollowUp = followUps.at(-1)?.[1];
 	if (lastFollowUp) {
 		return lastFollowUp;
 	}
-	return (
-		input.match(/<slack_latest_message>[\s\S]*?text:\n([\s\S]*?)\n<\/slack_latest_message>/)?.[1] ??
-		input
-	);
+	return input.match(SLACK_LATEST_MESSAGE_TEXT_PATTERN)?.[1] ?? input;
 }
 
 function selectActiveToolsForQuestion(options: {
 	question: string;
 	source: "dashboard" | "mcp" | "slack";
 }): string[] | undefined {
-	const text = (options.source === "slack"
-		? latestSlackText(options.question)
-		: options.question
+	const text = (
+		options.source === "slack"
+			? latestSlackText(options.question)
+			: options.question
 	).toLowerCase();
 	if (options.source === "slack") {
 		if (FRESH_ANALYTICS_PATTERN.test(text)) {
