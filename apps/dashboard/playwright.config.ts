@@ -18,7 +18,7 @@ export default defineConfig({
 		video: "retain-on-failure",
 	},
 	webServer: {
-		command: `bash -lc 'bun --cwd ../api src/index.ts --port 3001 & api_pid=$!; trap "kill $api_pid 2>/dev/null || true" EXIT; until curl -sf http://localhost:3001/health >/dev/null; do sleep 0.2; done; bun next dev -p ${PORT}'`,
+		command: `bash -c 'bun --cwd ../api src/index.ts --port 3001 & api_pid=$!; trap "kill $api_pid 2>/dev/null || true" EXIT; until curl -sf http://localhost:3001/health >/dev/null; do sleep 0.2; done; bun next dev -p ${PORT}'`,
 		env: {
 			DATABUDDY_E2E_MODE: process.env.DATABUDDY_E2E_MODE ?? "true",
 			NEXT_PUBLIC_DATABUDDY_E2E_MODE:
