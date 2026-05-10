@@ -166,7 +166,8 @@ For picker controls, use the component that matches the interaction:
 - Empty `catch {}` blocks need a reason comment or minimal logging, especially in instrumentation paths.
 - Eval guardrail regexes should be precise and bounded; avoid broad `.*` patterns that can fail unrelated output.
 - CI service containers should mirror local Docker requirements; ClickHouse needs the high `nofile` ulimit, generous health startup time, and a health command supported inside the ClickHouse image.
-- Dashboard Playwright web servers should not use `bash -lc`; login shells can reset PATH on CI and hide Bun. Use `bash -c` or an explicit Bun path, and build dist-only workspace packages such as `@databuddy/sdk` before starting the API.
+- Dashboard Playwright web servers should not use `bash -lc`; login shells can reset PATH on CI and hide Bun. Use `bash -c` or an explicit Bun path, and build dist-only workspace packages such as `@databuddy/sdk`/`@databuddy/devtools` before starting the API/dashboard.
+- Bun `mock.module` state can affect files in the same package test command; mocks for shared modules like `../lib/logger` must include every method later tests may call.
 
 ## AI Policy Note
 
