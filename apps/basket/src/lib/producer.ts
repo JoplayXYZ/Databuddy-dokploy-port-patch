@@ -89,6 +89,73 @@ function toError(err: unknown): Error {
 	return err instanceof Error ? err : new Error(String(err));
 }
 
+function groupBufferedEvents(
+	items: BufferedEvent[]
+): Map<string, BufferedEvent[]> {
+	const grouped = new Map<string, BufferedEvent[]>();
+	for (const item of items) {
+		grouped.set(item.table, [...(grouped.get(item.table) ?? []), item]);
+	}
+	return grouped;
+}
+
+async function insertClickHouseChunks(
+	ch: ClickHouseClient,
+	table: string,
+	events: unknown[],
+	chunkSize: number
+) {
+	for (let i = 0; i < events.length; i += chunkSize) {
+		await ch.insert({
+			table,
+			values: events.slice(i, i + chunkSize),
+			format: "JSONEachRow",
+		});
+	}
+}
+
+function rebufferOrDropEvents({
+	bufferHardMax,
+	events,
+	inc,
+	ref,
+	table,
+	error,
+}: {
+	bufferHardMax: number;
+	error: FlushError;
+	events: unknown[];
+	inc: (field: keyof ProducerState, n?: number) => Effect.Effect<void>;
+	ref: Ref.Ref<ProducerState>;
+	table: string;
+}) {
+	return Ref.get(ref).pipe(
+		Effect.flatMap((state) => {
+			if (state.buffer.length + events.length <= bufferHardMax) {
+				return Ref.update(ref, (current) => ({
+					...current,
+					buffer: [
+						...current.buffer,
+						...events.map((event) => ({ table, event })),
+					],
+					errors: current.errors + 1,
+				}));
+			}
+
+			return inc("dropped", events.length).pipe(
+				Effect.tap(() => inc("errors", 1)),
+				Effect.tap(() =>
+					Effect.sync(() =>
+						captureError(error.cause, {
+							message: `Dropped ${String(events.length)} events - buffer full`,
+						})
+					)
+				)
+			);
+		})
+	);
+}
+
 function makeProducerEffects(
 	config: ProducerConfig,
 	kafka: Producer | null,
@@ -163,58 +230,29 @@ function makeProducerEffects(
 			{ ...s, buffer: s.buffer.slice(batchSize), flushing: true },
 		]);
 
-		const grouped = new Map<string, BufferedEvent[]>();
-		for (const item of items) {
-			const list = grouped.get(item.table);
-			if (list) {
-				list.push(item);
-			} else {
-				grouped.set(item.table, [item]);
-			}
-		}
+		const grouped = groupBufferedEvents(items);
 
 		yield* Effect.forEach(
 			grouped.entries(),
 			([table, entries]: [string, BufferedEvent[]]) => {
-				const events = entries.map((e: BufferedEvent) => e.event);
+				const events = entries.map((entry) => entry.event);
 				return Effect.tryPromise({
 					try: () =>
-						record("clickhouseFallbackInsert", async () => {
-							for (let i = 0; i < events.length; i += config.chunkSize) {
-								await ch.insert({
-									table,
-									values: events.slice(i, i + config.chunkSize),
-									format: "JSONEachRow",
-								});
-							}
-						}),
+						record("clickhouseFallbackInsert", () =>
+							insertClickHouseChunks(ch, table, events, config.chunkSize)
+						),
 					catch: (e) => new FlushError({ table, cause: toError(e) }),
 				}).pipe(
 					Effect.tap(() => inc("flushed", events.length)),
-					Effect.catchTag("FlushError", (err) =>
-						Ref.get(ref).pipe(
-							Effect.flatMap((s) =>
-								s.buffer.length + events.length <= config.bufferHardMax
-									? Ref.update(ref, (st) => ({
-											...st,
-											buffer: [
-												...st.buffer,
-												...events.map((event: unknown) => ({ table, event })),
-											],
-											errors: st.errors + 1,
-										}))
-									: inc("dropped", events.length).pipe(
-											Effect.tap(() => inc("errors", 1)),
-											Effect.tap(() =>
-												Effect.sync(() =>
-													captureError(err.cause, {
-														message: `Dropped ${String(events.length)} events - buffer full`,
-													})
-												)
-											)
-										)
-							)
-						)
+					Effect.catchTag("FlushError", (error) =>
+						rebufferOrDropEvents({
+							bufferHardMax: config.bufferHardMax,
+							error,
+							events,
+							inc,
+							ref,
+							table,
+						})
 					)
 				);
 			},
