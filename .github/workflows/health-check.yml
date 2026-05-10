@@ -30,7 +30,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: health-check-${{ github.ref }}
+  group: health-check-${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name || github.repository }}-${{ github.head_ref || github.ref_name }}
   cancel-in-progress: true
 
 jobs:
