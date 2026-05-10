@@ -6,7 +6,7 @@ import { Data, Effect } from "effect";
 import { UPTIME_ENV } from "./lib/env";
 import { extractHealth } from "./json-parser";
 import { captureError } from "./lib/tracing";
-import type { ActionResult, UptimeData } from "./types";
+import type { ActionResult, ScheduleLookupReason, UptimeData } from "./types";
 import { MonitorStatus } from "./types";
 
 const DEFAULT_TIMEOUT = 60_000;
@@ -58,6 +58,7 @@ export interface CheckOptions {
 
 class ScheduleLookupError extends Data.TaggedError("ScheduleLookupError")<{
 	message: string;
+	reason: ScheduleLookupReason;
 }> {}
 
 class UptimeCheckError extends Data.TaggedError("UptimeCheckError")<{
@@ -278,13 +279,18 @@ const resolveSchedule = (id: string) =>
 				where: { id },
 				with: { website: true },
 			}),
-		catch: (cause) => new ScheduleLookupError({ message: String(cause) }),
+		catch: (cause) =>
+			new ScheduleLookupError({
+				message: String(cause),
+				reason: "transient",
+			}),
 	}).pipe(
 		Effect.flatMap((schedule) => {
 			if (!schedule) {
 				return Effect.fail(
 					new ScheduleLookupError({
 						message: `Schedule ${id} not found`,
+						reason: "not_found",
 					})
 				);
 			}
@@ -292,6 +298,7 @@ const resolveSchedule = (id: string) =>
 				return Effect.fail(
 					new ScheduleLookupError({
 						message: `Schedule ${id} has invalid data (missing url)`,
+						reason: "malformed",
 					})
 				);
 			}
@@ -390,10 +397,13 @@ export async function lookupSchedule(
 		const data = await Effect.runPromise(resolveSchedule(id));
 		return { success: true, data };
 	} catch (error) {
-		captureError(error, { error_step: "lookup_schedule" });
+		const reason: ScheduleLookupReason =
+			error instanceof ScheduleLookupError ? error.reason : "transient";
+		captureError(error, { error_step: "lookup_schedule", reason });
 		return {
 			success: false,
 			error: error instanceof Error ? error.message : "Database error",
+			reason,
 		};
 	}
 }

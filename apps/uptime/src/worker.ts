@@ -1,9 +1,11 @@
 import {
 	getBullMQWorkerConnectionOptions,
+	getUptimeQueue,
 	type UptimeCheckJobData,
 	UPTIME_CHECK_JOB_NAME,
 	UPTIME_JOB_TIMEOUT_MS,
 	UPTIME_QUEUE_NAME,
+	uptimeSchedulerId,
 } from "@databuddy/redis";
 import { Worker } from "bullmq";
 import type { RequestLogger } from "evlog";
@@ -18,7 +20,12 @@ import {
 import { isHealthExtractionEnabled } from "./json-parser";
 import { sendUptimeEvent } from "./lib/producer";
 import { captureError } from "./lib/tracing";
-import { MonitorStatus, type ActionResult, type UptimeData } from "./types";
+import {
+	MonitorStatus,
+	type ActionResult,
+	type ScheduleLookupReason,
+	type UptimeData,
+} from "./types";
 import {
 	fireTransitionAlerts,
 	getPreviousMonitorStatus,
@@ -26,7 +33,18 @@ import {
 
 class ScheduleNotFound extends Data.TaggedError("ScheduleNotFound")<{
 	message: string;
+	reason: ScheduleLookupReason;
 }> {}
+
+const REAPABLE_REASONS: ReadonlySet<ScheduleLookupReason> = new Set([
+	"not_found",
+	"malformed",
+]);
+
+async function defaultReapOrphanScheduler(scheduleId: string): Promise<void> {
+	const queue = getUptimeQueue();
+	await queue.removeJobScheduler(uptimeSchedulerId(scheduleId));
+}
 
 class SchedulePaused extends Data.TaggedError("SchedulePaused")<
 	Record<keyof any, never>
@@ -61,6 +79,7 @@ export interface UptimeWorkerDeps {
 	getPreviousMonitorStatus: (monitorId: string) => Promise<number | undefined>;
 	isHealthExtractionEnabled: (config: unknown) => boolean;
 	lookupSchedule: (scheduleId: string) => Promise<ActionResult<ScheduleData>>;
+	reapOrphanScheduler: (scheduleId: string) => Promise<void>;
 	sendUptimeEvent: (data: UptimeData, monitorId: string) => Promise<void>;
 }
 
@@ -71,6 +90,7 @@ const uptimeWorkerDeps: UptimeWorkerDeps = {
 	getPreviousMonitorStatus,
 	isHealthExtractionEnabled,
 	lookupSchedule,
+	reapOrphanScheduler: defaultReapOrphanScheduler,
 	sendUptimeEvent,
 	fireTransitionAlerts,
 };
@@ -114,12 +134,18 @@ const timed = <A, E>(
 const resolveSchedule = (scheduleId: string, deps: UptimeWorkerDeps) =>
 	Effect.tryPromise({
 		try: () => deps.lookupSchedule(scheduleId),
-		catch: (cause) => new ScheduleNotFound({ message: String(cause) }),
+		catch: (cause) =>
+			new ScheduleNotFound({ message: String(cause), reason: "transient" }),
 	}).pipe(
 		Effect.flatMap((result) =>
 			result.success
 				? Effect.succeed(result.data)
-				: Effect.fail(new ScheduleNotFound({ message: result.error }))
+				: Effect.fail(
+						new ScheduleNotFound({
+							message: result.error,
+							reason: result.reason ?? "transient",
+						})
+					)
 		)
 	);
 
@@ -196,6 +222,31 @@ const runTransitionAlerts = (
 		)
 	);
 
+function reapScheduler(
+	scheduleId: string,
+	reason: ScheduleLookupReason,
+	deps: UptimeWorkerDeps,
+	log: RequestLogger
+): void {
+	deps
+		.reapOrphanScheduler(scheduleId)
+		.then(() => {
+			log.set({ orphan_scheduler_reaped: true });
+		})
+		.catch((cause) => {
+			log.set({
+				orphan_scheduler_reaped: false,
+				orphan_scheduler_reap_error:
+					cause instanceof Error ? cause.message : String(cause),
+			});
+			deps.captureError(cause, {
+				error_step: "reap_orphan_scheduler",
+				schedule_id: scheduleId,
+				schedule_lookup_reason: reason,
+			});
+		});
+}
+
 const processCheck = (
 	scheduleId: string,
 	log: RequestLogger,
@@ -211,7 +262,11 @@ const processCheck = (
 				log.set({
 					outcome: "schedule_not_found",
 					error_message: e.message,
+					schedule_lookup_reason: e.reason,
 				});
+				if (REAPABLE_REASONS.has(e.reason)) {
+					reapScheduler(scheduleId, e.reason, deps, log);
+				}
 				return Effect.fail(new ScheduleNotFound(e));
 			})
 		);
