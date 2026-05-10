@@ -106,10 +106,10 @@ export const insightSchema = z.object({
 		),
 	impactSummary: z
 		.string()
-		.max(160)
+		.max(220)
 		.optional()
 		.describe(
-			"Optional short statement of user or business impact. Use when the impact is clear from the available data."
+			"Optional short statement of user or business impact. Use when the impact is clear from the available data. Hard limit: 220 characters — keep it to a single sentence."
 		),
 });
 

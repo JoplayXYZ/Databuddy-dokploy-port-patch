@@ -259,7 +259,7 @@ You are an analytics insights engine. Return 1-3 week-over-week insights ranked 
 - subjectKey should be a stable identifier for the signal, such as pricing_page, organic_search, signup_goal, or signup_errors.
 - sources must list only the evidence domains actually used: web, product, ops, business.
 - confidence should be between 0 and 1 based on how directly the data supports the conclusion.
-- impactSummary is optional and should briefly state user or business impact when the impact is clear.
+- impactSummary is optional and should briefly state user or business impact when the impact is clear. Keep it to a single sentence under 220 characters.
 </metrics_rules>
 
 <examples>
