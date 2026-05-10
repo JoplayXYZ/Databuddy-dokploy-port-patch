@@ -398,12 +398,10 @@ const queryFunnelErrors = async (
 			AND anonymous_id NOT IN (${lastStepSubquery})`
 		: null;
 
-	const chSettings = { clickhouse_settings: { max_execution_time: 15 } };
-
 	const [errorRows, dropoffResult] = await Promise.all([
-		chQuery<ErrorRow>(errorQuery, params, chSettings),
+		chQuery<ErrorRow>(errorQuery, params),
 		dropoffQuery
-			? chQuery<{ count: number }>(dropoffQuery, params, chSettings)
+			? chQuery<{ count: number }>(dropoffQuery, params)
 			: Promise.resolve([]),
 	]);
 
@@ -546,10 +544,8 @@ ORDER BY 1, 2`;
 
 	const sentinelStep = totalSteps + 1;
 
-	const chSettings = { clickhouse_settings: { max_execution_time: 15 } };
-
 	const [aggRows, errorData] = await Promise.all([
-		chQuery<FunnelAggRow>(fullQuery, params, chSettings),
+		chQuery<FunnelAggRow>(fullQuery, params),
 		queryFunnelErrors(steps, true, params),
 	]);
 
@@ -729,9 +725,7 @@ FROM step_events
 GROUP BY vid
 HAVING max_step >= 1`;
 
-	const rows = await chQuery<ReferrerRow>(fullQuery, params, {
-		clickhouse_settings: { max_execution_time: 15 },
-	});
+	const rows = await chQuery<ReferrerRow>(fullQuery, params);
 
 	const groups = new Map<
 		string,

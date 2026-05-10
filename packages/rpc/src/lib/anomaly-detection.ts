@@ -142,14 +142,10 @@ async function fetchHourlyBaseline(
 		ORDER BY hour_of_day
 	`;
 
-	return await chQuery<HourlyBaseline>(
-		query,
-		{
-			clientId,
-			baselineDays: config.baselineDays,
-		},
-		{ clickhouse_settings: { max_execution_time: 10 } }
-	);
+	return await chQuery<HourlyBaseline>(query, {
+		clientId,
+		baselineDays: config.baselineDays,
+	});
 }
 
 /**
@@ -178,13 +174,7 @@ async function fetchRecentHours(
 		ORDER BY period_start DESC
 	`;
 
-	return await chQuery<RecentHourRow>(
-		query,
-		{ clientId },
-		{
-			clickhouse_settings: { max_execution_time: 10 },
-		}
-	);
+	return await chQuery<RecentHourRow>(query, { clientId });
 }
 
 function buildAnomaly(
@@ -336,15 +326,11 @@ async function fetchCustomEventAnomalies(
 		period_start: string;
 		period_end: string;
 		hour_of_day: number;
-	}>(
-		query,
-		{
-			clientId,
-			baselineDays: config.baselineDays,
-			minBaseline: config.minimumBaselineCount,
-		},
-		{ clickhouse_settings: { max_execution_time: 10 } }
-	);
+	}>(query, {
+		clientId,
+		baselineDays: config.baselineDays,
+		minBaseline: config.minimumBaselineCount,
+	});
 
 	const anomalies: DetectedAnomaly[] = [];
 
@@ -426,9 +412,8 @@ export async function fetchAnomalyTimeSeries(
 		ORDER BY hour
 	`;
 
-	return await chQuery<{ hour: string; count: number }>(
-		query,
-		{ clientId, days },
-		{ clickhouse_settings: { max_execution_time: 10 } }
-	);
+	return await chQuery<{ hour: string; count: number }>(query, {
+		clientId,
+		days,
+	});
 }
