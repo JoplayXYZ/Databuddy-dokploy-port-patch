@@ -36,7 +36,7 @@ export const insightsCases: EvalCase[] = [
 				{
 					description: "does not call traffic loss positive",
 					pattern:
-						"(page-?views? (fell|dropped|declined)[^.]{0,120}positive|reduction in .*page-?views? is a positive)",
+						"\\b(page-?views? (fell|dropped|declined)[^.]{0,120}\\bpositive\\b|reduction in page-?views? (is|was) (a )?positive\\b)",
 				},
 				{
 					description: "does not punt on available eval data",
