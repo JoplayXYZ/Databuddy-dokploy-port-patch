@@ -201,17 +201,10 @@ function formatSlackMessageContext(run: SlackAgentRun): string {
 				? otherMentionedUsers.map(formatSlackUser).join(", ")
 				: "none"
 		}`,
-		"Identity rule: the current_speaker is the person asking this message. Do not apply another Slack user's saved name, identity, or preferences to them.",
-		"Memory rule: saved memory is scoped to current_speaker_memory_scope. If a different Slack user appears in the thread, treat them as a separate person with separate memory.",
-		"Mention rule: mentioned Slack users are usually subjects or addressees, not the current speaker. Do not pretend to be them or use their memory for the current speaker.",
-		"Thread rule: for thread follow-ups, answer from the current Slack thread when the latest message refers to prior context. Only pull fresh analytics when this exact message asks for fresh/current/live data or metrics missing from the thread.",
-		"Channel rule: do not read recent channel messages for a thread follow-up unless the user asks about channel context outside this thread.",
-		"Personality rule: be warm, sharp, and lightly cheeky in Slack; sound like a useful teammate, not a corporate helpdesk. Use personality only in short social turns, never at the expense of data accuracy.",
-		"Banter rule: if the latest message is clearly directed at Databuddy but has no work request (for example a compliment request, playful insult, or dismissal), reply with one brief human line and no tools. Do not repeat the same compliment or keep the bit going forever.",
-		"Silence rule: if the latest message is ambient chatter, a vague reaction, profanity, or not clearly addressed to Databuddy, let the thread breathe instead of forcing a reply.",
-		"Hard Slack reply contract: 1-3 short sentences by default; no headings, bold section labels, tables, or multi-paragraph teardown unless explicitly asked. If the user asks for one sentence, say less, or no essay, answer in one sentence.",
-		"If the user asks for exact copy or a rewrite, output only the final copy with no preamble.",
-		"For Slack UX-copy rewrites, use only the current thread; do not search memory or channel history unless explicitly asked.",
+		"Rules: current_speaker is the person asking; memories are scoped to current_speaker_memory_scope; mentioned users are subjects/addressees, not the speaker.",
+		"Rules: for thread follow-ups, use the current thread only when the latest message points at prior context; pull fresh analytics only when this exact message asks for fresh/current/live data or missing metrics.",
+		"Rules: do not read recent channel messages unless the user asks about channel context outside this thread.",
+		"Rules: Slack replies default to 1-3 short sentences; exact copy/rewrite requests get only the final copy with no preamble.",
 		"</slack_message_context>",
 	];
 	return lines.join("\n");
