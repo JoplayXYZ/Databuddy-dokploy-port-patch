@@ -46,13 +46,3 @@ export interface CustomQueryRequest {
 	startDate: string;
 	timezone?: string;
 }
-
-export interface CustomQueryResponse {
-	data?: Record<string, unknown>[];
-	error?: string;
-	meta?: {
-		rowCount: number;
-		executionTime: number;
-	};
-	success: boolean;
-}

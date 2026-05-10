@@ -1,7 +1,7 @@
 "use client";
 
 import type { Website } from "@databuddy/db/schema";
-import type { ProcessedMiniChartData } from "@databuddy/shared/types/website";
+import type { ProcessedMiniChartData } from "@/types/website";
 
 import type { QueryKey } from "@tanstack/react-query";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";

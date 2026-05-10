@@ -1,4 +1,4 @@
-import type { WebsiteBasic } from "@databuddy/shared/types/website";
+import type { WebsiteBasic } from "@/types/website";
 import Link from "next/link";
 import { FaviconImage } from "@/components/analytics/favicon-image";
 import { Skeleton } from "@databuddy/ui";

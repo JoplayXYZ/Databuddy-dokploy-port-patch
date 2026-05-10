@@ -1,9 +1,4 @@
 import { chQuery } from "@databuddy/db/clickhouse";
-import type {
-	DailyUsageByTypeRow,
-	DailyUsageRow,
-	EventTypeBreakdown,
-} from "@databuddy/shared/types/billing";
 import { TOPUP_MAX_QUANTITY } from "@databuddy/shared/billing/topup-math";
 import { z } from "zod";
 import { rpcError } from "../errors";
@@ -26,6 +21,22 @@ const EVENT_CATEGORIES = {
 } as const;
 
 type EventCategory = (typeof EVENT_CATEGORIES)[keyof typeof EVENT_CATEGORIES];
+
+interface DailyUsageRow {
+	date: string;
+	event_count: number;
+}
+
+interface DailyUsageByTypeRow {
+	date: string;
+	event_category: string;
+	event_count: number;
+}
+
+interface EventTypeBreakdown {
+	event_category: string;
+	event_count: number;
+}
 
 interface EventSource {
 	category: EventCategory;

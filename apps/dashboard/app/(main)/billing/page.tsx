@@ -4,7 +4,7 @@ import AttachDialog from "@/components/autumn/attach-dialog";
 import { useBillingContext } from "@/components/providers/billing-provider";
 import { orpc } from "@/lib/orpc";
 import { TOPUP_PRODUCT_ID } from "@databuddy/shared/billing/topup-math";
-import type { UsageResponse } from "@databuddy/shared/types/billing";
+import type { UsageResponse } from "@/types/billing";
 import { useQuery } from "@tanstack/react-query";
 import type { PreviewAttachResponse } from "autumn-js";
 import { useCustomer } from "autumn-js/react";

@@ -8,7 +8,6 @@ import {
 	WebsiteNotFoundError,
 	WebsiteService,
 } from "@databuddy/services/websites";
-import type { ProcessedMiniChartData } from "@databuddy/shared/types/website";
 import {
 	createWebsiteSchema,
 	togglePublicWebsiteSchema,
@@ -27,6 +26,21 @@ import {
 	generateExport,
 	validateExportDateRange,
 } from "../services/export-service";
+
+interface MiniChartDataPoint {
+	date: string;
+	value: number;
+}
+
+interface ProcessedMiniChartData {
+	data: MiniChartDataPoint[];
+	hasAnyData: boolean;
+	totalViews: number;
+	trend: {
+		type: "up" | "down" | "neutral";
+		value: number;
+	} | null;
+}
 
 const websiteService = new WebsiteService(db);
 const TREND_THRESHOLD = 5;

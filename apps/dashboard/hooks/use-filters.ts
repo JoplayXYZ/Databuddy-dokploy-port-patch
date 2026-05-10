@@ -1,5 +1,5 @@
-import { filterOptions } from "@databuddy/shared/lists/filters";
-import type { DynamicQueryFilter } from "@databuddy/shared/types/api";
+import { filterOptions } from "@/lib/filter-options";
+import type { DynamicQueryFilter } from "@/types/api";
 import { useCallback } from "react";
 
 export const operatorOptions = [

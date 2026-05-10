@@ -1,8 +1,8 @@
-import type { DateRange } from "@databuddy/shared/types/analytics";
+import type { DateRange } from "@/types/analytics";
 import type {
 	BatchQueryResponse,
 	DynamicQueryFilter,
-} from "@databuddy/shared/types/api";
+} from "@/types/api";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { useBatchDynamicQuery } from "@/hooks/use-dynamic-query";
 

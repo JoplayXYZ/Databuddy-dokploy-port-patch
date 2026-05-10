@@ -1,6 +1,6 @@
 "use client";
 
-import type { QueryBuilderMeta } from "@databuddy/shared/types/query";
+import type { QueryBuilderMeta } from "./types-query-builder";
 import { CheckCircleIcon, CopyIcon } from "@databuddy/ui/icons";
 import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";

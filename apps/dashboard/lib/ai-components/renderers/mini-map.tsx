@@ -1,6 +1,6 @@
 "use client";
 
-import type { LocationData } from "@databuddy/shared/types/website";
+import type { LocationData } from "@/types/website";
 import dynamic from "next/dynamic";
 import { motion } from "motion/react";
 import { useId, useMemo, useState } from "react";

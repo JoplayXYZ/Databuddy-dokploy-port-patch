@@ -5,8 +5,8 @@ import { FilterRow } from "@/components/ui/filter-row";
 import type { AutocompleteData } from "@/hooks/use-autocomplete";
 import { goalFunnelOperatorOptions, useFilters } from "@/hooks/use-filters";
 import type { CreateGoalData, Goal } from "@/hooks/use-goals";
-import { filterOptions } from "@databuddy/shared/lists/filters";
-import type { GoalFilter } from "@databuddy/shared/types/api";
+import { filterOptions } from "@/lib/filter-options";
+import type { GoalFilter } from "@/types/api";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
 	FunnelIcon as FunnelSimpleIcon,

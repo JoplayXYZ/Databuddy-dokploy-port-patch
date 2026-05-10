@@ -1,6 +1,6 @@
 "use client";
 
-import type { DynamicQueryFilter } from "@databuddy/shared/types/api";
+import type { DynamicQueryFilter } from "@/types/api";
 import { createContext, useContext, useMemo } from "react";
 import { useOrganizationsContext } from "@/components/providers/organizations-provider";
 import { useCustomEventsData } from "@/hooks/use-custom-events";

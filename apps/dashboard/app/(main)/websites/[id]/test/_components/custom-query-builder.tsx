@@ -7,7 +7,7 @@ import {
 import type {
 	AggregateFunction,
 	CustomQueryConfig,
-} from "@databuddy/shared/types/custom-query";
+} from "./types/custom-query";
 import { useMemo } from "react";
 import {
 	Select,

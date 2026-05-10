@@ -1,6 +1,6 @@
 "use client";
 
-import type { QueryBuilderMeta } from "@databuddy/shared/types/query";
+import type { QueryBuilderMeta } from "./types-query-builder";
 import { CaretRightIcon } from "@databuddy/ui/icons";
 import { Card, CardContent } from "@/components/ui/card";
 import { QueryTypeDialog } from "./query-type-dialog";

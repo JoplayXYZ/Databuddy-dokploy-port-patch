@@ -1,6 +1,6 @@
 import { useDebouncedValue } from "@tanstack/react-pacer";
 import { useMemo } from "react";
-import type { Monitor } from "../page";
+import type { Monitor } from "./types";
 
 export type SortOption = "newest" | "oldest" | "name-asc" | "name-desc";
 export type StatusFilter = "all" | "active" | "paused";

@@ -3,7 +3,7 @@
 import type {
 	DailyUsageByTypeRow,
 	UsageResponse,
-} from "@databuddy/shared/types/billing";
+} from "@/types/billing";
 import { useMemo, useState } from "react";
 import { METRIC_COLORS } from "@/components/charts/metrics-constants";
 import { DateRangePicker } from "@/components/date-range-picker";

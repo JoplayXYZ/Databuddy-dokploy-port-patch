@@ -4,6 +4,7 @@ import { authClient, useSession } from "@databuddy/auth/client";
 import { useQuery } from "@tanstack/react-query";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { type ReactNode, useEffect, useMemo } from "react";
+import type { Organization } from "@/stores/jotai/organization-types";
 import {
 	activeOrganizationAtom,
 	getOrganizationBySlugAtom,
@@ -11,10 +12,7 @@ import {
 	organizationsAtom,
 	pendingActiveOrganizationIdAtom,
 } from "@/stores/jotai/organizationsAtoms";
-
-export type Organization = NonNullable<
-	ReturnType<typeof authClient.useListOrganizations>["data"]
->[number];
+export type { Organization } from "@/stores/jotai/organization-types";
 
 export const AUTH_QUERY_KEYS = {
 	organizations: ["auth", "organizations"] as const,

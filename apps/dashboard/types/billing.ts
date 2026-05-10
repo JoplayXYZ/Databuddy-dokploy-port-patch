@@ -1,5 +1,3 @@
-// Billing and usage types
-
 export interface DailyUsageRow {
 	date: string;
 	event_count: number;

@@ -4,7 +4,7 @@ import { useBatchDynamicQuery } from "@/hooks/use-dynamic-query";
 import { dayjs } from "@databuddy/ui";
 import { orpc } from "@/lib/orpc";
 import type { Link, LinkFolder } from "@databuddy/db/schema";
-import type { DateRange } from "@databuddy/shared/types/analytics";
+import type { DateRange } from "@/types/analytics";
 import type { QueryKey } from "@tanstack/react-query";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo } from "react";

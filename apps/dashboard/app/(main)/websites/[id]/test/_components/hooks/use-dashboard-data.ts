@@ -1,14 +1,14 @@
 import { publicConfig } from "@databuddy/env/public";
-import type { DateRange } from "@databuddy/shared/types/analytics";
+import type { DateRange } from "@/types/analytics";
 import type {
 	DynamicQueryFilter,
 	DynamicQueryRequest,
 	ParameterWithDates,
-} from "@databuddy/shared/types/api";
+} from "@/types/api";
 import type {
 	CustomQueryConfig,
 	CustomQueryRequest,
-} from "@databuddy/shared/types/custom-query";
+} from "../types/custom-query";
 import { useQueries } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { useBatchDynamicQuery } from "@/hooks/use-dynamic-query";
