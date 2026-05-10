@@ -1,35 +1,16 @@
-import type { TimeUnit } from "./types";
-
-export type AggregateFn =
-	| "count"
-	| "countIf"
-	| "sum"
-	| "sumIf"
-	| "avg"
-	| "avgIf"
-	| "uniq"
-	| "uniqIf"
-	| "median"
-	| "medianIf"
-	| "min"
-	| "minIf"
-	| "max"
-	| "maxIf"
-	| "any"
-	| "argMin"
-	| "argMax"
-	| "groupArray"
-	| "quantile"
-	| "quantileIf";
-
-export type Granularity = "minute" | "hour" | "day" | "week" | "month";
-
-export type SqlExpression = string & { readonly __brand: "SqlExpression" };
-
-export interface AliasedExpression {
-	readonly alias: string;
-	readonly expression: SqlExpression;
-}
+import type {
+	AggregateFn,
+	AliasedExpression,
+	Granularity,
+	SqlExpression,
+	TimeUnit,
+} from "./primitives";
+export type {
+	AggregateFn,
+	AliasedExpression,
+	Granularity,
+	SqlExpression,
+} from "./primitives";
 
 export type SelectField = string | AliasedExpression;
 

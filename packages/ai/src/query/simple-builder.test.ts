@@ -722,6 +722,42 @@ describe("SimpleQueryBuilder.compile", () => {
 		});
 	});
 
+	it("builds real session transition flow instead of page popularity", () => {
+		const config = QueryBuilders.session_flow;
+		if (!config) {
+			throw new Error("session_flow builder is missing");
+		}
+
+		const { sql } = new SimpleQueryBuilder(
+			config,
+			makeRequest({ type: "session_flow" })
+		).compile();
+
+		expect(sql).toContain("leadInFrame(path)");
+		expect(sql).toContain("from_path");
+		expect(sql).toContain("to_path");
+		expect(sql).toContain("event_name = 'screen_view'");
+		expect(sql).not.toContain("event_name = 'pageview'");
+	});
+
+	it("builds interesting sessions with pageview, custom event, and error signals", () => {
+		const config = QueryBuilders.interesting_sessions;
+		if (!config) {
+			throw new Error("interesting_sessions builder is missing");
+		}
+
+		const { sql } = new SimpleQueryBuilder(
+			config,
+			makeRequest({ type: "interesting_sessions", limit: 5 })
+		).compile();
+
+		expect(sql).toContain("interesting_score");
+		expect(sql).toContain("analytics.custom_events");
+		expect(sql).toContain("analytics.error_spans");
+		expect(sql).toContain("event_name = 'screen_view'");
+		expect(sql).not.toContain("event_name = 'pageview'");
+	});
+
 	it("builds scroll depth queries from page_exit percent values", () => {
 		const summaryConfig = QueryBuilders.scroll_depth_summary;
 		const distributionConfig = QueryBuilders.scroll_depth_distribution;

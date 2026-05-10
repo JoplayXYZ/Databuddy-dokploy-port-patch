@@ -6,7 +6,7 @@ import {
 	getTableDefinition,
 	isValidColumn,
 	isValidTable,
-} from "@databuddy/shared/schema/analytics-tables";
+} from "./analytics-tables";
 import type {
 	AggregateFunction,
 	CustomQueryConfig,
@@ -15,7 +15,7 @@ import type {
 	CustomQueryRequest,
 	CustomQueryResponse,
 	CustomQuerySelect,
-} from "@databuddy/shared/types/custom-query";
+} from "./custom-query-types";
 import { log } from "evlog";
 import { getActiveAiRequestLogger } from "../lib/request-logger";
 

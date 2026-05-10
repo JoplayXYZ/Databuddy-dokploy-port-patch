@@ -1,6 +1,12 @@
 import { Analytics } from "../../types/tables";
 import type { Filter, SimpleQueryConfig, TimeUnit } from "../types";
 
+const DATE_ONLY_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+function inclusiveEndDate(endDate: string): string {
+	return DATE_ONLY_RE.test(endDate) ? `${endDate} 23:59:59` : endDate;
+}
+
 export const SessionsBuilders: Record<string, SimpleQueryConfig> = {
 	session_metrics: {
 		customSql: (websiteId: string, startDate: string, endDate: string) => ({
@@ -101,6 +107,45 @@ export const SessionsBuilders: Record<string, SimpleQueryConfig> = {
 	} satisfies SimpleQueryConfig,
 
 	session_flow: {
+		customSql: (websiteId: string, startDate: string, endDate: string) => ({
+			sql: `
+				WITH page_events AS (
+					SELECT
+						session_id,
+						path,
+						leadInFrame(path) OVER (
+							PARTITION BY session_id
+							ORDER BY time ASC
+							ROWS BETWEEN CURRENT ROW AND 1 FOLLOWING
+						) as next_path
+					FROM ${Analytics.events}
+					WHERE
+						client_id = {websiteId:String}
+						AND time >= toDateTime({startDate:String})
+						AND time <= toDateTime({endDate:String})
+						AND event_name = 'screen_view'
+						AND session_id != ''
+						AND path != ''
+				)
+				SELECT
+					path as from_path,
+					next_path as to_path,
+					concat(path, ' → ', next_path) as name,
+					count() as transitions,
+					uniq(session_id) as sessions
+				FROM page_events
+				WHERE next_path != '' AND next_path != path
+				GROUP BY path, next_path
+				ORDER BY transitions DESC
+				LIMIT 100
+			`,
+			params: { websiteId, startDate, endDate: inclusiveEndDate(endDate) },
+		}),
+		timeField: "time",
+		customizable: true,
+	} satisfies SimpleQueryConfig,
+
+	session_pages: {
 		table: Analytics.events,
 		fields: [
 			"path as name",
@@ -113,6 +158,107 @@ export const SessionsBuilders: Record<string, SimpleQueryConfig> = {
 		limit: 100,
 		timeField: "time",
 		customizable: true,
+	} satisfies SimpleQueryConfig,
+
+	interesting_sessions: {
+		customSql: (
+			websiteId: string,
+			startDate: string,
+			endDate: string,
+			_filters?: Filter[],
+			_granularity?: TimeUnit,
+			limit = 10,
+			offset = 0
+		) => ({
+			sql: `
+				WITH base_sessions AS (
+					SELECT
+						session_id,
+						min(time) as first_visit,
+						max(time) as last_visit,
+						dateDiff('second', min(time), max(time)) as duration_seconds,
+						any(anonymous_id) as visitor_id,
+						any(country) as country,
+						any(referrer) as referrer,
+						any(device_type) as device_type,
+						any(browser_name) as browser_name,
+						any(os_name) as os_name,
+						countIf(event_name = 'screen_view') as page_views,
+						uniqIf(path, event_name = 'screen_view' AND path != '') as unique_pages,
+						countIf(event_name NOT IN ('screen_view', 'page_exit', 'web_vitals', 'link_out')) as analytics_engagement_events,
+						groupUniqArrayIf(12)(path, event_name = 'screen_view' AND path != '') as paths
+					FROM ${Analytics.events}
+					WHERE
+						client_id = {websiteId:String}
+						AND time >= toDateTime({startDate:String})
+						AND time <= toDateTime({endDate:String})
+						AND session_id != ''
+					GROUP BY session_id
+				),
+				custom_by_session AS (
+					SELECT
+						session_id,
+						count() as custom_events,
+						groupUniqArray(8)(event_name) as custom_event_names
+					FROM ${Analytics.custom_events}
+					WHERE
+						website_id = {websiteId:String}
+						AND timestamp >= toDateTime({startDate:String})
+						AND timestamp <= toDateTime({endDate:String})
+						AND session_id != ''
+					GROUP BY session_id
+				),
+				errors_by_session AS (
+					SELECT session_id, count() as errors
+					FROM ${Analytics.error_spans}
+					WHERE
+						client_id = {websiteId:String}
+						AND timestamp >= toDateTime({startDate:String})
+						AND timestamp <= toDateTime({endDate:String})
+						AND session_id != ''
+					GROUP BY session_id
+				)
+				SELECT
+					bs.session_id,
+					bs.visitor_id,
+					bs.first_visit,
+					bs.last_visit,
+					bs.duration_seconds,
+					bs.page_views,
+					bs.unique_pages,
+					bs.analytics_engagement_events,
+					ifNull(cs.custom_events, 0) as custom_events,
+					ifNull(es.errors, 0) as errors,
+					bs.paths,
+					ifNull(cs.custom_event_names, []) as custom_event_names,
+					bs.country,
+					bs.referrer,
+					bs.device_type,
+					bs.browser_name,
+					bs.os_name,
+					(
+						least(bs.page_views, 10) * 2
+						+ least(bs.unique_pages, 8) * 3
+						+ least(bs.analytics_engagement_events + ifNull(cs.custom_events, 0), 20)
+						+ least(ifNull(es.errors, 0), 10) * 2
+						+ if(bs.duration_seconds >= 120, 5, 0)
+					) as interesting_score
+				FROM base_sessions bs
+				LEFT JOIN custom_by_session cs ON bs.session_id = cs.session_id
+				LEFT JOIN errors_by_session es ON bs.session_id = es.session_id
+				WHERE bs.page_views > 0
+				ORDER BY interesting_score DESC, bs.last_visit DESC
+				LIMIT {limit:Int32} OFFSET {offset:Int32}
+			`,
+			params: {
+				websiteId,
+				startDate,
+				endDate: inclusiveEndDate(endDate),
+				limit,
+				offset,
+			},
+		}),
+		plugins: { normalizeGeo: true },
 	} satisfies SimpleQueryConfig,
 
 	session_list: {
@@ -230,7 +376,7 @@ export const SessionsBuilders: Record<string, SimpleQueryConfig> = {
 				params: {
 					websiteId,
 					startDate,
-					endDate: `${endDate} 23:59:59`,
+					endDate: inclusiveEndDate(endDate),
 					limit,
 					offset,
 					...filterParams,

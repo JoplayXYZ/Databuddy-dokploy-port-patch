@@ -113,6 +113,29 @@ describe("validateAgentSQL", () => {
 		expect(result.reason).toContain("Multiple statements");
 	});
 
+	it("rejects common analytics.events schema footguns", () => {
+		for (const [badColumn, replacement] of [
+			["website_id", "client_id"],
+			["created_at", "time"],
+			["page_path", "path"],
+			["event_type", "event_name"],
+		] as const) {
+			const result = validateAgentSQL(
+				`SELECT count() FROM analytics.events WHERE client_id = {websiteId:String} AND ${badColumn} != ''`
+			);
+			expect(result.valid).toBe(false);
+			expect(result.reason).toContain(replacement);
+		}
+	});
+
+	it("rejects the nonexistent pageview event name", () => {
+		const result = validateAgentSQL(
+			"SELECT count() FROM analytics.events WHERE client_id = {websiteId:String} AND event_name = 'pageview'"
+		);
+		expect(result.valid).toBe(false);
+		expect(result.reason).toContain("screen_view");
+	});
+
 	it("exports the validation error constant", () => {
 		expect(AGENT_SQL_VALIDATION_ERROR).toContain("security validation");
 	});

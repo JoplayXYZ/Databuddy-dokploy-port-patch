@@ -9,8 +9,7 @@ import {
 } from "@databuddy/api-keys/resolve";
 import { db } from "@databuddy/db";
 import { ratelimit } from "@databuddy/redis/rate-limit";
-import { filterOptions } from "@databuddy/shared/lists/filters";
-import type { CustomQueryRequest } from "@databuddy/shared/types/custom-query";
+import type { CustomQueryRequest } from "@databuddy/ai/query/custom-query-types";
 import { compileQuery, executeBatch } from "@databuddy/ai/query";
 import { QueryBuilders } from "@databuddy/ai/query/builders";
 import { executeCustomQuery } from "@databuddy/ai/query/custom-query-builder";
@@ -32,6 +31,30 @@ import {
 	type DynamicQueryRequestType,
 } from "../schemas/query-schemas";
 
+const DEFAULT_ALLOWED_FILTERS = [
+	"path",
+	"query_string",
+	"referrer",
+	"country",
+	"region",
+	"city",
+	"timezone",
+	"language",
+	"device_type",
+	"browser_name",
+	"os_name",
+	"utm_source",
+	"utm_medium",
+	"utm_campaign",
+	"provider",
+	"model",
+	"type",
+	"finish_reason",
+	"error_name",
+	"http_status",
+	"user_id",
+	"trace_id",
+] as const;
 const MAX_HOURLY_DAYS = 30;
 const MS_PER_DAY = 86_400_000;
 
@@ -944,8 +967,7 @@ export const query = new Elysia({ prefix: "/v1/query" })
 			Object.entries(QueryBuilders).map(([key, cfg]) => [
 				key,
 				{
-					allowedFilters:
-						cfg.allowedFilters ?? filterOptions.map((f) => f.value),
+					allowedFilters: cfg.allowedFilters ?? DEFAULT_ALLOWED_FILTERS,
 					customizable: cfg.customizable,
 					defaultLimit: cfg.limit,
 					...(includeMeta && { meta: cfg.meta }),
