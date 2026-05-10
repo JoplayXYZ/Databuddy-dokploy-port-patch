@@ -106,7 +106,7 @@ export function createInsightsAgentTools(
 
 	const webMetricsTool = tool({
 		description:
-			"Fetch analytics data for the current or previous week-over-week period. Batch multiple query types in one call (up to 8). Start with summary_metrics for both periods, then add top_pages, errors, referrers, geo, browsers, vitals, or custom events as needed before producing final insights.",
+			"Fetch analytics data for the current or previous week-over-week period. Batch multiple query types in one call (up to 8). Goal: gather enough breadth for 3 concise, non-duplicate insight cards. Start with summary_metrics for both periods, then add top_pages, errors, referrers, geo, browsers, vitals, or custom events only when they sharpen actionability.",
 		inputSchema: z.object({
 			period: z
 				.enum(["current", "previous"])

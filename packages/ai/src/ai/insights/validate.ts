@@ -40,6 +40,21 @@ const IMPROVE_WORDS =
 const WORSEN_WORDS =
 	/\b(worse|worsens|worsened|worsening|degrade|degrades|degraded|regression|broken|sluggish)\b/i;
 const SIGNED_UP_NUMBER = /(^|\s)\+\s?\d/;
+const ACTION_VERB_PATTERN =
+	/\b(inspect|review|compare|segment|drill|open|fix|audit|trace|check|verify|validate|filter|investigate|rollback|hotfix|profile|diagnose)\b/i;
+const GENERIC_MONITORING_PATTERN =
+	/\b(monitor|keep an eye|watch this|track closely|continue tracking)\b/i;
+const HARD_CAUSALITY_PATTERN =
+	/\b(caused by|because of|due to|driven by)\b/i;
+const ATTRIBUTION_CONTEXT_PATTERN =
+	/\b(referrer|source|utm|campaign|channel|twitter|google|bing|toolfolio)\b/i;
+const BUSINESS_CLAIM_PATTERN =
+	/\b(revenue|roi|roas|cac|ltv|payback|profit|sales|commercial impact)\b/i;
+const TECHNICAL_TITLE_JARGON_PATTERN = /\b(INP|LCP|FCP|TTFB|CLS|p75)\b/i;
+
+const MAX_TITLE_CHARS = 80;
+const MAX_DESCRIPTION_CHARS = 320;
+const MAX_SUGGESTION_CHARS = 260;
 
 function roundPercent(value: number): number {
 	return Math.round(value * 10) / 10;
@@ -190,6 +205,68 @@ export function validateInsight(input: ParsedInsight): InsightValidationResult {
 			warnings: [
 				...warnings,
 				`${insight.title}: dropped because narrative sentiment contradicts metric direction`,
+			],
+		};
+	}
+
+	if (TECHNICAL_TITLE_JARGON_PATTERN.test(insight.title)) {
+		return {
+			insight: null,
+			warnings: [
+				...warnings,
+				`${insight.title}: dropped because title uses technical jargon`,
+			],
+		};
+	}
+
+	if (
+		insight.title.length > MAX_TITLE_CHARS ||
+		insight.description.length > MAX_DESCRIPTION_CHARS ||
+		insight.suggestion.length > MAX_SUGGESTION_CHARS
+	) {
+		return {
+			insight: null,
+			warnings: [
+				...warnings,
+				`${insight.title}: dropped because insight copy is too verbose`,
+			],
+		};
+	}
+
+	if (
+		GENERIC_MONITORING_PATTERN.test(insight.suggestion) &&
+		!ACTION_VERB_PATTERN.test(insight.suggestion)
+	) {
+		return {
+			insight: null,
+			warnings: [
+				...warnings,
+				`${insight.title}: dropped because suggestion is generic monitoring advice`,
+			],
+		};
+	}
+
+	const narrative = `${insight.title} ${insight.description} ${insight.suggestion}`;
+	if (
+		HARD_CAUSALITY_PATTERN.test(narrative) &&
+		ATTRIBUTION_CONTEXT_PATTERN.test(narrative) &&
+		insight.confidence < 0.9
+	) {
+		return {
+			insight: null,
+			warnings: [
+				...warnings,
+				`${insight.title}: dropped because attribution causality is overstated`,
+			],
+		};
+	}
+
+	if (BUSINESS_CLAIM_PATTERN.test(narrative) && !insight.sources.includes("business")) {
+		return {
+			insight: null,
+			warnings: [
+				...warnings,
+				`${insight.title}: dropped because business impact claim lacks business data source`,
 			],
 		};
 	}

@@ -100,7 +100,7 @@ describe("validateInsight", () => {
 	it("treats rising vitals latency as negative", () => {
 		const result = validateInsight({
 			...base,
-			title: "INP p75 rising",
+			title: "Interactions getting slower",
 			description: "INP p75 worsened this week.",
 			metrics: [
 				{ label: "INP p75", current: 104, previous: 96, format: "duration_ms" },
@@ -115,6 +115,63 @@ describe("validateInsight", () => {
 			type: "vitals_degraded",
 			changePercent: 8.3,
 		});
+	});
+
+	it("drops technical jargon in titles", () => {
+		const result = validateInsight({
+			...base,
+			title: "INP p75 regression",
+			description: "Interaction latency worsened this week.",
+			suggestion: "Profile homepage JavaScript during real sessions.",
+			metrics: [
+				{ label: "INP p75", current: 104, previous: 96, format: "duration_ms" },
+			],
+			type: "vitals_degraded",
+			sentiment: "negative",
+			changePercent: 8.3,
+		});
+
+		expect(result.insight).toBeNull();
+		expect(result.warnings.join("\n")).toContain("technical jargon");
+	});
+
+	it("drops generic monitoring advice", () => {
+		const result = validateInsight({
+			...base,
+			suggestion: "Monitor this closely over the next week.",
+		});
+
+		expect(result.insight).toBeNull();
+		expect(result.warnings.join("\n")).toContain("generic monitoring");
+	});
+
+	it("drops unsupported revenue impact claims without business data", () => {
+		const result = validateInsight({
+			...base,
+			title: "Pricing traffic creates revenue upside",
+			description: "Pricing Page Visitors rose and should create revenue upside.",
+			suggestion: "Inspect the pricing path and compare conversion quality.",
+			sources: ["web"],
+		});
+
+		expect(result.insight).toBeNull();
+		expect(result.warnings.join("\n")).toContain("business impact claim");
+	});
+
+	it("drops overstated attribution causality", () => {
+		const result = validateInsight({
+			...base,
+			title: "Twitter caused engagement drop",
+			description:
+				"Engagement dropped because of the Twitter referrer mix shift.",
+			suggestion: "Segment Twitter sessions against other referrers to verify.",
+			type: "referrer_change",
+			sources: ["web"],
+			confidence: 0.65,
+		});
+
+		expect(result.insight).toBeNull();
+		expect(result.warnings.join("\n")).toContain("causality is overstated");
 	});
 });
 

@@ -260,126 +260,133 @@ ${lines.join("\n")}
 }
 
 const INSIGHTS_SYSTEM_PROMPT = `<role>
-You are an analytics insights engine. Return 1-3 week-over-week insights ranked by actionability and business impact.
+You are an analytics insights engine. Return exactly 3 week-over-week insights when there are 3 distinct data-backed signals; otherwise return only the distinct signals that exist. Rank by actionability and user/business impact.
 </role>
 
-<prioritization>
-- Score by actionability x impact, not raw percentage magnitude.
-- Reliability, errors, engagement drops, and meaningful behavior changes usually matter more than vanity traffic spikes.
-- Reserve priority 8-10 for issues or opportunities that likely affect users, outcomes, or operational health.
-</prioritization>
+<selection_rules>
+- Write for a founder/operator, not an analytics engineer. Translate technical metrics into plain outcomes: "interactions got slower", "pages feel slower", "setup is leaking users", "one source now dominates traffic".
+- Prefer reliability, conversion/product impact, engagement quality, broken instrumentation, and meaningful behavior changes over vanity traffic spikes.
+- Score actionability × impact, not raw percentage magnitude. Reserve priority 8-10 for likely user, revenue, or operational impact.
+- Prefer fewer, sharper insights over broad coverage. Return only signals a user can act on this week.
+- Avoid repeating recently reported narratives unless the signal materially changed.
+</selection_rules>
 
-<data_boundaries>
-- Use only metrics returned from analytics data plus annotations and recently reported insights included in the user message.
-- Do not invent revenue, funnel conversion, signups, retention, or root causes that are not supported by the data.
-- If the message lists multiple organization websites, treat them as separate properties and name the relevant property clearly in the insight.
-- If a referrer is another organization website, describe it as cross-property traffic rather than a generic referral.
-</data_boundaries>
+<data_rules>
+- Use only provided data, tool results, annotations, and recent-insight context.
+- Do not invent revenue, signups, retention, funnel conversion, causality, root causes, or business impact.
+- If multiple org websites are listed, keep properties separate; cross-domain referrers are cross-property traffic, not generic referrals.
+- Use cautious language for correlations unless segment-level evidence directly proves the cause.
+- Do not punt, apologize, or say you cannot produce insights when any useful metrics exist. If one query is sparse, use stronger available evidence and lower confidence.
+</data_rules>
 
-<writing_rules>
-- Metrics belong in the metrics array. Description and suggestion should reference metric labels, not repeat the numbers.
-- Keep the description to 1-2 concise sentences: what changed, why it matters, and whether the cause is direct evidence or a hypothesis.
-- Keep the suggestion concrete and specific. Avoid generic advice such as "monitor this" or "keep an eye on it".
-- Use cautious language for correlations. Say "may" or "should be checked" unless the segment-level data directly proves the cause.
-- Never use raw opaque URL slugs in titles. Use the provided human page labels.
-- If the week is mostly positive, still include one real risk or watch item when supported by the data.
-- If the same narrative already appears in recently reported insights, avoid repeating it unless the change is materially new.
-</writing_rules>
+<output_rules>
+- Prefer 3 concise insights: reliability/product risk first, then engagement/acquisition opportunity. Do not make near-duplicates.
+- Each insight must be one clear signal with 1-5 metrics; primary metric first.
+- Metrics array owns the numbers. Description/suggestion should reference metric labels, not restate values.
+- Keep title under 80 chars, description under 320 chars, suggestion under 260 chars.
+- Titles must be plain English and user-facing. Do not put raw metric jargon like INP, LCP, FCP, TTFB, CLS, or p75 in titles; put technical metric names only in the metrics array.
+- Keep description 1-2 concise sentences: what changed, why it matters, and whether cause is evidence or hypothesis.
+- Suggestion must be a specific next action with an operational verb such as inspect, review, compare, segment, drill into, fix, audit, trace, or verify. Never use generic monitoring advice.
+- Suggestion must name the exact product surface to inspect next: funnel step, goal, referrer segment, page path, error class, session stream, web vital, flag rollout, or agent diagnostic prompt.
+- subjectKey must be stable; sources must include only evidence domains used; confidence 0-1 should reflect evidence strength.
+- impactSummary is optional, one sentence under 220 characters.
+</output_rules>
 
-<metrics_rules>
-- Every insight needs 1-5 metrics.
-- Put the primary metric first.
-- Include supporting metrics only when they add context.
-- Use the right format: number, percent, duration_ms, or duration_s.
-- Include previous when comparison data exists.
-- changePercent should be the signed week-over-week change for the primary metric when that comparison exists.
-- subjectKey should be a stable identifier for the signal, such as pricing_page, organic_search, signup_goal, or signup_errors.
-- sources must list only the evidence domains actually used: web, product, ops, business.
-- confidence should be between 0 and 1 based on how directly the data supports the conclusion.
-- impactSummary is optional and should briefly state user or business impact when the impact is clear. Keep it to a single sentence under 220 characters.
-- Prefer specific types when they fit: conversion_leak, funnel_regression, channel_concentration, reliability_improved, persistent_error_hotspot, quality_shift, cross_property_dependency, performance_improved.
-</metrics_rules>
-
-<examples>
-<example name="traffic_growth_with_context">
-Input pattern: visitors and sessions rise, bounce rate improves, top pages show stronger pricing/demo intent.
-Output pattern:
-{
-  "title": "Pricing page traffic up 28%",
-  "description": "Pricing Page Visitors became a larger share of site activity while Bounce Rate improved, which suggests the extra traffic was more qualified than a broad awareness spike. If annotations mention a launch or campaign, use that as context rather than inventing a cause.",
-  "suggestion": "Review the journey from Pricing Page Visitors into the next high-intent step and tighten the CTA path if Contact Page Visitors or demo pages are lagging.",
-  "metrics": [
-    { "label": "Pricing Page Visitors", "current": 640, "previous": 500, "format": "number" },
-    { "label": "Sessions", "current": 3100, "previous": 2800, "format": "number" },
-    { "label": "Bounce Rate", "current": 42, "previous": 47, "format": "percent" }
-  ],
-  "severity": "info",
-  "sentiment": "positive",
-  "priority": 6,
-  "type": "page_trend",
-  "changePercent": 28,
-  "subjectKey": "pricing_page",
-  "sources": ["web"],
-  "confidence": 0.74,
-  "impactSummary": "Higher-intent page demand improved this week."
-}
-</example>
-
-<example name="error_regression">
-Input pattern: error rate rises and a browser, page, or referrer shift may help explain it.
-Output pattern:
-{
-  "title": "Error rate up 2.1 pts",
-  "description": "Error Rate worsened while Sessions stayed healthy, so this looks like a product or delivery issue rather than a demand problem. If browser or page data points to a concentrated segment, call that out directly.",
-  "suggestion": "Inspect the dominant error class and the affected browser or page path first, then verify whether the recent release or traffic source introduced a broken flow.",
-  "metrics": [
-    { "label": "Error Rate", "current": 3.4, "previous": 1.3, "format": "percent" },
-    { "label": "Errors", "current": 81, "previous": 29, "format": "number" },
-    { "label": "Sessions", "current": 2600, "previous": 2550, "format": "number" }
-  ],
-  "severity": "warning",
-  "sentiment": "negative",
-  "priority": 8,
-  "type": "error_spike",
-  "changePercent": 161.5,
-  "subjectKey": "error_rate",
-  "sources": ["web", "ops"],
-  "confidence": 0.88,
-  "impactSummary": "More sessions are likely encountering broken flows."
-}
-</example>
-
-<example name="mostly_flat_week">
-Input pattern: top-line traffic is stable, but one supporting metric signals risk.
-Output pattern:
-{
-  "title": "Traffic steady, engagement softer",
-  "description": "Visitors stayed broadly stable, but Avg Session Duration moved the wrong way, which suggests the week was less healthy than the topline implies. Use a risk framing instead of forcing a celebratory narrative.",
-  "suggestion": "Check which landing pages or referrers contributed most to the weaker Avg Session Duration and test whether the entry experience or message match slipped.",
-  "metrics": [
-    { "label": "Visitors", "current": 2400, "previous": 2360, "format": "number" },
-    { "label": "Avg Session Duration", "current": 118, "previous": 143, "format": "duration_s" },
-    { "label": "Bounce Rate", "current": 46, "previous": 43, "format": "percent" }
-  ],
-  "severity": "info",
-  "sentiment": "neutral",
-  "priority": 5,
-  "type": "engagement_change",
-  "changePercent": -17.5,
-  "subjectKey": "session_duration",
-  "sources": ["web"],
-  "confidence": 0.63
-}
-</example>
-</examples>
+<quality_examples>
+Good: Error Rate rose while Sessions stayed stable -> reliability issue; suggest reviewing affected page/errors first.
+Good: INP p75 rose -> title "Interactions got slower"; metrics can still include "INP p75".
+Good: Onboarding step 2 drop-off is 80% -> title "Onboarding is leaking at step 2".
+Bad: Pricing Visitors rose -> "revenue opportunity" without business data.
+Bad: Twitter rose and Bounce Rate worsened -> "Twitter caused the drop" without segmented engagement data.
+Bad: "INP p75 still rising" as a title; users should not need to know web-vitals acronyms.
+</quality_examples>
 
 <self_check>
-Before finalizing, verify each insight:
-1. Uses only provided data.
-2. Includes a metrics array with the primary metric first.
-3. Does not restate metric values in description or suggestion.
-4. Gives a specific next action instead of generic monitoring advice.
+Before finalizing: exactly 3 if data supports it, data-backed only, metrics present, primary metric first, no duplicate narrative, concise copy, specific action, named product surface, no punt on partial data.
 </self_check>`;
+
+async function validateOrRepairInsights(
+	insights: ParsedInsight[],
+	context: { domain: string; mode: "agent" | "legacy"; websiteId: string }
+): Promise<ParsedInsight[]> {
+	const validated = validateInsights(insights);
+	if (validated.warnings.length > 0) {
+		useLogger().warn("Insights validation repaired or dropped output", {
+			insights: {
+				websiteId: context.websiteId,
+				mode: context.mode,
+				warnings: validated.warnings,
+			},
+		});
+	}
+
+	const targetCount = Math.min(3, insights.length);
+	if (targetCount === 0 || validated.insights.length >= targetCount) {
+		return validated.insights;
+	}
+
+	try {
+		const ai = getAILogger();
+		const repair = await generateText({
+			model: ai.wrap(models.balanced),
+			output: Output.object({ schema: insightsOutputSchema }),
+			messages: [
+				{
+					role: "system",
+					content: `Repair Databuddy insight cards. Return exactly ${targetCount} concise, valid cards when the source contains ${targetCount} distinct data-backed signals. Use only the provided metrics and claims; do not invent numbers, causes, revenue impact, or new entities. Keep title <=80 chars, description <=320 chars, suggestion <=260 chars. Write for a founder/operator: titles must be plain English and avoid raw metric jargon like INP, LCP, FCP, TTFB, CLS, or p75. Technical metric names may remain in the metrics array. Suggestions need specific operational actions, not monitoring. Soften unsupported causality.`,
+				},
+				{
+					role: "user",
+					content: JSON.stringify(
+						{
+							domain: context.domain,
+							validationWarnings: validated.warnings,
+							originalInsights: insights,
+						},
+						null,
+						2
+					),
+				},
+			],
+			temperature: 0,
+			maxOutputTokens: 4096,
+			abortSignal: AbortSignal.timeout(30_000),
+			experimental_telemetry: {
+				isEnabled: true,
+				functionId: "databuddy.insights.repair",
+				metadata: {
+					source: "insights",
+					feature: "smart_insights",
+					mode: context.mode,
+					websiteId: context.websiteId,
+					websiteDomain: context.domain,
+				},
+			},
+		});
+
+		const repairedOutput = repair.output?.insights ?? [];
+		const repaired = validateInsights(repairedOutput);
+		if (repaired.warnings.length > 0) {
+			useLogger().warn("Insights repair validation warnings", {
+				insights: {
+					websiteId: context.websiteId,
+					mode: context.mode,
+					warnings: repaired.warnings,
+				},
+			});
+		}
+
+		if (repaired.insights.length >= validated.insights.length) {
+			return repaired.insights.slice(0, targetCount);
+		}
+	} catch (error) {
+		useLogger().warn("Insights repair failed", {
+			insights: { websiteId: context.websiteId, mode: context.mode, error },
+		});
+	}
+
+	return validated.insights;
+}
 
 async function analyzeWebsiteLegacy(
 	organizationId: string,
@@ -466,16 +473,11 @@ async function analyzeWebsiteLegacy(
 			return [];
 		}
 
-		const validated = validateInsights(result.output.insights);
-		if (validated.warnings.length > 0) {
-			useLogger().warn(
-				"Insights validation repaired or dropped legacy output",
-				{
-					insights: { websiteId, warnings: validated.warnings },
-				}
-			);
-		}
-		return validated.insights;
+		return await validateOrRepairInsights(result.output.insights, {
+			domain,
+			mode: "legacy",
+			websiteId,
+		});
 	} catch (error) {
 		useLogger().warn("Failed to generate insights (legacy)", {
 			insights: { websiteId, error },
@@ -604,16 +606,11 @@ ${orgContext}${annotationContext}${recentInsightsBlock}`;
 		});
 
 		if (result.output?.insights?.length) {
-			const validated = validateInsights(result.output.insights);
-			if (validated.warnings.length > 0) {
-				useLogger().warn(
-					"Insights validation repaired or dropped agent output",
-					{
-						insights: { websiteId, warnings: validated.warnings },
-					}
-				);
-			}
-			return validated.insights;
+			return await validateOrRepairInsights(result.output.insights, {
+				domain,
+				mode: "agent",
+				websiteId,
+			});
 		}
 
 		useLogger().warn("Insights agent finished without structured output", {
