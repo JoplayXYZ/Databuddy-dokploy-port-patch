@@ -95,10 +95,10 @@ describe("Databuddy Slack agent client", () => {
 			"other_people_mentioned_in_latest_message: <@U999>"
 		);
 		expect(String(captured.input)).toContain(
-			"Do not apply another Slack user's saved name"
+			"mentioned users are subjects/addressees, not the speaker"
 		);
 		expect(String(captured.input)).toContain(
-			"Personality rule: be warm, sharp, and lightly cheeky"
+			"Slack replies default to 1-3 short sentences"
 		);
 		expect(captured.actor).toMatchObject({
 			type: "api_key_secret",
