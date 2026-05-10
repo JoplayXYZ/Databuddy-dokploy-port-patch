@@ -60,7 +60,10 @@ export async function getAccessibleWebsites(
 			.select(select)
 			.from(websites)
 			.where(
-				and(eq(websites.organizationId, organizationId), isNull(websites.deletedAt))
+				and(
+					eq(websites.organizationId, organizationId),
+					isNull(websites.deletedAt)
+				)
 			)
 			.orderBy((t) => t.createdAt);
 	}

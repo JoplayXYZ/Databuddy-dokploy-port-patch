@@ -1,13 +1,13 @@
-import { readBooleanEnv } from "@databuddy/env/boolean";
 import { publicConfig } from "@databuddy/env/public";
 import type { AppRouter } from "@databuddy/rpc";
 import { createORPCClient, onError } from "@orpc/client";
 import { RPCLink } from "@orpc/client/fetch";
 import type { RouterClient } from "@orpc/server";
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
+import { isDashboardE2E } from "@/lib/e2e-mode";
 import { isAbortError } from "@/lib/is-abort-error";
 
-const isE2E = readBooleanEnv("NEXT_PUBLIC_DATABUDDY_E2E_MODE");
+const isE2E = isDashboardE2E;
 
 const link = new RPCLink({
 	url: `${publicConfig.urls.api}/rpc`,

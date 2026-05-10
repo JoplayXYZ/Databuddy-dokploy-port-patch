@@ -1,7 +1,7 @@
 import { and, db, eq, ne, withTransaction } from "@databuddy/db";
 import { featureInvite, flags } from "@databuddy/db/schema";
 import type { userRuleSchema } from "@databuddy/shared/flags";
-import { invalidateFlagCache } from "@databuddy/shared/flags/utils";
+import { invalidateFlagCache } from "../utils/flags";
 import { randomUUIDv7 } from "bun";
 import { z } from "zod";
 import { rpcError } from "../errors";

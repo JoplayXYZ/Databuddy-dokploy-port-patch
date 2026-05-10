@@ -5,24 +5,9 @@
   "type": "module",
   "exports": {
     "./country-codes": "./src/country-codes.ts",
-    "./billing/credit-schema": "./src/billing/credit-schema.ts",
-    "./billing/topup-math": "./src/billing/topup-math.ts",
-    "./lists/filters": "./src/lists/filters.ts",
-    "./lists/referrers": "./src/lists/referrers.ts",
-    "./schema/analytics-tables": "./src/schema/analytics-tables.ts",
-    "./types/analytics": "./src/types/analytics.ts",
-    "./types/api": "./src/types/api.ts",
-    "./types/custom-query": "./src/types/custom-query.ts",
-    "./types/billing": "./src/types/billing.ts",
-    "./types/errors": "./src/types/errors.ts",
     "./types/features": "./src/types/features.ts",
-    "./types/query": "./src/types/query.ts",
-    "./types/sessions": "./src/types/sessions.ts",
-    "./types/website": "./src/types/website.ts",
     "./flags": "./src/flags/index.ts",
-    "./flags/utils": "./src/flags/utils.ts",
     "./utils/referrer": "./src/utils/referrer.ts",
-    "./utils/ids": "./src/utils/ids.ts",
     "./bot-detection": "./src/utils/bot-detection/index.ts",
     "./bot-detection/detector": "./src/utils/bot-detection/detector.ts",
     "./bot-detection/types": "./src/utils/bot-detection/types.ts",
@@ -35,11 +20,6 @@
     "test": "bun test src"
   },
   "dependencies": {
-    "@databuddy/redis": "workspace:*",
-    "@databuddy/db": "workspace:*",
-    "evlog": "catalog:",
-    "nanoid": "catalog:",
-    "tokenlens": "catalog:",
     "ua-parser-js": "catalog:",
     "zod": "catalog:"
   }

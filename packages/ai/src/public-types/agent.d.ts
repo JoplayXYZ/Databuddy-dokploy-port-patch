@@ -3,7 +3,6 @@ import type { ApiKeyRow } from "@databuddy/api-keys/resolve";
 export type DatabuddyAgentSource = "dashboard" | "mcp" | "slack";
 export type DatabuddyAgentBillingMode = "bill" | "skip";
 export type DatabuddyAgentMutationMode = "allow" | "dry-run";
-export type DatabuddyAgentToolMode = "live" | "eval-fixtures";
 export type DatabuddyAgentUserErrorCode = "agent_credits_exhausted";
 
 export declare class DatabuddyAgentUserError extends Error {
@@ -114,7 +113,6 @@ export interface DatabuddyAgentOptions {
 	source?: DatabuddyAgentSource;
 	timeoutMs?: number;
 	timezone?: string;
-	toolMode?: DatabuddyAgentToolMode;
 	websiteDomain?: string | null;
 	websiteId?: string | null;
 }

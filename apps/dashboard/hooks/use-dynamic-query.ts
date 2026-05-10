@@ -1,10 +1,10 @@
 import { publicConfig } from "@databuddy/env/public";
-import type { DateRange } from "@databuddy/shared/types/analytics";
+import type { DateRange } from "@/types/analytics";
 import type {
 	BatchQueryResponse,
 	DynamicQueryRequest,
 	DynamicQueryResponse,
-} from "@databuddy/shared/types/api";
+} from "@/types/api";
 import { type UseQueryOptions, useQuery } from "@tanstack/react-query";
 import { useCallback, useMemo } from "react";
 import { guessTimezone } from "@databuddy/ui";

@@ -98,7 +98,7 @@ export function buildBatchQueryRequests(
 }
 
 const SCHEMA_SUMMARY =
-	"analytics.events (client_id, path, time, country, device_type, referrer, utm_*); analytics.custom_events (owner_id, event_name, properties — use get_data custom_events_* builders, not raw SQL); analytics.error_spans; analytics.web_vitals_hourly. Filter: client_id = {websiteId:String}.";
+	"analytics.events (client_id, anonymous_id, session_id, time, path, event_name, country, device_type, referrer, utm_*). Footguns: use client_id not website_id, time not created_at, path not page_path, event_name not event_type, and screen_view not pageview. analytics.custom_events (owner_id, event_name, properties — use get_data custom_events_* builders, not raw SQL); analytics.error_spans; analytics.web_vitals_hourly. Filter: client_id = {websiteId:String}.";
 
 const QUERY_TYPE_DESCRIPTIONS: Record<string, string> = {
 	entry_pages:
@@ -110,7 +110,7 @@ const QUERY_TYPE_DESCRIPTIONS: Record<string, string> = {
 	utm_mediums:
 		"Traffic breakdown by UTM medium parameters (e.g. cpc, email, social).",
 	traffic_sources:
-		"Aggregated traffic sources combining referrers, UTM, and direct visits.",
+		"Aggregated traffic sources combining referrers, UTM, and direct visits. This is traffic distribution, not revenue attribution, incrementality, or causal channel ROI.",
 	browsers:
 		"Detailed browser usage breakdown including specific browser names.",
 	browser_versions: "Browser usage broken down by specific version numbers.",
@@ -153,9 +153,13 @@ const QUERY_TYPE_DESCRIPTIONS: Record<string, string> = {
 	sessions_by_browser: "Session counts grouped by browser.",
 	sessions_time_series: "Session counts plotted over time.",
 	session_flow:
-		"User navigation flow showing page-to-page transitions within sessions.",
+		"Page-to-page transitions within sessions (from_path → to_path), ranked by transition count.",
+	session_pages:
+		"Pages ranked by how many sessions and visitors viewed them; useful for product usage hotspots, not path transitions.",
+	interesting_sessions:
+		"Ranked individual sessions worth inspecting, scored by page depth, unique pages, custom events, errors, and duration. Use first for 'dig into sessions' or 'how people use the product'.",
 	session_list:
-		"List of individual sessions with metadata (duration, pages, country).",
+		"List of recent individual sessions with metadata and chronological events.",
 	session_events: "Events within a specific session in chronological order.",
 	custom_events: "Custom event names with occurrence counts.",
 	custom_event_properties: "Property keys and values for custom events.",
@@ -204,18 +208,23 @@ const QUERY_TYPE_DESCRIPTIONS: Record<string, string> = {
 	revenue_by_provider: "Revenue broken down by payment provider.",
 	revenue_by_product: "Revenue broken down by product.",
 	revenue_attribution_overview:
-		"Revenue attribution overview showing conversion sources.",
+		"Revenue attribution overview for instrumented revenue only. Use to check revenue coverage before making channel-investment claims; do not infer incrementality or CAC/LTV without spend and identity data.",
 	revenue_by_country: "Revenue broken down by customer country.",
 	revenue_by_region: "Revenue broken down by customer region/state.",
 	revenue_by_city: "Revenue broken down by customer city.",
 	revenue_by_browser: "Revenue broken down by browser.",
 	revenue_by_device: "Revenue broken down by device type.",
 	revenue_by_os: "Revenue broken down by operating system.",
-	revenue_by_referrer: "Revenue attributed to traffic referrers.",
-	revenue_by_utm_source: "Revenue attributed to UTM source parameters.",
-	revenue_by_utm_medium: "Revenue attributed to UTM medium parameters.",
-	revenue_by_utm_campaign: "Revenue attributed to UTM campaign parameters.",
-	revenue_by_entry_page: "Revenue attributed to landing/entry pages.",
+	revenue_by_referrer:
+		"Instrumented revenue grouped by referrer. Treat missing/none buckets and identity gaps as coverage limitations, not proof of causality.",
+	revenue_by_utm_source:
+		"Instrumented revenue grouped by UTM source. Treat missing/none buckets and identity gaps as coverage limitations, not proof of causality.",
+	revenue_by_utm_medium:
+		"Instrumented revenue grouped by UTM medium. Treat missing/none buckets and identity gaps as coverage limitations, not proof of causality.",
+	revenue_by_utm_campaign:
+		"Instrumented revenue grouped by UTM campaign. Treat missing/none buckets and identity gaps as coverage limitations, not proof of causality.",
+	revenue_by_entry_page:
+		"Instrumented revenue grouped by landing/entry page. Useful for coverage/proxy analysis, not causal page ROI by itself.",
 	recent_transactions: "Most recent revenue transactions with details.",
 };
 

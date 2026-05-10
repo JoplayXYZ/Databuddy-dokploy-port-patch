@@ -82,6 +82,10 @@ export const QUERY_CATEGORIES = {
 			"sessions_by_browser",
 			"sessions_time_series",
 			"session_flow",
+			"session_pages",
+			"interesting_sessions",
+			"session_list",
+			"session_events",
 		] as const,
 	},
 	custom_events: {

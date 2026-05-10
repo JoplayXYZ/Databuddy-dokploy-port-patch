@@ -2,7 +2,7 @@ name: Dashboard E2E
 
 on:
   push:
-    branches: [main, staging]
+    branches: [main]
     paths:
       - ".github/workflows/dashboard-e2e.yml"
       - "apps/api/**"
@@ -26,7 +26,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: dashboard-e2e-${{ github.ref }}
+  group: dashboard-e2e-${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name || github.repository }}-${{ github.head_ref || github.ref_name }}
   cancel-in-progress: true
 
 jobs:
@@ -36,8 +36,8 @@ jobs:
     timeout-minutes: 20
     env:
       DATABUDDY_E2E_BASE_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres
-      DATABUDDY_E2E_START_CLICKHOUSE: "0"
-      DATABUDDY_E2E_SEED_CLICKHOUSE: "1"
+      DATABUDDY_E2E_START_CLICKHOUSE: "false"
+      DATABUDDY_E2E_SEED_CLICKHOUSE: "true"
       DATABUDDY_E2E_CLICKHOUSE_EVENTS: "150"
       CLICKHOUSE_URL: http://default:@localhost:8123/databuddy_analytics
       REDIS_URL: redis://localhost:6379
@@ -79,10 +79,12 @@ jobs:
           - 8123:8123
           - 9000:9000
         options: >-
-          --health-cmd "wget --no-verbose --tries=1 --spider http://localhost:8123/ping"
+          --ulimit nofile=262144:262144
+          --health-cmd "clickhouse-client --query 'SELECT 1'"
           --health-interval 10s
           --health-timeout 5s
-          --health-retries 10
+          --health-start-period 120s
+          --health-retries 20
 
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
@@ -95,6 +97,8 @@ jobs:
           key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
           restore-keys: ${{ runner.os }}-bun-
       - run: bun install --frozen-lockfile
+      - name: Build dashboard runtime packages
+        run: bunx turbo run build --filter @databuddy/cache --filter @databuddy/devtools --filter @databuddy/sdk
       - run: bunx playwright install --with-deps chromium
       - name: Run dashboard E2E
         run: |

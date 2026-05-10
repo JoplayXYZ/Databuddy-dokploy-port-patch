@@ -29,18 +29,21 @@ export const insightMetricSchema = z.object({
 export const insightSchema = z.object({
 	title: z
 		.string()
+		.max(80)
 		.describe(
-			"Brief headline under 60 chars with the key number. Never paste raw URL paths that contain opaque ID segments (long random slugs). Use human labels from Top Pages 'Human label' (e.g. 'Demo page', 'Pricing page', 'Home') instead of paths like /demo/xYz12…"
+			"Brief plain-English headline under 80 chars for a founder/operator. Avoid raw metric jargon like INP, LCP, FCP, TTFB, CLS, p75 in titles; translate to outcomes such as 'Interactions got slower' or 'Pages feel slower'. Never paste opaque URL slugs."
 		),
 	description: z
 		.string()
+		.max(320)
 		.describe(
-			"2-3 concise sentences explaining WHY the change matters and what likely caused it. Do NOT restate numbers that are already in the metrics array — reference metrics by their label name instead (e.g. 'Contact Page Visitors dropped sharply while Pricing Page Visitors surged'). Focus on the narrative: causes, implications, and context that the numbers alone cannot convey. End with a full stop. Name pages using human labels when the path has opaque IDs."
+			"1-2 concise sentences in plain English explaining what changed and why it matters. Translate technical metrics into user/product outcomes; keep raw metric names in the metrics array. Do NOT restate numbers already in metrics. End with a full stop."
 		),
 	suggestion: z
 		.string()
+		.max(260)
 		.describe(
-			"One or two actionable sentences tied to THIS product's data. Reference metric labels from the metrics array rather than restating their values. Recommend a specific next step grounded in the data pattern. Do not give generic marketing platitudes or hypothetical tactics."
+			"One specific next action in plain English tied to this product's data. Name the surface to inspect (page, funnel step, referrer segment, error class, sessions, flag rollout). Do not give generic monitoring advice."
 		),
 	metrics: z
 		.array(insightMetricSchema)
@@ -76,6 +79,14 @@ export const insightSchema = z.object({
 		"positive_trend",
 		"performance",
 		"uptime_issue",
+		"conversion_leak",
+		"funnel_regression",
+		"channel_concentration",
+		"reliability_improved",
+		"persistent_error_hotspot",
+		"quality_shift",
+		"cross_property_dependency",
+		"performance_improved",
 	]),
 	changePercent: z
 		.number()

@@ -1,8 +1,6 @@
 import type { WebsiteOutput } from "@databuddy/rpc";
-import type {
-	ProcessedMiniChartData,
-	Website,
-} from "@databuddy/shared/types/website";
+import type { Website } from "@databuddy/db/schema";
+import type { ProcessedMiniChartData } from "@/types/website";
 import { PrefetchZone } from "@/components/ds/prefetch-zone";
 import dynamic from "next/dynamic";
 import Link from "next/link";

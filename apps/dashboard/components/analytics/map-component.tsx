@@ -2,10 +2,7 @@
 
 import { CountryFlag } from "@/components/icon";
 import { type Country, useCountries } from "@/lib/geo";
-import type {
-	CountryData,
-	LocationData,
-} from "@databuddy/shared/types/website";
+import type { CountryData, LocationData } from "@/types/website";
 import { GlobeIcon } from "@databuddy/ui/icons";
 import { scalePow } from "d3-scale";
 import type { Feature, GeoJsonObject } from "geojson";

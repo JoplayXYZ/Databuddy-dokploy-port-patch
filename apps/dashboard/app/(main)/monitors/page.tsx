@@ -15,34 +15,12 @@ import {
 } from "@databuddy/ui/icons";
 import { Button, Card, EmptyState, Skeleton } from "@databuddy/ui";
 import { MonitorsSearchBar } from "./_components/monitors-search-bar";
+import type { Monitor } from "./_components/types";
 import {
 	type SortOption,
 	type StatusFilter,
 	useFilteredMonitors,
 } from "./_components/use-filtered-monitors";
-
-export interface Monitor {
-	cacheBust: boolean;
-	createdAt: Date | string;
-	cron: string;
-	granularity: string;
-	id: string;
-	isPaused: boolean;
-	jsonParsingConfig?: {
-		enabled: boolean;
-	} | null;
-	name: string | null;
-	organizationId: string;
-	timeout: number | null;
-	updatedAt: Date | string;
-	url: string | null;
-	website: {
-		id: string;
-		name: string | null;
-		domain: string;
-	} | null;
-	websiteId: string | null;
-}
 
 export default function MonitorsPage() {
 	const [isSheetOpen, setIsSheetOpen] = useState(false);

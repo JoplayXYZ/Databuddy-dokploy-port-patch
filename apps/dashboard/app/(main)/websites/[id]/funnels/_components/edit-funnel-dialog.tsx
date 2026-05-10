@@ -11,7 +11,7 @@ import type {
 	FunnelFilter,
 	FunnelStep,
 } from "@/types/funnels";
-import { filterOptions } from "@databuddy/shared/lists/filters";
+import { filterOptions } from "@/lib/filter-options";
 import {
 	DragDropContext,
 	Draggable,

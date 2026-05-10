@@ -88,11 +88,6 @@ const MODELS: Record<string, ModelEntry> = {
 		outputPerMToken: 2.5,
 		tags: ["mid", "xai"],
 	},
-	"xai/grok-4.20-multi-agent-beta": {
-		inputPerMToken: 2.0,
-		outputPerMToken: 6.0,
-		tags: ["mid", "xai"],
-	},
 	"xai/grok-4.3": {
 		inputPerMToken: 1.25,
 		outputPerMToken: 2.5,
@@ -114,12 +109,6 @@ const MODELS: Record<string, ModelEntry> = {
 		inputPerMToken: 0.065,
 		outputPerMToken: 0.26,
 		tags: ["budget", "alibaba", "open-weight"],
-	},
-
-	"nvidia/nemotron-3-super-120b-a12b": {
-		inputPerMToken: 0.09,
-		outputPerMToken: 0.45,
-		tags: ["budget", "nvidia", "open-weight"],
 	},
 
 	"inception/mercury-2": {

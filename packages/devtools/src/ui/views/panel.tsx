@@ -10,7 +10,7 @@ import type {
 	DatabuddyTrackerSnapshot,
 	DiagnosticItem,
 	FlagCatalogState,
-} from "../../core";
+} from "../../core/types";
 import {
 	CheckIcon,
 	ChevronIcon,

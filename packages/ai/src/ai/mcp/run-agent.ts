@@ -17,7 +17,7 @@ import {
 } from "../agents/execution";
 import { createMcpAgentConfig } from "../agents/mcp";
 import { getDefaultAgentModelId } from "../config/models";
-import type { AppMutationMode, AppToolMode } from "../config/context";
+import type { AppMutationMode } from "../config/context";
 import type { DatabuddyAgentSlackContext } from "./slack-context";
 
 const DEFAULT_MCP_AGENT_TIMEOUT_MS = 45_000;
@@ -39,7 +39,6 @@ export interface RunMcpAgentOptions {
 	storeMemory?: boolean;
 	timeoutMs?: number;
 	timezone?: string;
-	toolMode?: AppToolMode;
 	userId: string | null;
 	websiteDomain?: string | null;
 	websiteId?: string | null;
@@ -230,9 +229,12 @@ async function prepareMcpAgentRun(options: RunMcpAgentOptions) {
 				organizationId,
 				slackContext: options.slackContext,
 				source,
-				toolMode: options.toolMode,
 				websiteDomain: options.websiteDomain,
 				websiteId: options.websiteId,
+				activeTools: selectActiveToolsForQuestion({
+					question: options.question,
+					source,
+				}),
 			})
 		),
 		isMemoryEnabled()
@@ -262,6 +264,7 @@ async function prepareMcpAgentRun(options: RunMcpAgentOptions) {
 		model: ai.wrap(config.model),
 		instructions,
 		tools: config.tools,
+		activeTools: config.activeTools,
 		stopWhen: config.stopWhen,
 		temperature: config.temperature,
 		experimental_context: config.experimental_context,
@@ -313,6 +316,158 @@ async function trackPreparedUsage(
 		chatId: prepared.sessionId,
 		billingCustomerId: prepared.billingCustomerId,
 	});
+}
+
+const NO_TOOL_CHAT_PATTERN =
+	/\b(hi|hello|hey|thanks|thank you|lol|nice|cool|ok|okay|nah that's wrong|that's wrong|nope|shut up)\b|^\s*(damn|lol|nice|thanks)[.!?\s]*$/i;
+const THREAD_REFERENCE_PATTERN =
+	/\b(above|that|this thread|which one|what first|where do we .*first|poke first|prioriti[sz]e|what'?s the call|do you agree|who said|who asked|recap|from earlier|from above)\b/i;
+const FRESH_ANALYTICS_PATTERN =
+	/\b(fresh|current|latest|live|now|metrics?|analytics|top pages?|last \d+|last week|last month|pull|rerun|check)\b/i;
+const COPY_ONLY_PATTERN = /\b(exact copy|copy only)\b/i;
+const SLACK_FOLLOW_UP_OPEN_TAG = "<slack_follow_up";
+const SLACK_FOLLOW_UP_CLOSE_TAG = "</slack_follow_up>";
+const SLACK_LATEST_MESSAGE_OPEN_TAG = "<slack_latest_message>";
+const SLACK_LATEST_MESSAGE_CLOSE_TAG = "</slack_latest_message>";
+const SLACK_TEXT_MARKER = "\ntext:\n";
+const SLACK_TEXT_PREFIX = "text:\n";
+const ANALYTICS_ACTIVE_TOOLS = [
+	"list_websites",
+	"get_data",
+	"execute_query_builder",
+	"execute_sql_query",
+	"list_profiles",
+	"get_profile",
+	"get_profile_sessions",
+];
+
+function latestSlackText(input: string): string {
+	const lastFollowUp = getLastTaggedBlock(
+		input,
+		SLACK_FOLLOW_UP_OPEN_TAG,
+		SLACK_FOLLOW_UP_CLOSE_TAG
+	);
+	if (lastFollowUp !== undefined) {
+		return getSlackBlockText(lastFollowUp) ?? lastFollowUp;
+	}
+
+	const latestMessage = getFirstTaggedBlock(
+		input,
+		SLACK_LATEST_MESSAGE_OPEN_TAG,
+		SLACK_LATEST_MESSAGE_CLOSE_TAG
+	);
+	return latestMessage === undefined
+		? input
+		: (getSlackBlockText(latestMessage) ?? latestMessage);
+}
+
+function getFirstTaggedBlock(
+	input: string,
+	openTagPrefix: string,
+	closeTag: string
+): string | undefined {
+	const openStart = input.indexOf(openTagPrefix);
+	return openStart === -1
+		? undefined
+		: getTaggedBlockAfterOpen(input, openStart, openTagPrefix, closeTag)?.block;
+}
+
+function getLastTaggedBlock(
+	input: string,
+	openTagPrefix: string,
+	closeTag: string
+): string | undefined {
+	let searchFrom = 0;
+	let lastBlock: string | undefined;
+	while (searchFrom < input.length) {
+		const openStart = input.indexOf(openTagPrefix, searchFrom);
+		if (openStart === -1) {
+			return lastBlock;
+		}
+
+		const parsed = getTaggedBlockAfterOpen(
+			input,
+			openStart,
+			openTagPrefix,
+			closeTag
+		);
+		if (!parsed) {
+			return lastBlock;
+		}
+
+		lastBlock = parsed.block;
+		searchFrom = parsed.nextIndex;
+	}
+	return lastBlock;
+}
+
+function getTaggedBlockAfterOpen(
+	input: string,
+	openStart: number,
+	openTagPrefix: string,
+	closeTag: string
+): { block: string; nextIndex: number } | undefined {
+	const openEnd = input.indexOf(">", openStart + openTagPrefix.length);
+	if (openEnd === -1) {
+		return;
+	}
+
+	const bodyStart = openEnd + 1;
+	const closeStart = input.indexOf(closeTag, bodyStart);
+	if (closeStart === -1) {
+		return;
+	}
+
+	return {
+		block: input.slice(bodyStart, closeStart),
+		nextIndex: closeStart + closeTag.length,
+	};
+}
+
+function getSlackBlockText(block: string): string | undefined {
+	const textIndex = block.indexOf(SLACK_TEXT_MARKER);
+	if (textIndex !== -1) {
+		return block.slice(textIndex + SLACK_TEXT_MARKER.length);
+	}
+	return block.startsWith(SLACK_TEXT_PREFIX)
+		? block.slice(SLACK_TEXT_PREFIX.length)
+		: undefined;
+}
+
+function selectActiveToolsForQuestion(options: {
+	question: string;
+	source: "dashboard" | "mcp" | "slack";
+}): string[] | undefined {
+	const text = (
+		options.source === "slack"
+			? latestSlackText(options.question)
+			: options.question
+	).toLowerCase();
+	if (options.source === "slack") {
+		if (FRESH_ANALYTICS_PATTERN.test(text)) {
+			return THREAD_REFERENCE_PATTERN.test(text)
+				? ["slack_read_current_thread", ...ANALYTICS_ACTIVE_TOOLS]
+				: ANALYTICS_ACTIVE_TOOLS;
+		}
+		if (COPY_ONLY_PATTERN.test(text) && !THREAD_REFERENCE_PATTERN.test(text)) {
+			return [];
+		}
+		if (THREAD_REFERENCE_PATTERN.test(text)) {
+			return ["slack_read_current_thread"];
+		}
+		if (NO_TOOL_CHAT_PATTERN.test(text)) {
+			return [];
+		}
+	}
+
+	if (NO_TOOL_CHAT_PATTERN.test(text) && !FRESH_ANALYTICS_PATTERN.test(text)) {
+		return [];
+	}
+	if (FRESH_ANALYTICS_PATTERN.test(text)) {
+		return ANALYTICS_ACTIVE_TOOLS;
+	}
+
+	return;
 }
 
 function collectToolTrace(

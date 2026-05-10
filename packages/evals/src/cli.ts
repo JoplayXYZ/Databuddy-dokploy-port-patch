@@ -77,7 +77,7 @@ const QUALITY_GATE_FAILURE_PREFIX = "Quality judge score";
 const RUNNER_ERROR_PREFIX = "Runner error:";
 
 function shouldJudgeCase(evalCase: EvalCase): boolean {
-	return evalCase.category === "quality" || evalCase.category === "attribution";
+	return ["quality", "attribution", "insights"].includes(evalCase.category);
 }
 
 function countRunnerErrors(run: EvalRun): number {

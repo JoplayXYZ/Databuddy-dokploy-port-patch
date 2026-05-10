@@ -20,7 +20,6 @@
     "@databuddy/env": "workspace:*",
     "@databuddy/notifications": "workspace:*",
     "@databuddy/redis": "*",
-    "@databuddy/shared": "*",
     "better-auth": "^1.4.10",
     "better-auth-harmony": "^1.2.5",
     "drizzle-kit": "^1.0.0-rc.1",

@@ -81,7 +81,8 @@ export async function ensureWebsiteAccess(
 function accessibleWebsitesCacheKey(
 	principal: RequestPrincipal
 ): string | null {
-	const organizationId = principal.organizationId ?? principal.apiKey?.organizationId;
+	const organizationId =
+		principal.organizationId ?? principal.apiKey?.organizationId;
 	if (principal.apiKey) {
 		return `apikey:${(principal.apiKey as { id: string }).id}:org:${organizationId ?? "none"}`;
 	}
@@ -101,7 +102,8 @@ export async function getCachedAccessibleWebsites(
 ): Promise<WebsiteSummary[]> {
 	const authCtx = {
 		apiKey: principal.apiKey,
-		organizationId: principal.organizationId ?? principal.apiKey?.organizationId,
+		organizationId:
+			principal.organizationId ?? principal.apiKey?.organizationId,
 		user: principal.userId ? { id: principal.userId } : null,
 	};
 	const cacheKey = accessibleWebsitesCacheKey(principal);
@@ -205,7 +207,10 @@ export async function resolveOrganizationIds(
 		return [orgId];
 	}
 	if (principal.organizationId) {
-		if (principal.apiKey && principal.apiKey.organizationId !== principal.organizationId) {
+		if (
+			principal.apiKey &&
+			principal.apiKey.organizationId !== principal.organizationId
+		) {
 			return new Error("API key does not belong to the requested organization");
 		}
 		return [principal.organizationId];
@@ -236,7 +241,8 @@ export function buildRpcContext(
 		timezone: "UTC",
 		currentDateTime: new Date().toISOString(),
 		chatId: "",
-		organizationId: principal.organizationId ?? principal.apiKey?.organizationId,
+		organizationId:
+			principal.organizationId ?? principal.apiKey?.organizationId,
 		requestHeaders: principal.requestHeaders,
 	};
 }

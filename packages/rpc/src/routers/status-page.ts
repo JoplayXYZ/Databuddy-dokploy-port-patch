@@ -23,6 +23,58 @@ const trackedMonitorsProcedure = trackedProcedure;
 
 const UPTIME_TABLE = "uptime.uptime_monitor";
 
+const DAILY_UPTIME_SQL = `SELECT
+					site_id,
+					date,
+					round(100 * (1 - least(downtime_seconds, 86400) / 86400), 2) as uptime_percentage,
+					total_checks,
+					successful_checks,
+					downtime_seconds,
+					avg_response_time,
+					p95_response_time
+				FROM (
+					SELECT
+						site_id,
+						toDate(ts) as date,
+						toUInt32(countIf(status = 1) + countIf(status = 0)) as total_checks,
+						toUInt32(countIf(status = 1)) as successful_checks,
+						toUInt32(sumIf(
+							least(dateDiff('second', ts, next_ts), 86400),
+							status = 0
+						)) as downtime_seconds,
+						round(avg(total_ms), 2) as avg_response_time,
+						round(quantile(0.95)(total_ms), 2) as p95_response_time
+					FROM (
+						SELECT
+							site_id,
+							timestamp as ts,
+							status,
+							total_ms,
+							leadInFrame(timestamp, 1, now()) OVER (
+								PARTITION BY site_id
+								ORDER BY timestamp ASC
+								ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING
+							) as next_ts
+						FROM ${UPTIME_TABLE}
+						WHERE
+							site_id IN ({siteIds:Array(String)})
+							AND timestamp >= toDateTime({startDate:String})
+							AND timestamp <= toDateTime(concat({endDate:String}, ' 23:59:59'))
+					)
+					GROUP BY site_id, date
+				)
+				ORDER BY site_id, date ASC`;
+
+const LATEST_CHECK_SQL = `SELECT
+						site_id,
+						max(timestamp) as last_timestamp,
+						argMax(status, timestamp) as last_status,
+						argMax(http_code, timestamp) as last_http_code
+					FROM ${UPTIME_TABLE}
+					WHERE site_id IN ({siteIds:Array(String)})
+						AND timestamp >= now() - INTERVAL 7 DAY
+					GROUP BY site_id`;
+
 const dailyUptimeSchema = z.object({
 	date: z.string(),
 	uptime_percentage: z.number().optional(),
@@ -189,6 +241,84 @@ interface LatestCheckRow {
 	site_id: string;
 }
 
+function getDateRange(days: number) {
+	const today = new Date();
+	const start = new Date(today);
+	start.setDate(start.getDate() - (days - 1));
+	return {
+		startDate: start.toISOString().split("T").at(0) ?? "",
+		endDate: today.toISOString().split("T").at(0) ?? "",
+	};
+}
+
+function groupDailyRows(rows: DailyRow[]): Map<string, DailyRow[]> {
+	const grouped = new Map<string, DailyRow[]>();
+	for (const row of rows) {
+		grouped.set(row.site_id, [...(grouped.get(row.site_id) ?? []), row]);
+	}
+	return grouped;
+}
+
+function indexLatestChecks(
+	rows: LatestCheckRow[]
+): Map<string, LatestCheckRow> {
+	return new Map(rows.map((row) => [row.site_id, row]));
+}
+
+function buildStatusPageInfo(row: {
+	customCss: string | null;
+	faviconUrl: string | null;
+	hideBranding: boolean;
+	logoUrl: string | null;
+	statusPageDescription: string | null;
+	statusPageName: string;
+	supportUrl: string | null;
+	theme: "system" | "light" | "dark" | null;
+	websiteUrl: string | null;
+}) {
+	return {
+		name: row.statusPageName,
+		description: row.statusPageDescription,
+		logoUrl: row.logoUrl,
+		faviconUrl: row.faviconUrl,
+		websiteUrl: row.websiteUrl,
+		supportUrl: row.supportUrl,
+		theme: row.theme,
+		hideBranding: row.hideBranding,
+		customCss: row.customCss,
+	};
+}
+
+function applyIncidentImpacts(
+	monitors: z.infer<typeof monitorSchema>[],
+	activeIncidents: z.infer<typeof incidentSchema>[],
+	rows: Array<{ scheduleId: string | null; statusPageMonitorId: string | null }>
+) {
+	const spmToScheduleId = new Map(
+		rows
+			.filter((row) => row.scheduleId)
+			.map((row) => [row.statusPageMonitorId, row.scheduleId] as const)
+	);
+
+	for (const incident of activeIncidents) {
+		for (const affectedMonitor of incident.affectedMonitors) {
+			const scheduleId = spmToScheduleId.get(
+				affectedMonitor.statusPageMonitorId
+			);
+			const monitor = scheduleId
+				? monitors.find((candidate) => candidate.id === scheduleId)
+				: null;
+			if (!monitor) {
+				continue;
+			}
+			if (affectedMonitor.impact === "down" || monitor.currentStatus === "up") {
+				monitor.currentStatus =
+					affectedMonitor.impact === "down" ? "down" : "degraded";
+			}
+		}
+	}
+}
+
 async function _fetchStatusPageData(
 	slug: string,
 	days = 90
@@ -243,18 +373,7 @@ async function _fetchStatusPageData(
 		logo: rows[0].orgLogo,
 	};
 
-	const first = rows[0];
-	const statusPageInfo = {
-		name: first.statusPageName,
-		description: first.statusPageDescription,
-		logoUrl: first.logoUrl,
-		faviconUrl: first.faviconUrl,
-		websiteUrl: first.websiteUrl,
-		supportUrl: first.supportUrl,
-		theme: first.theme,
-		hideBranding: first.hideBranding,
-		customCss: first.customCss,
-	};
+	const statusPageInfo = buildStatusPageInfo(rows[0]);
 
 	const schedules = rows
 		.filter((r) => r.scheduleId)
@@ -269,12 +388,7 @@ async function _fetchStatusPageData(
 			hideLatency: r.hideLatency,
 		}));
 
-	const today = new Date();
-	const ninetyDaysAgo = new Date(today);
-	ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - (days - 1));
-
-	const startDate = ninetyDaysAgo.toISOString().split("T").at(0) ?? "";
-	const endDate = today.toISOString().split("T").at(0) ?? "";
+	const { startDate, endDate } = getDateRange(days);
 
 	const websiteIds = schedules
 		.map((s) => s.websiteId)
@@ -298,64 +412,10 @@ async function _fetchStatusPageData(
 						.where(inArray(websites.id, websiteIds))
 				: Promise.resolve([]),
 			siteIds.length > 0
-				? chQuery<DailyRow>(
-						`SELECT
-					site_id,
-					date,
-					round(100 * (1 - least(downtime_seconds, 86400) / 86400), 2) as uptime_percentage,
-					total_checks,
-					successful_checks,
-					downtime_seconds,
-					avg_response_time,
-					p95_response_time
-				FROM (
-					SELECT
-						site_id,
-						toDate(ts) as date,
-						toUInt32(countIf(status = 1) + countIf(status = 0)) as total_checks,
-						toUInt32(countIf(status = 1)) as successful_checks,
-						toUInt32(sumIf(
-							least(dateDiff('second', ts, next_ts), 86400),
-							status = 0
-						)) as downtime_seconds,
-						round(avg(total_ms), 2) as avg_response_time,
-						round(quantile(0.95)(total_ms), 2) as p95_response_time
-					FROM (
-						SELECT
-							site_id,
-							timestamp as ts,
-							status,
-							total_ms,
-							leadInFrame(timestamp, 1, now()) OVER (
-								PARTITION BY site_id
-								ORDER BY timestamp ASC
-								ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING
-							) as next_ts
-						FROM ${UPTIME_TABLE}
-						WHERE
-							site_id IN ({siteIds:Array(String)})
-							AND timestamp >= toDateTime({startDate:String})
-							AND timestamp <= toDateTime(concat({endDate:String}, ' 23:59:59'))
-					)
-					GROUP BY site_id, date
-				)
-				ORDER BY site_id, date ASC`,
-						{ siteIds, startDate, endDate }
-					)
+				? chQuery<DailyRow>(DAILY_UPTIME_SQL, { siteIds, startDate, endDate })
 				: Promise.resolve([]),
 			siteIds.length > 0
-				? chQuery<LatestCheckRow>(
-						`SELECT
-						site_id,
-						max(timestamp) as last_timestamp,
-						argMax(status, timestamp) as last_status,
-						argMax(http_code, timestamp) as last_http_code
-					FROM ${UPTIME_TABLE}
-					WHERE site_id IN ({siteIds:Array(String)})
-						AND timestamp >= now() - INTERVAL 7 DAY
-					GROUP BY site_id`,
-						{ siteIds }
-					)
+				? chQuery<LatestCheckRow>(LATEST_CHECK_SQL, { siteIds })
 				: Promise.resolve([]),
 			db.query.incidents.findMany({
 				where: {
@@ -376,20 +436,8 @@ async function _fetchStatusPageData(
 
 	const websiteMap = new Map(websiteRows.map((w) => [w.id, w] as const));
 
-	const dailyBySite = new Map<string, DailyRow[]>();
-	for (const row of allDailyData) {
-		const existing = dailyBySite.get(row.site_id);
-		if (existing) {
-			existing.push(row);
-		} else {
-			dailyBySite.set(row.site_id, [row]);
-		}
-	}
-
-	const latestBySite = new Map<string, LatestCheckRow>();
-	for (const row of allRecentChecks) {
-		latestBySite.set(row.site_id, row);
-	}
+	const dailyBySite = groupDailyRows(allDailyData);
+	const latestBySite = indexLatestChecks(allRecentChecks);
 
 	const monitors = schedules.map((schedule) => {
 		const siteId = schedule.websiteId ?? schedule.id;
@@ -503,28 +551,7 @@ async function _fetchStatusPageData(
 		(i) => i.status !== "resolved"
 	);
 
-	const spmToScheduleId = new Map(
-		rows
-			.filter((r) => r.scheduleId)
-			.map((r) => [r.statusPageMonitorId, r.scheduleId] as const)
-	);
-
-	for (const incident of activeIncidents) {
-		for (const am of incident.affectedMonitors) {
-			const scheduleId = spmToScheduleId.get(am.statusPageMonitorId);
-			if (!scheduleId) {
-				continue;
-			}
-			const monitor = monitors.find((m) => m.id === scheduleId);
-			if (!monitor) {
-				continue;
-			}
-			const impact = am.impact as "degraded" | "down";
-			if (impact === "down" || monitor.currentStatus === "up") {
-				monitor.currentStatus = impact === "down" ? "down" : "degraded";
-			}
-		}
-	}
+	applyIncidentImpacts(monitors, activeIncidents, rows);
 
 	return {
 		organization: org,

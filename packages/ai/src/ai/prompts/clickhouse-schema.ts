@@ -77,8 +77,6 @@ const ANALYTICS_TABLES: TableDef[] = [
 			"rtt (Int16) - Round trip time",
 			"downlink (Float32) - Download speed",
 			"properties (String) - JSON string with custom properties",
-
-			"created_at (DateTime64)",
 		],
 		additionalInfo:
 			"Partitioned by month (toYYYYMM(time)), ordered by (client_id, time, id)",
@@ -209,7 +207,11 @@ const GUIDELINES = `## Query Guidelines
 - NO nested aggregates: \`sum(count())\` is illegal. Use a subquery: \`SELECT sum(cnt) FROM (SELECT count() as cnt ... GROUP BY ...)\`
 - NO aggregates in WHERE: use HAVING for post-aggregation filters, not WHERE.
 - \`is_bounce\` is NOT a column. Compute bounces as sessions with exactly 1 pageview: \`SELECT session_id, count() as pv FROM analytics.events ... GROUP BY session_id HAVING pv = 1\`
+- \`website_id\` is NOT the tenant column on \`analytics.events\`. Use \`client_id = {websiteId:String}\`.
+- \`created_at\` is NOT the canonical event timestamp. Use \`time\` on \`analytics.events\`.
+- \`page_path\` does NOT exist. The column is \`path\`.
 - \`event_type\` does NOT exist. The column is \`event_name\`.
+- Pageviews are \`event_name = 'screen_view'\`. Never use \`event_name = 'pageview'\`.
 - \`device_type\` is often empty. Always handle: \`NULLIF(device_type, '') as device_type\` or \`if(device_type = '', 'Desktop', device_type)\`
 - For IN filters use tuple syntax: \`path IN ('/pricing', '/docs', '/demo')\`, NOT array syntax \`['/pricing', '/docs']\`
 - formatDateTime does NOT support %A (weekday name). Use \`toDayOfWeek(time)\` (1=Mon, 7=Sun) or \`dateName('weekday', time)\`
@@ -323,5 +325,31 @@ Primary tables for website traffic, user behavior, and performance:
 ${analyticsDoc}${guidelinesBlock}${examplesBlock}
 </available-data>`;
 }
+
+export const COMPACT_CLICKHOUSE_SCHEMA_DOCS = `<analytics-schema-quick-reference>
+Prefer get_data builders. Use SQL only when builders cannot answer.
+
+analytics.events canonical columns:
+- client_id: website/project id. Always filter with client_id = {websiteId:String}.
+- time: event timestamp.
+- path: URL path.
+- event_name: event discriminator. Pageviews are event_name = 'screen_view' only.
+- anonymous_id, session_id, referrer, country, region, city, device_type, browser_name, os_name, utm_source, utm_medium, utm_campaign, utm_term, utm_content, load_time, time_on_page, scroll_depth, properties.
+
+Common SQL footguns:
+- never use website_id on analytics.events; use client_id.
+- never use created_at on analytics.events; use time.
+- never use page_path; use path.
+- never use event_type; use event_name.
+- never use event_name = 'pageview'; use event_name = 'screen_view'.
+
+Other tables:
+- analytics.error_hourly: preferred for aggregated error counts.
+- analytics.error_spans: detailed errors, timestamp + client_id + path.
+- analytics.web_vitals_hourly: preferred for aggregated vitals.
+- analytics.web_vitals_spans: detailed vitals, timestamp + client_id + path.
+- analytics.outgoing_links: outbound clicks, timestamp + client_id + path.
+- analytics.custom_events: custom SDK events; prefer get_data custom_events_* builders because ownership/website scoping differs from analytics.events.
+</analytics-schema-quick-reference>`;
 
 export const CLICKHOUSE_SCHEMA_DOCS = generateSchemaDocumentation();

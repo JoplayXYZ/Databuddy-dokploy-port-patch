@@ -16,7 +16,8 @@ initLogger({
 	},
 });
 
-const rootRedirectUrl = process.env.LINKS_ROOT_REDIRECT_URL || "https://databuddy.cc";
+const rootRedirectUrl =
+	process.env.LINKS_ROOT_REDIRECT_URL || "https://databuddy.cc";
 preloadGeoDatabase();
 
 const app = new Elysia()

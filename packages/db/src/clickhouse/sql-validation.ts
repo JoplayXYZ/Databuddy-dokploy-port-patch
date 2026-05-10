@@ -6,6 +6,13 @@ const CTE_PATTERN = /(?:\bWITH\b|,)\s*([a-zA-Z_][a-zA-Z0-9_]*)\s+AS\s*\(/gi;
 const RELATION_PATTERN =
 	/\b(?:FROM|JOIN)\s+(`[^`]+`|"[^"]+"|[a-zA-Z_][a-zA-Z0-9_.]*)(\s*\()?/gi;
 const TENANT_FILTER_PATTERN = /\bclient_id\s*=\s*\{websiteId\s*:\s*String\}/i;
+const BAD_EVENTS_COLUMN_REPLACEMENTS: Record<string, string> = {
+	created_at: "time",
+	event_type: "event_name",
+	page_path: "path",
+	website_id: "client_id",
+};
+const PAGEVIEW_EVENT_PATTERN = /\bevent_name\s*=\s*(['"])pageview\1/i;
 
 function maskCommentsAndStrings(sql: string): string {
 	let result = "";
@@ -128,6 +135,25 @@ export function validateAgentSQL(sql: string): {
 			valid: false,
 			reason: "Query contains a blocked SQL keyword.",
 		};
+	}
+
+	if (PAGEVIEW_EVENT_PATTERN.test(sql)) {
+		return {
+			valid: false,
+			reason:
+				"Invalid pageview event name: use event_name = 'screen_view', never 'pageview'.",
+		};
+	}
+
+	for (const [badColumn, replacement] of Object.entries(
+		BAD_EVENTS_COLUMN_REPLACEMENTS
+	)) {
+		if (new RegExp(`\\b${badColumn}\\b`, "i").test(sanitized)) {
+			return {
+				valid: false,
+				reason: `Invalid analytics.events column "${badColumn}". Use "${replacement}" instead.`,
+			};
+		}
 	}
 
 	const cteNames = extractCteNames(sanitized);

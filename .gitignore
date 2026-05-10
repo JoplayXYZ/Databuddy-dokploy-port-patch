@@ -71,5 +71,8 @@ tmp
 .superpowers/
 .warden/
 
+# Local Sentrux baseline/rules/GUI state
+.sentrux/
+
 # Local reference repositories
 tigerbeetle/

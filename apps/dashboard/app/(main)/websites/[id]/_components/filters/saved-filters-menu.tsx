@@ -1,6 +1,6 @@
 "use client";
 
-import type { DynamicQueryFilter } from "@databuddy/shared/types/api";
+import type { DynamicQueryFilter } from "@/types/api";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { getFieldLabel, getOperatorLabel } from "@/hooks/use-filters";

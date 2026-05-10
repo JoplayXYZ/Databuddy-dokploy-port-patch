@@ -1,9 +1,6 @@
-import type { DateRange } from "@databuddy/shared/types/analytics";
-import type { DynamicQueryResponse } from "@databuddy/shared/types/api";
-import type {
-	ProfileDetail,
-	ProfileSession,
-} from "@databuddy/shared/types/sessions";
+import type { DateRange } from "@/types/analytics";
+import type { DynamicQueryResponse } from "@/types/api";
+import type { ProfileDetail, ProfileSession } from "@/types/sessions";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { useDynamicQuery } from "@/hooks/use-dynamic-query";

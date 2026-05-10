@@ -19,6 +19,9 @@ interface AnnotationRecord {
 	yValue?: number | null;
 }
 
+const chartTypeSchema = z.enum(["metrics"]);
+const annotationTypeSchema = z.enum(["point", "line", "range"]);
+
 const chartContextSchema = z.object({
 	dateRange: z.object({
 		start_date: z.string(),
@@ -38,15 +41,57 @@ const chartContextSchema = z.object({
 	tabId: z.string().optional(),
 });
 
+const isoDateSchema = z.string().refine((value) => dayjs(value).isValid(), {
+	message:
+		"Must be a valid ISO 8601 date string (e.g., '2024-01-15T10:30:00Z').",
+});
+
+const createAnnotationInputSchema = z
+	.object({
+		websiteId: z.string(),
+		chartType: chartTypeSchema,
+		chartContext: chartContextSchema,
+		annotationType: annotationTypeSchema,
+		xValue: isoDateSchema,
+		xEndValue: isoDateSchema.optional(),
+		yValue: z.number().optional(),
+		text: z.string().min(1).max(500),
+		tags: z.array(z.string()).optional(),
+		color: z.string().optional(),
+		isPublic: z.boolean().optional(),
+		confirmed: z.boolean().describe("false=preview, true=apply"),
+	})
+	.refine((input) => input.annotationType !== "range" || input.xEndValue, {
+		message:
+			"Range annotations require an xEndValue to define the end of the time period.",
+		path: ["xEndValue"],
+	});
+
+const listAnnotationsInputSchema = z.object({
+	websiteId: z.string(),
+	chartType: chartTypeSchema,
+	chartContext: chartContextSchema,
+});
+const updateAnnotationInputSchema = createAnnotationInputSchema
+	.pick({
+		text: true,
+		tags: true,
+		color: true,
+		isPublic: true,
+		confirmed: true,
+	})
+	.partial({ text: true, tags: true, color: true, isPublic: true })
+	.extend({ id: z.string() });
+const deleteAnnotationInputSchema = z.object({
+	id: z.string(),
+	confirmed: z.boolean().describe("false=preview, true=delete"),
+});
+
 export function createAnnotationTools() {
 	const listAnnotationsTool = tool({
 		description:
 			"List annotations for a chart context (metadata, text, tags, timing).",
-		inputSchema: z.object({
-			websiteId: z.string(),
-			chartType: z.enum(["metrics"]),
-			chartContext: chartContextSchema,
-		}),
+		inputSchema: listAnnotationsInputSchema,
 		execute: async ({ websiteId, chartType, chartContext }, options) => {
 			const context = getAppContext(options);
 			try {
@@ -76,20 +121,7 @@ export function createAnnotationTools() {
 	const createAnnotationTool = tool({
 		description:
 			"Create a chart annotation. type=point (moment), line (vertical line), range (period — needs xEndValue). Timestamps ISO 8601.",
-		inputSchema: z.object({
-			websiteId: z.string(),
-			chartType: z.enum(["metrics"]),
-			chartContext: chartContextSchema,
-			annotationType: z.enum(["point", "line", "range"]),
-			xValue: z.string(),
-			xEndValue: z.string().optional(),
-			yValue: z.number().optional(),
-			text: z.string().min(1).max(500),
-			tags: z.array(z.string()).optional(),
-			color: z.string().optional(),
-			isPublic: z.boolean().optional(),
-			confirmed: z.boolean().describe("false=preview, true=apply"),
-		}),
+		inputSchema: createAnnotationInputSchema,
 		execute: async (
 			{
 				websiteId,
@@ -109,23 +141,6 @@ export function createAnnotationTools() {
 		) => {
 			const context = getAppContext(options);
 			try {
-				if (!dayjs(xValue).isValid()) {
-					throw new Error(
-						"xValue must be a valid ISO 8601 date string (e.g., '2024-01-15T10:30:00Z')."
-					);
-				}
-				if (xEndValue && !dayjs(xEndValue).isValid()) {
-					throw new Error(
-						"xEndValue must be a valid ISO 8601 date string (e.g., '2024-01-15T10:30:00Z')."
-					);
-				}
-
-				if (annotationType === "range" && !xEndValue) {
-					throw new Error(
-						"Range annotations require an xEndValue to define the end of the time period."
-					);
-				}
-
 				if (!confirmed) {
 					const dateRangePreview = `${chartContext.dateRange.start_date} to ${chartContext.dateRange.end_date} (${chartContext.dateRange.granularity})`;
 
@@ -191,14 +206,7 @@ export function createAnnotationTools() {
 
 	const updateAnnotationTool = tool({
 		description: "Update annotation text, tags, color, or visibility.",
-		inputSchema: z.object({
-			id: z.string(),
-			text: z.string().min(1).max(500).optional(),
-			tags: z.array(z.string()).optional(),
-			color: z.string().optional(),
-			isPublic: z.boolean().optional(),
-			confirmed: z.boolean().describe("false=preview, true=apply"),
-		}),
+		inputSchema: updateAnnotationInputSchema,
 		execute: async (
 			{ id, text, tags, color, isPublic, confirmed },
 			options
@@ -217,32 +225,12 @@ export function createAnnotationTools() {
 						throw new Error("Annotation not found");
 					}
 
-					const updates: string[] = [];
-					if (text !== undefined && text !== currentAnnotation.text) {
-						updates.push(`Text: "${currentAnnotation.text}" → "${text}"`);
-					}
-					if (tags !== undefined) {
-						const currentTags = currentAnnotation.tags || [];
-						const tagsChanged =
-							JSON.stringify(currentTags.sort()) !==
-							JSON.stringify(tags.sort());
-						if (tagsChanged) {
-							updates.push(
-								`Tags: [${currentTags.join(", ") || "none"}] → [${tags.join(", ") || "none"}]`
-							);
-						}
-					}
-					if (color !== undefined && color !== currentAnnotation.color) {
-						updates.push(`Color: ${currentAnnotation.color} → ${color}`);
-					}
-					if (
-						isPublic !== undefined &&
-						isPublic !== currentAnnotation.isPublic
-					) {
-						updates.push(
-							`Visibility: ${currentAnnotation.isPublic ? "public" : "private"} → ${isPublic ? "public" : "private"}`
-						);
-					}
+					const updates = buildAnnotationChanges(currentAnnotation, {
+						text,
+						tags,
+						color,
+						isPublic,
+					});
 
 					if (updates.length === 0) {
 						return {
@@ -271,31 +259,10 @@ export function createAnnotationTools() {
 					};
 				}
 
-				const updateData: {
-					id: string;
-					text?: string;
-					tags?: string[];
-					color?: string;
-					isPublic?: boolean;
-				} = { id };
-
-				if (text !== undefined) {
-					updateData.text = text;
-				}
-				if (tags !== undefined) {
-					updateData.tags = tags;
-				}
-				if (color !== undefined) {
-					updateData.color = color;
-				}
-				if (isPublic !== undefined) {
-					updateData.isPublic = isPublic;
-				}
-
 				const result = await callRPCProcedure(
 					"annotations",
 					"update",
-					updateData,
+					omitUndefined({ id, text, tags, color, isPublic }),
 					context
 				);
 
@@ -315,10 +282,7 @@ export function createAnnotationTools() {
 
 	const deleteAnnotationTool = tool({
 		description: "Soft-delete an annotation.",
-		inputSchema: z.object({
-			id: z.string(),
-			confirmed: z.boolean().describe("false=preview, true=delete"),
-		}),
+		inputSchema: deleteAnnotationInputSchema,
 		execute: async ({ id, confirmed }, options) => {
 			const context = getAppContext(options);
 			try {
@@ -372,4 +336,51 @@ export function createAnnotationTools() {
 		update_annotation: updateAnnotationTool,
 		delete_annotation: deleteAnnotationTool,
 	} as const;
+}
+
+interface AnnotationUpdates {
+	color?: string;
+	isPublic?: boolean;
+	tags?: string[];
+	text?: string;
+}
+
+function buildAnnotationChanges(
+	current: AnnotationRecord,
+	updates: AnnotationUpdates
+): string[] {
+	const changes: string[] = [];
+
+	if (updates.text !== undefined && updates.text !== current.text) {
+		changes.push(`Text: "${current.text}" → "${updates.text}"`);
+	}
+	if (updates.tags !== undefined) {
+		const currentTags = current.tags || [];
+		if (
+			JSON.stringify([...currentTags].sort()) !==
+			JSON.stringify([...updates.tags].sort())
+		) {
+			changes.push(
+				`Tags: [${currentTags.join(", ") || "none"}] → [${updates.tags.join(", ") || "none"}]`
+			);
+		}
+	}
+	if (updates.color !== undefined && updates.color !== current.color) {
+		changes.push(`Color: ${current.color} → ${updates.color}`);
+	}
+	if (updates.isPublic !== undefined && updates.isPublic !== current.isPublic) {
+		changes.push(
+			`Visibility: ${current.isPublic ? "public" : "private"} → ${updates.isPublic ? "public" : "private"}`
+		);
+	}
+
+	return changes;
+}
+
+function omitUndefined(
+	input: Record<string, unknown>
+): Record<string, unknown> {
+	return Object.fromEntries(
+		Object.entries(input).filter(([, value]) => value !== undefined)
+	);
 }

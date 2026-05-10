@@ -1,10 +1,44 @@
 import { captureError, mergeWideEvent } from "@/lib/tracing";
 import { db } from "@databuddy/db";
-import { agentInstallTelemetry } from "@databuddy/db/schema";
+import {
+	type AgentInstallIssue,
+	type AgentInstallStep,
+	agentInstallTelemetry,
+} from "@databuddy/db/schema";
 import { cacheable } from "@databuddy/redis";
 import { getRateLimitHeaders, ratelimit } from "@databuddy/redis/rate-limit";
 import { randomUUIDv7 } from "bun";
 import { Elysia, t } from "elysia";
+
+interface ReportedInstallIssue {
+	detail?: string;
+	resolved?: boolean;
+	type: string;
+}
+
+function toCompletedInstallSteps(
+	steps: string[] | undefined
+): AgentInstallStep[] | null {
+	if (!steps?.length) {
+		return null;
+	}
+
+	return steps.map((name) => ({ name, status: "completed" }));
+}
+
+function toInstallIssues(
+	issues: ReportedInstallIssue[] | undefined
+): AgentInstallIssue[] | null {
+	if (!issues?.length) {
+		return null;
+	}
+
+	return issues.map((issue) => ({
+		code: issue.type,
+		message: issue.detail ?? issue.type,
+		severity: issue.resolved ? "info" : "warning",
+	}));
+}
 
 // Cache website existence checks — returns true/false, caches both (negative cache).
 // 5 min TTL, stale-while-revalidate after 2 min.
@@ -89,8 +123,8 @@ export const agentTelemetryRoute = new Elysia({
 					framework: body.framework ?? null,
 					installMethod: body.installMethod ?? null,
 					durationMs: body.durationMs ?? null,
-					stepsCompleted: body.stepsCompleted ?? null,
-					issues: body.issues ?? null,
+					stepsCompleted: toCompletedInstallSteps(body.stepsCompleted),
+					issues: toInstallIssues(body.issues),
 					errorMessage: body.errorMessage ?? null,
 					metadata: body.metadata ?? null,
 				})

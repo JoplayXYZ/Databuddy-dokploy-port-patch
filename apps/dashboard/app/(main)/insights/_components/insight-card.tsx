@@ -114,6 +114,46 @@ const TYPE_STYLES: Record<
 		color: "text-red-500",
 		bg: "bg-red-500/10",
 	},
+	conversion_leak: {
+		icon: <TrendDownIcon className="size-4" weight="fill" />,
+		color: "text-red-500",
+		bg: "bg-red-500/10",
+	},
+	funnel_regression: {
+		icon: <TrendDownIcon className="size-4" weight="fill" />,
+		color: "text-red-500",
+		bg: "bg-red-500/10",
+	},
+	channel_concentration: {
+		icon: <ChartLineUpIcon className="size-4" weight="duotone" />,
+		color: "text-amber-500",
+		bg: "bg-amber-500/10",
+	},
+	reliability_improved: {
+		icon: <BugIcon className="size-4" weight="duotone" />,
+		color: "text-emerald-500",
+		bg: "bg-emerald-500/10",
+	},
+	persistent_error_hotspot: {
+		icon: <BugIcon className="size-4" weight="duotone" />,
+		color: "text-amber-500",
+		bg: "bg-amber-500/10",
+	},
+	quality_shift: {
+		icon: <ChartLineUpIcon className="size-4" weight="duotone" />,
+		color: "text-violet-500",
+		bg: "bg-violet-500/10",
+	},
+	cross_property_dependency: {
+		icon: <LinkIcon className="size-4" weight="duotone" />,
+		color: "text-amber-500",
+		bg: "bg-amber-500/10",
+	},
+	performance_improved: {
+		icon: <RocketIcon className="size-4" weight="duotone" />,
+		color: "text-emerald-500",
+		bg: "bg-emerald-500/10",
+	},
 };
 
 const SENTIMENT_STYLES: Record<
@@ -272,7 +312,10 @@ export function InsightCard({
 										<span
 											className={cn(
 												"tabular-nums",
-												changePercentChipClassName(insight.changePercent)
+												changePercentChipClassName(
+													insight.changePercent,
+													insight.sentiment
+												)
 											)}
 										>
 											{formatSignedChangePercent(insight.changePercent)}

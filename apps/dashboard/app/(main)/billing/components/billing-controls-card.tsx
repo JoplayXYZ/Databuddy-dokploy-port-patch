@@ -6,7 +6,7 @@ import {
 	calculateTopupCost,
 	TOPUP_FEATURE_ID,
 	TOPUP_MAX_QUANTITY,
-} from "@databuddy/shared/billing/topup-math";
+} from "@/lib/topup-math";
 import { useMutation } from "@tanstack/react-query";
 import { useCustomer } from "autumn-js/react";
 import { AnimatePresence, motion } from "motion/react";

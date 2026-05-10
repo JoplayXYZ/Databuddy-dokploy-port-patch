@@ -3,9 +3,10 @@
 import type { CSSProperties } from "react";
 
 import { useDotMatrixPhases, usePrefersReducedMotion } from "./hooks";
+import type { DotMatrixPhase } from "./types";
+export type { DotMatrixPhase } from "./types";
 
 export type MatrixPattern = "diamond" | "full" | "outline" | "rose" | "cross" | "rings";
-export type DotMatrixPhase = "idle" | "collapse" | "hoverRipple" | "loadingRipple";
 
 export interface DotMatrixCommonProps {
   size?: number;

@@ -188,9 +188,7 @@ export const autocompleteRouter = {
 						const results = await chQuery<{
 							category: string;
 							value: string;
-						}>(getAutocompleteQuery(), params, {
-							clickhouse_settings: { max_execution_time: 10 },
-						});
+						}>(getAutocompleteQuery(), params);
 
 						return categorizeAutocompleteResults(results);
 					} catch (error) {

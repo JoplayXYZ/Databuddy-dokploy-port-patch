@@ -159,54 +159,28 @@ export async function streamAgentToSlack({
 		await flush(true);
 
 		const finalText = safeMarkdown.trim();
-		if (streamTs) {
-			await client.chat.stopStream({
-				channel: run.channelId,
-				markdown_text: finalText ? undefined : SLACK_COPY.noAnswer,
-				ts: streamTs,
-			});
-			setSlackLog(eventLog, {
-				slack_answer_chars: finalText.length,
-				slack_components_converted: convertedComponentCount,
-				slack_components_dropped: droppedComponentCount,
-				slack_stream_chunks: chunks,
-				slack_streamed: true,
-				"timing.slack_agent_response_ms": Math.round(
-					performance.now() - startedAt
-				),
-			});
-			return {
-				answerChars: finalText.length,
-				chunks,
-				ok: true,
-				responseTs: streamTs,
-				streamed: true,
-			};
-		}
-
-		const response = await say({
-			text: finalText || SLACK_COPY.noAnswer,
-			thread_ts: run.threadTs,
-		});
-		const responseTs = getSlackMessageTs(response);
-		setSlackLog(eventLog, {
-			slack_answer_chars: finalText.length,
-			slack_components_converted: convertedComponentCount,
-			slack_components_dropped: droppedComponentCount,
-			slack_response_ts: responseTs,
-			slack_stream_chunks: chunks,
-			slack_streamed: false,
-			"timing.slack_agent_response_ms": Math.round(
-				performance.now() - startedAt
-			),
-		});
-		return {
-			answerChars: finalText.length,
-			chunks,
-			ok: true,
-			responseTs,
-			streamed: false,
-		};
+		return streamTs
+			? finishStreamedResponse({
+					client,
+					convertedComponentCount,
+					droppedComponentCount,
+					eventLog,
+					finalText,
+					run,
+					chunks,
+					startedAt,
+					streamTs,
+				})
+			: sendFinalSlackMessage({
+					convertedComponentCount,
+					droppedComponentCount,
+					eventLog,
+					finalText,
+					run,
+					say,
+					chunks,
+					startedAt,
+				});
 	} catch (error) {
 		if (abortSignal?.aborted || isAbortError(error)) {
 			if (streamTs) {
@@ -222,14 +196,7 @@ export async function streamAgentToSlack({
 						logger.warn("Failed to stop aborted Slack stream", stopError)
 					);
 			}
-			return {
-				answerChars: safeMarkdown.trim().length,
-				aborted: true,
-				chunks,
-				ok: false,
-				responseTs: streamTs ?? undefined,
-				streamed: Boolean(streamTs),
-			};
+			return abortedStreamResult(safeMarkdown, chunks, streamTs);
 		}
 
 		if (isSlackUserCancellation(error)) {
@@ -237,14 +204,7 @@ export async function streamAgentToSlack({
 				slack_stream_cancelled: true,
 				slack_stream_cancelled_code: getSlackApiErrorCode(error),
 			});
-			return {
-				answerChars: safeMarkdown.trim().length,
-				aborted: true,
-				chunks,
-				ok: false,
-				responseTs: streamTs ?? undefined,
-				streamed: Boolean(streamTs),
-			};
+			return abortedStreamResult(safeMarkdown, chunks, streamTs);
 		}
 
 		const userFacingError = isDatabuddyAgentUserError(error) ? error : null;
@@ -339,6 +299,94 @@ export async function streamAgentToSlack({
 			streamed: false,
 		};
 	}
+}
+
+function abortedStreamResult(
+	safeMarkdown: string,
+	chunks: number,
+	streamTs: string | null
+): StreamAgentToSlackResult {
+	return {
+		answerChars: safeMarkdown.trim().length,
+		aborted: true,
+		chunks,
+		ok: false,
+		responseTs: streamTs ?? undefined,
+		streamed: Boolean(streamTs),
+	};
+}
+
+interface SlackSuccessLogOptions {
+	chunks: number;
+	convertedComponentCount: number;
+	droppedComponentCount: number;
+	eventLog?: RequestLogger;
+	finalText: string;
+	startedAt: number;
+}
+
+function logSlackSuccess(
+	{
+		chunks,
+		convertedComponentCount,
+		droppedComponentCount,
+		eventLog,
+		finalText,
+		startedAt,
+	}: SlackSuccessLogOptions,
+	extra: Record<string, unknown>
+) {
+	setSlackLog(eventLog, {
+		slack_answer_chars: finalText.length,
+		slack_components_converted: convertedComponentCount,
+		slack_components_dropped: droppedComponentCount,
+		slack_stream_chunks: chunks,
+		"timing.slack_agent_response_ms": Math.round(performance.now() - startedAt),
+		...extra,
+	});
+}
+
+async function finishStreamedResponse(
+	options: SlackSuccessLogOptions & {
+		client: Pick<SlackAgentClient, "chat">;
+		run: SlackAgentRun;
+		streamTs: string;
+	}
+): Promise<StreamAgentToSlackResult> {
+	await options.client.chat.stopStream({
+		channel: options.run.channelId,
+		markdown_text: options.finalText ? undefined : SLACK_COPY.noAnswer,
+		ts: options.streamTs,
+	});
+	logSlackSuccess(options, { slack_streamed: true });
+	return {
+		answerChars: options.finalText.length,
+		chunks: options.chunks,
+		ok: true,
+		responseTs: options.streamTs,
+		streamed: true,
+	};
+}
+
+async function sendFinalSlackMessage(
+	options: SlackSuccessLogOptions & { run: SlackAgentRun; say: SayFn }
+): Promise<StreamAgentToSlackResult> {
+	const response = await options.say({
+		text: options.finalText || SLACK_COPY.noAnswer,
+		thread_ts: options.run.threadTs,
+	});
+	const responseTs = getSlackMessageTs(response);
+	logSlackSuccess(options, {
+		slack_response_ts: responseTs,
+		slack_streamed: false,
+	});
+	return {
+		answerChars: options.finalText.length,
+		chunks: options.chunks,
+		ok: true,
+		responseTs,
+		streamed: false,
+	};
 }
 
 async function startSlackStream(

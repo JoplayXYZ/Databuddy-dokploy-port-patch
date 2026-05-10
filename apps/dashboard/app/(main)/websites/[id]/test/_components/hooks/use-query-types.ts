@@ -1,5 +1,5 @@
 import { publicConfig } from "@databuddy/env/public";
-import type { QueryBuilderMeta } from "@databuddy/shared/types/query";
+import type { QueryBuilderMeta } from "../types/query";
 import { useQuery } from "@tanstack/react-query";
 
 const API_BASE_URL = publicConfig.urls.api;

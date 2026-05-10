@@ -9,9 +9,8 @@ import { tool, type ToolSet } from "ai";
 import { z } from "zod";
 import { getAccessibleWebsites } from "../../lib/accessible-websites";
 import { getWebsiteDomain } from "../../lib/website-utils";
-import { executeBatch, executeQuery, QueryBuilders } from "../../query";
+import { executeBatch, executeQuery } from "../../query";
 import type { Filter, QueryRequest } from "../../query/types";
-import type { AppToolMode } from "../config/context";
 import { createAnnotationTools } from "../tools/annotations";
 import { createFlagTools } from "../tools/flags";
 import { createFunnelTools } from "../tools/funnels";
@@ -31,7 +30,6 @@ export interface McpAgentContext {
 	apiKey: ApiKeyRow | null;
 	organizationId?: string | null;
 	requestHeaders: Headers;
-	toolMode?: AppToolMode;
 	userId: string | null;
 }
 
@@ -64,6 +62,12 @@ function getContext(ctx: unknown): McpAgentContext {
 	return ctx as McpAgentContext;
 }
 
+function getToolContext(options: unknown): McpAgentContext {
+	return getContext(
+		(options as { experimental_context?: unknown }).experimental_context
+	);
+}
+
 export function createMcpAgentTools(
 	options: { slackContext?: DatabuddyAgentSlackContext | null } = {}
 ): ToolSet {
@@ -74,29 +78,7 @@ export function createMcpAgentTools(
 			strict: true,
 			inputSchema: z.object({}),
 			execute: async (_args, options) => {
-				const experimental_context = (
-					options as { experimental_context?: unknown }
-				).experimental_context;
-				const ctx = getContext(experimental_context);
-				if (ctx.toolMode === "eval-fixtures") {
-					return {
-						total: 2,
-						websites: [
-							{
-								domain: "databuddy.cc",
-								id: "OXmNQsViBT-FOS_wZCTHc",
-								isPublic: false,
-								name: "Databuddy",
-							},
-							{
-								domain: "docs.databuddy.cc",
-								id: "eval_docs_website",
-								isPublic: true,
-								name: "Databuddy Docs",
-							},
-						],
-					};
-				}
+				const ctx = getToolContext(options);
 				const session = ctx.userId
 					? await auth.api.getSession({ headers: ctx.requestHeaders })
 					: null;
@@ -125,7 +107,8 @@ export function createMcpAgentTools(
 			},
 		}),
 		execute_query_builder: tool({
-			description: `Pre-built analytics queries. Types: ${Object.keys(QueryBuilders).join(", ")}. Preferred for traffic, sessions, devices, etc.`,
+			description:
+				"Single pre-built analytics query. Prefer get_data for analytics requests because it batches 1-10 builders. Covers traffic, pages, sessions, errors, performance, vitals, custom events, profiles, links, uptime, LLM, and revenue. If a type is invalid, the server returns valid options.",
 			strict: true,
 			inputSchema: z.object({
 				websiteId: z.string(),
@@ -141,14 +124,7 @@ export function createMcpAgentTools(
 				timezone: z.string().optional(),
 			}),
 			execute: async (args, options) => {
-				const experimental_context = (
-					options as { experimental_context?: unknown }
-				).experimental_context;
-				const ctx = getContext(experimental_context);
-				if (ctx.toolMode === "eval-fixtures") {
-					const data = getEvalAnalyticsRows(args.type);
-					return { data, rowCount: data.length, type: args.type };
-				}
+				const ctx = getToolContext(options);
 				const access = await ensureWebsiteAccess(
 					args.websiteId,
 					ctx.requestHeaders,
@@ -181,8 +157,11 @@ export function createMcpAgentTools(
 			},
 		}),
 		execute_sql_query: tool({
-			description:
-				"Custom read-only ClickHouse SQL. SELECT/WITH only. Use {paramName:Type} for parameters. websiteId is auto-included.",
+			description: `Custom read-only ClickHouse SQL. SELECT/WITH only. Use {paramName:Type} for parameters. websiteId is auto-included. Use only when get_data/query builders cannot answer.
+
+Canonical analytics.events schema: client_id, anonymous_id, session_id, time, path, referrer, browser_name, os_name, device_type, country, region, city, utm_source, utm_medium, utm_campaign, utm_term, utm_content, load_time, time_on_page, scroll_depth, properties, event_name.
+
+Critical schema footguns: website id column is client_id (not website_id); timestamp is time (not created_at); page URL path is path (not page_path); event discriminator is event_name (not event_type); pageviews are event_name = 'screen_view' (never 'pageview'). Custom events are easy to query incorrectly; use get_data custom_events_* builders instead.`,
 			strict: true,
 			inputSchema: z.object({
 				websiteId: z.string(),
@@ -191,30 +170,7 @@ export function createMcpAgentTools(
 			}),
 			execute: async (args, options) => {
 				const { websiteId, sql, params } = args;
-				const experimental_context = (
-					options as { experimental_context?: unknown }
-				).experimental_context;
-				const ctx = getContext(experimental_context);
-				if (ctx.toolMode === "eval-fixtures") {
-					return {
-						data: [
-							{
-								note: "Eval fixture SQL result",
-								page: "/pricing",
-								value: 42,
-							},
-						],
-						rowCount: 1,
-					};
-				}
-				const access = await ensureWebsiteAccess(
-					websiteId,
-					ctx.requestHeaders,
-					ctx.apiKey
-				);
-				if (access instanceof Error) {
-					throw new Error(access.message);
-				}
+				const ctx = getToolContext(options);
 				const validation = validateAgentSQL(sql);
 				if (!validation.valid) {
 					throw new Error(validation.reason ?? AGENT_SQL_VALIDATION_ERROR);
@@ -223,6 +179,14 @@ export function createMcpAgentTools(
 					throw new Error(
 						"Query must include tenant isolation: WHERE client_id = {websiteId:String}"
 					);
+				}
+				const access = await ensureWebsiteAccess(
+					websiteId,
+					ctx.requestHeaders,
+					ctx.apiKey
+				);
+				if (access instanceof Error) {
+					throw new Error(access.message);
 				}
 				const result = await executeTimedQuery(
 					"MCP Agent SQL",
@@ -234,7 +198,8 @@ export function createMcpAgentTools(
 			},
 		}),
 		get_data: tool({
-			description: `Run 1-10 analytics queries in one call. PREFERRED when user asks for one or many metrics (traffic + top pages + referrers, etc). Types: ${Object.keys(QueryBuilders).join(", ")}. Use preset (e.g. last_7d, last_30d) or from/to dates. Supports filters (e.g. os_name eq "Mac" for slowest page for Mac users), groupBy, orderBy.`,
+			description:
+				"Run 1-10 pre-built analytics queries in one call. Preferred for explicit analytics requests. Covers traffic, pages, sessions, errors, performance, vitals, custom events, profiles, links, uptime, LLM, and revenue. Use preset (last_7d/last_30d/etc.) or from/to dates. Supports filters, groupBy, orderBy. If a type is invalid, the server returns valid options.",
 			strict: true,
 			inputSchema: z.object({
 				websiteId: z.string(),
@@ -261,23 +226,7 @@ export function createMcpAgentTools(
 				timezone: z.string().optional().default("UTC"),
 			}),
 			execute: async (args, options) => {
-				const experimental_context = (
-					options as { experimental_context?: unknown }
-				).experimental_context;
-				const ctx = getContext(experimental_context);
-				if (ctx.toolMode === "eval-fixtures") {
-					return {
-						batch: true,
-						results: args.queries.map((query) => {
-							const data = getEvalAnalyticsRows(query.type);
-							return {
-								type: query.type,
-								data,
-								rowCount: data.length,
-							};
-						}),
-					};
-				}
+				const ctx = getToolContext(options);
 				const access = await ensureWebsiteAccess(
 					args.websiteId,
 					ctx.requestHeaders,
@@ -320,79 +269,4 @@ export function createMcpAgentTools(
 		...createLinksTools(),
 		...createSlackConversationTools(options.slackContext),
 	};
-}
-
-function getEvalAnalyticsRows(type: string): Record<string, unknown>[] {
-	switch (type) {
-		case "summary_metrics":
-			return [
-				{
-					bounce_rate: 5.02,
-					pageviews: 11_375,
-					sessions: 1992,
-					unique_visitors: 1465,
-				},
-			];
-		case "top_pages":
-			return [
-				{ page: "/demo", pageviews: 1342, visitors: 914 },
-				{ page: "/demo/errors", pageviews: 1070, visitors: 809 },
-				{ page: "/pricing", pageviews: 319, visitors: 218 },
-			];
-		case "top_referrers":
-		case "traffic_sources":
-			return [
-				{ referrer: "databuddy.cc", visitors: 850 },
-				{ referrer: "direct", visitors: 570 },
-				{ referrer: "google", visitors: 42 },
-			];
-		case "device_types":
-			return [
-				{ device_type: "mobile", visitors: 610 },
-				{ device_type: "desktop", visitors: 520 },
-				{ device_type: "tablet", visitors: 35 },
-			];
-		case "error_summary":
-			return [
-				{
-					affected_users: 109,
-					error_rate: 6.08,
-					total_errors: 199,
-					unique_errors: 5,
-				},
-			];
-		case "errors_by_page":
-			return [
-				{ errors: 37, page: "/pricing" },
-				{ errors: 22, page: "/demo/errors" },
-			];
-		case "error_types":
-		case "errors_by_type":
-			return [
-				{ count: 88, type: "HydrationError" },
-				{ count: 43, type: "PaymentFormError" },
-			];
-		case "vitals_overview":
-		case "vitals_by_page":
-		case "slow_pages":
-		case "page_performance":
-			return [
-				{ lcp_p75: 4.9, page: "/", visitors: 610 },
-				{ lcp_p75: 3.8, page: "/pricing", visitors: 218 },
-			];
-		case "custom_events_summary":
-		case "events_by_date":
-			return [
-				{ count: 420, event: "signup_started" },
-				{ count: 184, event: "signup_completed" },
-			];
-		default:
-			return [
-				{
-					label: type,
-					note: "Eval fixture analytics row",
-					value: 1,
-				},
-			];
-	}
 }

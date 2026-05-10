@@ -11,10 +11,7 @@ import {
 	organizationsAtom,
 	pendingActiveOrganizationIdAtom,
 } from "@/stores/jotai/organizationsAtoms";
-
-export type Organization = NonNullable<
-	ReturnType<typeof authClient.useListOrganizations>["data"]
->[number];
+export type { Organization } from "@/stores/jotai/organization-types";
 
 export const AUTH_QUERY_KEYS = {
 	organizations: ["auth", "organizations"] as const,

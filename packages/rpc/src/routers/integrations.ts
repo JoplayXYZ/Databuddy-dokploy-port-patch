@@ -1,8 +1,5 @@
 import { and, desc, eq } from "@databuddy/db";
-import {
-	slackChannelBindings,
-	slackIntegrations,
-} from "@databuddy/db/schema";
+import { slackChannelBindings, slackIntegrations } from "@databuddy/db/schema";
 import { invalidateCacheableKey } from "@databuddy/redis";
 import { z } from "zod";
 import { rpcError } from "../errors";

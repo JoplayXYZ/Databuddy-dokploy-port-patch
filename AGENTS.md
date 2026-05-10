@@ -155,6 +155,21 @@ For picker controls, use the component that matches the interaction:
   - Only make a single snapshot commit for the whole worktree when the user explicitly asks to include everything as-is.
 - **PRs**: Open against `staging` branch (not `main`).
 
+## CI and Review Lessons
+
+- Always run `bun run lint`, `bun run check-types`, and relevant tests before pushing; formatter-only drift can fail CI.
+- Keep workspace dependencies explicit in each package's `package.json`; typecheck can pass locally from hoisting while CI or package boundaries fail.
+- Process lifecycle code must fail safe: `uncaughtException` handlers should log/capture then exit non-zero, and graceful shutdown must have a timeout plus a concurrent-signal guard.
+- API error handlers must preserve valid 4xx statuses (400/401/403/404/422/429, etc.) instead of collapsing everything to 500.
+- Avoid regexes with broad wildcards over user/model text or tagged prompt payloads; prefer deterministic delimiter parsing.
+- Avoid O(n²) accumulator patterns such as spreading arrays inside loops; mutate local arrays with `push` when grouping buffered items.
+- Empty `catch {}` blocks need a reason comment or minimal logging, especially in instrumentation paths.
+- Eval guardrail regexes should be precise and bounded; avoid broad `.*` patterns that can fail unrelated output.
+- CI service containers should mirror local Docker requirements; ClickHouse needs the high `nofile` ulimit, generous health startup time, and a health command supported inside the ClickHouse image.
+- Dashboard Playwright web servers should not use `bash -lc`; login shells can reset PATH on CI and hide Bun. Use `bash -c` or an explicit Bun path, build dist-only workspace packages such as `@databuddy/sdk`/`@databuddy/devtools` before starting the API/dashboard, and set E2E boolean env vars as `"true"`/`"false"` because `readBooleanEnv` does not treat `"1"` as enabled.
+- Bun `mock.module` state can affect files in the same package test command; mocks for shared modules like `../lib/logger` must include every method later tests may call.
+- Client-side `NEXT_PUBLIC_*` checks must use direct `process.env.NEXT_PUBLIC_NAME` access (or a helper that does); dynamic helpers like `readBooleanEnv("NEXT_PUBLIC_...")` are not inlined into the browser bundle.
+
 ## AI Policy Note
 
 The project has a formal AI usage policy (`AI_POLICY.md`). For contributions: all AI usage must be disclosed, PRs must reference an accepted issue, and all AI-generated code must be fully human-verified. Maintainers are exempt and may use AI at their discretion.

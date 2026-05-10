@@ -1,6 +1,7 @@
 const apiKey = process.env.DATABUDDY_API_KEY;
 const websiteId = process.env.DATABUDDY_WEBSITE_ID;
-const apiUrl = process.env.DATABUDDY_TRACKING_URL ?? "https://basket.databuddy.cc";
+const apiUrl =
+	process.env.DATABUDDY_TRACKING_URL ?? "https://basket.databuddy.cc";
 
 interface TrackingEvent {
 	anonymousId?: string;

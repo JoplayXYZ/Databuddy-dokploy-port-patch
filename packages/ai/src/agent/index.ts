@@ -34,7 +34,6 @@ export type {
 export type DatabuddyAgentSource = "dashboard" | "mcp" | "slack";
 export type DatabuddyAgentBillingMode = "bill" | "skip";
 export type DatabuddyAgentMutationMode = "allow" | "dry-run";
-export type DatabuddyAgentToolMode = "live" | "eval-fixtures";
 
 export type DatabuddyAgentActor =
 	| {
@@ -71,7 +70,6 @@ export interface DatabuddyAgentOptions {
 	source?: DatabuddyAgentSource;
 	timeoutMs?: number;
 	timezone?: string;
-	toolMode?: DatabuddyAgentToolMode;
 	websiteDomain?: string | null;
 	websiteId?: string | null;
 }
@@ -119,7 +117,6 @@ export async function askDatabuddyAgent(
 		storeMemory: options.persistConversation !== false,
 		timeoutMs: options.timeoutMs,
 		timezone: options.timezone,
-		toolMode: options.toolMode,
 		userId: prepared.actor.userId,
 		websiteDomain: options.websiteDomain,
 		websiteId: options.websiteId,
@@ -150,7 +147,6 @@ export async function traceDatabuddyAgent(
 		storeMemory: options.persistConversation !== false,
 		timeoutMs: options.timeoutMs,
 		timezone: options.timezone,
-		toolMode: options.toolMode,
 		userId: prepared.actor.userId,
 		websiteDomain: options.websiteDomain,
 		websiteId: options.websiteId,
@@ -195,7 +191,6 @@ export async function* streamDatabuddyAgent(
 		storeMemory: options.persistConversation !== false,
 		timeoutMs: options.timeoutMs,
 		timezone: options.timezone,
-		toolMode: options.toolMode,
 		userId: prepared.actor.userId,
 		websiteDomain: options.websiteDomain,
 		websiteId: options.websiteId,

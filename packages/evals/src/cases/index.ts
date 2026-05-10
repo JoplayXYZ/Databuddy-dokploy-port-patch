@@ -2,6 +2,7 @@ import type { EvalCase, EvalSurface } from "../types";
 import { attributionCases } from "./attribution";
 import { behavioralCases } from "./behavioral";
 import { formatCases } from "./format";
+import { insightsCases } from "./insights";
 import { integrationCases } from "./integrations";
 import { qualityCases } from "./quality";
 import { slackThreadCases } from "./slack-thread";
@@ -14,6 +15,7 @@ export const allCases: EvalCase[] = [
 	...behavioralCases,
 	...attributionCases,
 	...qualityCases,
+	...insightsCases,
 	...formatCases,
 	...integrationCases,
 	...slackThreadCases,

@@ -28,6 +28,8 @@ const CONVERSATIONAL_TOOLS_NOT_CALLED: string[] = [
 	"create_link",
 	"update_link",
 	"delete_link",
+	"slack_read_current_thread",
+	"slack_read_recent_channel_messages",
 ];
 
 /**
@@ -75,6 +77,67 @@ export const behavioralCases: EvalCase[] = [
 			],
 			maxSteps: 1,
 			maxLatencyMs: 15_000,
+		},
+	},
+	{
+		id: "conversational-correction-no-tools",
+		category: "behavioral",
+		name: "Responds to a correction without reading thread or launching tools",
+		query: "nah that's wrong",
+		websiteId: WS,
+		surfaces: ["slack"],
+		tags: ["conversation", "no-tools", "slack", "correction"],
+		expect: {
+			toolsNotCalled: CONVERSATIONAL_TOOLS_NOT_CALLED,
+			maxSteps: 1,
+			maxLatencyMs: 15_000,
+			maxResponseWords: 25,
+			responseNotContains: ["pageviews", "sessions", "revenue"],
+		},
+	},
+	{
+		id: "slack-exact-copy-no-preamble",
+		category: "behavioral",
+		name: "Outputs exact copy in Slack without preamble or tools",
+		query:
+			"exact copy only: tell them the Slack app needs to be reinstalled for new scopes",
+		websiteId: WS,
+		surfaces: ["slack"],
+		tags: ["conversation", "no-tools", "slack", "copy"],
+		expect: {
+			toolsNotCalled: CONVERSATIONAL_TOOLS_NOT_CALLED,
+			maxSteps: 1,
+			maxLatencyMs: 15_000,
+			maxResponseWords: 25,
+			responseNotMatches: [
+				{
+					description: "does not add rewrite preamble",
+					pattern: "^(sure|okay|got it|here'?s|try this|option)",
+				},
+			],
+			responseMatches: [
+				{
+					description: "mentions reinstalling Slack app for scopes",
+					pattern:
+						"Slack app.+reinstalled.+scopes|reinstalled.+Slack app.+scopes",
+				},
+			],
+		},
+	},
+	{
+		id: "slack-ambient-reaction-no-tools",
+		category: "behavioral",
+		name: "Does not force a report for ambient Slack chatter",
+		query: "damn",
+		websiteId: WS,
+		surfaces: ["slack"],
+		tags: ["conversation", "no-tools", "slack", "ambient"],
+		expect: {
+			toolsNotCalled: CONVERSATIONAL_TOOLS_NOT_CALLED,
+			maxSteps: 1,
+			maxLatencyMs: 15_000,
+			maxResponseWords: 20,
+			responseNotContains: ["pageviews", "sessions", "revenue", "report"],
 		},
 	},
 	{

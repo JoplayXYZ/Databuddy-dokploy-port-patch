@@ -1,8 +1,5 @@
-import { AGENT_CREDIT_SCHEMA } from "@databuddy/shared/billing/credit-schema";
-import {
-	TOPUP_MAX_QUANTITY,
-	TOPUP_TIERS,
-} from "@databuddy/shared/billing/topup-math";
+import { AGENT_CREDIT_SCHEMA } from "./lib/credit-schema";
+import { TOPUP_MAX_QUANTITY, TOPUP_TIERS } from "./lib/topup-math";
 import { feature, item, plan } from "atmn";
 
 export const events = feature({

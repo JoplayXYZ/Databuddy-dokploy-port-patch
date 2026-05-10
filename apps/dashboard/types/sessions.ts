@@ -1,5 +1,3 @@
-// Session types for consistent data structures across the app
-
 export type SessionEventSource =
 	| "analytics"
 	| "custom"
@@ -92,20 +90,13 @@ export interface SessionRowProps {
 	session: Session;
 }
 
-// Raw ClickHouse tuple format for events (before transformation)
 export type RawSessionEventTuple = [
-	string, // event_id
-	string, // time
-	string, // event_name
-	string, // path
-	string | null, // properties (JSON string)
-	SessionEventSource?, // source table/category
+	string,
+	string,
+	string,
+	string,
+	string | null,
+	SessionEventSource?,
 ];
 
-// Raw ClickHouse tuple format for web vitals (kept separate from events)
-export type RawSessionWebVitalTuple = [
-	string, // metric_name
-	number, // metric_value
-	string, // time
-	string, // path
-];
+export type RawSessionWebVitalTuple = [string, number, string, string];

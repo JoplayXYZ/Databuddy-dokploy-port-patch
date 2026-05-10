@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { db } from "@databuddy/db";
 import { usageAlertLog } from "@databuddy/db/schema";
 import { render, UsageAlertEmail, UsageLimitEmail } from "@databuddy/email";
@@ -8,7 +9,6 @@ import {
 	invalidateAgentContextSnapshotsForOwner,
 	invalidateCacheablePattern,
 } from "@databuddy/redis";
-import { createId } from "@databuddy/shared/utils/ids";
 import { Elysia } from "elysia";
 import { useLogger } from "evlog/elysia";
 import { Resend } from "resend";
@@ -144,7 +144,7 @@ async function sendAlertEmail(opts: {
 	}
 
 	await db.insert(usageAlertLog).values({
-		id: createId(),
+		id: randomUUID(),
 		userId: customerId,
 		featureId: cooldownKey,
 		alertType,

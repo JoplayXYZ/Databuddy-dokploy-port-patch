@@ -1,6 +1,6 @@
 "use client";
 
-import type { ProcessedMiniChartData } from "@databuddy/shared/types/website";
+import type { ProcessedMiniChartData } from "@/types/website";
 import { useMemo } from "react";
 import type { Website } from "@/hooks/use-websites";
 import { useWebsites } from "@/hooks/use-websites";

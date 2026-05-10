@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { readFile, writeFile } from "node:fs/promises";
 import { Glob } from "bun";
 import { transform } from "./transform";
 
@@ -31,8 +32,7 @@ for (const root of roots) {
 			continue;
 		}
 		const fullPath = `${root.replace(/\/$/, "")}/${path}`;
-		const file = Bun.file(fullPath);
-		const content = await file.text();
+		const content = await readFile(fullPath, "utf8");
 		const { output, changes } = transform(content);
 		if (changes === 0) {
 			continue;
@@ -40,10 +40,12 @@ for (const root of roots) {
 		totalFiles += 1;
 		totalChanges += changes;
 		if (!quiet) {
-			console.log(`${fullPath}: ${changes} replacement${changes === 1 ? "" : "s"}`);
+			console.log(
+				`${fullPath}: ${changes} replacement${changes === 1 ? "" : "s"}`
+			);
 		}
 		if (write) {
-			await Bun.write(fullPath, output);
+			await writeFile(fullPath, output);
 		}
 	}
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import type { DateRange } from "@databuddy/shared/types/analytics";
+import type { DateRange } from "@/types/analytics";
 import type { ColumnDef } from "@tanstack/react-table";
 import { useAtom } from "jotai";
 import { useMemo } from "react";

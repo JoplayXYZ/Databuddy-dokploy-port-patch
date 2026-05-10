@@ -31,16 +31,16 @@ import {
 	type SlackThreadReplyGate,
 } from "@/slack/thread-relevance";
 
-export function registerSlackListeners(
-	app: App,
-	agent: Pick<DatabuddyAgentClient, "stream">,
-	installations: SlackInstallationServices,
-	threadQueue: SlackThreadQueueStore = slackThreadQueue,
-	threadReplyGate: SlackThreadReplyGate = slackThreadReplyGate
-): void {
-	const dedupe = createRecentDedupe();
-
-	const assistant = new Assistant({
+function createDatabuddyAssistant({
+	agent,
+	dedupe,
+	threadQueue,
+}: {
+	agent: Pick<DatabuddyAgentClient, "stream">;
+	dedupe: ReturnType<typeof createRecentDedupe>;
+	threadQueue: SlackThreadQueueStore;
+}) {
+	return new Assistant({
 		threadContextChanged: async ({ logger, saveThreadContext }) => {
 			try {
 				await saveThreadContext();
@@ -116,8 +116,18 @@ export function registerSlackListeners(
 			});
 		},
 	});
+}
 
-	app.assistant(assistant);
+export function registerSlackListeners(
+	app: App,
+	agent: Pick<DatabuddyAgentClient, "stream">,
+	installations: SlackInstallationServices,
+	threadQueue: SlackThreadQueueStore = slackThreadQueue,
+	threadReplyGate: SlackThreadReplyGate = slackThreadReplyGate
+): void {
+	const dedupe = createRecentDedupe();
+
+	app.assistant(createDatabuddyAssistant({ agent, dedupe, threadQueue }));
 
 	app.event(
 		"app_mention",
@@ -337,58 +347,52 @@ export function registerSlackListeners(
 		});
 	});
 
+	registerSlackCommands(app, installations);
+	registerSlackReactionFeedback(app, installations);
+}
+
+function registerSlackCommands(
+	app: App,
+	installations: SlackInstallationServices
+) {
 	app.command("/databuddy-help", async ({ ack, respond }) => {
 		await ack();
-		await respond({
-			response_type: "ephemeral",
-			text: SLACK_COPY.help,
-		});
+		await respond({ response_type: "ephemeral", text: SLACK_COPY.help });
 	});
 
 	app.command(
 		"/databuddy-status",
 		async ({ ack, command, logger, respond }) => {
 			await ack();
-			await respondToStatusCommand({
-				command,
-				installations,
-				logger,
-				respond,
-			});
+			await respondToStatusCommand({ command, installations, logger, respond });
 		}
 	);
 
 	app.command("/bind", async ({ ack, command, logger, respond }) => {
 		await ack();
-		await respondToBindCommand({
-			command,
-			installations,
-			logger,
-			respond,
-		});
+		await respondToBindCommand({ command, installations, logger, respond });
 	});
+}
 
-	app.event("reaction_added", async ({ context, event, logger }) => {
-		await logSlackReactionFeedback({
-			action: "added",
-			botUserId: context.botUserId,
-			event,
-			installations,
-			logger,
-			teamId: context.teamId,
+function registerSlackReactionFeedback(
+	app: App,
+	installations: SlackInstallationServices
+) {
+	for (const [eventName, action] of [
+		["reaction_added", "added"],
+		["reaction_removed", "removed"],
+	] as const) {
+		app.event(eventName, async ({ context, event, logger }) => {
+			await logSlackReactionFeedback({
+				action,
+				botUserId: context.botUserId,
+				event,
+				installations,
+				logger,
+				teamId: context.teamId,
+			});
 		});
-	});
-
-	app.event("reaction_removed", async ({ context, event, logger }) => {
-		await logSlackReactionFeedback({
-			action: "removed",
-			botUserId: context.botUserId,
-			event,
-			installations,
-			logger,
-			teamId: context.teamId,
-		});
-	});
+	}
 }
 
 function getMentionSourceTeamId(event: {

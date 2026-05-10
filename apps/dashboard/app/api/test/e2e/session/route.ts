@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { auth } from "@databuddy/auth";
 import { and, db, eq } from "@databuddy/db";
 import { readBooleanEnv } from "@databuddy/env/boolean";
@@ -8,7 +9,6 @@ import {
 	user,
 	websites,
 } from "@databuddy/db/schema";
-import { createId } from "@databuddy/shared/utils/ids";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -115,14 +115,14 @@ async function ensureOrganization(
 		return { id: existing.organizationId, name: existing.name };
 	}
 
-	const orgId = createId();
+	const orgId = randomUUID();
 	await db.insert(organization).values({
 		id: orgId,
 		name: orgName,
 		createdAt: new Date(),
 	});
 	await db.insert(member).values({
-		id: createId(),
+		id: randomUUID(),
 		organizationId: orgId,
 		userId,
 		role: "owner",
@@ -149,7 +149,7 @@ async function ensureWebsite(organizationId: string) {
 	const [created] = await db
 		.insert(websites)
 		.values({
-			id: createId(),
+			id: randomUUID(),
 			domain: "e2e.databuddy.local",
 			name: "E2E Website",
 			organizationId,

@@ -22,7 +22,7 @@ import {
 	websites,
 } from "@databuddy/db/schema";
 import { cacheable } from "@databuddy/redis";
-import { invalidateFlagCache } from "@databuddy/shared/flags/utils";
+import { invalidateFlagCache } from "@databuddy/rpc/flags";
 import { randomUUIDv7 } from "bun";
 import { Elysia, t } from "elysia";
 import { useLogger } from "evlog/elysia";

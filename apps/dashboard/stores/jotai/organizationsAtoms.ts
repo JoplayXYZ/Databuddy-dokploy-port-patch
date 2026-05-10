@@ -1,5 +1,5 @@
 import { atom } from "jotai";
-import type { Organization } from "@/components/providers/organizations-provider";
+import type { Organization } from "./organization-types";
 
 export const organizationsAtom = atom<Organization[]>([]);
 export const activeOrganizationAtom = atom<Organization | null>(null);
