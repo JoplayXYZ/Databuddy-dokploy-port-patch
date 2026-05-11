@@ -307,7 +307,10 @@ export const apikeysRouter = {
 			setTrackProperties({ type: input.type, has_expiry: !!input.expiresAt });
 			await verifyOrganizationAccess(context, input.organizationId);
 
-			if (input.scopes.length > 0) {
+			const grantingScopes =
+				input.scopes.length > 0 ||
+				Object.keys(input.resources ?? {}).length > 0;
+			if (grantingScopes) {
 				await assertOrgAdminForScopeChange(context, input.organizationId);
 			}
 
@@ -383,7 +386,12 @@ export const apikeysRouter = {
 			const key = await getKeyWithAuth(context, input.id);
 			const meta = getMeta(key);
 
-			if (input.scopes !== undefined && key.organizationId) {
+			const grantingScopes =
+				input.scopes !== undefined ||
+				(input.resources !== undefined &&
+					input.resources !== null &&
+					Object.keys(input.resources).length > 0);
+			if (grantingScopes && key.organizationId) {
 				await assertOrgAdminForScopeChange(context, key.organizationId);
 			}
 
