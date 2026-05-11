@@ -131,6 +131,17 @@ const feedbackOutputSchema = z.object({
 	updatedAt: z.coerce.date(),
 });
 
+const submitterFeedbackOutputSchema = z.object({
+	id: z.string(),
+	title: z.string(),
+	description: z.string(),
+	category: categoryEnum,
+	status: statusEnum,
+	creditsAwarded: z.number(),
+	createdAt: z.coerce.date(),
+	updatedAt: z.coerce.date(),
+});
+
 const computeCreditsBalance = async (
 	db: typeof DbType,
 	userId: string,
@@ -231,7 +242,7 @@ export const feedbackRouter = {
 				})
 				.default({})
 		)
-		.output(z.array(feedbackOutputSchema))
+		.output(z.array(submitterFeedbackOutputSchema))
 		.handler(async ({ context, input }) => {
 			if (!context.organizationId) {
 				throw rpcError.badRequest("Organization context is required");
@@ -247,7 +258,16 @@ export const feedbackRouter = {
 			}
 
 			return await context.db
-				.select()
+				.select({
+					id: feedback.id,
+					title: feedback.title,
+					description: feedback.description,
+					category: feedback.category,
+					status: feedback.status,
+					creditsAwarded: feedback.creditsAwarded,
+					createdAt: feedback.createdAt,
+					updatedAt: feedback.updatedAt,
+				})
 				.from(feedback)
 				.where(and(...conditions))
 				.orderBy(desc(feedback.createdAt));
