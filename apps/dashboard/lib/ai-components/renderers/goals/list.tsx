@@ -5,7 +5,12 @@ import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { EditGoalDialog } from "@/app/(main)/websites/[id]/goals/_components/edit-goal-dialog";
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
-import { type CreateGoalData, type Goal, useGoals } from "@/hooks/use-goals";
+import {
+	type CreateGoalData,
+	type Goal,
+	useGoal,
+	useGoals,
+} from "@/hooks/use-goals";
 import { cn } from "@/lib/utils";
 import type { BaseComponentProps } from "../../types";
 import {
@@ -182,7 +187,7 @@ export function GoalsListRenderer({ title, goals, className }: GoalsListProps) {
 	const websiteId = params.id as string;
 
 	const [dialogOpen, setDialogOpen] = useState(false);
-	const [editingGoal, setEditingGoal] = useState<GoalItem | null>(null);
+	const [editingGoalId, setEditingGoalId] = useState<string | null>(null);
 	const [deletingId, setDeletingId] = useState<string | null>(null);
 
 	const {
@@ -194,27 +199,29 @@ export function GoalsListRenderer({ title, goals, className }: GoalsListProps) {
 		isDeleting,
 	} = useGoals(websiteId);
 
+	const editingGoalQuery = useGoal(editingGoalId ?? "", !!editingGoalId);
+
 	const openCreate = useCallback(() => {
-		setEditingGoal(null);
+		setEditingGoalId(null);
 		setDialogOpen(true);
 	}, []);
 
 	const openEdit = useCallback((goal: GoalItem) => {
-		setEditingGoal(goal);
+		setEditingGoalId(goal.id);
 		setDialogOpen(true);
 	}, []);
 
 	const closeDialog = useCallback(() => {
 		setDialogOpen(false);
-		setEditingGoal(null);
+		setEditingGoalId(null);
 	}, []);
 
 	const handleSave = useCallback(
 		async (data: Goal | Omit<CreateGoalData, "websiteId">) => {
 			try {
-				if (editingGoal) {
+				if (editingGoalId) {
 					await updateGoal({
-						goalId: editingGoal.id,
+						goalId: editingGoalId,
 						updates: data as Partial<CreateGoalData>,
 					});
 				} else {
@@ -226,11 +233,11 @@ export function GoalsListRenderer({ title, goals, className }: GoalsListProps) {
 				closeDialog();
 			} catch {
 				toast.error(
-					editingGoal ? "Failed to update goal" : "Failed to create goal"
+					editingGoalId ? "Failed to update goal" : "Failed to create goal"
 				);
 			}
 		},
-		[editingGoal, createGoal, updateGoal, websiteId, closeDialog]
+		[editingGoalId, createGoal, updateGoal, websiteId, closeDialog]
 	);
 
 	const confirmDelete = useCallback(async () => {
@@ -245,26 +252,8 @@ export function GoalsListRenderer({ title, goals, className }: GoalsListProps) {
 		}
 	}, [deletingId, deleteGoal]);
 
-	// Convert GoalItem to Goal for the dialog
-	const goalForDialog: Goal | null = editingGoal
-		? {
-				id: editingGoal.id,
-				websiteId,
-				name: editingGoal.name,
-				description: editingGoal.description ?? null,
-				type: editingGoal.type,
-				target: editingGoal.target,
-				filters: [],
-				isActive: editingGoal.isActive,
-				ignoreHistoricData: false,
-				createdAt: editingGoal.createdAt
-					? new Date(editingGoal.createdAt)
-					: new Date(),
-				updatedAt: new Date(),
-				createdBy: "",
-				deletedAt: null,
-			}
-		: null;
+	const goalForDialog: Goal | null = (editingGoalQuery.data as Goal) ?? null;
+	const dialogReady = !(editingGoalId && editingGoalQuery.isLoading);
 
 	if (goals.length === 0) {
 		return (
@@ -351,8 +340,8 @@ export function GoalsListRenderer({ title, goals, className }: GoalsListProps) {
 
 			<EditGoalDialog
 				goal={goalForDialog}
-				isOpen={dialogOpen}
-				isSaving={editingGoal ? isUpdating : isCreating}
+				isOpen={dialogOpen && dialogReady}
+				isSaving={editingGoalId ? isUpdating : isCreating}
 				onClose={closeDialog}
 				onSave={handleSave}
 			/>
