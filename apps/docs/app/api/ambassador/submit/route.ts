@@ -1,5 +1,6 @@
 import { checkBotId } from "botid/server";
 import { type NextRequest, NextResponse } from "next/server";
+import { enforceFormRateLimit } from "@/lib/rate-limit";
 import { escapeMrkdwn } from "@/lib/slack-format";
 
 const SLACK_WEBHOOK_URL = process.env.SLACK_WEBHOOK_URL || "";
@@ -230,6 +231,15 @@ export async function POST(request: NextRequest) {
 	const verification = await checkBotId();
 	if (verification.isBot) {
 		return NextResponse.json({ error: "Access denied" }, { status: 403 });
+	}
+
+	const rateLimited = await enforceFormRateLimit(request, {
+		key: "ambassador",
+		max: 3,
+		windowSec: 600,
+	});
+	if (rateLimited) {
+		return rateLimited;
 	}
 
 	const clientIP = getClientIP(request);

@@ -12,6 +12,7 @@
     "test": "bun test lib"
   },
   "dependencies": {
+    "@databuddy/redis": "workspace:*",
     "@databuddy/sdk": "workspace:*",
     "@databuddy/shared": "workspace:*",
     "@databuddy/ui": "workspace:*",
