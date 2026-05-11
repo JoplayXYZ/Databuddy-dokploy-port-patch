@@ -412,12 +412,6 @@ const PUBLIC_OVERVIEW_QUERY_TYPES = new Set([
 	"realtime_velocity",
 ]);
 
-function queryTypesAllowedForPublicAccess(types: string[]): boolean {
-	return (
-		types.length > 0 && types.every((t) => PUBLIC_OVERVIEW_QUERY_TYPES.has(t))
-	);
-}
-
 function extractQueryTypes(
 	body: DynamicQueryRequestType | DynamicQueryRequestType[]
 ): string[] {
@@ -427,251 +421,225 @@ function extractQueryTypes(
 	);
 }
 
-function verifyWebsiteAccess(
+function isOverviewOnlyAccess(queryTypes: string[]): boolean {
+	return (
+		queryTypes.length > 0 &&
+		queryTypes.every((t) => PUBLIC_OVERVIEW_QUERY_TYPES.has(t))
+	);
+}
+
+async function verifyWebsiteAccess(
 	ctx: AuthContext,
 	websiteId: string,
 	queryTypes: string[] = []
 ): Promise<boolean> {
-	return (async () => {
-		mergeWideEvent({ access_check_type: "website", website_id: websiteId });
+	mergeWideEvent({ access_check_type: "website", website_id: websiteId });
 
-		const website = await db.query.websites.findFirst({
-			where: { id: websiteId },
-			columns: {
-				id: true,
-				isPublic: true,
-				organizationId: true,
-			},
+	const website = await db.query.websites.findFirst({
+		where: { id: websiteId },
+		columns: { id: true, isPublic: true, organizationId: true },
+	});
+
+	if (!website) {
+		mergeWideEvent({ access_result: "not_found" });
+		return false;
+	}
+
+	if (website.isPublic && isOverviewOnlyAccess(queryTypes)) {
+		mergeWideEvent({ access_result: "public_overview" });
+		return true;
+	}
+
+	if (!ctx.isAuthenticated) {
+		mergeWideEvent({
+			access_result: website.isPublic
+				? "public_overview_only"
+				: "unauthenticated",
 		});
+		return false;
+	}
 
-		if (!website) {
-			mergeWideEvent({ access_result: "not_found" });
-			return false;
-		}
+	if (!website.organizationId) {
+		mergeWideEvent({ access_result: "no_organization" });
+		return false;
+	}
 
-		if (website.isPublic) {
-			if (queryTypesAllowedForPublicAccess(queryTypes)) {
-				mergeWideEvent({ access_result: "public_overview" });
-				return true;
-			}
-			if (!ctx.isAuthenticated) {
-				mergeWideEvent({ access_result: "public_overview_only" });
-				return false;
-			}
-		}
-
-		if (!ctx.isAuthenticated) {
-			mergeWideEvent({ access_result: "unauthenticated" });
-			return false;
-		}
-
-		if (!website.organizationId) {
-			mergeWideEvent({ access_result: "no_organization" });
-			return false;
-		}
-
-		if (ctx.apiKey) {
-			if (hasGlobalAccess(ctx.apiKey)) {
-				if (ctx.apiKey.organizationId) {
-					const granted = website.organizationId === ctx.apiKey.organizationId;
-					mergeWideEvent({
-						access_result: granted ? "api_key_global" : "api_key_denied",
-					});
-					return granted;
-				}
+	if (ctx.apiKey) {
+		if (hasGlobalAccess(ctx.apiKey)) {
+			if (!ctx.apiKey.organizationId) {
 				mergeWideEvent({ access_result: "api_key_no_org" });
 				return false;
 			}
-
-			const accessibleIds = getAccessibleWebsiteIds(ctx.apiKey);
-			const granted = accessibleIds.includes(websiteId);
+			const granted = website.organizationId === ctx.apiKey.organizationId;
 			mergeWideEvent({
-				access_result: granted ? "api_key_scoped" : "api_key_denied",
+				access_result: granted ? "api_key_global" : "api_key_denied",
 			});
 			return granted;
 		}
 
-		if (ctx.user) {
-			const membership = await db.query.member.findFirst({
-				where: { userId: ctx.user.id, organizationId: website.organizationId },
-				columns: {
-					id: true,
-				},
-			});
+		const granted = getAccessibleWebsiteIds(ctx.apiKey).includes(websiteId);
+		mergeWideEvent({
+			access_result: granted ? "api_key_scoped" : "api_key_denied",
+		});
+		return granted;
+	}
 
-			mergeWideEvent({
-				access_result: membership ? "member" : "not_member",
-			});
-			return !!membership;
-		}
+	if (ctx.user) {
+		const membership = await db.query.member.findFirst({
+			where: { userId: ctx.user.id, organizationId: website.organizationId },
+			columns: { id: true },
+		});
+		mergeWideEvent({ access_result: membership ? "member" : "not_member" });
+		return !!membership;
+	}
 
-		mergeWideEvent({ access_result: "denied" });
-		return false;
-	})();
+	mergeWideEvent({ access_result: "denied" });
+	return false;
 }
 
-function verifyScheduleAccess(
+async function verifyScheduleAccess(
 	ctx: AuthContext,
 	scheduleId: string
 ): Promise<boolean> {
-	return (async () => {
-		mergeWideEvent({ access_check_type: "schedule", schedule_id: scheduleId });
+	mergeWideEvent({ access_check_type: "schedule", schedule_id: scheduleId });
 
-		const schedule = await db.query.uptimeSchedules.findFirst({
-			where: { id: scheduleId },
-			columns: {
-				id: true,
-				organizationId: true,
-				websiteId: true,
-			},
-		});
+	const schedule = await db.query.uptimeSchedules.findFirst({
+		where: { id: scheduleId },
+		columns: { id: true, organizationId: true, websiteId: true },
+	});
 
-		if (!schedule) {
-			mergeWideEvent({ access_result: "not_found" });
-			return false;
-		}
-
-		if (!ctx.isAuthenticated) {
-			mergeWideEvent({ access_result: "unauthenticated" });
-			return false;
-		}
-
-		if (ctx.user) {
-			const membership = await db.query.member.findFirst({
-				where: { userId: ctx.user.id, organizationId: schedule.organizationId },
-				columns: { id: true },
-			});
-			mergeWideEvent({
-				access_result: membership ? "member" : "not_member",
-			});
-			return !!membership;
-		}
-
-		if (ctx.apiKey) {
-			const orgMatch =
-				hasKeyScope(ctx.apiKey, "read:data") &&
-				ctx.apiKey.organizationId === schedule.organizationId;
-			if (!orgMatch) {
-				mergeWideEvent({ access_result: "api_key_denied" });
-				return false;
-			}
-			if (hasGlobalAccess(ctx.apiKey)) {
-				mergeWideEvent({ access_result: "api_key_match" });
-				return true;
-			}
-			const accessible = getAccessibleWebsiteIds(ctx.apiKey);
-			const granted =
-				!!schedule.websiteId && accessible.includes(schedule.websiteId);
-			mergeWideEvent({
-				access_result: granted
-					? "api_key_website_match"
-					: "api_key_website_denied",
-			});
-			return granted;
-		}
-
-		mergeWideEvent({ access_result: "denied" });
+	if (!schedule) {
+		mergeWideEvent({ access_result: "not_found" });
 		return false;
-	})();
+	}
+
+	if (!ctx.isAuthenticated) {
+		mergeWideEvent({ access_result: "unauthenticated" });
+		return false;
+	}
+
+	if (ctx.user) {
+		const membership = await db.query.member.findFirst({
+			where: { userId: ctx.user.id, organizationId: schedule.organizationId },
+			columns: { id: true },
+		});
+		mergeWideEvent({ access_result: membership ? "member" : "not_member" });
+		return !!membership;
+	}
+
+	if (ctx.apiKey) {
+		const orgMatch =
+			hasKeyScope(ctx.apiKey, "read:data") &&
+			ctx.apiKey.organizationId === schedule.organizationId;
+		if (!orgMatch) {
+			mergeWideEvent({ access_result: "api_key_denied" });
+			return false;
+		}
+		if (hasGlobalAccess(ctx.apiKey)) {
+			mergeWideEvent({ access_result: "api_key_match" });
+			return true;
+		}
+		const granted =
+			!!schedule.websiteId &&
+			getAccessibleWebsiteIds(ctx.apiKey).includes(schedule.websiteId);
+		mergeWideEvent({
+			access_result: granted
+				? "api_key_website_match"
+				: "api_key_website_denied",
+		});
+		return granted;
+	}
+
+	mergeWideEvent({ access_result: "denied" });
+	return false;
 }
 
-function verifyLinkAccess(ctx: AuthContext, linkId: string): Promise<boolean> {
-	return (async () => {
-		mergeWideEvent({ access_check_type: "link", link_id: linkId });
+async function verifyLinkAccess(
+	ctx: AuthContext,
+	linkId: string
+): Promise<boolean> {
+	mergeWideEvent({ access_check_type: "link", link_id: linkId });
 
-		const link = await db.query.links.findFirst({
-			where: { id: linkId, deletedAt: { isNull: true } },
-			columns: {
-				id: true,
-				organizationId: true,
-				createdBy: true,
-			},
-		});
+	const link = await db.query.links.findFirst({
+		where: { id: linkId, deletedAt: { isNull: true } },
+		columns: { id: true, organizationId: true, createdBy: true },
+	});
 
-		if (!link) {
-			mergeWideEvent({ access_result: "not_found" });
-			return false;
-		}
-
-		if (!ctx.isAuthenticated) {
-			mergeWideEvent({ access_result: "unauthenticated" });
-			return false;
-		}
-
-		if (ctx.user && link.organizationId) {
-			const membership = await db.query.member.findFirst({
-				where: { userId: ctx.user.id, organizationId: link.organizationId },
-				columns: { id: true },
-			});
-			mergeWideEvent({
-				access_result: membership ? "member" : "not_member",
-			});
-			return !!membership;
-		}
-
-		if (ctx.user) {
-			const granted = link.createdBy === ctx.user.id;
-			mergeWideEvent({
-				access_result: granted ? "owner" : "not_owner",
-			});
-			return granted;
-		}
-
-		if (ctx.apiKey) {
-			const granted =
-				hasKeyScope(ctx.apiKey, "read:data") &&
-				ctx.apiKey.organizationId === link.organizationId &&
-				hasGlobalAccess(ctx.apiKey);
-			mergeWideEvent({
-				access_result: granted ? "api_key_match" : "api_key_denied",
-			});
-			return granted;
-		}
-
-		mergeWideEvent({ access_result: "denied" });
+	if (!link) {
+		mergeWideEvent({ access_result: "not_found" });
 		return false;
-	})();
+	}
+
+	if (!ctx.isAuthenticated) {
+		mergeWideEvent({ access_result: "unauthenticated" });
+		return false;
+	}
+
+	if (ctx.user && link.organizationId) {
+		const membership = await db.query.member.findFirst({
+			where: { userId: ctx.user.id, organizationId: link.organizationId },
+			columns: { id: true },
+		});
+		mergeWideEvent({ access_result: membership ? "member" : "not_member" });
+		return !!membership;
+	}
+
+	if (ctx.user) {
+		const granted = link.createdBy === ctx.user.id;
+		mergeWideEvent({ access_result: granted ? "owner" : "not_owner" });
+		return granted;
+	}
+
+	if (ctx.apiKey) {
+		const granted =
+			hasKeyScope(ctx.apiKey, "read:data") &&
+			ctx.apiKey.organizationId === link.organizationId &&
+			hasGlobalAccess(ctx.apiKey);
+		mergeWideEvent({
+			access_result: granted ? "api_key_match" : "api_key_denied",
+		});
+		return granted;
+	}
+
+	mergeWideEvent({ access_result: "denied" });
+	return false;
 }
 
-function verifyOrganizationAccess(
+async function verifyOrganizationAccess(
 	ctx: AuthContext,
 	organizationId: string
 ): Promise<boolean> {
-	return (async () => {
-		mergeWideEvent({
-			access_check_type: "organization",
-			organization_id: organizationId,
-		});
+	mergeWideEvent({
+		access_check_type: "organization",
+		organization_id: organizationId,
+	});
 
-		if (!ctx.isAuthenticated) {
-			mergeWideEvent({ access_result: "unauthenticated" });
-			return false;
-		}
-
-		if (ctx.user) {
-			const membership = await db.query.member.findFirst({
-				where: { userId: ctx.user.id, organizationId },
-				columns: { id: true },
-			});
-			mergeWideEvent({
-				access_result: membership ? "member" : "not_member",
-			});
-			return !!membership;
-		}
-
-		if (ctx.apiKey) {
-			const granted =
-				hasKeyScope(ctx.apiKey, "read:data") &&
-				ctx.apiKey.organizationId === organizationId;
-			mergeWideEvent({
-				access_result: granted ? "api_key_match" : "api_key_denied",
-			});
-			return granted;
-		}
-
-		mergeWideEvent({ access_result: "denied" });
+	if (!ctx.isAuthenticated) {
+		mergeWideEvent({ access_result: "unauthenticated" });
 		return false;
-	})();
+	}
+
+	if (ctx.user) {
+		const membership = await db.query.member.findFirst({
+			where: { userId: ctx.user.id, organizationId },
+			columns: { id: true },
+		});
+		mergeWideEvent({ access_result: membership ? "member" : "not_member" });
+		return !!membership;
+	}
+
+	if (ctx.apiKey) {
+		const granted =
+			hasKeyScope(ctx.apiKey, "read:data") &&
+			ctx.apiKey.organizationId === organizationId;
+		mergeWideEvent({
+			access_result: granted ? "api_key_match" : "api_key_denied",
+		});
+		return granted;
+	}
+
+	mergeWideEvent({ access_result: "denied" });
+	return false;
 }
 
 async function resolveProjectAccess(

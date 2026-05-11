@@ -165,13 +165,6 @@ async function assertOrgAdmin(
 	}
 }
 
-async function assertOrgAdminForScopeChange(
-	ctx: Context,
-	organizationId: string
-) {
-	await assertOrgAdmin(ctx, organizationId, "Change API key scopes");
-}
-
 async function getKeyWithAuth(ctx: Context, id: string) {
 	const key = await ctx.db.query.apikey.findFirst({ where: { id } });
 	if (!key) {
@@ -311,7 +304,11 @@ export const apikeysRouter = {
 				input.scopes.length > 0 ||
 				Object.keys(input.resources ?? {}).length > 0;
 			if (grantingScopes) {
-				await assertOrgAdminForScopeChange(context, input.organizationId);
+				await assertOrgAdmin(
+					context,
+					input.organizationId,
+					"Change API key scopes"
+				);
 			}
 
 			const nextMetadata = {
@@ -392,7 +389,11 @@ export const apikeysRouter = {
 					input.resources !== null &&
 					Object.keys(input.resources).length > 0);
 			if (grantingScopes && key.organizationId) {
-				await assertOrgAdminForScopeChange(context, key.organizationId);
+				await assertOrgAdmin(
+					context,
+					key.organizationId,
+					"Change API key scopes"
+				);
 			}
 
 			const nextMetadata = {

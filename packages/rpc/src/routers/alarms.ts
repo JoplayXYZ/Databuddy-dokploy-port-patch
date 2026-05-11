@@ -10,7 +10,7 @@ import { z } from "zod";
 import { rpcError } from "../errors";
 import { toNotificationConfig } from "../lib/alarm-notifications";
 import { setTrackProperties } from "../middleware/track-mutation";
-import { protectedProcedure, trackedProcedure } from "../orpc";
+import { type Context, protectedProcedure, trackedProcedure } from "../orpc";
 import { withWorkspace } from "../procedures/with-workspace";
 
 const SLACK_WEBHOOK_PATTERN =
@@ -92,12 +92,13 @@ function maskTail(value: string, keep = 4): string {
 	return `${"•".repeat(value.length - keep)}${value.slice(-keep)}`;
 }
 
-function redactDestination(d: {
-	type: string;
-	identifier: string;
+interface RedactableDestination {
 	config: unknown;
-	[key: string]: unknown;
-}) {
+	identifier: string;
+	type: string;
+}
+
+function redactDestination<T extends RedactableDestination>(d: T): T {
 	const cfg = (d.config ?? {}) as Record<string, unknown>;
 	const headers = cfg.headers as Record<string, string> | undefined;
 	const redactedHeaders = headers
@@ -107,15 +108,14 @@ function redactDestination(d: {
 		: headers;
 	return {
 		...d,
-		identifier:
-			d.type === "email" ? d.identifier : maskTail(d.identifier),
+		identifier: d.type === "email" ? d.identifier : maskTail(d.identifier),
 		config: redactedHeaders ? { ...cfg, headers: redactedHeaders } : cfg,
 	};
 }
 
-function redactAlarm<
-	T extends { destinations?: Array<Parameters<typeof redactDestination>[0]> },
->(alarm: T): T {
+function redactAlarm<T extends { destinations?: RedactableDestination[] }>(
+	alarm: T
+): T {
 	if (!alarm.destinations) {
 		return alarm;
 	}
@@ -123,7 +123,7 @@ function redactAlarm<
 }
 
 async function callerCanReadSecrets(
-	context: Parameters<typeof withWorkspace>[0],
+	context: Context,
 	organizationId: string
 ): Promise<boolean> {
 	try {
@@ -140,7 +140,7 @@ async function callerCanReadSecrets(
 
 async function getAlarmAndAuthorize(
 	alarmId: string,
-	context: Parameters<typeof withWorkspace>[0],
+	context: Context,
 	permissions: ("read" | "update" | "delete")[] = ["read"]
 ) {
 	const alarm = await db.query.alarms.findFirst({
