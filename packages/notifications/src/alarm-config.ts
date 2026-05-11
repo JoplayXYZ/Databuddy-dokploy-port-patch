@@ -6,6 +6,44 @@ interface AlarmDestination {
 	type: string;
 }
 
+const FORBIDDEN_WEBHOOK_HEADERS = new Set([
+	"authorization",
+	"content-length",
+	"content-type",
+	"cookie",
+	"host",
+	"connection",
+	"transfer-encoding",
+	"x-forwarded-for",
+	"x-forwarded-host",
+	"x-original-url",
+	"x-real-ip",
+]);
+
+const CRLF_PATTERN = /[\r\n]/;
+
+function sanitizeWebhookHeaders(
+	raw: unknown
+): Record<string, string> | undefined {
+	if (!raw || typeof raw !== "object") {
+		return;
+	}
+	const out: Record<string, string> = {};
+	for (const [name, value] of Object.entries(raw as Record<string, unknown>)) {
+		if (typeof value !== "string") {
+			continue;
+		}
+		if (FORBIDDEN_WEBHOOK_HEADERS.has(name.toLowerCase())) {
+			continue;
+		}
+		if (CRLF_PATTERN.test(name) || CRLF_PATTERN.test(value)) {
+			continue;
+		}
+		out[name] = value;
+	}
+	return Object.keys(out).length > 0 ? out : undefined;
+}
+
 export function buildAlarmNotificationConfig(destinations: AlarmDestination[]) {
 	const clientConfig: Record<string, Record<string, unknown>> = {};
 	const channels: NotificationChannel[] = [];
@@ -19,7 +57,7 @@ export function buildAlarmNotificationConfig(destinations: AlarmDestination[]) {
 		} else if (dest.type === "webhook") {
 			clientConfig.webhook = {
 				url: dest.identifier,
-				headers: cfg.headers as Record<string, string> | undefined,
+				headers: sanitizeWebhookHeaders(cfg.headers),
 			};
 			channels.push("webhook");
 		} else if (dest.type === "email") {
