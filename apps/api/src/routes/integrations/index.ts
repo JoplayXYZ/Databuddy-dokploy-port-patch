@@ -419,6 +419,13 @@ export const integrations = new Elysia({ prefix: "/v1/integrations" })
 					throw new SlackInstallError("Slack install link expired");
 				}
 
+				const session = await auth.api.getSession({ headers: request.headers });
+				if (!session?.user || session.user.id !== state.userId) {
+					throw new SlackInstallError(
+						"Slack install must be completed by the same user who started it"
+					);
+				}
+
 				const access = await exchangeSlackCode(config, query.code);
 				const identity = await readSlackBotIdentity(access.accessToken);
 				await saveSlackInstallation({ access, config, identity, state });
