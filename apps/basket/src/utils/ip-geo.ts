@@ -170,12 +170,34 @@ function lookupGeoLocation(ip: string): Promise<{
 	});
 }
 
-const getGeoLocation = cacheable(lookupGeoLocation, {
+/**
+ * Coarsens an IP to its network prefix so the geo cache key never holds a
+ * full visitor IP: IPv4 -> /24, IPv6 -> /64. Geo data is per-network anyway,
+ * so this preserves accuracy while keeping PII out of Redis keys.
+ */
+function coarsenIpForCache(ip: string): string {
+	if (ip.includes(":")) {
+		const groups = ip.split(":");
+		const head = groups.slice(0, 4).join(":");
+		return `${head}::`;
+	}
+	const octets = ip.split(".");
+	if (octets.length === 4) {
+		return `${octets[0]}.${octets[1]}.${octets[2]}.0`;
+	}
+	return ip;
+}
+
+const getCachedGeoLocation = cacheable(lookupGeoLocation, {
 	expireInSec: 86_400 * 7,
 	prefix: "geoip_location",
 	staleWhileRevalidate: true,
 	staleTime: 86_400,
 });
+
+function getGeoLocation(ip: string) {
+	return getCachedGeoLocation(coarsenIpForCache(ip));
+}
 
 export function anonymizeIp(ip: string): string {
 	if (!ip) {
