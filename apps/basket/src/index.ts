@@ -106,7 +106,7 @@ const app = new Elysia()
 	.use(stripeWebhook)
 	.use(paddleWebhook)
 	.get("/health/status", async function basketHealthStatus() {
-		const { clickHouseOG } = await import("@databuddy/db/clickhouse");
+		const { clickHouse } = await import("@databuddy/db/clickhouse");
 		const { Kafka } = await import("kafkajs");
 
 		async function ping(probe: () => Promise<void>) {
@@ -128,7 +128,7 @@ const app = new Elysia()
 
 		const [clickhouse, redpanda] = await Promise.all([
 			ping(async () => {
-				const { success } = await clickHouseOG.ping();
+				const { success } = await clickHouse.ping();
 				if (!success) {
 					throw new Error("ping failed");
 				}

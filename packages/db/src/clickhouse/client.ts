@@ -86,8 +86,6 @@ export const TABLE_NAMES = {
 	link_visits: "analytics.link_visits",
 };
 
-const logger = console;
-
 export const CLICKHOUSE_OPTIONS: NodeClickHouseClientConfigOptions = {
 	max_open_connections: 30,
 	request_timeout: 30_000,
@@ -101,62 +99,58 @@ export const CLICKHOUSE_OPTIONS: NodeClickHouseClientConfigOptions = {
 	},
 };
 
-export const clickHouseOG = createClient({
+const baseClient = createClient({
 	url: process.env.CLICKHOUSE_URL,
 	...CLICKHOUSE_OPTIONS,
 });
 
-async function withRetry<T>(
+const RETRIABLE_INSERT_ERROR_PATTERNS = [
+	"Connect",
+	"socket hang up",
+	"Timeout error",
+];
+
+function isRetriableInsertError(err: unknown): boolean {
+	const message = err instanceof Error ? err.message : String(err);
+	return RETRIABLE_INSERT_ERROR_PATTERNS.some((p) => message.includes(p));
+}
+
+async function withInsertRetry<T>(
 	operation: () => Promise<T>,
 	maxRetries = 3,
 	baseDelay = 500
 ): Promise<T> {
-	let lastError: Error | undefined;
-
+	let lastError: unknown;
 	for (let attempt = 0; attempt < maxRetries; attempt++) {
 		try {
-			const res = await operation();
-			if (attempt > 0) {
-				logger.info("Retry operation succeeded", { attempt });
-			}
-			return res;
-		} catch (error: any) {
+			return await operation();
+		} catch (error) {
 			lastError = error;
-
-			if (
-				error.message.includes("Connect") ||
-				error.message.includes("socket hang up") ||
-				error.message.includes("Timeout error")
-			) {
-				const delay = baseDelay * 2 ** attempt;
-				logger.warn(
-					`Attempt ${attempt + 1}/${maxRetries} failed, retrying in ${delay}ms`,
-					{
-						error: error.message,
-					}
-				);
-				await new Promise((resolve) => setTimeout(resolve, delay));
-				continue;
+			if (attempt === maxRetries - 1 || !isRetriableInsertError(error)) {
+				throw error;
 			}
-
-			throw error; // Non-retriable error
+			await new Promise((resolve) =>
+				setTimeout(resolve, baseDelay * 2 ** attempt)
+			);
 		}
 	}
-
 	throw lastError;
 }
 
-export const clickHouse = new Proxy(clickHouseOG, {
-	get(target, property, receiver) {
-		const value = Reflect.get(target, property, receiver);
+type ClickHouseClient = typeof baseClient;
 
-		if (property === "insert") {
-			return (...args: any[]) => withRetry(() => value.apply(target, args));
-		}
-
-		return value;
-	},
-});
+export const clickHouse: ClickHouseClient = Object.assign(
+	Object.create(Object.getPrototypeOf(baseClient)),
+	baseClient,
+	{
+		insert: (
+			...args: Parameters<ClickHouseClient["insert"]>
+		): ReturnType<ClickHouseClient["insert"]> =>
+			withInsertRetry(() => baseClient.insert(...args)) as ReturnType<
+				ClickHouseClient["insert"]
+			>,
+	}
+);
 
 export interface ChQueryOptions {
 	clickhouse_settings?: Record<string, string | number>;
@@ -184,24 +178,27 @@ export async function chQueryWithMeta<T extends Record<string, any>>(
 		reportChMetrics(res.response_headers, res.query_id);
 		return data;
 	});
-	const keys = Object.keys(json.data[0] || {});
+
+	const intColumns = new Set(
+		(json.meta ?? []).filter((m) => m.type.includes("Int")).map((m) => m.name)
+	);
+	if (intColumns.size === 0) {
+		return json;
+	}
 
 	return {
 		...json,
-		data: json.data.map((item) =>
-			keys.reduce(
-				(acc, key) => {
-					const meta = json.meta?.find((m) => m.name === key);
-					acc[key] =
-						item[key] && meta?.type.includes("Int")
-							? Number.parseFloat(item[key] as string)
-							: item[key];
-					return acc;
-				},
-				{} as Record<string, any>
-			)
-		),
-	} as ResponseJSON<T>;
+		data: json.data.map((item) => {
+			const out: Record<string, unknown> = { ...item };
+			for (const key of intColumns) {
+				const v = out[key];
+				if (v !== null && v !== undefined && v !== "") {
+					out[key] = Number.parseFloat(v as string);
+				}
+			}
+			return out as T;
+		}),
+	};
 }
 
 export function chQuery<T extends Record<string, any>>(

@@ -79,3 +79,4 @@ tmp
 
 # Local reference repositories
 tigerbeetle/
+*.rdb

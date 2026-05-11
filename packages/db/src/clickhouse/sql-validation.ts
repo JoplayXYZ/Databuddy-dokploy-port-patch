@@ -269,21 +269,6 @@ function hasTopLevelOr(whereBody: string): boolean {
 }
 
 /**
- * Convenience: does the supplied SQL contain at least one tenant filter on
- * a top-level WHERE? `validateAgentSQL` already enforces this as part of
- * its full check, but some call paths want to assert tenant-filtering as a
- * cheap precondition without running the whole validator.
- */
-export function requiresTenantFilter(sql: string): boolean {
-	const sanitized = maskCommentsAndStrings(sql);
-	const bodies = whereClauseBodies(sanitized);
-	if (bodies.length === 0) {
-		return false;
-	}
-	return bodies.every((body) => topLevelHasTenantFilter(body));
-}
-
-/**
  * Returns the set of allowlisted analytics.* tables referenced in the query.
  * Callers use this to build `additional_table_filters` server-side.
  * Pre-condition: sql has already passed `validateAgentSQL`.
