@@ -57,7 +57,7 @@ async function gracefulShutdown(signal: string, exitCode = 0) {
 }
 
 process.on("unhandledRejection", (reason) => {
-	handleUnhandledRejection(reason);
+	handleUnhandledRejection(reason, gracefulShutdown);
 });
 process.on("uncaughtException", (error) => {
 	handleUncaughtException(error, gracefulShutdown);
