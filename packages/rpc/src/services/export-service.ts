@@ -388,6 +388,12 @@ function formatData<T extends Record<string, unknown>>(
 	}
 }
 
+const FORMULA_PREFIX_PATTERN = /^[\s ]*[=+\-@\t\r]/;
+
+function neutralizeFormula(str: string): string {
+	return FORMULA_PREFIX_PATTERN.test(str) ? `'${str}` : str;
+}
+
 function convertToCSV<T extends Record<string, unknown>>(data: T[]): string {
 	const headers = Object.keys(data[0] || {}).join(",");
 	const rows = data
@@ -397,7 +403,7 @@ function convertToCSV<T extends Record<string, unknown>>(data: T[]): string {
 					if (value === null || value === undefined) {
 						return "";
 					}
-					const str = String(value);
+					const str = neutralizeFormula(String(value));
 					if (str.includes(",") || str.includes('"') || str.includes("\n")) {
 						return `"${str.replace(/"/g, '""')}"`;
 					}
@@ -414,7 +420,11 @@ function convertToTXT<T extends Record<string, unknown>>(data: T[]): string {
 	const rows = data
 		.map((row) =>
 			Object.values(row)
-				.map((v) => (v == null ? "" : String(v).replace(/[\t\n\r]/g, " ")))
+				.map((v) =>
+					v == null
+						? ""
+						: neutralizeFormula(String(v).replace(/[\t\n\r]/g, " "))
+				)
 				.join("\t")
 		)
 		.join("\n");
