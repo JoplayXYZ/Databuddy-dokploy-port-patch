@@ -78,7 +78,7 @@ function integrationsRedirect(
 	return Response.redirect(url.toString(), 302);
 }
 
-function requireConfig(request: Request): SlackOAuthConfig {
+function requireConfig(_request: Request): SlackOAuthConfig {
 	const missing: string[] = [];
 	const authSecret = process.env.BETTER_AUTH_SECRET;
 	const clientId = process.env.SLACK_CLIENT_ID;
@@ -111,7 +111,7 @@ function requireConfig(request: Request): SlackOAuthConfig {
 		encryptionKey,
 		redirectUri:
 			process.env.SLACK_REDIRECT_URI ||
-			new URL("/v1/integrations/slack/callback", request.url).toString(),
+			new URL("/v1/integrations/slack/callback", config.urls.api).toString(),
 	};
 }
 
