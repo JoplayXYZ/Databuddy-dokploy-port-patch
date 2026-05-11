@@ -1,3 +1,4 @@
+import { serializeJsonLd } from "@databuddy/shared/json-ld";
 import type { Metadata } from "next";
 import { unstable_cache } from "next/cache";
 import { notFound } from "next/navigation";
@@ -165,7 +166,7 @@ export default async function StatusPage({
 				<main className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
 					<div className="mx-auto max-w-2xl px-4 py-8 sm:px-6">
 						<script
-							dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+							dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }}
 							type="application/ld+json"
 						/>
 

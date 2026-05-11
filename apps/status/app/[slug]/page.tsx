@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { serializeJsonLd } from "@databuddy/shared/json-ld";
 import { ThemeProvider } from "next-themes";
 import { DATABUDDY_UPTIME_URL, getStatusPageUrl } from "@/lib/status-url";
 import { rpcClient } from "@/lib/orpc";
@@ -163,7 +164,7 @@ export default async function StatusPage({ params }: StatusPageProps) {
 				<main className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
 					<div className="mx-auto max-w-2xl px-4 py-8 sm:px-6">
 						<script
-							dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+							dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }}
 							type="application/ld+json"
 						/>
 
