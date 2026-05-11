@@ -976,6 +976,21 @@ export const statusPageRouter = {
 				permissions: ["update"],
 			});
 
+			const schedule = await db.query.uptimeSchedules.findFirst({
+				where: { id: input.uptimeScheduleId },
+				columns: { organizationId: true },
+			});
+
+			if (!schedule) {
+				throw rpcError.notFound("UptimeSchedule", input.uptimeScheduleId);
+			}
+
+			if (schedule.organizationId !== statusPage.organizationId) {
+				throw rpcError.forbidden(
+					"Uptime schedule does not belong to this status page's organization"
+				);
+			}
+
 			const existing = await db.query.statusPageMonitors.findFirst({
 				where: {
 					statusPageId: input.statusPageId,
