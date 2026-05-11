@@ -112,6 +112,14 @@ export const agentTelemetryRoute = new Elysia({
 			};
 		}
 
+		if (body.metadata) {
+			const serialized = JSON.stringify(body.metadata);
+			if (Buffer.byteLength(serialized, "utf8") > 4096) {
+				set.status = 413;
+				return { success: false, error: "metadata exceeds 4096 bytes" };
+			}
+		}
+
 		try {
 			const [row] = await db
 				.insert(agentInstallTelemetry)
@@ -195,11 +203,15 @@ export const agentTelemetryRoute = new Elysia({
 				)
 			),
 			errorMessage: t.Optional(
-				t.String({ description: "Final error if status is failed" })
+				t.String({
+					maxLength: 2048,
+					description: "Final error if status is failed",
+				})
 			),
 			metadata: t.Optional(
-				t.Record(t.String(), t.Unknown(), {
+				t.Record(t.String({ maxLength: 64 }), t.Unknown(), {
 					description: "Any extra context",
+					maxProperties: 32,
 				})
 			),
 		}),
