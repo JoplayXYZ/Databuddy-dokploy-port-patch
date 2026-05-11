@@ -149,6 +149,17 @@ async function userHasOrgAccess(
 	return memberships.some((m) => m.organizationId === organizationId);
 }
 
+async function userIsOrgAdmin(
+	userId: string,
+	organizationId: string
+): Promise<boolean> {
+	const membership = await db.query.member.findFirst({
+		where: { userId, organizationId },
+		columns: { role: true },
+	});
+	return membership?.role === "owner" || membership?.role === "admin";
+}
+
 function tryCacheSet(
 	redis: ReturnType<typeof getRedis>,
 	key: string,
@@ -1089,11 +1100,11 @@ export const insights = new Elysia({ prefix: "/v1/insights" })
 			const { organizationId } = body;
 			mergeWideEvent({ insights_clear_org_id: organizationId });
 
-			if (!(await userHasOrgAccess(userId, organizationId))) {
+			if (!(await userIsOrgAdmin(userId, organizationId))) {
 				set.status = 403;
 				return {
 					success: false,
-					error: "Access denied to this organization",
+					error: "Owner or admin role required to clear insights",
 					deleted: 0,
 				};
 			}
@@ -1146,6 +1157,16 @@ export const insights = new Elysia({ prefix: "/v1/insights" })
 				insights_timezone: timezone,
 			});
 
+			if (!(await userHasOrgAccess(userId, organizationId))) {
+				mergeWideEvent({ insights_access: "denied" });
+				set.status = 403;
+				return {
+					success: false,
+					error: "Access denied to this organization",
+					insights: [],
+				};
+			}
+
 			const redis = getRedis();
 			const cacheKey = `${CACHE_KEY_PREFIX}:${organizationId}:${timezone}`;
 
@@ -1168,16 +1189,6 @@ export const insights = new Elysia({ prefix: "/v1/insights" })
 			}
 
 			mergeWideEvent({ insights_cache: "miss" });
-
-			if (!(await userHasOrgAccess(userId, organizationId))) {
-				mergeWideEvent({ insights_access: "denied" });
-				set.status = 403;
-				return {
-					success: false,
-					error: "Access denied to this organization",
-					insights: [],
-				};
-			}
 
 			const recentInsights = await getRecentInsightsFromDb(organizationId);
 			if (recentInsights) {
