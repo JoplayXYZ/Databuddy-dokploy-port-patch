@@ -144,13 +144,14 @@ async function verifyOrganizationAccess(
 	}
 }
 
-async function assertOrgAdminForScopeChange(
+async function assertOrgAdmin(
 	ctx: Context,
-	organizationId: string
+	organizationId: string,
+	action: string
 ) {
 	if (!ctx.user) {
 		throw rpcError.forbidden(
-			"API key scopes cannot be changed via an API key — use a user session"
+			`${action} cannot be performed via an API key — use a user session`
 		);
 	}
 	const callerMember = await ctx.db.query.member.findFirst({
@@ -159,9 +160,16 @@ async function assertOrgAdminForScopeChange(
 	});
 	if (callerMember?.role !== "owner" && callerMember?.role !== "admin") {
 		throw rpcError.forbidden(
-			"Only organization owners or admins can change API key scopes"
+			`Only organization owners or admins can ${action.toLowerCase()}`
 		);
 	}
+}
+
+async function assertOrgAdminForScopeChange(
+	ctx: Context,
+	organizationId: string
+) {
+	await assertOrgAdmin(ctx, organizationId, "Change API key scopes");
 }
 
 async function getKeyWithAuth(ctx: Context, id: string) {
@@ -435,6 +443,10 @@ export const apikeysRouter = {
 		.output(successOutputSchema)
 		.handler(async ({ context, input }) => {
 			const key = await getKeyWithAuth(context, input.id);
+			if (!key.organizationId) {
+				throw rpcError.internal("Organization key required to revoke");
+			}
+			await assertOrgAdmin(context, key.organizationId, "Revoke API keys");
 
 			await invalidateCacheableKey("api-key-by-hash", key.keyHash);
 
@@ -467,6 +479,8 @@ export const apikeysRouter = {
 			if (!ownerId) {
 				throw rpcError.internal("Organization key required for rotate");
 			}
+			await assertOrgAdmin(context, ownerId, "Rotate API keys");
+
 			const { key: secret, record } = await keys.create({
 				ownerId,
 				name: key.name,
@@ -515,6 +529,10 @@ export const apikeysRouter = {
 		.output(successOutputSchema)
 		.handler(async ({ context, input }) => {
 			const key = await getKeyWithAuth(context, input.id);
+			if (!key.organizationId) {
+				throw rpcError.internal("Organization key required to delete");
+			}
+			await assertOrgAdmin(context, key.organizationId, "Delete API keys");
 
 			await invalidateCacheableKey("api-key-by-hash", key.keyHash);
 
