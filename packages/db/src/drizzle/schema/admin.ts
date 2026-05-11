@@ -17,6 +17,7 @@ export const featureInvite = pgTable(
 		token: text().notNull(),
 		status: text().default("active").notNull(),
 		invitedById: text("invited_by_id").notNull(),
+		organizationId: text("organization_id"),
 		redeemedById: text("redeemed_by_id"),
 		redeemedAt: timestamp("redeemed_at", { precision: 3, withTimezone: true }),
 		createdAt: timestamp("created_at", { precision: 3, withTimezone: true })
@@ -29,6 +30,7 @@ export const featureInvite = pgTable(
 			table.flagKey,
 			table.invitedById
 		),
+		index("feature_invite_org_flag_idx").on(table.organizationId, table.flagKey),
 		foreignKey({
 			columns: [table.invitedById],
 			foreignColumns: [user.id],

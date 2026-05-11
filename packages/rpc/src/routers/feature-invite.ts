@@ -46,12 +46,13 @@ async function requireAccess(context: Context, flagKey: string): Promise<void> {
 
 async function syncEmailToFlagRules(
 	flagKey: string,
-	email: string
+	email: string,
+	organizationId: string
 ): Promise<void> {
 	const normalizedEmail = email.toLowerCase();
 
 	const matchingFlags = await db.query.flags.findMany({
-		where: { key: flagKey },
+		where: { key: flagKey, organizationId },
 		columns: { id: true, rules: true, websiteId: true, organizationId: true },
 		limit: 1000,
 	});
@@ -167,6 +168,12 @@ export const featureInviteRouter = {
 		.output(z.array(linkOutputSchema))
 		.handler(async ({ context, input }) => {
 			const userId = context.user.id;
+			const organizationId = context.organizationId;
+			if (!organizationId) {
+				throw rpcError.badRequest(
+					"An active organization is required to issue invites"
+				);
+			}
 			await requireAccess(context as Context, input.flagKey);
 
 			return withTransaction(async (tx) => {
@@ -187,6 +194,7 @@ export const featureInviteRouter = {
 					token: randomUUIDv7(),
 					status: "active" as const,
 					invitedById: userId,
+					organizationId,
 				}));
 
 				await tx.insert(featureInvite).values(newLinks);
@@ -304,12 +312,18 @@ export const featureInviteRouter = {
 				return updated;
 			});
 
-			syncEmailToFlagRules(result.flagKey, userEmail).catch((error) => {
-				logger.error(
-					{ error, flagKey: result.flagKey, email: userEmail },
-					"Failed to sync redeemed email to flag rules"
-				);
-			});
+			if (result.organizationId) {
+				syncEmailToFlagRules(
+					result.flagKey,
+					userEmail,
+					result.organizationId
+				).catch((error) => {
+					logger.error(
+						{ error, flagKey: result.flagKey, email: userEmail },
+						"Failed to sync redeemed email to flag rules"
+					);
+				});
+			}
 
 			return { flagKey: result.flagKey };
 		}),

@@ -22,10 +22,16 @@ export async function isFlagGloballyEnabled(
 
 export async function hasRedeemedInvite(
 	flagKey: string,
-	userId: string
+	userId: string,
+	organizationId: string
 ): Promise<boolean> {
 	const invite = await db.query.featureInvite.findFirst({
-		where: { flagKey, redeemedById: userId, status: "redeemed" },
+		where: {
+			flagKey,
+			redeemedById: userId,
+			status: "redeemed",
+			organizationId,
+		},
 		columns: { id: true },
 	});
 
@@ -42,17 +48,15 @@ export async function resolveFeatureAccess(
 	}
 
 	const organizationId = context.organizationId;
-	if (organizationId) {
-		const globallyEnabled = await isFlagGloballyEnabled(
-			flagKey,
-			organizationId
-		);
-		if (globallyEnabled) {
-			return true;
-		}
+	if (!organizationId) {
+		return false;
 	}
 
-	return hasRedeemedInvite(flagKey, userId);
+	if (await isFlagGloballyEnabled(flagKey, organizationId)) {
+		return true;
+	}
+
+	return hasRedeemedInvite(flagKey, userId, organizationId);
 }
 
 function logAccess(
