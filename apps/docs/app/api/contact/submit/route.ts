@@ -2,6 +2,7 @@ import { Databuddy } from "@databuddy/sdk/node";
 import { checkBotId } from "botid/server";
 import { isValidPhoneNumber, parsePhoneNumber } from "libphonenumber-js";
 import { type NextRequest, NextResponse } from "next/server";
+import { escapeMrkdwn, mrkdwnLink } from "@/lib/slack-format";
 
 const SLACK_WEBHOOK_URL = process.env.SLACK_WEBHOOK_URL || "";
 const SLACK_TIMEOUT_MS = 10_000;
@@ -159,11 +160,13 @@ function getPhoneCountry(phone: string): string {
 
 function buildSlackBlocks(data: ContactFormData, ip: string): unknown[] {
 	const lines = [
-		`*Name:* ${data.fullName}`,
-		`*Business:* ${data.businessName}`,
-		`*Website:* <${data.website}|${data.website}>`,
-		`*Email:* <mailto:${data.email}|${data.email}>`,
-		data.phone ? `*Phone:* ${data.phone}${getPhoneCountry(data.phone)}` : "",
+		`*Name:* ${escapeMrkdwn(data.fullName)}`,
+		`*Business:* ${escapeMrkdwn(data.businessName)}`,
+		`*Website:* ${mrkdwnLink(data.website, data.website)}`,
+		`*Email:* <mailto:${encodeURIComponent(data.email)}|${escapeMrkdwn(data.email)}>`,
+		data.phone
+			? `*Phone:* ${escapeMrkdwn(data.phone)}${getPhoneCountry(data.phone)}`
+			: "",
 	].filter(Boolean);
 
 	return [

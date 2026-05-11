@@ -1,5 +1,6 @@
 import { checkBotId } from "botid/server";
 import { type NextRequest, NextResponse } from "next/server";
+import { escapeMrkdwn, mrkdwnLink } from "@/lib/slack-format";
 
 const SLACK_WEBHOOK_URL = process.env.SLACK_WEBHOOK_URL || "";
 const SLACK_TIMEOUT_MS = 10_000;
@@ -135,7 +136,7 @@ function validateFormData(data: unknown): ValidationResult {
 function createSlackField(label: string, value: string) {
 	return {
 		type: "mrkdwn" as const,
-		text: `*${label}:*\n${value}`,
+		text: `*${label}:*\n${escapeMrkdwn(value)}`,
 	};
 }
 
@@ -144,7 +145,10 @@ function buildSlackBlocks(data: OssFormData, ip: string): unknown[] {
 		createSlackField("Name", data.name),
 		createSlackField("Email", data.email),
 		createSlackField("Project", data.projectName),
-		createSlackField("Repo", `<${data.repoUrl}|${data.repoUrl}>`),
+		{
+			type: "mrkdwn" as const,
+			text: `*Repo:*\n${mrkdwnLink(data.repoUrl, data.repoUrl)}`,
+		},
 		createSlackField(
 			"Accelerator",
 			ACCELERATOR_LABELS[data.accelerator] ?? data.accelerator
@@ -175,7 +179,7 @@ function buildSlackBlocks(data: OssFormData, ip: string): unknown[] {
 			type: "section",
 			text: {
 				type: "mrkdwn",
-				text: `*Notes:*\n${data.notes}`,
+				text: `*Notes:*\n${escapeMrkdwn(data.notes)}`,
 			},
 		});
 	}

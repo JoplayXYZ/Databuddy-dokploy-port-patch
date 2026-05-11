@@ -1,5 +1,6 @@
 import { checkBotId } from "botid/server";
 import { type NextRequest, NextResponse } from "next/server";
+import { escapeMrkdwn } from "@/lib/slack-format";
 
 const SLACK_WEBHOOK_URL = process.env.SLACK_WEBHOOK_URL || "";
 const SLACK_TIMEOUT_MS = 10_000;
@@ -142,7 +143,7 @@ function validateFormData(data: unknown): ValidationResult {
 function createSlackField(label: string, value: string) {
 	return {
 		type: "mrkdwn" as const,
-		text: `*${label}:*\n${value}`,
+		text: `*${label}:*\n${escapeMrkdwn(value)}`,
 	};
 }
 
@@ -190,7 +191,7 @@ function buildSlackBlocks(data: AmbassadorFormData, ip: string): unknown[] {
 		type: "section",
 		text: {
 			type: "mrkdwn",
-			text: `*Why Ambassador:*\n${data.whyAmbassador}`,
+			text: `*Why Ambassador:*\n${escapeMrkdwn(data.whyAmbassador)}`,
 		},
 	});
 
