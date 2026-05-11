@@ -1,4 +1,4 @@
-import type { ApiKeyRow } from "@databuddy/api-keys/resolve";
+import { type ApiKeyRow, hasGlobalAccess } from "@databuddy/api-keys/resolve";
 import { auth } from "@databuddy/auth";
 import { tool, type ToolSet } from "ai";
 import { z } from "zod";
@@ -77,9 +77,12 @@ export function createMcpAgentTools(
 				const session = ctx.userId
 					? await auth.api.getSession({ headers: ctx.requestHeaders })
 					: null;
+				const scopedApiKey = ctx.apiKey && !hasGlobalAccess(ctx.apiKey);
 				const authCtx = {
 					apiKey: ctx.apiKey,
-					organizationId: ctx.organizationId ?? ctx.apiKey?.organizationId,
+					organizationId: scopedApiKey
+						? null
+						: (ctx.organizationId ?? ctx.apiKey?.organizationId ?? null),
 					user: session?.user
 						? {
 								id: session.user.id,
