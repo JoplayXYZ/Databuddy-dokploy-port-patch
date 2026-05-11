@@ -1,6 +1,10 @@
 import { connect } from "node:tls";
 import { db } from "@databuddy/db";
-import { safeFetch, SsrfError, validateUrl } from "@databuddy/shared/ssrf-guard";
+import {
+	safeFetch,
+	SsrfError,
+	validateUrl,
+} from "@databuddy/shared/ssrf-guard";
 import { CryptoHasher } from "bun";
 import { Data, Effect } from "effect";
 import { UPTIME_ENV } from "./lib/env";
@@ -93,6 +97,39 @@ function applyCacheBust(url: string): string {
 	return parsed.toString();
 }
 
+const MAX_RESPONSE_BYTES = 5 * 1024 * 1024;
+const TIMED_OUT_PATTERN = /timed out/;
+
+class ResponseTooLargeError extends Error {
+	constructor(limit: number) {
+		super(`Response exceeded ${limit} bytes`);
+	}
+}
+
+async function readBoundedBody(res: Response, limit: number): Promise<string> {
+	if (!res.body) {
+		return "";
+	}
+	const reader = res.body.getReader();
+	const decoder = new TextDecoder();
+	const chunks: string[] = [];
+	let total = 0;
+	while (true) {
+		const { value, done } = await reader.read();
+		if (done) {
+			break;
+		}
+		total += value.byteLength;
+		if (total > limit) {
+			await reader.cancel().catch(() => undefined);
+			throw new ResponseTooLargeError(limit);
+		}
+		chunks.push(decoder.decode(value, { stream: true }));
+	}
+	chunks.push(decoder.decode());
+	return chunks.join("");
+}
+
 async function pingWebsite(
 	url: string,
 	timeout: number,
@@ -128,11 +165,44 @@ async function pingWebsite(
 
 			const contentType = res.headers.get("content-type");
 			const isJson = contentType?.includes("application/json");
-			const [content, parsedJson]: [string, unknown] = isJson
-				? await res
-						.json()
-						.then((j: unknown) => [JSON.stringify(j), j] as [string, unknown])
-				: [await res.text(), undefined];
+			const contentLength = res.headers.get("content-length");
+			if (
+				contentLength &&
+				Number.parseInt(contentLength, 10) > MAX_RESPONSE_BYTES
+			) {
+				return {
+					ok: false,
+					statusCode: res.status,
+					ttfb: Math.round(ttfb),
+					total: Math.round(performance.now() - start),
+					error: `Response too large (${contentLength} > ${MAX_RESPONSE_BYTES} bytes)`,
+				};
+			}
+			let bodyText: string;
+			try {
+				bodyText = await readBoundedBody(res, MAX_RESPONSE_BYTES);
+			} catch (err) {
+				if (err instanceof ResponseTooLargeError) {
+					return {
+						ok: false,
+						statusCode: res.status,
+						ttfb: Math.round(ttfb),
+						total: Math.round(performance.now() - start),
+						error: err.message,
+					};
+				}
+				throw err;
+			}
+			let parsedJson: unknown;
+			let content = bodyText;
+			if (isJson) {
+				try {
+					parsedJson = JSON.parse(bodyText);
+					content = JSON.stringify(parsedJson);
+				} catch {
+					parsedJson = undefined;
+				}
+			}
 
 			const total = performance.now() - start;
 
@@ -152,7 +222,7 @@ async function pingWebsite(
 				ttfb: Math.round(ttfb),
 				total: Math.round(total),
 				redirects,
-				bytes: new Blob([content]).size,
+				bytes: Buffer.byteLength(content, "utf8"),
 				content,
 				contentType,
 				parsedJson,
@@ -172,7 +242,7 @@ async function pingWebsite(
 				error: error.message,
 			};
 		}
-		if (error instanceof Error && /timed out/.test(error.message)) {
+		if (error instanceof Error && TIMED_OUT_PATTERN.test(error.message)) {
 			return {
 				ok: false,
 				statusCode: 0,
