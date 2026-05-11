@@ -6,6 +6,7 @@ import {
 	flushBatchedAxiomDrain,
 } from "@lib/evlog-basket";
 import { shutdownPostgres } from "@databuddy/db";
+import { resolveKafkaSsl } from "@databuddy/shared/kafka-tls";
 import { disconnect, disposeRuntime, runPromise } from "@lib/producer";
 import {
 	handleUncaughtException,
@@ -137,19 +138,21 @@ const app = new Elysia()
 				if (!broker) {
 					throw new Error("not configured");
 				}
+				const hasCreds = Boolean(
+					process.env.REDPANDA_USER && process.env.REDPANDA_PASSWORD
+				);
 				const kafka = new Kafka({
 					clientId: "health",
 					brokers: [broker],
 					connectionTimeout: 5000,
-					...(process.env.REDPANDA_USER &&
-						process.env.REDPANDA_PASSWORD && {
-							sasl: {
-								mechanism: "scram-sha-256",
-								username: process.env.REDPANDA_USER,
-								password: process.env.REDPANDA_PASSWORD,
-							},
-							ssl: false,
-						}),
+					...(hasCreds && {
+						sasl: {
+							mechanism: "scram-sha-256",
+							username: process.env.REDPANDA_USER as string,
+							password: process.env.REDPANDA_PASSWORD as string,
+						},
+						ssl: resolveKafkaSsl(true),
+					}),
 				});
 				const admin = kafka.admin();
 				try {

@@ -1,4 +1,5 @@
 import { clickHouse, TABLE_NAMES } from "@databuddy/db/clickhouse";
+import { resolveKafkaSsl } from "@databuddy/shared/kafka-tls";
 import { CompressionTypes, Kafka, type Producer } from "kafkajs";
 import { captureError, setAttributes } from "./logging";
 
@@ -68,15 +69,19 @@ function connect(): Promise<boolean> {
 
 	connectPromise = (async () => {
 		try {
+			const hasCreds = Boolean(username && password);
 			const kafka = new Kafka({
 				brokers: [broker],
 				clientId: "links-producer",
 				requestTimeout: sendTimeoutMs,
-				...(username &&
-					password && {
-						sasl: { mechanism: "scram-sha-256", username, password },
-						ssl: false,
-					}),
+				...(hasCreds && {
+					sasl: {
+						mechanism: "scram-sha-256",
+						username: username as string,
+						password: password as string,
+					},
+					ssl: resolveKafkaSsl(true),
+				}),
 			});
 
 			producer = kafka.producer({
