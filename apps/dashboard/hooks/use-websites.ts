@@ -132,6 +132,15 @@ export function useWebsite(id: string) {
 	});
 }
 
+export function usePublicWebsiteSummary(id: string) {
+	return useQuery({
+		...orpc.websites.getPublicSummary.queryOptions({
+			input: { id },
+		}),
+		enabled: !!id,
+	});
+}
+
 export function useCreateWebsite() {
 	const queryClient = useQueryClient();
 

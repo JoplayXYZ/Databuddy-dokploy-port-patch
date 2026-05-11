@@ -6,7 +6,7 @@ import { WebsiteOverviewTab } from "@/app/(main)/websites/[id]/_components/tabs/
 import type { FullTabProps } from "@/app/(main)/websites/[id]/_components/utils/types";
 import { EmptyState } from "@/app/(main)/websites/[id]/_components/utils/ui-components";
 import { useDateFilters } from "@/hooks/use-date-filters";
-import { useWebsite } from "@/hooks/use-websites";
+import { usePublicWebsiteSummary } from "@/hooks/use-websites";
 import {
 	addDynamicFilterAtom,
 	dynamicQueryFiltersAtom,
@@ -19,7 +19,11 @@ export default function PublicDashboardPage() {
 	const [filters] = useAtom(dynamicQueryFiltersAtom);
 	const [, addFilter] = useAtom(addDynamicFilterAtom);
 	const { dateRange } = useDateFilters();
-	const { data: websiteData, isLoading, isError } = useWebsite(websiteId);
+	const {
+		data: websiteData,
+		isLoading,
+		isError,
+	} = usePublicWebsiteSummary(websiteId);
 
 	if (isError || !(isLoading || websiteData)) {
 		return (
@@ -42,7 +46,7 @@ export default function PublicDashboardPage() {
 	const tabProps: Omit<FullTabProps, "isRefreshing" | "setIsRefreshing"> = {
 		websiteId,
 		dateRange,
-		websiteData,
+		websiteData: websiteData as FullTabProps["websiteData"],
 		filters,
 		addFilter,
 	};

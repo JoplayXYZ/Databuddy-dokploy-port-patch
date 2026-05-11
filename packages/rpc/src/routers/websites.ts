@@ -151,6 +151,16 @@ const websiteOutputSchema = z.object({
 	settings: websiteSettingsSchema,
 });
 
+const publicWebsiteSummarySchema = z.object({
+	id: z.string(),
+	domain: z.string(),
+	name: z.string().nullable(),
+	status: websiteStatusOutputSchema,
+	isPublic: z.boolean(),
+	createdAt: z.coerce.date(),
+	updatedAt: z.coerce.date(),
+});
+
 const processedMiniChartDataSchema = z.object({
 	data: z.array(
 		z.object({
@@ -401,9 +411,9 @@ export const websitesRouter = {
 			return { websites: websitesList, chartData, activeUsers };
 		}),
 
-	getById: publicProcedure
+	getById: protectedProcedure
 		.route({
-			description: "Returns a website by id. Supports public access.",
+			description: "Returns a website by id. Requires website read permission.",
 			method: "POST",
 			path: "/websites/getById",
 			summary: "Get website",
@@ -415,32 +425,46 @@ export const websitesRouter = {
 			const workspace = await withWorkspace(context, {
 				websiteId: input.id,
 				permissions: ["read"],
+			});
+
+			const site = workspace.website;
+			if (!site) {
+				throw rpcError.notFound("website");
+			}
+			return site;
+		}),
+
+	getPublicSummary: publicProcedure
+		.route({
+			description:
+				"Returns minimal public-overview metadata for a website (id, domain, name, status). Public websites only.",
+			method: "POST",
+			path: "/websites/getPublicSummary",
+			summary: "Get public website summary",
+			tags: ["Websites"],
+		})
+		.input(z.object({ id: z.string() }))
+		.output(publicWebsiteSummarySchema)
+		.handler(async ({ context, input }) => {
+			const workspace = await withWorkspace(context, {
+				websiteId: input.id,
+				permissions: ["read"],
 				allowPublicAccess: true,
 			});
 
 			const site = workspace.website;
-
 			if (!site) {
 				throw rpcError.notFound("website");
 			}
-
-			if (workspace.isPublicAccess) {
-				return {
-					id: site.id,
-					domain: site.domain,
-					name: site.name,
-					status: site.status,
-					isPublic: site.isPublic,
-					createdAt: site.createdAt,
-					updatedAt: site.updatedAt,
-					organizationId: site.organizationId,
-					deletedAt: site.deletedAt,
-					integrations: site.integrations,
-					settings: site.settings,
-				};
-			}
-
-			return site;
+			return {
+				id: site.id,
+				domain: site.domain,
+				name: site.name,
+				status: site.status,
+				isPublic: site.isPublic,
+				createdAt: site.createdAt,
+				updatedAt: site.updatedAt,
+			};
 		}),
 
 	create: trackedProcedure
@@ -674,9 +698,10 @@ export const websitesRouter = {
 			}
 		}),
 
-	isTrackingSetup: publicProcedure
+	isTrackingSetup: protectedProcedure
 		.route({
-			description: "Checks if tracking is set up for a website.",
+			description:
+				"Checks if tracking is set up for a website. Requires website read permission.",
 			method: "POST",
 			path: "/websites/isTrackingSetup",
 			summary: "Check tracking setup",
@@ -688,7 +713,6 @@ export const websitesRouter = {
 			await withWorkspace(context, {
 				websiteId: input.websiteId,
 				permissions: ["read"],
-				allowPublicAccess: true,
 			});
 
 			const { hasEvents, error: eventsError } = await getTrackingEventsStatus(
