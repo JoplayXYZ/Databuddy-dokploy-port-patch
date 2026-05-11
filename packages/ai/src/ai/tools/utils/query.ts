@@ -50,13 +50,17 @@ export async function executeTimedQuery<T extends Record<string, unknown>>(
 	toolName: string,
 	sql: string,
 	params: Record<string, unknown> = {},
-	logContext?: Record<string, unknown>
+	logContext?: Record<string, unknown>,
+	clickhouseSettings?: Record<string, string | number>
 ): Promise<QueryResult<T>> {
 	const logger = createToolLogger(toolName);
 	const queryStart = Date.now();
 
 	try {
-		const raw = await chQuery<T>(sql, params, { readonly: true });
+		const raw = await chQuery<T>(sql, params, {
+			readonly: true,
+			...(clickhouseSettings && { clickhouse_settings: clickhouseSettings }),
+		});
 		const executionTime = Date.now() - queryStart;
 		const result = raw.map(sanitizeRow);
 
