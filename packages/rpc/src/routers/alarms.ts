@@ -5,6 +5,7 @@ import {
 	alarmTriggerTypeValues,
 } from "@databuddy/db/schema";
 import { NotificationClient } from "@databuddy/notifications";
+import { ratelimit } from "@databuddy/redis/rate-limit";
 import { randomUUIDv7 } from "bun";
 import { z } from "zod";
 import { rpcError } from "../errors";
@@ -381,7 +382,25 @@ export const alarmsRouter = {
 			})
 		)
 		.handler(async ({ context, input }) => {
-			const alarm = await getAlarmAndAuthorize(input.alarmId, context);
+			const alarm = await getAlarmAndAuthorize(input.alarmId, context, [
+				"update",
+			]);
+
+			const principal = context.user
+				? `user:${context.user.id}`
+				: context.apiKey
+					? `apikey:${context.apiKey.id}`
+					: null;
+			if (principal) {
+				const rl = await ratelimit(
+					`alarms:test:${principal}:${input.alarmId}`,
+					5,
+					60
+				);
+				if (!rl.success) {
+					throw rpcError.rateLimited(rl.reset);
+				}
+			}
 
 			if (!alarm.destinations || alarm.destinations.length === 0) {
 				throw rpcError.badRequest("Alarm has no destinations configured");
