@@ -337,6 +337,10 @@ export const feedbackRouter = {
 			const redemptionId = randomUUIDv7();
 
 			await withTransaction(async (tx) => {
+				await tx.execute(
+					sql`SELECT pg_advisory_xact_lock(hashtextextended(${`feedback:${userId}:${organizationId}`}, 0))`
+				);
+
 				const balance = await computeCreditsBalance(tx, userId, organizationId);
 
 				if (balance.available < tier.creditsRequired) {
