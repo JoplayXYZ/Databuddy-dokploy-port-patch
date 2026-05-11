@@ -10,6 +10,45 @@ import { executeTimedQuery, getAppContext, type QueryResult } from "./utils";
 
 const MAX_MODEL_ROWS = 50;
 
+/**
+ * ClickHouse per-query safety caps applied to every agent SQL execution.
+ * Layered on top of `readonly: true` (already enforced by chQuery) and the
+ * per-tenant `additional_table_filters`. These bound resource consumption so
+ * a pathological agent query (runaway JOIN, missing predicate, prompt
+ * injection) can't degrade the cluster.
+ *
+ * Sized for analytics queries scoped to a single tenant. Calibrate against
+ * system.query_log p99 if numbers turn out wrong in practice.
+ */
+const AGENT_CH_SAFETY_SETTINGS: Record<string, string | number> = {
+	/* wall-clock cap per query */
+	max_execution_time: 30,
+	timeout_overflow_mode: "throw",
+
+	/* memory cap per query */
+	max_memory_usage: 4_000_000_000,
+
+	/* read-budget: scan ceiling. Throw if exceeded so bad queries fail loudly. */
+	max_rows_to_read: 500_000_000,
+	max_bytes_to_read: 50_000_000_000,
+	read_overflow_mode: "throw",
+
+	/* result-budget: silently truncate to keep payloads sane. The TS layer
+	   slices to MAX_MODEL_ROWS = 50 anyway; this is the engine safety net. */
+	max_result_rows: 10_000,
+	max_result_bytes: 50_000_000,
+	result_overflow_mode: "break",
+
+	/* per-shard caps for the distributed cluster */
+	max_rows_to_read_leaf: 200_000_000,
+	max_bytes_to_read_leaf: 20_000_000_000,
+
+	/* AST-size guards against pathological generated SQL */
+	max_ast_depth: 1000,
+	max_ast_elements: 50_000,
+	max_expanded_ast_elements: 500_000,
+};
+
 function withServerBoundIds(
 	params: Record<string, unknown> | undefined,
 	websiteId: string,
@@ -50,7 +89,7 @@ export async function executeAgentSqlForWebsite({
 		sql,
 		withServerBoundIds(params, websiteId, websiteDomain),
 		{ websiteId },
-		{ additional_table_filters }
+		{ ...AGENT_CH_SAFETY_SETTINGS, additional_table_filters }
 	);
 
 	return result.data.length > MAX_MODEL_ROWS
