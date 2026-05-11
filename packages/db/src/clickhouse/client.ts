@@ -16,6 +16,62 @@ export function setChRecordFn(
 function traced<T>(name: string, fn: () => Promise<T>): Promise<T> {
 	return _record ? _record(name, fn) : fn();
 }
+
+export interface ChQueryMetrics {
+	elapsed_ms: number;
+	memory_usage_bytes?: number;
+	query_id: string;
+	read_bytes: number;
+	read_rows: number;
+	result_rows: number;
+	served_by?: string;
+	written_bytes: number;
+	written_rows: number;
+}
+
+let _metricsFn: ((m: ChQueryMetrics) => void) | null = null;
+
+export function setChMetricsFn(fn: (m: ChQueryMetrics) => void) {
+	_metricsFn = fn;
+}
+
+function headerValue(
+	headers: Record<string, string | string[] | undefined>,
+	name: string
+): string | undefined {
+	const v = headers[name];
+	return Array.isArray(v) ? v[0] : v;
+}
+
+function reportChMetrics(
+	headers: Record<string, string | string[] | undefined>,
+	queryId: string
+): void {
+	if (!_metricsFn) {
+		return;
+	}
+	const summary = headerValue(headers, "x-clickhouse-summary");
+	if (!summary) {
+		return;
+	}
+	try {
+		const s = JSON.parse(summary) as Record<string, string>;
+		const num = (k: string) => Number(s[k] ?? 0) || 0;
+		_metricsFn({
+			read_rows: num("read_rows"),
+			read_bytes: num("read_bytes"),
+			result_rows: num("result_rows"),
+			written_rows: num("written_rows"),
+			written_bytes: num("written_bytes"),
+			elapsed_ms: num("elapsed_ns") / 1_000_000,
+			memory_usage_bytes: s.memory_usage ? num("memory_usage") : undefined,
+			served_by: headerValue(headers, "x-clickhouse-server-display-name"),
+			query_id: queryId,
+		});
+	} catch {
+		// instrumentation must never break the query path
+	}
+}
 /**
  * ClickHouse table names used throughout the application
  */
@@ -124,7 +180,9 @@ export async function chQueryWithMeta<T extends Record<string, any>>(
 				clickhouse_settings: settings,
 			}),
 		});
-		return res.json<T>();
+		const data = await res.json<T>();
+		reportChMetrics(res.response_headers, res.query_id);
+		return data;
 	});
 	const keys = Object.keys(json.data[0] || {});
 
@@ -158,13 +216,14 @@ export async function chCommand(
 	query: string,
 	params?: Record<string, unknown>
 ): Promise<void> {
-	await traced("ch.command", () =>
-		clickHouse.command({
+	await traced("ch.command", async () => {
+		const res = await clickHouse.command({
 			query,
 			query_params: params,
 			clickhouse_settings: { wait_end_of_query: 1 },
-		})
-	);
+		});
+		reportChMetrics(res.response_headers, res.query_id);
+	});
 }
 
 const Z_REGEX = /Z+$/;
