@@ -20,7 +20,7 @@ import {
 	rethrowOrWrap,
 } from "@lib/structured-errors";
 import { record } from "@lib/tracing";
-import { extractIpFromRequest } from "@utils/ip-geo";
+import { extractTrustedClientIp } from "@utils/ip-geo";
 import {
 	isValidIpFromSettings,
 	isValidOriginFromSettings,
@@ -95,7 +95,11 @@ async function enforceWebsiteSecurity(
 	const allowedOrigins = settings?.allowedOrigins;
 	const allowedIps = settings?.allowedIps;
 
-	if (origin && allowedOrigins && allowedOrigins.length > 0) {
+	if (allowedOrigins && allowedOrigins.length > 0) {
+		if (!origin) {
+			log.set({ auth: { ok: false, reason: "origin_missing" } });
+			throw basketErrors.ingestOriginNotAuthorized();
+		}
 		if (!(await isValidOriginFromSettings(origin, allowedOrigins))) {
 			log.set({ auth: { ok: false, reason: "origin_not_authorized", origin } });
 			throw basketErrors.ingestOriginNotAuthorized();
@@ -106,7 +110,7 @@ async function enforceWebsiteSecurity(
 	}
 
 	if (allowedIps && allowedIps.length > 0) {
-		const ip = extractIpFromRequest(request);
+		const ip = extractTrustedClientIp(request);
 		if (!(ip && (await isValidIpFromSettings(ip, allowedIps)))) {
 			log.set({ auth: { ok: false, reason: "ip_not_authorized" } });
 			throw basketErrors.ingestIpNotAuthorized();

@@ -228,6 +228,15 @@ export function getGeo(ip: string, request?: Request) {
 }
 
 const TRUSTED_IP_HEADER = process.env.TRUSTED_IP_HEADER || "cf-connecting-ip";
+const IP_HEADER_VERIFIED =
+	process.env.IP_HEADER_VERIFIED?.toLowerCase() === "true";
+
+if (!process.env.IP_HEADER_VERIFIED && process.env.NODE_ENV === "production") {
+	log.warn({
+		message:
+			"IP_HEADER_VERIFIED is not set — client-supplied IP headers are spoofable. Set IP_HEADER_VERIFIED=true only when traffic is forced through a trusted proxy that overwrites this header.",
+	});
+}
 
 export function extractIpFromRequest(
 	request: Request,
@@ -246,6 +255,13 @@ export function extractIpFromRequest(
 	}
 
 	return "";
+}
+
+export function extractTrustedClientIp(request: Request): string | null {
+	if (!IP_HEADER_VERIFIED) {
+		return null;
+	}
+	return extractIpFromRequest(request) || null;
 }
 
 export function closeGeoIPReader(): void {
