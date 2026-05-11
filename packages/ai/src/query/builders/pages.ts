@@ -399,7 +399,7 @@ export const PagesBuilders: Record<string, SimpleQueryConfig> = {
                 decodeURLComponent(CASE WHEN trimRight(path(e.path), '/') = '' THEN '/' ELSE trimRight(path(e.path), '/') END) as name,
                 COUNT(*) as sessions_with_time,
                 COUNT(DISTINCT e.anonymous_id) as visitors,
-                ROUND(quantile(0.5)(e.time_on_page), 2) as median_time_on_page,
+                ROUND(quantileTDigest(0.5)(e.time_on_page), 2) as median_time_on_page,
                 ROUND((COUNT(DISTINCT e.anonymous_id) / SUM(COUNT(DISTINCT e.anonymous_id)) OVER()) * 100, 2) as percentage
             FROM analytics.events e
             ${helpers.sessionAttributionJoin("e")}
@@ -420,7 +420,7 @@ export const PagesBuilders: Record<string, SimpleQueryConfig> = {
                 decodeURLComponent(CASE WHEN trimRight(path(path), '/') = '' THEN '/' ELSE trimRight(path(path), '/') END) as name,
                 COUNT(*) as sessions_with_time,
                 COUNT(DISTINCT anonymous_id) as visitors,
-                ROUND(quantile(0.5)(time_on_page), 2) as median_time_on_page,
+                ROUND(quantileTDigest(0.5)(time_on_page), 2) as median_time_on_page,
                 ROUND((COUNT(DISTINCT anonymous_id) / SUM(COUNT(DISTINCT anonymous_id)) OVER()) * 100, 2) as percentage
             FROM analytics.events
             WHERE client_id = {websiteId:String}

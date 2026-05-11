@@ -401,7 +401,7 @@ export const CustomEventsBuilders: Record<string, SimpleQueryConfig> = {
 						SELECT 
 							event_name,
 							property_key,
-							uniqExact(property_value) as unique_values,
+							uniqCombined64(property_value) as unique_values,
 							COUNT(*) as occurrences
 						FROM property_values
 						WHERE 1 = 1

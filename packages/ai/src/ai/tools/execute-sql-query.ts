@@ -75,7 +75,9 @@ Canonical analytics.events schema: client_id, anonymous_id, session_id, time, pa
 
 Critical schema footguns: website id column is client_id (not website_id); timestamp is time (not created_at); page URL path is path (not page_path); event discriminator is event_name (not event_type); pageviews are event_name = 'screen_view' (never 'pageview').
 
-Other tables: analytics.error_spans (client_id, session_id, timestamp, path, message, filename, lineno, stack, error_type), analytics.web_vitals_spans (client_id, timestamp, path, metric_name FCP/LCP/CLS/INP/TTFB/FPS, metric_value), analytics.outgoing_links (client_id, timestamp, path, href, text). Custom events are in analytics.custom_events and are easy to query incorrectly — use get_data custom_events_* builders instead. Prefer get_data query builders for anything they cover.`,
+Other tables: analytics.error_spans (client_id, session_id, timestamp, path, message, filename, lineno, stack, error_type), analytics.web_vitals_spans (client_id, timestamp, path, metric_name FCP/LCP/CLS/INP/TTFB/FPS, metric_value), analytics.outgoing_links (client_id, timestamp, path, href, text). Custom events are in analytics.custom_events and are easy to query incorrectly — use get_data custom_events_* builders instead. Prefer get_data query builders for anything they cover.
+
+Aggregate function preferences: use quantileTDigest(p)(col) not quantile(p)(col) — the default quantile uses reservoir sampling and is ~10% off at p99. Use uniqCombined64(col) instead of uniqExact(col) for visitor/session/path distinct counts (same ~0.3% error as default uniq, ~6× less memory than uniqExact). Reserve uniqExact for cases where an exact count is required.`,
 	strict: true,
 	inputSchema: z.object({
 		sql: z

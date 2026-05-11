@@ -52,11 +52,11 @@ export const VitalsBuilders: Record<string, SimpleQueryConfig> = {
 			sql: `
 				SELECT 
 					metric_name,
-					quantile(0.50)(metric_value) as p50,
-					quantile(0.75)(metric_value) as p75,
-					quantile(0.90)(metric_value) as p90,
-					quantile(0.95)(metric_value) as p95,
-					quantile(0.99)(metric_value) as p99,
+					quantileTDigest(0.50)(metric_value) as p50,
+					quantileTDigest(0.75)(metric_value) as p75,
+					quantileTDigest(0.90)(metric_value) as p90,
+					quantileTDigest(0.95)(metric_value) as p95,
+					quantileTDigest(0.99)(metric_value) as p99,
 					avg(metric_value) as avg_value,
 					count() as samples
 				FROM ${Analytics.web_vitals_spans}
@@ -79,11 +79,11 @@ export const VitalsBuilders: Record<string, SimpleQueryConfig> = {
 				SELECT 
 					toDate(timestamp) as date,
 					metric_name,
-					quantile(0.50)(metric_value) as p50,
-					quantile(0.75)(metric_value) as p75,
-					quantile(0.90)(metric_value) as p90,
-					quantile(0.95)(metric_value) as p95,
-					quantile(0.99)(metric_value) as p99,
+					quantileTDigest(0.50)(metric_value) as p50,
+					quantileTDigest(0.75)(metric_value) as p75,
+					quantileTDigest(0.90)(metric_value) as p90,
+					quantileTDigest(0.95)(metric_value) as p95,
+					quantileTDigest(0.99)(metric_value) as p99,
 					count() as samples
 				FROM ${Analytics.web_vitals_spans}
 				WHERE 
@@ -119,11 +119,11 @@ export const VitalsBuilders: Record<string, SimpleQueryConfig> = {
 							END
 						) as page,
 						metric_name,
-						quantile(0.50)(metric_value) as p50,
-						quantile(0.75)(metric_value) as p75,
-						quantile(0.90)(metric_value) as p90,
-						quantile(0.95)(metric_value) as p95,
-						quantile(0.99)(metric_value) as p99,
+						quantileTDigest(0.50)(metric_value) as p50,
+						quantileTDigest(0.75)(metric_value) as p75,
+						quantileTDigest(0.90)(metric_value) as p90,
+						quantileTDigest(0.95)(metric_value) as p95,
+						quantileTDigest(0.99)(metric_value) as p99,
 						count() as samples
 					FROM ${Analytics.web_vitals_spans}
 					WHERE 

@@ -203,6 +203,11 @@ const GUIDELINES = `## Query Guidelines
 - Use uniqMerge() for unique counts from AggregateFunction columns.
 - Properties columns contain JSON strings — use JSONExtractString(properties, 'key') to parse.
 
+## Aggregate function preferences
+- Percentiles: use \`quantileTDigest(p)(col)\` for p50/p75/p95/p99. Plain \`quantile(p)\` uses reservoir sampling and is noisy at the tails (~10% error at p99). \`quantileTDigest\` is within 0.1% of exact at the same memory cost.
+- Distinct counts: \`uniq(col)\` (HLL11) is fine when approximate is OK. Prefer \`uniqCombined64(col)\` for high-cardinality distinct counts (visitor_id, session_id, anonymous_id, path) — same ~0.3% error as uniq() but lower memory and stable across reruns. Reserve \`uniqExact(col)\` only when an exact count is genuinely required (small cardinality dashboard widgets, billing).
+- Top-N lists: prefer exact \`GROUP BY ... ORDER BY count() DESC LIMIT N\` for user-facing leaderboards. \`topK(N)(col)\` is approximate and can swap the bottom-of-list entries — only use it for ML/agent summarization where minor ordering noise is acceptable.
+
 ## ClickHouse Pitfalls
 - NO nested aggregates: \`sum(count())\` is illegal. Use a subquery: \`SELECT sum(cnt) FROM (SELECT count() as cnt ... GROUP BY ...)\`
 - NO aggregates in WHERE: use HAVING for post-aggregation filters, not WHERE.
