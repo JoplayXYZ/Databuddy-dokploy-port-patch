@@ -284,8 +284,17 @@ export function createFlagTools() {
 }
 
 function parseFlagRules(value: unknown): FlagTargetRule[] {
+	if (value == null) {
+		return [];
+	}
 	const result = z.array(flagTargetRuleSchema).safeParse(value);
-	return result.success ? result.data : [];
+	if (!result.success) {
+		const storedCount = Array.isArray(value) ? value.length : "unknown";
+		throw new Error(
+			`Existing flag rules (${storedCount}) do not match the expected schema. Refusing to modify the flag to avoid destroying targeting configuration.`
+		);
+	}
+	return result.data;
 }
 
 function omitUndefined(
