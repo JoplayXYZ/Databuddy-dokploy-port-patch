@@ -1,3 +1,4 @@
+import { getRateLimitHeaders, ratelimit } from "@databuddy/redis/rate-limit";
 import { safeFetch, SsrfError } from "@databuddy/shared/ssrf-guard";
 import { type NextRequest, NextResponse } from "next/server";
 
@@ -9,10 +10,28 @@ const ALLOWED_CONTENT_TYPES = [
 	"image/avif",
 ];
 
-const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
+const MAX_IMAGE_SIZE = 2 * 1024 * 1024;
 const TIMEOUT_MESSAGE_PATTERN = /timed out/;
 
+function getClientIp(request: NextRequest): string {
+	return (
+		request.headers.get("cf-connecting-ip") ||
+		request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+		request.headers.get("x-real-ip") ||
+		"unknown"
+	);
+}
+
 export async function GET(request: NextRequest) {
+	const ip = getClientIp(request);
+	const rl = await ratelimit(`image-proxy:${ip}`, 30, 60);
+	if (!rl.success) {
+		return NextResponse.json(
+			{ error: "Too many requests" },
+			{ status: 429, headers: getRateLimitHeaders(rl) }
+		);
+	}
+
 	const url = request.nextUrl.searchParams.get("url");
 
 	if (!url) {
