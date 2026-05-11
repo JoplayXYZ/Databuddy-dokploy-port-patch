@@ -1,6 +1,6 @@
 import { connect } from "node:tls";
 import { db } from "@databuddy/db";
-import { validateUrl } from "@databuddy/shared/ssrf-guard";
+import { safeFetch, SsrfError, validateUrl } from "@databuddy/shared/ssrf-guard";
 import { CryptoHasher } from "bun";
 import { Data, Effect } from "effect";
 import { UPTIME_ENV } from "./lib/env";
@@ -98,32 +98,18 @@ async function pingWebsite(
 	timeout: number,
 	cacheBust: boolean
 ): Promise<FetchSuccess | FetchFailure> {
-	const abort = new AbortController();
-	const timer = setTimeout(() => abort.abort(), timeout);
 	const start = performance.now();
+	let redirects = 0;
+	let current = cacheBust ? applyCacheBust(url) : url;
+	let ttfb = 0;
 
 	try {
-		let redirects = 0;
-		let current = cacheBust ? applyCacheBust(url) : url;
-		let ttfb = 0;
-
 		while (redirects < MAX_REDIRECTS) {
-			const urlCheck = await validateUrl(current);
-			if (!urlCheck.safe) {
-				return {
-					ok: false as const,
-					statusCode: 0,
-					ttfb: 0,
-					total: Math.round(performance.now() - start),
-					error: urlCheck.error ?? "Target resolves to a private address",
-				};
-			}
-
-			const res = await fetch(current, {
+			const res = await safeFetch(current, {
 				method: "GET",
-				signal: abort.signal,
-				redirect: "manual",
 				headers: HEADERS,
+				maxRedirects: 0,
+				timeoutMs: timeout,
 			});
 
 			if (ttfb === 0) {
@@ -149,7 +135,6 @@ async function pingWebsite(
 				: [await res.text(), undefined];
 
 			const total = performance.now() - start;
-			clearTimeout(timer);
 
 			if (res.status >= 500) {
 				return {
@@ -176,10 +161,18 @@ async function pingWebsite(
 
 		throw new Error(`Too many redirects (max ${MAX_REDIRECTS})`);
 	} catch (error) {
-		clearTimeout(timer);
 		const total = performance.now() - start;
 
-		if (error instanceof Error && error.name === "AbortError") {
+		if (error instanceof SsrfError) {
+			return {
+				ok: false,
+				statusCode: 0,
+				ttfb: 0,
+				total: Math.round(total),
+				error: error.message,
+			};
+		}
+		if (error instanceof Error && /timed out/.test(error.message)) {
 			return {
 				ok: false,
 				statusCode: 0,
@@ -200,18 +193,23 @@ async function pingWebsite(
 }
 
 const checkCertificate = (url: string) =>
-	Effect.promise<{ valid: boolean; expiry: number }>(
-		() =>
-			new Promise((resolve) => {
-				try {
-					const parsed = new URL(url);
+	Effect.promise<{ valid: boolean; expiry: number }>(async () => {
+		const fallback = { valid: false, expiry: 0 };
+		try {
+			const parsed = new URL(url);
+			if (parsed.protocol !== "https:") {
+				return fallback;
+			}
 
-					if (parsed.protocol !== "https:") {
-						resolve({ valid: false, expiry: 0 });
-						return;
-					}
+			const urlCheck = await validateUrl(url);
+			if (!urlCheck.safe) {
+				return fallback;
+			}
 
-					const port = parsed.port ? Number.parseInt(parsed.port, 10) : 443;
+			const port = parsed.port ? Number.parseInt(parsed.port, 10) : 443;
+
+			return await new Promise<{ valid: boolean; expiry: number }>(
+				(resolve) => {
 					const socket = connect(
 						{
 							host: parsed.hostname,
@@ -224,7 +222,7 @@ const checkCertificate = (url: string) =>
 							socket.destroy();
 
 							if (!cert?.valid_to) {
-								resolve({ valid: false, expiry: 0 });
+								resolve(fallback);
 								return;
 							}
 
@@ -238,18 +236,19 @@ const checkCertificate = (url: string) =>
 
 					socket.on("error", () => {
 						socket.destroy();
-						resolve({ valid: false, expiry: 0 });
+						resolve(fallback);
 					});
 
 					socket.on("timeout", () => {
 						socket.destroy();
-						resolve({ valid: false, expiry: 0 });
+						resolve(fallback);
 					});
-				} catch {
-					resolve({ valid: false, expiry: 0 });
 				}
-			})
-	);
+			);
+		} catch {
+			return fallback;
+		}
+	});
 
 let cachedProbeIp: string | null = null;
 
