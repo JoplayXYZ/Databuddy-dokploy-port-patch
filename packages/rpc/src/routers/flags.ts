@@ -32,7 +32,7 @@ import type { Context } from "../orpc";
 import { publicProcedure, trackedProcedure } from "../orpc";
 import { setTrackProperties } from "../middleware/track-mutation";
 import {
-	isFullyAuthorized,
+	hasApiKeyOrgAccess,
 	type Workspace,
 	withWorkspace,
 } from "../procedures/with-workspace";
@@ -40,7 +40,7 @@ import {
 	requireFeatureWithLimit,
 	requireUsageWithinLimit,
 } from "../types/billing";
-import { getCacheAuthContext } from "../utils/cache-keys";
+import { scopedCacheKey } from "../utils/scoped-cache-key";
 
 const flagsCache = createDrizzleCache({ redis, namespace: "flags" });
 const CACHE_DURATION = 60;
@@ -52,66 +52,61 @@ function requireCondition(condition: ReturnType<typeof and>) {
 	return condition;
 }
 
-const authorizeScope = async (
+const flagScopeFields = {
+	websiteId: z.string().optional(),
+	organizationId: z.string().optional(),
+};
+
+const SCOPE_REQUIRED_ERROR =
+	"Either websiteId or organizationId must be provided";
+
+const requireScope = <
+	T extends { websiteId?: string; organizationId?: string },
+>(
+	data: T
+) => Boolean(data.websiteId || data.organizationId);
+
+const scopeRefinement = { message: SCOPE_REQUIRED_ERROR, path: ["websiteId"] };
+
+function authorizeFlagRead(
 	context: Context,
-	websiteId?: string,
-	organizationId?: string,
-	permission: "read" | "update" | "delete" = "read",
-	allowPublicAccess = false
-) => {
-	if (websiteId) {
-		await withWorkspace(context, {
-			websiteId,
-			permissions: [permission],
-			allowPublicAccess,
-		});
-	} else if (organizationId) {
-		const perm = permission === "read" ? "read" : "create";
-		await withWorkspace(context, {
-			organizationId,
-			resource: "website",
-			permissions: [perm],
+	scope: { websiteId?: string; organizationId?: string }
+): Promise<Workspace> {
+	if (scope.websiteId) {
+		return withWorkspace(context, {
+			websiteId: scope.websiteId,
+			permissions: ["read"],
+			allowPublicAccess: true,
 		});
 	}
-};
+	if (!scope.organizationId) {
+		throw rpcError.badRequest(SCOPE_REQUIRED_ERROR);
+	}
+	return withWorkspace(context, {
+		organizationId: scope.organizationId,
+		resource: "website",
+		permissions: ["read"],
+	});
+}
 
 const listFlagsSchema = z
 	.object({
-		websiteId: z.string().optional(),
-		organizationId: z.string().optional(),
+		...flagScopeFields,
 		status: z.enum(["active", "inactive", "archived"]).optional(),
 	})
-	.refine((data) => data.websiteId || data.organizationId, {
-		message: "Either websiteId or organizationId must be provided",
-		path: ["websiteId"],
-	});
+	.refine(requireScope, scopeRefinement);
 
 const getFlagSchema = z
-	.object({
-		id: z.string(),
-		websiteId: z.string().optional(),
-		organizationId: z.string().optional(),
-	})
-	.refine((data) => data.websiteId || data.organizationId, {
-		message: "Either websiteId or organizationId must be provided",
-		path: ["websiteId"],
-	});
+	.object({ id: z.string(), ...flagScopeFields })
+	.refine(requireScope, scopeRefinement);
 
 const getFlagByKeySchema = z
-	.object({
-		key: z.string(),
-		websiteId: z.string().optional(),
-		organizationId: z.string().optional(),
-	})
-	.refine((data) => data.websiteId || data.organizationId, {
-		message: "Either websiteId or organizationId must be provided",
-		path: ["websiteId"],
-	});
+	.object({ key: z.string(), ...flagScopeFields })
+	.refine(requireScope, scopeRefinement);
 
 const createFlagSchema = z
 	.object({
-		websiteId: z.string().optional(),
-		organizationId: z.string().optional(),
+		...flagScopeFields,
 		payload: z
 			.record(z.string(), z.unknown())
 			.refine(
@@ -122,10 +117,7 @@ const createFlagSchema = z
 		persistAcrossAuth: z.boolean().optional(),
 		...flagFormShape,
 	})
-	.refine((data) => data.websiteId || data.organizationId, {
-		message: "Either websiteId or organizationId must be provided",
-		path: ["websiteId"],
-	});
+	.refine(requireScope, scopeRefinement);
 
 const updateFlagSchema = z
 	.object({
@@ -241,24 +233,34 @@ interface FlagWithTargetGroups {
 	[key: string]: unknown;
 }
 
-/**
- * Sanitizes flag data for unauthorized/demo users by removing sensitive targeting information.
- * Only keeps aggregate numbers like rule count and group count.
- */
 function sanitizeFlagForDemo<T extends FlagWithTargetGroups>(flag: T): T {
 	return {
 		...flag,
-		rules: Array.isArray(flag.rules) && flag.rules.length > 0 ? [] : flag.rules,
-		targetGroups: flag.targetGroups?.map(
-			(group: { rules?: unknown; [key: string]: unknown }) => ({
-				...group,
-				rules:
-					Array.isArray(group.rules) && group.rules.length > 0
-						? []
-						: group.rules,
-			})
-		),
+		rules: Array.isArray(flag.rules) ? [] : flag.rules,
+		targetGroups: flag.targetGroups?.map((group) => ({
+			...group,
+			rules: Array.isArray(group.rules) ? [] : group.rules,
+		})),
 	};
+}
+
+interface FlagRelation {
+	flagsToTargetGroups: Array<{
+		targetGroup: { deletedAt: Date | null; [key: string]: unknown } | null;
+	}>;
+}
+
+function flattenTargetGroups<T extends FlagRelation>(flag: T) {
+	const { flagsToTargetGroups, ...rest } = flag;
+	const targetGroups = flagsToTargetGroups
+		.map((ftg) => ftg.targetGroup)
+		.filter((tg): tg is NonNullable<typeof tg> => !!tg && !tg.deletedAt);
+	return { ...rest, targetGroups };
+}
+
+function projectForViewer<T extends FlagRelation>(flag: T, sanitize: boolean) {
+	const mapped = flattenTargetGroups(flag);
+	return sanitize ? sanitizeFlagForDemo(mapped) : mapped;
 }
 
 function buildFlagChangeSnapshot(flag: {
@@ -313,23 +315,23 @@ export const flagsRouter = {
 		})
 		.input(listFlagsSchema)
 		.output(z.array(flagOutputSchema))
-		.handler(({ context, input }) => {
+		.handler(async ({ context, input }) => {
+			const workspace = await authorizeFlagRead(context, input);
 			const scope = getScope(input.websiteId, input.organizationId);
-			const cacheKey = `list:${scope}:${input.status || "all"}`;
+			const sanitize =
+				workspace.tier === "demo" && !hasApiKeyOrgAccess(workspace, context);
 
 			return flagsCache.withCache({
-				key: cacheKey,
+				key: scopedCacheKey(
+					"list",
+					workspace,
+					scope,
+					`status:${input.status || "all"}`,
+					`sanitize:${sanitize}`
+				),
 				ttl: CACHE_DURATION,
 				tables: ["flags", "flags_to_target_groups", "target_groups"],
 				queryFn: async () => {
-					await authorizeScope(
-						context,
-						input.websiteId,
-						input.organizationId,
-						"read",
-						true
-					);
-
 					const flagsList = await context.db.query.flags.findMany({
 						where: {
 							RAW: (t) => {
@@ -350,36 +352,10 @@ export const flagsRouter = {
 						},
 						orderBy: { createdAt: "desc" },
 						limit: 200,
-						with: {
-							flagsToTargetGroups: {
-								with: {
-									targetGroup: true,
-								},
-							},
-						},
+						with: { flagsToTargetGroups: { with: { targetGroup: true } } },
 					});
 
-					// Map the nested relations to flat targetGroups array
-					const mappedFlags = flagsList.map((flag) => ({
-						...flag,
-						targetGroups: flag.flagsToTargetGroups
-							.map((ftg) => ftg.targetGroup)
-							.filter(
-								(tg): tg is NonNullable<typeof tg> => !!tg && !tg.deletedAt
-							),
-					}));
-
-					// Check if user is fully authorized
-					const isAuthorized = input.websiteId
-						? await isFullyAuthorized(context, input.websiteId)
-						: Boolean(context.user);
-
-					// Sanitize data for unauthorized/demo users
-					if (!isAuthorized) {
-						return mappedFlags.map((flag) => sanitizeFlagForDemo(flag));
-					}
-
-					return mappedFlags;
+					return flagsList.map((flag) => projectForViewer(flag, sanitize));
 				},
 			});
 		}),
@@ -396,27 +372,22 @@ export const flagsRouter = {
 		.input(getFlagSchema)
 		.output(flagOutputSchema)
 		.handler(async ({ context, input }) => {
+			const workspace = await authorizeFlagRead(context, input);
 			const scope = getScope(input.websiteId, input.organizationId);
-			const authContext = await getCacheAuthContext(context, {
-				websiteId: input.websiteId,
-				organizationId: input.organizationId,
-			});
-
-			const cacheKey = `byId:${input.id}:${scope}:${authContext}`;
+			const sanitize =
+				workspace.tier === "demo" && !hasApiKeyOrgAccess(workspace, context);
 
 			return flagsCache.withCache({
-				key: cacheKey,
+				key: scopedCacheKey(
+					"byId",
+					workspace,
+					scope,
+					`id:${input.id}`,
+					`sanitize:${sanitize}`
+				),
 				ttl: CACHE_DURATION,
 				tables: ["flags", "flags_to_target_groups", "target_groups"],
 				queryFn: async () => {
-					await authorizeScope(
-						context,
-						input.websiteId,
-						input.organizationId,
-						"read",
-						true
-					);
-
 					const flag = await context.db.query.flags.findFirst({
 						where: {
 							RAW: (t) =>
@@ -433,39 +404,13 @@ export const flagsRouter = {
 									)
 								),
 						},
-						with: {
-							flagsToTargetGroups: {
-								with: {
-									targetGroup: true,
-								},
-							},
-						},
+						with: { flagsToTargetGroups: { with: { targetGroup: true } } },
 					});
 
 					if (!flag) {
 						throw rpcError.notFound("Flag", input.id);
 					}
-
-					const mappedFlag = {
-						...flag,
-						targetGroups: flag.flagsToTargetGroups
-							.map((ftg) => ftg.targetGroup)
-							.filter(
-								(tg): tg is NonNullable<typeof tg> => !!tg && !tg.deletedAt
-							),
-					};
-
-					// Check if user is fully authorized
-					const isAuthorized = input.websiteId
-						? await isFullyAuthorized(context, input.websiteId)
-						: Boolean(context.user);
-
-					// Sanitize data for unauthorized/demo users
-					if (!isAuthorized) {
-						return sanitizeFlagForDemo(mappedFlag);
-					}
-
-					return mappedFlag;
+					return projectForViewer(flag, sanitize);
 				},
 			});
 		}),
@@ -482,27 +427,22 @@ export const flagsRouter = {
 		.input(getFlagByKeySchema)
 		.output(flagOutputSchema)
 		.handler(async ({ context, input }) => {
+			const workspace = await authorizeFlagRead(context, input);
 			const scope = getScope(input.websiteId, input.organizationId);
-			const authContext = await getCacheAuthContext(context, {
-				websiteId: input.websiteId,
-				organizationId: input.organizationId,
-			});
-
-			const cacheKey = `byKey:${input.key}:${scope}:${authContext}`;
+			const sanitize =
+				workspace.tier === "demo" && !hasApiKeyOrgAccess(workspace, context);
 
 			return flagsCache.withCache({
-				key: cacheKey,
+				key: scopedCacheKey(
+					"byKey",
+					workspace,
+					scope,
+					`key:${input.key}`,
+					`sanitize:${sanitize}`
+				),
 				ttl: CACHE_DURATION,
 				tables: ["flags", "flags_to_target_groups", "target_groups"],
 				queryFn: async () => {
-					await authorizeScope(
-						context,
-						input.websiteId,
-						input.organizationId,
-						"read",
-						true
-					);
-
 					const flag = await context.db.query.flags.findFirst({
 						where: {
 							RAW: (t) =>
@@ -520,39 +460,13 @@ export const flagsRouter = {
 									)
 								),
 						},
-						with: {
-							flagsToTargetGroups: {
-								with: {
-									targetGroup: true,
-								},
-							},
-						},
+						with: { flagsToTargetGroups: { with: { targetGroup: true } } },
 					});
 
 					if (!flag) {
 						throw rpcError.notFound("Flag");
 					}
-
-					const mappedFlag = {
-						...flag,
-						targetGroups: flag.flagsToTargetGroups
-							.map((ftg) => ftg.targetGroup)
-							.filter(
-								(tg): tg is NonNullable<typeof tg> => !!tg && !tg.deletedAt
-							),
-					};
-
-					// Check if user is fully authorized
-					const isAuthorized = input.websiteId
-						? await isFullyAuthorized(context, input.websiteId)
-						: Boolean(context.user);
-
-					// Sanitize data for unauthorized/demo users
-					if (!isAuthorized) {
-						return sanitizeFlagForDemo(mappedFlag);
-					}
-
-					return mappedFlag;
+					return projectForViewer(flag, sanitize);
 				},
 			});
 		}),

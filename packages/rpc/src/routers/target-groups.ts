@@ -12,10 +12,11 @@ import { z } from "zod";
 import { rpcError } from "../errors";
 import { publicProcedure, trackedProcedure } from "../orpc";
 import {
-	isFullyAuthorized,
+	hasApiKeyOrgAccess,
 	withWebsiteRead,
 	withWorkspace,
 } from "../procedures/with-workspace";
+import { scopedCacheKey } from "../utils/scoped-cache-key";
 
 const targetGroupsCache = createDrizzleCache({
 	redis,
@@ -68,15 +69,10 @@ interface TargetGroupWithRules {
 	[key: string]: unknown;
 }
 
-/**
- * Sanitizes target group data for unauthorized/demo users by removing sensitive targeting information.
- * Only keeps aggregate numbers like rule count.
- */
 function sanitizeGroupForDemo<T extends TargetGroupWithRules>(group: T): T {
 	return {
 		...group,
-		rules:
-			Array.isArray(group.rules) && group.rules.length > 0 ? [] : group.rules,
+		rules: Array.isArray(group.rules) ? [] : group.rules,
 	};
 }
 
@@ -92,20 +88,26 @@ export const targetGroupsRouter = {
 		})
 		.input(listSchema)
 		.output(z.array(targetGroupOutputSchema))
-		.handler(({ context, input }) => {
-			const cacheKey = `list:website:${input.websiteId}`;
+		.handler(async ({ context, input }) => {
+			const workspace = await withWorkspace(context, {
+				websiteId: input.websiteId,
+				permissions: ["read"],
+				allowPublicAccess: true,
+			});
+
+			const sanitize =
+				workspace.tier === "demo" && !hasApiKeyOrgAccess(workspace, context);
 
 			return targetGroupsCache.withCache({
-				key: cacheKey,
+				key: scopedCacheKey(
+					"list",
+					workspace,
+					`website:${input.websiteId}`,
+					`sanitize:${sanitize}`
+				),
 				ttl: CACHE_DURATION,
 				tables: ["target_groups"],
 				queryFn: async () => {
-					await withWorkspace(context, {
-						websiteId: input.websiteId,
-						permissions: ["read"],
-						allowPublicAccess: true,
-					});
-
 					const groupsList = await context.db
 						.select()
 						.from(targetGroups)
@@ -117,18 +119,7 @@ export const targetGroupsRouter = {
 						)
 						.orderBy(desc(targetGroups.createdAt));
 
-					// Check if user is fully authorized
-					const isAuthorized = await isFullyAuthorized(
-						context,
-						input.websiteId
-					);
-
-					// Sanitize data for unauthorized/demo users
-					if (!isAuthorized) {
-						return groupsList.map((group) => sanitizeGroupForDemo(group));
-					}
-
-					return groupsList;
+					return sanitize ? groupsList.map(sanitizeGroupForDemo) : groupsList;
 				},
 			});
 		}),
@@ -146,39 +137,32 @@ export const targetGroupsRouter = {
 		.output(targetGroupOutputSchema)
 		.use(withWebsiteRead)
 		.handler(async ({ context, input }) => {
-			const cacheKey = `byId:${input.id}:website:${input.websiteId}`;
+			const { workspace } = context;
+			const sanitize =
+				workspace.tier === "demo" && !hasApiKeyOrgAccess(workspace, context);
 
 			return await targetGroupsCache.withCache({
-				key: cacheKey,
+				key: scopedCacheKey(
+					"byId",
+					workspace,
+					`website:${input.websiteId}`,
+					`id:${input.id}`,
+					`sanitize:${sanitize}`
+				),
 				ttl: CACHE_DURATION,
 				tables: ["target_groups"],
 				queryFn: async () => {
-					const result = await context.db
-						.select()
-						.from(targetGroups)
-						.where(
-							and(
-								eq(targetGroups.id, input.id),
-								eq(targetGroups.websiteId, input.websiteId),
-								isNull(targetGroups.deletedAt)
-							)
-						)
-						.limit(1);
-
-					if (result.length === 0) {
+					const row = await context.db.query.targetGroups.findFirst({
+						where: {
+							id: input.id,
+							websiteId: input.websiteId,
+							deletedAt: { isNull: true },
+						},
+					});
+					if (!row) {
 						throw rpcError.notFound("Target group", input.id);
 					}
-
-					const isAuthorized = await isFullyAuthorized(
-						context,
-						input.websiteId
-					);
-
-					if (!isAuthorized) {
-						return sanitizeGroupForDemo(result[0]);
-					}
-
-					return result[0];
+					return sanitize ? sanitizeGroupForDemo(row) : row;
 				},
 			});
 		}),

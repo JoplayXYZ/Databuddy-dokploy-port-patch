@@ -19,13 +19,14 @@ export {
 	trackedSessionProcedure,
 } from "./orpc";
 export {
-	isFullyAuthorized,
+	hasApiKeyOrgAccess,
 	type PermissionFor,
 	type PlanId,
 	type ResourceType,
 	type Website,
 	type WithWorkspaceOptions,
 	type Workspace,
+	type WorkspaceTier,
 	websiteInputSchema,
 	withWebsiteRead,
 	withWebsiteWrite,
