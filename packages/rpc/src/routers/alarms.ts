@@ -85,6 +85,59 @@ const destinationSchema = z.discriminatedUnion("type", [
 
 const alarmOutputSchema = z.record(z.string(), z.unknown());
 
+function maskTail(value: string, keep = 4): string {
+	if (value.length <= keep) {
+		return "•".repeat(value.length);
+	}
+	return `${"•".repeat(value.length - keep)}${value.slice(-keep)}`;
+}
+
+function redactDestination(d: {
+	type: string;
+	identifier: string;
+	config: unknown;
+	[key: string]: unknown;
+}) {
+	const cfg = (d.config ?? {}) as Record<string, unknown>;
+	const headers = cfg.headers as Record<string, string> | undefined;
+	const redactedHeaders = headers
+		? Object.fromEntries(
+				Object.entries(headers).map(([name, value]) => [name, maskTail(value)])
+			)
+		: headers;
+	return {
+		...d,
+		identifier:
+			d.type === "email" ? d.identifier : maskTail(d.identifier),
+		config: redactedHeaders ? { ...cfg, headers: redactedHeaders } : cfg,
+	};
+}
+
+function redactAlarm<
+	T extends { destinations?: Array<Parameters<typeof redactDestination>[0]> },
+>(alarm: T): T {
+	if (!alarm.destinations) {
+		return alarm;
+	}
+	return { ...alarm, destinations: alarm.destinations.map(redactDestination) };
+}
+
+async function callerCanReadSecrets(
+	context: Parameters<typeof withWorkspace>[0],
+	organizationId: string
+): Promise<boolean> {
+	try {
+		await withWorkspace(context, {
+			organizationId,
+			resource: "organization",
+			permissions: ["update"],
+		});
+		return true;
+	} catch {
+		return false;
+	}
+}
+
 async function getAlarmAndAuthorize(
 	alarmId: string,
 	context: Parameters<typeof withWorkspace>[0],
@@ -131,12 +184,17 @@ export const alarmsRouter = {
 				permissions: ["read"],
 			});
 
-			return db.query.alarms.findMany({
+			const rows = await db.query.alarms.findMany({
 				where: { organizationId: orgId },
 				orderBy: { createdAt: "desc" },
 				with: { destinations: true },
 				limit: 100,
 			});
+
+			if (await callerCanReadSecrets(context, orgId)) {
+				return rows;
+			}
+			return rows.map(redactAlarm);
 		}),
 
 	get: protectedProcedure
@@ -149,9 +207,13 @@ export const alarmsRouter = {
 		})
 		.input(z.object({ alarmId: z.string() }))
 		.output(alarmOutputSchema)
-		.handler(({ context, input }) =>
-			getAlarmAndAuthorize(input.alarmId, context)
-		),
+		.handler(async ({ context, input }) => {
+			const alarm = await getAlarmAndAuthorize(input.alarmId, context);
+			if (await callerCanReadSecrets(context, alarm.organizationId)) {
+				return alarm;
+			}
+			return redactAlarm(alarm);
+		}),
 
 	create: trackedProcedure
 		.route({
