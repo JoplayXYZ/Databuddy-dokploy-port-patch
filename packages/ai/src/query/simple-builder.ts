@@ -1,4 +1,5 @@
 import { chQuery } from "@databuddy/db/clickhouse";
+import { domainSchema } from "@databuddy/validation";
 import { normalizeClickHouseDateTime } from "./date-utils";
 import type { Granularity } from "./expressions";
 import {
@@ -235,7 +236,7 @@ function buildGenericFilter(
 export class SimpleQueryBuilder {
 	private readonly config: SimpleQueryConfig;
 	private readonly request: QueryRequest;
-	private readonly websiteDomain?: string | null;
+	private readonly websiteDomain: string | null;
 
 	constructor(
 		config: SimpleQueryConfig,
@@ -244,7 +245,9 @@ export class SimpleQueryBuilder {
 	) {
 		this.config = config;
 		this.request = request;
-		this.websiteDomain = websiteDomain;
+		this.websiteDomain = websiteDomain
+			? (domainSchema.safeParse(websiteDomain).data ?? null)
+			: null;
 	}
 
 	private buildFilter(filter: Filter, index: number): FilterResult {

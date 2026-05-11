@@ -1,3 +1,4 @@
+import { hasKeyScope } from "@databuddy/api-keys/resolve";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 import type { AnySchema } from "@modelcontextprotocol/sdk/server/zod-compat.js";
@@ -60,7 +61,9 @@ export async function handleDatabuddyMcpRequest(
 	);
 
 	for (const tool of createMcpTools(options)) {
-		registerTool(server, tool);
+		if (apiKeyCanCallTool(options.apiKey, tool)) {
+			registerTool(server, tool);
+		}
 	}
 
 	const transport = new WebStandardStreamableHTTPServerTransport({
@@ -77,6 +80,21 @@ export async function handleDatabuddyMcpRequest(
 	} finally {
 		await server.close().catch(() => {});
 	}
+}
+
+function apiKeyCanCallTool(
+	apiKey: McpRequestContext["apiKey"],
+	tool: RegisteredMcpTool
+): boolean {
+	const required = tool.metadata.access.scopes;
+	if (!required?.length) {
+		return true;
+	}
+	if (!apiKey) {
+		// Session-authenticated callers fall through to downstream role checks.
+		return true;
+	}
+	return required.every((scope) => hasKeyScope(apiKey, scope));
 }
 
 function registerTool(server: McpServer, tool: RegisteredMcpTool): void {
