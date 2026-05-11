@@ -574,6 +574,20 @@ export const agent = new Elysia({ prefix: "/v1/agent" })
 						);
 					}
 
+					if (body.id) {
+						const existingChat = await db.query.agentChats.findFirst({
+							where: { id: chatId },
+							columns: { userId: true, websiteId: true },
+						});
+						if (
+							existingChat &&
+							(existingChat.userId !== userId ||
+								existingChat.websiteId !== body.websiteId)
+						) {
+							return jsonError(403, "ACCESS_DENIED", "Access denied to chat");
+						}
+					}
+
 					const timezone = body.timezone ?? "UTC";
 					const domain = website.domain ?? "unknown";
 					const lastMessage = getLastMessagePreview(body.messages);
