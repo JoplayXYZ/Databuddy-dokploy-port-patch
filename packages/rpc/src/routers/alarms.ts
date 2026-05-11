@@ -1,7 +1,6 @@
 import { db, eq, withTransaction } from "@databuddy/db";
 import {
 	alarmDestinations,
-	alarmDestinationTypeValues,
 	alarms,
 	alarmTriggerTypeValues,
 } from "@databuddy/db/schema";
@@ -14,11 +13,75 @@ import { setTrackProperties } from "../middleware/track-mutation";
 import { protectedProcedure, trackedProcedure } from "../orpc";
 import { withWorkspace } from "../procedures/with-workspace";
 
-const destinationSchema = z.object({
-	type: z.enum(alarmDestinationTypeValues),
-	identifier: z.string().default(""),
+const SLACK_WEBHOOK_PATTERN =
+	/^https:\/\/hooks\.slack\.com\/services\/T[A-Z0-9]+\/B[A-Z0-9]+\/[A-Za-z0-9]+$/;
+const FORBIDDEN_HEADER_NAMES = new Set([
+	"authorization",
+	"cookie",
+	"host",
+	"connection",
+	"content-length",
+	"transfer-encoding",
+	"x-forwarded-for",
+	"x-forwarded-host",
+	"x-real-ip",
+]);
+
+const webhookHeadersSchema = z
+	.record(
+		z
+			.string()
+			.min(1)
+			.max(128)
+			.refine((name) => !FORBIDDEN_HEADER_NAMES.has(name.toLowerCase()), {
+				message: "Header name is not allowed.",
+			}),
+		z.string().max(2048)
+	)
+	.refine((rec) => Object.keys(rec).length <= 20, {
+		message: "At most 20 custom webhook headers are allowed.",
+	});
+
+const slackDestinationSchema = z.object({
+	type: z.literal("slack"),
+	identifier: z
+		.string()
+		.regex(
+			SLACK_WEBHOOK_PATTERN,
+			"Slack destination must be a hooks.slack.com webhook URL"
+		),
 	config: z.record(z.string(), z.unknown()).default({}),
 });
+
+const webhookDestinationSchema = z.object({
+	type: z.literal("webhook"),
+	identifier: z
+		.string()
+		.url("Webhook destination must be a valid URL")
+		.refine(
+			(url) => url.startsWith("http://") || url.startsWith("https://"),
+			"Webhook destination must use http(s)"
+		),
+	config: z
+		.object({
+			headers: webhookHeadersSchema.optional(),
+			method: z.enum(["GET", "POST", "PUT", "PATCH"]).optional(),
+		})
+		.passthrough()
+		.default({}),
+});
+
+const emailDestinationSchema = z.object({
+	type: z.literal("email"),
+	identifier: z.string().email(),
+	config: z.record(z.string(), z.unknown()).default({}),
+});
+
+const destinationSchema = z.discriminatedUnion("type", [
+	slackDestinationSchema,
+	webhookDestinationSchema,
+	emailDestinationSchema,
+]);
 
 const alarmOutputSchema = z.record(z.string(), z.unknown());
 
