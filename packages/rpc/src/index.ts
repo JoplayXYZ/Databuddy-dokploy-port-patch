@@ -28,6 +28,7 @@ export {
 	type Workspace,
 	type WorkspaceTier,
 	websiteInputSchema,
+	withFlagsWrite,
 	withWebsiteRead,
 	withWebsiteWrite,
 	withWorkspace,

@@ -13,6 +13,7 @@ import { rpcError } from "../errors";
 import { publicProcedure, trackedProcedure } from "../orpc";
 import {
 	hasApiKeyOrgAccess,
+	withFlagsWrite,
 	withWebsiteRead,
 	withWorkspace,
 } from "../procedures/with-workspace";
@@ -179,7 +180,7 @@ export const targetGroupsRouter = {
 		.input(createSchema)
 		.output(targetGroupOutputSchema)
 		.handler(async ({ context, input }) => {
-			const workspace = await withWorkspace(context, {
+			const workspace = await withFlagsWrite(context, {
 				websiteId: input.websiteId,
 				permissions: ["update"],
 			});
@@ -230,7 +231,7 @@ export const targetGroupsRouter = {
 
 			const group = existingGroup[0];
 
-			await withWorkspace(context, {
+			await withFlagsWrite(context, {
 				websiteId: group.websiteId,
 				permissions: ["update"],
 			});
@@ -282,7 +283,7 @@ export const targetGroupsRouter = {
 
 			const group = existingGroup[0];
 
-			await withWorkspace(context, {
+			await withFlagsWrite(context, {
 				websiteId: group.websiteId,
 				permissions: ["delete"],
 			});

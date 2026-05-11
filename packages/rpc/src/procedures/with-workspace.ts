@@ -325,6 +325,24 @@ export async function withLinksAccess(
 	});
 }
 
+export async function withFlagsWrite(
+	context: Context,
+	options: {
+		websiteId: string;
+		permissions: PermissionFor<"website">[];
+	}
+): Promise<Workspace & { website: Website }> {
+	if (context.apiKey && !hasKeyScope(context.apiKey, "manage:flags")) {
+		throw rpcError.forbidden("API key missing manage:flags scope");
+	}
+
+	return await withWorkspace<"website">(context, {
+		websiteId: options.websiteId,
+		resource: "website",
+		permissions: options.permissions,
+	});
+}
+
 async function _resolveCreatedBy(
 	context: Context,
 	organizationId: string
