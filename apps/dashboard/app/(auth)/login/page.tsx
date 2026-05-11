@@ -93,9 +93,8 @@ function LoginPage() {
 						error?.error?.code === "EMAIL_NOT_VERIFIED" ||
 						error?.error?.message?.toLowerCase().includes("not verified")
 					) {
-						router.push(
-							`/login/verification-needed?email=${encodeURIComponent(email)}`
-						);
+						sessionStorage.setItem("databuddy:verification-email", email);
+						router.push("/login/verification-needed");
 					} else {
 						toast.error(
 							error?.error?.message ||
