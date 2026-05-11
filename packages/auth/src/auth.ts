@@ -42,8 +42,49 @@ function generateOrgSlug(name: string): string {
 		.replace(/\s+/g, "-")
 		.replace(/-+/g, "-")
 		.slice(0, 48);
-	const suffix = randomUUID().slice(0, 6);
+	const suffix = randomUUID().replace(/-/g, "").slice(0, 16);
 	return `${base}-${suffix}`;
+}
+
+const ORG_SLUG_MAX_ATTEMPTS = 5;
+const SLUG_COLLISION_PATTERN = /organizations_slug_unique/;
+
+async function provisionDefaultOrg(input: {
+	userId: string;
+	name: string;
+	email: string;
+}): Promise<string> {
+	const orgName = getOrgNameFromUser(input.name, input.email);
+	const orgId = randomUUID();
+
+	for (let attempt = 1; attempt <= ORG_SLUG_MAX_ATTEMPTS; attempt++) {
+		try {
+			await db.transaction(async (tx) => {
+				await tx.insert(organizationTable).values({
+					id: orgId,
+					name: orgName,
+					slug: generateOrgSlug(orgName),
+					createdAt: new Date(),
+				});
+				await tx.insert(memberTable).values({
+					id: randomUUID(),
+					organizationId: orgId,
+					userId: input.userId,
+					role: "owner",
+					createdAt: new Date(),
+				});
+			});
+			return orgId;
+		} catch (error) {
+			const isSlugCollision =
+				error instanceof Error && SLUG_COLLISION_PATTERN.test(error.message);
+			if (!isSlugCollision || attempt === ORG_SLUG_MAX_ATTEMPTS) {
+				throw error;
+			}
+		}
+	}
+
+	throw new Error("Failed to provision organization after slug retries");
 }
 
 function getOrgNameFromUser(userName: string, email: string): string {
@@ -157,35 +198,18 @@ export const auth = betterAuth({
 		user: {
 			create: {
 				after: async (createdUser) => {
-					const orgId = randomUUID();
-					const orgName = getOrgNameFromUser(
-						createdUser.name,
-						createdUser.email
-					);
-
+					let orgId: string;
 					try {
-						await db.transaction(async (tx) => {
-							await tx.insert(organizationTable).values({
-								id: orgId,
-								name: orgName,
-								slug: generateOrgSlug(orgName),
-								createdAt: new Date(),
-							});
-
-							await tx.insert(memberTable).values({
-								id: randomUUID(),
-								organizationId: orgId,
-								userId: createdUser.id,
-								role: "owner",
-								createdAt: new Date(),
-							});
+						orgId = await provisionDefaultOrg({
+							userId: createdUser.id,
+							name: createdUser.name,
+							email: createdUser.email,
 						});
 					} catch (error) {
 						log.error({
 							service: "auth",
 							auth_hook: "user.create.after",
 							auth_user_id: createdUser.id,
-							auth_org_id: orgId,
 							error: error instanceof Error ? error.message : String(error),
 						});
 						return;
@@ -221,6 +245,30 @@ export const auth = betterAuth({
 								},
 							};
 						}
+
+						const user = await db.query.user.findFirst({
+							where: { id: sessionData.userId },
+							columns: { id: true, name: true, email: true },
+						});
+						if (!user) {
+							return { data: sessionData };
+						}
+
+						const orgId = await provisionDefaultOrg({
+							userId: user.id,
+							name: user.name,
+							email: user.email,
+						});
+						log.info({
+							service: "auth",
+							auth_hook: "session.create.before",
+							auth_user_id: sessionData.userId,
+							auth_org_id: orgId,
+							message: "Provisioned default org for orphaned account",
+						});
+						return {
+							data: { ...sessionData, activeOrganizationId: orgId },
+						};
 					} catch (error) {
 						log.error({
 							service: "auth",
