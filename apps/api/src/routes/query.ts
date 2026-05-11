@@ -390,9 +390,47 @@ async function getOrganizationWebsiteIds(
 	return websites.map((website) => website.id);
 }
 
+const PUBLIC_OVERVIEW_QUERY_TYPES = new Set([
+	"summary_metrics",
+	"today_metrics",
+	"active_stats",
+	"events_by_date",
+	"traffic_sources",
+	"top_pages",
+	"top_referrers",
+	"country",
+	"region",
+	"city",
+	"device_types",
+	"browser_name",
+	"os_name",
+	"realtime_pages",
+	"realtime_referrers",
+	"realtime_countries",
+	"realtime_cities",
+	"realtime_sessions",
+	"realtime_velocity",
+]);
+
+function queryTypesAllowedForPublicAccess(types: string[]): boolean {
+	return (
+		types.length > 0 && types.every((t) => PUBLIC_OVERVIEW_QUERY_TYPES.has(t))
+	);
+}
+
+function extractQueryTypes(
+	body: DynamicQueryRequestType | DynamicQueryRequestType[]
+): string[] {
+	const requests = Array.isArray(body) ? body : [body];
+	return requests.flatMap((req) =>
+		req.parameters.map((p) => (typeof p === "string" ? p : p.name))
+	);
+}
+
 function verifyWebsiteAccess(
 	ctx: AuthContext,
-	websiteId: string
+	websiteId: string,
+	queryTypes: string[] = []
 ): Promise<boolean> {
 	return (async () => {
 		mergeWideEvent({ access_check_type: "website", website_id: websiteId });
@@ -412,8 +450,14 @@ function verifyWebsiteAccess(
 		}
 
 		if (website.isPublic) {
-			mergeWideEvent({ access_result: "public" });
-			return true;
+			if (queryTypesAllowedForPublicAccess(queryTypes)) {
+				mergeWideEvent({ access_result: "public_overview" });
+				return true;
+			}
+			if (!ctx.isAuthenticated) {
+				mergeWideEvent({ access_result: "public_overview_only" });
+				return false;
+			}
 		}
 
 		if (!ctx.isAuthenticated) {
@@ -637,9 +681,10 @@ async function resolveProjectAccess(
 		scheduleId?: string;
 		linkId?: string;
 		organizationId?: string;
+		queryTypes?: string[];
 	}
 ): Promise<ProjectAccessResult> {
-	const { websiteId, scheduleId, linkId, organizationId } = options;
+	const { websiteId, scheduleId, linkId, organizationId, queryTypes } = options;
 
 	if (linkId) {
 		const hasAccess = await verifyLinkAccess(ctx, linkId);
@@ -672,7 +717,7 @@ async function resolveProjectAccess(
 	}
 
 	if (websiteId) {
-		const hasAccess = await verifyWebsiteAccess(ctx, websiteId);
+		const hasAccess = await verifyWebsiteAccess(ctx, websiteId, queryTypes);
 		if (!hasAccess) {
 			return {
 				success: false,
@@ -1053,6 +1098,7 @@ export const query = new Elysia({ prefix: "/v1/query" })
 			}
 			const accessResult = await resolveProjectAccess(ctx, {
 				websiteId: q.website_id,
+				queryTypes: body.type ? [String(body.type)] : [],
 			});
 
 			if (!accessResult.success) {
@@ -1120,6 +1166,7 @@ export const query = new Elysia({ prefix: "/v1/query" })
 					scheduleId: q.schedule_id,
 					linkId: q.link_id,
 					organizationId: q.organization_id,
+					queryTypes: extractQueryTypes(body),
 				});
 
 				if (!accessResult.success) {
