@@ -67,6 +67,15 @@ const ADMIN_KEY_STORAGE_KEY = "databuddy:devtools:admin-key";
 const ADMIN_URL_STORAGE_KEY = "databuddy:devtools:admin-url";
 const TRAILING_SLASH_RE = /\/+$/;
 export const DEFAULT_ADMIN_API_URL = "https://api.databuddy.cc";
+
+function isValidAdminApiUrl(value: string): boolean {
+	try {
+		const parsed = new URL(value);
+		return parsed.protocol === "https:";
+	} catch {
+		return false;
+	}
+}
 const DEFAULT_SIZE: Size = { w: 460, h: 560 };
 const SNAPSHOT_POLL_MS = 750;
 const TRACKER_EVENTS = ["scroll", "click", "keydown", "touchstart"] as const;
@@ -451,9 +460,16 @@ class DevtoolsStore {
 	setAdminApiUrl = (url: string | null) => {
 		const trimmed = url?.trim().replace(TRAILING_SLASH_RE, "") ?? "";
 		const next = trimmed === "" ? null : trimmed;
+		if (next && !isValidAdminApiUrl(next)) {
+			return;
+		}
+		const urlChanged = next !== this.state.adminApiUrl;
 		saveAdminApiUrl(next);
-		this.commit({ adminApiUrl: next });
-		if (this.state.adminKey) {
+		this.commit({
+			adminApiUrl: next,
+			...(urlChanged && this.state.adminKey ? { adminKey: null } : {}),
+		});
+		if (this.state.adminKey && !urlChanged) {
 			this.fetchCatalog().catch(() => undefined);
 		}
 	};
@@ -513,6 +529,7 @@ class DevtoolsStore {
 					"content-type": "application/json",
 				},
 				credentials: "omit",
+				redirect: "error",
 				body: JSON.stringify({
 					clientId: ctx.clientId,
 					key: input.key,
@@ -556,6 +573,7 @@ class DevtoolsStore {
 					"content-type": "application/json",
 				},
 				credentials: "omit",
+				redirect: "error",
 				body: JSON.stringify({ clientId: ctx.clientId, ...input }),
 			});
 			if (!res.ok) {
@@ -586,6 +604,7 @@ class DevtoolsStore {
 				method: "DELETE",
 				headers: { "x-api-key": ctx.key },
 				credentials: "omit",
+				redirect: "error",
 			});
 			if (!res.ok) {
 				return { ok: false, error: await this.readError(res) };
@@ -649,6 +668,7 @@ class DevtoolsStore {
 			const res = await fetch(url.toString(), {
 				headers: { "x-api-key": adminKey },
 				credentials: "omit",
+				redirect: "error",
 			});
 			if (!res.ok) {
 				if (requestSeq !== this.catalogFetchSeq) {
