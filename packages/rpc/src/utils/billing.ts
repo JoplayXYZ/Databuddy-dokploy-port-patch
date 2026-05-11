@@ -46,7 +46,7 @@ export async function getBillingCustomerId(
 	return orgOwnerId ?? userId;
 }
 
-const getMemberRole = cacheable(
+export const getMemberRole = cacheable(
 	async (userId: string, organizationId: string): Promise<string | null> => {
 		const row = await db.query.member.findFirst({
 			where: { organizationId, userId },
