@@ -266,9 +266,12 @@ export const trackRoute = new Elysia().post(
 				: auth.ownerId;
 
 			if (billingUserId) {
-				await checkAutumnUsage(billingUserId, "events", {
-					api_route: "track",
-				});
+				await checkAutumnUsage(
+					billingUserId,
+					"events",
+					{ api_route: "track", batch_size: events.length },
+					events.length
+				);
 			}
 
 			const allowedApiKeyWebsiteIds =
