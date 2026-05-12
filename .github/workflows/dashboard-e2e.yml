@@ -96,7 +96,7 @@ jobs:
           path: ~/.bun/install/cache
           key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
           restore-keys: ${{ runner.os }}-bun-
-      - run: bun install --frozen-lockfile
+      - run: bun install --frozen-lockfile --ignore-scripts
       - name: Build dashboard runtime packages
         run: bunx turbo run build --filter @databuddy/cache --filter @databuddy/devtools --filter @databuddy/sdk
       - run: bunx playwright install --with-deps chromium
