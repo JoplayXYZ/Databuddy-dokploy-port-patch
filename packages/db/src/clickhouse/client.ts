@@ -183,7 +183,7 @@ export interface ChQueryOptions {
 	readonly?: boolean;
 }
 
-export async function chQueryWithMeta<T extends Record<string, any>>(
+async function chQueryWithMeta<T extends Record<string, any>>(
 	query: string,
 	params?: Record<string, unknown>,
 	options?: ChQueryOptions
