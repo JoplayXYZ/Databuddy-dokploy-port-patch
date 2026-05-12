@@ -28,11 +28,9 @@
     "@databuddy/cache": "workspace:*",
     "@faker-js/faker": "^9.9.0",
     "@neondatabase/serverless": "^1.0.2",
-    "@types/sqlstring": "^2.3.2",
     "drizzle-orm": "catalog:",
     "ioredis": "^5.8.2",
-    "pg": "^8.16.3",
-    "sqlstring": "^2.3.3"
+    "pg": "^8.16.3"
   },
   "devDependencies": {
     "@types/pg": "^8.16.0",

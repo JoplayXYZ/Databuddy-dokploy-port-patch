@@ -1,8 +1,6 @@
 import { createClient, type ResponseJSON } from "@clickhouse/client";
 import type { NodeClickHouseClientConfigOptions } from "@clickhouse/client/dist/config";
 
-import SqlString from "sqlstring";
-
 let _record:
 	| (<T>(name: string, fn: () => Promise<T> | T) => Promise<T>)
 	| null = null;
@@ -247,37 +245,4 @@ export async function chCommand(
 		});
 		reportChMetrics(res.response_headers, res.query_id);
 	});
-}
-
-const Z_REGEX = /Z+$/;
-const DATE_REGEX = /\d{4}-\d{2}-\d{2}/;
-
-export function formatClickhouseDate(
-	date: Date | string,
-	skipTime = false
-): string {
-	if (skipTime) {
-		return new Date(date).toISOString().split("T")[0] ?? "";
-	}
-	return new Date(date).toISOString().replace("T", " ").replace(Z_REGEX, "");
-}
-
-export function toDate(str: string, interval?: string) {
-	if (!interval || interval === "minute" || interval === "hour") {
-		if (DATE_REGEX.test(str)) {
-			return SqlString.escape(str);
-		}
-
-		return str;
-	}
-
-	if (DATE_REGEX.test(str)) {
-		return `toDate(${SqlString.escape(str.split(" ")[0])})`;
-	}
-
-	return `toDate(${SqlString.escape(str)})`;
-}
-
-export function convertClickhouseDateToJs(date: string) {
-	return new Date(`${date.replace(" ", "T")}Z`);
 }
