@@ -43,6 +43,7 @@ import {
 	streamBufferKey,
 	tailStream,
 } from "@databuddy/redis/stream-buffer";
+import { ratelimit } from "@databuddy/redis/rate-limit";
 import {
 	convertToModelMessages,
 	generateId,
@@ -439,6 +440,16 @@ export const agent = new Elysia({ prefix: "/v1/agent" })
 					return jsonError(401, "AUTH_REQUIRED", "Authentication required");
 				}
 
+				const principal = user?.id ?? `apikey:${apiKey?.id ?? "unknown"}`;
+				const rl = await ratelimit(`agent:ask:${principal}`, 30, 60);
+				if (!rl.success) {
+					return jsonError(
+						429,
+						"RATE_LIMITED",
+						"Too many agent requests. Try again shortly."
+					);
+				}
+
 				const actor = apiKey
 					? {
 							apiKey,
@@ -511,6 +522,19 @@ export const agent = new Elysia({ prefix: "/v1/agent" })
 						return jsonError(401, "AUTH_REQUIRED", "Authentication required");
 					}
 					const userId = user?.id ?? `apikey:${apiKey?.id}`;
+
+					const rl = await ratelimit(
+						`agent:chat:${userId}:${body.websiteId}`,
+						30,
+						60
+					);
+					if (!rl.success) {
+						return jsonError(
+							429,
+							"RATE_LIMITED",
+							"Too many agent requests. Try again shortly."
+						);
+					}
 
 					const websiteValidation = await timeAgentPhase(
 						"validate_website",
