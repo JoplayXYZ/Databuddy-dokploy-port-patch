@@ -211,10 +211,8 @@ const buildFilterSQL = (
 			continue;
 		}
 
-		const escaped = escapeClickhouseString(value);
-
 		if (operator === "contains" || operator === "not_contains") {
-			params[key] = `%${escaped}%`;
+			params[key] = `%${escapeClickhouseString(value)}%`;
 			parts.push(
 				`${field} ${operator === "contains" ? "LIKE" : "NOT LIKE"} {${key}:String}`
 			);
@@ -222,19 +220,19 @@ const buildFilterSQL = (
 		}
 
 		if (operator === "starts_with") {
-			params[key] = `${escaped}%`;
+			params[key] = `${escapeClickhouseString(value)}%`;
 			parts.push(`${field} LIKE {${key}:String}`);
 			continue;
 		}
 
 		if (operator === "ends_with") {
-			params[key] = `%${escaped}`;
+			params[key] = `%${escapeClickhouseString(value)}`;
 			parts.push(`${field} LIKE {${key}:String}`);
 			continue;
 		}
 
 		const isNegative = operator === "not_equals" || operator === "not_in";
-		params[key] = escaped;
+		params[key] = value;
 		parts.push(`${field} ${isNegative ? "!=" : "="} {${key}:String}`);
 	}
 
