@@ -4,6 +4,7 @@ import { member, slackIntegrations } from "@databuddy/db/schema";
 import { encrypt } from "@databuddy/encryption";
 import { config } from "@databuddy/env/app";
 import { invalidateCacheableKey } from "@databuddy/redis/cache-invalidation";
+import { ratelimit } from "@databuddy/redis/rate-limit";
 import { randomUUIDv7 } from "bun";
 import { Elysia, t } from "elysia";
 import { useLogger } from "evlog/elysia";
@@ -368,10 +369,39 @@ async function saveSlackInstallationOnce({
 	await invalidateCacheableKey("slack-integration-by-team", teamId);
 }
 
+function principalFromRequest(request: Request): string {
+	return (
+		request.headers.get("cf-connecting-ip") ||
+		request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+		request.headers.get("x-real-ip") ||
+		"unknown"
+	);
+}
+
+async function throttleSlackOAuth(
+	action: "install" | "callback",
+	request: Request,
+	max: number
+): Promise<Response | null> {
+	const ip = principalFromRequest(request);
+	const rl = await ratelimit(`slack-oauth:${action}:${ip}`, max, 60);
+	if (rl.success) {
+		return null;
+	}
+	return integrationsRedirect(
+		"error",
+		"Too many Slack install attempts; try again shortly."
+	);
+}
+
 export const integrations = new Elysia({ prefix: "/v1/integrations" })
 	.get(
 		"/slack/install",
 		async ({ query, request }) => {
+			const throttled = await throttleSlackOAuth("install", request, 10);
+			if (throttled) {
+				return throttled;
+			}
 			try {
 				const config = requireConfig(request);
 				const userId = await requireOrgInstaller(request, query.organizationId);
@@ -406,6 +436,10 @@ export const integrations = new Elysia({ prefix: "/v1/integrations" })
 	.get(
 		"/slack/callback",
 		async ({ query, request }) => {
+			const throttled = await throttleSlackOAuth("callback", request, 20);
+			if (throttled) {
+				return throttled;
+			}
 			if (query.error) {
 				return integrationsRedirect("error", `Slack returned ${query.error}`);
 			}
