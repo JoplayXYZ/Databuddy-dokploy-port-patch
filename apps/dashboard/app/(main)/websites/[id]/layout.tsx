@@ -95,6 +95,9 @@ export default function WebsiteLayout({ children }: WebsiteLayoutProps) {
 	useEffect(() => {
 		const parsedFilters = parseDashboardFiltersParam(filtersParam);
 		if (parsedFilters === null) {
+			if (filtersParam === null) {
+				setDynamicFilters([]);
+			}
 			return;
 		}
 

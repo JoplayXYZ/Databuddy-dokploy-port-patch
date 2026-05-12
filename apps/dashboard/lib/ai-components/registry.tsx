@@ -1,3 +1,4 @@
+import { DASHBOARD_ACTION_TARGETS } from "@/lib/dashboard-navigation-actions";
 import {
 	type AnnotationsListProps,
 	AnnotationsListRenderer,
@@ -158,6 +159,19 @@ function isFunnelPreviewInput(
 	return typeof funnel.name === "string" && Array.isArray(funnel.steps);
 }
 
+const DASHBOARD_ACTION_TARGET_SET = new Set<string>(DASHBOARD_ACTION_TARGETS);
+
+function hasValidDashboardActionTarget(
+	record: Record<string, unknown>
+): boolean {
+	const target = record.target;
+	return (
+		typeof target === "string" &&
+		DASHBOARD_ACTION_TARGET_SET.has(target) &&
+		(target !== "website.event" || typeof record.eventName === "string")
+	);
+}
+
 function isDashboardActionsInput(
 	input: RawComponentInput
 ): input is RawComponentInput & DashboardActionsInput {
@@ -174,7 +188,7 @@ function isDashboardActionsInput(
 		const record = action as Record<string, unknown>;
 		return (
 			typeof record.label === "string" &&
-			(typeof record.href === "string" || typeof record.target === "string")
+			(typeof record.href === "string" || hasValidDashboardActionTarget(record))
 		);
 	});
 }

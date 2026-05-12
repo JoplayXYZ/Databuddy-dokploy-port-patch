@@ -3,7 +3,6 @@
 import { useAtom } from "jotai";
 import { useParams } from "next/navigation";
 import { WebsiteOverviewTab } from "@/app/(main)/websites/[id]/_components/tabs/overview-tab";
-import type { FullTabProps } from "@/app/(main)/websites/[id]/_components/utils/types";
 import { EmptyState } from "@/app/(main)/websites/[id]/_components/utils/ui-components";
 import { useDateFilters } from "@/hooks/use-date-filters";
 import { usePublicWebsiteSummary } from "@/hooks/use-websites";
@@ -43,10 +42,9 @@ export default function PublicDashboardPage() {
 		);
 	}
 
-	const tabProps: Omit<FullTabProps, "isRefreshing" | "setIsRefreshing"> = {
+	const tabProps = {
 		websiteId,
 		dateRange,
-		websiteData: websiteData as FullTabProps["websiteData"],
 		filters,
 		addFilter,
 	};

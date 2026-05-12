@@ -18,6 +18,7 @@ import {
 	Text,
 	useHydrated,
 } from "@databuddy/ui";
+import { storeVerificationEmail } from "./verification-email-storage";
 
 function LoginPage() {
 	const router = useRouter();
@@ -93,7 +94,7 @@ function LoginPage() {
 						error?.error?.code === "EMAIL_NOT_VERIFIED" ||
 						error?.error?.message?.toLowerCase().includes("not verified")
 					) {
-						sessionStorage.setItem("databuddy:verification-email", email);
+						storeVerificationEmail(email);
 						router.push("/login/verification-needed");
 					} else {
 						toast.error(

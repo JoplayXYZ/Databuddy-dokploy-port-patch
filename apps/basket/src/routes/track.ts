@@ -249,10 +249,7 @@ export const trackRoute = new Elysia().post(
 			const rateLimitPrincipal = auth.apiKey
 				? `track:apikey:${auth.apiKey.id}`
 				: `track:website:${auth.websiteId ?? "unknown"}:${
-						request.headers.get("cf-connecting-ip") ||
-						request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-						request.headers.get("x-real-ip") ||
-						"anon"
+						extractTrustedClientIp(request) ?? "anon"
 					}`;
 			const rl = await ratelimit(rateLimitPrincipal, 600, 60);
 			if (!rl.success) {

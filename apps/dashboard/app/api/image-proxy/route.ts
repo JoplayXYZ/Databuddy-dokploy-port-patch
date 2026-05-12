@@ -89,7 +89,7 @@ export async function GET(request: NextRequest) {
 		});
 	} catch (error) {
 		if (error instanceof SsrfError) {
-			return NextResponse.json({ error: error.message }, { status: 400 });
+			return NextResponse.json({ error: "URL not allowed" }, { status: 400 });
 		}
 		if (error instanceof Error && TIMEOUT_MESSAGE_PATTERN.test(error.message)) {
 			return NextResponse.json({ error: "Request timeout" }, { status: 504 });

@@ -6,8 +6,10 @@ import { Suspense, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { ArrowLeftIcon, WarningIcon } from "@databuddy/ui/icons";
 import { Button, Spinner, Text } from "@databuddy/ui";
-
-const VERIFICATION_EMAIL_KEY = "databuddy:verification-email";
+import {
+	readVerificationEmail,
+	storeVerificationEmail,
+} from "../verification-email-storage";
 
 function VerificationNeededPage() {
 	const [email, setEmail] = useState("");
@@ -17,7 +19,7 @@ function VerificationNeededPage() {
 		const params = new URLSearchParams(window.location.search);
 		const fromQuery = params.get("email");
 		if (fromQuery) {
-			sessionStorage.setItem(VERIFICATION_EMAIL_KEY, fromQuery);
+			storeVerificationEmail(fromQuery);
 			setEmail(fromQuery);
 			params.delete("email");
 			const next = params.toString();
@@ -28,7 +30,7 @@ function VerificationNeededPage() {
 			);
 			return;
 		}
-		const stored = sessionStorage.getItem(VERIFICATION_EMAIL_KEY);
+		const stored = readVerificationEmail();
 		if (stored) {
 			setEmail(stored);
 		}
@@ -80,6 +82,7 @@ function VerificationNeededPage() {
 				</div>
 				<Button
 					className="w-full"
+					disabled={!email}
 					loading={isLoading}
 					onClick={sendVerificationEmail}
 				>

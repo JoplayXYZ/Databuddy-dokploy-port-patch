@@ -268,7 +268,9 @@ export function FunnelsListRenderer({
 			}
 		: null;
 
-	const dialogReady = !(editingFunnelId && editingFunnelQuery.isLoading);
+	const dialogReady =
+		!editingFunnelId ||
+		(Boolean(editingFunnelQuery.data) && !editingFunnelQuery.isLoading);
 
 	if (funnels.length === 0) {
 		return (
