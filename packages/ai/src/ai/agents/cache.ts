@@ -115,13 +115,6 @@ function refreshAgentContextSnapshot(
 	snapshotRefreshes.set(key, work);
 }
 
-export async function ensureAgentCreditsAvailable(
-	billingCustomerId: string | null
-): Promise<boolean> {
-	const { ensureAgentCreditsAvailable } = await import("./execution");
-	return ensureAgentCreditsAvailable(billingCustomerId);
-}
-
 export async function checkWebsiteReadPermissionCached(
 	userId: string,
 	organizationId: string,
