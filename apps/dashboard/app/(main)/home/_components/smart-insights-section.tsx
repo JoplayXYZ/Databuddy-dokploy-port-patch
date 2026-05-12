@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { InsightCard } from "@/app/(main)/insights/_components/insight-card";
 import type { Insight } from "@/lib/insight-types";
@@ -185,6 +186,12 @@ export function SmartInsightsSection({
 							{insights.length} {insights.length === 1 ? "insight" : "insights"}
 						</span>
 					)}
+					<Link
+						className="text-muted-foreground text-xs hover:text-foreground"
+						href="/insights"
+					>
+						View all
+					</Link>
 					{onRefreshAction && (
 						<button
 							aria-label="Refresh insights"
