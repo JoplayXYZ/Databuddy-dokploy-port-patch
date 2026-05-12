@@ -7,6 +7,7 @@ import {
 } from "@databuddy/api-keys/resolve";
 import { createConfig as createAgentConfig } from "@databuddy/ai/agents/analytics";
 import {
+	ensureAgentCreditsAvailable,
 	resolveAgentBillingCustomerId,
 	trackAgentUsageAndBill,
 } from "@databuddy/ai/agents/execution";
@@ -60,7 +61,6 @@ import { log, parseError } from "evlog";
 import { useLogger } from "evlog/elysia";
 import {
 	checkWebsiteReadPermissionCached,
-	ensureAgentCreditsAvailable,
 	getAgentContextSnapshot,
 	getMemoryContextCached,
 	shouldLoadMemoryContext,
