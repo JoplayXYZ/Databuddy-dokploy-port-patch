@@ -211,7 +211,7 @@ export default async function StatusPage({
 								))}
 							</Status.Section>
 
-							<Status.Incidents />
+							<Status.Incidents incidents={data.incidents} />
 							<LastUpdated timestamp={latestTimestamp} />
 						</Status>
 					</div>
