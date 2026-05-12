@@ -106,36 +106,46 @@ export const VitalsBuilders: Record<string, SimpleQueryConfig> = {
 			endDate: string,
 			_filters?,
 			_granularity?,
-			_limit?: number
+			_limit?: number,
+			_offset?,
+			_timezone?,
+			filterConditions?: string[],
+			filterParams?: Record<string, unknown>
 		) => {
 			const limit = _limit ?? 50;
+			const filterClause = filterConditions?.length
+				? `AND ${filterConditions.join(" AND ")}`
+				: "";
 			return {
 				sql: `
-					SELECT 
+					WITH ${VITALS_SESSION_DIMENSIONS_CTE}
+					SELECT
 						decodeURLComponent(
-							CASE WHEN trimRight(path(path), '/') = '' 
-							THEN '/' 
-							ELSE trimRight(path(path), '/') 
+							CASE WHEN trimRight(path(wv.path), '/') = ''
+							THEN '/'
+							ELSE trimRight(path(wv.path), '/')
 							END
 						) as page,
-						metric_name,
-						quantileTDigest(0.50)(metric_value) as p50,
-						quantileTDigest(0.75)(metric_value) as p75,
-						quantileTDigest(0.90)(metric_value) as p90,
-						quantileTDigest(0.95)(metric_value) as p95,
-						quantileTDigest(0.99)(metric_value) as p99,
+						wv.metric_name as metric_name,
+						quantileTDigest(0.50)(wv.metric_value) as p50,
+						quantileTDigest(0.75)(wv.metric_value) as p75,
+						quantileTDigest(0.90)(wv.metric_value) as p90,
+						quantileTDigest(0.95)(wv.metric_value) as p95,
+						quantileTDigest(0.99)(wv.metric_value) as p99,
 						count() as samples
-					FROM ${Analytics.web_vitals_spans}
-					WHERE 
-						client_id = {websiteId:String}
-						AND timestamp >= toDateTime({startDate:String})
-						AND timestamp <= toDateTime(concat({endDate:String}, ' 23:59:59'))
-						AND path != ''
+					FROM ${Analytics.web_vitals_spans} wv
+					INNER JOIN session_dimensions sd ON wv.session_id = sd.session_id AND wv.client_id = sd.client_id
+					WHERE
+						wv.client_id = {websiteId:String}
+						AND wv.timestamp >= toDateTime({startDate:String})
+						AND wv.timestamp <= toDateTime(concat({endDate:String}, ' 23:59:59'))
+						AND wv.path != ''
+						${filterClause}
 					GROUP BY page, metric_name
 					ORDER BY samples DESC
 					LIMIT {limit:UInt32}
 				`,
-				params: { websiteId, startDate, endDate, limit },
+				params: { websiteId, startDate, endDate, limit, ...filterParams },
 			};
 		},
 		timeField: "timestamp",
