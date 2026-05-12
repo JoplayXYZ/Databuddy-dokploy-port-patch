@@ -1,4 +1,5 @@
 import { chQuery } from "@databuddy/db/clickhouse";
+import { goalFunnelFilterFieldSet } from "@databuddy/shared/analytics-filters";
 import { parseReferrer } from "@databuddy/shared/utils/referrer";
 
 export interface AnalyticsStep {
@@ -140,25 +141,7 @@ function toFiniteNumber(value: unknown, fallback = 0): number {
 	return Number.isFinite(n) ? n : fallback;
 }
 
-// Filter building
-const FIELDS = new Set([
-	"event_name",
-	"path",
-	"referrer",
-	"user_agent",
-	"country",
-	"city",
-	"device_type",
-	"browser_name",
-	"os_name",
-	"screen_resolution",
-	"language",
-	"utm_source",
-	"utm_medium",
-	"utm_campaign",
-	"utm_term",
-	"utm_content",
-]);
+const FIELDS = goalFunnelFilterFieldSet;
 
 const OPS = new Set([
 	"equals",
