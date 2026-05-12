@@ -665,6 +665,7 @@
       "version": "1.0.0",
       "dependencies": {
         "@databuddy/db": "workspace:*",
+        "@databuddy/redis": "workspace:*",
       },
       "devDependencies": {
         "typescript": "^5.9.3",
