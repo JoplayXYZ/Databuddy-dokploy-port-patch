@@ -189,6 +189,10 @@ export const contents: SidebarSection[] = [
 						href: "/docs/sdk/react",
 					},
 					{
+						title: "Nuxt",
+						href: "/docs/sdk/nuxt",
+					},
+					{
 						title: "Vue",
 						href: "/docs/sdk/vue",
 					},
