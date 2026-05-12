@@ -1,10 +1,6 @@
 import { isValid, parse } from "ipaddr.js";
 import { resolve4, resolve6 } from "node:dns/promises";
-import {
-	Agent,
-	fetch as undiciFetch,
-	type RequestInit as UndiciRequestInit,
-} from "undici";
+import type { Agent, RequestInit as UndiciRequestInit } from "undici";
 
 const BLOCKED_HOSTNAMES = new Set([
 	"localhost",
@@ -120,8 +116,12 @@ export interface SafeFetchInit
 	timeoutMs?: number;
 }
 
-function pinnedAgent(hostname: string, ip: string): Agent {
-	return new Agent({
+function pinnedAgent(
+	AgentCtor: typeof import("undici").Agent,
+	hostname: string,
+	ip: string
+): Agent {
+	return new AgentCtor({
 		connect: {
 			lookup: (host, _options, cb) => {
 				if (host.toLowerCase() !== hostname) {
@@ -150,6 +150,7 @@ export async function safeFetch(
 		? AbortSignal.any([timeoutSignal, externalSignal])
 		: timeoutSignal;
 
+	const { Agent: UndiciAgent, fetch: undiciFetch } = await import("undici");
 	let current = url;
 
 	for (let hop = 0; hop <= maxRedirects; hop++) {
@@ -161,7 +162,7 @@ export async function safeFetch(
 			);
 		}
 
-		const dispatcher = pinnedAgent(check.hostname, check.ip);
+		const dispatcher = pinnedAgent(UndiciAgent, check.hostname, check.ip);
 		let response: Response;
 		try {
 			response = (await undiciFetch(current, {
