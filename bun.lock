@@ -419,6 +419,7 @@
         "@databuddy/validation": "workspace:*",
         "@modelcontextprotocol/sdk": "^1.26.0",
         "@orpc/server": "^1.14.0",
+        "@tokenlens/models": "catalog:",
         "ai": "^6.0.154",
         "autumn-js": "catalog:",
         "dayjs": "^1.11.19",
