@@ -6,8 +6,10 @@ import {
 	flushBatchedAxiomDrain,
 } from "@lib/evlog-basket";
 import { shutdownPostgres } from "@databuddy/db";
+import { clickHouse } from "@databuddy/db/clickhouse";
 import { resolveKafkaSsl } from "@databuddy/shared/kafka-tls";
 import { disconnect, disposeRuntime, runPromise } from "@lib/producer";
+import { Kafka } from "kafkajs";
 import {
 	handleUncaughtException,
 	handleUnhandledRejection,
@@ -106,9 +108,6 @@ const app = new Elysia()
 	.use(stripeWebhook)
 	.use(paddleWebhook)
 	.get("/health/status", async function basketHealthStatus() {
-		const { clickHouse } = await import("@databuddy/db/clickhouse");
-		const { Kafka } = await import("kafkajs");
-
 		async function ping(probe: () => Promise<void>) {
 			const start = performance.now();
 			try {
