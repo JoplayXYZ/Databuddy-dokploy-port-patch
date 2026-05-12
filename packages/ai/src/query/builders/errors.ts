@@ -1,21 +1,12 @@
 import { Analytics } from "../../types/tables";
-import type { Filter, SimpleQueryConfig, TimeUnit } from "../types";
+import type { SimpleQueryConfig } from "../types";
 
 export const ErrorsBuilders: Record<string, SimpleQueryConfig> = {
 	recent_errors: {
-		customSql: (
-			websiteId: string,
-			startDate: string,
-			endDate: string,
-			_filters?: Filter[],
-			_granularity?: TimeUnit,
-			_limit?: number,
-			_offset?: number,
-			_timezone?: string,
-			filterConditions?: string[],
-			filterParams?: Record<string, Filter["value"]>
-		) => {
-			const limit = _limit ?? 50;
+		customSql: (ctx) => {
+			const { websiteId, startDate, endDate, filterConditions, filterParams } =
+				ctx;
+			const limit = ctx.limit ?? 50;
 			const combinedWhereClause = filterConditions?.length
 				? `AND ${filterConditions.join(" AND ")}`
 				: "";
@@ -158,18 +149,9 @@ export const ErrorsBuilders: Record<string, SimpleQueryConfig> = {
 			description: "Overview of errors with calculated error rate",
 			version: "1.0",
 		},
-		customSql: (
-			websiteId: string,
-			startDate: string,
-			endDate: string,
-			_filters?: Filter[],
-			_granularity?: TimeUnit,
-			_limit?: number,
-			_offset?: number,
-			_timezone?: string,
-			filterConditions?: string[],
-			filterParams?: Record<string, Filter["value"]>
-		) => {
+		customSql: (ctx) => {
+			const { websiteId, startDate, endDate, filterConditions, filterParams } =
+				ctx;
 			const combinedWhereClause = filterConditions?.length
 				? `AND ${filterConditions.join(" AND ")}`
 				: "";

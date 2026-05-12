@@ -1,5 +1,5 @@
 import { Analytics } from "../../types/tables";
-import type { Filter, SimpleQueryConfig, TimeUnit } from "../types";
+import type { Filter, SimpleQueryConfig } from "../types";
 
 function projectWhereClause(
 	filterParams?: Record<string, Filter["value"]>
@@ -38,19 +38,15 @@ function separatePropertyKeyConditions(filterConditions?: string[]): {
 
 export const CustomEventsBuilders: Record<string, SimpleQueryConfig> = {
 	custom_events: {
-		customSql: (
-			projectId: string,
-			startDate: string,
-			endDate: string,
-			_filters?: Filter[],
-			_granularity?: TimeUnit,
-			_limit?: number,
-			_offset?: number,
-			_timezone?: string,
-			filterConditions?: string[],
-			filterParams?: Record<string, Filter["value"]>
-		) => {
-			const limit = _limit ?? 10_000;
+		customSql: (ctx) => {
+			const {
+				websiteId: projectId,
+				startDate,
+				endDate,
+				filterConditions,
+				filterParams,
+			} = ctx;
+			const limit = ctx.limit ?? 10_000;
 			const combinedWhereClause = filterConditions?.length
 				? `AND ${filterConditions.join(" AND ")}`
 				: "";
@@ -98,19 +94,15 @@ export const CustomEventsBuilders: Record<string, SimpleQueryConfig> = {
 		customizable: true,
 	},
 	custom_event_properties: {
-		customSql: (
-			projectId: string,
-			startDate: string,
-			endDate: string,
-			_filters?: Filter[],
-			_granularity?: TimeUnit,
-			_limit?: number,
-			_offset?: number,
-			_timezone?: string,
-			filterConditions?: string[],
-			filterParams?: Record<string, Filter["value"]>
-		) => {
-			const limit = _limit ?? 10_000;
+		customSql: (ctx) => {
+			const {
+				websiteId: projectId,
+				startDate,
+				endDate,
+				filterConditions,
+				filterParams,
+			} = ctx;
+			const limit = ctx.limit ?? 10_000;
 			const { whereClause, propertyKeyClause } =
 				separatePropertyKeyConditions(filterConditions);
 
@@ -169,19 +161,15 @@ export const CustomEventsBuilders: Record<string, SimpleQueryConfig> = {
 	},
 
 	custom_events_by_path: {
-		customSql: (
-			projectId: string,
-			startDate: string,
-			endDate: string,
-			_filters?: Filter[],
-			_granularity?: TimeUnit,
-			_limit?: number,
-			_offset?: number,
-			_timezone?: string,
-			filterConditions?: string[],
-			filterParams?: Record<string, Filter["value"]>
-		) => {
-			const limit = _limit ?? 50;
+		customSql: (ctx) => {
+			const {
+				websiteId: projectId,
+				startDate,
+				endDate,
+				filterConditions,
+				filterParams,
+			} = ctx;
+			const limit = ctx.limit ?? 50;
 			const combinedWhereClause = filterConditions?.length
 				? `AND ${filterConditions.join(" AND ")}`
 				: "";
@@ -220,19 +208,15 @@ export const CustomEventsBuilders: Record<string, SimpleQueryConfig> = {
 	},
 
 	custom_events_trends: {
-		customSql: (
-			projectId: string,
-			startDate: string,
-			endDate: string,
-			_filters?: Filter[],
-			_granularity?: TimeUnit,
-			_limit?: number,
-			_offset?: number,
-			_timezone?: string,
-			filterConditions?: string[],
-			filterParams?: Record<string, Filter["value"]>
-		) => {
-			const limit = _limit ?? 1000;
+		customSql: (ctx) => {
+			const {
+				websiteId: projectId,
+				startDate,
+				endDate,
+				filterConditions,
+				filterParams,
+			} = ctx;
+			const limit = ctx.limit ?? 1000;
 			const combinedWhereClause = filterConditions?.length
 				? `AND ${filterConditions.join(" AND ")}`
 				: "";
@@ -271,19 +255,15 @@ export const CustomEventsBuilders: Record<string, SimpleQueryConfig> = {
 	},
 
 	custom_events_trends_by_event: {
-		customSql: (
-			projectId: string,
-			startDate: string,
-			endDate: string,
-			_filters?: Filter[],
-			_granularity?: TimeUnit,
-			_limit?: number,
-			_offset?: number,
-			_timezone?: string,
-			filterConditions?: string[],
-			filterParams?: Record<string, Filter["value"]>
-		) => {
-			const limit = _limit ?? 10_000;
+		customSql: (ctx) => {
+			const {
+				websiteId: projectId,
+				startDate,
+				endDate,
+				filterConditions,
+				filterParams,
+			} = ctx;
+			const limit = ctx.limit ?? 10_000;
 			const combinedWhereClause = filterConditions?.length
 				? `AND ${filterConditions.join(" AND ")}`
 				: "";
@@ -319,18 +299,14 @@ export const CustomEventsBuilders: Record<string, SimpleQueryConfig> = {
 	},
 
 	custom_events_summary: {
-		customSql: (
-			projectId: string,
-			startDate: string,
-			endDate: string,
-			_filters?: Filter[],
-			_granularity?: TimeUnit,
-			_limit?: number,
-			_offset?: number,
-			_timezone?: string,
-			filterConditions?: string[],
-			filterParams?: Record<string, Filter["value"]>
-		) => {
+		customSql: (ctx) => {
+			const {
+				websiteId: projectId,
+				startDate,
+				endDate,
+				filterConditions,
+				filterParams,
+			} = ctx;
 			const combinedWhereClause = filterConditions?.length
 				? `AND ${filterConditions.join(" AND ")}`
 				: "";
@@ -364,19 +340,15 @@ export const CustomEventsBuilders: Record<string, SimpleQueryConfig> = {
 	},
 
 	custom_events_property_cardinality: {
-		customSql: (
-			projectId: string,
-			startDate: string,
-			endDate: string,
-			_filters?: Filter[],
-			_granularity?: TimeUnit,
-			_limit?: number,
-			_offset?: number,
-			_timezone?: string,
-			filterConditions?: string[],
-			filterParams?: Record<string, Filter["value"]>
-		) => {
-			const limit = _limit ?? 100;
+		customSql: (ctx) => {
+			const {
+				websiteId: projectId,
+				startDate,
+				endDate,
+				filterConditions,
+				filterParams,
+			} = ctx;
+			const limit = ctx.limit ?? 100;
 			const { whereClause, propertyKeyClause } =
 				separatePropertyKeyConditions(filterConditions);
 
@@ -433,20 +405,16 @@ export const CustomEventsBuilders: Record<string, SimpleQueryConfig> = {
 	},
 
 	custom_events_recent: {
-		customSql: (
-			projectId: string,
-			startDate: string,
-			endDate: string,
-			_filters?: Filter[],
-			_granularity?: TimeUnit,
-			_limit?: number,
-			_offset?: number,
-			_timezone?: string,
-			filterConditions?: string[],
-			filterParams?: Record<string, Filter["value"]>
-		) => {
-			const limit = _limit ?? 50;
-			const offset = _offset ?? 0;
+		customSql: (ctx) => {
+			const {
+				websiteId: projectId,
+				startDate,
+				endDate,
+				filterConditions,
+				filterParams,
+			} = ctx;
+			const limit = ctx.limit ?? 50;
+			const offset = ctx.offset ?? 0;
 			const combinedWhereClause = filterConditions?.length
 				? `AND ${filterConditions.join(" AND ")}`
 				: "";
@@ -500,19 +468,15 @@ export const CustomEventsBuilders: Record<string, SimpleQueryConfig> = {
 	 * - sample_values: top 5 values with counts
 	 */
 	custom_events_property_classification: {
-		customSql: (
-			projectId: string,
-			startDate: string,
-			endDate: string,
-			_filters?: Filter[],
-			_granularity?: TimeUnit,
-			_limit?: number,
-			_offset?: number,
-			_timezone?: string,
-			filterConditions?: string[],
-			filterParams?: Record<string, Filter["value"]>
-		) => {
-			const limit = _limit ?? 500;
+		customSql: (ctx) => {
+			const {
+				websiteId: projectId,
+				startDate,
+				endDate,
+				filterConditions,
+				filterParams,
+			} = ctx;
+			const limit = ctx.limit ?? 500;
 			const { whereClause, propertyKeyClause } =
 				separatePropertyKeyConditions(filterConditions);
 
@@ -636,19 +600,15 @@ export const CustomEventsBuilders: Record<string, SimpleQueryConfig> = {
 	 * Use this when render_strategy is 'top_n_chart' or 'top_n_with_other'
 	 */
 	custom_events_property_top_values: {
-		customSql: (
-			projectId: string,
-			startDate: string,
-			endDate: string,
-			_filters?: Filter[],
-			_granularity?: TimeUnit,
-			_limit?: number,
-			_offset?: number,
-			_timezone?: string,
-			filterConditions?: string[],
-			filterParams?: Record<string, Filter["value"]>
-		) => {
-			const limit = _limit ?? 10;
+		customSql: (ctx) => {
+			const {
+				websiteId: projectId,
+				startDate,
+				endDate,
+				filterConditions,
+				filterParams,
+			} = ctx;
+			const limit = ctx.limit ?? 10;
 			const { whereClause, propertyKeyClause } =
 				separatePropertyKeyConditions(filterConditions);
 
@@ -727,19 +687,15 @@ export const CustomEventsBuilders: Record<string, SimpleQueryConfig> = {
 	 * Returns all values with counts and percentages
 	 */
 	custom_events_property_distribution: {
-		customSql: (
-			projectId: string,
-			startDate: string,
-			endDate: string,
-			_filters?: Filter[],
-			_granularity?: TimeUnit,
-			_limit?: number,
-			_offset?: number,
-			_timezone?: string,
-			filterConditions?: string[],
-			filterParams?: Record<string, Filter["value"]>
-		) => {
-			const limit = _limit ?? 100;
+		customSql: (ctx) => {
+			const {
+				websiteId: projectId,
+				startDate,
+				endDate,
+				filterConditions,
+				filterParams,
+			} = ctx;
+			const limit = ctx.limit ?? 100;
 			const { whereClause, propertyKeyClause } =
 				separatePropertyKeyConditions(filterConditions);
 
@@ -816,19 +772,15 @@ export const CustomEventsBuilders: Record<string, SimpleQueryConfig> = {
 	 * Replaces the need for sequential custom_events → custom_event_properties → custom_events_property_top_values.
 	 */
 	custom_events_discovery: {
-		customSql: (
-			projectId: string,
-			startDate: string,
-			endDate: string,
-			_filters?: Filter[],
-			_granularity?: TimeUnit,
-			_limit?: number,
-			_offset?: number,
-			_timezone?: string,
-			filterConditions?: string[],
-			filterParams?: Record<string, Filter["value"]>
-		) => {
-			const limit = _limit ?? 200;
+		customSql: (ctx) => {
+			const {
+				websiteId: projectId,
+				startDate,
+				endDate,
+				filterConditions,
+				filterParams,
+			} = ctx;
+			const limit = ctx.limit ?? 200;
 			const combinedWhereClause = filterConditions?.length
 				? `AND ${filterConditions.join(" AND ")}`
 				: "";

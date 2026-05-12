@@ -1,5 +1,5 @@
 import { Analytics } from "../../types/tables";
-import type { Filter, SimpleQueryConfig, TimeUnit } from "../types";
+import type { SimpleQueryConfig } from "../types";
 
 const WEB_VITALS_SESSION_DIMENSIONS_CTE = `
 	session_dimensions AS (
@@ -177,15 +177,9 @@ export const PerformanceBuilders: Record<string, SimpleQueryConfig> = {
 	},
 
 	web_vitals_by_page: {
-		customSql: (
-			websiteId: string,
-			startDate: string,
-			endDate: string,
-			_filters?: Filter[],
-			_granularity?: TimeUnit,
-			_limit?: number
-		) => {
-			const limit = _limit ?? 100;
+		customSql: (ctx) => {
+			const { websiteId, startDate, endDate } = ctx;
+			const limit = ctx.limit ?? 100;
 			return {
 				sql: `
 					SELECT 
@@ -218,15 +212,9 @@ export const PerformanceBuilders: Record<string, SimpleQueryConfig> = {
 	},
 
 	web_vitals_by_browser: {
-		customSql: (
-			websiteId: string,
-			startDate: string,
-			endDate: string,
-			_filters?: Filter[],
-			_granularity?: TimeUnit,
-			_limit?: number
-		) => {
-			const limit = _limit ?? 100;
+		customSql: (ctx) => {
+			const { websiteId, startDate, endDate } = ctx;
+			const limit = ctx.limit ?? 100;
 			return {
 				sql: `
 					WITH ${WEB_VITALS_SESSION_DIMENSIONS_CTE}
@@ -252,15 +240,9 @@ export const PerformanceBuilders: Record<string, SimpleQueryConfig> = {
 	},
 
 	web_vitals_by_country: {
-		customSql: (
-			websiteId: string,
-			startDate: string,
-			endDate: string,
-			_filters?: Filter[],
-			_granularity?: TimeUnit,
-			_limit?: number
-		) => {
-			const limit = _limit ?? 100;
+		customSql: (ctx) => {
+			const { websiteId, startDate, endDate } = ctx;
+			const limit = ctx.limit ?? 100;
 			return {
 				sql: `
 					WITH ${WEB_VITALS_SESSION_DIMENSIONS_CTE}
@@ -287,15 +269,9 @@ export const PerformanceBuilders: Record<string, SimpleQueryConfig> = {
 	},
 
 	web_vitals_by_os: {
-		customSql: (
-			websiteId: string,
-			startDate: string,
-			endDate: string,
-			_filters?: Filter[],
-			_granularity?: TimeUnit,
-			_limit?: number
-		) => {
-			const limit = _limit ?? 100;
+		customSql: (ctx) => {
+			const { websiteId, startDate, endDate } = ctx;
+			const limit = ctx.limit ?? 100;
 			return {
 				sql: `
 					WITH ${WEB_VITALS_SESSION_DIMENSIONS_CTE}
@@ -321,15 +297,9 @@ export const PerformanceBuilders: Record<string, SimpleQueryConfig> = {
 	},
 
 	web_vitals_by_region: {
-		customSql: (
-			websiteId: string,
-			startDate: string,
-			endDate: string,
-			_filters?: Filter[],
-			_granularity?: TimeUnit,
-			_limit?: number
-		) => {
-			const limit = _limit ?? 100;
+		customSql: (ctx) => {
+			const { websiteId, startDate, endDate } = ctx;
+			const limit = ctx.limit ?? 100;
 			return {
 				sql: `
 					WITH ${WEB_VITALS_SESSION_DIMENSIONS_CTE}
@@ -356,8 +326,10 @@ export const PerformanceBuilders: Record<string, SimpleQueryConfig> = {
 	},
 
 	web_vitals_time_series: {
-		customSql: (websiteId: string, startDate: string, endDate: string) => ({
-			sql: `
+		customSql: (ctx) => {
+			const { websiteId, startDate, endDate } = ctx;
+			return {
+				sql: `
 				SELECT 
 					toDate(timestamp) as date,
 					avgIf(metric_value, metric_name = 'FCP' AND metric_value > 0) as avg_fcp,
@@ -379,8 +351,9 @@ export const PerformanceBuilders: Record<string, SimpleQueryConfig> = {
 				GROUP BY toDate(timestamp)
 				ORDER BY date ASC
 			`,
-			params: { websiteId, startDate, endDate },
-		}),
+				params: { websiteId, startDate, endDate },
+			};
+		},
 		timeField: "timestamp",
 		customizable: true,
 	},

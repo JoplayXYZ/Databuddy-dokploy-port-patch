@@ -1,5 +1,5 @@
 import { Analytics } from "../../types/tables";
-import type { Filter, SimpleQueryConfig, TimeUnit } from "../types";
+import type { SimpleQueryConfig } from "../types";
 
 export const RealtimeBuilders: Record<string, SimpleQueryConfig> = {
 	realtime_pages: {
@@ -98,15 +98,9 @@ export const RealtimeBuilders: Record<string, SimpleQueryConfig> = {
 			supports_granularity: [],
 			version: "1.0",
 		},
-		customSql: (
-			websiteId: string,
-			_startDate: string,
-			_endDate: string,
-			_filters?: Filter[],
-			_granularity?: TimeUnit,
-			_limit?: number
-		) => {
-			const limit = _limit ?? 10;
+		customSql: (ctx) => {
+			const { websiteId } = ctx;
+			const limit = ctx.limit ?? 10;
 			return {
 				sql: `
 					SELECT
@@ -342,14 +336,10 @@ export const RealtimeBuilders: Record<string, SimpleQueryConfig> = {
 			supports_granularity: [],
 			version: "1.0",
 		},
-		customSql: (
-			websiteId: string,
-			_startDate: string,
-			_endDate: string,
-			_filters?: Filter[],
-			_granularity?: TimeUnit
-		) => ({
-			sql: `
+		customSql: (ctx) => {
+			const { websiteId } = ctx;
+			return {
+				sql: `
 				SELECT
 					session_id,
 					argMax(path, time) as current_page,
@@ -364,8 +354,9 @@ export const RealtimeBuilders: Record<string, SimpleQueryConfig> = {
 				GROUP BY session_id
 				ORDER BY last_seen DESC
 				LIMIT 20`,
-			params: { websiteId },
-		}),
+				params: { websiteId },
+			};
+		},
 		timeField: "time",
 		skipDateFilter: true,
 		customizable: false,
@@ -408,14 +399,10 @@ export const RealtimeBuilders: Record<string, SimpleQueryConfig> = {
 			supports_granularity: [],
 			version: "1.0",
 		},
-		customSql: (
-			websiteId: string,
-			_startDate: string,
-			_endDate: string,
-			_filters?: Filter[],
-			_granularity?: TimeUnit
-		) => ({
-			sql: `
+		customSql: (ctx) => {
+			const { websiteId } = ctx;
+			return {
+				sql: `
 				SELECT
 					toStartOfMinute(time) as minute,
 					countIf(event_name = 'screen_view') as pageviews,
@@ -427,8 +414,9 @@ export const RealtimeBuilders: Record<string, SimpleQueryConfig> = {
 					AND session_id != ''
 				GROUP BY minute
 				ORDER BY minute ASC`,
-			params: { websiteId },
-		}),
+				params: { websiteId },
+			};
+		},
 		timeField: "time",
 		skipDateFilter: true,
 		customizable: false,

@@ -48,8 +48,10 @@ const VITALS_P50_METRICS = `
 
 export const VitalsBuilders: Record<string, SimpleQueryConfig> = {
 	vitals_overview: {
-		customSql: (websiteId: string, startDate: string, endDate: string) => ({
-			sql: `
+		customSql: (ctx) => {
+			const { websiteId, startDate, endDate } = ctx;
+			return {
+				sql: `
 				SELECT 
 					metric_name,
 					quantileTDigest(0.50)(metric_value) as p50,
@@ -67,15 +69,18 @@ export const VitalsBuilders: Record<string, SimpleQueryConfig> = {
 				GROUP BY metric_name
 				ORDER BY metric_name
 			`,
-			params: { websiteId, startDate, endDate },
-		}),
+				params: { websiteId, startDate, endDate },
+			};
+		},
 		timeField: "timestamp",
 		customizable: false,
 	},
 
 	vitals_time_series: {
-		customSql: (websiteId: string, startDate: string, endDate: string) => ({
-			sql: `
+		customSql: (ctx) => {
+			const { websiteId, startDate, endDate } = ctx;
+			return {
+				sql: `
 				SELECT 
 					toDate(timestamp) as date,
 					metric_name,
@@ -93,26 +98,18 @@ export const VitalsBuilders: Record<string, SimpleQueryConfig> = {
 				GROUP BY date, metric_name
 				ORDER BY date ASC, metric_name
 			`,
-			params: { websiteId, startDate, endDate },
-		}),
+				params: { websiteId, startDate, endDate },
+			};
+		},
 		timeField: "timestamp",
 		customizable: false,
 	},
 
 	vitals_by_page: {
-		customSql: (
-			websiteId: string,
-			startDate: string,
-			endDate: string,
-			_filters?,
-			_granularity?,
-			_limit?: number,
-			_offset?,
-			_timezone?,
-			filterConditions?: string[],
-			filterParams?: Record<string, unknown>
-		) => {
-			const limit = _limit ?? 50;
+		customSql: (ctx) => {
+			const { websiteId, startDate, endDate, filterConditions, filterParams } =
+				ctx;
+			const limit = ctx.limit ?? 50;
 			const filterClause = filterConditions?.length
 				? `AND ${filterConditions.join(" AND ")}`
 				: "";
@@ -153,19 +150,10 @@ export const VitalsBuilders: Record<string, SimpleQueryConfig> = {
 	},
 
 	vitals_by_country: {
-		customSql: (
-			websiteId: string,
-			startDate: string,
-			endDate: string,
-			_filters?,
-			_granularity?,
-			_limit?: number,
-			_offset?,
-			_timezone?,
-			filterConditions?: string[],
-			filterParams?: Record<string, unknown>
-		) => {
-			const limit = _limit ?? 100;
+		customSql: (ctx) => {
+			const { websiteId, startDate, endDate, filterConditions, filterParams } =
+				ctx;
+			const limit = ctx.limit ?? 100;
 			const filterClause = filterConditions?.length
 				? `AND ${filterConditions.join(" AND ")}`
 				: "";
@@ -196,19 +184,10 @@ export const VitalsBuilders: Record<string, SimpleQueryConfig> = {
 	},
 
 	vitals_by_browser: {
-		customSql: (
-			websiteId: string,
-			startDate: string,
-			endDate: string,
-			_filters?,
-			_granularity?,
-			_limit?: number,
-			_offset?,
-			_timezone?,
-			filterConditions?: string[],
-			filterParams?: Record<string, unknown>
-		) => {
-			const limit = _limit ?? 100;
+		customSql: (ctx) => {
+			const { websiteId, startDate, endDate, filterConditions, filterParams } =
+				ctx;
+			const limit = ctx.limit ?? 100;
 			const filterClause = filterConditions?.length
 				? `AND ${filterConditions.join(" AND ")}`
 				: "";
@@ -238,19 +217,10 @@ export const VitalsBuilders: Record<string, SimpleQueryConfig> = {
 	},
 
 	vitals_by_region: {
-		customSql: (
-			websiteId: string,
-			startDate: string,
-			endDate: string,
-			_filters?,
-			_granularity?,
-			_limit?: number,
-			_offset?,
-			_timezone?,
-			filterConditions?: string[],
-			filterParams?: Record<string, unknown>
-		) => {
-			const limit = _limit ?? 100;
+		customSql: (ctx) => {
+			const { websiteId, startDate, endDate, filterConditions, filterParams } =
+				ctx;
+			const limit = ctx.limit ?? 100;
 			const filterClause = filterConditions?.length
 				? `AND ${filterConditions.join(" AND ")}`
 				: "";
@@ -281,19 +251,10 @@ export const VitalsBuilders: Record<string, SimpleQueryConfig> = {
 	},
 
 	vitals_by_city: {
-		customSql: (
-			websiteId: string,
-			startDate: string,
-			endDate: string,
-			_filters?,
-			_granularity?,
-			_limit?: number,
-			_offset?,
-			_timezone?,
-			filterConditions?: string[],
-			filterParams?: Record<string, unknown>
-		) => {
-			const limit = _limit ?? 100;
+		customSql: (ctx) => {
+			const { websiteId, startDate, endDate, filterConditions, filterParams } =
+				ctx;
+			const limit = ctx.limit ?? 100;
 			const filterClause = filterConditions?.length
 				? `AND ${filterConditions.join(" AND ")}`
 				: "";
@@ -324,8 +285,10 @@ export const VitalsBuilders: Record<string, SimpleQueryConfig> = {
 	},
 
 	performance_overview: {
-		customSql: (websiteId: string, startDate: string, endDate: string) => ({
-			sql: `
+		customSql: (ctx) => {
+			const { websiteId, startDate, endDate } = ctx;
+			return {
+				sql: `
 				SELECT 
 					AVG(CASE WHEN load_time > 0 THEN load_time ELSE NULL END) as avg_load_time,
 					AVG(CASE WHEN dom_ready_time > 0 THEN dom_ready_time ELSE NULL END) as avg_dom_ready_time,
@@ -338,8 +301,9 @@ export const VitalsBuilders: Record<string, SimpleQueryConfig> = {
 					AND time <= toDateTime(concat({endDate:String}, ' 23:59:59'))
 					AND load_time > 0
 			`,
-			params: { websiteId, startDate, endDate },
-		}),
+				params: { websiteId, startDate, endDate },
+			};
+		},
 		timeField: "time",
 		customizable: false,
 	},

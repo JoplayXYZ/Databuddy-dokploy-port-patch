@@ -513,20 +513,20 @@ export class SimpleQueryBuilder {
 					}
 				: undefined;
 
-			const result = this.config.customSql(
-				this.request.projectId,
-				this.formatDateTime(this.request.from),
-				this.formatDateTime(this.request.to),
-				this.request.filters,
-				this.request.timeUnit,
-				this.request.limit,
-				this.request.offset,
-				this.request.timezone,
-				whereClause,
-				whereClauseParams,
+			const result = this.config.customSql({
+				websiteId: this.request.projectId,
+				startDate: this.formatDateTime(this.request.from),
+				endDate: this.formatDateTime(this.request.to),
+				filters: this.request.filters,
+				granularity: this.request.timeUnit,
+				limit: this.request.limit,
+				offset: this.request.offset,
+				timezone: this.request.timezone,
+				filterConditions: whereClause,
+				filterParams: whereClauseParams,
 				helpers,
-				this.request.orderBy
-			);
+				orderBy: this.request.orderBy,
+			});
 
 			if (typeof result === "string") {
 				return this.finalizeCompiledQuery(result, {});

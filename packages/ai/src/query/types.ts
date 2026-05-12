@@ -155,19 +155,23 @@ export interface QueryHelpers {
 	sessionAttributionJoin: (alias?: string) => string;
 }
 
+export interface CustomSqlContext {
+	endDate: string;
+	filterConditions?: string[];
+	filterParams?: Record<string, Filter["value"]>;
+	filters?: Filter[];
+	granularity?: TimeUnit;
+	helpers?: QueryHelpers;
+	limit?: number;
+	offset?: number;
+	orderBy?: string;
+	startDate: string;
+	timezone?: string;
+	websiteId: string;
+}
+
 export type CustomSqlFn = (
-	websiteId: string,
-	startDate: string,
-	endDate: string,
-	filters?: Filter[],
-	granularity?: TimeUnit,
-	limit?: number,
-	offset?: number,
-	timezone?: string,
-	filterConditions?: string[],
-	filterParams?: Record<string, Filter["value"]>,
-	helpers?: QueryHelpers,
-	orderBy?: string
+	ctx: CustomSqlContext
 ) => string | { sql: string; params: Record<string, unknown> };
 
 export interface SimpleQueryConfig {

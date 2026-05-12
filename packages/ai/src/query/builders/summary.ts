@@ -1,5 +1,5 @@
 import { Analytics } from "../../types/tables";
-import type { Filter, SimpleQueryConfig, TimeUnit } from "../types";
+import type { SimpleQueryConfig } from "../types";
 
 export const SummaryBuilders: Record<string, SimpleQueryConfig> = {
 	summary_metrics: {
@@ -54,22 +54,16 @@ export const SummaryBuilders: Record<string, SimpleQueryConfig> = {
 			supports_granularity: ["day"],
 			version: "1.0",
 		},
-		customSql: (
-			websiteId: string,
-			startDate: string,
-			endDate: string,
-			_filters?: Filter[],
-			_granularity?: TimeUnit,
-			_limit?: number,
-			_offset?: number,
-			timezone?: string,
-			filterConditions?: string[],
-			filterParams?: Record<string, Filter["value"]>,
-			helpers?: {
-				sessionAttributionCTE: (timeField?: string) => string;
-				sessionAttributionJoin: (alias?: string) => string;
-			}
-		) => {
+		customSql: (ctx) => {
+			const {
+				websiteId,
+				startDate,
+				endDate,
+				timezone,
+				filterConditions,
+				filterParams,
+				helpers,
+			} = ctx;
 			const tz = timezone || "UTC";
 			const filterClause = filterConditions?.length
 				? `AND ${filterConditions.join(" AND ")}`
@@ -243,24 +237,19 @@ export const SummaryBuilders: Record<string, SimpleQueryConfig> = {
 			supports_granularity: ["hour", "day"],
 			version: "1.0",
 		},
-		customSql: (
-			websiteId: string,
-			startDate: string,
-			endDate: string,
-			_filters?: Filter[],
-			_granularity?: TimeUnit,
-			_limit?: number,
-			_offset?: number,
-			timezone?: string,
-			filterConditions?: string[],
-			filterParams?: Record<string, Filter["value"]>,
-			helpers?: {
-				sessionAttributionCTE: (timeField?: string) => string;
-				sessionAttributionJoin: (alias?: string) => string;
-			}
-		) => {
+		customSql: (ctx) => {
+			const {
+				websiteId,
+				startDate,
+				endDate,
+				granularity,
+				timezone,
+				filterConditions,
+				filterParams,
+				helpers,
+			} = ctx;
 			const tz = timezone || "UTC";
-			const isHourly = _granularity === "hour" || _granularity === "hourly";
+			const isHourly = granularity === "hour" || granularity === "hourly";
 			const filterClause = filterConditions?.length
 				? `AND ${filterConditions.join(" AND ")}`
 				: "";

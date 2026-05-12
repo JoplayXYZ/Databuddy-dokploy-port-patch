@@ -1,5 +1,5 @@
 import { Analytics } from "../../types/tables";
-import type { Filter, SimpleQueryConfig, TimeUnit } from "../types";
+import type { SimpleQueryConfig } from "../types";
 
 export const PagesBuilders: Record<string, SimpleQueryConfig> = {
 	top_pages: {
@@ -97,22 +97,17 @@ export const PagesBuilders: Record<string, SimpleQueryConfig> = {
 		plugins: {
 			sessionAttribution: true,
 		},
-		customSql: (
-			websiteId: string,
-			startDate: string,
-			endDate: string,
-			_filters?: Filter[],
-			_granularity?: TimeUnit,
-			limit?: number,
-			offset?: number,
-			_timezone?: string,
-			filterConditions?: string[],
-			filterParams?: Record<string, Filter["value"]>,
-			helpers?: {
-				sessionAttributionCTE: (timeField?: string) => string;
-				sessionAttributionJoin: (alias?: string) => string;
-			}
-		) => {
+		customSql: (ctx) => {
+			const {
+				websiteId,
+				startDate,
+				endDate,
+				filterConditions,
+				filterParams,
+				helpers,
+			} = ctx;
+			const limit = ctx.limit;
+			const offset = ctx.offset;
 			const combinedWhereClause = filterConditions?.length
 				? `AND ${filterConditions.join(" AND ")}`
 				: "";
@@ -219,22 +214,17 @@ export const PagesBuilders: Record<string, SimpleQueryConfig> = {
 		plugins: {
 			sessionAttribution: true,
 		},
-		customSql: (
-			websiteId: string,
-			startDate: string,
-			endDate: string,
-			_filters?: Filter[],
-			_granularity?: TimeUnit,
-			limit?: number,
-			offset?: number,
-			_timezone?: string,
-			filterConditions?: string[],
-			filterParams?: Record<string, Filter["value"]>,
-			helpers?: {
-				sessionAttributionCTE: (timeField?: string) => string;
-				sessionAttributionJoin: (alias?: string) => string;
-			}
-		) => {
+		customSql: (ctx) => {
+			const {
+				websiteId,
+				startDate,
+				endDate,
+				filterConditions,
+				filterParams,
+				helpers,
+			} = ctx;
+			const limit = ctx.limit;
+			const offset = ctx.offset;
 			const combinedWhereClause = filterConditions?.length
 				? `AND ${filterConditions.join(" AND ")}`
 				: "";
@@ -369,22 +359,17 @@ export const PagesBuilders: Record<string, SimpleQueryConfig> = {
 		plugins: {
 			sessionAttribution: true,
 		},
-		customSql: (
-			websiteId: string,
-			startDate: string,
-			endDate: string,
-			_filters?: Filter[],
-			_granularity?: TimeUnit,
-			limit?: number,
-			offset?: number,
-			_timezone?: string,
-			filterConditions?: string[],
-			filterParams?: Record<string, Filter["value"]>,
-			helpers?: {
-				sessionAttributionCTE: (timeField?: string) => string;
-				sessionAttributionJoin: (alias?: string) => string;
-			}
-		) => {
+		customSql: (ctx) => {
+			const {
+				websiteId,
+				startDate,
+				endDate,
+				filterConditions,
+				filterParams,
+				helpers,
+			} = ctx;
+			const limit = ctx.limit;
+			const offset = ctx.offset;
 			const combinedWhereClause = filterConditions?.length
 				? `AND ${filterConditions.join(" AND ")}`
 				: "";

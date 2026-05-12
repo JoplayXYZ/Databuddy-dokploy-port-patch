@@ -1,10 +1,5 @@
 import { Analytics } from "../../types/tables";
-import type {
-	Filter,
-	QueryHelpers,
-	SimpleQueryConfig,
-	TimeUnit,
-} from "../types";
+import type { Filter, SimpleQueryConfig } from "../types";
 
 const PROFILE_SORT_FIELDS: Record<string, string> = {
 	session_count: "session_count",
@@ -154,22 +149,20 @@ const PROFILE_ACTIVITY_CTE = `
 
 export const ProfilesBuilders: Record<string, SimpleQueryConfig> = {
 	profile_list: {
-		customSql: (
-			websiteId: string,
-			startDate: string,
-			endDate: string,
-			_filters?: Filter[],
-			_granularity?: TimeUnit,
-			limit?: number,
-			offset?: number,
-			_timezone?: string,
-			filterConditions?: string[],
-			filterParams?: Record<string, Filter["value"]>,
-			_helpers?: QueryHelpers,
-			orderBy?: string
-		) => {
+		customSql: (ctx) => {
+			const {
+				websiteId,
+				startDate,
+				endDate,
+				filters,
+				filterConditions,
+				filterParams,
+				orderBy,
+			} = ctx;
+			const limit = ctx.limit;
+			const offset = ctx.offset;
 			const { whereConditions, havingConditions, subqueryFilters } =
-				separateProfileFilters(_filters, filterConditions);
+				separateProfileFilters(filters, filterConditions);
 
 			const combinedWhereClause = whereConditions.length
 				? `AND ${whereConditions.join(" AND ")}`
@@ -315,18 +308,8 @@ export const ProfilesBuilders: Record<string, SimpleQueryConfig> = {
 	profile_detail: {
 		allowedFilters: ["anonymous_id"],
 		requiredFilters: ["anonymous_id"],
-		customSql: (
-			websiteId: string,
-			startDate: string,
-			endDate: string,
-			filters?: Filter[],
-			_granularity?: TimeUnit,
-			_limit?: number,
-			_offset?: number,
-			_timezone?: string,
-			_filterConditions?: string[],
-			_filterParams?: Record<string, Filter["value"]>
-		) => {
+		customSql: (ctx) => {
+			const { websiteId, startDate, endDate, filters } = ctx;
 			const visitorId = filters?.find((f) => f.field === "anonymous_id")?.value;
 
 			if (!visitorId || typeof visitorId !== "string") {
@@ -404,15 +387,10 @@ export const ProfilesBuilders: Record<string, SimpleQueryConfig> = {
 	profile_sessions: {
 		allowedFilters: ["anonymous_id"],
 		requiredFilters: ["anonymous_id"],
-		customSql: (
-			websiteId: string,
-			startDate: string,
-			endDate: string,
-			filters?: Filter[],
-			_granularity?: TimeUnit,
-			limit = 100,
-			offset = 0
-		) => {
+		customSql: (ctx) => {
+			const { websiteId, startDate, endDate, filters } = ctx;
+			const limit = ctx.limit ?? 100;
+			const offset = ctx.offset ?? 0;
 			const visitorId = filters?.find((f) => f.field === "anonymous_id")?.value;
 
 			if (!visitorId || typeof visitorId !== "string") {
