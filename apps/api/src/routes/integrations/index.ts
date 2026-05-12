@@ -3,7 +3,7 @@ import { and, db, eq } from "@databuddy/db";
 import { member, slackIntegrations } from "@databuddy/db/schema";
 import { encrypt } from "@databuddy/encryption";
 import { config } from "@databuddy/env/app";
-import { invalidateCacheableKey } from "@databuddy/redis/cache-invalidation";
+import { invalidateSlackIntegrationCache } from "@databuddy/redis/cache-invalidation";
 import { ratelimit } from "@databuddy/redis/rate-limit";
 import { randomUUIDv7 } from "bun";
 import { Elysia, t } from "elysia";
@@ -366,7 +366,7 @@ async function saveSlackInstallationOnce({
 		});
 	});
 
-	await invalidateCacheableKey("slack-integration-by-team", teamId);
+	await invalidateSlackIntegrationCache(teamId);
 }
 
 function principalFromRequest(request: Request): string {
