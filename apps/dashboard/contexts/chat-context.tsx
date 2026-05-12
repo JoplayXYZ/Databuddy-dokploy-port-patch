@@ -13,6 +13,7 @@ import {
 	useState,
 } from "react";
 import { useAgentChatTransport } from "@/components/agent/hooks/use-agent-chat";
+import { normalizeAIComponentMessages } from "@/lib/ai-components/message-parts";
 import { orpc } from "@/lib/orpc";
 
 type ChatApi = ReturnType<typeof useAiSdkChat<UIMessage>>;
@@ -83,7 +84,9 @@ export function ChatProvider({
 
 		const ids = new Set<string>();
 		if (storedChat?.messages && storedChat.messages.length > 0) {
-			const persisted = storedChat.messages as UIMessage[];
+			const persisted = normalizeAIComponentMessages(
+				storedChat.messages as UIMessage[]
+			);
 			for (const [idx, msg] of persisted.entries()) {
 				if (msg.role === "user") {
 					ids.add(msg.id || `msg-${idx}`);
@@ -94,6 +97,16 @@ export function ChatProvider({
 		setPersistedUserMessageIds(ids);
 		setHasRestored(true);
 	}, [hasRestored, isFetched, storedChat]);
+
+	useEffect(() => {
+		if (chat.status !== "ready") {
+			return;
+		}
+		const normalized = normalizeAIComponentMessages(chat.messages);
+		if (normalized !== chat.messages) {
+			chat.setMessages(normalized);
+		}
+	}, [chat.status, chat.messages, chat.setMessages]);
 
 	const pendingRef = useRef<string[]>([]);
 	const [pendingTexts, setPendingTexts] = useState<string[]>([]);

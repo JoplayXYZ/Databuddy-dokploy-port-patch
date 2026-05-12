@@ -3,8 +3,8 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useAtom, useSetAtom } from "jotai";
 import { useParams, usePathname } from "next/navigation";
-import { parseAsBoolean, useQueryState } from "nuqs";
-import { useEffect } from "react";
+import { parseAsBoolean, parseAsString, useQueryState } from "nuqs";
+import { useEffect, useMemo } from "react";
 import { toast } from "sonner";
 import { LiveUserIndicator } from "@/components/analytics";
 import { TopBar } from "@/components/layout/top-bar";
@@ -14,10 +14,16 @@ import {
 	dynamicQueryKeys,
 } from "@/hooks/use-dynamic-query";
 import { useWebsite } from "@/hooks/use-websites";
+import {
+	DASHBOARD_FILTERS_QUERY_PARAM,
+	parseDashboardFiltersParam,
+	serializeDashboardFilters,
+} from "@/lib/dashboard-navigation-actions";
 import { cn } from "@/lib/utils";
 import {
 	addDynamicFilterAtom,
 	currentFilterWebsiteIdAtom,
+	dynamicQueryFiltersAtom,
 	isAnalyticsRefreshingAtom,
 } from "@/stores/jotai/filterAtoms";
 import { AnalyticsDateControls } from "./_components/analytics-date-controls";
@@ -30,16 +36,31 @@ import { useTrackingSetup } from "./hooks/use-tracking-setup";
 import { ArrowClockwiseIcon } from "@databuddy/ui/icons";
 import { Button } from "@databuddy/ui";
 
-const NO_TOOLBAR_ROUTES = [
-	"/assistant",
-	"/map",
-	"/flags",
-	"/databunny",
-	"/settings",
-	"/users",
-	"/agent",
-	"/pulse",
-];
+const ROUTES_WITHOUT_ANALYTICS_TOOLBAR = new Set([
+	"agent",
+	"flags",
+	"map",
+	"pulse",
+	"realtime",
+	"settings",
+	"users",
+]);
+
+function shouldHideAnalyticsToolbar(
+	pathname: string,
+	isEmbed: boolean
+): boolean {
+	if (isEmbed) {
+		return true;
+	}
+
+	const [, routeGroup, , section] = pathname.split("/");
+	if (routeGroup !== "websites" && routeGroup !== "demo") {
+		return false;
+	}
+
+	return section != null && ROUTES_WITHOUT_ANALYTICS_TOOLBAR.has(section);
+}
 
 interface WebsiteLayoutProps {
 	children: React.ReactNode;
@@ -52,16 +73,51 @@ export default function WebsiteLayout({ children }: WebsiteLayoutProps) {
 	const queryClient = useQueryClient();
 	const [isRefreshing, setIsRefreshing] = useAtom(isAnalyticsRefreshingAtom);
 	const setCurrentFilterWebsiteId = useSetAtom(currentFilterWebsiteIdAtom);
+	const [dynamicFilters, setDynamicFilters] = useAtom(dynamicQueryFiltersAtom);
 	const [isEmbed] = useQueryState("embed", parseAsBoolean.withDefault(false));
+	const [filtersParam, setFiltersParam] = useQueryState(
+		DASHBOARD_FILTERS_QUERY_PARAM,
+		parseAsString
+	);
 	const [, addFilter] = useAtom(addDynamicFilterAtom);
+	const serializedDynamicFilters = useMemo(
+		() =>
+			dynamicFilters.length > 0
+				? serializeDashboardFilters(dynamicFilters)
+				: null,
+		[dynamicFilters]
+	);
 
 	useEffect(() => {
 		setCurrentFilterWebsiteId(websiteId);
 	}, [websiteId, setCurrentFilterWebsiteId]);
 
+	useEffect(() => {
+		const parsedFilters = parseDashboardFiltersParam(filtersParam);
+		if (parsedFilters === null) {
+			return;
+		}
+
+		const serializedParsedFilters =
+			parsedFilters.length > 0
+				? serializeDashboardFilters(parsedFilters)
+				: null;
+		if (serializedParsedFilters === serializedDynamicFilters) {
+			return;
+		}
+
+		setDynamicFilters(parsedFilters);
+	}, [filtersParam, serializedDynamicFilters, setDynamicFilters]);
+
+	useEffect(() => {
+		if (serializedDynamicFilters === filtersParam) {
+			return;
+		}
+		setFiltersParam(serializedDynamicFilters);
+	}, [filtersParam, serializedDynamicFilters, setFiltersParam]);
+
 	const isDemoRoute = pathname?.startsWith("/demo/");
-	const hideToolbar =
-		isEmbed || NO_TOOLBAR_ROUTES.some((route) => pathname.includes(route));
+	const hideToolbar = shouldHideAnalyticsToolbar(pathname, isEmbed);
 
 	const {
 		data: websiteData,
