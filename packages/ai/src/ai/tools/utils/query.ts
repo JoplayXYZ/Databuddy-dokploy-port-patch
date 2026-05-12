@@ -8,12 +8,6 @@ export interface QueryResult<T = unknown> {
 	rowCount: number;
 }
 
-/**
- * Fields we know are safe agent inputs: server-controlled identifiers,
- * timestamps, and aggregates. Everything else is treated as untrusted visitor
- * data and HTML-stripped + truncated before being returned to a model that
- * also holds mutation tools.
- */
 const TRUSTED_FIELDS = new Set([
 	"client_id",
 	"website_id",
@@ -74,11 +68,6 @@ function sanitizeRow<T extends Record<string, unknown>>(row: T): T {
 	return out;
 }
 
-/**
- * Executes a timed ClickHouse query with logging.
- * Sanitizes user-controlled string fields in results to reduce indirect
- * prompt injection surface.
- */
 export async function executeTimedQuery<T extends Record<string, unknown>>(
 	toolName: string,
 	sql: string,

@@ -86,8 +86,6 @@ export const agentTelemetryRoute = new Elysia({
 			mergeWideEvent({ agent_telemetry_duration_ms: body.durationMs });
 		}
 
-		// Rate limit by client IP first to stop an attacker from spreading load
-		// across many valid websiteIds, then by websiteId for tenant-fair use.
 		const clientIp =
 			request.headers.get("cf-connecting-ip") ||
 			request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||

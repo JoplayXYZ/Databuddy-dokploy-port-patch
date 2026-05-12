@@ -60,7 +60,7 @@ import { log, parseError } from "evlog";
 import { useLogger } from "evlog/elysia";
 import {
 	checkWebsiteReadPermissionCached,
-	ensureAgentCreditsAvailableCached,
+	ensureAgentCreditsAvailable,
 	getAgentContextSnapshot,
 	getMemoryContextCached,
 	shouldLoadMemoryContext,
@@ -645,7 +645,7 @@ export const agent = new Elysia({ prefix: "/v1/agent" })
 					const creditsCheck = billingCustomerId
 						? timeAgentPhase(
 								"credits_check",
-								ensureAgentCreditsAvailableCached(billingCustomerId).catch(
+								ensureAgentCreditsAvailable(billingCustomerId).catch(
 									(err) => {
 										captureError(err, {
 											agent_credit_check_error: true,

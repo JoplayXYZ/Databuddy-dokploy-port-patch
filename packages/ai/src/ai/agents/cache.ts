@@ -115,12 +115,7 @@ function refreshAgentContextSnapshot(
 	snapshotRefreshes.set(key, work);
 }
 
-/**
- * Agent credit availability is checked fresh on every call. Caching a positive
- * decision would let a principal fan out paid streams in the cache window and
- * exceed quota, since usage is only billed after the stream completes.
- */
-export async function ensureAgentCreditsAvailableCached(
+export async function ensureAgentCreditsAvailable(
 	billingCustomerId: string | null
 ): Promise<boolean> {
 	const { ensureAgentCreditsAvailable } = await import("./execution");
