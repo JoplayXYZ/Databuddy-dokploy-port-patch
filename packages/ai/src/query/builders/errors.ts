@@ -1,24 +1,14 @@
 import { Analytics } from "../../types/tables";
-import type { Filter, SimpleQueryConfig, TimeUnit } from "../types";
+import { appendFilterClause } from "../simple-builder";
+import type { SimpleQueryConfig } from "../types";
 
 export const ErrorsBuilders: Record<string, SimpleQueryConfig> = {
 	recent_errors: {
-		customSql: (
-			websiteId: string,
-			startDate: string,
-			endDate: string,
-			_filters?: Filter[],
-			_granularity?: TimeUnit,
-			_limit?: number,
-			_offset?: number,
-			_timezone?: string,
-			filterConditions?: string[],
-			filterParams?: Record<string, Filter["value"]>
-		) => {
-			const limit = _limit ?? 50;
-			const combinedWhereClause = filterConditions?.length
-				? `AND ${filterConditions.join(" AND ")}`
-				: "";
+		customSql: (ctx) => {
+			const { websiteId, startDate, endDate, filterConditions, filterParams } =
+				ctx;
+			const limit = ctx.limit ?? 50;
+			const filterClause = appendFilterClause(filterConditions);
 
 			return {
 				sql: `
@@ -64,7 +54,7 @@ export const ErrorsBuilders: Record<string, SimpleQueryConfig> = {
 						AND es.timestamp >= toDateTime({startDate:String})
 						AND es.timestamp <= toDateTime(concat({endDate:String}, ' 23:59:59'))
 						AND es.message != ''
-						${combinedWhereClause}
+						${filterClause}
 					ORDER BY es.timestamp DESC
 					LIMIT {limit:UInt32}
 				`,
@@ -158,54 +148,43 @@ export const ErrorsBuilders: Record<string, SimpleQueryConfig> = {
 			description: "Overview of errors with calculated error rate",
 			version: "1.0",
 		},
-		customSql: (
-			websiteId: string,
-			startDate: string,
-			endDate: string,
-			_filters?: Filter[],
-			_granularity?: TimeUnit,
-			_limit?: number,
-			_offset?: number,
-			_timezone?: string,
-			filterConditions?: string[],
-			filterParams?: Record<string, Filter["value"]>
-		) => {
-			const combinedWhereClause = filterConditions?.length
-				? `AND ${filterConditions.join(" AND ")}`
-				: "";
+		customSql: (ctx) => {
+			const { websiteId, startDate, endDate, filterConditions, filterParams } =
+				ctx;
+			const filterClause = appendFilterClause(filterConditions);
 
 			return {
 				sql: `
 					WITH total_sessions AS (
-						SELECT uniq(session_id) as total 
+						SELECT uniq(session_id) as total
 						FROM ${Analytics.events}
-						WHERE client_id = {websiteId:String} 
+						WHERE client_id = {websiteId:String}
 						AND time >= toDateTime({startDate:String})
 						AND time <= toDateTime(concat({endDate:String}, ' 23:59:59'))
 					),
 					error_sessions AS (
-						SELECT uniq(session_id) as error_count 
+						SELECT uniq(session_id) as error_count
 						FROM ${Analytics.error_spans}
-						WHERE client_id = {websiteId:String} 
+						WHERE client_id = {websiteId:String}
 						AND timestamp >= toDateTime({startDate:String})
 						AND timestamp <= toDateTime(concat({endDate:String}, ' 23:59:59'))
 						AND message != ''
-						${combinedWhereClause}
+						${filterClause}
 					),
 					error_stats AS (
-						SELECT 
+						SELECT
 							COUNT(*) as totalErrors,
 							uniq(message) as uniqueErrorTypes,
 							uniq(anonymous_id) as affectedUsers,
 							uniq(session_id) as affectedSessions
 						FROM ${Analytics.error_spans}
-						WHERE client_id = {websiteId:String} 
+						WHERE client_id = {websiteId:String}
 						AND timestamp >= toDateTime({startDate:String})
 						AND timestamp <= toDateTime(concat({endDate:String}, ' 23:59:59'))
 						AND message != ''
-						${combinedWhereClause}
+						${filterClause}
 					)
-					SELECT 
+					SELECT
 						es.totalErrors,
 						es.uniqueErrorTypes,
 						es.affectedUsers,

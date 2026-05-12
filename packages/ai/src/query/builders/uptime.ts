@@ -1,4 +1,4 @@
-import type { Filter, SimpleQueryConfig } from "../types";
+import type { SimpleQueryConfig } from "../types";
 
 /**
  * Uptime monitoring query builders
@@ -21,8 +21,10 @@ const UPTIME_TABLE = "uptime.uptime_monitor";
 
 export const UptimeBuilders: Record<string, SimpleQueryConfig> = {
 	uptime_overview: {
-		customSql: (websiteId: string, startDate: string, endDate: string) => ({
-			sql: `
+		customSql: (ctx) => {
+			const { websiteId, startDate, endDate } = ctx;
+			return {
+				sql: `
 				SELECT 
 					if((countIf(status = 1) + countIf(status = 0)) = 0, 0, round((countIf(status = 1) / (countIf(status = 1) + countIf(status = 0))) * 100, 2)) as uptime_percentage,
 					avg(total_ms) as avg_response_time,
@@ -41,24 +43,17 @@ export const UptimeBuilders: Record<string, SimpleQueryConfig> = {
 					AND timestamp >= toDateTime({startDate:String})
 					AND timestamp <= toDateTime(concat({endDate:String}, ' 23:59:59'))
 			`,
-			params: { websiteId, startDate, endDate },
-		}),
+				params: { websiteId, startDate, endDate },
+			};
+		},
 		timeField: "timestamp",
 		customizable: false,
 	},
 
 	uptime_time_series: {
-		customSql: (
-			websiteId: string,
-			startDate: string,
-			endDate: string,
-			_filters?: Filter[],
-			_granularity?: string,
-			_limit?: number,
-			_offset?: number,
-			timezone?: string
-		) => {
-			const granularity = _granularity ?? "hour";
+		customSql: (ctx) => {
+			const { websiteId, startDate, endDate, timezone } = ctx;
+			const granularity = ctx.granularity ?? "hour";
 			const tz = timezone || "UTC";
 			const timeGroup =
 				granularity === "minute"
@@ -136,8 +131,10 @@ export const UptimeBuilders: Record<string, SimpleQueryConfig> = {
 	},
 
 	uptime_status_breakdown: {
-		customSql: (websiteId: string, startDate: string, endDate: string) => ({
-			sql: `
+		customSql: (ctx) => {
+			const { websiteId, startDate, endDate } = ctx;
+			return {
+				sql: `
 				SELECT 
 					status,
 					http_code,
@@ -151,24 +148,18 @@ export const UptimeBuilders: Record<string, SimpleQueryConfig> = {
 				GROUP BY status, http_code
 				ORDER BY count DESC
 			`,
-			params: { websiteId, startDate, endDate },
-		}),
+				params: { websiteId, startDate, endDate },
+			};
+		},
 		timeField: "timestamp",
 		customizable: false,
 	},
 
 	uptime_recent_checks: {
-		customSql: (
-			websiteId: string,
-			startDate: string,
-			endDate: string,
-			_filters?: Filter[],
-			_granularity?: string,
-			_limit?: number,
-			_offset?: number
-		) => {
-			const limit = _limit ?? 50;
-			const offset = _offset ?? 0;
+		customSql: (ctx) => {
+			const { websiteId, startDate, endDate } = ctx;
+			const limit = ctx.limit ?? 50;
+			const offset = ctx.offset ?? 0;
 			return {
 				sql: `
 					SELECT 
@@ -199,14 +190,9 @@ export const UptimeBuilders: Record<string, SimpleQueryConfig> = {
 	},
 
 	uptime_response_time_trends: {
-		customSql: (
-			websiteId: string,
-			startDate: string,
-			endDate: string,
-			_filters?: Filter[],
-			_granularity?: string
-		) => {
-			const granularity = _granularity ?? "hour";
+		customSql: (ctx) => {
+			const { websiteId, startDate, endDate } = ctx;
+			const granularity = ctx.granularity ?? "hour";
 			const timeGroup =
 				granularity === "minute"
 					? "toStartOfMinute(timestamp)"
@@ -246,8 +232,10 @@ export const UptimeBuilders: Record<string, SimpleQueryConfig> = {
 	},
 
 	uptime_ssl_status: {
-		customSql: (websiteId: string, startDate: string, endDate: string) => ({
-			sql: `
+		customSql: (ctx) => {
+			const { websiteId, startDate, endDate } = ctx;
+			return {
+				sql: `
 				SELECT 
 					latest_ssl_expiry as ssl_expiry,
 					latest_ssl_valid as ssl_valid,
@@ -265,15 +253,18 @@ export const UptimeBuilders: Record<string, SimpleQueryConfig> = {
 					GROUP BY site_id
 				)
 			`,
-			params: { websiteId, startDate, endDate },
-		}),
+				params: { websiteId, startDate, endDate },
+			};
+		},
 		timeField: "timestamp",
 		customizable: false,
 	},
 
 	uptime_by_region: {
-		customSql: (websiteId: string, startDate: string, endDate: string) => ({
-			sql: `
+		customSql: (ctx) => {
+			const { websiteId, startDate, endDate } = ctx;
+			return {
+				sql: `
 				SELECT 
 					probe_region as region,
 					if((countIf(status = 1) + countIf(status = 0)) = 0, 0, round((countIf(status = 1) / (countIf(status = 1) + countIf(status = 0))) * 100, 2)) as uptime_percentage,
@@ -287,8 +278,9 @@ export const UptimeBuilders: Record<string, SimpleQueryConfig> = {
 				GROUP BY probe_region
 				ORDER BY uptime_percentage DESC
 			`,
-			params: { websiteId, startDate, endDate },
-		}),
+				params: { websiteId, startDate, endDate },
+			};
+		},
 		timeField: "timestamp",
 		customizable: false,
 	},

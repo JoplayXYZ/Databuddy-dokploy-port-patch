@@ -1,4 +1,5 @@
 import type { ApiKeyRow } from "@databuddy/api-keys/resolve";
+import { MIN_AGENT_CREDIT_CHECK_BALANCE } from "@databuddy/shared/agent-credits";
 import { getAutumn } from "@databuddy/rpc/autumn";
 import {
 	getBillingCustomerId,
@@ -84,6 +85,7 @@ export async function ensureAgentCreditsAvailable(
 		const result = await getAutumn().check({
 			customerId: billingCustomerId,
 			featureId: "agent_credits",
+			requiredBalance: MIN_AGENT_CREDIT_CHECK_BALANCE,
 		});
 		const allowed = result.allowed !== false;
 		const balance = result.balance;
@@ -156,12 +158,7 @@ export async function trackAgentUsageAndBill(
 
 	const autumn = getAutumn();
 	const billingCustomerId = input.billingCustomerId;
-	const tokenTracks: [string, number][] = [
-		["agent_input_tokens", summary.fresh_input_tokens],
-		["agent_output_tokens", summary.output_tokens],
-		["agent_cache_read_tokens", summary.cache_read_tokens],
-		["agent_cache_write_tokens", summary.cache_write_tokens],
-	];
+	const creditsUsed = summary.agent_credits_used;
 
 	const billingErrorContext = {
 		agent_usage_billing_error: true,
@@ -171,19 +168,26 @@ export async function trackAgentUsageAndBill(
 		...(input.websiteId ? { agent_website_id: input.websiteId } : {}),
 	};
 
-	await Promise.all(
-		tokenTracks
-			.filter(([, value]) => value > 0)
-			.map(([featureId, value]) =>
-				autumn
-					.track({
-						customerId: billingCustomerId,
-						featureId,
-						value,
-					})
-					.catch((err) => captureError(err, billingErrorContext))
-			)
-	);
+	if (creditsUsed <= 0) {
+		return summary;
+	}
+
+	await autumn
+		.track({
+			customerId: billingCustomerId,
+			featureId: "agent_credits",
+			value: creditsUsed,
+			properties: {
+				agent_source: input.source,
+				cost_model_id: summary.cost_model_id,
+				model_id: input.modelId,
+				input_tokens: summary.input_tokens,
+				output_tokens: summary.output_tokens,
+				cache_read_tokens: summary.cache_read_tokens,
+				cache_write_tokens: summary.cache_write_tokens,
+			},
+		})
+		.catch((err) => captureError(err, billingErrorContext));
 
 	return summary;
 }

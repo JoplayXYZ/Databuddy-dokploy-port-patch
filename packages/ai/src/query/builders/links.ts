@@ -1,5 +1,6 @@
 import { Analytics } from "../../types/tables";
-import type { Filter, SimpleQueryConfig, TimeUnit } from "../types";
+import { appendFilterClause } from "../simple-builder";
+import type { SimpleQueryConfig } from "../types";
 
 // Link Shortener Query Builders
 
@@ -493,27 +494,16 @@ export const LinksBuilders: Record<string, SimpleQueryConfig> = {
 			supports_granularity: ["hour", "day"],
 			version: "1.0",
 		},
-		customSql: (
-			websiteId: string,
-			startDate: string,
-			endDate: string,
-			_filters?: Filter[],
-			_granularity?: TimeUnit,
-			_limit?: number,
-			_offset?: number,
-			_timezone?: string,
-			filterConditions?: string[],
-			filterParams?: Record<string, Filter["value"]>
-		) => {
-			const limit = _limit || 100;
-			const combinedWhereClause = filterConditions?.length
-				? `AND ${filterConditions.join(" AND ")}`
-				: "";
+		customSql: (ctx) => {
+			const { websiteId, startDate, endDate, filterConditions, filterParams } =
+				ctx;
+			const limit = ctx.limit || 100;
+			const filterClause = appendFilterClause(filterConditions);
 
 			return {
 				sql: `
 					WITH enriched_links AS (
-						SELECT 
+						SELECT
 							ol.href,
 							ol.text,
 							ol.anonymous_id,
@@ -531,11 +521,11 @@ export const LinksBuilders: Record<string, SimpleQueryConfig> = {
 							e.utm_campaign
 						FROM analytics.outgoing_links ol
 						LEFT JOIN analytics.events e ON (
-							ol.session_id = e.session_id 
+							ol.session_id = e.session_id
 							AND ol.client_id = e.client_id
 							AND abs(dateDiff('second', ol.timestamp, e.time)) < 60
 						)
-						WHERE 
+						WHERE
 							ol.client_id = {websiteId:String}
 							AND ol.timestamp >= toDateTime({startDate:String})
 							AND ol.timestamp <= toDateTime(concat({endDate:String}, ' 23:59:59'))
@@ -549,9 +539,9 @@ export const LinksBuilders: Record<string, SimpleQueryConfig> = {
 							AND ol.text != 'undefined'
 							AND ol.text != 'null'
 							AND length(trim(ol.text)) >= 0
-							${combinedWhereClause}
+							${filterClause}
 					)
-					SELECT 
+					SELECT
 						href,
 						text,
 						COUNT(*) as total_clicks,
@@ -639,27 +629,16 @@ export const LinksBuilders: Record<string, SimpleQueryConfig> = {
 			version: "1.0",
 		},
 
-		customSql: (
-			websiteId: string,
-			startDate: string,
-			endDate: string,
-			_filters?: Filter[],
-			_granularity?: TimeUnit,
-			_limit?: number,
-			_offset?: number,
-			_timezone?: string,
-			filterConditions?: string[],
-			filterParams?: Record<string, Filter["value"]>
-		) => {
-			const limit = _limit || 100;
-			const combinedWhereClause = filterConditions?.length
-				? `AND ${filterConditions.join(" AND ")}`
-				: "";
+		customSql: (ctx) => {
+			const { websiteId, startDate, endDate, filterConditions, filterParams } =
+				ctx;
+			const limit = ctx.limit || 100;
+			const filterClause = appendFilterClause(filterConditions);
 
 			return {
 				sql: `
 					WITH enriched_links AS (
-						SELECT 
+						SELECT
 							ol.href,
 							ol.text,
 							ol.anonymous_id,
@@ -677,11 +656,11 @@ export const LinksBuilders: Record<string, SimpleQueryConfig> = {
 							e.utm_campaign
 						FROM analytics.outgoing_links ol
 						LEFT JOIN analytics.events e ON (
-							ol.session_id = e.session_id 
+							ol.session_id = e.session_id
 							AND ol.client_id = e.client_id
 							AND abs(dateDiff('second', ol.timestamp, e.time)) < 60
 						)
-						WHERE 
+						WHERE
 							ol.client_id = {websiteId:String}
 							AND ol.timestamp >= toDateTime({startDate:String})
 							AND ol.timestamp <= toDateTime(concat({endDate:String}, ' 23:59:59'))
@@ -695,9 +674,9 @@ export const LinksBuilders: Record<string, SimpleQueryConfig> = {
 							AND ol.text != 'undefined'
 							AND ol.text != 'null'
 							AND length(trim(ol.text)) >= 0
-							${combinedWhereClause}
+							${filterClause}
 					)
-					SELECT 
+					SELECT
 						domain(href) as domain,
 						COUNT(*) as total_clicks,
 						COUNT(DISTINCT anonymous_id) as unique_users,

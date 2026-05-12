@@ -1,5 +1,6 @@
 import { Analytics } from "../../types/tables";
-import type { Filter, SimpleQueryConfig, TimeUnit } from "../types";
+import { appendFilterClause } from "../simple-builder";
+import type { SimpleQueryConfig } from "../types";
 
 const DATE_ONLY_RE = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -9,8 +10,10 @@ function inclusiveEndDate(endDate: string): string {
 
 export const SessionsBuilders: Record<string, SimpleQueryConfig> = {
 	session_metrics: {
-		customSql: (websiteId: string, startDate: string, endDate: string) => ({
-			sql: `
+		customSql: (ctx) => {
+			const { websiteId, startDate, endDate } = ctx;
+			return {
+				sql: `
 				WITH session_rollup AS (
 					SELECT
 						session_id,
@@ -33,8 +36,9 @@ export const SessionsBuilders: Record<string, SimpleQueryConfig> = {
 					sum(total_events) as total_events
 				FROM session_rollup
 			`,
-			params: { websiteId, startDate, endDate },
-		}),
+				params: { websiteId, startDate, endDate },
+			};
+		},
 		timeField: "time",
 		customizable: true,
 	} satisfies SimpleQueryConfig,
@@ -107,8 +111,10 @@ export const SessionsBuilders: Record<string, SimpleQueryConfig> = {
 	} satisfies SimpleQueryConfig,
 
 	session_flow: {
-		customSql: (websiteId: string, startDate: string, endDate: string) => ({
-			sql: `
+		customSql: (ctx) => {
+			const { websiteId, startDate, endDate } = ctx;
+			return {
+				sql: `
 				WITH page_events AS (
 					SELECT
 						session_id,
@@ -139,8 +145,9 @@ export const SessionsBuilders: Record<string, SimpleQueryConfig> = {
 				ORDER BY transitions DESC
 				LIMIT 100
 			`,
-			params: { websiteId, startDate, endDate: inclusiveEndDate(endDate) },
-		}),
+				params: { websiteId, startDate, endDate: inclusiveEndDate(endDate) },
+			};
+		},
 		timeField: "time",
 		customizable: true,
 	} satisfies SimpleQueryConfig,
@@ -161,16 +168,12 @@ export const SessionsBuilders: Record<string, SimpleQueryConfig> = {
 	} satisfies SimpleQueryConfig,
 
 	interesting_sessions: {
-		customSql: (
-			websiteId: string,
-			startDate: string,
-			endDate: string,
-			_filters?: Filter[],
-			_granularity?: TimeUnit,
-			limit = 10,
-			offset = 0
-		) => ({
-			sql: `
+		customSql: (ctx) => {
+			const { websiteId, startDate, endDate } = ctx;
+			const limit = ctx.limit ?? 10;
+			const offset = ctx.offset ?? 0;
+			return {
+				sql: `
 				WITH base_sessions AS (
 					SELECT
 						session_id,
@@ -250,33 +253,25 @@ export const SessionsBuilders: Record<string, SimpleQueryConfig> = {
 				ORDER BY interesting_score DESC, bs.last_visit DESC
 				LIMIT {limit:Int32} OFFSET {offset:Int32}
 			`,
-			params: {
-				websiteId,
-				startDate,
-				endDate: inclusiveEndDate(endDate),
-				limit,
-				offset,
-			},
-		}),
+				params: {
+					websiteId,
+					startDate,
+					endDate: inclusiveEndDate(endDate),
+					limit,
+					offset,
+				},
+			};
+		},
 		plugins: { normalizeGeo: true },
 	} satisfies SimpleQueryConfig,
 
 	session_list: {
-		customSql: (
-			websiteId: string,
-			startDate: string,
-			endDate: string,
-			_filters?: Filter[],
-			_granularity?: TimeUnit,
-			limit = 25,
-			offset = 0,
-			_timezone?: string,
-			filterConditions?: string[],
-			filterParams?: Record<string, Filter["value"]>
-		) => {
-			const sessionFilterClause = filterConditions?.length
-				? `AND ${filterConditions.join(" AND ")}`
-				: "";
+		customSql: (ctx) => {
+			const { websiteId, startDate, endDate, filterConditions, filterParams } =
+				ctx;
+			const limit = ctx.limit ?? 25;
+			const offset = ctx.offset ?? 0;
+			const filterClause = appendFilterClause(filterConditions);
 
 			return {
 				sql: `
@@ -297,7 +292,7 @@ export const SessionsBuilders: Record<string, SimpleQueryConfig> = {
         client_id = {websiteId:String}
         AND time >= toDateTime({startDate:String})
         AND time <= toDateTime({endDate:String})
-        ${sessionFilterClause}
+        ${filterClause}
       GROUP BY session_id
       ORDER BY first_visit DESC
       LIMIT {limit:Int32} OFFSET {offset:Int32}

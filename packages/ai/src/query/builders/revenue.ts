@@ -1,6 +1,6 @@
 import { Analytics } from "../../types/tables";
 import { escapeLikePattern } from "../simple-builder";
-import type { Filter, SimpleQueryConfig, TimeUnit } from "../types";
+import type { CustomSqlFn, Filter, SimpleQueryConfig } from "../types";
 
 const REVENUE_FILTER_COLUMNS: Record<string, string> = {
 	country: "country",
@@ -271,44 +271,20 @@ function buildRevenueQuery(
 	};
 }
 
-type RevenueCustomSql = (
-	websiteId: string,
-	startDate: string,
-	endDate: string,
-	filters?: Filter[],
-	_granularity?: TimeUnit,
-	_limit?: number,
-	_offset?: number,
-	_timezone?: string,
-	_filterConditions?: string[],
-	customSqlParams?: Record<string, Filter["value"]>
-) => { sql: string; params: Record<string, Filter["value"]> };
-
 function makeRevenueBuilder(
 	configFn: (limit: number | undefined) => RevenueQueryConfig,
 	defaultLimit?: number
-): RevenueCustomSql {
-	return (
-		websiteId,
-		startDate,
-		endDate,
-		filters,
-		_granularity,
-		_limit,
-		_offset,
-		_timezone,
-		_filterConditions,
-		customSqlParams
-	) =>
+): CustomSqlFn {
+	return ({ websiteId, startDate, endDate, filters, limit, filterParams }) =>
 		buildRevenueQuery(
 			configFn(
-				defaultLimit === undefined ? undefined : (_limit ?? defaultLimit)
+				defaultLimit === undefined ? undefined : (limit ?? defaultLimit)
 			),
 			websiteId,
 			startDate,
 			endDate,
 			filters,
-			customSqlParams
+			filterParams
 		);
 }
 

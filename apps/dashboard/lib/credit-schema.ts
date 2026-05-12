@@ -3,34 +3,27 @@
  *
  * Derives per-token credit costs from tokenlens' Vercel AI Gateway catalog
  * plus a business markup, so the Autumn creditSchema in autumn.config.ts
- * and the agent-cost-probe script stay in sync with provider prices
- * automatically. The raw USD rates come from tokenlens; the markup and
- * credit-to-USD ratio are the pricing knobs we tune per plan tier.
+ * matches the model we actually run.
  *
- * Credit formula: credits_per_token = usd_per_token × MARKUP × CREDITS_PER_USD
+ * Credit formula: credits_per_token = usd_per_token × markup × credits_per_usd
  */
 
+import {
+	AGENT_CREDIT_MARKUP,
+	AGENT_CREDITS_PER_USD,
+	usdPerMillionTokensToAgentCreditsPerToken,
+} from "@databuddy/shared/agent-credits";
 import { vercelModels } from "tokenlens/providers/vercel";
 
-/**
- * How many credits the user spends per USD of underlying provider cost.
- * 1 credit ≈ $0.10 of retail-priced usage — small, dollar-shaped numbers
- * that users can reason about directly ("I have 150 credits ≈ $15 of AI").
- */
-export const CREDITS_PER_USD = 10;
-
-/** Business markup on top of provider cost. 2.0 = 100% margin. */
-export const MARKUP = 2.0;
+export const CREDITS_PER_USD = AGENT_CREDITS_PER_USD;
+export const MARKUP = AGENT_CREDIT_MARKUP;
 
 /**
- * Model whose provider rates back the credit schema. Pinned to the most
- * expensive Anthropic model in the tokenlens catalog (Opus 4.1) so that
- * if the agent ever routes to Opus for heavy queries, per-token credit
- * deduction keeps up with real COGS. Current production routes to
- * Sonnet 4.6 (~5× cheaper), so on today's traffic this deliberately
- * over-deducts — the cushion is intentional per the ceiling principle.
+ * Pricing proxy for production dashboard agent traffic. Vercel Gateway serves
+ * `anthropic/claude-sonnet-4.6`, while tokenlens currently exposes the same
+ * Sonnet pricing under `anthropic/claude-4-sonnet`.
  */
-export const BASELINE_MODEL_ID = "anthropic/claude-4-1-opus" as const;
+export const BASELINE_MODEL_ID = "anthropic/claude-4-sonnet" as const;
 
 /**
  * Anthropic's 1-hour prompt cache write rate (USD per 1M tokens).
@@ -43,8 +36,6 @@ export const BASELINE_MODEL_ID = "anthropic/claude-4-1-opus" as const;
  * delete this constant and let tokenlens drive the rate directly.
  */
 const CACHE_WRITE_1H_USD_PER_M_TOKENS = 6;
-
-const TOKENS_PER_MILLION = 1_000_000;
 
 interface ModelCostsPerMillion {
 	cache_read: number;
@@ -69,16 +60,6 @@ function getBaselineUsdPerMillion(): ModelCostsPerMillion {
 	};
 }
 
-/**
- * Converts a per-million-tokens USD rate into a per-token credit rate.
- * Rounds to 12 significant digits to avoid floating-point noise like
- * `0.0007199999999999999` leaking into the Autumn creditSchema payload.
- */
-function toCredits(usdPerMillion: number): number {
-	const raw = (usdPerMillion / TOKENS_PER_MILLION) * MARKUP * CREDITS_PER_USD;
-	return Number.parseFloat(raw.toPrecision(12));
-}
-
 export interface AgentCreditSchema {
 	/** Credits per cache-read input token. */
 	cacheRead: number;
@@ -97,8 +78,10 @@ const baselineUsd = getBaselineUsdPerMillion();
  * from any cost probe so both stay in lockstep.
  */
 export const AGENT_CREDIT_SCHEMA: AgentCreditSchema = {
-	input: toCredits(baselineUsd.input),
-	output: toCredits(baselineUsd.output),
-	cacheRead: toCredits(baselineUsd.cache_read),
-	cacheWrite: toCredits(baselineUsd.cache_write),
+	input: usdPerMillionTokensToAgentCreditsPerToken(baselineUsd.input),
+	output: usdPerMillionTokensToAgentCreditsPerToken(baselineUsd.output),
+	cacheRead: usdPerMillionTokensToAgentCreditsPerToken(baselineUsd.cache_read),
+	cacheWrite: usdPerMillionTokensToAgentCreditsPerToken(
+		baselineUsd.cache_write
+	),
 };

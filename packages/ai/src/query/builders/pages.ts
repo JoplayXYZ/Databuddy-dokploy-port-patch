@@ -1,5 +1,6 @@
 import { Analytics } from "../../types/tables";
-import type { Filter, SimpleQueryConfig, TimeUnit } from "../types";
+import { appendFilterClause } from "../simple-builder";
+import type { SimpleQueryConfig } from "../types";
 
 export const PagesBuilders: Record<string, SimpleQueryConfig> = {
 	top_pages: {
@@ -97,25 +98,18 @@ export const PagesBuilders: Record<string, SimpleQueryConfig> = {
 		plugins: {
 			sessionAttribution: true,
 		},
-		customSql: (
-			websiteId: string,
-			startDate: string,
-			endDate: string,
-			_filters?: Filter[],
-			_granularity?: TimeUnit,
-			limit?: number,
-			offset?: number,
-			_timezone?: string,
-			filterConditions?: string[],
-			filterParams?: Record<string, Filter["value"]>,
-			helpers?: {
-				sessionAttributionCTE: (timeField?: string) => string;
-				sessionAttributionJoin: (alias?: string) => string;
-			}
-		) => {
-			const combinedWhereClause = filterConditions?.length
-				? `AND ${filterConditions.join(" AND ")}`
-				: "";
+		customSql: (ctx) => {
+			const {
+				websiteId,
+				startDate,
+				endDate,
+				filterConditions,
+				filterParams,
+				helpers,
+			} = ctx;
+			const limit = ctx.limit;
+			const offset = ctx.offset;
+			const filterClause = appendFilterClause(filterConditions);
 
 			const sessionAttributionCTE = helpers?.sessionAttributionCTE
 				? `${helpers.sessionAttributionCTE("time")},`
@@ -124,7 +118,7 @@ export const PagesBuilders: Record<string, SimpleQueryConfig> = {
 			const sessionEntryQuery = helpers?.sessionAttributionCTE
 				? `
             session_entry AS (
-                SELECT 
+                SELECT
                     e.session_id,
                     e.anonymous_id,
                     CASE WHEN trimRight(path(e.path), '/') = '' THEN '/' ELSE trimRight(path(e.path), '/') END as entry_page,
@@ -144,11 +138,11 @@ export const PagesBuilders: Record<string, SimpleQueryConfig> = {
                     AND e.time >= toDateTime({startDate:String})
                     AND e.time <= toDateTime(concat({endDate:String}, ' 23:59:59'))
                     AND e.event_name = 'screen_view'
-                    ${combinedWhereClause}
+                    ${filterClause}
             )`
 				: `
             session_entry AS (
-                SELECT 
+                SELECT
                     session_id,
                     anonymous_id,
                     CASE WHEN trimRight(path(path), '/') = '' THEN '/' ELSE trimRight(path(path), '/') END as entry_page,
@@ -159,7 +153,7 @@ export const PagesBuilders: Record<string, SimpleQueryConfig> = {
                     AND time >= toDateTime({startDate:String})
                     AND time <= toDateTime(concat({endDate:String}, ' 23:59:59'))
                     AND event_name = 'screen_view'
-                    ${combinedWhereClause}
+                    ${filterClause}
             )`;
 
 			return {
@@ -219,25 +213,18 @@ export const PagesBuilders: Record<string, SimpleQueryConfig> = {
 		plugins: {
 			sessionAttribution: true,
 		},
-		customSql: (
-			websiteId: string,
-			startDate: string,
-			endDate: string,
-			_filters?: Filter[],
-			_granularity?: TimeUnit,
-			limit?: number,
-			offset?: number,
-			_timezone?: string,
-			filterConditions?: string[],
-			filterParams?: Record<string, Filter["value"]>,
-			helpers?: {
-				sessionAttributionCTE: (timeField?: string) => string;
-				sessionAttributionJoin: (alias?: string) => string;
-			}
-		) => {
-			const combinedWhereClause = filterConditions?.length
-				? `AND ${filterConditions.join(" AND ")}`
-				: "";
+		customSql: (ctx) => {
+			const {
+				websiteId,
+				startDate,
+				endDate,
+				filterConditions,
+				filterParams,
+				helpers,
+			} = ctx;
+			const limit = ctx.limit;
+			const offset = ctx.offset;
+			const filterClause = appendFilterClause(filterConditions);
 
 			const sessionAttributionCTE = helpers?.sessionAttributionCTE
 				? `${helpers.sessionAttributionCTE("time")},`
@@ -263,7 +250,7 @@ export const PagesBuilders: Record<string, SimpleQueryConfig> = {
                     AND e.time >= toDateTime({startDate:String})
                     AND e.time <= toDateTime(concat({endDate:String}, ' 23:59:59'))
                     AND e.event_name = 'screen_view'
-					${combinedWhereClause}
+					${filterClause}
                 GROUP BY e.session_id, sa.session_referrer, sa.session_utm_source, sa.session_utm_medium, sa.session_utm_campaign, sa.session_country, sa.session_device_type, sa.session_browser_name, sa.session_os_name
             ),`
 				: `
@@ -276,7 +263,7 @@ export const PagesBuilders: Record<string, SimpleQueryConfig> = {
                     AND time >= toDateTime({startDate:String})
                     AND time <= toDateTime(concat({endDate:String}, ' 23:59:59'))
                     AND event_name = 'screen_view'
-					${combinedWhereClause}
+					${filterClause}
                 GROUP BY session_id
             ),`;
 
@@ -295,7 +282,7 @@ export const PagesBuilders: Record<string, SimpleQueryConfig> = {
                     AND e.time >= toDateTime({startDate:String})
                     AND e.time <= toDateTime(concat({endDate:String}, ' 23:59:59'))
                     AND e.event_name = 'screen_view'
-					${combinedWhereClause}
+					${filterClause}
             )
             SELECT 
                 path as name,
@@ -369,25 +356,18 @@ export const PagesBuilders: Record<string, SimpleQueryConfig> = {
 		plugins: {
 			sessionAttribution: true,
 		},
-		customSql: (
-			websiteId: string,
-			startDate: string,
-			endDate: string,
-			_filters?: Filter[],
-			_granularity?: TimeUnit,
-			limit?: number,
-			offset?: number,
-			_timezone?: string,
-			filterConditions?: string[],
-			filterParams?: Record<string, Filter["value"]>,
-			helpers?: {
-				sessionAttributionCTE: (timeField?: string) => string;
-				sessionAttributionJoin: (alias?: string) => string;
-			}
-		) => {
-			const combinedWhereClause = filterConditions?.length
-				? `AND ${filterConditions.join(" AND ")}`
-				: "";
+		customSql: (ctx) => {
+			const {
+				websiteId,
+				startDate,
+				endDate,
+				filterConditions,
+				filterParams,
+				helpers,
+			} = ctx;
+			const limit = ctx.limit;
+			const offset = ctx.offset;
+			const filterClause = appendFilterClause(filterConditions);
 
 			const sessionAttributionCTE = helpers?.sessionAttributionCTE
 				? `${helpers.sessionAttributionCTE("time")}`
@@ -395,7 +375,7 @@ export const PagesBuilders: Record<string, SimpleQueryConfig> = {
 
 			const baseQuery = helpers?.sessionAttributionCTE
 				? `
-            SELECT 
+            SELECT
                 decodeURLComponent(CASE WHEN trimRight(path(e.path), '/') = '' THEN '/' ELSE trimRight(path(e.path), '/') END) as name,
                 COUNT(*) as sessions_with_time,
                 COUNT(DISTINCT e.anonymous_id) as visitors,
@@ -410,13 +390,13 @@ export const PagesBuilders: Record<string, SimpleQueryConfig> = {
                 AND e.time_on_page IS NOT NULL
                 AND e.time_on_page > 1
                 AND e.time_on_page < 3600
-                ${combinedWhereClause}
+                ${filterClause}
             GROUP BY name
             HAVING COUNT(*) >= 1
             ORDER BY visitors DESC
             LIMIT {limit:Int32} OFFSET {offset:Int32}`
 				: `
-            SELECT 
+            SELECT
                 decodeURLComponent(CASE WHEN trimRight(path(path), '/') = '' THEN '/' ELSE trimRight(path(path), '/') END) as name,
                 COUNT(*) as sessions_with_time,
                 COUNT(DISTINCT anonymous_id) as visitors,
@@ -430,7 +410,7 @@ export const PagesBuilders: Record<string, SimpleQueryConfig> = {
                 AND time_on_page IS NOT NULL
                 AND time_on_page > 1
                 AND time_on_page < 3600
-                ${combinedWhereClause}
+                ${filterClause}
             GROUP BY name
             HAVING COUNT(*) >= 1
             ORDER BY visitors DESC

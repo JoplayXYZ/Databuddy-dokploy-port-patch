@@ -1,3 +1,4 @@
+import { usdToAgentCredits } from "@databuddy/shared/agent-credits";
 import type { LanguageModelUsage } from "ai";
 import type { SourceModel } from "tokenlens";
 import { computeTokenCostsForModel } from "tokenlens/helpers";
@@ -5,15 +6,87 @@ import { vercelModels } from "tokenlens/providers/vercel";
 
 type VercelModelId = keyof typeof vercelModels.models;
 
+interface ModelCost {
+	cache_read: number;
+	cache_write: number;
+	input: number;
+	output: number;
+}
+
+interface CostModel {
+	fallback: boolean;
+	id: string;
+	model: SourceModel;
+}
+
+const MODEL_COST_ALIASES: Record<string, string> = {
+	"anthropic/claude-sonnet-4": "anthropic/claude-4-sonnet",
+	"anthropic/claude-sonnet-4.6": "anthropic/claude-4-sonnet",
+};
+
+const MODEL_COST_OVERRIDES: Record<string, ModelCost> = {
+	"anthropic/claude-4-sonnet": {
+		input: 3,
+		output: 15,
+		cache_read: 0.3,
+		cache_write: 6,
+	},
+	"deepseek/deepseek-v4-flash": {
+		input: 0.14,
+		output: 0.28,
+		cache_read: 0,
+		cache_write: 0,
+	},
+};
+
+const FALLBACK_MODEL_ID = "anthropic/claude-4-sonnet";
+
+const toSourceModel = (id: string, cost: ModelCost): SourceModel =>
+	({ canonical_id: id, cost, id }) as unknown as SourceModel;
+
 const lookupModel = (modelId: string): SourceModel | undefined => {
+	const override = MODEL_COST_OVERRIDES[modelId];
+	if (override) {
+		return toSourceModel(modelId, override);
+	}
+
 	const model = vercelModels.models[modelId as VercelModelId];
-	return model
+	return model?.cost
 		? ({ canonical_id: model.id, ...model } as unknown as SourceModel)
 		: undefined;
 };
 
-const toUsage = (usage: LanguageModelUsage) => ({
-	input_tokens: usage.inputTokens,
+function resolveCostModel(modelId: string): CostModel {
+	const model = lookupModel(modelId);
+	if (model) {
+		return { fallback: false, id: modelId, model };
+	}
+
+	const aliasId = MODEL_COST_ALIASES[modelId];
+	const alias = aliasId ? lookupModel(aliasId) : undefined;
+	if (alias && aliasId) {
+		return { fallback: false, id: aliasId, model: alias };
+	}
+
+	const fallback = lookupModel(FALLBACK_MODEL_ID);
+	if (fallback) {
+		return { fallback: true, id: FALLBACK_MODEL_ID, model: fallback };
+	}
+
+	return {
+		fallback: true,
+		id: modelId,
+		model: toSourceModel(modelId, {
+			input: 0,
+			output: 0,
+			cache_read: 0,
+			cache_write: 0,
+		}),
+	};
+}
+
+const toCostUsage = (usage: LanguageModelUsage, freshInputTokens: number) => ({
+	input_tokens: freshInputTokens,
 	output_tokens: usage.outputTokens,
 	cache_read_tokens: usage.inputTokenDetails?.cacheReadTokens,
 	cache_write_tokens: usage.inputTokenDetails?.cacheWriteTokens,
@@ -24,16 +97,13 @@ const toUsage = (usage: LanguageModelUsage) => ({
  * Best-effort token telemetry for the agent route.
  *
  * - Always returns raw token counts from the AI SDK usage object.
- * - Looks up USD cost in the Vercel AI Gateway catalog. Falls back to
- *   `anthropic/claude-4-sonnet` when the exact model id isn't recognized
- *   (the gateway uses `claude-sonnet-4.6` which the catalog doesn't ship
- *   yet — directionally correct cost). The `costFallback` flag lets
- *   downstream analytics filter or correct estimated rows.
+ * - Looks up USD cost in the Vercel AI Gateway catalog, with explicit aliases
+ *   for gateway ids that the catalog has not caught up with yet. Only truly
+ *   unknown model ids are marked as fallback-priced.
  */
 
-const FALLBACK_MODEL_ID = "anthropic/claude-4-sonnet";
-
 export interface UsageTelemetry {
+	agent_credits_used: number;
 	cache_read_tokens: number;
 	cache_write_tokens: number;
 	cost_cache_read_usd: number;
@@ -71,20 +141,13 @@ export function summarizeAgentUsage(
 		num(usage.inputTokenDetails?.noCacheTokens) ||
 		Math.max(0, inputTokens - cacheReadTokens - cacheWriteTokens);
 
-	const normalizedUsage = toUsage(usage);
-	let costModelId = modelId;
-	let model = lookupModel(modelId);
-	let costs = model
-		? computeTokenCostsForModel({ model, usage: normalizedUsage })
-		: undefined;
-
-	if (costs === undefined || costs.totalTokenCostUSD === 0) {
-		costModelId = FALLBACK_MODEL_ID;
-		model = lookupModel(FALLBACK_MODEL_ID);
-		costs = model
-			? computeTokenCostsForModel({ model, usage: normalizedUsage })
-			: undefined;
-	}
+	const normalizedUsage = toCostUsage(usage, freshInputTokens);
+	const costModel = resolveCostModel(modelId);
+	const costs = computeTokenCostsForModel({
+		model: costModel.model,
+		usage: normalizedUsage,
+	});
+	const costTotalUsd = num(costs?.totalTokenCostUSD);
 
 	return {
 		input_tokens: inputTokens,
@@ -96,11 +159,12 @@ export function summarizeAgentUsage(
 		reasoning_tokens: num(usage.outputTokenDetails?.reasoningTokens),
 		cost_input_usd: num(costs?.inputTokenCostUSD),
 		cost_output_usd: num(costs?.outputTokenCostUSD),
-		cost_total_usd: num(costs?.totalTokenCostUSD),
+		cost_total_usd: costTotalUsd,
 		cost_cache_read_usd: num(costs?.cacheReadTokenCostUSD),
 		cost_cache_write_usd: num(costs?.cacheWriteTokenCostUSD),
 		cost_reasoning_usd: num(costs?.reasoningTokenCostUSD),
-		cost_model_id: costModelId,
-		cost_fallback: costModelId !== modelId,
+		cost_model_id: costModel.id,
+		cost_fallback: costModel.fallback,
+		agent_credits_used: usdToAgentCredits(costTotalUsd),
 	};
 }
