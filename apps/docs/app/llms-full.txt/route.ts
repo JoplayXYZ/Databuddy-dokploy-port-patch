@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import fg from "fast-glob";
 import matter from "gray-matter";
 import fs from "node:fs/promises";
@@ -83,7 +84,7 @@ export async function GET() {
 		headers: {
 			"Content-Type": "text/plain; charset=utf-8",
 			"Cache-Control": "public, max-age=3600, must-revalidate",
-			ETag: `"${Buffer.from(body).length.toString(36)}"`,
+			ETag: `"${createHash("sha256").update(body).digest("hex").slice(0, 16)}"`,
 		},
 	});
 }

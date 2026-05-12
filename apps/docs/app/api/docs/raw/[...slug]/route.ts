@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
 import matter from "gray-matter";
@@ -46,7 +47,7 @@ export async function GET(
 				headers: {
 					"Content-Type": "text/markdown; charset=utf-8",
 					"Cache-Control": "public, max-age=3600, must-revalidate",
-					ETag: `"${Buffer.from(body).length.toString(36)}"`,
+					ETag: `"${createHash("sha256").update(body).digest("hex").slice(0, 16)}"`,
 				},
 			});
 		} catch {}
