@@ -21,7 +21,7 @@ import {
 	flags,
 	websites,
 } from "@databuddy/db/schema";
-import { cacheable } from "@databuddy/redis";
+import { cacheNamespaces, cacheTags, cacheable } from "@databuddy/redis";
 import { getRateLimitHeaders, ratelimit } from "@databuddy/redis/rate-limit";
 import { invalidateFlagCache } from "@databuddy/rpc/flags";
 import { randomUUIDv7 } from "bun";
@@ -164,9 +164,13 @@ const getCachedFlag = cacheable(
 	},
 	{
 		expireInSec: 30,
-		prefix: "flag",
+		prefix: cacheNamespaces.flag,
 		staleWhileRevalidate: true,
 		staleTime: 15,
+		tags: (_result, key, clientId) => [
+			cacheTags.flagClient(clientId),
+			cacheTags.flagKey(clientId, key),
+		],
 	}
 );
 
@@ -210,9 +214,10 @@ const getCachedFlagsForClient = cacheable(
 	},
 	{
 		expireInSec: 30,
-		prefix: "flags-client",
+		prefix: cacheNamespaces.flagsClient,
 		staleWhileRevalidate: true,
 		staleTime: 15,
+		tags: (_result, clientId) => [cacheTags.flagClient(clientId)],
 	}
 );
 
@@ -237,9 +242,10 @@ const getCachedFlagDefinitionsForClient = cacheable(
 	},
 	{
 		expireInSec: 30,
-		prefix: "flags-definitions",
+		prefix: cacheNamespaces.flagsDefinitions,
 		staleWhileRevalidate: true,
 		staleTime: 15,
+		tags: (_result, clientId) => [cacheTags.flagClient(clientId)],
 	}
 );
 
@@ -283,9 +289,13 @@ const getCachedFlagsForUser = cacheable(
 	},
 	{
 		expireInSec: 30,
-		prefix: "flags-user",
+		prefix: cacheNamespaces.flagsUser,
 		staleWhileRevalidate: true,
 		staleTime: 15,
+		tags: (_result, userId, clientId) => [
+			cacheTags.flagClient(clientId),
+			cacheTags.flagUser(clientId, userId),
+		],
 	}
 );
 

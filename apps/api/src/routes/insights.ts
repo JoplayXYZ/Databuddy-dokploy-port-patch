@@ -7,10 +7,13 @@ import {
 	websites,
 } from "@databuddy/db/schema";
 import {
+	cacheNamespaces,
+	cacheTags,
 	cacheable,
 	getRedisCache,
 	invalidateAgentContextSnapshotsForOwner,
 	invalidateAgentContextSnapshotsForWebsite,
+	invalidateInsightsCachesForOrganization,
 } from "@databuddy/redis";
 import { getRateLimitHeaders, ratelimit } from "@databuddy/redis/rate-limit";
 import { generateText, Output, stepCountIs, ToolLoopAgent } from "ai";
@@ -766,6 +769,8 @@ async function invalidateInsightsCacheForOrg(
 				await redis.del(...keys);
 			}
 		} while (cursor !== "0");
+
+		await invalidateInsightsCachesForOrganization(organizationId);
 	} catch (error) {
 		useLogger().info("Insights cache invalidation scan failed (best-effort)", {
 			insights: { organizationId, error },
@@ -891,7 +896,8 @@ ${insightLines.join("\n")}`;
 	},
 	{
 		expireInSec: NARRATIVE_CACHE_TTL_SECS,
-		prefix: "insights-narrative",
+		prefix: cacheNamespaces.insightsNarrative,
+		tags: (_result, organizationId) => [cacheTags.organization(organizationId)],
 	}
 );
 
@@ -1342,6 +1348,10 @@ export const insights = new Elysia({ prefix: "/v1/insights" })
 						});
 						finalInsights = [];
 						mergeWideEvent({ insights_persist_failed: true });
+					}
+
+					if (finalInsights.length > 0) {
+						await invalidateInsightsCacheForOrg(organizationId);
 					}
 
 					await Promise.all(

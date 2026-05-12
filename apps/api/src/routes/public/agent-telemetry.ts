@@ -5,7 +5,7 @@ import {
 	type AgentInstallStep,
 	agentInstallTelemetry,
 } from "@databuddy/db/schema";
-import { cacheable } from "@databuddy/redis";
+import { cacheNamespaces, cacheable } from "@databuddy/redis";
 import { getRateLimitHeaders, ratelimit } from "@databuddy/redis/rate-limit";
 import { randomUUIDv7 } from "bun";
 import { Elysia, t } from "elysia";
@@ -52,7 +52,7 @@ const checkWebsiteExists = cacheable(
 	},
 	{
 		expireInSec: 300,
-		prefix: "agent-telemetry:website-exists",
+		prefix: cacheNamespaces.agentTelemetryWebsiteExists,
 		staleWhileRevalidate: true,
 		staleTime: 120,
 	}
