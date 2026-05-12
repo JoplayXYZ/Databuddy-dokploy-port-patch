@@ -1,4 +1,5 @@
 import { Analytics } from "../../types/tables";
+import { escapeLikePattern } from "../simple-builder";
 import type { Filter, SimpleQueryConfig, TimeUnit } from "../types";
 
 const REVENUE_FILTER_COLUMNS: Record<string, string> = {
@@ -17,22 +18,14 @@ const REVENUE_FILTER_COLUMNS: Record<string, string> = {
 	type: "type",
 };
 
-function escapeRevenueLikeValue(value: string): string {
-	return value.replace(/\\/g, "\\\\").replace(/%/g, "\\%").replace(/_/g, "\\_");
-}
-
-function buildRevenueFilterConditions(filters?: Filter[]): {
-	conditions: string[];
-	params: Record<string, Filter["value"]>;
-} {
-	if (!filters?.length) {
-		return { conditions: [], params: {} };
-	}
-
+function buildRevenueWhereClause(
+	filters: Filter[] | undefined,
+	extraConditions: string[] = []
+): { whereClause: string; params: Record<string, Filter["value"]> } {
 	const params: Record<string, Filter["value"]> = {};
-	const conditions: string[] = [];
+	const conditions: string[] = [...extraConditions];
 
-	filters.forEach((filter, i) => {
+	filters?.forEach((filter, i) => {
 		if (!filter || filter.having) {
 			return;
 		}
@@ -59,7 +52,7 @@ function buildRevenueFilterConditions(filters?: Filter[]): {
 		}
 
 		if (op === "contains" || op === "not_contains") {
-			params[key] = `%${escapeRevenueLikeValue(String(filter.value))}%`;
+			params[key] = `%${escapeLikePattern(String(filter.value))}%`;
 			conditions.push(
 				`${column} ${op === "contains" ? "LIKE" : "NOT LIKE"} {${key}:String}`
 			);
@@ -67,7 +60,7 @@ function buildRevenueFilterConditions(filters?: Filter[]): {
 		}
 
 		if (op === "starts_with") {
-			params[key] = `${escapeRevenueLikeValue(String(filter.value))}%`;
+			params[key] = `${escapeLikePattern(String(filter.value))}%`;
 			conditions.push(`${column} LIKE {${key}:String}`);
 			return;
 		}
@@ -76,17 +69,8 @@ function buildRevenueFilterConditions(filters?: Filter[]): {
 		conditions.push(`${column} ${op === "ne" ? "!=" : "="} {${key}:String}`);
 	});
 
-	return { conditions, params };
-}
-
-function buildRevenueWhereClause(
-	filters?: Filter[],
-	extraConditions: string[] = []
-): { whereClause: string; params: Record<string, Filter["value"]> } {
-	const { conditions, params } = buildRevenueFilterConditions(filters);
-	const all = [...extraConditions, ...conditions];
 	return {
-		whereClause: all.length ? ` WHERE ${all.join(" AND ")}` : "",
+		whereClause: conditions.length ? ` WHERE ${conditions.join(" AND ")}` : "",
 		params,
 	};
 }
