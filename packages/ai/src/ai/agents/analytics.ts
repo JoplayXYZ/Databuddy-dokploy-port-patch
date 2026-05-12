@@ -9,6 +9,7 @@ import {
 import { TIER_CONFIG } from "../config/tiers";
 import { buildAnalyticsInstructions } from "../prompts/analytics";
 import { createAnnotationTools } from "../tools/annotations";
+import { dashboardActionsTool } from "../tools/dashboard-actions";
 import { executeSqlQueryTool } from "../tools/execute-sql-query";
 import { createFlagTools } from "../tools/flags";
 import { createFunnelTools } from "../tools/funnels";
@@ -22,6 +23,7 @@ import type { AgentConfig, AgentContext, AgentThinking } from "./types";
 const analyticsTools = {
 	get_data: getDataTool,
 	execute_sql_query: executeSqlQueryTool,
+	dashboard_actions: dashboardActionsTool,
 	...createMemoryTools(),
 	...createProfileTools(),
 	...createFlagTools(),

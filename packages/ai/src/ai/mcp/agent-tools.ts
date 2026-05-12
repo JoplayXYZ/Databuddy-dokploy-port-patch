@@ -1,10 +1,5 @@
-import type { ApiKeyRow } from "@databuddy/api-keys/resolve";
+import { type ApiKeyRow, hasGlobalAccess } from "@databuddy/api-keys/resolve";
 import { auth } from "@databuddy/auth";
-import {
-	AGENT_SQL_VALIDATION_ERROR,
-	requiresTenantFilter,
-	validateAgentSQL,
-} from "@databuddy/db/clickhouse";
 import { tool, type ToolSet } from "ai";
 import { z } from "zod";
 import { getAccessibleWebsites } from "../../lib/accessible-websites";
@@ -17,9 +12,9 @@ import { createFunnelTools } from "../tools/funnels";
 import { createGoalTools } from "../tools/goals";
 import { createLinksTools } from "../tools/links";
 import { createMemoryTools } from "../tools/memory";
-import { createProfileTools } from "../tools/profiles";
-import { executeTimedQuery } from "../tools/utils";
+import { executeAgentSqlForWebsite } from "../tools/execute-sql-query";
 import { buildBatchQueryRequests, MCP_DATE_PRESETS } from "./mcp-utils";
+import { createMcpProfileTools } from "./profile-tools";
 import {
 	createSlackConversationTools,
 	type DatabuddyAgentSlackContext,
@@ -82,9 +77,12 @@ export function createMcpAgentTools(
 				const session = ctx.userId
 					? await auth.api.getSession({ headers: ctx.requestHeaders })
 					: null;
+				const scopedApiKey = ctx.apiKey && !hasGlobalAccess(ctx.apiKey);
 				const authCtx = {
 					apiKey: ctx.apiKey,
-					organizationId: ctx.organizationId ?? ctx.apiKey?.organizationId,
+					organizationId: scopedApiKey
+						? null
+						: (ctx.organizationId ?? ctx.apiKey?.organizationId ?? null),
 					user: session?.user
 						? {
 								id: session.user.id,
@@ -157,7 +155,7 @@ export function createMcpAgentTools(
 			},
 		}),
 		execute_sql_query: tool({
-			description: `Custom read-only ClickHouse SQL. SELECT/WITH only. Use {paramName:Type} for parameters. websiteId is auto-included. Use only when get_data/query builders cannot answer.
+			description: `Custom read-only ClickHouse SQL. SELECT/WITH only. Use {paramName:Type} for parameters. websiteId and websiteDomain are bound server-side from the verified website argument; tool args of those names in params are ignored. UNION, INTERSECT, EXCEPT, subqueries, and comma-joins are not allowed — use CTEs instead. Every WHERE must AND \`client_id = {websiteId:String}\` at top level. Use only when get_data/query builders cannot answer.
 
 Canonical analytics.events schema: client_id, anonymous_id, session_id, time, path, referrer, browser_name, os_name, device_type, country, region, city, utm_source, utm_medium, utm_campaign, utm_term, utm_content, load_time, time_on_page, scroll_depth, properties, event_name.
 
@@ -169,32 +167,24 @@ Critical schema footguns: website id column is client_id (not website_id); times
 				params: z.record(z.string(), z.unknown()).optional(),
 			}),
 			execute: async (args, options) => {
-				const { websiteId, sql, params } = args;
 				const ctx = getToolContext(options);
-				const validation = validateAgentSQL(sql);
-				if (!validation.valid) {
-					throw new Error(validation.reason ?? AGENT_SQL_VALIDATION_ERROR);
-				}
-				if (!requiresTenantFilter(sql)) {
-					throw new Error(
-						"Query must include tenant isolation: WHERE client_id = {websiteId:String}"
-					);
-				}
 				const access = await ensureWebsiteAccess(
-					websiteId,
+					args.websiteId,
 					ctx.requestHeaders,
 					ctx.apiKey
 				);
 				if (access instanceof Error) {
 					throw new Error(access.message);
 				}
-				const result = await executeTimedQuery(
-					"MCP Agent SQL",
-					sql,
-					{ websiteId, ...(params ?? {}) },
-					{ websiteId }
-				);
-				return result;
+				const websiteDomain =
+					(await getWebsiteDomain(args.websiteId)) ?? "unknown";
+				return executeAgentSqlForWebsite({
+					websiteId: args.websiteId,
+					websiteDomain,
+					sql: args.sql,
+					params: args.params,
+					toolName: "MCP Agent SQL",
+				});
 			},
 		}),
 		get_data: tool({
@@ -261,7 +251,7 @@ Critical schema footguns: website id column is client_id (not website_id); times
 			},
 		}),
 		...createMemoryTools(),
-		...createProfileTools(),
+		...createMcpProfileTools(),
 		...createFlagTools(),
 		...createFunnelTools(),
 		...createGoalTools(),

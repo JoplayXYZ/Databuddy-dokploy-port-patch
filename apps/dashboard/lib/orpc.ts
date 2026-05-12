@@ -63,10 +63,5 @@ export const orpc = createTanstackQueryUtils(client, {
 		autocomplete: {
 			get: { queryOptions: { staleTime: FIVE_MINUTES } },
 		},
-		featureInvite: {
-			checkAccess: {
-				queryOptions: { staleTime: FIVE_MINUTES, retry: false },
-			},
-		},
 	},
 });

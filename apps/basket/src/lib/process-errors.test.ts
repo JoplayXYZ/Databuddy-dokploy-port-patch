@@ -1,4 +1,4 @@
-import { describe, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 const { mockCaptureError, mockLogError } = vi.hoisted(() => ({
 	mockCaptureError: vi.fn(),
@@ -19,12 +19,28 @@ const { handleUncaughtException, handleUnhandledRejection } = await import(
 	"./process-errors"
 );
 
+const exitSpy = vi.spyOn(process, "exit").mockImplementation(((
+	_code?: number
+) => undefined as never) as typeof process.exit);
+
+beforeEach(() => {
+	mockCaptureError.mockReset();
+	mockLogError.mockReset();
+	exitSpy.mockClear();
+});
+
+afterEach(() => {
+	vi.useRealTimers();
+});
+
 describe("process error handlers", () => {
-	test("uncaught exception logs and starts non-zero shutdown", () => {
+	test("uncaught exception logs, runs shutdown, then exits 1", async () => {
 		const shutdown = vi.fn(() => Promise.resolve());
 		const error = new Error("boom");
 
 		handleUncaughtException(error, shutdown);
+		await Promise.resolve();
+		await Promise.resolve();
 
 		expect(mockCaptureError).toHaveBeenCalledWith(error);
 		expect(mockLogError).toHaveBeenCalledWith(
@@ -35,10 +51,15 @@ describe("process error handlers", () => {
 			})
 		);
 		expect(shutdown).toHaveBeenCalledWith("uncaughtException", 1);
+		expect(exitSpy).toHaveBeenCalledWith(1);
 	});
 
-	test("unhandled rejection logs without forcing process shutdown", () => {
-		handleUnhandledRejection("bad promise");
+	test("unhandled rejection logs and runs fatal shutdown", async () => {
+		const shutdown = vi.fn(() => Promise.resolve());
+
+		handleUnhandledRejection("bad promise", shutdown);
+		await Promise.resolve();
+		await Promise.resolve();
 
 		expect(mockCaptureError).toHaveBeenCalledWith("bad promise");
 		expect(mockLogError).toHaveBeenCalledWith(
@@ -48,6 +69,19 @@ describe("process error handlers", () => {
 				error_source: "process",
 			})
 		);
+		expect(shutdown).toHaveBeenCalledWith("unhandledRejection", 1);
+		expect(exitSpy).toHaveBeenCalledWith(1);
+	});
+
+	test("forces exit when shutdown exceeds timeout", () => {
+		vi.useFakeTimers();
+		const shutdown = vi.fn(() => new Promise<void>(() => undefined));
+
+		handleUncaughtException(new Error("hung"), shutdown);
+
+		expect(exitSpy).not.toHaveBeenCalled();
+		vi.advanceTimersByTime(10_000);
+		expect(exitSpy).toHaveBeenCalledWith(1);
 	});
 });
 

@@ -106,5 +106,9 @@ export default async function LinkProxyPage({
 		notFound();
 	}
 
+	if (link.expiresAt && new Date(link.expiresAt) < new Date()) {
+		redirect(link.expiredRedirectUrl ?? "/dby/expired");
+	}
+
 	redirect(link.targetUrl);
 }

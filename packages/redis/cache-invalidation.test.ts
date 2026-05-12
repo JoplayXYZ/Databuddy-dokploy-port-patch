@@ -6,6 +6,7 @@ interface RedisEntry {
 }
 
 const redisStore = new Map<string, RedisEntry>();
+const redisSets = new Map<string, Set<string>>();
 let failGet = false;
 
 function matchesRedisPattern(pattern: string, key: string): boolean {
@@ -23,14 +24,26 @@ const mockRedisClient = {
 			if (redisStore.delete(key)) {
 				count += 1;
 			}
+			if (redisSets.delete(key)) {
+				count += 1;
+			}
 		}
 		return count;
 	}),
+	expire: mock(async () => 1),
 	get: mock(async (key: string) => {
 		if (failGet) {
 			throw new Error("redis get failed");
 		}
 		return redisStore.get(key)?.value ?? null;
+	}),
+	sadd: mock(async (key: string, ...members: string[]) => {
+		const set = redisSets.get(key) ?? new Set<string>();
+		for (const member of members) {
+			set.add(member);
+		}
+		redisSets.set(key, set);
+		return members.length;
 	}),
 	scan: mock(
 		async (
@@ -54,6 +67,7 @@ const mockRedisClient = {
 		redisStore.set(key, { value, ttl });
 		return "OK";
 	}),
+	smembers: mock(async (key: string) => Array.from(redisSets.get(key) ?? [])),
 	ttl: mock(async (key: string) => redisStore.get(key)?.ttl ?? -2),
 };
 
@@ -62,10 +76,15 @@ mock.module("./redis", () => ({
 }));
 
 const {
+	cacheTags,
 	getAgentContextSnapshotKey,
 	invalidateAgentContextSnapshot,
 	invalidateAgentContextSnapshotsForOwner,
 	invalidateAgentContextSnapshotsForWebsite,
+	invalidateCacheableTag,
+	invalidateFlagReadCaches,
+	invalidateOrganizationMembershipCaches,
+	invalidateWebsiteReadCaches,
 } = await import("./cache-invalidation");
 
 const freshSnapshot = (context: string) =>
@@ -82,12 +101,16 @@ const readSnapshot = (key: string) =>
 
 beforeEach(() => {
 	redisStore.clear();
+	redisSets.clear();
 	failGet = false;
 	mockRedisClient.del.mockClear();
+	mockRedisClient.expire.mockClear();
 	mockRedisClient.get.mockClear();
+	mockRedisClient.sadd.mockClear();
 	mockRedisClient.scan.mockClear();
 	mockRedisClient.set.mockClear();
 	mockRedisClient.setex.mockClear();
+	mockRedisClient.smembers.mockClear();
 	mockRedisClient.ttl.mockClear();
 });
 
@@ -101,6 +124,212 @@ describe("agent context snapshot keys", () => {
 	it("falls back to the user id for personal workspaces", () => {
 		expect(getAgentContextSnapshotKey("user-1", "site-1", null)).toBe(
 			"agent:context-snapshot:user-1:site-1"
+		);
+	});
+});
+
+describe("website read cache invalidation", () => {
+	it("invalidates known website cacheable keys and batch domain caches", async () => {
+		const websiteId = "site-1";
+		redisStore.set("cacheable:website_by_id:[site-1]", {
+			value: "{}",
+			ttl: 100,
+		});
+		redisStore.set("cacheable:website_with_owner_v2:[site-1]", {
+			value: "{}",
+			ttl: 100,
+		});
+		redisStore.set("cacheable:website-cache:[site-1]", {
+			value: "{}",
+			ttl: 100,
+		});
+		redisStore.set("cacheable:website-domain:[site-1]", {
+			value: "example.com",
+			ttl: 100,
+		});
+		redisStore.set("cacheable:agent-telemetry:website-exists:[site-1]", {
+			value: "true",
+			ttl: 100,
+		});
+		redisStore.set("cacheable:website-domains-batch:[[site-1,site-2]]", {
+			value: "{}",
+			ttl: 100,
+		});
+		redisStore.set("cacheable:website-domains-batch:[[site-2]]", {
+			value: "{}",
+			ttl: 100,
+		});
+
+		const result = await invalidateWebsiteReadCaches(websiteId);
+
+		expect(result).toEqual({ attempted: 6, failed: 0 });
+		expect(redisStore.has("cacheable:website_by_id:[site-1]")).toBe(false);
+		expect(redisStore.has("cacheable:website_with_owner_v2:[site-1]")).toBe(
+			false
+		);
+		expect(redisStore.has("cacheable:website-cache:[site-1]")).toBe(false);
+		expect(redisStore.has("cacheable:website-domain:[site-1]")).toBe(false);
+		expect(
+			redisStore.has("cacheable:agent-telemetry:website-exists:[site-1]")
+		).toBe(false);
+		expect(
+			redisStore.has("cacheable:website-domains-batch:[[site-1,site-2]]")
+		).toBe(false);
+		expect(redisStore.has("cacheable:website-domains-batch:[[site-2]]")).toBe(
+			true
+		);
+	});
+});
+
+describe("cache tag registry", () => {
+	it("encodes tag parts so ids cannot collide with delimiters", () => {
+		expect(cacheTags.flagKey("client:1", "flag/a b")).toBe(
+			"flag-key:client%3A1:flag%2Fa%20b"
+		);
+	});
+});
+
+describe("tagged cache invalidation", () => {
+	it("deletes keys from an exact tag index without scanning", async () => {
+		const indexKey = "cacheable-index:website-domains-batch:website:site-1";
+		redisStore.set("cacheable:website-domains-batch:[[site-1,site-2]]", {
+			value: "{}",
+			ttl: 100,
+		});
+		redisStore.set("cacheable:website-domains-batch:[[site-2]]", {
+			value: "{}",
+			ttl: 100,
+		});
+		redisSets.set(
+			indexKey,
+			new Set(["cacheable:website-domains-batch:[[site-1,site-2]]"])
+		);
+
+		const deletedCount = await invalidateCacheableTag(
+			"website-domains-batch",
+			cacheTags.website("site-1")
+		);
+
+		expect(deletedCount).toBe(1);
+		expect(
+			redisStore.has("cacheable:website-domains-batch:[[site-1,site-2]]")
+		).toBe(false);
+		expect(redisStore.has("cacheable:website-domains-batch:[[site-2]]")).toBe(
+			true
+		);
+		expect(redisSets.has(indexKey)).toBe(false);
+		expect(mockRedisClient.scan).not.toHaveBeenCalled();
+	});
+});
+
+describe("flag read cache invalidation", () => {
+	it("invalidates exact tagged flag caches and args-based fallbacks", async () => {
+		redisStore.set("cacheable:flag:[homepage,site-1]", {
+			value: "{}",
+			ttl: 30,
+		});
+		redisStore.set("cacheable:flag:[pricing,site-1]", {
+			value: "{}",
+			ttl: 30,
+		});
+		redisStore.set("cacheable:flags-client:[site-1]", {
+			value: "[]",
+			ttl: 30,
+		});
+		redisStore.set("cacheable:flags-definitions:[site-1]", {
+			value: "[]",
+			ttl: 30,
+		});
+		redisStore.set("cacheable:flags-user:[user-1,site-1]", {
+			value: "[]",
+			ttl: 30,
+		});
+		redisStore.set("cacheable:flags-user:[user-2,site-1]", {
+			value: "[]",
+			ttl: 30,
+		});
+		redisSets.set(
+			"cacheable-index:flag:flag-key:site-1:homepage",
+			new Set(["cacheable:flag:[homepage,site-1]"])
+		);
+		redisSets.set(
+			"cacheable-index:flags-user:flag-user:site-1:user-1",
+			new Set(["cacheable:flags-user:[user-1,site-1]"])
+		);
+
+		const result = await invalidateFlagReadCaches({
+			clientId: "site-1",
+			flagKey: "homepage",
+			userId: "user-1",
+		});
+
+		expect(result).toEqual({ attempted: 4, failed: 0 });
+		expect(redisStore.has("cacheable:flag:[homepage,site-1]")).toBe(false);
+		expect(redisStore.has("cacheable:flag:[pricing,site-1]")).toBe(true);
+		expect(redisStore.has("cacheable:flags-client:[site-1]")).toBe(false);
+		expect(redisStore.has("cacheable:flags-definitions:[site-1]")).toBe(false);
+		expect(redisStore.has("cacheable:flags-user:[user-1,site-1]")).toBe(false);
+		expect(redisStore.has("cacheable:flags-user:[user-2,site-1]")).toBe(
+			true
+		);
+	});
+});
+
+describe("organization membership cache invalidation", () => {
+	it("invalidates role, owner, and billing caches for a member", async () => {
+		redisStore.set("cacheable:rpc:org_role:[user-1,org-1]", {
+			value: "member",
+			ttl: 100,
+		});
+		redisStore.set("cacheable:rpc:member_role:[user-1,org-1]", {
+			value: "member",
+			ttl: 100,
+		});
+		redisStore.set("cacheable:rpc:org_owner:[org-1]", {
+			value: "user-1",
+			ttl: 100,
+		});
+		redisStore.set("cacheable:api_key_owner_id:[org-1]", {
+			value: "user-1",
+			ttl: 100,
+		});
+		redisStore.set("cacheable:rpc:billing_owner:[user-1,org-1]", {
+			value: "{}",
+			ttl: 100,
+		});
+		redisStore.set("cacheable:rpc:billing_owner:[user-2,org-1]", {
+			value: "{}",
+			ttl: 100,
+		});
+		redisStore.set("cacheable:rpc:billing_owner:[user-2,org-2]", {
+			value: "{}",
+			ttl: 100,
+		});
+
+		const result = await invalidateOrganizationMembershipCaches({
+			organizationId: "org-1",
+			userId: "user-1",
+		});
+
+		expect(result).toEqual({ attempted: 6, failed: 0 });
+		expect(redisStore.has("cacheable:rpc:org_role:[user-1,org-1]")).toBe(
+			false
+		);
+		expect(redisStore.has("cacheable:rpc:member_role:[user-1,org-1]")).toBe(
+			false
+		);
+		expect(redisStore.has("cacheable:rpc:org_owner:[org-1]")).toBe(false);
+		expect(redisStore.has("cacheable:api_key_owner_id:[org-1]")).toBe(
+			false
+		);
+		expect(redisStore.has("cacheable:rpc:billing_owner:[user-1,org-1]")).toBe(
+			false
+		);
+		expect(redisStore.has("cacheable:rpc:billing_owner:[user-2,org-1]")).toBe(
+			false
+		);
+		expect(redisStore.has("cacheable:rpc:billing_owner:[user-2,org-2]")).toBe(
+			true
 		);
 	});
 });

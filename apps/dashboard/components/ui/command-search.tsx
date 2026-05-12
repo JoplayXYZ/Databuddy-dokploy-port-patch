@@ -18,6 +18,7 @@ import {
 import { useHotkeys } from "react-hotkeys-hook";
 import {
 	mainNavigation,
+	settingsNavigation,
 	websiteNavigation,
 } from "@/components/layout/navigation/navigation-config";
 import type {
@@ -147,9 +148,12 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
 	const { websites } = useWebsites({ enabled: open });
 	const { isFeatureEnabled, isLoading: isBillingLoading } = useBillingContext();
 
+	const isDemoPath = pathname.startsWith("/demo/");
 	const currentWebsiteId = pathname.startsWith("/websites/")
 		? pathname.split("/")[2]
-		: undefined;
+		: isDemoPath
+			? pathname.split("/")[2]
+			: undefined;
 
 	useHotkeys(
 		["mod+k", "/"],
@@ -176,10 +180,11 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
 	const groups = useMemo(() => {
 		const result: SearchGroup[] = [];
 		const websitePrefix = currentWebsiteId
-			? `/websites/${currentWebsiteId}`
+			? `${isDemoPath ? "/demo" : "/websites"}/${currentWebsiteId}`
 			: "";
 
 		result.push(...groupsToSearchGroups(mainNavigation));
+		result.push(...groupsToSearchGroups(settingsNavigation));
 
 		if (websites.length > 0) {
 			result.push({
@@ -205,6 +210,7 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
 	}, [
 		websites,
 		currentWebsiteId,
+		isDemoPath,
 		isBillingLoading,
 		isFeatureEnabled,
 	]);

@@ -8,9 +8,6 @@ function joinCspSources(...sources: (string | false)[]): string {
 const nextConfig: NextConfig = {
 	outputFileTracingRoot: path.join(process.cwd(), "../.."),
 	serverExternalPackages: ["pg"],
-	typescript: {
-		ignoreBuildErrors: true,
-	},
 	images: {
 		remotePatterns: [
 			{
@@ -71,18 +68,27 @@ const nextConfig: NextConfig = {
 
 		const isDev = process.env.NODE_ENV === "development";
 		const localhostSources = isDev
-			? "http://localhost:* http://127.0.0.1:*"
+			? "http://localhost:* http://127.0.0.1:* ws://localhost:* ws://127.0.0.1:*"
 			: false;
 		const connectSources = joinCspSources(
 			"'self'",
 			localhostSources,
-			"https:",
-			"wss:"
+			"https://*.databuddy.cc",
+			"https://*.useautumn.com",
+			"https://api.openai.com",
+			"https://hooks.slack.com",
+			"wss://*.databuddy.cc"
+		);
+		const scriptSources = joinCspSources(
+			"'self'",
+			"'unsafe-inline'",
+			isDev && "'unsafe-eval'",
+			"https://cdn.databuddy.cc"
 		);
 
 		const cspDirectives = [
 			"default-src 'self'",
-			"script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.databuddy.cc",
+			`script-src ${scriptSources}`,
 			"style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
 			"font-src 'self' https://fonts.gstatic.com",
 			"img-src 'self' data: blob: https://cdn.databuddy.cc https://www.google.com https://flagcdn.com https://api.dicebear.com https://avatars.githubusercontent.com https://lh3.googleusercontent.com",
@@ -94,12 +100,12 @@ const nextConfig: NextConfig = {
 
 		const demoCspDirectives = [
 			"default-src 'self'",
-			"script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.databuddy.cc",
+			`script-src ${scriptSources}`,
 			"style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
 			"font-src 'self' https://fonts.gstatic.com",
 			"img-src 'self' data: blob: https://cdn.databuddy.cc https://www.google.com https://flagcdn.com https://api.dicebear.com https://avatars.githubusercontent.com https://lh3.googleusercontent.com",
 			`connect-src ${connectSources}`,
-			`frame-ancestors ${joinCspSources("'self'", localhostSources, "https:")}`,
+			`frame-ancestors ${joinCspSources("'self'", localhostSources)}`,
 			"base-uri 'self'",
 			"form-action 'self'",
 		];

@@ -274,7 +274,7 @@ export const SessionsBuilders: Record<string, SimpleQueryConfig> = {
 			filterConditions?: string[],
 			filterParams?: Record<string, Filter["value"]>
 		) => {
-			const combinedWhereClause = filterConditions?.length
+			const sessionFilterClause = filterConditions?.length
 				? `AND ${filterConditions.join(" AND ")}`
 				: "";
 
@@ -293,10 +293,11 @@ export const SessionsBuilders: Record<string, SimpleQueryConfig> = {
         any(browser_name) as browser_name,
         any(os_name) as os_name
       FROM ${Analytics.events}
-      WHERE 
+      WHERE
         client_id = {websiteId:String}
         AND time >= toDateTime({startDate:String})
         AND time <= toDateTime({endDate:String})
+        ${sessionFilterClause}
       GROUP BY session_id
       ORDER BY first_visit DESC
       LIMIT {limit:Int32} OFFSET {offset:Int32}
@@ -308,28 +309,28 @@ export const SessionsBuilders: Record<string, SimpleQueryConfig> = {
         e.time,
         e.event_name,
         e.path,
-        CASE 
-          WHEN e.event_name NOT IN ('screen_view', 'page_exit', 'web_vitals', 'link_out') 
-            AND e.properties IS NOT NULL 
-            AND e.properties != '{}' 
+        CASE
+          WHEN e.event_name NOT IN ('screen_view', 'page_exit', 'web_vitals', 'link_out')
+            AND e.properties IS NOT NULL
+            AND e.properties != '{}'
           THEN CAST(e.properties AS String)
           ELSE NULL
         END as properties
       FROM ${Analytics.events} e
       INNER JOIN session_list sl ON e.session_id = sl.session_id
       WHERE e.client_id = {websiteId:String}
-      
+
       UNION ALL
-      
+
       SELECT
         generateUUIDv4() as id,
         ce.session_id,
         ce.timestamp as time,
         ce.event_name,
         ce.path,
-        CASE 
-          WHEN ce.properties IS NOT NULL 
-            AND ce.properties != '{}' 
+        CASE
+          WHEN ce.properties IS NOT NULL
+            AND ce.properties != '{}'
           THEN CAST(ce.properties AS String)
           ELSE NULL
         END as properties
@@ -353,7 +354,6 @@ export const SessionsBuilders: Record<string, SimpleQueryConfig> = {
         SELECT * FROM all_events
         ORDER BY time ASC
       )
-      ${combinedWhereClause}
       GROUP BY session_id
     )
     SELECT
@@ -370,7 +370,6 @@ export const SessionsBuilders: Record<string, SimpleQueryConfig> = {
       COALESCE(se.events, []) as events
     FROM session_list sl
     LEFT JOIN session_events se ON sl.session_id = se.session_id
-    ${combinedWhereClause}
     ORDER BY sl.first_visit DESC
   `,
 				params: {

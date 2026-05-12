@@ -118,6 +118,7 @@ vi.mock("@utils/ip-geo", () => ({
 		})
 	),
 	extractIpFromRequest: vi.fn(() => "1.2.3.4"),
+	extractTrustedClientIp: vi.fn(() => "1.2.3.4"),
 	closeGeoIPReader: noop,
 }));
 
@@ -134,6 +135,13 @@ vi.mock("@lib/blocked-traffic", () => ({
 
 vi.mock("@lib/billing", () => ({
 	checkAutumnUsage: vi.fn(() => Promise.resolve({ allowed: true })),
+}));
+
+vi.mock("@databuddy/redis/rate-limit", () => ({
+	ratelimit: vi.fn(() =>
+		Promise.resolve({ success: true, limit: 600, remaining: 599, reset: 60 })
+	),
+	getRateLimitHeaders: vi.fn(() => ({})),
 }));
 
 vi.mock("@lib/api-key", () => ({

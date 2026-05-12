@@ -3,6 +3,7 @@ import { z } from "zod";
 import { getWebsiteDomain } from "../../lib/website-utils";
 import { executeQuery } from "../../query";
 import type { QueryRequest } from "../../query/types";
+import { getAppContext } from "./utils";
 import { createToolLogger } from "./utils/logger";
 
 const logger = createToolLogger("Profiles");
@@ -20,9 +21,8 @@ function today(): string {
 export function createProfileTools() {
 	const listProfilesTool = tool({
 		description:
-			"List recent visitor profiles (sessions, pageviews, device, geo, browser, referrer). Use for visitors/users/audience questions.",
+			"List recent visitor profiles (sessions, pageviews, device, geo, browser, referrer). Use for visitors/users/audience questions. The current website is bound server-side from the authorized chat session.",
 		inputSchema: z.object({
-			websiteId: z.string(),
 			days: z.number().min(1).max(90).default(7),
 			limit: z.number().min(1).max(50).default(10),
 			filters: z
@@ -42,11 +42,12 @@ export function createProfileTools() {
 					})
 				)
 				.optional(),
-			websiteDomain: z.string().optional(),
 		}),
-		execute: async ({ websiteId, days, limit, filters, websiteDomain }) => {
+		execute: async ({ days, limit, filters }, options) => {
+			const ctx = getAppContext(options);
+			const websiteId = ctx.websiteId;
 			try {
-				const domain = websiteDomain ?? (await getWebsiteDomain(websiteId));
+				const domain = ctx.websiteDomain || (await getWebsiteDomain(websiteId));
 				const from = daysAgo(days);
 				const to = today();
 
@@ -87,16 +88,16 @@ export function createProfileTools() {
 
 	const getProfileTool = tool({
 		description:
-			"Visitor detail by anonymous_id: first/last activity, sessions across analytics/custom/error/vital/link events, pageviews, duration, device, browser, OS, location.",
+			"Visitor detail by anonymous_id: first/last activity, sessions across analytics/custom/error/vital/link events, pageviews, duration, device, browser, OS, location. The current website is bound server-side.",
 		inputSchema: z.object({
-			websiteId: z.string(),
 			visitorId: z.string(),
 			days: z.number().min(1).max(365).default(30),
-			websiteDomain: z.string().optional(),
 		}),
-		execute: async ({ websiteId, visitorId, days, websiteDomain }) => {
+		execute: async ({ visitorId, days }, options) => {
+			const ctx = getAppContext(options);
+			const websiteId = ctx.websiteId;
 			try {
-				const domain = websiteDomain ?? (await getWebsiteDomain(websiteId));
+				const domain = ctx.websiteDomain || (await getWebsiteDomain(websiteId));
 				const from = daysAgo(days);
 				const to = today();
 
@@ -139,17 +140,17 @@ export function createProfileTools() {
 
 	const getProfileSessionsTool = tool({
 		description:
-			"Session history for a visitor, including analytics events, custom events, errors, outgoing links, and separate web vitals context. Use after list_profiles/get_profile.",
+			"Session history for a visitor, including analytics events, custom events, errors, outgoing links, and separate web vitals context. Use after list_profiles/get_profile. The current website is bound server-side.",
 		inputSchema: z.object({
-			websiteId: z.string(),
 			visitorId: z.string(),
 			days: z.number().min(1).max(365).default(30),
 			limit: z.number().min(1).max(100).default(20),
-			websiteDomain: z.string().optional(),
 		}),
-		execute: async ({ websiteId, visitorId, days, limit, websiteDomain }) => {
+		execute: async ({ visitorId, days, limit }, options) => {
+			const ctx = getAppContext(options);
+			const websiteId = ctx.websiteId;
 			try {
-				const domain = websiteDomain ?? (await getWebsiteDomain(websiteId));
+				const domain = ctx.websiteDomain || (await getWebsiteDomain(websiteId));
 				const from = daysAgo(days);
 				const to = today();
 

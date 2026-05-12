@@ -3,6 +3,7 @@ import { z } from "zod";
 import { getWebsiteDomain } from "../../lib/website-utils";
 import { executeQuery, QueryBuilders } from "../../query";
 import type { QueryRequest } from "../../query/types";
+import { getAppContext } from "./utils";
 
 const queryItemSchema = z.object({
 	type: z.string(),
@@ -107,11 +108,8 @@ const BUILDER_CATEGORIES = `Builder types by category:
 - Revenue: revenue_overview, revenue_time_series, revenue_by_provider, revenue_by_product, revenue_attribution_overview, revenue_by_country, revenue_by_region, revenue_by_city, revenue_by_browser, revenue_by_device, revenue_by_os, revenue_by_referrer, revenue_by_utm_source, revenue_by_utm_medium, revenue_by_utm_campaign, revenue_by_entry_page, recent_transactions`;
 
 export const getDataTool = tool({
-	description: `Run analytics query builders only when the latest user message explicitly asks for website analytics data, metrics, reports, comparisons, breakdowns, trends, revenue, sessions, pages, events, errors, vitals, uptime, LLM usage, links, profiles, or similar quantitative analysis. Do not use for greetings, thanks, acknowledgments, short reactions, clarification-only replies, frustration, or meta-conversation about the assistant/chat. Batch 1-10 queries in parallel. Use preset (last_7d/last_30d/...) or from+to dates.\n\n${BUILDER_CATEGORIES}`,
+	description: `Run analytics query builders only when the latest user message explicitly asks for website analytics data, metrics, reports, comparisons, breakdowns, trends, revenue, sessions, pages, events, errors, vitals, uptime, LLM usage, links, profiles, or similar quantitative analysis. Do not use for greetings, thanks, acknowledgments, short reactions, clarification-only replies, frustration, or meta-conversation about the assistant/chat. Batch 1-10 queries in parallel. Use preset (last_7d/last_30d/...) or from+to dates. The current website is bound server-side from the authorized chat session.\n\n${BUILDER_CATEGORIES}`,
 	inputSchema: z.object({
-		websiteId: z
-			.string()
-			.describe("Website/client id to query. Use the selected website id."),
 		queries: z
 			.array(queryItemSchema)
 			.min(1)
@@ -119,14 +117,12 @@ export const getDataTool = tool({
 			.describe(
 				"One to ten explicit analytics query builder requests needed to answer the user's latest data question."
 			),
-		websiteDomain: z
-			.string()
-			.optional()
-			.describe("Optional website domain used by query builders for context."),
 	}),
-	execute: async ({ websiteId, queries, websiteDomain }) => {
+	execute: async ({ queries }, options) => {
+		const ctx = getAppContext(options);
+		const websiteId = ctx.websiteId;
 		const batchStart = Date.now();
-		const domain = websiteDomain ?? (await getWebsiteDomain(websiteId));
+		const domain = ctx.websiteDomain || (await getWebsiteDomain(websiteId));
 
 		const results = await Promise.all(
 			queries.map(async (item): Promise<QueryItemResult> => {

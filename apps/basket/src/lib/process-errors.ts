@@ -6,6 +6,8 @@ type ShutdownHandler = (
 	exitCode: number
 ) => Promise<void> | void;
 
+const SHUTDOWN_TIMEOUT_MS = 10_000;
+
 function describeError(error: unknown): {
 	message: string;
 	stack?: string;
@@ -29,8 +31,26 @@ function logProcessError(processName: string, error: unknown): void {
 	});
 }
 
-export function handleUnhandledRejection(reason: unknown): void {
+function logShutdownError(error: unknown): void {
+	const { message } = describeError(error);
+	log.error({
+		process: "uncaughtException",
+		error_message: message,
+		error_source: "shutdown",
+	});
+}
+
+function fatalExit(reason: string): never {
+	log.error({ process: "uncaughtException", reason, error_source: "fatal" });
+	process.exit(1);
+}
+
+export function handleUnhandledRejection(
+	reason: unknown,
+	shutdown: ShutdownHandler
+): void {
 	logProcessError("unhandledRejection", reason);
+	runFatalShutdown(shutdown, "unhandledRejection");
 }
 
 export function handleUncaughtException(
@@ -38,25 +58,42 @@ export function handleUncaughtException(
 	shutdown: ShutdownHandler
 ): void {
 	logProcessError("uncaughtException", error);
+	runFatalShutdown(shutdown, "uncaughtException");
+}
+
+function runFatalShutdown(shutdown: ShutdownHandler, signal: string): void {
+	let exited = false;
+	const timer = setTimeout(() => {
+		if (exited) {
+			return;
+		}
+		fatalExit(`${signal}: shutdown exceeded ${SHUTDOWN_TIMEOUT_MS}ms`);
+	}, SHUTDOWN_TIMEOUT_MS);
+	timer.unref?.();
+
+	const finish = (errored: boolean, err?: unknown) => {
+		if (exited) {
+			return;
+		}
+		exited = true;
+		clearTimeout(timer);
+		if (errored) {
+			logShutdownError(err);
+		}
+		process.exit(1);
+	};
 
 	try {
-		const result = shutdown("uncaughtException", 1);
-		if (result && typeof result.then === "function") {
-			result.catch((shutdownError) => {
-				const { message } = describeError(shutdownError);
-				log.error({
-					process: "uncaughtException",
-					error_message: message,
-					error_source: "shutdown",
-				});
-			});
+		const result = shutdown(signal, 1);
+		if (result && typeof (result as Promise<void>).then === "function") {
+			(result as Promise<void>).then(
+				() => finish(false),
+				(shutdownError) => finish(true, shutdownError)
+			);
+		} else {
+			finish(false);
 		}
 	} catch (shutdownError) {
-		const { message } = describeError(shutdownError);
-		log.error({
-			process: "uncaughtException",
-			error_message: message,
-			error_source: "shutdown",
-		});
+		finish(true, shutdownError);
 	}
 }

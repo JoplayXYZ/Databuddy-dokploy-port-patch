@@ -1,4 +1,8 @@
-import { getWebsiteByIdV2, resolveApiKeyOwnerId } from "@hooks/auth";
+import {
+	getWebsiteByIdV2,
+	isValidOrigin,
+	resolveApiKeyOwnerId,
+} from "@hooks/auth";
 import {
 	type ApiKeyRow,
 	getAccessibleWebsiteIds,
@@ -8,6 +12,8 @@ import {
 } from "@lib/api-key";
 import { checkAutumnUsage } from "@lib/billing";
 import { insertCustomEvents } from "@lib/event-service";
+import { ratelimit } from "@databuddy/redis/rate-limit";
+import { getWebsiteSecuritySettings } from "@lib/request-validation";
 import { summarizeRejectedBody } from "@lib/rejection-summary";
 import {
 	basketErrors,
@@ -15,6 +21,11 @@ import {
 	rethrowOrWrap,
 } from "@lib/structured-errors";
 import { record } from "@lib/tracing";
+import { extractTrustedClientIp } from "@utils/ip-geo";
+import {
+	isValidIpFromSettings,
+	isValidOriginFromSettings,
+} from "@utils/origin-ip-validation";
 import { VALIDATION_LIMITS, validatePayloadSize } from "@utils/validation";
 import { Elysia } from "elysia";
 import { useLogger } from "evlog/elysia";
@@ -61,8 +72,56 @@ function parseTimestamp(
 	return timestamp;
 }
 
+async function enforceWebsiteSecurity(
+	website: NonNullable<Awaited<ReturnType<typeof getWebsiteByIdV2>>>,
+	request: Request,
+	websiteIdParam: string
+): Promise<void> {
+	const log = useLogger();
+
+	if (website.status !== "ACTIVE") {
+		log.set({
+			auth: {
+				ok: false,
+				reason: "website_not_active",
+				websiteId: websiteIdParam,
+				status: website.status,
+			},
+		});
+		throw basketErrors.trackWebsiteNotFound();
+	}
+
+	const origin = request.headers.get("origin");
+	const settings = getWebsiteSecuritySettings(website.settings);
+	const allowedOrigins = settings?.allowedOrigins;
+	const allowedIps = settings?.allowedIps;
+
+	if (allowedOrigins && allowedOrigins.length > 0) {
+		if (!origin) {
+			log.set({ auth: { ok: false, reason: "origin_missing" } });
+			throw basketErrors.ingestOriginNotAuthorized();
+		}
+		if (!(await isValidOriginFromSettings(origin, allowedOrigins))) {
+			log.set({ auth: { ok: false, reason: "origin_not_authorized", origin } });
+			throw basketErrors.ingestOriginNotAuthorized();
+		}
+	} else if (origin && !(await isValidOrigin(origin, website.domain))) {
+		log.set({ auth: { ok: false, reason: "origin_not_authorized", origin } });
+		throw basketErrors.ingestOriginNotAuthorized();
+	}
+
+	if (allowedIps && allowedIps.length > 0) {
+		const ip = extractTrustedClientIp(request);
+		if (!(ip && (await isValidIpFromSettings(ip, allowedIps)))) {
+			log.set({ auth: { ok: false, reason: "ip_not_authorized" } });
+			throw basketErrors.ingestIpNotAuthorized();
+		}
+	}
+}
+
 function resolveAuth(
 	headers: Headers,
+	request: Request,
 	websiteIdParam?: string
 ): Promise<ResolvedAuth> {
 	return record("resolveAuth", async () => {
@@ -127,6 +186,8 @@ function resolveAuth(
 			throw basketErrors.trackWebsiteNoOrganization();
 		}
 
+		await enforceWebsiteSecurity(website, request, websiteIdParam);
+
 		log.set({
 			auth: {
 				ok: true,
@@ -177,7 +238,7 @@ export const trackRoute = new Elysia().post(
 				: [parseResult.data];
 			const websiteIdParam = typedQuery.website_id || events[0]?.websiteId;
 
-			const auth = await resolveAuth(request.headers, websiteIdParam);
+			const auth = await resolveAuth(request.headers, request, websiteIdParam);
 
 			log.set({
 				ownerId: auth.ownerId,
@@ -185,14 +246,29 @@ export const trackRoute = new Elysia().post(
 				count: events.length,
 			});
 
+			const rateLimitPrincipal = auth.apiKey
+				? `track:apikey:${auth.apiKey.id}`
+				: `track:website:${auth.websiteId ?? "unknown"}:${
+						extractTrustedClientIp(request) ?? "anon"
+					}`;
+			const rl = await ratelimit(rateLimitPrincipal, 600, 60);
+			if (!rl.success) {
+				log.set({ rejected: "rate_limit" });
+				captureRejectedBody();
+				throw basketErrors.trackRateLimited();
+			}
+
 			const billingUserId = auth.organizationId
 				? await resolveApiKeyOwnerId(auth.organizationId)
 				: auth.ownerId;
 
 			if (billingUserId) {
-				await checkAutumnUsage(billingUserId, "events", {
-					api_route: "track",
-				});
+				await checkAutumnUsage(
+					billingUserId,
+					"events",
+					{ api_route: "track", batch_size: events.length },
+					events.length
+				);
 			}
 
 			const allowedApiKeyWebsiteIds =

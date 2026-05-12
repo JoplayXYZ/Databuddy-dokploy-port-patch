@@ -21,7 +21,8 @@ import {
 	flags,
 	websites,
 } from "@databuddy/db/schema";
-import { cacheable } from "@databuddy/redis";
+import { cacheNamespaces, cacheTags, cacheable } from "@databuddy/redis";
+import { getRateLimitHeaders, ratelimit } from "@databuddy/redis/rate-limit";
 import { invalidateFlagCache } from "@databuddy/rpc/flags";
 import { randomUUIDv7 } from "bun";
 import { Elysia, t } from "elysia";
@@ -163,9 +164,13 @@ const getCachedFlag = cacheable(
 	},
 	{
 		expireInSec: 30,
-		prefix: "flag",
+		prefix: cacheNamespaces.flag,
 		staleWhileRevalidate: true,
 		staleTime: 15,
+		tags: (_result, key, clientId) => [
+			cacheTags.flagClient(clientId),
+			cacheTags.flagKey(clientId, key),
+		],
 	}
 );
 
@@ -209,9 +214,10 @@ const getCachedFlagsForClient = cacheable(
 	},
 	{
 		expireInSec: 30,
-		prefix: "flags-client",
+		prefix: cacheNamespaces.flagsClient,
 		staleWhileRevalidate: true,
 		staleTime: 15,
+		tags: (_result, clientId) => [cacheTags.flagClient(clientId)],
 	}
 );
 
@@ -236,9 +242,10 @@ const getCachedFlagDefinitionsForClient = cacheable(
 	},
 	{
 		expireInSec: 30,
-		prefix: "flags-definitions",
+		prefix: cacheNamespaces.flagsDefinitions,
 		staleWhileRevalidate: true,
 		staleTime: 15,
+		tags: (_result, clientId) => [cacheTags.flagClient(clientId)],
 	}
 );
 
@@ -282,9 +289,13 @@ const getCachedFlagsForUser = cacheable(
 	},
 	{
 		expireInSec: 30,
-		prefix: "flags-user",
+		prefix: cacheNamespaces.flagsUser,
 		staleWhileRevalidate: true,
 		staleTime: 15,
+		tags: (_result, userId, clientId) => [
+			cacheTags.flagClient(clientId),
+			cacheTags.flagUser(clientId, userId),
+		],
 	}
 );
 
@@ -609,6 +620,42 @@ export function evaluateFlag(
 	};
 }
 
+const PUBLIC_EVAL_RATE_PER_MINUTE = 600;
+
+function clientIpForFlags(request: Request): string {
+	return (
+		request.headers.get("cf-connecting-ip") ||
+		request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+		request.headers.get("x-real-ip") ||
+		"unknown"
+	);
+}
+
+interface ElysiaSet {
+	headers: Record<string, unknown>;
+	status?: unknown;
+}
+
+async function enforcePublicFlagRateLimit(
+	request: Request,
+	clientId: string | undefined,
+	set: ElysiaSet
+): Promise<boolean> {
+	const ip = clientIpForFlags(request);
+	const key = clientId
+		? `flags:eval:${clientId}:${ip}`
+		: `flags:eval:anon:${ip}`;
+	const rl = await ratelimit(key, PUBLIC_EVAL_RATE_PER_MINUTE, 60);
+	if (rl.success) {
+		return true;
+	}
+	for (const [name, value] of Object.entries(getRateLimitHeaders(rl))) {
+		set.headers[name] = value;
+	}
+	set.status = 429;
+	return false;
+}
+
 const FLAG_CACHE_CONTROL =
 	"public, max-age=15, s-maxage=30, stale-while-revalidate=15";
 
@@ -723,7 +770,16 @@ export const flagsRoute = new Elysia({ prefix: "/v1/flags" })
 	})
 	.get(
 		"/evaluate",
-		async function evaluateFlagEndpoint({ query, set }) {
+		async function evaluateFlagEndpoint({ query, set, request }) {
+			if (!(await enforcePublicFlagRateLimit(request, query.clientId, set))) {
+				return {
+					enabled: false,
+					value: false,
+					payload: null,
+					reason: "RATE_LIMITED",
+				};
+			}
+
 			mergeWideEvent({
 				flag_key: query.key || "",
 				flag_client_id: query.clientId || "",
@@ -817,7 +873,11 @@ export const flagsRoute = new Elysia({ prefix: "/v1/flags" })
 
 	.get(
 		"/bulk",
-		async function bulkEvaluateFlags({ query, set }) {
+		async function bulkEvaluateFlags({ query, set, request }) {
+			if (!(await enforcePublicFlagRateLimit(request, query.clientId, set))) {
+				return { flags: [], reason: "RATE_LIMITED" };
+			}
+
 			mergeWideEvent({
 				flag_bulk: true,
 				flag_client_id: query.clientId || "",

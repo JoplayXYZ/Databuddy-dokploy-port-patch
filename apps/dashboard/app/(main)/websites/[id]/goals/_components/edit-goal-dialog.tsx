@@ -5,7 +5,7 @@ import { FilterRow } from "@/components/ui/filter-row";
 import type { AutocompleteData } from "@/hooks/use-autocomplete";
 import { goalFunnelOperatorOptions, useFilters } from "@/hooks/use-filters";
 import type { CreateGoalData, Goal } from "@/hooks/use-goals";
-import { filterOptions } from "@/lib/filter-options";
+import { goalFunnelFilterOptions } from "@/lib/filter-options";
 import type { GoalFilter } from "@/types/api";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
@@ -326,7 +326,7 @@ export function EditGoalDialog({
 												{formData.filters.map((filter, index) => (
 													<FilterRow
 														field={filter.field}
-														fieldOptions={filterOptions}
+														fieldOptions={goalFunnelFilterOptions}
 														key={`filter-${index}`}
 														onFieldChange={(value) =>
 															updateFilter(index, "field", value)
@@ -341,7 +341,11 @@ export function EditGoalDialog({
 														operator={filter.operator || "equals"}
 														operatorOptions={goalFunnelOperatorOptions}
 														suggestions={getSuggestions(filter.field)}
-														value={(filter.value as string) || ""}
+														value={
+															Array.isArray(filter.value)
+																? filter.value.join(", ")
+																: (filter.value ?? "")
+														}
 													/>
 												))}
 											</div>

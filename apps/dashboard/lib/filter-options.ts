@@ -1,3 +1,5 @@
+export { goalFunnelFilterFields as goalFunnelFilterOptions } from "@databuddy/shared/analytics-filters";
+
 export const filterOptions = [
 	{ value: "path", label: "Page Path" },
 	{ value: "query_string", label: "Query String" },

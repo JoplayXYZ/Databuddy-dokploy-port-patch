@@ -9,7 +9,7 @@ import { logBlockedTraffic } from "@lib/blocked-traffic";
 import { runFork, send } from "@lib/producer";
 import { basketErrors } from "@lib/structured-errors";
 import { record } from "@lib/tracing";
-import { extractIpFromRequest } from "@utils/ip-geo";
+import { extractIpFromRequest, extractTrustedClientIp } from "@utils/ip-geo";
 import { detectBot } from "@utils/user-agent";
 import {
 	sanitizeString,
@@ -152,7 +152,22 @@ export function validateRequest(
 		const allowedOrigins = securitySettings?.allowedOrigins;
 		const allowedIps = securitySettings?.allowedIps;
 
-		if (origin && allowedOrigins && allowedOrigins.length > 0) {
+		if (allowedOrigins && allowedOrigins.length > 0) {
+			if (!origin) {
+				logBlockedTraffic(
+					request,
+					body,
+					query,
+					"origin_missing",
+					"Security Check",
+					undefined,
+					clientId
+				);
+				log.set({
+					validation: { failed: true, reason: "origin_missing" },
+				});
+				throw basketErrors.ingestOriginNotAuthorized();
+			}
 			if (
 				!(await record("isValidOriginFromSettings", () =>
 					isValidOriginFromSettings(origin, allowedOrigins)
@@ -194,10 +209,11 @@ export function validateRequest(
 		}
 
 		if (allowedIps && allowedIps.length > 0) {
+			const trustedIp = extractTrustedClientIp(request);
 			const isAllowed =
-				ip &&
+				trustedIp &&
 				(await record("isValidIpFromSettings", () =>
-					isValidIpFromSettings(ip, allowedIps)
+					isValidIpFromSettings(trustedIp, allowedIps)
 				));
 
 			if (!isAllowed) {

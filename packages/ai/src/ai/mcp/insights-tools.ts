@@ -1,4 +1,4 @@
-import { cacheable } from "@databuddy/redis";
+import { cacheNamespaces, cacheTags, cacheable } from "@databuddy/redis";
 import dayjs from "dayjs";
 import { z } from "zod";
 import {
@@ -398,7 +398,9 @@ function mapInsightRow(row: InsightRow) {
 
 const cachedFetchInsightsForOrgs = cacheable(fetchInsightsForOrgs, {
 	expireInSec: INSIGHTS_LIST_CACHE_TTL,
-	prefix: "mcp:insights",
+	prefix: cacheNamespaces.mcpInsights,
+	tags: (_result, options) =>
+		options.organizationIds.map(cacheTags.organization),
 });
 
 const INSIGHT_FIELDS = [

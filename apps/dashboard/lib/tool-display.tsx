@@ -52,6 +52,7 @@ function crudLabel(
 }
 
 const TOOL_LABELS: Record<string, (input: Input) => string> = {
+	dashboard_actions: () => "Preparing dashboard action",
 	execute_sql_query: () => "Running custom query",
 	get_data: (input) => {
 		const queries = input.queries as { type: string }[] | undefined;

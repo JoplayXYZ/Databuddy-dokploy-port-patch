@@ -1,11 +1,18 @@
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { EditFunnelDialog } from "@/app/(main)/websites/[id]/funnels/_components/edit-funnel-dialog";
 import { useFunnels } from "@/hooks/use-funnels";
-import type { CreateFunnelData, Funnel } from "@/types/funnels";
+import { orpc } from "@/lib/orpc";
+import type {
+	CreateFunnelData,
+	Funnel,
+	FunnelFilter,
+	FunnelStep,
+} from "@/types/funnels";
 import { cn } from "@/lib/utils";
 import type { BaseComponentProps, FunnelStepInput } from "../../types";
 import {
@@ -149,7 +156,7 @@ export function FunnelsListRenderer({
 	const websiteId = params.id as string;
 
 	const [dialogOpen, setDialogOpen] = useState(false);
-	const [editingFunnel, setEditingFunnel] = useState<FunnelItem | null>(null);
+	const [editingFunnelId, setEditingFunnelId] = useState<string | null>(null);
 	const [deletingId, setDeletingId] = useState<string | null>(null);
 
 	const {
@@ -161,19 +168,26 @@ export function FunnelsListRenderer({
 		isDeleting,
 	} = useFunnels(websiteId);
 
+	const editingFunnelQuery = useQuery({
+		...orpc.funnels.getById.queryOptions({
+			input: { id: editingFunnelId ?? "" },
+		}),
+		enabled: !!editingFunnelId,
+	});
+
 	const openCreate = useCallback(() => {
-		setEditingFunnel(null);
+		setEditingFunnelId(null);
 		setDialogOpen(true);
 	}, []);
 
 	const openEdit = useCallback((funnel: FunnelItem) => {
-		setEditingFunnel(funnel);
+		setEditingFunnelId(funnel.id);
 		setDialogOpen(true);
 	}, []);
 
 	const closeDialog = useCallback(() => {
 		setDialogOpen(false);
-		setEditingFunnel(null);
+		setEditingFunnelId(null);
 	}, []);
 
 	const handleCreate = useCallback(
@@ -190,11 +204,11 @@ export function FunnelsListRenderer({
 
 	const handleUpdate = useCallback(
 		async (funnel: Funnel) => {
-			if (!editingFunnel) {
+			if (!editingFunnelId) {
 				return;
 			}
 			try {
-				await updateAction(editingFunnel.id, {
+				await updateAction(editingFunnelId, {
 					name: funnel.name,
 					description: funnel.description ?? undefined,
 					steps: funnel.steps,
@@ -206,7 +220,7 @@ export function FunnelsListRenderer({
 				toast.error("Failed to update funnel");
 			}
 		},
-		[editingFunnel, updateAction, closeDialog]
+		[editingFunnelId, updateAction, closeDialog]
 	);
 
 	const confirmDelete = useCallback(async () => {
@@ -221,19 +235,42 @@ export function FunnelsListRenderer({
 		}
 	}, [deletingId, deleteAction]);
 
-	// Convert FunnelItem to Funnel for the dialog
-	const funnelForDialog: Funnel | null = editingFunnel
+	const fetchedFunnel = editingFunnelQuery.data as
+		| {
+				createdAt: string | Date;
+				description?: string | null;
+				filters?: unknown;
+				id: string;
+				ignoreHistoricData?: boolean;
+				isActive: boolean;
+				name: string;
+				steps: unknown;
+				updatedAt?: string | Date;
+		  }
+		| undefined;
+	const funnelForDialog: Funnel | null = fetchedFunnel
 		? {
-				id: editingFunnel.id,
-				name: editingFunnel.name,
-				description: editingFunnel.description,
-				steps: editingFunnel.steps,
-				filters: [],
-				isActive: editingFunnel.isActive,
-				createdAt: editingFunnel.createdAt ?? "",
-				updatedAt: editingFunnel.createdAt ?? "",
+				id: fetchedFunnel.id,
+				name: fetchedFunnel.name,
+				description: fetchedFunnel.description ?? null,
+				steps: fetchedFunnel.steps as FunnelStep[],
+				filters: (fetchedFunnel.filters as FunnelFilter[] | undefined) ?? [],
+				ignoreHistoricData: fetchedFunnel.ignoreHistoricData,
+				isActive: fetchedFunnel.isActive,
+				createdAt:
+					typeof fetchedFunnel.createdAt === "string"
+						? fetchedFunnel.createdAt
+						: fetchedFunnel.createdAt.toISOString(),
+				updatedAt:
+					typeof fetchedFunnel.updatedAt === "string"
+						? fetchedFunnel.updatedAt
+						: (fetchedFunnel.updatedAt?.toISOString() ?? ""),
 			}
 		: null;
+
+	const dialogReady =
+		!editingFunnelId ||
+		(Boolean(editingFunnelQuery.data) && !editingFunnelQuery.isLoading);
 
 	if (funnels.length === 0) {
 		return (
@@ -325,7 +362,7 @@ export function FunnelsListRenderer({
 			<EditFunnelDialog
 				funnel={funnelForDialog}
 				isCreating={isCreating}
-				isOpen={dialogOpen}
+				isOpen={dialogOpen && dialogReady}
 				isUpdating={isUpdating}
 				onClose={closeDialog}
 				onCreate={handleCreate}

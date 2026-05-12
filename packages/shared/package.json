@@ -12,8 +12,11 @@
     "./bot-detection/detector": "./src/utils/bot-detection/detector.ts",
     "./bot-detection/types": "./src/utils/bot-detection/types.ts",
     "./bot-detection/user-agent": "./src/utils/bot-detection/user-agent.ts",
+    "./json-ld": "./src/json-ld.ts",
+    "./kafka-tls": "./src/kafka-tls.ts",
     "./ssrf-guard": "./src/ssrf-guard.ts",
-    "./constants/deep-link-apps": "./src/constants/deep-link-apps.ts"
+    "./constants/deep-link-apps": "./src/constants/deep-link-apps.ts",
+    "./analytics-filters": "./src/analytics-filters.ts"
   },
   "scripts": {
     "check-types": "tsc --noEmit",
@@ -21,6 +24,7 @@
   },
   "dependencies": {
     "ua-parser-js": "catalog:",
+    "undici": "^8.2.0",
     "zod": "catalog:"
   }
 }

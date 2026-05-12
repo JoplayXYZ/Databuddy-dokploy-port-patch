@@ -6,7 +6,10 @@ import {
 	flushBatchedAxiomDrain,
 } from "@lib/evlog-basket";
 import { shutdownPostgres } from "@databuddy/db";
+import { clickHouse } from "@databuddy/db/clickhouse";
+import { resolveKafkaSsl } from "@databuddy/shared/kafka-tls";
 import { disconnect, disposeRuntime, runPromise } from "@lib/producer";
+import { Kafka } from "kafkajs";
 import {
 	handleUncaughtException,
 	handleUnhandledRejection,
@@ -57,7 +60,7 @@ async function gracefulShutdown(signal: string, exitCode = 0) {
 }
 
 process.on("unhandledRejection", (reason) => {
-	handleUnhandledRejection(reason);
+	handleUnhandledRejection(reason, gracefulShutdown);
 });
 process.on("uncaughtException", (error) => {
 	handleUncaughtException(error, gracefulShutdown);
@@ -105,9 +108,6 @@ const app = new Elysia()
 	.use(stripeWebhook)
 	.use(paddleWebhook)
 	.get("/health/status", async function basketHealthStatus() {
-		const { clickHouseOG } = await import("@databuddy/db/clickhouse");
-		const { Kafka } = await import("kafkajs");
-
 		async function ping(probe: () => Promise<void>) {
 			const start = performance.now();
 			try {
@@ -127,7 +127,7 @@ const app = new Elysia()
 
 		const [clickhouse, redpanda] = await Promise.all([
 			ping(async () => {
-				const { success } = await clickHouseOG.ping();
+				const { success } = await clickHouse.ping();
 				if (!success) {
 					throw new Error("ping failed");
 				}
@@ -137,19 +137,21 @@ const app = new Elysia()
 				if (!broker) {
 					throw new Error("not configured");
 				}
+				const hasCreds = Boolean(
+					process.env.REDPANDA_USER && process.env.REDPANDA_PASSWORD
+				);
 				const kafka = new Kafka({
 					clientId: "health",
 					brokers: [broker],
 					connectionTimeout: 5000,
-					...(process.env.REDPANDA_USER &&
-						process.env.REDPANDA_PASSWORD && {
-							sasl: {
-								mechanism: "scram-sha-256",
-								username: process.env.REDPANDA_USER,
-								password: process.env.REDPANDA_PASSWORD,
-							},
-							ssl: false,
-						}),
+					...(hasCreds && {
+						sasl: {
+							mechanism: "scram-sha-256",
+							username: process.env.REDPANDA_USER as string,
+							password: process.env.REDPANDA_PASSWORD as string,
+						},
+						ssl: resolveKafkaSsl(true),
+					}),
 				});
 				const admin = kafka.admin();
 				try {

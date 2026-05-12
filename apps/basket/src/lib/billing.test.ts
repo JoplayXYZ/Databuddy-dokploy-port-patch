@@ -84,7 +84,24 @@ describe("checkAutumnUsage", () => {
 			customerId: "cust_1",
 			featureId: "events",
 			sendEvent: true,
+			requiredBalance: 1,
 			properties: { website_id: "ws_1" },
+		});
+	});
+
+	test("passes batch quantity through requiredBalance", async () => {
+		mockCheck.mockResolvedValue({
+			allowed: true,
+			customerId: "c",
+			balance: { usage: 0, granted: 0, unlimited: false },
+		});
+		await checkAutumnUsage("cust_1", "events", undefined, 25);
+		expect(mockCheck).toHaveBeenCalledWith({
+			customerId: "cust_1",
+			featureId: "events",
+			sendEvent: true,
+			requiredBalance: 25,
+			properties: undefined,
 		});
 	});
 

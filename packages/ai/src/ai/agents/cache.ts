@@ -115,19 +115,6 @@ function refreshAgentContextSnapshot(
 	snapshotRefreshes.set(key, work);
 }
 
-export const ensureAgentCreditsAvailableCached = cacheable(
-	async (billingCustomerId: string | null) => {
-		const { ensureAgentCreditsAvailable } = await import("./execution");
-		return ensureAgentCreditsAvailable(billingCustomerId);
-	},
-	{
-		expireInSec: 30,
-		prefix: "agent:credits",
-		staleTime: 10,
-		staleWhileRevalidate: true,
-	}
-);
-
 export async function checkWebsiteReadPermissionCached(
 	userId: string,
 	organizationId: string,

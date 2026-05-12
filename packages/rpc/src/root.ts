@@ -5,7 +5,6 @@ import { anomaliesRouter } from "./routers/anomalies";
 import { apikeysRouter } from "./routers/apikeys";
 import { autocompleteRouter } from "./routers/autocomplete";
 import { billingRouter } from "./routers/billing";
-import { featureInviteRouter } from "./routers/feature-invite";
 import { feedbackRouter } from "./routers/feedback";
 import { flagsRouter } from "./routers/flags";
 import { funnelsRouter } from "./routers/funnels";
@@ -35,7 +34,6 @@ export const appRouter = {
 	autocomplete: autocompleteRouter,
 	apikeys: apikeysRouter,
 	integrations: integrationsRouter,
-	featureInvite: featureInviteRouter,
 	feedback: feedbackRouter,
 	flags: flagsRouter,
 	insights: insightsRouter,

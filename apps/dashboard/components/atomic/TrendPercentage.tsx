@@ -12,8 +12,10 @@ interface TrendPercentageProps {
 }
 
 const formatPercentage = (value: number, digits = 1): string => {
-	const sign = value > 0 ? "+" : "";
-	return `${sign}${Math.abs(value).toFixed(digits)}%`;
+	const normalized = Object.is(value, -0) ? 0 : value;
+	const rounded = Number(normalized.toFixed(digits));
+	const sign = rounded > 0 ? "+" : "";
+	return `${sign}${rounded.toFixed(digits)}%`;
 };
 
 export const TrendPercentage: React.FC<TrendPercentageProps> = ({

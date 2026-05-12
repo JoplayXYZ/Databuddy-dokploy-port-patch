@@ -5,6 +5,10 @@ import { type ReactNode, useMemo } from "react";
 import { toast } from "sonner";
 import type { InsightFeedbackVote } from "@/app/(main)/insights/lib/insight-feedback-vote";
 import {
+	toInsightCardViewModel,
+	type InsightCardViewModel,
+} from "@/app/(main)/insights/lib/insight-card-view-model";
+import {
 	buildInsightAgentCopyText,
 	buildInsightShareUrl,
 	extractInsightPathHint,
@@ -18,11 +22,7 @@ import {
 	changePercentChipClassName,
 	formatSignedChangePercent,
 } from "@/lib/insight-signal-key";
-import type {
-	Insight,
-	InsightSentiment,
-	InsightType,
-} from "@/lib/insight-types";
+import type { Insight, InsightType } from "@/lib/insight-types";
 import { cn } from "@/lib/utils";
 import {
 	ArrowRightIcon,
@@ -156,14 +156,15 @@ const TYPE_STYLES: Record<
 	},
 };
 
-const SENTIMENT_STYLES: Record<
-	InsightSentiment,
-	{ label: string; color: string }
-> = {
-	positive: { label: "Positive", color: "text-emerald-600" },
-	neutral: { label: "Neutral", color: "text-muted-foreground" },
-	negative: { label: "Needs attention", color: "text-red-500" },
-};
+type InsightCardVariant = "full" | "compact";
+type InsightTypeStyle = (typeof TYPE_STYLES)[InsightType];
+
+interface InsightCardLinks {
+	agentHref: string;
+	analyticsHref: string;
+	analyticsLabel: string;
+	pathHint: string | null;
+}
 
 function buildDiagnosticPrompt(insight: Insight): string {
 	const parts = [
@@ -198,34 +199,7 @@ function buildDiagnosticPrompt(insight: Insight): string {
 	return parts.join("\n");
 }
 
-export interface InsightCardProps {
-	expanded: boolean;
-	feedbackVote?: InsightFeedbackVote | null;
-	insight: Insight;
-	onDismissAction?: () => void;
-	onFeedbackAction?: (vote: InsightFeedbackVote | null) => void;
-	onToggleAction: () => void;
-	variant?: "full" | "compact";
-}
-
-export function InsightCard({
-	insight,
-	expanded,
-	onToggleAction,
-	onDismissAction,
-	feedbackVote,
-	onFeedbackAction,
-	variant = "full",
-}: InsightCardProps) {
-	const isCompact = variant === "compact";
-	const typeStyle = TYPE_STYLES[insight.type];
-	const sentimentStyle = SENTIMENT_STYLES[insight.sentiment];
-	const freshnessLine = formatInsightFreshness(insight);
-	const comparisonWindow = useMemo(
-		() => (isCompact ? null : formatComparisonWindow(insight)),
-		[isCompact, insight]
-	);
-
+function useInsightCardLinks(insight: Insight): InsightCardLinks {
 	const agentHref = useMemo(() => {
 		const chatId = crypto.randomUUID();
 		const prompt = encodeURIComponent(buildDiagnosticPrompt(insight));
@@ -241,7 +215,387 @@ export function InsightCard({
 		return insight.link;
 	}, [insight.websiteId, insight.link, pathHint]);
 
-	const analyticsLabel = pathHint ? "View events" : "Overview";
+	return {
+		agentHref,
+		analyticsHref,
+		analyticsLabel: pathHint ? "View evidence" : "Open analytics",
+		pathHint,
+	};
+}
+
+function InsightIcon({ typeStyle }: { typeStyle: InsightTypeStyle }) {
+	return (
+		<span
+			className={cn(
+				"mt-0.5 flex size-7 shrink-0 items-center justify-center rounded",
+				typeStyle.bg,
+				typeStyle.color
+			)}
+		>
+			{typeStyle.icon}
+		</span>
+	);
+}
+
+function InsightChange({ insight }: { insight: Insight }) {
+	if (insight.changePercent === undefined || insight.changePercent === 0) {
+		return null;
+	}
+
+	return (
+		<>
+			<span className="text-muted-foreground/30">&middot;</span>
+			<span
+				className={cn(
+					"tabular-nums",
+					changePercentChipClassName(insight.changePercent, insight.sentiment)
+				)}
+			>
+				{formatSignedChangePercent(insight.changePercent)}
+			</span>
+		</>
+	);
+}
+
+interface InsightCardHeaderProps {
+	expanded: boolean;
+	insight: Insight;
+	isCompact: boolean;
+	onDismissAction?: () => void;
+	onToggleAction: () => void;
+	typeStyle: InsightTypeStyle;
+	view: InsightCardViewModel;
+}
+
+function InsightCardHeader({
+	expanded,
+	insight,
+	isCompact,
+	onDismissAction,
+	onToggleAction,
+	typeStyle,
+	view,
+}: InsightCardHeaderProps) {
+	return (
+		<div
+			className={cn(
+				"flex items-start gap-3 px-5",
+				isCompact ? "py-3" : "py-3.5"
+			)}
+		>
+			<Button
+				className="h-auto min-h-0 min-w-0 flex-1 items-start justify-start gap-3 whitespace-normal rounded-none bg-transparent p-0 text-left font-normal text-foreground hover:bg-transparent active:scale-100 active:bg-transparent"
+				onClick={onToggleAction}
+				variant="ghost"
+			>
+				<InsightIcon typeStyle={typeStyle} />
+				<span className="min-w-0 flex-1">
+					<span className="flex items-center justify-between gap-2">
+						<span className="line-clamp-2 font-medium text-foreground text-sm leading-snug">
+							{view.headline}
+						</span>
+						<CaretDownIcon
+							className={cn(
+								"size-3 shrink-0 text-muted-foreground transition-transform",
+								expanded && "rotate-180"
+							)}
+							weight="fill"
+						/>
+					</span>
+					<span className="mt-0.5 flex items-center gap-1.5 text-xs">
+						<span className="truncate text-muted-foreground">
+							{view.metaLabel}
+						</span>
+						<InsightChange insight={insight} />
+					</span>
+					{!expanded && (
+						<span className="mt-1 line-clamp-2 block text-muted-foreground text-xs leading-relaxed">
+							{view.whyItMatters}
+						</span>
+					)}
+				</span>
+			</Button>
+			{!isCompact && onDismissAction && (
+				<Button
+					aria-label="Dismiss insight"
+					className="size-6 text-muted-foreground opacity-0 transition-all hover:bg-accent hover:text-foreground group-hover:opacity-100"
+					onClick={onDismissAction}
+					size="icon"
+					variant="ghost"
+				>
+					<XIcon className="size-3" weight="bold" />
+				</Button>
+			)}
+		</div>
+	);
+}
+
+function InsightCardPanel({
+	children,
+	expanded,
+}: {
+	children: ReactNode;
+	expanded: boolean;
+}) {
+	return (
+		<div
+			aria-hidden={!expanded}
+			className={cn(
+				"grid transition-[grid-template-rows,opacity] duration-300 ease-out motion-reduce:transition-none",
+				expanded ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+			)}
+			inert={expanded ? undefined : true}
+		>
+			<div className="min-h-0 overflow-hidden">
+				<div className="space-y-4 border-border/60 border-t px-5 pt-4 pb-5 transition-transform duration-300 ease-out motion-reduce:transition-none">
+					{children}
+				</div>
+			</div>
+		</div>
+	);
+}
+
+function InsightCopy({ view }: { view: InsightCardViewModel }) {
+	return (
+		<>
+			<section className="space-y-1.5">
+				<p className="font-medium text-muted-foreground text-xs uppercase tracking-wide">
+					Why it matters
+				</p>
+				<p className="text-pretty text-[13px] text-foreground/85 leading-relaxed">
+					{view.whyItMatters}
+				</p>
+			</section>
+
+			{view.nextStep && (
+				<section className="space-y-1.5 rounded-lg border border-border/60 bg-accent/40 p-3">
+					<div className="flex items-center gap-2">
+						<LightbulbFilamentIcon
+							className="size-4 shrink-0 text-amber-500"
+							weight="duotone"
+						/>
+						<p className="font-medium text-foreground text-xs uppercase tracking-wide">
+							Do this next
+						</p>
+					</div>
+					<p className="text-pretty pl-6 text-foreground/85 text-xs leading-relaxed">
+						{view.nextStep}
+					</p>
+				</section>
+			)}
+		</>
+	);
+}
+
+function InsightEvidence({ view }: { view: InsightCardViewModel }) {
+	if (view.evidence.length === 0) {
+		return null;
+	}
+
+	return (
+		<section className="space-y-2">
+			<p className="font-medium text-muted-foreground text-xs uppercase tracking-wide">
+				Evidence
+			</p>
+			<InsightMetrics metrics={view.evidence} />
+		</section>
+	);
+}
+
+interface InsightCardActionsProps {
+	comparisonWindow: string | null;
+	feedbackVote?: InsightFeedbackVote | null;
+	freshnessLine: string | null;
+	insight: Insight;
+	isCompact: boolean;
+	links: InsightCardLinks;
+	onCopyLink: (value: string) => void;
+	onCopyPrompt: (value: string) => void;
+	onFeedbackAction?: (vote: InsightFeedbackVote | null) => void;
+	view: InsightCardViewModel;
+}
+
+function InsightCardActions({
+	comparisonWindow,
+	feedbackVote,
+	freshnessLine,
+	insight,
+	isCompact,
+	links,
+	onCopyLink,
+	onCopyPrompt,
+	onFeedbackAction,
+	view,
+}: InsightCardActionsProps) {
+	const actions = (
+		<>
+			<Link
+				aria-label="Open AI agent with this insight as context"
+				className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 font-medium text-primary-foreground text-xs transition-opacity hover:opacity-90"
+				href={links.agentHref}
+			>
+				Ask agent
+				<ArrowRightIcon className="size-3" weight="fill" />
+			</Link>
+			<Link
+				aria-label={
+					links.pathHint
+						? `View live events filtered to ${links.pathHint}`
+						: "Open website overview"
+				}
+				className="inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-muted-foreground text-xs transition-colors hover:bg-accent hover:text-foreground"
+				href={links.analyticsHref}
+			>
+				{view.primaryActionLabel}
+			</Link>
+		</>
+	);
+
+	if (isCompact) {
+		return <div className="flex items-center gap-2">{actions}</div>;
+	}
+
+	return (
+		<div className="flex items-center justify-between gap-3">
+			<div className="flex items-center gap-2">
+				{actions}
+				<InsightOverflowMenu
+					insight={insight}
+					onCopyLink={onCopyLink}
+					onCopyPrompt={onCopyPrompt}
+				/>
+			</div>
+
+			<div className="flex items-center gap-2">
+				{(freshnessLine || comparisonWindow) && (
+					<span className="hidden text-[11px] text-muted-foreground sm:block">
+						{freshnessLine}
+					</span>
+				)}
+				{onFeedbackAction && (
+					<InsightFeedbackButtons
+						onFeedbackAction={onFeedbackAction}
+						vote={feedbackVote}
+					/>
+				)}
+			</div>
+		</div>
+	);
+}
+
+function InsightOverflowMenu({
+	insight,
+	onCopyLink,
+	onCopyPrompt,
+}: {
+	insight: Insight;
+	onCopyLink: (value: string) => void;
+	onCopyPrompt: (value: string) => void;
+}) {
+	return (
+		<DropdownMenu>
+			<DropdownMenu.Trigger
+				aria-label="More actions"
+				className="flex size-7 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+			>
+				<DotsThreeIcon className="size-4" weight="bold" />
+			</DropdownMenu.Trigger>
+			<DropdownMenu.Content align="start" className="w-44">
+				<DropdownMenu.Item
+					onClick={() => {
+						onCopyPrompt(buildInsightAgentCopyText(insight));
+					}}
+				>
+					<CopyIcon className="size-4" weight="duotone" />
+					Copy prompt
+				</DropdownMenu.Item>
+				<DropdownMenu.Item
+					onClick={() => {
+						const url = buildInsightShareUrl(insight.id);
+						if (url) {
+							onCopyLink(url);
+						}
+					}}
+				>
+					<LinkIcon className="size-4" weight="duotone" />
+					Copy link
+				</DropdownMenu.Item>
+			</DropdownMenu.Content>
+		</DropdownMenu>
+	);
+}
+
+function InsightFeedbackButtons({
+	onFeedbackAction,
+	vote,
+}: {
+	onFeedbackAction: (vote: InsightFeedbackVote | null) => void;
+	vote?: InsightFeedbackVote | null;
+}) {
+	return (
+		<div className="flex items-center gap-1">
+			<Button
+				aria-label="Mark as helpful"
+				aria-pressed={vote === "up"}
+				className={cn(
+					"size-7 rounded-md border",
+					vote === "up"
+						? "border-primary bg-primary/10 text-primary"
+						: "text-muted-foreground hover:bg-accent hover:text-foreground"
+				)}
+				onClick={() => onFeedbackAction(vote === "up" ? null : "up")}
+				size="icon"
+				variant="ghost"
+			>
+				<ThumbsUpIcon className="size-3.5" weight="duotone" />
+			</Button>
+			<Button
+				aria-label="Mark as not helpful"
+				aria-pressed={vote === "down"}
+				className={cn(
+					"size-7 rounded-md border",
+					vote === "down"
+						? "border-destructive bg-destructive/10 text-destructive"
+						: "text-muted-foreground hover:bg-accent hover:text-foreground"
+				)}
+				onClick={() => onFeedbackAction(vote === "down" ? null : "down")}
+				size="icon"
+				variant="ghost"
+			>
+				<ThumbsDownIcon className="size-3.5" weight="duotone" />
+			</Button>
+		</div>
+	);
+}
+
+export interface InsightCardProps {
+	expanded: boolean;
+	feedbackVote?: InsightFeedbackVote | null;
+	insight: Insight;
+	onDismissAction?: () => void;
+	onFeedbackAction?: (vote: InsightFeedbackVote | null) => void;
+	onToggleAction: () => void;
+	variant?: InsightCardVariant;
+}
+
+export function InsightCard({
+	insight,
+	expanded,
+	onToggleAction,
+	onDismissAction,
+	feedbackVote,
+	onFeedbackAction,
+	variant = "full",
+}: InsightCardProps) {
+	const isCompact = variant === "compact";
+	const typeStyle = TYPE_STYLES[insight.type];
+	const links = useInsightCardLinks(insight);
+	const view = useMemo(() => toInsightCardViewModel(insight), [insight]);
+	const freshnessLine = formatInsightFreshness(insight);
+	const comparisonWindow = useMemo(
+		() => (isCompact ? null : formatComparisonWindow(insight)),
+		[isCompact, insight]
+	);
 
 	const { copyToClipboard: copyPrompt } = useCopyToClipboard({
 		onCopy: () => toast.success("Copied prompt for agent"),
@@ -255,238 +609,36 @@ export function InsightCard({
 		<div
 			className={cn(
 				"group scroll-mt-24 border-b transition-colors last:border-b-0",
-				expanded ? "bg-accent/20" : "hover:bg-accent/40"
+				expanded ? "bg-accent/20" : "hover:bg-accent/40 active:bg-accent/50"
 			)}
 			id={`insight-${insight.id}`}
 		>
-			<div
-				className={cn(
-					"flex items-start gap-3 px-5",
-					isCompact ? "py-3" : "py-3.5"
-				)}
-			>
-				<Button
-					className="min-w-0 flex-1 items-start justify-start gap-3 rounded-none bg-transparent p-0 text-left font-normal text-foreground hover:bg-transparent active:scale-100"
-					onClick={onToggleAction}
-					variant="ghost"
-				>
-					<span
-						className={cn(
-							"mt-0.5 flex size-7 shrink-0 items-center justify-center rounded",
-							typeStyle.bg,
-							typeStyle.color
-						)}
-					>
-						{typeStyle.icon}
-					</span>
-					<span className="min-w-0 flex-1">
-						<span className="flex items-center justify-between gap-2">
-							<span className="truncate font-medium text-foreground text-sm">
-								{insight.title}
-							</span>
-							<span className="flex shrink-0 items-center gap-1.5">
-								<span className="font-mono text-[11px] text-muted-foreground tabular-nums">
-									{insight.priority}/10
-								</span>
-								<CaretDownIcon
-									className={cn(
-										"size-3 text-muted-foreground transition-transform",
-										expanded && "rotate-180"
-									)}
-									weight="fill"
-								/>
-							</span>
-						</span>
-						<span className="mt-0.5 flex items-center gap-1.5 text-xs">
-							<span className="truncate text-muted-foreground">
-								{insight.websiteName ?? insight.websiteDomain}
-							</span>
-							<span className="text-muted-foreground/30">&middot;</span>
-							<span className={sentimentStyle.color}>
-								{sentimentStyle.label}
-							</span>
-							{insight.changePercent !== undefined &&
-								insight.changePercent !== 0 && (
-									<>
-										<span className="text-muted-foreground/30">&middot;</span>
-										<span
-											className={cn(
-												"tabular-nums",
-												changePercentChipClassName(
-													insight.changePercent,
-													insight.sentiment
-												)
-											)}
-										>
-											{formatSignedChangePercent(insight.changePercent)}
-										</span>
-									</>
-								)}
-						</span>
-						{!expanded && (
-							<span className="mt-1 line-clamp-1 block text-muted-foreground text-xs">
-								{insight.description}
-							</span>
-						)}
-					</span>
-				</Button>
-				{!isCompact && onDismissAction && (
-					<Button
-						aria-label="Dismiss insight"
-						className="size-6 text-muted-foreground opacity-0 transition-all hover:bg-accent hover:text-foreground group-hover:opacity-100"
-						onClick={onDismissAction}
-						size="icon"
-						variant="ghost"
-					>
-						<XIcon className="size-3" weight="bold" />
-					</Button>
-				)}
-			</div>
+			<InsightCardHeader
+				expanded={expanded}
+				insight={insight}
+				isCompact={isCompact}
+				onDismissAction={onDismissAction}
+				onToggleAction={onToggleAction}
+				typeStyle={typeStyle}
+				view={view}
+			/>
 
-			{expanded && (
-				<div className="space-y-4 border-border/60 border-t px-5 pt-4 pb-5">
-					<p className="text-pretty text-[13px] text-foreground/80 leading-relaxed">
-						{insight.description}
-					</p>
-
-					{!isCompact && insight.metrics && insight.metrics.length > 0 && (
-						<InsightMetrics metrics={insight.metrics} />
-					)}
-
-					{insight.suggestion && (
-						<div className="flex gap-2.5 rounded-md border border-border/60 bg-accent/50 p-3">
-							<LightbulbFilamentIcon
-								className="mt-0.5 size-4 shrink-0 text-amber-500"
-								weight="duotone"
-							/>
-							<p className="text-pretty text-foreground/80 text-xs leading-relaxed">
-								{insight.suggestion}
-							</p>
-						</div>
-					)}
-
-					{isCompact && (
-						<div className="flex items-center gap-2">
-							<Link
-								className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 font-medium text-primary-foreground text-xs transition-opacity hover:opacity-90"
-								href={agentHref}
-							>
-								Ask agent
-								<ArrowRightIcon className="size-3" weight="fill" />
-							</Link>
-							<Link
-								className="inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-muted-foreground text-xs transition-colors hover:bg-accent hover:text-foreground"
-								href={analyticsHref}
-							>
-								{analyticsLabel}
-							</Link>
-						</div>
-					)}
-
-					{!isCompact && (
-						<div className="flex items-center justify-between gap-3">
-							<div className="flex items-center gap-2">
-								<Link
-									aria-label="Open AI agent with this insight as context"
-									className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 font-medium text-primary-foreground text-xs transition-opacity hover:opacity-90"
-									href={agentHref}
-								>
-									Ask agent
-									<ArrowRightIcon className="size-3" weight="fill" />
-								</Link>
-								<Link
-									aria-label={
-										pathHint
-											? `View live events filtered to ${pathHint}`
-											: "Open website overview"
-									}
-									className="inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-muted-foreground text-xs transition-colors hover:bg-accent hover:text-foreground"
-									href={analyticsHref}
-								>
-									{analyticsLabel}
-								</Link>
-								<DropdownMenu>
-									<DropdownMenu.Trigger
-										aria-label="More actions"
-										className="flex size-7 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-									>
-										<DotsThreeIcon className="size-4" weight="bold" />
-									</DropdownMenu.Trigger>
-									<DropdownMenu.Content align="start" className="w-44">
-										<DropdownMenu.Item
-											onClick={() => {
-												copyPrompt(buildInsightAgentCopyText(insight));
-											}}
-										>
-											<CopyIcon className="size-4" weight="duotone" />
-											Copy prompt
-										</DropdownMenu.Item>
-										<DropdownMenu.Item
-											onClick={() => {
-												const url = buildInsightShareUrl(insight.id);
-												if (url) {
-													copyLink(url);
-												}
-											}}
-										>
-											<LinkIcon className="size-4" weight="duotone" />
-											Copy link
-										</DropdownMenu.Item>
-									</DropdownMenu.Content>
-								</DropdownMenu>
-							</div>
-
-							<div className="flex items-center gap-2">
-								{(freshnessLine || comparisonWindow) && (
-									<span className="hidden text-[11px] text-muted-foreground sm:block">
-										{freshnessLine}
-									</span>
-								)}
-								{onFeedbackAction && (
-									<div className="flex items-center gap-1">
-										<Button
-											aria-label="Mark as helpful"
-											aria-pressed={feedbackVote === "up"}
-											className={cn(
-												"size-7 rounded-md border",
-												feedbackVote === "up"
-													? "border-primary bg-primary/10 text-primary"
-													: "text-muted-foreground hover:bg-accent hover:text-foreground"
-											)}
-											onClick={() =>
-												onFeedbackAction(feedbackVote === "up" ? null : "up")
-											}
-											size="icon"
-											variant="ghost"
-										>
-											<ThumbsUpIcon className="size-3.5" weight="duotone" />
-										</Button>
-										<Button
-											aria-label="Mark as not helpful"
-											aria-pressed={feedbackVote === "down"}
-											className={cn(
-												"size-7 rounded-md border",
-												feedbackVote === "down"
-													? "border-destructive bg-destructive/10 text-destructive"
-													: "text-muted-foreground hover:bg-accent hover:text-foreground"
-											)}
-											onClick={() =>
-												onFeedbackAction(
-													feedbackVote === "down" ? null : "down"
-												)
-											}
-											size="icon"
-											variant="ghost"
-										>
-											<ThumbsDownIcon className="size-3.5" weight="duotone" />
-										</Button>
-									</div>
-								)}
-							</div>
-						</div>
-					)}
-				</div>
-			)}
+			<InsightCardPanel expanded={expanded}>
+				<InsightCopy view={view} />
+				{!isCompact && <InsightEvidence view={view} />}
+				<InsightCardActions
+					comparisonWindow={comparisonWindow}
+					feedbackVote={feedbackVote}
+					freshnessLine={freshnessLine}
+					insight={insight}
+					isCompact={isCompact}
+					links={links}
+					onCopyLink={copyLink}
+					onCopyPrompt={copyPrompt}
+					onFeedbackAction={onFeedbackAction}
+					view={view}
+				/>
+			</InsightCardPanel>
 		</div>
 	);
 }

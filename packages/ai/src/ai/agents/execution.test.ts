@@ -27,12 +27,15 @@ mock.module("@databuddy/rpc/autumn", () => ({
 
 mock.module("@databuddy/rpc/billing", () => ({
 	getBillingCustomerId: mockGetBillingCustomerId,
-	getBillingOwner: mock(async (userId: string, organizationId?: string | null) => ({
-		canUserUpgrade: true,
-		customerId: await mockGetBillingCustomerId(userId, organizationId),
-		isOrganization: Boolean(organizationId),
-		planId: "free",
-	})),
+	getBillingOwner: mock(
+		async (userId: string, organizationId?: string | null) => ({
+			canUserUpgrade: true,
+			customerId: await mockGetBillingCustomerId(userId, organizationId),
+			isOrganization: Boolean(organizationId),
+			planId: "free",
+		})
+	),
+	getMemberRole: mock(async () => "owner"),
 	getOrganizationOwnerId: mockGetOrganizationOwnerId,
 }));
 

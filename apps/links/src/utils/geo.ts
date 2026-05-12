@@ -183,22 +183,21 @@ export async function getGeo(
 	return geo;
 }
 
+const TRUSTED_IP_HEADER = (
+	process.env.TRUSTED_IP_HEADER ?? "cf-connecting-ip"
+).toLowerCase();
+
 export function extractIp(request: Request): string {
-	const cfIp = request.headers.get("cf-connecting-ip");
-	if (cfIp) {
-		return cfIp.trim();
+	const raw = request.headers.get(TRUSTED_IP_HEADER);
+	if (!raw) {
+		return "unknown";
 	}
-
-	const forwardedFor = request.headers.get("x-forwarded-for");
-	const firstIp = forwardedFor?.split(",")[0]?.trim();
-	if (firstIp) {
-		return firstIp;
+	const candidate =
+		TRUSTED_IP_HEADER === "x-forwarded-for"
+			? raw.split(",")[0]?.trim()
+			: raw.trim();
+	if (!(candidate && isValidIp(candidate))) {
+		return "unknown";
 	}
-
-	const realIp = request.headers.get("x-real-ip");
-	if (realIp) {
-		return realIp.trim();
-	}
-
-	return "unknown";
+	return candidate;
 }

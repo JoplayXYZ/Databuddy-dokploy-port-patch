@@ -92,9 +92,9 @@ export const agg: AggregateBuilder = {
 	argMax: (column: string, by: string) => expr(`argMax(${column}, ${by})`),
 	groupArray: (column: string) => expr(`groupArray(${column})`),
 	quantile: (level: number, column: string) =>
-		expr(`quantile(${level})(${column})`),
+		expr(`quantileTDigest(${level})(${column})`),
 	quantileIf: (level: number, column: string, condition: string) =>
-		expr(`quantileIf(${level})(${column}, ${condition})`),
+		expr(`quantileTDigestIf(${level})(${column}, ${condition})`),
 	minIf: (column: string, condition: string) =>
 		expr(`minIf(${column}, ${condition})`),
 	maxIf: (column: string, condition: string) =>
@@ -567,13 +567,13 @@ function compileAggregate(
 			case "quantile":
 			case "quantileIf":
 				// quantileIf requires a pre-split `level)(column` source (e.g. "0.50)(metric_value")
-				// so the final SQL becomes `quantileIf(0.50)(metric_value, condition)`.
+				// so the final SQL becomes `quantileTDigestIf(0.50)(metric_value, condition)`.
 				if (!source) {
 					throw new Error(
 						"quantileIf aggregate function requires a source column (e.g., '0.50)(metric_value')"
 					);
 				}
-				return `quantileIf(${source}, ${condition})`;
+				return `quantileTDigestIf(${source}, ${condition})`;
 			default:
 				return source
 					? `${fn}If(${source}, ${condition})`
@@ -612,7 +612,7 @@ function compileAggregate(
 					"quantile aggregate function requires a source column (e.g., '0.50)(metric_value')"
 				);
 			}
-			return `quantile(${source})`;
+			return `quantileTDigest(${source})`;
 		case "countIf":
 			return source ? `count(${source})` : "count()";
 		case "sumIf":
@@ -633,7 +633,7 @@ function compileAggregate(
 					"quantileIf aggregate function requires a source column (e.g., '0.50)(metric_value')"
 				);
 			}
-			return `quantile(${source})`;
+			return `quantileTDigest(${source})`;
 		default:
 			return `${fn}(${source || "*"})`;
 	}

@@ -21,10 +21,8 @@
     "@databuddy/notifications": "workspace:*",
     "@databuddy/redis": "*",
     "better-auth": "^1.4.10",
-    "better-auth-harmony": "^1.2.5",
     "drizzle-kit": "^1.0.0-rc.1",
     "evlog": "catalog:",
-    "resend": "^4.8.0",
-    "zod": "catalog:"
+    "resend": "^4.8.0"
   }
 }

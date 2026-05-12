@@ -1,5 +1,10 @@
 import { db, eq } from "@databuddy/db";
-import { uptimeSchedules } from "@databuddy/db/schema";
+import {
+	statusPageMonitors,
+	statusPages,
+	uptimeSchedules,
+} from "@databuddy/db/schema";
+import { invalidateStatusPageCache } from "@databuddy/redis";
 import { randomUUIDv7 } from "bun";
 import { z } from "zod";
 import { rpcError } from "../errors";
@@ -43,6 +48,29 @@ function parseStoredGranularity(
 		throw rpcError.internal("Invalid monitor granularity");
 	}
 	return parsed.data;
+}
+
+async function invalidateStatusPageCachesForSchedule(
+	scheduleId: string
+): Promise<void> {
+	const rows = await db
+		.select({ slug: statusPages.slug })
+		.from(statusPageMonitors)
+		.innerJoin(statusPages, eq(statusPageMonitors.statusPageId, statusPages.id))
+		.where(eq(statusPageMonitors.uptimeScheduleId, scheduleId));
+
+	const results = await Promise.allSettled(
+		rows.map((row) =>
+			Promise.resolve().then(() => invalidateStatusPageCache(row.slug))
+		)
+	);
+	const failed = results.filter((result) => result.status === "rejected");
+	if (failed.length > 0) {
+		logger.warn(
+			{ failedCount: failed.length, scheduleId },
+			"Failed to invalidate status page caches for uptime schedule"
+		);
+	}
 }
 
 async function getScheduleAndAuthorize(
@@ -341,6 +369,7 @@ export const uptimeRouter = {
 				updateData,
 				existingSchedule
 			);
+			await invalidateStatusPageCachesForSchedule(input.scheduleId);
 
 			logger.info({ scheduleId: input.scheduleId }, "Schedule updated");
 
@@ -369,6 +398,7 @@ export const uptimeRouter = {
 		.output(z.object({ success: z.literal(true) }))
 		.handler(async ({ context, input }) => {
 			await getScheduleAndAuthorize(input.scheduleId, context);
+			await invalidateStatusPageCachesForSchedule(input.scheduleId);
 
 			await deleteScheduleWithScheduler(input.scheduleId);
 
@@ -413,6 +443,8 @@ export const uptimeRouter = {
 				throw rpcError.internal("Failed to update monitor status");
 			}
 
+			await invalidateStatusPageCachesForSchedule(input.scheduleId);
+
 			logger.info(
 				{ scheduleId: input.scheduleId, paused: input.pause },
 				"Schedule toggled"
@@ -447,6 +479,8 @@ export const uptimeRouter = {
 				);
 				throw rpcError.internal("Failed to pause monitor");
 			}
+
+			await invalidateStatusPageCachesForSchedule(input.scheduleId);
 
 			logger.info({ scheduleId: input.scheduleId }, "Schedule paused");
 			return { success: true, isPaused: true };
@@ -490,6 +524,7 @@ export const uptimeRouter = {
 					updatedAt: new Date(),
 				})
 				.where(eq(uptimeSchedules.id, input.scheduleId));
+			await invalidateStatusPageCachesForSchedule(input.scheduleId);
 
 			logger.info(
 				{
@@ -518,6 +553,7 @@ export const uptimeRouter = {
 			const schedule = await getScheduleAndAuthorize(input.scheduleId, context);
 
 			await triggerManualUptimeCheck(input.scheduleId, schedule.isPaused);
+			await invalidateStatusPageCachesForSchedule(input.scheduleId);
 
 			logger.info({ scheduleId: input.scheduleId }, "Manual check triggered");
 			return { success: true };
@@ -552,6 +588,8 @@ export const uptimeRouter = {
 				);
 				throw rpcError.internal("Failed to resume monitor");
 			}
+
+			await invalidateStatusPageCachesForSchedule(input.scheduleId);
 
 			logger.info({ scheduleId: input.scheduleId }, "Schedule resumed");
 			return { success: true, isPaused: false };

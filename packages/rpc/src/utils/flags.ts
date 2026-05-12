@@ -1,9 +1,16 @@
-import { and, arrayContains, db, eq, inArray, isNull } from "@databuddy/db";
+import {
+	and,
+	arrayContains,
+	db,
+	eq,
+	inArray,
+	isNull,
+	withTransaction,
+} from "@databuddy/db";
 import { flagChangeEvents, flags } from "@databuddy/db/schema";
 import {
 	createDrizzleCache,
-	invalidateCacheablePattern,
-	invalidateCacheableWithArgs,
+	invalidateFlagReadCaches,
 	redis,
 } from "@databuddy/redis";
 import { randomUUIDv7 } from "bun";
@@ -15,6 +22,10 @@ export const getScope = (
 	websiteId?: string | null,
 	organizationId?: string | null
 ) => (websiteId ? `website:${websiteId}` : `org:${organizationId}`);
+
+export const invalidateFlagEvaluationCaches = async (clientId: string) => {
+	await invalidateFlagReadCaches({ clientId });
+};
 
 export const invalidateFlagCache = async (
 	id: string,
@@ -44,22 +55,13 @@ export const invalidateFlagCache = async (
 	];
 
 	if (clientId) {
-		if (key) {
-			invalidations.push(invalidateCacheableWithArgs("flag", [key, clientId]));
-		}
-		invalidations.push(invalidateCacheableWithArgs("flags-client", [clientId]));
 		invalidations.push(
-			invalidateCacheableWithArgs("flags-definitions", [clientId])
+			invalidateFlagReadCaches({
+				clientId,
+				flagKey: key,
+				userId: scopedUserId,
+			})
 		);
-		if (scopedUserId) {
-			invalidations.push(
-				invalidateCacheableWithArgs("flags-user", [scopedUserId, clientId])
-			);
-		} else {
-			invalidations.push(
-				invalidateCacheablePattern(`cacheable:flags-user:*${clientId}*`)
-			);
-		}
 	}
 
 	await Promise.allSettled(invalidations);
@@ -131,158 +133,187 @@ interface FlagUpdateDependencyCascadingParams {
 	userId?: string;
 }
 
+const MAX_CASCADE_DEPTH = 10;
+
+interface CascadeInvalidation {
+	flagId: string;
+	key: string;
+	organizationId: string | null;
+	websiteId: string | null;
+}
+
+interface CascadeContext {
+	changedBy?: string;
+	invalidations: CascadeInvalidation[];
+	tx: Parameters<Parameters<typeof withTransaction>[0]>[0];
+	userId?: string;
+	visited: Set<string>;
+}
+
+async function cascadeFlagStatus(
+	ctx: CascadeContext,
+	updatedFlag: FlagUpdateDependencyCascadingParams["updatedFlag"],
+	depth: number
+): Promise<void> {
+	if (updatedFlag.status === "archived" || depth >= MAX_CASCADE_DEPTH) {
+		return;
+	}
+	if (ctx.visited.has(updatedFlag.id)) {
+		return;
+	}
+	ctx.visited.add(updatedFlag.id);
+
+	const dependentFlags = await ctx.tx
+		.select()
+		.from(flags)
+		.where(
+			and(
+				getScopeCondition(
+					updatedFlag.websiteId,
+					updatedFlag.organizationId,
+					ctx.userId
+				),
+				isNull(flags.deletedAt),
+				arrayContains(flags.dependencies, [updatedFlag.key])
+			)
+		)
+		.for("update");
+
+	if (dependentFlags.length === 0) {
+		return;
+	}
+
+	const flagsToUpdate: Array<{
+		id: string;
+		key: string;
+		newStatus: "active" | "inactive";
+	}> = [];
+
+	if (updatedFlag.status === "inactive") {
+		for (const depFlag of dependentFlags) {
+			if (depFlag.status === "active") {
+				flagsToUpdate.push({
+					id: depFlag.id,
+					key: depFlag.key,
+					newStatus: "inactive",
+				});
+			}
+		}
+	} else {
+		const potentialActivations = dependentFlags.filter(
+			(depFlag) => depFlag.status === "inactive"
+		);
+
+		const allDepKeys = new Set(
+			potentialActivations.flatMap((f) => (f.dependencies as string[]) ?? [])
+		);
+		const allDepFlags = allDepKeys.size
+			? await ctx.tx
+					.select()
+					.from(flags)
+					.where(
+						and(
+							inArray(flags.key, [...allDepKeys]),
+							getScopeCondition(
+								updatedFlag.websiteId,
+								updatedFlag.organizationId,
+								ctx.userId
+							),
+							isNull(flags.deletedAt)
+						)
+					)
+			: [];
+		const depFlagsByKey = new Map(allDepFlags.map((f) => [f.key, f]));
+
+		for (const depFlag of potentialActivations) {
+			const deps = (depFlag.dependencies as string[]) ?? [];
+			const allActive = deps.every(
+				(key) => depFlagsByKey.get(key)?.status === "active"
+			);
+			if (allActive) {
+				flagsToUpdate.push({
+					id: depFlag.id,
+					key: depFlag.key,
+					newStatus: "active",
+				});
+			}
+		}
+	}
+
+	if (flagsToUpdate.length === 0) {
+		return;
+	}
+
+	const now = new Date();
+	await Promise.all(
+		flagsToUpdate.map((flagUpdate) =>
+			ctx.tx
+				.update(flags)
+				.set({ status: flagUpdate.newStatus, updatedAt: now })
+				.where(eq(flags.id, flagUpdate.id))
+		)
+	);
+
+	if (ctx.changedBy) {
+		const auditRows = flagsToUpdate.flatMap((flagUpdate) => {
+			const affectedFlag = dependentFlags.find((f) => f.id === flagUpdate.id);
+			if (!affectedFlag) {
+				return [];
+			}
+			return [
+				{
+					id: randomUUIDv7(),
+					flagId: affectedFlag.id,
+					websiteId: affectedFlag.websiteId,
+					organizationId: affectedFlag.organizationId,
+					changeType: "dependency_cascade" as const,
+					before: buildFlagChangeSnapshot(affectedFlag),
+					after: buildFlagChangeSnapshot({
+						...affectedFlag,
+						status: flagUpdate.newStatus,
+					}),
+					changedBy: ctx.changedBy as string,
+				},
+			];
+		});
+		if (auditRows.length > 0) {
+			await ctx.tx.insert(flagChangeEvents).values(auditRows);
+		}
+	}
+
+	for (const flagUpdate of flagsToUpdate) {
+		const affectedFlag = dependentFlags.find((f) => f.id === flagUpdate.id);
+		if (!affectedFlag) {
+			continue;
+		}
+		ctx.invalidations.push({
+			flagId: flagUpdate.id,
+			websiteId: affectedFlag.websiteId,
+			organizationId: affectedFlag.organizationId,
+			key: flagUpdate.key,
+		});
+		await cascadeFlagStatus(
+			ctx,
+			{ ...affectedFlag, status: flagUpdate.newStatus },
+			depth + 1
+		);
+	}
+}
+
 export async function handleFlagUpdateDependencyCascading(
 	params: FlagUpdateDependencyCascadingParams
 ) {
 	const { updatedFlag, userId, changedBy } = params;
+	const invalidations: CascadeContext["invalidations"] = [];
+
 	try {
-		if (updatedFlag.status !== "archived") {
-			const dependentFlags = await db
-				.select()
-				.from(flags)
-				.where(
-					and(
-						getScopeCondition(
-							updatedFlag.websiteId,
-							updatedFlag.organizationId,
-							userId
-						),
-						isNull(flags.deletedAt),
-						arrayContains(flags.dependencies, [updatedFlag.key])
-					)
-				);
-
-			if (dependentFlags.length > 0) {
-				const flagsToUpdate: Array<{
-					id: string;
-					key: string;
-					newStatus: "active" | "inactive";
-				}> = [];
-
-				if (updatedFlag.status === "inactive") {
-					const flagsToDeactivate = dependentFlags.filter(
-						(depFlag) => depFlag.status === "active"
-					);
-
-					flagsToUpdate.push(
-						...flagsToDeactivate.map((f) => ({
-							id: f.id,
-							key: f.key,
-							newStatus: "inactive" as const,
-						}))
-					);
-				} else if (updatedFlag.status === "active") {
-					const potentialActivations = dependentFlags.filter(
-						(depFlag) => depFlag.status === "inactive"
-					);
-
-					const allDepKeys = new Set(
-						potentialActivations.flatMap(
-							(f) => (f.dependencies as string[]) ?? []
-						)
-					);
-					const allDepFlags = await db
-						.select()
-						.from(flags)
-						.where(
-							and(
-								inArray(flags.key, [...allDepKeys]),
-								getScopeCondition(
-									updatedFlag.websiteId,
-									updatedFlag.organizationId,
-									userId
-								),
-								isNull(flags.deletedAt)
-							)
-						);
-					const depFlagsByKey = new Map(allDepFlags.map((f) => [f.key, f]));
-
-					for (const depFlag of potentialActivations) {
-						const deps = (depFlag.dependencies as string[]) ?? [];
-						const allDependenciesActive = deps.every((key) => {
-							const dep = depFlagsByKey.get(key);
-							return dep && dep.status === "active";
-						});
-
-						if (allDependenciesActive) {
-							flagsToUpdate.push({
-								id: depFlag.id,
-								key: depFlag.key,
-								newStatus: "active",
-							});
-						}
-					}
-				}
-
-				if (flagsToUpdate.length > 0) {
-					await Promise.all(
-						flagsToUpdate.map((flagUpdate) =>
-							db
-								.update(flags)
-								.set({
-									status: flagUpdate.newStatus,
-									updatedAt: new Date(),
-								})
-								.where(eq(flags.id, flagUpdate.id))
-						)
-					);
-
-					if (changedBy) {
-						await Promise.all(
-							flagsToUpdate.map((flagUpdate) => {
-								const affectedFlag = dependentFlags.find(
-									(f) => f.id === flagUpdate.id
-								);
-								if (!affectedFlag) {
-									return Promise.resolve();
-								}
-
-								return db.insert(flagChangeEvents).values({
-									id: randomUUIDv7(),
-									flagId: affectedFlag.id,
-									websiteId: affectedFlag.websiteId,
-									organizationId: affectedFlag.organizationId,
-									changeType: "dependency_cascade",
-									before: buildFlagChangeSnapshot(affectedFlag),
-									after: buildFlagChangeSnapshot({
-										...affectedFlag,
-										status: flagUpdate.newStatus,
-									}),
-									changedBy,
-								});
-							})
-						);
-					}
-
-					await Promise.all(
-						flagsToUpdate.map((flagUpdate) => {
-							const affectedFlag = dependentFlags.find(
-								(f) => f.id === flagUpdate.id
-							);
-							return invalidateFlagCache(
-								flagUpdate.id,
-								affectedFlag?.websiteId,
-								affectedFlag?.organizationId,
-								flagUpdate.key
-							);
-						})
-					);
-
-					for (const flagUpdate of flagsToUpdate) {
-						const affectedFlag = dependentFlags.find(
-							(f) => f.id === flagUpdate.id
-						);
-						if (affectedFlag) {
-							await handleFlagUpdateDependencyCascading({
-								updatedFlag: { ...affectedFlag, status: flagUpdate.newStatus },
-								changedBy,
-								userId,
-							});
-						}
-					}
-				}
-			}
-		}
+		await withTransaction(async (tx) => {
+			await cascadeFlagStatus(
+				{ tx, userId, changedBy, visited: new Set(), invalidations },
+				updatedFlag,
+				0
+			);
+		});
 	} catch (error) {
 		log.error({
 			service: "flag-service",
@@ -293,4 +324,15 @@ export async function handleFlagUpdateDependencyCascading(
 		});
 		throw error;
 	}
+
+	await Promise.all(
+		invalidations.map((job) =>
+			invalidateFlagCache(
+				job.flagId,
+				job.websiteId,
+				job.organizationId,
+				job.key
+			)
+		)
+	);
 }

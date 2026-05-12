@@ -19,14 +19,16 @@ export {
 	trackedSessionProcedure,
 } from "./orpc";
 export {
-	isFullyAuthorized,
+	hasApiKeyOrgAccess,
 	type PermissionFor,
 	type PlanId,
 	type ResourceType,
 	type Website,
 	type WithWorkspaceOptions,
 	type Workspace,
+	type WorkspaceTier,
 	websiteInputSchema,
+	withFlagsWrite,
 	withWebsiteRead,
 	withWebsiteWrite,
 	withWorkspace,
@@ -56,5 +58,6 @@ export {
 	type BillingOwner,
 	getBillingCustomerId,
 	getBillingOwner,
+	getMemberRole,
 	getOrganizationOwnerId,
 } from "./utils/billing";

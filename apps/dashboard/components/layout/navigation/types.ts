@@ -7,6 +7,8 @@ export type NavIcon = React.ComponentType<{
 }>;
 
 export interface NavigationItem {
+	activeMatch?: "exact" | "prefix";
+	activePathExclusions?: string[];
 	alpha?: boolean;
 	badge?: {
 		text: string;
@@ -18,6 +20,7 @@ export interface NavigationItem {
 	flag?: string;
 	gatedFeature?: GatedFeatureId;
 	hideFromDemo?: boolean;
+	hideFromSidebar?: boolean;
 	highlight?: boolean;
 	href: string;
 	icon: NavIcon;

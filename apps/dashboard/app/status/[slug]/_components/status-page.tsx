@@ -266,22 +266,120 @@ function StatusMonitorCard({
 	);
 }
 
-function StatusIncidents({ className }: { className?: string }) {
+interface StatusIncidentUpdate {
+	createdAt: string;
+	id: string;
+	message: string;
+	status: "investigating" | "identified" | "monitoring" | "resolved";
+}
+
+interface StatusIncident {
+	affectedMonitors: { monitorName: string; impact: string }[];
+	createdAt: string;
+	id: string;
+	resolvedAt: string | null;
+	severity: "minor" | "major" | "critical";
+	status: "investigating" | "identified" | "monitoring" | "resolved";
+	title: string;
+	updates: StatusIncidentUpdate[];
+}
+
+const SEVERITY_TONE: Record<StatusIncident["severity"], string> = {
+	minor: "text-amber-600 dark:text-amber-500",
+	major: "text-orange-600 dark:text-orange-500",
+	critical: "text-red-600 dark:text-red-500",
+};
+
+const STATUS_LABEL: Record<StatusIncident["status"], string> = {
+	investigating: "Investigating",
+	identified: "Identified",
+	monitoring: "Monitoring",
+	resolved: "Resolved",
+};
+
+function formatIncidentTimestamp(value: string): string {
+	const parsed = new Date(value);
+	if (Number.isNaN(parsed.getTime())) {
+		return value;
+	}
+	return parsed.toLocaleString(undefined, {
+		dateStyle: "medium",
+		timeStyle: "short",
+	});
+}
+
+function StatusIncidents({
+	className,
+	incidents = [],
+}: {
+	className?: string;
+	incidents?: StatusIncident[];
+}) {
 	return (
 		<div
 			className={cn("rounded border bg-card p-6", className)}
 			data-slot="status-incidents"
 		>
 			<h2 className="text-balance font-semibold text-sm">Recent Incidents</h2>
-			<div className="mt-4 flex items-center gap-2.5 text-muted-foreground">
-				<CheckCircleIcon
-					className="size-4 shrink-0 text-emerald-500"
-					weight="fill"
-				/>
-				<p className="text-pretty text-sm">
-					No incidents reported in the last 90 days.
-				</p>
-			</div>
+			{incidents.length === 0 ? (
+				<div className="mt-4 flex items-center gap-2.5 text-muted-foreground">
+					<CheckCircleIcon
+						className="size-4 shrink-0 text-emerald-500"
+						weight="fill"
+					/>
+					<p className="text-pretty text-sm">
+						No incidents reported in the last 90 days.
+					</p>
+				</div>
+			) : (
+				<ol className="mt-4 space-y-4">
+					{incidents.map((incident) => (
+						<li className="rounded border bg-background p-4" key={incident.id}>
+							<div className="flex flex-wrap items-baseline gap-2">
+								<p className="font-medium text-sm">{incident.title}</p>
+								<span
+									className={cn(
+										"text-xs uppercase tracking-wide",
+										SEVERITY_TONE[incident.severity]
+									)}
+								>
+									{incident.severity}
+								</span>
+								<span className="text-muted-foreground text-xs">
+									{STATUS_LABEL[incident.status]}
+								</span>
+								<span className="ml-auto text-muted-foreground text-xs">
+									{formatIncidentTimestamp(incident.createdAt)}
+								</span>
+							</div>
+							{incident.affectedMonitors.length > 0 && (
+								<p className="mt-1 text-muted-foreground text-xs">
+									Affects:{" "}
+									{incident.affectedMonitors
+										.map((m) => `${m.monitorName} (${m.impact})`)
+										.join(", ")}
+								</p>
+							)}
+							{incident.updates.length > 0 && (
+								<ul className="mt-3 space-y-2 border-l pl-3">
+									{incident.updates.map((update) => (
+										<li className="text-sm" key={update.id}>
+											<div className="flex flex-wrap items-baseline gap-2 text-muted-foreground text-xs">
+												<span>{STATUS_LABEL[update.status]}</span>
+												<span>•</span>
+												<span>{formatIncidentTimestamp(update.createdAt)}</span>
+											</div>
+											<p className="mt-0.5 text-pretty text-foreground/90 text-sm">
+												{update.message}
+											</p>
+										</li>
+									))}
+								</ul>
+							)}
+						</li>
+					))}
+				</ol>
+			)}
 		</div>
 	);
 }

@@ -2,7 +2,7 @@
 
 import type { UIMessage } from "ai";
 import { motion } from "motion/react";
-import type { ReactNode } from "react";
+import { useEffect, useMemo, type ReactNode } from "react";
 import { AIComponent } from "@/components/ai-elements/ai-component";
 import {
 	Message,
@@ -28,7 +28,13 @@ import {
 } from "@/components/ai-elements/tool";
 import { useChat, useChatLoading } from "@/contexts/chat-context";
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
-import { parseContentSegments } from "@/lib/ai-components";
+import {
+	parseContentSegments,
+	type RawComponentInput,
+} from "@/lib/ai-components";
+import { getAIComponentInputFromPart } from "@/lib/ai-components/message-parts";
+import { validateComponentJSON } from "@/lib/ai-components/schemas";
+import { isAbortError } from "@/lib/is-abort-error";
 import { formatToolLabel } from "@/lib/tool-display";
 import { cn } from "@/lib/utils";
 import { AgentErrorMessage } from "./agent-error-message";
@@ -145,6 +151,16 @@ function getToolStatus(tool: ToolMessagePart, isActive: boolean): ToolStatus {
 	return "complete";
 }
 
+function getAIComponentInputFromToolOutput(
+	tool: ToolMessagePart
+): RawComponentInput | null {
+	if (getToolName(tool) !== "dashboard_actions" || tool.output == null) {
+		return null;
+	}
+	const validation = validateComponentJSON(tool.output);
+	return validation.valid ? (tool.output as RawComponentInput) : null;
+}
+
 function InspectableToolStep({
 	tool,
 	label,
@@ -190,6 +206,16 @@ function renderToolGroup(
 					getToolName(entry.tool),
 					entry.tool.input ?? {}
 				);
+				const componentInput = getAIComponentInputFromToolOutput(entry.tool);
+				if (componentInput) {
+					return (
+						<AIComponent
+							input={componentInput}
+							key={`${key}-${idx}`}
+							streaming={false}
+						/>
+					);
+				}
 				return (
 					<InspectableToolStep
 						key={`${key}-${idx}`}
@@ -197,6 +223,49 @@ function renderToolGroup(
 						repeatCount={entry.repeatCount}
 						status={getToolStatus(entry.tool, isActive)}
 						tool={entry.tool}
+					/>
+				);
+			})}
+		</div>
+	);
+}
+
+function TextMessagePart({
+	baseKey,
+	isCurrentlyStreaming,
+	mode,
+	text,
+}: {
+	baseKey: string;
+	isCurrentlyStreaming: boolean;
+	mode: "static" | "streaming";
+	text: string;
+}) {
+	const segments = useMemo(() => parseContentSegments(text).segments, [text]);
+
+	if (!text.trim() || segments.length === 0) {
+		return null;
+	}
+
+	return (
+		<div className="space-y-4">
+			{segments.map((segment, idx) => {
+				if (segment.type === "text") {
+					return (
+						<MessageResponse
+							isAnimating={isCurrentlyStreaming}
+							key={`${baseKey}-text-${idx}`}
+							mode={mode}
+						>
+							{segment.content}
+						</MessageResponse>
+					);
+				}
+				return (
+					<AIComponent
+						input={segment.content}
+						key={`${baseKey}-component-${idx}`}
+						streaming={segment.type === "streaming-component"}
 					/>
 				);
 			})}
@@ -221,6 +290,15 @@ function renderMessagePart(
 		return renderToolGroup(part, key, isLastMessage, isCurrentlyStreaming);
 	}
 
+	const componentInput = getAIComponentInputFromPart(part);
+	if (componentInput) {
+		return (
+			<div className="py-1" key={key}>
+				<AIComponent input={componentInput} streaming={isCurrentlyStreaming} />
+			</div>
+		);
+	}
+
 	if (part.type === "reasoning") {
 		return (
 			<ReasoningMessage
@@ -232,44 +310,28 @@ function renderMessagePart(
 	}
 
 	if (part.type === "text") {
-		if (!part.text.trim()) {
-			return null;
-		}
-
-		const { segments } = parseContentSegments(part.text);
-		if (segments.length === 0) {
-			return null;
-		}
-
 		return (
-			<div className="space-y-4" key={key}>
-				{segments.map((segment, idx) => {
-					if (segment.type === "text") {
-						return (
-							<MessageResponse
-								isAnimating={isCurrentlyStreaming}
-								key={`${key}-text-${idx}`}
-								mode={mode}
-							>
-								{segment.content}
-							</MessageResponse>
-						);
-					}
-					return (
-						<AIComponent
-							input={segment.content}
-							key={`${key}-component-${idx}`}
-							streaming={segment.type === "streaming-component"}
-						/>
-					);
-				})}
-			</div>
+			<TextMessagePart
+				baseKey={key}
+				isCurrentlyStreaming={isCurrentlyStreaming}
+				key={key}
+				mode={mode}
+				text={part.text}
+			/>
 		);
 	}
 
 	if (isToolPart(part)) {
 		const isActive = isCurrentlyStreaming && !part.output;
 		const baseLabel = formatToolLabel(getToolName(part), part.input ?? {});
+		const toolComponentInput = getAIComponentInputFromToolOutput(part);
+		if (toolComponentInput) {
+			return (
+				<div className="py-1" key={key}>
+					<AIComponent input={toolComponentInput} streaming={false} />
+				</div>
+			);
+		}
 		return (
 			<div className="py-1" key={key}>
 				<InspectableToolStep
@@ -298,28 +360,32 @@ function AssistantActions({
 }) {
 	const text = getMessageText(message);
 	const { isCopied, copyToClipboard } = useCopyToClipboard();
+	const hasText = text.length > 0;
+	const showRegenerate = isLast && canRegenerate;
 
-	if (!text) {
+	if (!(hasText || showRegenerate)) {
 		return null;
 	}
 
 	return (
 		<div className="flex w-max items-center gap-0.5 rounded bg-secondary pt-0 opacity-60 transition-opacity focus-within:opacity-100 group-hover/message:opacity-100">
-			<Button
-				aria-label={isCopied ? "Copied" : "Copy response"}
-				className="size-7 text-muted-foreground hover:text-foreground"
-				onClick={() => copyToClipboard(text)}
-				size="icon"
-				type="button"
-				variant="ghost"
-			>
-				{isCopied ? (
-					<CheckIcon className="size-3.5" weight="bold" />
-				) : (
-					<CopyIcon className="size-3.5" weight="duotone" />
-				)}
-			</Button>
-			{isLast && canRegenerate ? (
+			{hasText ? (
+				<Button
+					aria-label={isCopied ? "Copied" : "Copy response"}
+					className="size-7 text-muted-foreground hover:text-foreground"
+					onClick={() => copyToClipboard(text)}
+					size="icon"
+					type="button"
+					variant="ghost"
+				>
+					{isCopied ? (
+						<CheckIcon className="size-3.5" weight="bold" />
+					) : (
+						<CopyIcon className="size-3.5" weight="duotone" />
+					)}
+				</Button>
+			) : null}
+			{showRegenerate ? (
 				<Button
 					aria-label="Regenerate response"
 					className="size-7 text-muted-foreground hover:text-foreground"
@@ -340,9 +406,16 @@ export function AgentMessages() {
 		useChat();
 	const { persistedUserMessageIds } = useChatLoading();
 
-	const hasError = status === "error";
+	const isExpectedAbort = isAbortError(error);
+	const hasError = status === "error" && !isExpectedAbort;
 	const isStreaming = status === "streaming" || status === "submitted";
 	const lastMessage = messages.at(-1);
+
+	useEffect(() => {
+		if (status === "error" && isExpectedAbort) {
+			clearError();
+		}
+	}, [clearError, isExpectedAbort, status]);
 
 	if (messages.length === 0) {
 		return null;

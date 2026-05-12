@@ -23,6 +23,7 @@
     "@databuddy/redis": "workspace:*",
     "@databuddy/rpc": "workspace:*",
     "@databuddy/sdk": "workspace:*",
+    "@databuddy/shared": "workspace:*",
     "@databuddy/validation": "workspace:*",
     "@elysiajs/cors": "^1.4.1",
     "@elysiajs/server-timing": "^1.4.0",

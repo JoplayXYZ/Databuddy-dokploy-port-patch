@@ -1,3 +1,4 @@
+import { resolveKafkaSsl } from "@databuddy/shared/kafka-tls";
 import { CompressionTypes, Kafka, type Producer } from "kafkajs";
 import { Context, Data, Effect, Layer } from "effect";
 import { captureError } from "./tracing";
@@ -18,14 +19,18 @@ const connectProducer = (): Promise<Producer> => {
 
 	const username = process.env.REDPANDA_USER;
 	const password = process.env.REDPANDA_PASSWORD;
+	const hasCreds = Boolean(username && password);
 	const kafka = new Kafka({
 		brokers: [broker],
 		clientId: "uptime-producer",
-		...(username &&
-			password && {
-				sasl: { mechanism: "scram-sha-256", username, password },
-				ssl: false,
-			}),
+		...(hasCreds && {
+			sasl: {
+				mechanism: "scram-sha-256",
+				username: username as string,
+				password: password as string,
+			},
+			ssl: resolveKafkaSsl(true),
+		}),
 	});
 
 	const producer = kafka.producer({

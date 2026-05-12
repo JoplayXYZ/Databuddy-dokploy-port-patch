@@ -43,7 +43,7 @@ jobs:
           path: ~/.bun/install/cache
           key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
           restore-keys: ${{ runner.os }}-bun-
-      - run: bun install --frozen-lockfile
+      - run: bun install --frozen-lockfile --ignore-scripts
       - id: detect
         env:
           EVENT_NAME: ${{ github.event_name }}
@@ -196,7 +196,12 @@ jobs:
 
       - name: Sign image
         if: always() && steps.build.outcome != 'cancelled'
-        run: cosign sign --yes ${{ env.IMAGE_PREFIX }}-${{ matrix.service }}:${{ steps.version.outputs.tag }}-${{ matrix.platform.arch }}
+        env:
+          IMAGE_PREFIX: ${{ env.IMAGE_PREFIX }}
+          SERVICE: ${{ matrix.service }}
+          TAG: ${{ steps.version.outputs.tag }}
+          ARCH: ${{ matrix.platform.arch }}
+        run: cosign sign --yes "${IMAGE_PREFIX}-${SERVICE}:${TAG}-${ARCH}"
 
   manifest:
     name: Publish ${{ matrix.service }} manifest
@@ -234,11 +239,15 @@ jobs:
           fi
 
       - name: Create multi-arch manifest
+        env:
+          IMAGE_PREFIX: ${{ env.IMAGE_PREFIX }}
+          SERVICE: ${{ matrix.service }}
+          TAG: ${{ steps.version.outputs.tag }}
+          IS_RELEASE: ${{ steps.version.outputs.is_release }}
+          COMMIT_SHA: ${{ github.sha }}
         run: |
-          IMAGE="${{ env.IMAGE_PREFIX }}-${{ matrix.service }}"
-          TAG="${{ steps.version.outputs.tag }}"
-          SHA_SHORT="${{ github.sha }}"
-          SHA_SHORT="${SHA_SHORT:0:7}"
+          IMAGE="${IMAGE_PREFIX}-${SERVICE}"
+          SHA_SHORT="${COMMIT_SHA:0:7}"
 
           docker buildx imagetools create \
             --tag "$IMAGE:$TAG" \
@@ -246,7 +255,7 @@ jobs:
             "$IMAGE:$TAG-amd64" \
             "$IMAGE:$TAG-arm64"
 
-          if [[ "${{ steps.version.outputs.is_release }}" == "true" ]]; then
+          if [[ "$IS_RELEASE" == "true" ]]; then
             docker buildx imagetools create \
               --tag "$IMAGE:latest" \
               "$IMAGE:$TAG-amd64" \
@@ -254,9 +263,12 @@ jobs:
           fi
 
       - name: Verify manifest
+        env:
+          IMAGE_PREFIX: ${{ env.IMAGE_PREFIX }}
+          SERVICE: ${{ matrix.service }}
+          TAG: ${{ steps.version.outputs.tag }}
         run: |
-          IMAGE="${{ env.IMAGE_PREFIX }}-${{ matrix.service }}"
-          TAG="${{ steps.version.outputs.tag }}"
+          IMAGE="${IMAGE_PREFIX}-${SERVICE}"
           echo "Inspecting $IMAGE:$TAG"
           docker buildx imagetools inspect "$IMAGE:$TAG"
 
@@ -264,9 +276,12 @@ jobs:
         uses: sigstore/cosign-installer@cad07c2e89fa2edd6e2d7bab4c1aa38e53f76003 # v4
 
       - name: Sign manifest
+        env:
+          IMAGE_PREFIX: ${{ env.IMAGE_PREFIX }}
+          SERVICE: ${{ matrix.service }}
+          TAG: ${{ steps.version.outputs.tag }}
         run: |
-          IMAGE="${{ env.IMAGE_PREFIX }}-${{ matrix.service }}"
-          TAG="${{ steps.version.outputs.tag }}"
+          IMAGE="${IMAGE_PREFIX}-${SERVICE}"
           cosign sign --yes "$IMAGE:$TAG"
 
   result:

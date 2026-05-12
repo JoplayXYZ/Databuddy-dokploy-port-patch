@@ -41,7 +41,7 @@ export const ErrorsBuilders: Record<string, SimpleQueryConfig> = {
 					)
 					SELECT
 						es.message,
-						es.stack,
+						substring(es.stack, 1, 1500) as stack,
 						es.path,
 						es.anonymous_id,
 						es.session_id,

@@ -74,5 +74,9 @@ tmp
 # Local Sentrux baseline/rules/GUI state
 .sentrux/
 
+# Local deepsec security audit workspace (scans, findings, env)
+.deepsec/
+
 # Local reference repositories
 tigerbeetle/
+*.rdb

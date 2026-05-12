@@ -11,6 +11,7 @@
   "dependencies": {
     "@databuddy/env": "workspace:*",
     "@databuddy/rpc": "workspace:*",
+    "@databuddy/shared": "workspace:*",
     "@databuddy/ui": "workspace:*",
     "@orpc/client": "^1.14.0",
     "next": "catalog:",

@@ -123,9 +123,7 @@ const linkOutputSchema = z.object({
 function validateHttpUrl(url: string): void {
 	const parsed = new URL(url);
 	if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
-		throw rpcError.badRequest(
-			"Target URL must be an absolute HTTP or HTTPS URL"
-		);
+		throw rpcError.badRequest("URL must be an absolute HTTP or HTTPS URL");
 	}
 }
 
@@ -341,6 +339,9 @@ export const linksRouter = {
 			});
 
 			validateHttpUrl(input.targetUrl);
+			if (input.expiredRedirectUrl) {
+				validateHttpUrl(input.expiredRedirectUrl);
+			}
 			const createdBy = await workspace.getCreatedBy();
 			const resolvedFolderId = await validateFolderId(
 				context.db,
@@ -443,6 +444,9 @@ export const linksRouter = {
 
 			if (input.targetUrl) {
 				validateHttpUrl(input.targetUrl);
+			}
+			if (input.expiredRedirectUrl) {
+				validateHttpUrl(input.expiredRedirectUrl);
 			}
 
 			let resolvedFolderId: string | null | undefined;

@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { cacheable } from "@databuddy/redis/cacheable";
-import { captureError, record } from "@lib/tracing";
+import { captureError, mergeWideEvent, record } from "@lib/tracing";
 import type { City } from "@maxmind/geoip2-node";
 import {
 	AddressNotFoundError,
@@ -8,24 +8,15 @@ import {
 	Reader,
 } from "@maxmind/geoip2-node";
 import { createError, EvlogError, log } from "evlog";
-import { useLogger } from "evlog/elysia";
 
 if (!process.env.IP_HASH_SALT && process.env.NODE_ENV === "production") {
-	log.warn({
-		message: "IP_HASH_SALT is not set — IP hashes will use an insecure default",
-	});
+	throw new Error(
+		"IP_HASH_SALT must be set in production. The fallback salt is public in the open-source repo, so leaving it unset lets anyone reverse 'anonymized' IPs via a precomputed table."
+	);
 }
 
 interface GeoIPReader extends Reader {
 	city(ip: string): City;
-}
-
-function mergeGeoWideEvent(context: Record<string, unknown>): void {
-	try {
-		useLogger().set({ geo: context });
-	} catch {
-		log.info({ geo: context });
-	}
 }
 
 const CDN_URL = "https://cdn.databuddy.cc/mmdb/GeoLite2-City.mmdb";
@@ -170,12 +161,29 @@ function lookupGeoLocation(ip: string): Promise<{
 	});
 }
 
-const getGeoLocation = cacheable(lookupGeoLocation, {
+function coarsenIpForCache(ip: string): string {
+	if (ip.includes(":")) {
+		const groups = ip.split(":");
+		const head = groups.slice(0, 4).join(":");
+		return `${head}::`;
+	}
+	const octets = ip.split(".");
+	if (octets.length === 4) {
+		return `${octets[0]}.${octets[1]}.${octets[2]}.0`;
+	}
+	return ip;
+}
+
+const getCachedGeoLocation = cacheable(lookupGeoLocation, {
 	expireInSec: 86_400 * 7,
 	prefix: "geoip_location",
 	staleWhileRevalidate: true,
 	staleTime: 86_400,
 });
+
+function getGeoLocation(ip: string) {
+	return getCachedGeoLocation(coarsenIpForCache(ip));
+}
 
 export function anonymizeIp(ip: string): string {
 	if (!ip) {
@@ -191,7 +199,9 @@ export function anonymizeIp(ip: string): string {
 export function getGeo(ip: string, request?: Request) {
 	return record("getGeo", async () => {
 		if (!ip || ignore.includes(ip) || !isValidIp(ip)) {
-			mergeGeoWideEvent({ skipped: true, reason: "invalid_or_local_ip" });
+			mergeWideEvent({
+				geo: { skipped: true, reason: "invalid_or_local_ip" },
+			});
 			return {
 				anonymizedIP: anonymizeIp(ip),
 				country: undefined,
@@ -205,9 +215,11 @@ export function getGeo(ip: string, request?: Request) {
 		if (!geo.country && request?.headers) {
 			const cfCountry = getCloudflareCountry(request.headers);
 			if (cfCountry) {
-				mergeGeoWideEvent({
-					source: "cloudflare_header",
-					country: cfCountry,
+				mergeWideEvent({
+					geo: {
+						source: "cloudflare_header",
+						country: cfCountry,
+					},
 				});
 				return {
 					anonymizedIP: anonymizeIp(ip),
@@ -228,6 +240,15 @@ export function getGeo(ip: string, request?: Request) {
 }
 
 const TRUSTED_IP_HEADER = process.env.TRUSTED_IP_HEADER || "cf-connecting-ip";
+const IP_HEADER_VERIFIED =
+	process.env.IP_HEADER_VERIFIED?.toLowerCase() === "true";
+
+if (!process.env.IP_HEADER_VERIFIED && process.env.NODE_ENV === "production") {
+	log.warn({
+		message:
+			"IP_HEADER_VERIFIED is not set — client-supplied IP headers are spoofable. Set IP_HEADER_VERIFIED=true only when traffic is forced through a trusted proxy that overwrites this header.",
+	});
+}
 
 export function extractIpFromRequest(
 	request: Request,
@@ -246,6 +267,13 @@ export function extractIpFromRequest(
 	}
 
 	return "";
+}
+
+export function extractTrustedClientIp(request: Request): string | null {
+	if (!IP_HEADER_VERIFIED) {
+		return null;
+	}
+	return extractIpFromRequest(request) || null;
 }
 
 export function closeGeoIPReader(): void {
