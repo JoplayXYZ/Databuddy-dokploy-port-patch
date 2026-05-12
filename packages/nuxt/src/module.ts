@@ -71,9 +71,16 @@ export default defineNuxtModule<ModuleOptions>({
 		// Preconnect to the CDN so the tracker script loads as fast as possible.
 		// This runs server-side and appears in the initial HTML — zero plugin overhead.
 		if (!options.disabled) {
-			const cdnOrigin = options.scriptUrl
-				? new URL(options.scriptUrl).origin
-				: "https://cdn.databuddy.cc";
+			let cdnOrigin = "https://cdn.databuddy.cc";
+			if (options.scriptUrl) {
+				try {
+					cdnOrigin = new URL(options.scriptUrl).origin;
+				} catch {
+					logger.warn(
+						`[@databuddy/nuxt] Invalid scriptUrl "${options.scriptUrl}" — falling back to default CDN.`
+					);
+				}
+			}
 
 			nuxt.options.app.head.link = [
 				...(nuxt.options.app.head.link ?? []),

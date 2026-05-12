@@ -12,11 +12,15 @@ import {
 } from "@databuddy/sdk";
 
 const setGlobalProperties = (properties: Record<string, unknown>) => {
-	window.db?.setGlobalProperties(properties);
+	if (typeof window !== "undefined") {
+		window.db?.setGlobalProperties(properties);
+	}
 };
 
 const screenView = (properties?: Record<string, unknown>) => {
-	window.db?.screenView(properties);
+	if (typeof window !== "undefined") {
+		window.db?.screenView(properties);
+	}
 };
 
 export function useDatabuddy() {

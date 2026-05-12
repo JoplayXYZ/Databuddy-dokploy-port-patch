@@ -38,6 +38,12 @@ export default defineNuxtPlugin((nuxtApp) => {
 			globals.value = { ...debug.globals };
 		}
 
+		// If the external clear() reset the array, reset our counter too so new
+		// events are not silently dropped after a clear.
+		if (debug.events.length < seenCount) {
+			seenCount = 0;
+		}
+
 		// Sync new events (the inline script prepends them, so we track by length)
 		if (debug.events.length > seenCount) {
 			const fresh = debug.events.slice(0, debug.events.length - seenCount);
@@ -76,5 +82,8 @@ export default defineNuxtPlugin((nuxtApp) => {
 		return originalFetch.apply(this, args);
 	};
 
-	nuxtApp.hook("app:unmount", () => clearInterval(interval));
+	nuxtApp.hook("app:unmount", () => {
+		clearInterval(interval);
+		window.fetch = originalFetch;
+	});
 });

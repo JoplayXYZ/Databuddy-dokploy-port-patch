@@ -1,6 +1,6 @@
 {
   "title": "SDK Reference",
-  "description": "Complete SDK documentation for React, Vue, Node.js, Swift, and vanilla JavaScript",
+  "description": "Complete SDK documentation for React, Nuxt, Vue, Node.js, Swift, and vanilla JavaScript",
   "icon": "Code",
   "pages": [
     "index",

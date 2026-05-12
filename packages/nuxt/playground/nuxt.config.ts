@@ -22,7 +22,8 @@ const DEBUG_SETUP_SCRIPT = `(function () {
   // Dedup: ignore events with the same name + props within a 50ms window
   // (window.db and window.databuddy may both fire for the same call)
   function dedup(name, props) {
-    var key = name + ":" + JSON.stringify(props);
+    var key;
+    try { key = name + ":" + JSON.stringify(props); } catch { key = name; }
     var now = Date.now();
     if ((seen.get(key) || 0) > now - 50) return false;
     seen.set(key, now);
