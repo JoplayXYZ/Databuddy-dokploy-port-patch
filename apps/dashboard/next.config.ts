@@ -8,9 +8,6 @@ function joinCspSources(...sources: (string | false)[]): string {
 const nextConfig: NextConfig = {
 	outputFileTracingRoot: path.join(process.cwd(), "../.."),
 	serverExternalPackages: ["pg"],
-	typescript: {
-		ignoreBuildErrors: true,
-	},
 	images: {
 		remotePatterns: [
 			{
@@ -82,10 +79,16 @@ const nextConfig: NextConfig = {
 			"https://hooks.slack.com",
 			"wss://*.databuddy.cc"
 		);
+		const scriptSources = joinCspSources(
+			"'self'",
+			"'unsafe-inline'",
+			isDev && "'unsafe-eval'",
+			"https://cdn.databuddy.cc"
+		);
 
 		const cspDirectives = [
 			"default-src 'self'",
-			"script-src 'self' 'unsafe-inline' https://cdn.databuddy.cc",
+			`script-src ${scriptSources}`,
 			"style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
 			"font-src 'self' https://fonts.gstatic.com",
 			"img-src 'self' data: blob: https://cdn.databuddy.cc https://www.google.com https://flagcdn.com https://api.dicebear.com https://avatars.githubusercontent.com https://lh3.googleusercontent.com",
@@ -97,7 +100,7 @@ const nextConfig: NextConfig = {
 
 		const demoCspDirectives = [
 			"default-src 'self'",
-			"script-src 'self' 'unsafe-inline' https://cdn.databuddy.cc",
+			`script-src ${scriptSources}`,
 			"style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
 			"font-src 'self' https://fonts.gstatic.com",
 			"img-src 'self' data: blob: https://cdn.databuddy.cc https://www.google.com https://flagcdn.com https://api.dicebear.com https://avatars.githubusercontent.com https://lh3.googleusercontent.com",
