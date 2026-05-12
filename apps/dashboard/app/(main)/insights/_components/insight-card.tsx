@@ -185,7 +185,10 @@ function buildDiagnosticPrompt(insight: Insight): string {
 
 	const pathHint = extractInsightPathHint(insight);
 	if (pathHint) {
-		parts.push("", `Focus on page path ${pathHint} in analytics when relevant.`);
+		parts.push(
+			"",
+			`Focus on page path ${pathHint} in analytics when relevant.`
+		);
 	}
 
 	parts.push(
@@ -281,7 +284,7 @@ function InsightCardHeader({
 			)}
 		>
 			<Button
-				className="h-auto min-h-0 min-w-0 flex-1 items-start justify-start gap-3 rounded-none bg-transparent p-0 text-left font-normal text-foreground whitespace-normal hover:bg-transparent active:bg-transparent active:scale-100"
+				className="h-auto min-h-0 min-w-0 flex-1 items-start justify-start gap-3 whitespace-normal rounded-none bg-transparent p-0 text-left font-normal text-foreground hover:bg-transparent active:scale-100 active:bg-transparent"
 				onClick={onToggleAction}
 				variant="ghost"
 			>

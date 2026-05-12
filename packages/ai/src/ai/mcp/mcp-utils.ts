@@ -34,6 +34,8 @@ export interface McpQueryItem {
 	type: string;
 }
 
+const TOP_QUERY_PREFIX = /^top_/;
+
 const QUERY_TYPE_ALIASES: Record<string, string> = {
 	countries: "country",
 	top_countries: "country",
@@ -62,7 +64,7 @@ export function buildBatchQueryRequests(
 	for (const q of items) {
 		const resolvedType = resolveQueryType(q.type);
 		if (!(resolvedType in QueryBuilders)) {
-			const hint = suggestQueryTypes(q.type.replace(/^top_/, ""));
+			const hint = suggestQueryTypes(q.type.replace(TOP_QUERY_PREFIX, ""));
 			const message = hint.length
 				? `Unknown type: ${q.type}. Did you mean: ${hint.join(", ")}?`
 				: `Unknown type: ${q.type}. Use the capabilities tool to see valid types.`;

@@ -118,6 +118,7 @@ vi.mock("@utils/ip-geo", () => ({
 		})
 	),
 	extractIpFromRequest: vi.fn(() => "1.2.3.4"),
+	extractTrustedClientIp: vi.fn(() => "1.2.3.4"),
 	closeGeoIPReader: noop,
 }));
 

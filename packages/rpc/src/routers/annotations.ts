@@ -128,7 +128,10 @@ export const annotationsRouter = {
 					];
 
 					let visibilityCondition: SQL<unknown> | undefined;
-					if (workspace.tier === "demo" && !hasApiKeyOrgAccess(workspace, context)) {
+					if (
+						workspace.tier === "demo" &&
+						!hasApiKeyOrgAccess(workspace, context)
+					) {
 						visibilityCondition = context.user
 							? or(
 									eq(annotations.isPublic, true),
@@ -184,7 +187,10 @@ export const annotationsRouter = {
 				allowPublicAccess: true,
 			});
 
-			if (workspace.tier === "demo" && !hasApiKeyOrgAccess(workspace, context)) {
+			if (
+				workspace.tier === "demo" &&
+				!hasApiKeyOrgAccess(workspace, context)
+			) {
 				const isOwner = context.user?.id === annotationRow.createdBy;
 				if (!(isOwner || annotationRow.isPublic)) {
 					throw errors.NOT_FOUND({
