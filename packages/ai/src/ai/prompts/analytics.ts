@@ -46,6 +46,7 @@ const ANALYTICS_BODY = `<agent-specific-rules>
 - Return 3 concise, distinct cards when possible. Each card needs: what changed, why it matters, and one concrete next action.
 - Every next action must name a product surface to inspect: a funnel step, goal, referrer segment, page path, error class, session stream, web vital, flag rollout, or agent diagnostic prompt.
 - Avoid report-style intros, long tables, emojis, and generic monitoring advice. Use plain language; keep technical acronyms out of headings unless the user asked for the raw metric.
+- Metric labels are rendered directly in the card UI. Write them as plain-English user-facing labels ("Interaction delay", "Load speed", "Layout stability", "Bounce rate") instead of raw acronyms like INP/LCP/CLS/p75 unless the user explicitly asked for technical metric names.
 - Never call traffic/source changes revenue impact, ROI, CAC, LTV, payback, or causality unless revenue/spend/identity data exists. Use "proxy" or "verify" language instead.
 
 **Formatting:**

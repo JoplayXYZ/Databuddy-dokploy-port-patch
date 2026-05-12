@@ -75,8 +75,15 @@ Read [codebase-map.md](./references/codebase-map.md) when you need deeper routin
 - Database scripts are routed from root into `packages/db`
 - Environment schemas live in `packages/env/src/*.ts`; update the matching app schema when adding env vars
 - BullMQ queues use `BULLMQ_REDIS_URL`; generic Redis cache/pubsub code uses `REDIS_URL`.
-- Cache invalidation should stay domain-owned but direct: prefer namespace/tag registries plus simple `Promise.allSettled` helpers over labeled job/facade abstractions.
-- For AI-generated copy, semantic labels, or summaries, fix the upstream LLM prompt/schema/validation contract instead of adding frontend regex/string heuristics to rewrite the output. Deterministic maps are fine for stable enums/internal IDs, not for guessing generated language.
+
+## Code Standards
+
+- Keep one source of truth. If output is AI-generated copy, semantic labels, summaries, or recommendations, fix the upstream prompt/schema/validation contract; do not patch it later with frontend regex/string heuristics.
+- Use deterministic transforms only for deterministic data: stable enums, IDs, namespaces, routes, schema fields, and typed status values. Do not guess meaning from free-form model/user text with regexes.
+- Prefer structured contracts over text parsing. If the UI needs a label, action, link, severity, or metric category, add it to the schema/tool output and validate it at the boundary.
+- Keep domain concerns at the owning seam. Routers/UI should call domain/service helpers, not know cache keys, raw Redis patterns, billing internals, or provider-specific lifecycle details.
+- Prefer direct, boring code. Use typed registries and small local helpers when they delete duplication; avoid generic job/facade abstractions, labeled pipelines, or framework-y wrappers unless they clearly reduce code and concepts.
+- Test invariants and contracts, not implementation trivia. Add guard tests for architectural rules only when they prevent repeat classes of bugs.
 
 ## Change Routing
 
