@@ -104,15 +104,41 @@ const baseClient = createClient({
 	...CLICKHOUSE_OPTIONS,
 });
 
-const RETRIABLE_INSERT_ERROR_PATTERNS = [
-	"Connect",
-	"socket hang up",
-	"Timeout error",
-];
+const RETRIABLE_ERROR_CODES = new Set([
+	// undici (Node's HTTP client used by @clickhouse/client)
+	"UND_ERR_CONNECT_TIMEOUT",
+	"UND_ERR_HEADERS_TIMEOUT",
+	"UND_ERR_BODY_TIMEOUT",
+	"UND_ERR_SOCKET",
+	"UND_ERR_CLOSED",
+	// node net / dns
+	"ECONNREFUSED",
+	"ECONNRESET",
+	"ETIMEDOUT",
+	"EPIPE",
+	"EAI_AGAIN",
+]);
 
-function isRetriableInsertError(err: unknown): boolean {
-	const message = err instanceof Error ? err.message : String(err);
-	return RETRIABLE_INSERT_ERROR_PATTERNS.some((p) => message.includes(p));
+const RETRIABLE_MESSAGE_FRAGMENTS = ["socket hang up", "Timeout error"];
+
+const MAX_CAUSE_DEPTH = 4;
+
+function isRetriableInsertError(err: unknown, depth = 0): boolean {
+	if (depth >= MAX_CAUSE_DEPTH || err === null || typeof err !== "object") {
+		return false;
+	}
+	const code = (err as { code?: unknown }).code;
+	if (typeof code === "string" && RETRIABLE_ERROR_CODES.has(code)) {
+		return true;
+	}
+	if (err instanceof Error) {
+		const m = err.message;
+		if (RETRIABLE_MESSAGE_FRAGMENTS.some((p) => m.includes(p))) {
+			return true;
+		}
+	}
+	const cause = (err as { cause?: unknown }).cause;
+	return cause ? isRetriableInsertError(cause, depth + 1) : false;
 }
 
 async function withInsertRetry<T>(
