@@ -1,6 +1,6 @@
 import { db, eq, type InferSelectModel } from "@databuddy/db";
 import { apikey } from "@databuddy/db/schema";
-import { cacheable, redis } from "@databuddy/redis";
+import { cacheNamespaces, cacheable, redis } from "@databuddy/redis";
 import {
 	createKeys,
 	hasAllScopes,
@@ -54,9 +54,31 @@ const getCachedApiKeyByHash = cacheable(
 	},
 	{
 		expireInSec: 30,
-		prefix: "api-key-by-hash",
+		prefix: cacheNamespaces.apiKeyByHash,
 	}
 );
+
+export function invalidateApiKeyByHash(keyHash: string): Promise<void> {
+	return getCachedApiKeyByHash.invalidate(keyHash);
+}
+
+function uniqueHashes(hashes: (string | null | undefined)[]): string[] {
+	return [...new Set(hashes.filter((hash): hash is string => Boolean(hash)))];
+}
+
+export async function withApiKeyCacheInvalidation<T>(
+	hashes: (string | null | undefined)[],
+	operation: () => Promise<T>,
+	getResultHashes: (result: T) => (string | null | undefined)[] = () => []
+): Promise<T> {
+	const before = uniqueHashes(hashes);
+	await Promise.allSettled(before.map(invalidateApiKeyByHash));
+
+	const result = await operation();
+	const after = uniqueHashes([...before, ...getResultHashes(result)]);
+	await Promise.allSettled(after.map(invalidateApiKeyByHash));
+	return result;
+}
 
 const LAST_USED_DEBOUNCE_SEC = 300;
 

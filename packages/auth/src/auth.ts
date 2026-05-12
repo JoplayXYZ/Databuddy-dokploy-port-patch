@@ -20,7 +20,11 @@ import {
 import { config } from "@databuddy/env/app";
 import { readBooleanEnv } from "@databuddy/env/boolean";
 import { SlackProvider } from "@databuddy/notifications";
-import { getRedisCache, ratelimit } from "@databuddy/redis";
+import {
+	getRedisCache,
+	invalidateOrganizationMembershipCaches,
+	ratelimit,
+} from "@databuddy/redis";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { betterAuth } from "better-auth/minimal";
 import {
@@ -149,6 +153,23 @@ function notifySignUpSlackAction(input: {
 		userId: input.userId,
 		organizationId: input.organizationId,
 	});
+}
+
+async function invalidateMemberCaches(member: {
+	organizationId: string;
+	userId: string;
+}): Promise<void> {
+	const result = await invalidateOrganizationMembershipCaches(member);
+	if (result.failed > 0) {
+		log.warn({
+			service: "auth",
+			auth_hook: "organization.member.cache_invalidation",
+			auth_user_id: member.userId,
+			auth_org_id: member.organizationId,
+			cache_invalidations_failed: result.failed,
+			cache_invalidations_attempted: result.attempted,
+		});
+	}
 }
 
 export const auth = betterAuth({
@@ -491,6 +512,12 @@ export const auth = betterAuth({
 				admin,
 				member,
 				viewer,
+			},
+			organizationHooks: {
+				afterAddMember: ({ member }) => invalidateMemberCaches(member),
+				afterCreateOrganization: ({ member }) => invalidateMemberCaches(member),
+				afterRemoveMember: ({ member }) => invalidateMemberCaches(member),
+				afterUpdateMemberRole: ({ member }) => invalidateMemberCaches(member),
 			},
 			sendInvitationEmail: async ({
 				email,

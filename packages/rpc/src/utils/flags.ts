@@ -10,8 +10,7 @@ import {
 import { flagChangeEvents, flags } from "@databuddy/db/schema";
 import {
 	createDrizzleCache,
-	invalidateCacheablePattern,
-	invalidateCacheableWithArgs,
+	invalidateFlagReadCaches,
 	redis,
 } from "@databuddy/redis";
 import { randomUUIDv7 } from "bun";
@@ -23,6 +22,10 @@ export const getScope = (
 	websiteId?: string | null,
 	organizationId?: string | null
 ) => (websiteId ? `website:${websiteId}` : `org:${organizationId}`);
+
+export const invalidateFlagEvaluationCaches = async (clientId: string) => {
+	await invalidateFlagReadCaches({ clientId });
+};
 
 export const invalidateFlagCache = async (
 	id: string,
@@ -52,22 +55,13 @@ export const invalidateFlagCache = async (
 	];
 
 	if (clientId) {
-		if (key) {
-			invalidations.push(invalidateCacheableWithArgs("flag", [key, clientId]));
-		}
-		invalidations.push(invalidateCacheableWithArgs("flags-client", [clientId]));
 		invalidations.push(
-			invalidateCacheableWithArgs("flags-definitions", [clientId])
+			invalidateFlagReadCaches({
+				clientId,
+				flagKey: key,
+				userId: scopedUserId,
+			})
 		);
-		if (scopedUserId) {
-			invalidations.push(
-				invalidateCacheableWithArgs("flags-user", [scopedUserId, clientId])
-			);
-		} else {
-			invalidations.push(
-				invalidateCacheablePattern(`cacheable:flags-user:*${clientId}*`)
-			);
-		}
 	}
 
 	await Promise.allSettled(invalidations);

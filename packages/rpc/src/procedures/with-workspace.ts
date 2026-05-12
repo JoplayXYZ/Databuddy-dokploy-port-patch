@@ -6,7 +6,7 @@ import {
 } from "@databuddy/api-keys/scopes";
 import type { PermissionFor, ResourceType, User } from "@databuddy/auth";
 import { db } from "@databuddy/db";
-import { cacheable } from "@databuddy/redis";
+import { cacheNamespaces, cacheable } from "@databuddy/redis";
 import type { PlanId } from "@databuddy/shared/types/features";
 import { z } from "zod";
 import { rpcError } from "../errors";
@@ -53,7 +53,7 @@ const getWebsiteById = cacheable(
 	},
 	{
 		expireInSec: 600,
-		prefix: "website_by_id",
+		prefix: cacheNamespaces.websiteById,
 		staleWhileRevalidate: true,
 		staleTime: 60,
 	}
@@ -77,7 +77,7 @@ const _getOrganizationRole = async (
 
 const getOrganizationRole = cacheable(_getOrganizationRole, {
 	expireInSec: 300,
-	prefix: "rpc:org_role",
+	prefix: cacheNamespaces.organizationRole,
 	staleWhileRevalidate: true,
 	staleTime: 60,
 });

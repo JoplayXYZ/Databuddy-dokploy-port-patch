@@ -10,7 +10,11 @@ import {
 	uptimeSchedules,
 	websites,
 } from "@databuddy/db/schema";
-import { cacheable, invalidateCacheableWithArgs } from "@databuddy/redis";
+import {
+	cacheNamespaces,
+	cacheable,
+	invalidateStatusPageCache,
+} from "@databuddy/redis";
 import { randomUUIDv7 } from "bun";
 import { z } from "zod";
 import { rpcError } from "../errors";
@@ -564,7 +568,7 @@ async function _fetchStatusPageData(
 
 const fetchStatusPageData = cacheable(_fetchStatusPageData, {
 	expireInSec: 60,
-	prefix: "status-page",
+	prefix: cacheNamespaces.statusPage,
 	staleWhileRevalidate: true,
 	staleTime: 30,
 });
@@ -824,9 +828,9 @@ export const statusPageRouter = {
 				})
 				.where(eq(statusPages.id, input.statusPageId));
 
-			await invalidateCacheableWithArgs("status-page", [statusPage.slug]);
+			await invalidateStatusPageCache(statusPage.slug);
 			if (input.slug && input.slug !== statusPage.slug) {
-				await invalidateCacheableWithArgs("status-page", [input.slug]);
+				await invalidateStatusPageCache(input.slug);
 			}
 
 			return db.query.statusPages.findFirst({
@@ -865,7 +869,7 @@ export const statusPageRouter = {
 				.delete(statusPages)
 				.where(eq(statusPages.id, input.statusPageId));
 
-			await invalidateCacheableWithArgs("status-page", [statusPage.slug]);
+			await invalidateStatusPageCache(statusPage.slug);
 
 			return { success: true };
 		}),
@@ -943,7 +947,7 @@ export const statusPageRouter = {
 				}
 			});
 
-			await invalidateCacheableWithArgs("status-page", [statusPage.slug]);
+			await invalidateStatusPageCache(statusPage.slug);
 
 			return { success: true };
 		}),
@@ -1010,7 +1014,7 @@ export const statusPageRouter = {
 				uptimeScheduleId: input.uptimeScheduleId,
 			});
 
-			await invalidateCacheableWithArgs("status-page", [statusPage.slug]);
+			await invalidateStatusPageCache(statusPage.slug);
 
 			return db.query.statusPageMonitors.findFirst({
 				where: { id },
@@ -1054,7 +1058,7 @@ export const statusPageRouter = {
 					)
 				);
 
-			await invalidateCacheableWithArgs("status-page", [statusPage.slug]);
+			await invalidateStatusPageCache(statusPage.slug);
 
 			return { success: true };
 		}),
@@ -1112,9 +1116,7 @@ export const statusPageRouter = {
 				})
 				.where(eq(statusPageMonitors.id, input.monitorId));
 
-			await invalidateCacheableWithArgs("status-page", [
-				monitor.statusPage.slug,
-			]);
+			await invalidateStatusPageCache(monitor.statusPage.slug);
 
 			return db.query.statusPageMonitors.findFirst({
 				where: { id: input.monitorId },
@@ -1210,7 +1212,7 @@ export const statusPageRouter = {
 				}
 			});
 
-			await invalidateCacheableWithArgs("status-page", [statusPage.slug]);
+			await invalidateStatusPageCache(statusPage.slug);
 
 			return db.query.incidents.findFirst({
 				where: { id: incidentId },
@@ -1266,9 +1268,7 @@ export const statusPageRouter = {
 					.where(eq(incidents.id, input.incidentId));
 			});
 
-			await invalidateCacheableWithArgs("status-page", [
-				incident.statusPage.slug,
-			]);
+			await invalidateStatusPageCache(incident.statusPage.slug);
 
 			return db.query.incidents.findFirst({
 				where: { id: input.incidentId },
@@ -1302,9 +1302,7 @@ export const statusPageRouter = {
 
 			await db.delete(incidents).where(eq(incidents.id, input.incidentId));
 
-			await invalidateCacheableWithArgs("status-page", [
-				incident.statusPage.slug,
-			]);
+			await invalidateStatusPageCache(incident.statusPage.slug);
 
 			return { deleted: true };
 		}),

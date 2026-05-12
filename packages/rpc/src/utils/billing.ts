@@ -1,5 +1,5 @@
 import { db } from "@databuddy/db";
-import { cacheable } from "@databuddy/redis";
+import { cacheNamespaces, cacheTags, cacheable } from "@databuddy/redis";
 import { getAutumn } from "../lib/autumn-client";
 import { logger, record } from "../lib/logger";
 
@@ -30,7 +30,7 @@ const _getOrganizationOwnerId = async (
 
 export const getOrganizationOwnerId = cacheable(_getOrganizationOwnerId, {
 	expireInSec: 300,
-	prefix: "rpc:org_owner",
+	prefix: cacheNamespaces.organizationOwner,
 	staleWhileRevalidate: true,
 	staleTime: 60,
 });
@@ -56,7 +56,7 @@ export const getMemberRole = cacheable(
 	},
 	{
 		expireInSec: 300,
-		prefix: "rpc:member_role",
+		prefix: cacheNamespaces.memberRole,
 		staleWhileRevalidate: true,
 		staleTime: 60,
 	}
@@ -106,8 +106,18 @@ export const getBillingOwner = cacheable(
 	},
 	{
 		expireInSec: 300,
-		prefix: "rpc:billing_owner",
+		prefix: cacheNamespaces.billingOwner,
 		staleWhileRevalidate: true,
 		staleTime: 60,
+		tags: (result, userId, organizationId) => {
+			const tags = [
+				cacheTags.billingOwner(userId),
+				cacheTags.billingOwner(result.customerId),
+			];
+			if (organizationId) {
+				tags.push(cacheTags.billingOwner(organizationId));
+			}
+			return tags;
+		},
 	}
 );

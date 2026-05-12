@@ -3,12 +3,12 @@ import {
 	collectScopes,
 	keys,
 	markApiKeyUsed,
+	withApiKeyCacheInvalidation,
 } from "@databuddy/api-keys/resolve";
 import { API_SCOPES } from "@databuddy/api-keys/scopes";
 import { websitesApi } from "@databuddy/auth";
 import { desc, eq } from "@databuddy/db";
 import { apikey } from "@databuddy/db/schema";
-import { invalidateCacheableKey } from "@databuddy/redis";
 import {
 	ApiKeyErrorCode,
 	hasAllScopes,
@@ -408,33 +408,34 @@ export const apikeysRouter = {
 			};
 			assertMetadataSize(nextMetadata);
 
-			await invalidateCacheableKey("api-key-by-hash", key.keyHash);
-
-			const [updated] = await context.db
-				.update(apikey)
-				.set({
-					...(input.name !== undefined && { name: input.name }),
-					...(input.enabled !== undefined && { enabled: input.enabled }),
-					...(input.scopes !== undefined && { scopes: input.scopes }),
-					...(input.expiresAt !== undefined && {
-						expiresAt: input.expiresAt ? new Date(input.expiresAt) : null,
-					}),
-					...(input.ratelimit?.enabled !== undefined && {
-						rateLimitEnabled: input.ratelimit.enabled,
-					}),
-					...(input.ratelimit?.max !== undefined && {
-						rateLimitMax: input.ratelimit.max,
-					}),
-					...(input.ratelimit?.window !== undefined && {
-						rateLimitTimeWindow: input.ratelimit.window,
-					}),
-					metadata: nextMetadata,
-					updatedAt: new Date(),
-				})
-				.where(eq(apikey.id, input.id))
-				.returning();
-
-			await invalidateCacheableKey("api-key-by-hash", updated.keyHash);
+			const [updated] = await withApiKeyCacheInvalidation(
+				[key.keyHash],
+				() =>
+					context.db
+						.update(apikey)
+						.set({
+							...(input.name !== undefined && { name: input.name }),
+							...(input.enabled !== undefined && { enabled: input.enabled }),
+							...(input.scopes !== undefined && { scopes: input.scopes }),
+							...(input.expiresAt !== undefined && {
+								expiresAt: input.expiresAt ? new Date(input.expiresAt) : null,
+							}),
+							...(input.ratelimit?.enabled !== undefined && {
+								rateLimitEnabled: input.ratelimit.enabled,
+							}),
+							...(input.ratelimit?.max !== undefined && {
+								rateLimitMax: input.ratelimit.max,
+							}),
+							...(input.ratelimit?.window !== undefined && {
+								rateLimitTimeWindow: input.ratelimit.window,
+							}),
+							metadata: nextMetadata,
+							updatedAt: new Date(),
+						})
+						.where(eq(apikey.id, input.id))
+						.returning(),
+				(rows) => [rows[0]?.keyHash]
+			);
 
 			return mapKey(updated);
 		}),
@@ -457,14 +458,12 @@ export const apikeysRouter = {
 			}
 			await assertOrgAdmin(context, key.organizationId, "Revoke API keys");
 
-			await invalidateCacheableKey("api-key-by-hash", key.keyHash);
-
-			await context.db
-				.update(apikey)
-				.set({ enabled: false, revokedAt: new Date(), updatedAt: new Date() })
-				.where(eq(apikey.id, input.id));
-
-			await invalidateCacheableKey("api-key-by-hash", key.keyHash);
+			await withApiKeyCacheInvalidation([key.keyHash], () =>
+				context.db
+					.update(apikey)
+					.set({ enabled: false, revokedAt: new Date(), updatedAt: new Date() })
+					.where(eq(apikey.id, input.id))
+			);
 
 			return { success: true };
 		}),
@@ -499,23 +498,21 @@ export const apikeysRouter = {
 				expiresAt: key.expiresAt?.toISOString() ?? null,
 			});
 
-			await invalidateCacheableKey("api-key-by-hash", key.keyHash);
-
-			const [updated] = await context.db
-				.update(apikey)
-				.set({
-					prefix: secret.split("_")[0] ?? "dbdy",
-					start: secret.slice(0, 8),
-					keyHash: record.keyHash,
-					updatedAt: new Date(),
-				})
-				.where(eq(apikey.id, input.id))
-				.returning();
-
-			await Promise.all([
-				invalidateCacheableKey("api-key-by-hash", key.keyHash),
-				invalidateCacheableKey("api-key-by-hash", updated.keyHash),
-			]);
+			const [updated] = await withApiKeyCacheInvalidation(
+				[key.keyHash],
+				() =>
+					context.db
+						.update(apikey)
+						.set({
+							prefix: secret.split("_")[0] ?? "dbdy",
+							start: secret.slice(0, 8),
+							keyHash: record.keyHash,
+							updatedAt: new Date(),
+						})
+						.where(eq(apikey.id, input.id))
+						.returning(),
+				(rows) => [rows[0]?.keyHash]
+			);
 
 			return {
 				id: updated.id,
@@ -543,11 +540,9 @@ export const apikeysRouter = {
 			}
 			await assertOrgAdmin(context, key.organizationId, "Delete API keys");
 
-			await invalidateCacheableKey("api-key-by-hash", key.keyHash);
-
-			await context.db.delete(apikey).where(eq(apikey.id, input.id));
-
-			await invalidateCacheableKey("api-key-by-hash", key.keyHash);
+			await withApiKeyCacheInvalidation([key.keyHash], () =>
+				context.db.delete(apikey).where(eq(apikey.id, input.id))
+			);
 
 			return { success: true };
 		}),

@@ -1,11 +1,6 @@
 import { and, desc, eq, isNull, withTransaction } from "@databuddy/db";
 import { flagsToTargetGroups, targetGroups } from "@databuddy/db/schema";
-import {
-	createDrizzleCache,
-	invalidateCacheablePattern,
-	invalidateCacheableWithArgs,
-	redis,
-} from "@databuddy/redis";
+import { createDrizzleCache, redis } from "@databuddy/redis";
 import { userRuleSchema } from "@databuddy/shared/flags";
 import { randomUUIDv7 } from "bun";
 import { z } from "zod";
@@ -17,6 +12,7 @@ import {
 	withWebsiteRead,
 	withWorkspace,
 } from "../procedures/with-workspace";
+import { invalidateFlagEvaluationCaches } from "../utils/flags";
 import { scopedCacheKey } from "../utils/scoped-cache-key";
 
 const targetGroupsCache = createDrizzleCache({
@@ -247,12 +243,7 @@ export const targetGroupsRouter = {
 				.returning();
 
 			await targetGroupsCache.invalidateByTables(["target_groups"]);
-
-			await invalidateCacheablePattern(`cacheable:flag:*${group.websiteId}*`);
-			await invalidateCacheableWithArgs("flags-client", [group.websiteId]);
-			await invalidateCacheablePattern(
-				`cacheable:flags-user:*${group.websiteId}*`
-			);
+			await invalidateFlagEvaluationCaches(group.websiteId);
 
 			return updatedGroup;
 		}),
@@ -303,10 +294,7 @@ export const targetGroupsRouter = {
 
 			await targetGroupsCache.invalidateByTables(["target_groups"]);
 			await flagsCache.invalidateByTables(["flags", "flags_to_target_groups"]);
-			await invalidateCacheableWithArgs("flags-client", [group.websiteId]);
-			await invalidateCacheablePattern(
-				`cacheable:flags-user:*${group.websiteId}*`
-			);
+			await invalidateFlagEvaluationCaches(group.websiteId);
 
 			return { success: true };
 		}),
