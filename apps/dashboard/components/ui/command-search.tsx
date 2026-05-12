@@ -48,13 +48,38 @@ interface SearchItem {
 	icon: NavIcon;
 	lockedPlanName?: string | null;
 	name: string;
+	parentName?: string;
 	path: string;
+	searchTags?: string[];
 	tag?: string;
 }
 
 interface SearchGroup {
 	category: string;
 	items: SearchItem[];
+}
+
+function resolveNavigationPath({
+	href,
+	parentPath,
+	pathPrefix,
+	rootLevel,
+}: {
+	href: string;
+	parentPath?: string;
+	pathPrefix: string;
+	rootLevel?: boolean;
+}) {
+	if (href.startsWith("#") || href.startsWith("?")) {
+		return `${parentPath ?? pathPrefix}${href}`;
+	}
+	if (href.startsWith("http")) {
+		return href;
+	}
+	if (href === "") {
+		return parentPath ?? (rootLevel ? href : pathPrefix);
+	}
+	return rootLevel ? href : `${pathPrefix}${href}`;
 }
 
 function toSearchItem(
@@ -65,7 +90,11 @@ function toSearchItem(
 		isFeatureEnabled: (feature: GatedFeatureId) => boolean;
 	}
 ): SearchItem {
-	const path = item.rootLevel ? item.href : `${pathPrefix}${item.href}`;
+	const path = resolveNavigationPath({
+		href: item.href,
+		pathPrefix,
+		rootLevel: item.rootLevel,
+	});
 	const locked =
 		access != null &&
 		!access.isBillingLoading &&
@@ -78,6 +107,7 @@ function toSearchItem(
 		icon: item.icon,
 		disabled: item.disabled || locked,
 		tag: item.tag,
+		searchTags: item.searchTags,
 		external: item.external,
 		alpha: item.alpha,
 		badge: item.badge,
@@ -89,6 +119,44 @@ function toSearchItem(
 	};
 }
 
+function toSearchItems(
+	item: NavigationItem,
+	pathPrefix = "",
+	access?: {
+		isBillingLoading: boolean;
+		isFeatureEnabled: (feature: GatedFeatureId) => boolean;
+	}
+): SearchItem[] {
+	const parent = toSearchItem(item, pathPrefix, access);
+	const sectionItems =
+		item.searchItems?.map((section) => {
+			const path = resolveNavigationPath({
+				href: section.href ?? "",
+				parentPath: parent.path,
+				pathPrefix,
+				rootLevel: section.rootLevel ?? item.rootLevel,
+			});
+
+			return {
+				name: section.name,
+				path,
+				icon: section.icon ?? item.icon,
+				disabled: parent.disabled || section.disabled,
+				external: section.external ?? path.startsWith("http"),
+				gatedFeature: parent.gatedFeature,
+				lockedPlanName: parent.lockedPlanName,
+				parentName: item.name,
+				searchTags: [
+					item.name,
+					...(item.searchTags ?? []),
+					...(section.searchTags ?? []),
+				],
+			};
+		}) ?? [];
+
+	return [parent, ...sectionItems];
+}
+
 function groupsToSearchGroups(
 	groups: NavigationGroup[],
 	pathPrefix = "",
@@ -97,14 +165,27 @@ function groupsToSearchGroups(
 		isFeatureEnabled: (feature: GatedFeatureId) => boolean;
 	}
 ): SearchGroup[] {
-	return groups
-		.filter((g) => g.items.length > 0)
-		.map((g) => ({
-			category: g.label || "Quick Access",
-			items: g.items
-				.filter((item) => !item.hideFromDemo)
-				.map((item) => toSearchItem(item, pathPrefix, access)),
-		}));
+	const searchGroups: SearchGroup[] = [];
+
+	for (const group of groups) {
+		if (group.items.length === 0) {
+			continue;
+		}
+
+		const items: SearchItem[] = [];
+		for (const item of group.items) {
+			if (!item.hideFromDemo) {
+				items.push(...toSearchItems(item, pathPrefix, access));
+			}
+		}
+
+		searchGroups.push({
+			category: group.label || "Quick Access",
+			items,
+		});
+	}
+
+	return searchGroups;
 }
 
 function mergeGroups(groups: SearchGroup[]): SearchGroup[] {
@@ -113,14 +194,53 @@ function mergeGroups(groups: SearchGroup[]): SearchGroup[] {
 	for (const group of groups) {
 		const existing = merged.get(group.category) ?? [];
 		const existingPaths = new Set(existing.map((i) => i.path));
-		const newItems = group.items.filter((i) => !existingPaths.has(i.path));
-		merged.set(group.category, [...existing, ...newItems]);
+		const nextItems = [...existing];
+
+		for (const item of group.items) {
+			if (!existingPaths.has(item.path)) {
+				existingPaths.add(item.path);
+				nextItems.push(item);
+			}
+		}
+
+		merged.set(group.category, nextItems);
 	}
 
 	return [...merged.entries()].map(([category, items]) => ({
 		category,
 		items,
 	}));
+}
+
+function getSearchValue(item: SearchItem) {
+	return [
+		item.name,
+		item.parentName,
+		item.path,
+		item.tag,
+		item.badge?.text,
+		item.alpha ? "alpha" : undefined,
+		...(item.searchTags ?? []),
+	]
+		.filter(Boolean)
+		.join(" ");
+}
+
+function matchesSearchItem(item: SearchItem, rawQuery: string) {
+	const query = rawQuery.trim().toLowerCase();
+	if (!query) {
+		return true;
+	}
+
+	const searchable = getSearchValue(item).toLowerCase();
+	if (searchable.includes(query)) {
+		return true;
+	}
+
+	return query
+		.split(/\s+/)
+		.filter(Boolean)
+		.every((term) => searchable.includes(term));
 }
 
 type CommandSearchContextValue = {
@@ -143,7 +263,7 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
 	const [open, setOpen] = useState(false);
 	const [search, setSearch] = useState("");
 	const [debouncedSearch, setDebouncedSearch] = useState("");
-	const router = useRouter();
+	const { push } = useRouter();
 	const pathname = usePathname();
 	const { websites } = useWebsites({ enabled: open });
 	const { isFeatureEnabled, isLoading: isBillingLoading } = useBillingContext();
@@ -193,6 +313,7 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
 					name: w.name || w.domain,
 					path: `/websites/${w.id}`,
 					icon: GlobeIcon,
+					searchTags: [w.domain],
 				})),
 			});
 		}
@@ -221,16 +342,16 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
 		}
 
 		const query = debouncedSearch.toLowerCase();
-		return groups
-			.map((group) => ({
-				...group,
-				items: group.items.filter(
-					(item) =>
-						item.name.toLowerCase().includes(query) ||
-						item.path.toLowerCase().includes(query)
-				),
-			}))
-			.filter((group) => group.items.length > 0);
+		const nextGroups: SearchGroup[] = [];
+
+		for (const group of groups) {
+			const items = group.items.filter((item) => matchesSearchItem(item, query));
+			if (items.length > 0) {
+				nextGroups.push({ ...group, items });
+			}
+		}
+
+		return nextGroups;
 	}, [groups, debouncedSearch]);
 
 	const handleSelect = useCallback(
@@ -244,10 +365,10 @@ export function CommandSearchProvider({ children }: { children: ReactNode }) {
 			if (item.external || item.path.startsWith("http")) {
 				window.open(item.path, "_blank", "noopener,noreferrer");
 			} else {
-				router.push(item.path);
+				push(item.path);
 			}
 		},
-		[router]
+		[push]
 	);
 
 	const totalResults = filteredGroups.reduce(
@@ -400,7 +521,7 @@ function SearchResultItem({
 			)}
 			disabled={item.disabled}
 			onSelect={() => onSelect(item)}
-			value={`${item.name} ${item.path}`}
+			value={getSearchValue(item)}
 		>
 			<div className="flex size-7 shrink-0 items-center justify-center rounded bg-accent group-data-[selected=true]:bg-background">
 				<ItemIcon className="size-4 text-muted-foreground" />
