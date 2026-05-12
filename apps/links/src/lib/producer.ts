@@ -32,6 +32,7 @@ export interface LinkVisitSendResult {
 	clickhouse_fallback_success: boolean;
 	kafka_broker_configured: boolean;
 	kafka_connected: boolean;
+	kafka_send_ambiguous: boolean;
 	kafka_send_skipped: boolean;
 	kafka_send_success: boolean;
 }
@@ -148,9 +149,10 @@ export async function sendLinkVisit(
 
 	let kafkaSent = false;
 	let kafkaSkipped = false;
+	let kafkaAmbiguous = false;
 
-	try {
-		if ((await connect()) && producer) {
+	if ((await connect()) && producer) {
+		try {
 			await withTimeout(
 				producer.send({
 					topic: TOPIC,
@@ -168,28 +170,34 @@ export async function sendLinkVisit(
 			);
 			kafkaSent = true;
 			setAttributes({ kafka_send_success: true });
-		} else {
-			kafkaSkipped = true;
-			setAttributes({ kafka_send_skipped: true });
+		} catch (error) {
+			kafkaAmbiguous = true;
+			captureError(error, {
+				operation: "kafka_send",
+				kafka_topic: TOPIC,
+			});
+			connected = false;
+			nextReconnectAt = Date.now() + reconnectCooldownMs;
+			setAttributes({
+				kafka_send_success: false,
+				kafka_send_ambiguous: true,
+			});
 		}
-	} catch (error) {
-		captureError(error, {
-			operation: "kafka_send",
-			kafka_topic: TOPIC,
-		});
-		connected = false;
-		nextReconnectAt = Date.now() + reconnectCooldownMs;
-		setAttributes({ kafka_send_success: false });
+	} else {
+		kafkaSkipped = true;
+		setAttributes({ kafka_send_skipped: true });
 	}
 
-	const fallbackSuccess = kafkaSent
-		? false
-		: await insertClickHouseFallback(event);
+	const shouldFallback = !(kafkaSent || kafkaAmbiguous);
+	const fallbackSuccess = shouldFallback
+		? await insertClickHouseFallback(event)
+		: false;
 
 	return {
 		clickhouse_fallback_success: fallbackSuccess,
 		kafka_broker_configured: Boolean(broker),
 		kafka_connected: connected,
+		kafka_send_ambiguous: kafkaAmbiguous,
 		kafka_send_skipped: kafkaSkipped,
 		kafka_send_success: kafkaSent,
 	};
