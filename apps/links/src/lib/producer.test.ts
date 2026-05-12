@@ -46,6 +46,7 @@ describe("sendLinkVisit", () => {
 			clickhouse_fallback_success: true,
 			kafka_broker_configured: false,
 			kafka_connected: false,
+			kafka_send_ambiguous: false,
 			kafka_send_skipped: true,
 			kafka_send_success: false,
 		});
