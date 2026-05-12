@@ -554,7 +554,7 @@ describe("SimpleQueryBuilder.compile", () => {
 	it("cleans date ranges returned by custom SQL builders", () => {
 		const { sql, params } = compile(
 			{
-				customSql: (_websiteId, startDate, endDate) => ({
+				customSql: ({ startDate, endDate }) => ({
 					sql: `
 						SELECT count() as total
 						FROM analytics.events
