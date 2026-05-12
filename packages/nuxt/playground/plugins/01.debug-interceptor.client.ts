@@ -6,6 +6,8 @@
 //   A 100ms setInterval is invisible to users and avoids wiring cross-context
 //   event emitters.
 
+import { defineNuxtPlugin, useState } from "#app";
+
 interface RawEvent {
 	name: string;
 	properties: Record<string, unknown>;
@@ -25,13 +27,18 @@ declare global {
 
 export default defineNuxtPlugin((nuxtApp) => {
 	const events = useState<RawEvent[]>("db-debug-events", () => []);
-	const globals = useState<Record<string, unknown>>("db-debug-globals", () => ({}));
+	const globals = useState<Record<string, unknown>>(
+		"db-debug-globals",
+		() => ({})
+	);
 
 	let seenCount = 0;
 
 	const interval = setInterval(() => {
 		const debug = window.__dbDebug;
-		if (!debug) return;
+		if (!debug) {
+			return;
+		}
 
 		// Sync global properties whenever they change
 		if (Object.keys(debug.globals).length > 0) {
@@ -76,7 +83,9 @@ export default defineNuxtPlugin((nuxtApp) => {
 					properties: body as Record<string, unknown>,
 					time: new Date().toLocaleTimeString("en", { hour12: false }),
 				});
-			} catch {}
+			} catch {
+				// Ignore malformed debug payloads; the real network request still runs.
+			}
 		}
 
 		return originalFetch.apply(this, args);

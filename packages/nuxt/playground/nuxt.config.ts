@@ -10,6 +10,8 @@
 //   3. The DebugPanel component (components/DebugPanel.vue) reads that state
 //      and displays events in a floating overlay — no backend required.
 
+import { defineNuxtConfig } from "nuxt/config";
+
 const DEBUG_SETUP_SCRIPT = `(function () {
   "use strict";
 

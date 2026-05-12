@@ -16,7 +16,10 @@ interface DebugEvent {
 }
 
 const events = useState<DebugEvent[]>("db-debug-events", () => []);
-const globals = useState<Record<string, unknown>>("db-debug-globals", () => ({}));
+const globals = useState<Record<string, unknown>>(
+	"db-debug-globals",
+	() => ({})
+);
 const isOpen = ref(true);
 
 const hasGlobals = computed(() => Object.keys(globals.value).length > 0);
@@ -40,7 +43,8 @@ function clear() {
 			role="button"
 			tabindex="0"
 			@click="isOpen = !isOpen"
-			@keydown.enter="isOpen = !isOpen"
+			@keydown.enter.self.prevent="isOpen = !isOpen"
+			@keydown.space.self.prevent="isOpen = !isOpen"
 		>
 			<span class="panel-title">
 				<span class="dot" />
@@ -53,7 +57,7 @@ function clear() {
 					type="button"
 					class="clear-btn"
 					@click.stop="clear"
-					@keydown.enter.stop
+					@keydown.enter.stop.prevent
 				>
 					Clear
 				</button>
