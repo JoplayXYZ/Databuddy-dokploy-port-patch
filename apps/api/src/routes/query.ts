@@ -9,6 +9,15 @@ import {
 } from "@databuddy/api-keys/resolve";
 import { db } from "@databuddy/db";
 import { ratelimit } from "@databuddy/redis/rate-limit";
+import {
+	getBillingOwner,
+	getOrganizationOwnerId,
+} from "@databuddy/rpc/billing";
+import {
+	type GatedFeatureId,
+	GATED_FEATURES,
+	isFeatureAvailable,
+} from "@databuddy/shared/types/features";
 import type { CustomQueryRequest } from "@databuddy/ai/query/custom-query-types";
 import { compileQuery, executeBatch } from "@databuddy/ai/query";
 import { QueryBuilders } from "@databuddy/ai/query/builders";
@@ -423,6 +432,44 @@ const PUBLIC_OVERVIEW_QUERY_TYPES = new Set([
 	"realtime_sessions",
 	"realtime_velocity",
 ]);
+
+const FEATURE_GATED_QUERY_TYPES: Record<string, GatedFeatureId> = {
+	recent_errors: GATED_FEATURES.ERROR_TRACKING,
+	error_types: GATED_FEATURES.ERROR_TRACKING,
+	errors_by_page: GATED_FEATURES.ERROR_TRACKING,
+	error_summary: GATED_FEATURES.ERROR_TRACKING,
+	error_chart_data: GATED_FEATURES.ERROR_TRACKING,
+};
+
+async function enforceFeatureGatesForQueryTypes(
+	queryTypes: string[],
+	website: { organizationId: string | null }
+): Promise<{ error: string; feature: GatedFeatureId } | null> {
+	const required = new Set<GatedFeatureId>();
+	for (const type of queryTypes) {
+		const feature = FEATURE_GATED_QUERY_TYPES[type];
+		if (feature) {
+			required.add(feature);
+		}
+	}
+	if (required.size === 0) {
+		return null;
+	}
+
+	const ownerId = website.organizationId
+		? await getOrganizationOwnerId(website.organizationId)
+		: null;
+	if (!ownerId) {
+		return null;
+	}
+	const billing = await getBillingOwner(ownerId, website.organizationId);
+	for (const feature of required) {
+		if (!isFeatureAvailable(billing.planId, feature)) {
+			return { error: "This feature is not available on the plan", feature };
+		}
+	}
+	return null;
+}
 
 function extractQueryTypes(
 	body: DynamicQueryRequestType | DynamicQueryRequestType[]
@@ -1162,6 +1209,28 @@ export const query = new Elysia({ prefix: "/v1/query" })
 						accessResult.status,
 						requestId
 					);
+				}
+
+				if (accessResult.projectType === "website" && q.website_id) {
+					const queryTypes = extractQueryTypes(body);
+					const website = await db.query.websites.findFirst({
+						where: { id: q.website_id },
+						columns: { organizationId: true },
+					});
+					if (website) {
+						const gateFail = await enforceFeatureGatesForQueryTypes(
+							queryTypes,
+							website
+						);
+						if (gateFail) {
+							return createErrorResponse(
+								gateFail.error,
+								"FEATURE_UNAVAILABLE",
+								402,
+								requestId
+							);
+						}
+					}
 				}
 
 				const organizationWebsiteIds =
