@@ -11,6 +11,7 @@ import {
 	setRpcRequestLoggerProvider,
 	setTrackingFn,
 } from "@databuddy/rpc";
+import type { RequestLogger } from "evlog";
 import { log } from "evlog";
 import { useLogger } from "evlog/elysia";
 import { trackMutationEvent } from "@/lib/databuddy";
@@ -37,6 +38,20 @@ interface ChTotals {
 
 const clickhouseTraceTotals = new WeakMap<object, ChTotals>();
 
+/**
+ * Run an enrichment callback against the active request logger, if any.
+ * Swallows the "outside Elysia request context" case — pg traces, cache
+ * lookups, and CH queries can all fire from background work where there
+ * is no wide event to write to.
+ */
+function withRequestLogger(fn: (logger: RequestLogger) => void): void {
+	try {
+		fn(useLogger());
+	} catch {
+		// no active request — skip enrichment
+	}
+}
+
 export function configureApiInstrumentation() {
 	setChRecordFn(record);
 	setChMetricsFn(recordClickHouseQueryMetrics);
@@ -51,8 +66,7 @@ export function configureApiInstrumentation() {
 }
 
 function recordPostgresQueryTiming(ms: number) {
-	try {
-		const logger = useLogger();
+	withRequestLogger((logger) => {
 		const previous = postgresTraceTotals.get(logger) ?? [0, 0, 0];
 		const next: [number, number, number] = [
 			previous[0] + 1,
@@ -65,14 +79,11 @@ function recordPostgresQueryTiming(ms: number) {
 			"pg.total_ms": Math.round(next[1] * 100) / 100,
 			"pg.max_ms": next[2],
 		});
-	} catch {
-		// Query traces can run outside an Elysia request context; skip enrichment then.
-	}
+	});
 }
 
 function recordClickHouseQueryMetrics(m: ChQueryMetrics) {
-	try {
-		const logger = useLogger();
+	withRequestLogger((logger) => {
 		const prev = clickhouseTraceTotals.get(logger);
 		const next: ChTotals = {
 			count: (prev?.count ?? 0) + 1,
@@ -102,9 +113,7 @@ function recordClickHouseQueryMetrics(m: ChQueryMetrics) {
 			"ch.memory_max": next.memory_max,
 			"ch.served_by": [...next.nodes].sort().join(","),
 		});
-	} catch {
-		// CH queries can run outside an Elysia request context; skip enrichment then.
-	}
+	});
 }
 
 function recordPostgresPoolError(error: Error) {
@@ -117,11 +126,7 @@ function recordPostgresPoolError(error: Error) {
 }
 
 function enrichRequestWithCacheTrace(fields: Record<string, unknown>) {
-	try {
-		useLogger().set(fields);
-	} catch {
-		// Cache traces can run outside an Elysia request context; skip enrichment then.
-	}
+	withRequestLogger((logger) => logger.set(fields));
 }
 
 function startTccTracing() {
