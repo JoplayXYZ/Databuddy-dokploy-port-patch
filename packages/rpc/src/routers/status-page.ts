@@ -1161,6 +1161,24 @@ export const statusPageRouter = {
 				permissions: ["update"],
 			});
 
+			if (input.affectedMonitors.length > 0) {
+				const monitorIds = input.affectedMonitors.map(
+					(am) => am.statusPageMonitorId
+				);
+				const ownedMonitors = await db.query.statusPageMonitors.findMany({
+					where: {
+						statusPageId: input.statusPageId,
+						id: { in: monitorIds },
+					},
+					columns: { id: true },
+				});
+				if (ownedMonitors.length !== monitorIds.length) {
+					throw rpcError.badRequest(
+						"Affected monitors must belong to this status page"
+					);
+				}
+			}
+
 			const incidentId = randomUUIDv7();
 			const updateId = randomUUIDv7();
 
