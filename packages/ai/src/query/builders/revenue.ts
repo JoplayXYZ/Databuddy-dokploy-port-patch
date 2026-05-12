@@ -234,825 +234,405 @@ function buildScopeParams(
 	return isOrgScope(filterParams) ? { organizationId: projectId } : {};
 }
 
+interface RevenueQueryConfig {
+	extraConditions?: string[];
+	groupBy?: string;
+	innerCte?: { name: string; body: (filteredSource: string) => string };
+	limit?: number;
+	orderBy?: string;
+	select: string;
+}
+
+function buildRevenueQuery(
+	config: RevenueQueryConfig,
+	websiteId: string,
+	startDate: string,
+	endDate: string,
+	filters?: Filter[],
+	customSqlParams?: Record<string, Filter["value"]>
+): { sql: string; params: Record<string, Filter["value"]> } {
+	const { whereClause, params: whereParams } = buildRevenueWhereClause(
+		filters,
+		config.extraConditions ?? []
+	);
+
+	const filteredSource = `revenue_attributed${whereClause}`;
+	const baseCte = buildAttributionCte(customSqlParams);
+	const withClause = config.innerCte
+		? `WITH ${baseCte},\n\t\t${config.innerCte.name} AS (${config.innerCte.body(filteredSource)})`
+		: `WITH ${baseCte}`;
+	const fromExpr = config.innerCte ? config.innerCte.name : filteredSource;
+
+	const parts = [withClause, config.select, `FROM ${fromExpr}`];
+	if (config.groupBy) {
+		parts.push(`GROUP BY ${config.groupBy}`);
+	}
+	if (config.orderBy) {
+		parts.push(`ORDER BY ${config.orderBy}`);
+	}
+	if (config.limit !== undefined) {
+		parts.push("LIMIT {limit:UInt32}");
+	}
+
+	return {
+		sql: parts.join("\n"),
+		params: {
+			websiteId,
+			startDate,
+			endDate,
+			...(config.limit === undefined ? {} : { limit: config.limit }),
+			...buildScopeParams(websiteId, customSqlParams),
+			...whereParams,
+		},
+	};
+}
+
+type RevenueCustomSql = (
+	websiteId: string,
+	startDate: string,
+	endDate: string,
+	filters?: Filter[],
+	_granularity?: TimeUnit,
+	_limit?: number,
+	_offset?: number,
+	_timezone?: string,
+	_filterConditions?: string[],
+	customSqlParams?: Record<string, Filter["value"]>
+) => { sql: string; params: Record<string, Filter["value"]> };
+
+function makeRevenueBuilder(
+	configFn: (limit: number | undefined) => RevenueQueryConfig,
+	defaultLimit?: number
+): RevenueCustomSql {
+	return (
+		websiteId,
+		startDate,
+		endDate,
+		filters,
+		_granularity,
+		_limit,
+		_offset,
+		_timezone,
+		_filterConditions,
+		customSqlParams
+	) =>
+		buildRevenueQuery(
+			configFn(
+				defaultLimit === undefined ? undefined : (_limit ?? defaultLimit)
+			),
+			websiteId,
+			startDate,
+			endDate,
+			filters,
+			customSqlParams
+		);
+}
+
+const REVENUE_METRICS = `
+		sumIf(amount, type != 'refund') as revenue,
+		countIf(type != 'refund') as transactions,
+		uniq(r_customer_id) as customers,
+		ROUND((sumIf(amount, type != 'refund') / nullIf(SUM(sumIf(amount, type != 'refund')) OVER(), 0)) * 100, 2) as percentage`;
+
+function dimensionCase(column: string, fallback: string): string {
+	return `CASE
+		WHEN is_attributed = 0 THEN 'Unattributed'
+		WHEN ${column} = '' OR ${column} IS NULL THEN '${fallback}'
+		ELSE ${column}
+	END`;
+}
+
+function recentTransactionDimension(
+	column: string,
+	fallback: string,
+	alias: string
+): string {
+	return `CASE WHEN is_attributed = 0 THEN 'Unattributed' ELSE coalesce(nullIf(${column}, ''), '${fallback}') END as ${alias}`;
+}
+
 export const RevenueBuilders: Record<string, SimpleQueryConfig> = {
 	revenue_overview: {
-		customSql: (
-			websiteId: string,
-			startDate: string,
-			endDate: string,
-			filters?: Filter[],
-			_granularity?: TimeUnit,
-			_limit?: number,
-			_offset?: number,
-			_timezone?: string,
-			_filterConditions?: string[],
-			customSqlParams?: Record<string, Filter["value"]>
-		) => {
-			const { whereClause, params: whereParams } =
-				buildRevenueWhereClause(filters);
-			return {
-				sql: `
-					WITH ${buildAttributionCte(customSqlParams)}
-					SELECT
-						sumIf(amount, type != 'refund') as total_revenue,
-						countIf(type != 'refund') as total_transactions,
-						sumIf(amount, type = 'refund') as refund_amount,
-						countIf(type = 'refund') as refund_count,
-						sumIf(amount, type = 'subscription') as subscription_revenue,
-						countIf(type = 'subscription') as subscription_count,
-						sumIf(amount, type = 'sale') as sale_revenue,
-						countIf(type = 'sale') as sale_count,
-						uniq(r_customer_id) as unique_customers,
-						countIf(is_attributed = 1 AND type != 'refund') as attributed_transactions,
-						sumIf(amount, is_attributed = 1 AND type != 'refund') as attributed_revenue
-					FROM revenue_attributed${whereClause}
-				`,
-				params: {
-					websiteId,
-					startDate,
-					endDate,
-					...buildScopeParams(websiteId, customSqlParams),
-					...whereParams,
-				},
-			};
-		},
+		customSql: makeRevenueBuilder(() => ({
+			select: `SELECT
+				sumIf(amount, type != 'refund') as total_revenue,
+				countIf(type != 'refund') as total_transactions,
+				sumIf(amount, type = 'refund') as refund_amount,
+				countIf(type = 'refund') as refund_count,
+				sumIf(amount, type = 'subscription') as subscription_revenue,
+				countIf(type = 'subscription') as subscription_count,
+				sumIf(amount, type = 'sale') as sale_revenue,
+				countIf(type = 'sale') as sale_count,
+				uniq(r_customer_id) as unique_customers,
+				countIf(is_attributed = 1 AND type != 'refund') as attributed_transactions,
+				sumIf(amount, is_attributed = 1 AND type != 'refund') as attributed_revenue`,
+		})),
 		timeField: "created",
 		customizable: false,
 	},
 
 	revenue_time_series: {
-		customSql: (
-			websiteId: string,
-			startDate: string,
-			endDate: string,
-			filters?: Filter[],
-			_granularity?: TimeUnit,
-			_limit?: number,
-			_offset?: number,
-			_timezone?: string,
-			_filterConditions?: string[],
-			customSqlParams?: Record<string, Filter["value"]>
-		) => {
-			const { whereClause, params: whereParams } =
-				buildRevenueWhereClause(filters);
-			return {
-				sql: `
-					WITH ${buildAttributionCte(customSqlParams)}
-					SELECT
-						toDate(created) as date,
-						sumIf(amount, type != 'refund') as revenue,
-						countIf(type != 'refund') as transactions,
-						uniq(r_customer_id) as customers,
-						sumIf(amount, type = 'refund') as refund_amount,
-						countIf(type = 'refund') as refund_count,
-						sumIf(amount, is_attributed = 1 AND type != 'refund') as attributed_revenue,
-						countIf(is_attributed = 1 AND type != 'refund') as attributed_transactions
-					FROM revenue_attributed${whereClause}
-					GROUP BY date
-					ORDER BY date ASC
-				`,
-				params: {
-					websiteId,
-					startDate,
-					endDate,
-					...buildScopeParams(websiteId, customSqlParams),
-					...whereParams,
-				},
-			};
-		},
+		customSql: makeRevenueBuilder(() => ({
+			select: `SELECT
+				toDate(created) as date,
+				sumIf(amount, type != 'refund') as revenue,
+				countIf(type != 'refund') as transactions,
+				uniq(r_customer_id) as customers,
+				sumIf(amount, type = 'refund') as refund_amount,
+				countIf(type = 'refund') as refund_count,
+				sumIf(amount, is_attributed = 1 AND type != 'refund') as attributed_revenue,
+				countIf(is_attributed = 1 AND type != 'refund') as attributed_transactions`,
+			groupBy: "date",
+			orderBy: "date ASC",
+		})),
 		timeField: "created",
 		customizable: false,
 	},
 
 	revenue_by_provider: {
-		customSql: (
-			websiteId: string,
-			startDate: string,
-			endDate: string,
-			filters?: Filter[],
-			_granularity?: TimeUnit,
-			_limit?: number,
-			_offset?: number,
-			_timezone?: string,
-			_filterConditions?: string[],
-			customSqlParams?: Record<string, Filter["value"]>
-		) => {
-			const { whereClause, params: whereParams } =
-				buildRevenueWhereClause(filters);
-			return {
-				sql: `
-					WITH ${buildAttributionCte(customSqlParams)}
-					SELECT
-						provider as name,
-						sumIf(amount, type != 'refund') as revenue,
-						countIf(type != 'refund') as transactions,
-						uniq(r_customer_id) as customers,
-						ROUND((sumIf(amount, type != 'refund') / nullIf(SUM(sumIf(amount, type != 'refund')) OVER(), 0)) * 100, 2) as percentage
-					FROM revenue_attributed${whereClause}
-					GROUP BY provider
-					ORDER BY revenue DESC
-				`,
-				params: {
-					websiteId,
-					startDate,
-					endDate,
-					...buildScopeParams(websiteId, customSqlParams),
-					...whereParams,
-				},
-			};
-		},
+		customSql: makeRevenueBuilder(() => ({
+			select: `SELECT
+				provider as name,${REVENUE_METRICS}`,
+			groupBy: "provider",
+			orderBy: "revenue DESC",
+		})),
 		timeField: "created",
 		customizable: false,
 	},
 
 	revenue_by_product: {
-		customSql: (
-			websiteId: string,
-			startDate: string,
-			endDate: string,
-			filters?: Filter[],
-			_granularity?: TimeUnit,
-			_limit?: number,
-			_offset?: number,
-			_timezone?: string,
-			_filterConditions?: string[],
-			customSqlParams?: Record<string, Filter["value"]>
-		) => {
-			const limit = _limit ?? 50;
-			const { whereClause, params: whereParams } =
-				buildRevenueWhereClause(filters);
-			return {
-				sql: `
-					WITH ${buildAttributionCte(customSqlParams)}
-					SELECT
-						coalesce(product_name, 'Unknown') as name,
-						product_id,
-						sumIf(amount, type != 'refund') as revenue,
-						countIf(type != 'refund') as transactions,
-						uniq(r_customer_id) as customers,
-						ROUND((sumIf(amount, type != 'refund') / nullIf(SUM(sumIf(amount, type != 'refund')) OVER(), 0)) * 100, 2) as percentage
-					FROM revenue_attributed${whereClause}
-					GROUP BY product_name, product_id
-					ORDER BY revenue DESC
-					LIMIT {limit:UInt32}
-				`,
-				params: {
-					websiteId,
-					startDate,
-					endDate,
-					limit,
-					...buildScopeParams(websiteId, customSqlParams),
-					...whereParams,
-				},
-			};
-		},
+		customSql: makeRevenueBuilder(
+			(limit) => ({
+				select: `SELECT
+				coalesce(product_name, 'Unknown') as name,
+				product_id,${REVENUE_METRICS}`,
+				groupBy: "product_name, product_id",
+				orderBy: "revenue DESC",
+				limit,
+			}),
+			50
+		),
 		timeField: "created",
 		customizable: true,
 	},
 
 	revenue_attribution_overview: {
-		customSql: (
-			websiteId: string,
-			startDate: string,
-			endDate: string,
-			filters?: Filter[],
-			_granularity?: TimeUnit,
-			_limit?: number,
-			_offset?: number,
-			_timezone?: string,
-			_filterConditions?: string[],
-			customSqlParams?: Record<string, Filter["value"]>
-		) => {
-			const { whereClause, params: whereParams } =
-				buildRevenueWhereClause(filters);
-			return {
-				sql: `
-					WITH ${buildAttributionCte(customSqlParams)}
-					SELECT
-						CASE WHEN is_attributed = 1 THEN 'Attributed' ELSE 'Unattributed' END as name,
-						sumIf(amount, type != 'refund') as revenue,
-						countIf(type != 'refund') as transactions,
-						uniq(r_customer_id) as customers,
-						ROUND((sumIf(amount, type != 'refund') / nullIf(SUM(sumIf(amount, type != 'refund')) OVER(), 0)) * 100, 2) as percentage
-					FROM revenue_attributed${whereClause}
-					GROUP BY is_attributed
-					ORDER BY revenue DESC
-				`,
-				params: {
-					websiteId,
-					startDate,
-					endDate,
-					...buildScopeParams(websiteId, customSqlParams),
-					...whereParams,
-				},
-			};
-		},
+		customSql: makeRevenueBuilder(() => ({
+			select: `SELECT
+				CASE WHEN is_attributed = 1 THEN 'Attributed' ELSE 'Unattributed' END as name,${REVENUE_METRICS}`,
+			groupBy: "is_attributed",
+			orderBy: "revenue DESC",
+		})),
 		timeField: "created",
 		customizable: false,
 	},
 
 	revenue_by_country: {
-		customSql: (
-			websiteId: string,
-			startDate: string,
-			endDate: string,
-			filters?: Filter[],
-			_granularity?: TimeUnit,
-			_limit?: number,
-			_offset?: number,
-			_timezone?: string,
-			_filterConditions?: string[],
-			customSqlParams?: Record<string, Filter["value"]>
-		) => {
-			const limit = _limit ?? 20;
-			const { whereClause, params: whereParams } =
-				buildRevenueWhereClause(filters);
-			return {
-				sql: `
-					WITH ${buildAttributionCte(customSqlParams)}
-					SELECT
-						CASE
-							WHEN is_attributed = 0 THEN 'Unattributed'
-							WHEN country = '' OR country IS NULL THEN 'Unknown'
-							ELSE country
-						END as name,
-						sumIf(amount, type != 'refund') as revenue,
-						countIf(type != 'refund') as transactions,
-						uniq(r_customer_id) as customers,
-						ROUND((sumIf(amount, type != 'refund') / nullIf(SUM(sumIf(amount, type != 'refund')) OVER(), 0)) * 100, 2) as percentage
-					FROM revenue_attributed${whereClause}
-					GROUP BY name
-					ORDER BY revenue DESC
-					LIMIT {limit:UInt32}
-				`,
-				params: {
-					websiteId,
-					startDate,
-					endDate,
-					limit,
-					...buildScopeParams(websiteId, customSqlParams),
-					...whereParams,
-				},
-			};
-		},
+		customSql: makeRevenueBuilder(
+			(limit) => ({
+				select: `SELECT
+				${dimensionCase("country", "Unknown")} as name,${REVENUE_METRICS}`,
+				groupBy: "name",
+				orderBy: "revenue DESC",
+				limit,
+			}),
+			20
+		),
 		timeField: "created",
 		customizable: true,
-		plugins: {
-			deduplicateGeo: true,
-			normalizeGeo: true,
-		},
+		plugins: { deduplicateGeo: true, normalizeGeo: true },
 	},
 
 	revenue_by_region: {
-		customSql: (
-			websiteId: string,
-			startDate: string,
-			endDate: string,
-			filters?: Filter[],
-			_granularity?: TimeUnit,
-			_limit?: number,
-			_offset?: number,
-			_timezone?: string,
-			_filterConditions?: string[],
-			customSqlParams?: Record<string, Filter["value"]>
-		) => {
-			const limit = _limit ?? 20;
-			const { whereClause, params: whereParams } =
-				buildRevenueWhereClause(filters);
-			return {
-				sql: `
-					WITH ${buildAttributionCte(customSqlParams)}
-					SELECT
-						CASE
-							WHEN is_attributed = 0 THEN 'Unattributed'
-							WHEN region = '' OR region IS NULL THEN 'Unknown'
-							ELSE region
-						END as name,
-						country,
-						sumIf(amount, type != 'refund') as revenue,
-						countIf(type != 'refund') as transactions,
-						uniq(r_customer_id) as customers,
-						ROUND((sumIf(amount, type != 'refund') / nullIf(SUM(sumIf(amount, type != 'refund')) OVER(), 0)) * 100, 2) as percentage
-					FROM revenue_attributed${whereClause}
-					GROUP BY name, country
-					ORDER BY revenue DESC
-					LIMIT {limit:UInt32}
-				`,
-				params: {
-					websiteId,
-					startDate,
-					endDate,
-					limit,
-					...buildScopeParams(websiteId, customSqlParams),
-					...whereParams,
-				},
-			};
-		},
+		customSql: makeRevenueBuilder(
+			(limit) => ({
+				select: `SELECT
+				${dimensionCase("region", "Unknown")} as name,
+				country,${REVENUE_METRICS}`,
+				groupBy: "name, country",
+				orderBy: "revenue DESC",
+				limit,
+			}),
+			20
+		),
 		timeField: "created",
 		customizable: true,
-		plugins: {
-			normalizeGeo: true,
-		},
+		plugins: { normalizeGeo: true },
 	},
 
 	revenue_by_city: {
-		customSql: (
-			websiteId: string,
-			startDate: string,
-			endDate: string,
-			filters?: Filter[],
-			_granularity?: TimeUnit,
-			_limit?: number,
-			_offset?: number,
-			_timezone?: string,
-			_filterConditions?: string[],
-			customSqlParams?: Record<string, Filter["value"]>
-		) => {
-			const limit = _limit ?? 20;
-			const { whereClause, params: whereParams } =
-				buildRevenueWhereClause(filters);
-			return {
-				sql: `
-					WITH ${buildAttributionCte(customSqlParams)}
-					SELECT
-						CASE
-							WHEN is_attributed = 0 THEN 'Unattributed'
-							WHEN city = '' OR city IS NULL THEN 'Unknown'
-							ELSE city
-						END as name,
-						country,
-						sumIf(amount, type != 'refund') as revenue,
-						countIf(type != 'refund') as transactions,
-						uniq(r_customer_id) as customers,
-						ROUND((sumIf(amount, type != 'refund') / nullIf(SUM(sumIf(amount, type != 'refund')) OVER(), 0)) * 100, 2) as percentage
-					FROM revenue_attributed${whereClause}
-					GROUP BY name, country
-					ORDER BY revenue DESC
-					LIMIT {limit:UInt32}
-				`,
-				params: {
-					websiteId,
-					startDate,
-					endDate,
-					limit,
-					...buildScopeParams(websiteId, customSqlParams),
-					...whereParams,
-				},
-			};
-		},
+		customSql: makeRevenueBuilder(
+			(limit) => ({
+				select: `SELECT
+				${dimensionCase("city", "Unknown")} as name,
+				country,${REVENUE_METRICS}`,
+				groupBy: "name, country",
+				orderBy: "revenue DESC",
+				limit,
+			}),
+			20
+		),
 		timeField: "created",
 		customizable: true,
-		plugins: {
-			normalizeGeo: true,
-		},
+		plugins: { normalizeGeo: true },
 	},
 
 	revenue_by_browser: {
-		customSql: (
-			websiteId: string,
-			startDate: string,
-			endDate: string,
-			filters?: Filter[],
-			_granularity?: TimeUnit,
-			_limit?: number,
-			_offset?: number,
-			_timezone?: string,
-			_filterConditions?: string[],
-			customSqlParams?: Record<string, Filter["value"]>
-		) => {
-			const limit = _limit ?? 10;
-			const { whereClause, params: whereParams } =
-				buildRevenueWhereClause(filters);
-			return {
-				sql: `
-					WITH ${buildAttributionCte(customSqlParams)}
-					SELECT
-						CASE
-							WHEN is_attributed = 0 THEN 'Unattributed'
-							WHEN browser_name = '' OR browser_name IS NULL THEN 'Unknown'
-							ELSE browser_name
-						END as name,
-						sumIf(amount, type != 'refund') as revenue,
-						countIf(type != 'refund') as transactions,
-						uniq(r_customer_id) as customers,
-						ROUND((sumIf(amount, type != 'refund') / nullIf(SUM(sumIf(amount, type != 'refund')) OVER(), 0)) * 100, 2) as percentage
-					FROM revenue_attributed${whereClause}
-					GROUP BY name
-					ORDER BY revenue DESC
-					LIMIT {limit:UInt32}
-				`,
-				params: {
-					websiteId,
-					startDate,
-					endDate,
-					limit,
-					...buildScopeParams(websiteId, customSqlParams),
-					...whereParams,
-				},
-			};
-		},
+		customSql: makeRevenueBuilder(
+			(limit) => ({
+				select: `SELECT
+				${dimensionCase("browser_name", "Unknown")} as name,${REVENUE_METRICS}`,
+				groupBy: "name",
+				orderBy: "revenue DESC",
+				limit,
+			}),
+			10
+		),
 		timeField: "created",
 		customizable: true,
 	},
 
 	revenue_by_device: {
-		customSql: (
-			websiteId: string,
-			startDate: string,
-			endDate: string,
-			filters?: Filter[],
-			_granularity?: TimeUnit,
-			_limit?: number,
-			_offset?: number,
-			_timezone?: string,
-			_filterConditions?: string[],
-			customSqlParams?: Record<string, Filter["value"]>
-		) => {
-			const limit = _limit ?? 10;
-			const { whereClause, params: whereParams } =
-				buildRevenueWhereClause(filters);
-			return {
-				sql: `
-					WITH ${buildAttributionCte(customSqlParams)}
-					SELECT
-						CASE
-							WHEN is_attributed = 0 THEN 'Unattributed'
-							WHEN device_type = '' OR device_type IS NULL THEN 'Unknown'
-							ELSE device_type
-						END as name,
-						sumIf(amount, type != 'refund') as revenue,
-						countIf(type != 'refund') as transactions,
-						uniq(r_customer_id) as customers,
-						ROUND((sumIf(amount, type != 'refund') / nullIf(SUM(sumIf(amount, type != 'refund')) OVER(), 0)) * 100, 2) as percentage
-					FROM revenue_attributed${whereClause}
-					GROUP BY name
-					ORDER BY revenue DESC
-					LIMIT {limit:UInt32}
-				`,
-				params: {
-					websiteId,
-					startDate,
-					endDate,
-					limit,
-					...buildScopeParams(websiteId, customSqlParams),
-					...whereParams,
-				},
-			};
-		},
+		customSql: makeRevenueBuilder(
+			(limit) => ({
+				select: `SELECT
+				${dimensionCase("device_type", "Unknown")} as name,${REVENUE_METRICS}`,
+				groupBy: "name",
+				orderBy: "revenue DESC",
+				limit,
+			}),
+			10
+		),
 		timeField: "created",
 		customizable: true,
 	},
 
 	revenue_by_os: {
-		customSql: (
-			websiteId: string,
-			startDate: string,
-			endDate: string,
-			filters?: Filter[],
-			_granularity?: TimeUnit,
-			_limit?: number,
-			_offset?: number,
-			_timezone?: string,
-			_filterConditions?: string[],
-			customSqlParams?: Record<string, Filter["value"]>
-		) => {
-			const limit = _limit ?? 10;
-			const { whereClause, params: whereParams } =
-				buildRevenueWhereClause(filters);
-			return {
-				sql: `
-					WITH ${buildAttributionCte(customSqlParams)}
-					SELECT
-						CASE
-							WHEN is_attributed = 0 THEN 'Unattributed'
-							WHEN os_name = '' OR os_name IS NULL THEN 'Unknown'
-							ELSE os_name
-						END as name,
-						sumIf(amount, type != 'refund') as revenue,
-						countIf(type != 'refund') as transactions,
-						uniq(r_customer_id) as customers,
-						ROUND((sumIf(amount, type != 'refund') / nullIf(SUM(sumIf(amount, type != 'refund')) OVER(), 0)) * 100, 2) as percentage
-					FROM revenue_attributed${whereClause}
-					GROUP BY name
-					ORDER BY revenue DESC
-					LIMIT {limit:UInt32}
-				`,
-				params: {
-					websiteId,
-					startDate,
-					endDate,
-					limit,
-					...buildScopeParams(websiteId, customSqlParams),
-					...whereParams,
-				},
-			};
-		},
+		customSql: makeRevenueBuilder(
+			(limit) => ({
+				select: `SELECT
+				${dimensionCase("os_name", "Unknown")} as name,${REVENUE_METRICS}`,
+				groupBy: "name",
+				orderBy: "revenue DESC",
+				limit,
+			}),
+			10
+		),
 		timeField: "created",
 		customizable: true,
 	},
 
 	revenue_by_referrer: {
-		customSql: (
-			websiteId: string,
-			startDate: string,
-			endDate: string,
-			filters?: Filter[],
-			_granularity?: TimeUnit,
-			_limit?: number,
-			_offset?: number,
-			_timezone?: string,
-			_filterConditions?: string[],
-			customSqlParams?: Record<string, Filter["value"]>
-		) => {
-			const limit = _limit ?? 20;
-			const { whereClause, params: whereParams } =
-				buildRevenueWhereClause(filters);
-			return {
-				sql: `
-					WITH ${buildAttributionCte(customSqlParams)},
-					referrer_agg AS (
+		customSql: makeRevenueBuilder(
+			(limit) => ({
+				select: `SELECT
+				referrer_name as name,${REVENUE_METRICS}`,
+				groupBy: "referrer_name",
+				orderBy: "revenue DESC",
+				limit,
+				innerCte: {
+					name: "referrer_agg",
+					body: (source) => `
 						SELECT
-							CASE
-								WHEN is_attributed = 0 THEN 'Unattributed'
-								WHEN referrer_domain = '' OR referrer_domain IS NULL THEN 'Direct'
-								ELSE referrer_domain
-							END as referrer_name,
+							${dimensionCase("referrer_domain", "Direct")} as referrer_name,
 							amount,
 							type,
 							r_customer_id
-						FROM revenue_attributed${whereClause}
-					)
-					SELECT
-						referrer_name as name,
-						sumIf(amount, type != 'refund') as revenue,
-						countIf(type != 'refund') as transactions,
-						uniq(r_customer_id) as customers,
-						ROUND((sumIf(amount, type != 'refund') / nullIf(SUM(sumIf(amount, type != 'refund')) OVER(), 0)) * 100, 2) as percentage
-					FROM referrer_agg
-					GROUP BY referrer_name
-					ORDER BY revenue DESC
-					LIMIT {limit:UInt32}
-				`,
-				params: {
-					websiteId,
-					startDate,
-					endDate,
-					limit,
-					...buildScopeParams(websiteId, customSqlParams),
-					...whereParams,
+						FROM ${source}
+					`,
 				},
-			};
-		},
+			}),
+			20
+		),
 		timeField: "created",
 		customizable: true,
 	},
 
 	revenue_by_utm_source: {
-		customSql: (
-			websiteId: string,
-			startDate: string,
-			endDate: string,
-			filters?: Filter[],
-			_granularity?: TimeUnit,
-			_limit?: number,
-			_offset?: number,
-			_timezone?: string,
-			_filterConditions?: string[],
-			customSqlParams?: Record<string, Filter["value"]>
-		) => {
-			const limit = _limit ?? 20;
-			const { whereClause, params: whereParams } =
-				buildRevenueWhereClause(filters);
-			return {
-				sql: `
-					WITH ${buildAttributionCte(customSqlParams)}
-					SELECT
-						CASE
-							WHEN is_attributed = 0 THEN 'Unattributed'
-							WHEN utm_source = '' OR utm_source IS NULL THEN 'None'
-							ELSE utm_source
-						END as name,
-						sumIf(amount, type != 'refund') as revenue,
-						countIf(type != 'refund') as transactions,
-						uniq(r_customer_id) as customers,
-						ROUND((sumIf(amount, type != 'refund') / nullIf(SUM(sumIf(amount, type != 'refund')) OVER(), 0)) * 100, 2) as percentage
-					FROM revenue_attributed${whereClause}
-					GROUP BY name
-					ORDER BY revenue DESC
-					LIMIT {limit:UInt32}
-				`,
-				params: {
-					websiteId,
-					startDate,
-					endDate,
-					limit,
-					...buildScopeParams(websiteId, customSqlParams),
-					...whereParams,
-				},
-			};
-		},
+		customSql: makeRevenueBuilder(
+			(limit) => ({
+				select: `SELECT
+				${dimensionCase("utm_source", "None")} as name,${REVENUE_METRICS}`,
+				groupBy: "name",
+				orderBy: "revenue DESC",
+				limit,
+			}),
+			20
+		),
 		timeField: "created",
 		customizable: true,
 	},
 
 	revenue_by_utm_medium: {
-		customSql: (
-			websiteId: string,
-			startDate: string,
-			endDate: string,
-			filters?: Filter[],
-			_granularity?: TimeUnit,
-			_limit?: number,
-			_offset?: number,
-			_timezone?: string,
-			_filterConditions?: string[],
-			customSqlParams?: Record<string, Filter["value"]>
-		) => {
-			const limit = _limit ?? 20;
-			const { whereClause, params: whereParams } =
-				buildRevenueWhereClause(filters);
-			return {
-				sql: `
-					WITH ${buildAttributionCte(customSqlParams)}
-					SELECT
-						CASE
-							WHEN is_attributed = 0 THEN 'Unattributed'
-							WHEN utm_medium = '' OR utm_medium IS NULL THEN 'None'
-							ELSE utm_medium
-						END as name,
-						sumIf(amount, type != 'refund') as revenue,
-						countIf(type != 'refund') as transactions,
-						uniq(r_customer_id) as customers,
-						ROUND((sumIf(amount, type != 'refund') / nullIf(SUM(sumIf(amount, type != 'refund')) OVER(), 0)) * 100, 2) as percentage
-					FROM revenue_attributed${whereClause}
-					GROUP BY name
-					ORDER BY revenue DESC
-					LIMIT {limit:UInt32}
-				`,
-				params: {
-					websiteId,
-					startDate,
-					endDate,
-					limit,
-					...buildScopeParams(websiteId, customSqlParams),
-					...whereParams,
-				},
-			};
-		},
+		customSql: makeRevenueBuilder(
+			(limit) => ({
+				select: `SELECT
+				${dimensionCase("utm_medium", "None")} as name,${REVENUE_METRICS}`,
+				groupBy: "name",
+				orderBy: "revenue DESC",
+				limit,
+			}),
+			20
+		),
 		timeField: "created",
 		customizable: true,
 	},
 
 	revenue_by_utm_campaign: {
-		customSql: (
-			websiteId: string,
-			startDate: string,
-			endDate: string,
-			filters?: Filter[],
-			_granularity?: TimeUnit,
-			_limit?: number,
-			_offset?: number,
-			_timezone?: string,
-			_filterConditions?: string[],
-			customSqlParams?: Record<string, Filter["value"]>
-		) => {
-			const limit = _limit ?? 20;
-			const { whereClause, params: whereParams } =
-				buildRevenueWhereClause(filters);
-			return {
-				sql: `
-					WITH ${buildAttributionCte(customSqlParams)}
-					SELECT
-						CASE
-							WHEN is_attributed = 0 THEN 'Unattributed'
-							WHEN utm_campaign = '' OR utm_campaign IS NULL THEN 'None'
-							ELSE utm_campaign
-						END as name,
-						sumIf(amount, type != 'refund') as revenue,
-						countIf(type != 'refund') as transactions,
-						uniq(r_customer_id) as customers,
-						ROUND((sumIf(amount, type != 'refund') / nullIf(SUM(sumIf(amount, type != 'refund')) OVER(), 0)) * 100, 2) as percentage
-					FROM revenue_attributed${whereClause}
-					GROUP BY name
-					ORDER BY revenue DESC
-					LIMIT {limit:UInt32}
-				`,
-				params: {
-					websiteId,
-					startDate,
-					endDate,
-					limit,
-					...buildScopeParams(websiteId, customSqlParams),
-					...whereParams,
-				},
-			};
-		},
+		customSql: makeRevenueBuilder(
+			(limit) => ({
+				select: `SELECT
+				${dimensionCase("utm_campaign", "None")} as name,${REVENUE_METRICS}`,
+				groupBy: "name",
+				orderBy: "revenue DESC",
+				limit,
+			}),
+			20
+		),
 		timeField: "created",
 		customizable: true,
 	},
 
 	revenue_by_entry_page: {
-		customSql: (
-			websiteId: string,
-			startDate: string,
-			endDate: string,
-			filters?: Filter[],
-			_granularity?: TimeUnit,
-			_limit?: number,
-			_offset?: number,
-			_timezone?: string,
-			_filterConditions?: string[],
-			customSqlParams?: Record<string, Filter["value"]>
-		) => {
-			const limit = _limit ?? 20;
-			const { whereClause, params: whereParams } =
-				buildRevenueWhereClause(filters);
-			return {
-				sql: `
-					WITH ${buildAttributionCte(customSqlParams)}
-					SELECT
-						CASE
-							WHEN is_attributed = 0 THEN 'Unattributed'
-							WHEN entry_path = '' OR entry_path IS NULL THEN 'Unknown'
-							ELSE entry_path
-						END as name,
-						sumIf(amount, type != 'refund') as revenue,
-						countIf(type != 'refund') as transactions,
-						uniq(r_customer_id) as customers,
-						ROUND((sumIf(amount, type != 'refund') / nullIf(SUM(sumIf(amount, type != 'refund')) OVER(), 0)) * 100, 2) as percentage
-					FROM revenue_attributed${whereClause}
-					GROUP BY name
-					ORDER BY revenue DESC
-					LIMIT {limit:UInt32}
-				`,
-				params: {
-					websiteId,
-					startDate,
-					endDate,
-					limit,
-					...buildScopeParams(websiteId, customSqlParams),
-					...whereParams,
-				},
-			};
-		},
+		customSql: makeRevenueBuilder(
+			(limit) => ({
+				select: `SELECT
+				${dimensionCase("entry_path", "Unknown")} as name,${REVENUE_METRICS}`,
+				groupBy: "name",
+				orderBy: "revenue DESC",
+				limit,
+			}),
+			20
+		),
 		timeField: "created",
 		customizable: true,
 	},
 
 	recent_transactions: {
-		customSql: (
-			websiteId: string,
-			startDate: string,
-			endDate: string,
-			filters?: Filter[],
-			_granularity?: TimeUnit,
-			_limit?: number,
-			_offset?: number,
-			_timezone?: string,
-			_filterConditions?: string[],
-			customSqlParams?: Record<string, Filter["value"]>
-		) => {
-			const limit = _limit ?? 50;
-			const { whereClause, params: whereParams } = buildRevenueWhereClause(
-				filters,
-				["type != 'refund'"]
-			);
-			return {
-				sql: `
-					WITH ${buildAttributionCte(customSqlParams)}
-					SELECT
-						transaction_id,
-						provider,
-						type,
-						amount,
-						r_anonymous_id as anonymous_id,
-						product_name,
-						created,
-						is_attributed,
-						CASE WHEN is_attributed = 0 THEN 'Unattributed' ELSE coalesce(nullIf(country, ''), 'Unknown') END as country,
-						CASE WHEN is_attributed = 0 THEN 'Unattributed' ELSE coalesce(nullIf(browser_name, ''), 'Unknown') END as browser_name,
-						CASE WHEN is_attributed = 0 THEN 'Unattributed' ELSE coalesce(nullIf(device_type, ''), 'Unknown') END as device_type,
-						CASE WHEN is_attributed = 0 THEN 'Unattributed' ELSE coalesce(nullIf(referrer_domain, ''), 'Direct') END as referrer,
-						CASE WHEN is_attributed = 0 THEN 'Unattributed' ELSE coalesce(nullIf(utm_source, ''), 'None') END as utm_source,
-						CASE WHEN is_attributed = 0 THEN 'Unattributed' ELSE coalesce(nullIf(utm_campaign, ''), 'None') END as utm_campaign
-					FROM revenue_attributed${whereClause}
-					ORDER BY created DESC
-					LIMIT {limit:UInt32}
-				`,
-				params: {
-					websiteId,
-					startDate,
-					endDate,
-					limit,
-					...buildScopeParams(websiteId, customSqlParams),
-					...whereParams,
-				},
-			};
-		},
+		customSql: makeRevenueBuilder(
+			(limit) => ({
+				select: `SELECT
+				transaction_id,
+				provider,
+				type,
+				amount,
+				r_anonymous_id as anonymous_id,
+				product_name,
+				created,
+				is_attributed,
+				${recentTransactionDimension("country", "Unknown", "country")},
+				${recentTransactionDimension("browser_name", "Unknown", "browser_name")},
+				${recentTransactionDimension("device_type", "Unknown", "device_type")},
+				${recentTransactionDimension("referrer_domain", "Direct", "referrer")},
+				${recentTransactionDimension("utm_source", "None", "utm_source")},
+				${recentTransactionDimension("utm_campaign", "None", "utm_campaign")}`,
+				orderBy: "created DESC",
+				limit,
+				extraConditions: ["type != 'refund'"],
+			}),
+			50
+		),
 		timeField: "created",
 		customizable: true,
-		plugins: {
-			normalizeGeo: true,
-		},
+		plugins: { normalizeGeo: true },
 	},
 };
