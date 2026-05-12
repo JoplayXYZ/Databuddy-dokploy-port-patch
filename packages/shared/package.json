@@ -16,7 +16,8 @@
     "./kafka-tls": "./src/kafka-tls.ts",
     "./ssrf-guard": "./src/ssrf-guard.ts",
     "./constants/deep-link-apps": "./src/constants/deep-link-apps.ts",
-    "./analytics-filters": "./src/analytics-filters.ts"
+    "./analytics-filters": "./src/analytics-filters.ts",
+    "./agent-credits": "./src/agent-credits.ts"
   },
   "scripts": {
     "check-types": "tsc --noEmit",

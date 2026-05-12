@@ -61,7 +61,6 @@
         "@orpc/openapi": "^1.14.0",
         "@orpc/server": "^1.14.0",
         "@orpc/zod": "^1.14.0",
-        "@tokenlens/models": "catalog:",
         "ai": "^6.0.154",
         "autumn-js": "catalog:",
         "bullmq": "^5.66.5",
@@ -74,7 +73,6 @@
         "resend": "^4.0.1",
         "supermemory": "^4.17.0",
         "svix": "^1.84.1",
-        "tokenlens": "catalog:",
         "zod": "catalog:",
       },
       "devDependencies": {
@@ -4228,8 +4226,6 @@
 
     "@databuddy/ai/tokenlens": ["tokenlens@2.0.0-alpha.3", "", { "dependencies": { "@tokenlens/core": "2.0.0-alpha.3", "@tokenlens/fetch": "2.0.0-alpha.3", "@tokenlens/helpers": "2.0.0-alpha.3", "@tokenlens/tokenizer": "2.0.0-alpha.3" } }, "sha512-bN+2JgJDDjl3hgFT4Grr2YPgEELT6M6QqDxgWxSvzZLjCTLS4erf9jsOpBXBRNISpDhc0IFYFFcANdIdjxMBfA=="],
 
-    "@databuddy/api/tokenlens": ["tokenlens@2.0.0-alpha.3", "", { "dependencies": { "@tokenlens/core": "2.0.0-alpha.3", "@tokenlens/fetch": "2.0.0-alpha.3", "@tokenlens/helpers": "2.0.0-alpha.3", "@tokenlens/tokenizer": "2.0.0-alpha.3" } }, "sha512-bN+2JgJDDjl3hgFT4Grr2YPgEELT6M6QqDxgWxSvzZLjCTLS4erf9jsOpBXBRNISpDhc0IFYFFcANdIdjxMBfA=="],
-
     "@databuddy/cache/drizzle-orm": ["drizzle-orm@1.0.0-rc.1", "", { "peerDependencies": { "@aws-sdk/client-rds-data": ">=3", "@cloudflare/workers-types": ">=4", "@effect/sql-pg": ">=4.0.0-beta.58 || >=4.0.0", "@electric-sql/pglite": ">=0.2.0", "@libsql/client": ">=0.10.0", "@libsql/client-wasm": ">=0.10.0", "@neondatabase/serverless": ">=0.10.0", "@op-engineering/op-sqlite": ">=2", "@opentelemetry/api": "^1.4.1", "@planetscale/database": ">=1.13", "@sinclair/typebox": ">=0.34.8", "@sqlitecloud/drivers": ">=1.0.653", "@tidbcloud/serverless": "*", "@tursodatabase/database": ">=0.2.1", "@tursodatabase/database-common": ">=0.2.1", "@tursodatabase/database-wasm": ">=0.2.1", "@types/better-sqlite3": "*", "@types/mssql": "^9.1.4", "@types/pg": "*", "@types/sql.js": "*", "@upstash/redis": ">=1.34.7", "@vercel/postgres": ">=0.8.0", "@xata.io/client": "*", "arktype": ">=2.0.0", "better-sqlite3": ">=9.3.0", "bun-types": "*", "effect": ">=4.0.0-beta.58 || >=4.0.0", "expo-sqlite": ">=14.0.0", "mssql": "^11.0.1", "mysql2": ">=2", "pg": ">=8", "postgres": ">=3", "sql.js": ">=1", "sqlite3": ">=5", "typebox": ">=1.0.0", "valibot": ">=1.0.0-beta.7", "zod": "^3.25.0 || ^4.0.0" }, "optionalPeers": ["@aws-sdk/client-rds-data", "@cloudflare/workers-types", "@effect/sql-pg", "@electric-sql/pglite", "@libsql/client", "@libsql/client-wasm", "@neondatabase/serverless", "@op-engineering/op-sqlite", "@opentelemetry/api", "@planetscale/database", "@sinclair/typebox", "@sqlitecloud/drivers", "@tidbcloud/serverless", "@tursodatabase/database", "@tursodatabase/database-common", "@tursodatabase/database-wasm", "@types/better-sqlite3", "@types/mssql", "@types/pg", "@types/sql.js", "@upstash/redis", "@vercel/postgres", "@xata.io/client", "arktype", "better-sqlite3", "bun-types", "effect", "expo-sqlite", "mssql", "mysql2", "pg", "postgres", "sql.js", "sqlite3", "typebox", "valibot", "zod"] }, "sha512-jGCqAgxpz+OSHP2jQGooUHBxnFMTYl0TTRSfULBl52VNf7CtyNRnazUi+VdbSxvJrDP2lnIsmUh5O+HhKeSJCg=="],
 
     "@databuddy/dashboard/@types/node": ["@types/node@22.19.17", "", { "dependencies": { "undici-types": "~6.21.0" } }, "sha512-wGdMcf+vPYM6jikpS/qhg6WiqSV/OhG+jeeHT/KlVqxYfD40iYJf9/AE1uQxVWFvU7MipKRkRv8NSHiCGgPr8Q=="],
@@ -4833,12 +4829,6 @@
     "@databuddy/ai/tokenlens/@tokenlens/fetch": ["@tokenlens/fetch@2.0.0-alpha.3", "", { "dependencies": { "@tokenlens/core": "2.0.0-alpha.3" } }, "sha512-/v5QDXjfUCiQz4iu+CjG4R9qAhNkExfIM5H0Yo1+/jPzxrvB7HCu/60i0lZJQltJS44wEqlgA55qrohpZTY3tw=="],
 
     "@databuddy/ai/tokenlens/@tokenlens/helpers": ["@tokenlens/helpers@2.0.0-alpha.3", "", { "dependencies": { "@tokenlens/core": "2.0.0-alpha.3" } }, "sha512-n9DosGQPkp0uFqR/egt1N0j04zOz/KTRFug15U4mB9atRuttyMaMBJ9oLuqQZEFad092PoAjDcT38yO2mbFoYw=="],
-
-    "@databuddy/api/tokenlens/@tokenlens/core": ["@tokenlens/core@2.0.0-alpha.3", "", {}, "sha512-oR+fO2vpTP0/w7xfc/JhI1QRnwlvP0/UVa6vAilp7o8/Gl7iCemPH0Ga6WYuiGI5TL6JA/M1T5losFsK0vKmpA=="],
-
-    "@databuddy/api/tokenlens/@tokenlens/fetch": ["@tokenlens/fetch@2.0.0-alpha.3", "", { "dependencies": { "@tokenlens/core": "2.0.0-alpha.3" } }, "sha512-/v5QDXjfUCiQz4iu+CjG4R9qAhNkExfIM5H0Yo1+/jPzxrvB7HCu/60i0lZJQltJS44wEqlgA55qrohpZTY3tw=="],
-
-    "@databuddy/api/tokenlens/@tokenlens/helpers": ["@tokenlens/helpers@2.0.0-alpha.3", "", { "dependencies": { "@tokenlens/core": "2.0.0-alpha.3" } }, "sha512-n9DosGQPkp0uFqR/egt1N0j04zOz/KTRFug15U4mB9atRuttyMaMBJ9oLuqQZEFad092PoAjDcT38yO2mbFoYw=="],
 
     "@databuddy/dashboard/@types/node/undici-types": ["undici-types@6.21.0", "", {}, "sha512-iwDZqg0QAGrg9Rav5H4n0M64c3mkR59cJ6wQp+7C4nI0gsmExaedaYLNO44eT4AtBBwjbTiGPMlt2Md0T9H9JQ=="],
 
