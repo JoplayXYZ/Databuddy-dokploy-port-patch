@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { cacheable } from "@databuddy/redis/cacheable";
-import { captureError, record } from "@lib/tracing";
+import { captureError, mergeWideEvent, record } from "@lib/tracing";
 import type { City } from "@maxmind/geoip2-node";
 import {
 	AddressNotFoundError,
@@ -8,7 +8,6 @@ import {
 	Reader,
 } from "@maxmind/geoip2-node";
 import { createError, EvlogError, log } from "evlog";
-import { useLogger } from "evlog/elysia";
 
 if (!process.env.IP_HASH_SALT && process.env.NODE_ENV === "production") {
 	throw new Error(
@@ -18,14 +17,6 @@ if (!process.env.IP_HASH_SALT && process.env.NODE_ENV === "production") {
 
 interface GeoIPReader extends Reader {
 	city(ip: string): City;
-}
-
-function mergeGeoWideEvent(context: Record<string, unknown>): void {
-	try {
-		useLogger().set({ geo: context });
-	} catch {
-		log.info({ geo: context });
-	}
 }
 
 const CDN_URL = "https://cdn.databuddy.cc/mmdb/GeoLite2-City.mmdb";
@@ -213,7 +204,9 @@ export function anonymizeIp(ip: string): string {
 export function getGeo(ip: string, request?: Request) {
 	return record("getGeo", async () => {
 		if (!ip || ignore.includes(ip) || !isValidIp(ip)) {
-			mergeGeoWideEvent({ skipped: true, reason: "invalid_or_local_ip" });
+			mergeWideEvent({
+				geo: { skipped: true, reason: "invalid_or_local_ip" },
+			});
 			return {
 				anonymizedIP: anonymizeIp(ip),
 				country: undefined,
@@ -227,9 +220,11 @@ export function getGeo(ip: string, request?: Request) {
 		if (!geo.country && request?.headers) {
 			const cfCountry = getCloudflareCountry(request.headers);
 			if (cfCountry) {
-				mergeGeoWideEvent({
-					source: "cloudflare_header",
-					country: cfCountry,
+				mergeWideEvent({
+					geo: {
+						source: "cloudflare_header",
+						country: cfCountry,
+					},
 				});
 				return {
 					anonymizedIP: anonymizeIp(ip),
