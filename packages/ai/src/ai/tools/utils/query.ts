@@ -8,21 +8,36 @@ export interface QueryResult<T = unknown> {
 	rowCount: number;
 }
 
-const USER_CONTENT_FIELDS = new Set([
-	"path",
-	"title",
-	"referrer",
-	"message",
-	"stack",
-	"filename",
-	"utm_source",
-	"utm_medium",
-	"utm_campaign",
-	"utm_term",
-	"utm_content",
-	"event_name",
-	"property_key",
-	"property_value",
+/**
+ * Fields we know are safe agent inputs: server-controlled identifiers,
+ * timestamps, and aggregates. Everything else is treated as untrusted visitor
+ * data and HTML-stripped + truncated before being returned to a model that
+ * also holds mutation tools.
+ */
+const TRUSTED_FIELDS = new Set([
+	"client_id",
+	"website_id",
+	"organization_id",
+	"owner_id",
+	"id",
+	"session_id",
+	"anonymous_id",
+	"user_id",
+	"time",
+	"timestamp",
+	"createdAt",
+	"created_at",
+	"updatedAt",
+	"updated_at",
+	"count",
+	"total",
+	"value",
+	"score",
+	"latency",
+	"duration",
+	"page",
+	"rank",
+	"is_bot",
 ]);
 
 const MAX_STRING_LENGTH = 2000;
@@ -31,12 +46,30 @@ function sanitizeValue(value: string): string {
 	return stripHtmlTags(value, MAX_STRING_LENGTH);
 }
 
+function sanitizeUnknown(value: unknown): unknown {
+	if (typeof value === "string") {
+		return sanitizeValue(value);
+	}
+	if (Array.isArray(value)) {
+		return value.map(sanitizeUnknown);
+	}
+	if (value && typeof value === "object") {
+		const out: Record<string, unknown> = {};
+		for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+			out[k] = TRUSTED_FIELDS.has(k) ? v : sanitizeUnknown(v);
+		}
+		return out;
+	}
+	return value;
+}
+
 function sanitizeRow<T extends Record<string, unknown>>(row: T): T {
 	const out = { ...row };
-	for (const key of Object.keys(out)) {
-		if (USER_CONTENT_FIELDS.has(key) && typeof out[key] === "string") {
-			(out as Record<string, unknown>)[key] = sanitizeValue(out[key] as string);
+	for (const [key, value] of Object.entries(out)) {
+		if (TRUSTED_FIELDS.has(key)) {
+			continue;
 		}
+		(out as Record<string, unknown>)[key] = sanitizeUnknown(value);
 	}
 	return out;
 }
