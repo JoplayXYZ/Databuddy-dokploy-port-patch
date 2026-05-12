@@ -1,17 +1,3 @@
-/**
- * Resolves whether Kafka/Redpanda SASL connections should use TLS.
- *
- * - Production defaults to `ssl: true`, unless `REDPANDA_SSL=false` is set
- *   explicitly (e.g. for local broker via Tailscale).
- * - Non-production defaults to `ssl: false`.
- * - Refuses SASL without TLS in production unless `ALLOW_INSECURE_KAFKA=true`
- *   is set explicitly.
- *
- * SCRAM authenticates but does not encrypt: username, topic metadata, and
- * payloads ride in cleartext on the unencrypted socket. Pair SASL with TLS
- * unless the broker is reachable only over a trusted transport (mTLS mesh,
- * VPC-private, etc.).
- */
 export function resolveKafkaSsl(
 	hasCredentials: boolean,
 	env: NodeJS.ProcessEnv = process.env

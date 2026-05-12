@@ -645,16 +645,14 @@ export const agent = new Elysia({ prefix: "/v1/agent" })
 					const creditsCheck = billingCustomerId
 						? timeAgentPhase(
 								"credits_check",
-								ensureAgentCreditsAvailable(billingCustomerId).catch(
-									(err) => {
-										captureError(err, {
-											agent_credit_check_error: true,
-											agent_chat_id: chatId,
-											agent_website_id: body.websiteId,
-										});
-										return true;
-									}
-								)
+								ensureAgentCreditsAvailable(billingCustomerId).catch((err) => {
+									captureError(err, {
+										agent_credit_check_error: true,
+										agent_chat_id: chatId,
+										agent_website_id: body.websiteId,
+									});
+									return true;
+								})
 							)
 						: Promise.resolve(true);
 

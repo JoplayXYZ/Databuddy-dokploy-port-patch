@@ -161,11 +161,6 @@ function lookupGeoLocation(ip: string): Promise<{
 	});
 }
 
-/**
- * Coarsens an IP to its network prefix so the geo cache key never holds a
- * full visitor IP: IPv4 -> /24, IPv6 -> /64. Geo data is per-network anyway,
- * so this preserves accuracy while keeping PII out of Redis keys.
- */
 function coarsenIpForCache(ip: string): string {
 	if (ip.includes(":")) {
 		const groups = ip.split(":");
