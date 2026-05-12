@@ -104,7 +104,7 @@ const buildStatusMessage = (hasEvents: boolean, eventsError: string | null) => {
 	}
 
 	if (eventsError) {
-		return `Unable to check events: ${eventsError}`;
+		return "Unable to check events. Try again shortly.";
 	}
 
 	return "Tracking not set up. Please install the script tag.";
