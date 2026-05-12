@@ -117,20 +117,26 @@ export const CustomEventsBuilders: Record<string, SimpleQueryConfig> = {
 			return {
 				sql: `
 					WITH all_props AS (
-						SELECT 
-							event_name as name,
-							arrayJoin(JSONExtractKeys(properties)) as property_key,
-							trim(BOTH '"' FROM JSONExtractRaw(properties, arrayJoin(JSONExtractKeys(properties)))) as property_value,
+						SELECT
+							name,
+							property_key,
+							trim(BOTH '"' FROM JSONExtractRaw(properties, property_key)) as property_value,
 							COUNT(*) as count
-						FROM ${Analytics.custom_events}
-						WHERE 
-							${projectWhereClause(filterParams)}
-							AND timestamp >= toDateTime({startDate:String})
-							AND timestamp <= toDateTime(concat({endDate:String}, ' 23:59:59'))
-							AND event_name != ''
-							AND properties != '{}'
-							AND isValidJSON(properties)
-							${whereClause}
+						FROM (
+							SELECT
+								event_name as name,
+								properties,
+								arrayJoin(JSONExtractKeys(properties)) as property_key
+							FROM ${Analytics.custom_events}
+							WHERE
+								${projectWhereClause(filterParams)}
+								AND timestamp >= toDateTime({startDate:String})
+								AND timestamp <= toDateTime(concat({endDate:String}, ' 23:59:59'))
+								AND event_name != ''
+								AND properties != '{}'
+								AND isValidJSON(properties)
+								${whereClause}
+						)
 						GROUP BY name, property_key, property_value
 					)
 					SELECT name, property_key, property_value, count
@@ -845,19 +851,25 @@ export const CustomEventsBuilders: Record<string, SimpleQueryConfig> = {
 						GROUP BY event_name
 					),
 					property_data AS (
-						SELECT 
+						SELECT
 							event_name,
-							arrayJoin(JSONExtractKeys(properties)) as property_key,
-							trim(BOTH '"' FROM JSONExtractRaw(properties, arrayJoin(JSONExtractKeys(properties)))) as property_value
-						FROM ${Analytics.custom_events}
-						WHERE 
-							${projectWhereClause(filterParams)}
-							AND timestamp >= toDateTime({startDate:String})
-							AND timestamp <= toDateTime(concat({endDate:String}, ' 23:59:59'))
-							AND event_name != ''
-							AND properties != '{}'
-							AND isValidJSON(properties)
-							${combinedWhereClause}
+							property_key,
+							trim(BOTH '"' FROM JSONExtractRaw(properties, property_key)) as property_value
+						FROM (
+							SELECT
+								event_name,
+								properties,
+								arrayJoin(JSONExtractKeys(properties)) as property_key
+							FROM ${Analytics.custom_events}
+							WHERE
+								${projectWhereClause(filterParams)}
+								AND timestamp >= toDateTime({startDate:String})
+								AND timestamp <= toDateTime(concat({endDate:String}, ' 23:59:59'))
+								AND event_name != ''
+								AND properties != '{}'
+								AND isValidJSON(properties)
+								${combinedWhereClause}
+						)
 					),
 					value_counts AS (
 						SELECT 
