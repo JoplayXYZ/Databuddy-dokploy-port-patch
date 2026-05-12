@@ -7,6 +7,7 @@
 
 import { db } from "@databuddy/db";
 import type { Website } from "@databuddy/db/schema";
+import { cacheNamespaces } from "@databuddy/redis/cache-invalidation";
 import { cacheable } from "@databuddy/redis/cacheable";
 import { captureError, record } from "@lib/tracing";
 import { createError, EvlogError } from "evlog";
@@ -53,7 +54,7 @@ export const resolveApiKeyOwnerId = cacheable(
 		_resolveOwnerId(organizationId),
 	{
 		expireInSec: 300,
-		prefix: "api_key_owner_id",
+		prefix: cacheNamespaces.apiKeyOwnerId,
 		staleWhileRevalidate: true,
 		staleTime: 60,
 	}
@@ -198,7 +199,7 @@ const getWebsiteByIdWithOwnerCached = cacheable(
 	},
 	{
 		expireInSec: 600,
-		prefix: "website_with_owner_v2",
+		prefix: cacheNamespaces.websiteWithOwner,
 		staleWhileRevalidate: true,
 		staleTime: 120,
 	}

@@ -1,6 +1,6 @@
 import { db } from "@databuddy/db";
 import { chQuery } from "@databuddy/db/clickhouse";
-import { cacheable, invalidateCacheableKey } from "@databuddy/redis";
+import { cacheable } from "@databuddy/redis";
 import {
 	DuplicateDomainError,
 	ValidationError,
@@ -44,15 +44,6 @@ interface ProcessedMiniChartData {
 
 const websiteService = new WebsiteService(db);
 const TREND_THRESHOLD = 5;
-
-async function invalidateWorkspaceWebsiteById(websiteId: string) {
-	await invalidateCacheableKey("website_by_id", websiteId).catch((error) => {
-		logger.warn(
-			{ error, websiteId },
-			"Failed to invalidate workspace website cache"
-		);
-	});
-}
 
 function handleServiceError(error: unknown): never {
 	if (error instanceof ValidationError) {
@@ -104,7 +95,7 @@ const buildStatusMessage = (hasEvents: boolean, eventsError: string | null) => {
 	}
 
 	if (eventsError) {
-		return `Unable to check events: ${eventsError}`;
+		return "Unable to check events. Try again shortly.";
 	}
 
 	return "Tracking not set up. Please install the script tag.";
@@ -149,6 +140,16 @@ const websiteOutputSchema = z.object({
 	deletedAt: z.coerce.date().nullable(),
 	integrations: z.record(z.string(), z.unknown()).nullable(),
 	settings: websiteSettingsSchema,
+});
+
+const publicWebsiteSummarySchema = z.object({
+	id: z.string(),
+	domain: z.string(),
+	name: z.string().nullable(),
+	status: websiteStatusOutputSchema,
+	isPublic: z.boolean(),
+	createdAt: z.coerce.date(),
+	updatedAt: z.coerce.date(),
 });
 
 const processedMiniChartDataSchema = z.object({
@@ -401,9 +402,9 @@ export const websitesRouter = {
 			return { websites: websitesList, chartData, activeUsers };
 		}),
 
-	getById: publicProcedure
+	getById: protectedProcedure
 		.route({
-			description: "Returns a website by id. Supports public access.",
+			description: "Returns a website by id. Requires website read permission.",
 			method: "POST",
 			path: "/websites/getById",
 			summary: "Get website",
@@ -415,32 +416,46 @@ export const websitesRouter = {
 			const workspace = await withWorkspace(context, {
 				websiteId: input.id,
 				permissions: ["read"],
+			});
+
+			const site = workspace.website;
+			if (!site) {
+				throw rpcError.notFound("website");
+			}
+			return site;
+		}),
+
+	getPublicSummary: publicProcedure
+		.route({
+			description:
+				"Returns minimal public-overview metadata for a website (id, domain, name, status). Public websites only.",
+			method: "POST",
+			path: "/websites/getPublicSummary",
+			summary: "Get public website summary",
+			tags: ["Websites"],
+		})
+		.input(z.object({ id: z.string() }))
+		.output(publicWebsiteSummarySchema)
+		.handler(async ({ context, input }) => {
+			const workspace = await withWorkspace(context, {
+				websiteId: input.id,
+				permissions: ["read"],
 				allowPublicAccess: true,
 			});
 
 			const site = workspace.website;
-
 			if (!site) {
 				throw rpcError.notFound("website");
 			}
-
-			if (workspace.isPublicAccess) {
-				return {
-					id: site.id,
-					domain: site.domain,
-					name: site.name,
-					status: site.status,
-					isPublic: site.isPublic,
-					createdAt: site.createdAt,
-					updatedAt: site.updatedAt,
-					organizationId: site.organizationId,
-					deletedAt: site.deletedAt,
-					integrations: site.integrations,
-					settings: site.settings,
-				};
-			}
-
-			return site;
+			return {
+				id: site.id,
+				domain: site.domain,
+				name: site.name,
+				status: site.status,
+				isPublic: site.isPublic,
+				createdAt: site.createdAt,
+				updatedAt: site.updatedAt,
+			};
 		}),
 
 	create: trackedProcedure
@@ -516,8 +531,6 @@ export const websitesRouter = {
 				);
 			}
 
-			await invalidateWorkspaceWebsiteById(input.id);
-
 			if (changes.length > 0) {
 				logger.info(
 					{ websiteId: updatedWebsite.id, userId: context.user?.id },
@@ -555,8 +568,6 @@ export const websitesRouter = {
 				handleServiceError(error);
 			}
 
-			await invalidateWorkspaceWebsiteById(input.id);
-
 			logger.info(
 				{
 					websiteId: input.id,
@@ -591,8 +602,6 @@ export const websitesRouter = {
 			} catch (error) {
 				handleServiceError(error);
 			}
-
-			await invalidateWorkspaceWebsiteById(input.id);
 
 			logger.warn(
 				{
@@ -674,9 +683,10 @@ export const websitesRouter = {
 			}
 		}),
 
-	isTrackingSetup: publicProcedure
+	isTrackingSetup: protectedProcedure
 		.route({
-			description: "Checks if tracking is set up for a website.",
+			description:
+				"Checks if tracking is set up for a website. Requires website read permission.",
 			method: "POST",
 			path: "/websites/isTrackingSetup",
 			summary: "Check tracking setup",
@@ -688,7 +698,6 @@ export const websitesRouter = {
 			await withWorkspace(context, {
 				websiteId: input.websiteId,
 				permissions: ["read"],
-				allowPublicAccess: true,
 			});
 
 			const { hasEvents, error: eventsError } = await getTrackingEventsStatus(

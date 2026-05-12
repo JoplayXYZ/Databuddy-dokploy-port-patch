@@ -7,10 +7,13 @@ import {
 	websites,
 } from "@databuddy/db/schema";
 import {
+	cacheNamespaces,
+	cacheTags,
 	cacheable,
 	getRedisCache,
 	invalidateAgentContextSnapshotsForOwner,
 	invalidateAgentContextSnapshotsForWebsite,
+	invalidateInsightsCachesForOrganization,
 } from "@databuddy/redis";
 import { getRateLimitHeaders, ratelimit } from "@databuddy/redis/rate-limit";
 import { generateText, Output, stepCountIs, ToolLoopAgent } from "ai";
@@ -147,6 +150,17 @@ async function userHasOrgAccess(
 		columns: { organizationId: true },
 	});
 	return memberships.some((m) => m.organizationId === organizationId);
+}
+
+async function userIsOrgAdmin(
+	userId: string,
+	organizationId: string
+): Promise<boolean> {
+	const membership = await db.query.member.findFirst({
+		where: { userId, organizationId },
+		columns: { role: true },
+	});
+	return membership?.role === "owner" || membership?.role === "admin";
 }
 
 function tryCacheSet(
@@ -755,6 +769,8 @@ async function invalidateInsightsCacheForOrg(
 				await redis.del(...keys);
 			}
 		} while (cursor !== "0");
+
+		await invalidateInsightsCachesForOrganization(organizationId);
 	} catch (error) {
 		useLogger().info("Insights cache invalidation scan failed (best-effort)", {
 			insights: { organizationId, error },
@@ -880,7 +896,8 @@ ${insightLines.join("\n")}`;
 	},
 	{
 		expireInSec: NARRATIVE_CACHE_TTL_SECS,
-		prefix: "insights-narrative",
+		prefix: cacheNamespaces.insightsNarrative,
+		tags: (_result, organizationId) => [cacheTags.organization(organizationId)],
 	}
 );
 
@@ -1089,11 +1106,11 @@ export const insights = new Elysia({ prefix: "/v1/insights" })
 			const { organizationId } = body;
 			mergeWideEvent({ insights_clear_org_id: organizationId });
 
-			if (!(await userHasOrgAccess(userId, organizationId))) {
+			if (!(await userIsOrgAdmin(userId, organizationId))) {
 				set.status = 403;
 				return {
 					success: false,
-					error: "Access denied to this organization",
+					error: "Owner or admin role required to clear insights",
 					deleted: 0,
 				};
 			}
@@ -1146,6 +1163,16 @@ export const insights = new Elysia({ prefix: "/v1/insights" })
 				insights_timezone: timezone,
 			});
 
+			if (!(await userHasOrgAccess(userId, organizationId))) {
+				mergeWideEvent({ insights_access: "denied" });
+				set.status = 403;
+				return {
+					success: false,
+					error: "Access denied to this organization",
+					insights: [],
+				};
+			}
+
 			const redis = getRedis();
 			const cacheKey = `${CACHE_KEY_PREFIX}:${organizationId}:${timezone}`;
 
@@ -1168,16 +1195,6 @@ export const insights = new Elysia({ prefix: "/v1/insights" })
 			}
 
 			mergeWideEvent({ insights_cache: "miss" });
-
-			if (!(await userHasOrgAccess(userId, organizationId))) {
-				mergeWideEvent({ insights_access: "denied" });
-				set.status = 403;
-				return {
-					success: false,
-					error: "Access denied to this organization",
-					insights: [],
-				};
-			}
 
 			const recentInsights = await getRecentInsightsFromDb(organizationId);
 			if (recentInsights) {
@@ -1331,6 +1348,10 @@ export const insights = new Elysia({ prefix: "/v1/insights" })
 						});
 						finalInsights = [];
 						mergeWideEvent({ insights_persist_failed: true });
+					}
+
+					if (finalInsights.length > 0) {
+						await invalidateInsightsCacheForOrg(organizationId);
 					}
 
 					await Promise.all(

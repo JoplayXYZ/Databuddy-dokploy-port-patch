@@ -7,6 +7,7 @@ import {
 } from "@databuddy/api-keys/resolve";
 import { createConfig as createAgentConfig } from "@databuddy/ai/agents/analytics";
 import {
+	ensureAgentCreditsAvailable,
 	resolveAgentBillingCustomerId,
 	trackAgentUsageAndBill,
 } from "@databuddy/ai/agents/execution";
@@ -43,6 +44,7 @@ import {
 	streamBufferKey,
 	tailStream,
 } from "@databuddy/redis/stream-buffer";
+import { ratelimit } from "@databuddy/redis/rate-limit";
 import {
 	convertToModelMessages,
 	generateId,
@@ -59,7 +61,6 @@ import { log, parseError } from "evlog";
 import { useLogger } from "evlog/elysia";
 import {
 	checkWebsiteReadPermissionCached,
-	ensureAgentCreditsAvailableCached,
 	getAgentContextSnapshot,
 	getMemoryContextCached,
 	shouldLoadMemoryContext,
@@ -248,6 +249,7 @@ const AgentAskRequestSchema = t.Object({
 const AGENT_TYPE = "analytics";
 const AGENT_MEMORY_CONTEXT_TIMEOUT_MS = 700;
 const AGENT_ENRICHMENT_CONTEXT_TIMEOUT_MS = 700;
+const SSE_DONE_MARKER = "data: [DONE]";
 
 const EMPTY_MEMORY_CONTEXT: MemoryContext = {
 	staticProfile: [],
@@ -357,6 +359,91 @@ function createToolLoopAgent(
 	});
 }
 
+function createAgentUsageInjector(
+	usagePromise: PromiseLike<{
+		inputTokens?: number;
+		outputTokens?: number;
+		totalTokens?: number;
+	}>
+) {
+	const encoder = new TextEncoder();
+	const decoder = new TextDecoder();
+	let buffer = "";
+	let injected = false;
+
+	function enqueueText(
+		controller: TransformStreamDefaultController<Uint8Array>,
+		text: string
+	) {
+		if (text) {
+			controller.enqueue(encoder.encode(text));
+		}
+	}
+
+	function flushSafePrefix(
+		controller: TransformStreamDefaultController<Uint8Array>
+	) {
+		const keepLength = SSE_DONE_MARKER.length - 1;
+		if (buffer.length <= keepLength) {
+			return;
+		}
+		const emitLength = buffer.length - keepLength;
+		enqueueText(controller, buffer.slice(0, emitLength));
+		buffer = buffer.slice(emitLength);
+	}
+
+	return new TransformStream<Uint8Array, Uint8Array>({
+		async transform(chunk, controller) {
+			if (injected) {
+				controller.enqueue(chunk);
+				return;
+			}
+
+			buffer += decoder.decode(chunk, { stream: true });
+			const doneIndex = buffer.indexOf(SSE_DONE_MARKER);
+			if (doneIndex === -1) {
+				flushSafePrefix(controller);
+				return;
+			}
+
+			const beforeDone = buffer.slice(0, doneIndex).trimEnd();
+			if (beforeDone) {
+				enqueueText(controller, `${beforeDone}\n\n`);
+			}
+
+			try {
+				const usage = await usagePromise;
+				const event = JSON.stringify({
+					type: "data-usage",
+					transient: true,
+					data: {
+						inputTokens: usage.inputTokens ?? 0,
+						outputTokens: usage.outputTokens ?? 0,
+						totalTokens: usage.totalTokens,
+					},
+				});
+				enqueueText(controller, `data: ${event}\n\n`);
+			} catch {
+				// Usage telemetry is best-effort; never turn a completed answer into
+				// a broken UI stream because token accounting failed.
+			}
+
+			enqueueText(controller, `${SSE_DONE_MARKER}\n\n`);
+			injected = true;
+			buffer = "";
+		},
+		flush(controller) {
+			if (injected) {
+				return;
+			}
+			const remaining = buffer + decoder.decode();
+			if (remaining) {
+				enqueueText(controller, remaining);
+			}
+		},
+	});
+}
+
 function createPlainTextStreamResponse(
 	stream: AsyncIterable<string>
 ): Response {
@@ -439,6 +526,16 @@ export const agent = new Elysia({ prefix: "/v1/agent" })
 					return jsonError(401, "AUTH_REQUIRED", "Authentication required");
 				}
 
+				const principal = user?.id ?? `apikey:${apiKey?.id ?? "unknown"}`;
+				const rl = await ratelimit(`agent:ask:${principal}`, 30, 60);
+				if (!rl.success) {
+					return jsonError(
+						429,
+						"RATE_LIMITED",
+						"Too many agent requests. Try again shortly."
+					);
+				}
+
 				const actor = apiKey
 					? {
 							apiKey,
@@ -512,6 +609,19 @@ export const agent = new Elysia({ prefix: "/v1/agent" })
 					}
 					const userId = user?.id ?? `apikey:${apiKey?.id}`;
 
+					const rl = await ratelimit(
+						`agent:chat:${userId}:${body.websiteId}`,
+						30,
+						60
+					);
+					if (!rl.success) {
+						return jsonError(
+							429,
+							"RATE_LIMITED",
+							"Too many agent requests. Try again shortly."
+						);
+					}
+
 					const websiteValidation = await timeAgentPhase(
 						"validate_website",
 						validateWebsite(body.websiteId)
@@ -574,6 +684,20 @@ export const agent = new Elysia({ prefix: "/v1/agent" })
 						);
 					}
 
+					if (body.id) {
+						const existingChat = await db.query.agentChats.findFirst({
+							where: { id: chatId },
+							columns: { userId: true, websiteId: true },
+						});
+						if (
+							existingChat &&
+							(existingChat.userId !== userId ||
+								existingChat.websiteId !== body.websiteId)
+						) {
+							return jsonError(403, "ACCESS_DENIED", "Access denied to chat");
+						}
+					}
+
 					const timezone = body.timezone ?? "UTC";
 					const domain = website.domain ?? "unknown";
 					const lastMessage = getLastMessagePreview(body.messages);
@@ -607,16 +731,14 @@ export const agent = new Elysia({ prefix: "/v1/agent" })
 					const creditsCheck = billingCustomerId
 						? timeAgentPhase(
 								"credits_check",
-								ensureAgentCreditsAvailableCached(billingCustomerId).catch(
-									(err) => {
-										captureError(err, {
-											agent_credit_check_error: true,
-											agent_chat_id: chatId,
-											agent_website_id: body.websiteId,
-										});
-										return true;
-									}
-								)
+								ensureAgentCreditsAvailable(billingCustomerId).catch((err) => {
+									captureError(err, {
+										agent_credit_check_error: true,
+										agent_chat_id: chatId,
+										agent_website_id: body.websiteId,
+									});
+									return true;
+								})
 							)
 						: Promise.resolve(true);
 
@@ -920,36 +1042,9 @@ export const agent = new Elysia({ prefix: "/v1/agent" })
 					});
 
 					if (response.body) {
-						const encoder = new TextEncoder();
-						const decoder = new TextDecoder();
-						const usageInjector = new TransformStream<Uint8Array, Uint8Array>({
-							async transform(chunk, controller) {
-								const text = decoder.decode(chunk, { stream: true });
-								if (text.includes("data: [DONE]")) {
-									const before = text.replace("data: [DONE]", "").trimEnd();
-									if (before) {
-										controller.enqueue(encoder.encode(before));
-									}
-									try {
-										const usage = await usagePromise;
-										const evt = JSON.stringify({
-											type: "usage",
-											inputTokens: usage.inputTokens,
-											outputTokens: usage.outputTokens,
-										});
-										controller.enqueue(
-											encoder.encode(`\ndata: ${evt}\n\ndata: [DONE]\n`)
-										);
-									} catch {
-										controller.enqueue(encoder.encode("\ndata: [DONE]\n"));
-									}
-								} else {
-									controller.enqueue(chunk);
-								}
-							},
-						});
-
-						const injectedStream = response.body.pipeThrough(usageInjector);
+						const injectedStream = response.body.pipeThrough(
+							createAgentUsageInjector(usagePromise)
+						);
 						const [forClient, forStorage] = injectedStream.tee();
 						(async () => {
 							const reader = forStorage.getReader();

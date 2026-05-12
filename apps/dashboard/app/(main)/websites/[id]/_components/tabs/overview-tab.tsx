@@ -124,12 +124,17 @@ const QUERY_CONFIG = {
 	},
 } as const;
 
+type WebsiteOverviewTabProps = Pick<
+	FullTabProps,
+	"addFilter" | "dateRange" | "filters" | "websiteId"
+>;
+
 export function WebsiteOverviewTab({
 	websiteId,
 	dateRange,
 	filters,
 	addFilter,
-}: Omit<FullTabProps, "isRefreshing" | "setIsRefreshing">) {
+}: WebsiteOverviewTabProps) {
 	const { chartType, chartStepType } = useChartPreferences("overview-stats");
 	const isMobile = useMediaQuery("(max-width: 640px)");
 	const calculatePreviousPeriod = useCallback(

@@ -61,15 +61,25 @@ export const mainNavigation: NavigationGroup[] = [
 	{
 		label: "Tracking",
 		items: [
-			createNavItem("Links", LinkIcon, "/links", { tag: "BETA" }),
-			createNavItem("Events", LightningIcon, "/events"),
+			createNavItem("Links", LinkIcon, "/links", {
+				activeMatch: "prefix",
+				tag: "BETA",
+			}),
+			createNavItem("Events", LightningIcon, "/events", {
+				activeMatch: "prefix",
+			}),
 		],
 	},
 	{
 		label: "Monitoring",
 		items: [
-			createNavItem("Monitors", HeartbeatIcon, "/monitors", { tag: "BETA" }),
+			createNavItem("Monitors", HeartbeatIcon, "/monitors", {
+				activeMatch: "prefix",
+				tag: "BETA",
+			}),
 			createNavItem("Status Pages", GlobeSimpleIcon, "/monitors/status-pages", {
+				activeMatch: "prefix",
+				hideFromSidebar: true,
 				tag: "BETA",
 			}),
 		],

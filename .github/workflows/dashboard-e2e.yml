@@ -96,7 +96,7 @@ jobs:
           path: ~/.bun/install/cache
           key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
           restore-keys: ${{ runner.os }}-bun-
-      - run: bun install --frozen-lockfile
+      - run: bun install --frozen-lockfile --ignore-scripts
       - name: Build dashboard runtime packages
         run: bunx turbo run build --filter @databuddy/cache --filter @databuddy/devtools --filter @databuddy/sdk
       - run: bunx playwright install --with-deps chromium
@@ -109,7 +109,7 @@ jobs:
           fi
       - name: Upload Playwright artifacts
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: dashboard-e2e-artifacts
           path: |

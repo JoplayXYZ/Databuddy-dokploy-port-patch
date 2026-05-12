@@ -258,6 +258,8 @@ export const ProfilesBuilders: Record<string, SimpleQueryConfig> = {
       FROM ${Analytics.events} e
       INNER JOIN visitor_profiles vp ON e.anonymous_id = vp.visitor_id
       WHERE e.client_id = {websiteId:String}
+        AND e.time >= toDateTime({startDate:String})
+        AND e.time <= toDateTime({endDate:String})
 	${combinedWhereClause}
       GROUP BY vp.visitor_id, e.session_id
       ORDER BY vp.visitor_id, session_start DESC
@@ -452,6 +454,8 @@ export const ProfilesBuilders: Record<string, SimpleQueryConfig> = {
       WHERE
         e.client_id = {websiteId:String}
         AND e.anonymous_id = {visitorId:String}
+        AND e.time >= toDateTime({startDate:String})
+        AND e.time <= toDateTime({endDate:String})
       GROUP BY e.session_id
     ),
     all_events AS (
@@ -477,6 +481,8 @@ export const ProfilesBuilders: Record<string, SimpleQueryConfig> = {
       WHERE
         e.client_id = {websiteId:String}
         AND e.anonymous_id = {visitorId:String}
+        AND e.time >= toDateTime({startDate:String})
+        AND e.time <= toDateTime({endDate:String})
 
       UNION ALL
 
@@ -501,6 +507,8 @@ export const ProfilesBuilders: Record<string, SimpleQueryConfig> = {
       WHERE
         ce.website_id = {websiteId:String}
         AND ce.anonymous_id = {visitorId:String}
+        AND ce.timestamp >= toDateTime({startDate:String})
+        AND ce.timestamp <= toDateTime({endDate:String})
 
       UNION ALL
 
@@ -527,6 +535,8 @@ export const ProfilesBuilders: Record<string, SimpleQueryConfig> = {
       WHERE
         es.client_id = {websiteId:String}
         AND es.anonymous_id = {visitorId:String}
+        AND es.timestamp >= toDateTime({startDate:String})
+        AND es.timestamp <= toDateTime({endDate:String})
 
       UNION ALL
 
@@ -546,6 +556,8 @@ export const ProfilesBuilders: Record<string, SimpleQueryConfig> = {
       WHERE
         ol.client_id = {websiteId:String}
         AND ol.anonymous_id = {visitorId:String}
+        AND ol.timestamp >= toDateTime({startDate:String})
+        AND ol.timestamp <= toDateTime({endDate:String})
     ),
     session_events AS (
       SELECT
@@ -575,6 +587,8 @@ export const ProfilesBuilders: Record<string, SimpleQueryConfig> = {
         WHERE
           wv.client_id = {websiteId:String}
           AND wv.anonymous_id = {visitorId:String}
+          AND wv.timestamp >= toDateTime({startDate:String})
+          AND wv.timestamp <= toDateTime({endDate:String})
         ORDER BY wv.timestamp ASC
       )
       WHERE session_id != ''

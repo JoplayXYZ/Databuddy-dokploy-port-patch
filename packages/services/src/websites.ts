@@ -5,6 +5,7 @@ import {
 	type Website,
 	websites,
 } from "@databuddy/db/schema";
+import { invalidateWebsiteReadCaches } from "@databuddy/redis/cache-invalidation";
 import { WebsiteCache } from "./website-cache";
 
 export type { Website } from "@databuddy/db/schema";
@@ -67,6 +68,21 @@ export class WebsiteService {
 				error: String(error),
 			});
 			return null;
+		}
+	}
+
+	private async invalidateReadCaches(id: string): Promise<void> {
+		if (!process.env.REDIS_URL) {
+			return;
+		}
+
+		const result = await invalidateWebsiteReadCaches(id);
+		if (result.failed > 0) {
+			console.error("WebsiteService.invalidateReadCaches partially failed:", {
+				websiteId: id,
+				failed: result.failed,
+				attempted: result.attempted,
+			});
 		}
 	}
 
@@ -178,6 +194,7 @@ export class WebsiteService {
 				created
 			);
 			await this.cache?.invalidateLists([created.organizationId]);
+			await this.invalidateReadCaches(created.id);
 
 			return created;
 		} catch (error) {
@@ -253,6 +270,7 @@ export class WebsiteService {
 			);
 
 			await this.cache?.invalidateLists(organizationIds);
+			await this.invalidateReadCaches(id);
 
 			return updated;
 		} catch (error) {
@@ -286,6 +304,7 @@ export class WebsiteService {
 				deleted.organizationId
 			);
 			await this.cache?.invalidateLists([deleted.organizationId]);
+			await this.invalidateReadCaches(id);
 		} catch (error) {
 			if (error instanceof WebsiteNotFoundError) {
 				throw error;

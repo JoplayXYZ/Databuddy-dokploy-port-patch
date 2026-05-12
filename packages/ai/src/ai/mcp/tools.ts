@@ -345,7 +345,7 @@ const getDataTool = defineMcpTool(
 	{
 		name: "get_data",
 		description:
-			"Run one or many analytics queries against a website. Single mode: type + preset/from/to. Batch mode: queries[] (2-10 items). Defaults to last_7d when no date is given.",
+			"Run analytics queries against a website. Single: type + preset/from/to. Batch: queries[] (2-10). Defaults to last_7d. Call capabilities for the query-type catalog and get_schema for column names. Filter/groupBy errors list allowed fields.",
 		inputSchema: z.object({
 			websiteId: z
 				.string()
@@ -394,7 +394,7 @@ const getDataTool = defineMcpTool(
 				.array(FilterSchema)
 				.optional()
 				.describe(
-					"Filters [{field, op, value}]. ops: eq, ne, contains, not_contains, starts_with, in, not_in."
+					"Filters [{field, op, value}]. ops: eq, ne, contains, not_contains, starts_with, in, not_in. 'field' is the ClickHouse column name — call get_schema if unsure. Rejected fields return the allowed list for this query."
 				),
 			groupBy: z.array(z.string()).optional().describe("Fields to group by."),
 			orderBy: z.string().optional().describe("Field to order results by."),
@@ -575,6 +575,7 @@ const CAPABILITY_DEFAULTS: readonly CapabilitySection[] = [
 ];
 
 const HINTS: readonly string[] = [
+	"For a deeper reference (workflow + footguns), read the databuddy://guide MCP resource",
 	"get_data accepts websiteId, websiteName, or websiteDomain — no need to call list_websites first if you know the name or domain",
 	"get_data batch: pass queries array (2-10 items, each with type + preset or from/to). Single: type + preset OR from+to. Defaults to last_7d.",
 	"capabilities is filterable: include=['hints'] for just hints, category='errors' to filter queryTypes, detail='full' for allowedFilters",

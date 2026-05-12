@@ -53,6 +53,7 @@ function clear() {
 					type="button"
 					class="clear-btn"
 					@click.stop="clear"
+					@keydown.enter.stop
 				>
 					Clear
 				</button>

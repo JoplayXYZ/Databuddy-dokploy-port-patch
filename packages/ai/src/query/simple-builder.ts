@@ -1,4 +1,5 @@
 import { chQuery } from "@databuddy/db/clickhouse";
+import { domainSchema } from "@databuddy/validation";
 import { normalizeClickHouseDateTime } from "./date-utils";
 import type { Granularity } from "./expressions";
 import {
@@ -147,9 +148,15 @@ export function escapeLikePattern(value: string): string {
 	return value.replace(/\\/g, "\\\\").replace(/[%_]/g, "\\$&");
 }
 
+function listAllowed(values: Iterable<string>): string {
+	return Array.from(values).sort().join(", ");
+}
+
 function validateGroupByField(field: string): void {
 	if (!ALLOWED_GROUPBY_FIELDS.has(field)) {
-		throw new Error(`Grouping by '${field}' is not permitted.`);
+		throw new Error(
+			`Grouping by '${field}' is not permitted. Allowed groupBy fields: ${listAllowed(ALLOWED_GROUPBY_FIELDS)}.`
+		);
 	}
 }
 
@@ -159,7 +166,9 @@ function validateOrderByField(orderBy: string): void {
 	const match = orderBy.match(ORDER_BY_REGEX);
 	const field = match?.[1];
 	if (!(field && ALLOWED_ORDERBY_FIELDS.has(field))) {
-		throw new Error(`Ordering by '${orderBy}' is not permitted.`);
+		throw new Error(
+			`Ordering by '${orderBy}' is not permitted. Use '<field> ASC|DESC' where field is one of: ${listAllowed(ALLOWED_ORDERBY_FIELDS)}.`
+		);
 	}
 }
 
@@ -235,7 +244,7 @@ function buildGenericFilter(
 export class SimpleQueryBuilder {
 	private readonly config: SimpleQueryConfig;
 	private readonly request: QueryRequest;
-	private readonly websiteDomain?: string | null;
+	private readonly websiteDomain: string | null;
 
 	constructor(
 		config: SimpleQueryConfig,
@@ -244,7 +253,9 @@ export class SimpleQueryBuilder {
 	) {
 		this.config = config;
 		this.request = request;
-		this.websiteDomain = websiteDomain;
+		this.websiteDomain = websiteDomain
+			? (domainSchema.safeParse(websiteDomain).data ?? null)
+			: null;
 	}
 
 	private buildFilter(filter: Filter, index: number): FilterResult {
@@ -254,7 +265,13 @@ export class SimpleQueryBuilder {
 		if (
 			!(isGloballyAllowed || this.config.allowedFilters?.includes(filter.field))
 		) {
-			throw new Error(`Filter on field '${filter.field}' is not permitted.`);
+			const allowed = new Set<string>(GLOBAL_ALLOWED_FILTERS);
+			for (const f of this.config.allowedFilters ?? []) {
+				allowed.add(f);
+			}
+			throw new Error(
+				`Filter on field '${filter.field}' is not permitted. Allowed fields for this query: ${listAllowed(allowed)}.`
+			);
 		}
 
 		const key = `f${index}`;

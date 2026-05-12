@@ -12,6 +12,7 @@
     "test": "bun test lib"
   },
   "dependencies": {
+    "@databuddy/redis": "workspace:*",
     "@databuddy/sdk": "workspace:*",
     "@databuddy/shared": "workspace:*",
     "@databuddy/ui": "workspace:*",
@@ -60,6 +61,7 @@
     "fumadocs-ui": "15.5.0",
     "gray-matter": "^4.0.3",
     "input-otp": "^1.4.2",
+    "isomorphic-dompurify": "^3.12.0",
     "libphonenumber-js": "^1.12.41",
     "motion": "^12.38.0",
     "next": "^16.2.6",

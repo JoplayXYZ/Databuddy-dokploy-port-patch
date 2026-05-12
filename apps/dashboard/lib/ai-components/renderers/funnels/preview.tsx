@@ -12,7 +12,7 @@ import { EditFunnelDialog } from "@/app/(main)/websites/[id]/funnels/_components
 import { useChat } from "@/contexts/chat-context";
 import { useFunnels } from "@/hooks/use-funnels";
 import { cn } from "@/lib/utils";
-import type { CreateFunnelData, Funnel } from "@/types/funnels";
+import type { CreateFunnelData } from "@/types/funnels";
 import type { BaseComponentProps, FunnelStepInput } from "../../types";
 import {
 	CheckIcon,
@@ -88,19 +88,7 @@ export function FunnelPreviewRenderer({
 
 	const config = MODE_CONFIG[mode];
 	const isLoading = status === "streaming" || status === "submitted";
-
-	// Convert to Funnel type for the dialog
-	const funnelForDialog: Funnel = {
-		id: "",
-		name: funnel.name,
-		description: funnel.description,
-		steps: funnel.steps,
-		filters: [],
-		ignoreHistoricData: funnel.ignoreHistoricData ?? false,
-		isActive: true,
-		createdAt: "",
-		updatedAt: "",
-	};
+	const canEditInline = mode === "create";
 
 	const handleConfirm = () => {
 		setIsConfirming(true);
@@ -118,14 +106,6 @@ export function FunnelPreviewRenderer({
 			}
 		},
 		[createAction]
-	);
-
-	const handleUpdateFromDialog = useCallback(
-		(_funnel: Funnel): Promise<void> => {
-			setIsDialogOpen(false);
-			return Promise.resolve();
-		},
-		[]
 	);
 
 	return (
@@ -194,15 +174,17 @@ export function FunnelPreviewRenderer({
 
 					<div className="rounded-md bg-background">
 						<div className="flex items-center justify-end gap-2 bg-muted/30 px-2 py-2">
-							<Button
-								disabled={isLoading || isConfirming}
-								onClick={() => setIsDialogOpen(true)}
-								size="sm"
-								variant="ghost"
-							>
-								<PencilSimpleIcon className="size-3.5" />
-								Edit
-							</Button>
+							{canEditInline && (
+								<Button
+									disabled={isLoading || isConfirming}
+									onClick={() => setIsDialogOpen(true)}
+									size="sm"
+									variant="ghost"
+								>
+									<PencilSimpleIcon className="size-3.5" />
+									Edit
+								</Button>
+							)}
 							<Button
 								disabled={isLoading}
 								loading={isConfirming}
@@ -218,15 +200,17 @@ export function FunnelPreviewRenderer({
 				</div>
 			</Card>
 
-			<EditFunnelDialog
-				funnel={mode === "create" ? null : funnelForDialog}
-				isCreating={isCreating}
-				isOpen={isDialogOpen}
-				isUpdating={false}
-				onClose={() => setIsDialogOpen(false)}
-				onCreate={handleCreateFromDialog}
-				onSubmit={handleUpdateFromDialog}
-			/>
+			{canEditInline && (
+				<EditFunnelDialog
+					funnel={null}
+					isCreating={isCreating}
+					isOpen={isDialogOpen}
+					isUpdating={false}
+					onClose={() => setIsDialogOpen(false)}
+					onCreate={handleCreateFromDialog}
+					onSubmit={() => Promise.resolve()}
+				/>
+			)}
 		</>
 	);
 }

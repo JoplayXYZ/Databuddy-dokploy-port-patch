@@ -1,4 +1,5 @@
 import { userPreferences } from "@databuddy/db/schema";
+import { invalidateUserPreferencesCache } from "@databuddy/redis";
 import { randomUUIDv7 } from "bun";
 import { z } from "zod";
 import { sessionProcedure, trackedSessionProcedure } from "../orpc";
@@ -80,6 +81,10 @@ export const preferencesRouter = {
 					},
 				})
 				.returning();
+
+			await invalidateUserPreferencesCache(context.user.id).catch(() => {
+				// Preferences cache is best-effort; the database write succeeded.
+			});
 
 			return result[0];
 		}),

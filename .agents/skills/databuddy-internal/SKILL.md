@@ -76,6 +76,15 @@ Read [codebase-map.md](./references/codebase-map.md) when you need deeper routin
 - Environment schemas live in `packages/env/src/*.ts`; update the matching app schema when adding env vars
 - BullMQ queues use `BULLMQ_REDIS_URL`; generic Redis cache/pubsub code uses `REDIS_URL`.
 
+## Code Standards
+
+- Keep one source of truth. If output is AI-generated copy, semantic labels, summaries, or recommendations, fix the upstream prompt/schema/validation contract; do not patch it later with frontend regex/string heuristics.
+- Use deterministic transforms only for deterministic data: stable enums, IDs, namespaces, routes, schema fields, and typed status values. Do not guess meaning from free-form model/user text with regexes.
+- Prefer structured contracts over text parsing. If the UI needs a label, action, link, severity, or metric category, add it to the schema/tool output and validate it at the boundary.
+- Keep domain concerns at the owning seam. Routers/UI should call domain/service helpers, not know cache keys, raw Redis patterns, billing internals, or provider-specific lifecycle details.
+- Prefer direct, boring code. Use typed registries and small local helpers when they delete duplication; avoid generic job/facade abstractions, labeled pipelines, or framework-y wrappers unless they clearly reduce code and concepts.
+- Test invariants and contracts, not implementation trivia. Add guard tests for architectural rules only when they prevent repeat classes of bugs.
+
 ## Change Routing
 
 ### Dashboard work
@@ -156,6 +165,8 @@ Read [codebase-map.md](./references/codebase-map.md) when you need deeper routin
 - **Vercel AI Gateway** model IDs in `apps/api/src/ai/config/models.ts` use gateway-style names (e.g. `anthropic/claude-sonnet-4.5`), not OpenRouter catalog strings.
 - **Bun HTTP** default `idleTimeout` is **10 seconds**; agent streams can look idle during slow tools. `apps/api/src/index.ts` exports `idleTimeout` on the server (Bun caps at **255** seconds).
 - **AI SDK UI (`useChat`)** does not document automatic HTTP retries on `DefaultChatTransport`—retry UX is **`regenerate()`** + `error` ([chatbot error state](https://ai-sdk.dev/docs/ai-sdk-ui/chatbot#error-state), [error handling](https://ai-sdk.dev/docs/ai-sdk-ui/error-handling)). `maxRetries` on **`streamText`/`generateText`** is server-side model calls, not the browser chat `fetch`. Mid-stream disconnect: **`resumeStream()`** ([useChat](https://ai-sdk.dev/docs/reference/ai-sdk-ui/use-chat)).
+- AI SDK UI stream custom chunks must use `type: "data-*"` (for example `data-usage` or `data-aiComponent`); injecting arbitrary chunk types such as `usage` makes `DefaultChatTransport` reject the stream.
+- Dashboard agent prompt references to new tool names must be backed by registered tools in `packages/ai/src/ai/agents/analytics.ts`; otherwise the model may call an unavailable tool and then apologize instead of rendering the intended UI.
 - **`@elysiajs/cors` with `origin: true`** sets `Vary: *`, killing CDN caching. Override with `set.headers.vary = "Origin"` on cacheable public endpoints.
 - **`applyAuthWideEvent`** in `apps/api/src/index.ts` runs a session DB lookup on every request including anonymous `/public/` routes. Skip it for public endpoints via URL check in `onBeforeHandle`.
 - **Agent SQL security**: Tenant isolation (`client_id`) is enforced programmatically in `validateAgentSQL` + `requiresTenantFilter` from `@databuddy/db`. Never rely solely on system-prompt instructions for data isolation. Every SQL tool entry point (API, RPC, etc.) must use the shared validation from `packages/db/src/clickhouse/sql-validation.ts`.

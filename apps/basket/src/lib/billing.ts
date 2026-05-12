@@ -11,7 +11,8 @@ interface BillingResult {
 export function checkAutumnUsage(
 	customerId: string,
 	featureId: string,
-	properties?: Record<string, unknown>
+	properties?: Record<string, unknown>,
+	quantity = 1
 ): Promise<BillingResult> {
 	return record("checkAutumnUsage", async (): Promise<BillingResult> => {
 		const log = useLogger();
@@ -22,6 +23,7 @@ export function checkAutumnUsage(
 					customerId,
 					featureId,
 					sendEvent: true,
+					requiredBalance: quantity,
 					properties,
 				})
 			);

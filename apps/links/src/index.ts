@@ -1,4 +1,5 @@
-import { shutdownPostgres } from "@databuddy/db";
+import { db, shutdownPostgres, sql } from "@databuddy/db";
+import { redis } from "@databuddy/redis";
 import { Elysia, redirect } from "elysia";
 import { initLogger, log } from "evlog";
 import { evlog } from "evlog/elysia";
@@ -25,9 +26,6 @@ const app = new Elysia()
 	.get("/", () => redirect(rootRedirectUrl, 302))
 	.get("/health", () => Response.json({ status: "ok" }))
 	.get("/health/status", async () => {
-		const { db, sql } = await import("@databuddy/db");
-		const { redis } = await import("@databuddy/redis");
-
 		async function ping(probe: () => Promise<void>) {
 			const start = performance.now();
 			try {

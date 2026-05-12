@@ -3,7 +3,8 @@ import { and, db, eq } from "@databuddy/db";
 import { member, slackIntegrations } from "@databuddy/db/schema";
 import { encrypt } from "@databuddy/encryption";
 import { config } from "@databuddy/env/app";
-import { invalidateCacheableKey } from "@databuddy/redis/cache-invalidation";
+import { invalidateSlackIntegrationCache } from "@databuddy/redis/cache-invalidation";
+import { ratelimit } from "@databuddy/redis/rate-limit";
 import { randomUUIDv7 } from "bun";
 import { Elysia, t } from "elysia";
 import { useLogger } from "evlog/elysia";
@@ -78,7 +79,7 @@ function integrationsRedirect(
 	return Response.redirect(url.toString(), 302);
 }
 
-function requireConfig(request: Request): SlackOAuthConfig {
+function requireConfig(_request: Request): SlackOAuthConfig {
 	const missing: string[] = [];
 	const authSecret = process.env.BETTER_AUTH_SECRET;
 	const clientId = process.env.SLACK_CLIENT_ID;
@@ -111,7 +112,7 @@ function requireConfig(request: Request): SlackOAuthConfig {
 		encryptionKey,
 		redirectUri:
 			process.env.SLACK_REDIRECT_URI ||
-			new URL("/v1/integrations/slack/callback", request.url).toString(),
+			new URL("/v1/integrations/slack/callback", config.urls.api).toString(),
 	};
 }
 
@@ -365,13 +366,42 @@ async function saveSlackInstallationOnce({
 		});
 	});
 
-	await invalidateCacheableKey("slack-integration-by-team", teamId);
+	await invalidateSlackIntegrationCache(teamId);
+}
+
+function principalFromRequest(request: Request): string {
+	return (
+		request.headers.get("cf-connecting-ip") ||
+		request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+		request.headers.get("x-real-ip") ||
+		"unknown"
+	);
+}
+
+async function throttleSlackOAuth(
+	action: "install" | "callback",
+	request: Request,
+	max: number
+): Promise<Response | null> {
+	const ip = principalFromRequest(request);
+	const rl = await ratelimit(`slack-oauth:${action}:${ip}`, max, 60);
+	if (rl.success) {
+		return null;
+	}
+	return integrationsRedirect(
+		"error",
+		"Too many Slack install attempts; try again shortly."
+	);
 }
 
 export const integrations = new Elysia({ prefix: "/v1/integrations" })
 	.get(
 		"/slack/install",
 		async ({ query, request }) => {
+			const throttled = await throttleSlackOAuth("install", request, 10);
+			if (throttled) {
+				return throttled;
+			}
 			try {
 				const config = requireConfig(request);
 				const userId = await requireOrgInstaller(request, query.organizationId);
@@ -406,6 +436,10 @@ export const integrations = new Elysia({ prefix: "/v1/integrations" })
 	.get(
 		"/slack/callback",
 		async ({ query, request }) => {
+			const throttled = await throttleSlackOAuth("callback", request, 20);
+			if (throttled) {
+				return throttled;
+			}
 			if (query.error) {
 				return integrationsRedirect("error", `Slack returned ${query.error}`);
 			}
@@ -417,6 +451,13 @@ export const integrations = new Elysia({ prefix: "/v1/integrations" })
 				const state = verifySlackOAuthState(query.state, config.authSecret);
 				if (!state) {
 					throw new SlackInstallError("Slack install link expired");
+				}
+
+				const session = await auth.api.getSession({ headers: request.headers });
+				if (!session?.user || session.user.id !== state.userId) {
+					throw new SlackInstallError(
+						"Slack install must be completed by the same user who started it"
+					);
 				}
 
 				const access = await exchangeSlackCode(config, query.code);

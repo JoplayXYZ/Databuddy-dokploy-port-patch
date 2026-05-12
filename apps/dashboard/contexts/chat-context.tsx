@@ -13,6 +13,7 @@ import {
 	useState,
 } from "react";
 import { useAgentChatTransport } from "@/components/agent/hooks/use-agent-chat";
+import { normalizeAIComponentMessages } from "@/lib/ai-components/message-parts";
 import { orpc } from "@/lib/orpc";
 
 type ChatApi = ReturnType<typeof useAiSdkChat<UIMessage>>;
@@ -39,6 +40,26 @@ const ChatLoadingContext = createContext<ChatLoadingValue>({
 	isEmpty: true,
 	persistedUserMessageIds: new Set(),
 });
+
+const UI_MESSAGE_ROLES = new Set(["assistant", "system", "user"]);
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+	return typeof value === "object" && value !== null;
+}
+
+function isUIMessageArray(value: unknown): value is UIMessage[] {
+	return (
+		Array.isArray(value) &&
+		value.every(
+			(message) =>
+				isRecord(message) &&
+				(!("id" in message) || typeof message.id === "string") &&
+				typeof message.role === "string" &&
+				UI_MESSAGE_ROLES.has(message.role) &&
+				Array.isArray(message.parts)
+		)
+	);
+}
 
 const isBusy = (c: ChatApi) =>
 	c.status === "submitted" || c.status === "streaming";
@@ -82,8 +103,11 @@ export function ChatProvider({
 		}
 
 		const ids = new Set<string>();
-		if (storedChat?.messages && storedChat.messages.length > 0) {
-			const persisted = storedChat.messages as UIMessage[];
+		if (
+			isUIMessageArray(storedChat?.messages) &&
+			storedChat.messages.length > 0
+		) {
+			const persisted = normalizeAIComponentMessages(storedChat.messages);
 			for (const [idx, msg] of persisted.entries()) {
 				if (msg.role === "user") {
 					ids.add(msg.id || `msg-${idx}`);
@@ -94,6 +118,16 @@ export function ChatProvider({
 		setPersistedUserMessageIds(ids);
 		setHasRestored(true);
 	}, [hasRestored, isFetched, storedChat]);
+
+	useEffect(() => {
+		if (chat.status !== "ready") {
+			return;
+		}
+		const normalized = normalizeAIComponentMessages(chat.messages);
+		if (normalized !== chat.messages) {
+			chat.setMessages(normalized);
+		}
+	}, [chat.status, chat.messages, chat.setMessages]);
 
 	const pendingRef = useRef<string[]>([]);
 	const [pendingTexts, setPendingTexts] = useState<string[]>([]);

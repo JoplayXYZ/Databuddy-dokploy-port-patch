@@ -5,7 +5,7 @@ import { rpcError } from "../errors";
 import { logger } from "../lib/logger";
 import { publicProcedure } from "../orpc";
 import { withWorkspace } from "../procedures/with-workspace";
-import { getCacheAuthContext } from "../utils/cache-keys";
+import { scopedCacheKey } from "../utils/scoped-cache-key";
 
 const drizzleCache = createDrizzleCache({ redis, namespace: "autocomplete" });
 
@@ -163,25 +163,28 @@ export const autocompleteRouter = {
 		)
 		.output(autocompleteOutputSchema)
 		.handler(async ({ context, input }) => {
+			const workspace = await withWorkspace(context, {
+				websiteId: input.websiteId,
+				permissions: ["read"],
+				allowPublicAccess: true,
+			});
+
 			const { startDate, endDate } =
 				input.startDate && input.endDate
 					? { startDate: input.startDate, endDate: input.endDate }
 					: getDefaultDateRange();
 
-			const authContext = await getCacheAuthContext(context, {
-				websiteId: input.websiteId,
-			});
-
 			return drizzleCache.withCache({
-				key: `autocomplete:${input.websiteId}:${startDate}:${endDate}:${authContext}`,
+				key: scopedCacheKey(
+					"get",
+					workspace,
+					`website:${input.websiteId}`,
+					`start:${startDate}`,
+					`end:${endDate}`
+				),
 				ttl: CACHE_TTL,
 				tables: ["websites"],
 				queryFn: async () => {
-					await withWorkspace(context, {
-						websiteId: input.websiteId,
-						permissions: ["read"],
-						allowPublicAccess: true,
-					});
 					const params = { websiteId: input.websiteId, startDate, endDate };
 
 					try {

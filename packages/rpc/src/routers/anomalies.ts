@@ -3,14 +3,41 @@ import {
 	buildAnomalyNotificationPayload,
 	NotificationClient,
 } from "@databuddy/notifications";
+import { redis } from "@databuddy/redis";
+import { ratelimit } from "@databuddy/redis/rate-limit";
 import { z } from "zod";
+import { rpcError } from "../errors";
 import { toNotificationConfig } from "../lib/alarm-notifications";
 import {
 	detectAnomalies,
 	fetchAnomalyTimeSeries,
 } from "../lib/anomaly-detection";
-import { protectedProcedure } from "../orpc";
+import { type Context, protectedProcedure } from "../orpc";
 import { withWorkspace } from "../procedures/with-workspace";
+
+async function throttleAnomalyAction(
+	context: Context,
+	action: string,
+	websiteId: string,
+	max: number
+): Promise<void> {
+	const principal = context.user
+		? `user:${context.user.id}`
+		: context.apiKey
+			? `apikey:${context.apiKey.id}`
+			: null;
+	if (!principal) {
+		return;
+	}
+	const rl = await ratelimit(
+		`anomalies:${action}:${principal}:${websiteId}`,
+		max,
+		60
+	);
+	if (!rl.success) {
+		throw rpcError.rateLimited(rl.reset);
+	}
+}
 
 const anomalySchema = z.object({
 	metric: z.enum(["pageviews", "custom_events", "errors"]),
@@ -62,6 +89,7 @@ export const anomaliesRouter = {
 				websiteId: input.websiteId,
 				permissions: ["read"],
 			});
+			await throttleAnomalyAction(context, "detect", workspace.website.id, 12);
 
 			return detectAnomalies(workspace.website.id, input.config ?? {});
 		}),
@@ -88,6 +116,12 @@ export const anomaliesRouter = {
 				websiteId: input.websiteId,
 				permissions: ["read"],
 			});
+			await throttleAnomalyAction(
+				context,
+				"timeSeries",
+				workspace.website.id,
+				30
+			);
 
 			return fetchAnomalyTimeSeries(
 				workspace.website.id,
@@ -119,8 +153,9 @@ export const anomaliesRouter = {
 		.handler(async ({ context, input }) => {
 			const workspace = await withWorkspace(context, {
 				websiteId: input.websiteId,
-				permissions: ["read"],
+				permissions: ["update"],
 			});
+			await throttleAnomalyAction(context, "notify", workspace.website.id, 3);
 
 			const clientId = workspace.website.id;
 			const orgId = workspace.organizationId;
@@ -155,6 +190,12 @@ export const anomaliesRouter = {
 				);
 
 				for (const anomaly of relevantAnomalies) {
+					const dedupKey = `anomalies:notified:${alarm.id}:${anomaly.metric}:${anomaly.type}:${anomaly.eventName ?? ""}`;
+					const reserved = await redis.set(dedupKey, "1", "EX", 300, "NX");
+					if (reserved !== "OK") {
+						continue;
+					}
+
 					const payload = buildAnomalyNotificationPayload({
 						kind: anomaly.type,
 						metric: anomaly.metric,

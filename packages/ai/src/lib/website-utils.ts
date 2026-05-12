@@ -5,7 +5,7 @@ import {
 } from "@databuddy/api-keys/resolve";
 import { auth } from "@databuddy/auth";
 import { db } from "@databuddy/db";
-import { cacheable } from "@databuddy/redis";
+import { cacheNamespaces, cacheTags, cacheable } from "@databuddy/redis";
 import type { Website } from "@databuddy/db/schema";
 import { validateTimezone } from "@databuddy/validation";
 import { record } from "./tracing";
@@ -36,7 +36,7 @@ const getCachedWebsite = cacheable(
 	},
 	{
 		expireInSec: 300,
-		prefix: "website-cache",
+		prefix: cacheNamespaces.websiteCache,
 		staleWhileRevalidate: true,
 		staleTime: 60,
 	}
@@ -55,7 +55,7 @@ const getWebsiteDomain = cacheable(
 	},
 	{
 		expireInSec: 300,
-		prefix: "website-domain",
+		prefix: cacheNamespaces.websiteDomain,
 		staleWhileRevalidate: true,
 		staleTime: 60,
 	}
@@ -88,9 +88,10 @@ const getCachedWebsiteDomain = cacheable(
 	},
 	{
 		expireInSec: 300,
-		prefix: "website-domains-batch",
+		prefix: cacheNamespaces.websiteDomainsBatch,
 		staleWhileRevalidate: true,
 		staleTime: 60,
+		tags: (_result, websiteIds) => websiteIds.map(cacheTags.website),
 	}
 );
 
@@ -106,7 +107,7 @@ const userPreferencesCache = cacheable(
 	},
 	{
 		expireInSec: 600,
-		prefix: "user-prefs",
+		prefix: cacheNamespaces.userPreferences,
 		staleWhileRevalidate: true,
 		staleTime: 120,
 	}

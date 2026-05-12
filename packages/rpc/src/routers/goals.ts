@@ -23,6 +23,13 @@ const cache = createDrizzleCache({ redis, namespace: "goals" });
 
 const ANALYTICS_CACHE_TTL = 180;
 
+async function invalidateGoalsCache(websiteId: string): Promise<void> {
+	await Promise.allSettled([
+		cache.invalidateByTables(["goals"]),
+		invalidateAgentContextSnapshotsForWebsite(websiteId),
+	]);
+}
+
 const filterSchema = z.object({
 	field: z.string(),
 	operator: z.enum(["equals", "contains", "not_equals", "in", "not_in"]),
@@ -237,7 +244,7 @@ export const goalsRouter = {
 				})
 				.returning();
 
-			await invalidateAgentContextSnapshotsForWebsite(input.websiteId);
+			await invalidateGoalsCache(input.websiteId);
 
 			return newGoal;
 		}),
@@ -287,7 +294,7 @@ export const goalsRouter = {
 				.where(and(eq(goals.id, id), isNull(goals.deletedAt)))
 				.returning();
 
-			await invalidateAgentContextSnapshotsForWebsite(existingGoal.websiteId);
+			await invalidateGoalsCache(existingGoal.websiteId);
 
 			return updatedGoal;
 		}),
@@ -323,7 +330,7 @@ export const goalsRouter = {
 				.set({ deletedAt: new Date(), isActive: false })
 				.where(and(eq(goals.id, input.id), isNull(goals.deletedAt)));
 
-			await invalidateAgentContextSnapshotsForWebsite(existingGoal.websiteId);
+			await invalidateGoalsCache(existingGoal.websiteId);
 
 			return { success: true };
 		}),

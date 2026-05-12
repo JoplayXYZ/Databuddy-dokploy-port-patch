@@ -29,8 +29,14 @@ export default defineNuxtPlugin((nuxtApp) => {
 	}
 
 	// SPA navigation: fire a screen_view on every client-side route change.
-	// No app.vue or layout edits needed — this covers everything automatically.
+	// Skip the first invocation — the CDN tracker already records the landing
+	// page view on initialisation, so firing again here would double-count it.
+	let initialPageFinished = false;
 	nuxtApp.hook("page:finish", () => {
+		if (!initialPageFinished) {
+			initialPageFinished = true;
+			return;
+		}
 		window.db?.screenView();
 	});
 

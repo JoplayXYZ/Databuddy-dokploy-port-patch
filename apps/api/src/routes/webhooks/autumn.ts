@@ -7,7 +7,7 @@ import { SlackProvider } from "@databuddy/notifications";
 import {
 	cacheable,
 	invalidateAgentContextSnapshotsForOwner,
-	invalidateCacheablePattern,
+	invalidateBillingOwnerCaches,
 } from "@databuddy/redis";
 import { Elysia } from "elysia";
 import { useLogger } from "evlog/elysia";
@@ -171,14 +171,9 @@ async function invalidatePlanCaches(customerId: string | null): Promise<void> {
 			...ownedOrganizations.map((row) => row.organizationId),
 		];
 		await Promise.all([
-			invalidateCacheablePattern(`cacheable:rpc:billing_owner:*${customerId}*`),
+			invalidateBillingOwnerCaches(ownerIds),
 			...ownerIds.map((ownerId) =>
 				invalidateAgentContextSnapshotsForOwner(ownerId)
-			),
-			...ownedOrganizations.map((row) =>
-				invalidateCacheablePattern(
-					`cacheable:rpc:billing_owner:*${row.organizationId}*`
-				)
 			),
 		]);
 	} catch (error) {

@@ -11,7 +11,7 @@ export const insightMetricSchema = z.object({
 	label: z
 		.string()
 		.describe(
-			"Short human-readable metric name, e.g. 'Visitors', 'Bounce Rate', 'LCP (p75)', 'Errors'"
+			"Short user-facing metric label for the card UI. Prefer plain-English labels such as 'Visitors', 'Bounce rate', 'Interaction delay', 'Load speed', 'Layout stability', or 'Errors'. Avoid raw acronyms/jargon unless the user explicitly asked for the technical metric."
 		),
 	current: z.number().describe("Value for the current period"),
 	previous: z

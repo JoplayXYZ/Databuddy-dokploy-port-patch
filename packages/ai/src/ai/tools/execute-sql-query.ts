@@ -1,65 +1,104 @@
 import {
 	AGENT_SQL_VALIDATION_ERROR,
-	requiresTenantFilter,
+	buildAdditionalTableFilters,
+	extractAllowlistedTables,
 	validateAgentSQL,
 } from "@databuddy/db/clickhouse";
 import { tool } from "ai";
 import { z } from "zod";
-import { executeTimedQuery, type QueryResult } from "./utils";
+import { executeTimedQuery, getAppContext, type QueryResult } from "./utils";
+
+const MAX_MODEL_ROWS = 50;
+
+function withServerBoundIds(
+	params: Record<string, unknown> | undefined,
+	websiteId: string,
+	websiteDomain: string | undefined
+): Record<string, unknown> {
+	const { websiteId: _, websiteDomain: __, ...rest } = params ?? {};
+	return websiteDomain
+		? { ...rest, websiteId, websiteDomain }
+		: { ...rest, websiteId };
+}
+
+export async function executeAgentSqlForWebsite({
+	websiteId,
+	websiteDomain,
+	sql,
+	params,
+	toolName = "Execute SQL Tool",
+}: {
+	websiteId: string;
+	websiteDomain?: string;
+	sql: string;
+	params?: Record<string, unknown>;
+	toolName?: string;
+}): Promise<QueryResult> {
+	const validation = validateAgentSQL(sql);
+	if (!validation.valid) {
+		throw new Error(validation.reason ?? AGENT_SQL_VALIDATION_ERROR);
+	}
+
+	const referencedTables = extractAllowlistedTables(sql);
+	const additional_table_filters = buildAdditionalTableFilters(
+		referencedTables,
+		websiteId
+	);
+
+	const result = await executeTimedQuery(
+		toolName,
+		sql,
+		withServerBoundIds(params, websiteId, websiteDomain),
+		{ websiteId },
+		{
+			additional_table_filters,
+			max_execution_time: 20,
+			max_memory_usage: 1_000_000_000,
+			max_rows_to_read: 100_000_000,
+			max_bytes_to_read: 5_000_000_000,
+			read_overflow_mode: "throw",
+			max_result_rows: 100_000,
+			max_result_bytes: 50_000_000,
+			result_overflow_mode: "break",
+		}
+	);
+
+	return result.data.length > MAX_MODEL_ROWS
+		? { ...result, data: result.data.slice(0, MAX_MODEL_ROWS) }
+		: result;
+}
 
 export const executeSqlQueryTool = tool({
-	description: `Use only for explicit analytics questions that cannot be answered by get_data query builders, such as session-level joins, ordered path analysis, or cross-table correlations. Do not use for greetings, thanks, acknowledgments, short reactions, clarification-only replies, frustration, or meta-conversation about the assistant/chat. Read-only ClickHouse SQL (SELECT/WITH only). Must use {paramName:Type} placeholders (no string interpolation) and filter by client_id = {websiteId:String}. websiteId is auto-added to params.
+	description: `Use only for explicit analytics questions that cannot be answered by get_data query builders, such as session-level joins, ordered path analysis, or cross-table correlations. Do not use for greetings, thanks, acknowledgments, short reactions, clarification-only replies, frustration, or meta-conversation about the assistant/chat. Read-only ClickHouse SQL (SELECT/WITH only). Must use {paramName:Type} placeholders (no string interpolation) and filter by client_id = {websiteId:String} AND-ed at the top level of every WHERE clause. The current website is bound server-side; tool arguments named websiteId or websiteDomain are ignored. UNION, INTERSECT, EXCEPT, subqueries, and comma-joins are not allowed — use CTEs (WITH ... AS (...)) instead.
 
 Canonical analytics.events schema: client_id, anonymous_id, session_id, time, path, referrer, browser_name, os_name, device_type, country, region, city, utm_source, utm_medium, utm_campaign, utm_term, utm_content, load_time, time_on_page, scroll_depth, properties, event_name.
 
 Critical schema footguns: website id column is client_id (not website_id); timestamp is time (not created_at); page URL path is path (not page_path); event discriminator is event_name (not event_type); pageviews are event_name = 'screen_view' (never 'pageview').
 
-Other tables: analytics.error_spans (client_id, session_id, timestamp, path, message, filename, lineno, stack, error_type), analytics.web_vitals_spans (client_id, timestamp, path, metric_name FCP/LCP/CLS/INP/TTFB/FPS, metric_value), analytics.outgoing_links (client_id, timestamp, path, href, text). Custom events are in analytics.custom_events and are easy to query incorrectly — use get_data custom_events_* builders instead. Prefer get_data query builders for anything they cover.`,
+Other tables: analytics.error_spans (client_id, session_id, timestamp, path, message, filename, lineno, stack, error_type), analytics.web_vitals_spans (client_id, timestamp, path, metric_name FCP/LCP/CLS/INP/TTFB/FPS, metric_value), analytics.outgoing_links (client_id, timestamp, path, href, text). Custom events are in analytics.custom_events and are easy to query incorrectly — use get_data custom_events_* builders instead. Prefer get_data query builders for anything they cover.
+
+Aggregate function preferences: use quantileTDigest(p)(col) not quantile(p)(col) — the default quantile uses reservoir sampling and is ~10% off at p99. Use uniqCombined64(col) instead of uniqExact(col) for visitor/session/path distinct counts (same ~0.3% error as default uniq, ~6× less memory than uniqExact). Reserve uniqExact for cases where an exact count is required.`,
 	strict: true,
 	inputSchema: z.object({
-		websiteId: z
-			.string()
-			.describe(
-				"Website/client id to query. Automatically injected into params."
-			),
 		sql: z
 			.string()
 			.describe(
-				"Read-only ClickHouse SELECT/WITH query for an explicit analytics request. Must include client_id = {websiteId:String}."
+				"Read-only ClickHouse SELECT/WITH query for an explicit analytics request. Must include client_id = {websiteId:String} AND-ed at the top level of every SELECT's WHERE."
 			),
 		params: z
 			.record(z.string(), z.unknown())
 			.optional()
 			.describe(
-				"Optional typed placeholder values other than websiteId. Never interpolate user input into SQL strings."
+				"Optional typed placeholder values. websiteId and websiteDomain are bound by the server and cannot be overridden."
 			),
 	}),
-	execute: async ({ sql, websiteId, params }): Promise<QueryResult> => {
-		const validation = validateAgentSQL(sql);
-		if (!validation.valid) {
-			throw new Error(validation.reason ?? AGENT_SQL_VALIDATION_ERROR);
-		}
-
-		if (!requiresTenantFilter(sql)) {
-			throw new Error(
-				"Query must include tenant isolation: WHERE client_id = {websiteId:String}"
-			);
-		}
-
-		const result = await executeTimedQuery("Execute SQL Tool", sql, {
-			websiteId,
-			...(params ?? {}),
+	execute: ({ sql, params }, options): Promise<QueryResult> => {
+		const ctx = getAppContext(options);
+		return executeAgentSqlForWebsite({
+			websiteId: ctx.websiteId,
+			websiteDomain: ctx.websiteDomain,
+			sql,
+			params,
 		});
-
-		// Truncate large results to save context tokens.
-		const MAX_MODEL_ROWS = 50;
-		if (result.data.length > MAX_MODEL_ROWS) {
-			return {
-				...result,
-				data: result.data.slice(0, MAX_MODEL_ROWS),
-			};
-		}
-
-		return result;
 	},
 });

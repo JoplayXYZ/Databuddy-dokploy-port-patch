@@ -1,5 +1,4 @@
 import { defineRelations } from "drizzle-orm";
-import { featureAccessLog, featureInvite } from "./admin";
 import { agentChats } from "./agent";
 import {
 	analyticsInsights,
@@ -65,8 +64,6 @@ const schema = {
 	alarms,
 	alarmDestinations,
 	usageAlertLog,
-	featureInvite,
-	featureAccessLog,
 	goals,
 	annotations,
 	feedback,
@@ -405,28 +402,6 @@ export const relations = defineRelations(schema, (r) => ({
 		alarm: r.one.alarms({
 			from: r.alarmDestinations.alarmId,
 			to: r.alarms.id,
-			optional: false,
-		}),
-	},
-
-	featureInvite: {
-		inviter: r.one.user({
-			from: r.featureInvite.invitedById,
-			to: r.user.id,
-			alias: "inviter",
-			optional: false,
-		}),
-		redeemer: r.one.user({
-			from: r.featureInvite.redeemedById,
-			to: r.user.id,
-			alias: "redeemer",
-		}),
-	},
-
-	featureAccessLog: {
-		organization: r.one.organization({
-			from: r.featureAccessLog.organizationId,
-			to: r.organization.id,
 			optional: false,
 		}),
 	},

@@ -71,6 +71,14 @@ export const basketErrors = {
 			fix: "Send events only for the authenticated website, or use an API key with access to multiple websites.",
 		}),
 
+	trackRateLimited: () =>
+		createError({
+			message: "Rate limit exceeded",
+			status: 429,
+			why: "Too many /track requests from this principal.",
+			fix: "Reduce request frequency or batch events.",
+		}),
+
 	ingestPayloadTooLarge: () =>
 		createError({
 			message: "Payload too large",

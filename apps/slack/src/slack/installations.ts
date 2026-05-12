@@ -2,7 +2,11 @@ import type { ApiKeyRow } from "@databuddy/api-keys/resolve";
 import { and, db, eq } from "@databuddy/db";
 import { slackChannelBindings, slackIntegrations } from "@databuddy/db/schema";
 import { decrypt } from "@databuddy/encryption";
-import { cacheable, invalidateCacheableKey } from "@databuddy/redis";
+import {
+	cacheNamespaces,
+	cacheable,
+	invalidateSlackChannelBindingCache,
+} from "@databuddy/redis";
 import type { Authorize } from "@slack/bolt";
 import { randomUUIDv7 } from "bun";
 import type {
@@ -241,8 +245,6 @@ export function createSlackAuthorize(
 	};
 }
 
-const SLACK_INTEGRATION_CACHE_PREFIX = "slack-integration-by-team";
-const SLACK_CHANNEL_BINDING_CACHE_PREFIX = "slack-channel-binding";
 const SLACK_INTEGRATION_CACHE_TTL_SEC = 300;
 const SLACK_CHANNEL_BINDING_CACHE_TTL_SEC = 300;
 
@@ -271,7 +273,7 @@ const findActiveIntegration = cacheable(
 			.then(([installation]) => installation ?? null),
 	{
 		expireInSec: SLACK_INTEGRATION_CACHE_TTL_SEC,
-		prefix: SLACK_INTEGRATION_CACHE_PREFIX,
+		prefix: cacheNamespaces.slackIntegrationByTeam,
 	}
 );
 
@@ -290,7 +292,7 @@ const findChannelBinding = cacheable(
 			.then(([binding]) => binding ?? null),
 	{
 		expireInSec: SLACK_CHANNEL_BINDING_CACHE_TTL_SEC,
-		prefix: SLACK_CHANNEL_BINDING_CACHE_PREFIX,
+		prefix: cacheNamespaces.slackChannelBinding,
 	}
 );
 
@@ -315,11 +317,7 @@ async function upsertChannelBinding(
 				slackChannelBindings.slackChannelId,
 			],
 		});
-	await invalidateCacheableKey(
-		SLACK_CHANNEL_BINDING_CACHE_PREFIX,
-		integrationId,
-		channelId
-	);
+	await invalidateSlackChannelBindingCache(integrationId, channelId);
 }
 
 type ActiveSlackIntegration = NonNullable<

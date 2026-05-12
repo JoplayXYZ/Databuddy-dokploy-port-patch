@@ -111,15 +111,15 @@ const ANALYTICS_TABLES: TableDef[] = [
 			"session_id (String)",
 			"timestamp (DateTime64)",
 			"path (String) - Page where error occurred",
-			"message (String) - Error message",
+			"message (String) - Full error message text (filter on this to search by content; field name is 'message', NOT 'error_message')",
 			"filename (String) - Source file",
 			"lineno (Int32) - Line number",
 			"colno (Int32) - Column number",
-			"stack (String) - Stack trace",
-			"error_type (String) - Error type/name",
+			"stack (String) - Stack trace (truncated to 1500 chars in recent_errors output)",
+			"error_type (String) - JS error class name (Error, TypeError, ReferenceError, SyntaxError, etc.) — NOT the message. Filter by 'message' to match error text.",
 		],
 		additionalInfo:
-			"Has bloom filter indexes on session_id, error_type, and message",
+			"Has bloom filter indexes on session_id, error_type, and message. Filterable fields on error queries: path, message, error_type (plus the global filters: country, region, city, device_type, browser_name, os_name).",
 	},
 	{
 		name: "analytics.error_hourly",
@@ -202,6 +202,11 @@ const GUIDELINES = `## Query Guidelines
 - All timestamps are in UTC.
 - Use uniqMerge() for unique counts from AggregateFunction columns.
 - Properties columns contain JSON strings — use JSONExtractString(properties, 'key') to parse.
+
+## Aggregate function preferences
+- Percentiles: use \`quantileTDigest(p)(col)\` for p50/p75/p95/p99. Plain \`quantile(p)\` uses reservoir sampling and is noisy at the tails (~10% error at p99). \`quantileTDigest\` is within 0.1% of exact at the same memory cost.
+- Distinct counts: \`uniq(col)\` (HLL11) is fine when approximate is OK. Prefer \`uniqCombined64(col)\` for high-cardinality distinct counts (visitor_id, session_id, anonymous_id, path) — same ~0.3% error as uniq() but lower memory and stable across reruns. Reserve \`uniqExact(col)\` only when an exact count is genuinely required (small cardinality dashboard widgets, billing).
+- Top-N lists: prefer exact \`GROUP BY ... ORDER BY count() DESC LIMIT N\` for user-facing leaderboards. \`topK(N)(col)\` is approximate and can swap the bottom-of-list entries — only use it for ML/agent summarization where minor ordering noise is acceptable.
 
 ## ClickHouse Pitfalls
 - NO nested aggregates: \`sum(count())\` is illegal. Use a subquery: \`SELECT sum(cnt) FROM (SELECT count() as cnt ... GROUP BY ...)\`

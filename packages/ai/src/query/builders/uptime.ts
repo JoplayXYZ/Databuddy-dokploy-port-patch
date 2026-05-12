@@ -26,10 +26,10 @@ export const UptimeBuilders: Record<string, SimpleQueryConfig> = {
 				SELECT 
 					if((countIf(status = 1) + countIf(status = 0)) = 0, 0, round((countIf(status = 1) / (countIf(status = 1) + countIf(status = 0))) * 100, 2)) as uptime_percentage,
 					avg(total_ms) as avg_response_time,
-					quantile(0.50)(total_ms) as p50_response_time,
-					quantile(0.75)(total_ms) as p75_response_time,
-					quantile(0.95)(total_ms) as p95_response_time,
-					quantile(0.99)(total_ms) as p99_response_time,
+					quantileTDigest(0.50)(total_ms) as p50_response_time,
+					quantileTDigest(0.75)(total_ms) as p75_response_time,
+					quantileTDigest(0.95)(total_ms) as p95_response_time,
+					quantileTDigest(0.99)(total_ms) as p99_response_time,
 					max(total_ms) as max_response_time,
 					min(total_ms) as min_response_time,
 					avg(ttfb_ms) as avg_ttfb,
@@ -102,12 +102,12 @@ export const UptimeBuilders: Record<string, SimpleQueryConfig> = {
 								status = 0
 							)) as downtime_seconds,
 							avg(total_ms) as avg_response_time,
-							quantile(0.50)(total_ms) as p50_response_time,
-							quantile(0.95)(total_ms) as p95_response_time,
+							quantileTDigest(0.50)(total_ms) as p50_response_time,
+							quantileTDigest(0.95)(total_ms) as p95_response_time,
 							max(total_ms) as max_response_time,
 							avg(ttfb_ms) as avg_ttfb,
-							quantile(0.50)(ttfb_ms) as p50_ttfb,
-							quantile(0.95)(ttfb_ms) as p95_ttfb
+							quantileTDigest(0.50)(ttfb_ms) as p50_ttfb,
+							quantileTDigest(0.95)(ttfb_ms) as p95_ttfb
 						FROM (
 							SELECT
 								timestamp as ts,
@@ -221,11 +221,11 @@ export const UptimeBuilders: Record<string, SimpleQueryConfig> = {
 					SELECT 
 						${timeGroup} as date,
 						avg(total_ms) as avg_response_time,
-						quantile(0.50)(total_ms) as p50_response_time,
-						quantile(0.75)(total_ms) as p75_response_time,
-						quantile(0.90)(total_ms) as p90_response_time,
-						quantile(0.95)(total_ms) as p95_response_time,
-						quantile(0.99)(total_ms) as p99_response_time,
+						quantileTDigest(0.50)(total_ms) as p50_response_time,
+						quantileTDigest(0.75)(total_ms) as p75_response_time,
+						quantileTDigest(0.90)(total_ms) as p90_response_time,
+						quantileTDigest(0.95)(total_ms) as p95_response_time,
+						quantileTDigest(0.99)(total_ms) as p99_response_time,
 						min(total_ms) as min_response_time,
 						max(total_ms) as max_response_time,
 						avg(ttfb_ms) as avg_ttfb
@@ -278,7 +278,7 @@ export const UptimeBuilders: Record<string, SimpleQueryConfig> = {
 					probe_region as region,
 					if((countIf(status = 1) + countIf(status = 0)) = 0, 0, round((countIf(status = 1) / (countIf(status = 1) + countIf(status = 0))) * 100, 2)) as uptime_percentage,
 					avg(total_ms) as avg_response_time,
-					quantile(0.95)(total_ms) as p95_response_time
+					quantileTDigest(0.95)(total_ms) as p95_response_time
 				FROM ${UPTIME_TABLE}
 				WHERE 
 					site_id = {websiteId:String}

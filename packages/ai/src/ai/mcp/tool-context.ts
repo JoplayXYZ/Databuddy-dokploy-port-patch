@@ -100,10 +100,12 @@ function accessibleWebsitesCacheKey(
 export async function getCachedAccessibleWebsites(
 	principal: RequestPrincipal
 ): Promise<WebsiteSummary[]> {
+	const scopedApiKey = principal.apiKey && !hasGlobalAccess(principal.apiKey);
 	const authCtx = {
 		apiKey: principal.apiKey,
-		organizationId:
-			principal.organizationId ?? principal.apiKey?.organizationId,
+		organizationId: scopedApiKey
+			? null
+			: (principal.organizationId ?? principal.apiKey?.organizationId ?? null),
 		user: principal.userId ? { id: principal.userId } : null,
 	};
 	const cacheKey = accessibleWebsitesCacheKey(principal);

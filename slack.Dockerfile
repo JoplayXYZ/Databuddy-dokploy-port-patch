@@ -15,6 +15,7 @@ RUN bun install --ignore-scripts
 
 COPY --from=pruner /app/out/full/ .
 COPY turbo.json turbo.json
+COPY tsconfig tsconfig
 
 ENV NODE_ENV=production
 

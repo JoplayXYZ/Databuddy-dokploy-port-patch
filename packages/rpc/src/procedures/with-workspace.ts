@@ -6,7 +6,7 @@ import {
 } from "@databuddy/api-keys/scopes";
 import type { PermissionFor, ResourceType, User } from "@databuddy/auth";
 import { db } from "@databuddy/db";
-import { cacheable } from "@databuddy/redis";
+import { cacheNamespaces, cacheable } from "@databuddy/redis";
 import type { PlanId } from "@databuddy/shared/types/features";
 import { z } from "zod";
 import { rpcError } from "../errors";
@@ -15,12 +15,15 @@ import { type Context, os } from "../orpc";
 
 type Website = NonNullable<Awaited<ReturnType<typeof getWebsiteById>>>;
 
+export type WorkspaceTier = "authed" | "demo";
+
 export interface Workspace {
 	getCreatedBy: () => Promise<string>;
 	isPublicAccess: boolean;
 	organizationId: string;
 	plan: PlanId;
 	role: string | null;
+	tier: WorkspaceTier;
 	user: User | null;
 	website: Website | null;
 }
@@ -50,7 +53,7 @@ const getWebsiteById = cacheable(
 	},
 	{
 		expireInSec: 600,
-		prefix: "website_by_id",
+		prefix: cacheNamespaces.websiteById,
 		staleWhileRevalidate: true,
 		staleTime: 60,
 	}
@@ -74,7 +77,7 @@ const _getOrganizationRole = async (
 
 const getOrganizationRole = cacheable(_getOrganizationRole, {
 	expireInSec: 300,
-	prefix: "rpc:org_role",
+	prefix: cacheNamespaces.organizationRole,
 	staleWhileRevalidate: true,
 	staleTime: 60,
 });
@@ -164,6 +167,7 @@ function resolveApiKeyWorkspace(
 		role: null,
 		plan,
 		isPublicAccess: false,
+		tier: "authed",
 	};
 }
 
@@ -221,6 +225,7 @@ export async function withWorkspace<R extends ResourceType = "organization">(
 				role: null,
 				plan,
 				isPublicAccess: !context.user,
+				tier: "demo",
 				website,
 				getCreatedBy: () => _resolveCreatedBy(context, orgId),
 			};
@@ -277,6 +282,7 @@ export async function withWorkspace<R extends ResourceType = "organization">(
 			role,
 			plan,
 			isPublicAccess: false,
+			tier: "authed",
 			website,
 			getCreatedBy,
 		};
@@ -319,6 +325,24 @@ export async function withLinksAccess(
 	});
 }
 
+export async function withFlagsWrite(
+	context: Context,
+	options: {
+		websiteId: string;
+		permissions: PermissionFor<"website">[];
+	}
+): Promise<Workspace & { website: Website }> {
+	if (context.apiKey && !hasKeyScope(context.apiKey, "manage:flags")) {
+		throw rpcError.forbidden("API key missing manage:flags scope");
+	}
+
+	return await withWorkspace<"website">(context, {
+		websiteId: options.websiteId,
+		resource: "website",
+		permissions: options.permissions,
+	});
+}
+
 async function _resolveCreatedBy(
 	context: Context,
 	organizationId: string
@@ -343,18 +367,14 @@ async function _resolveCreatedBy(
 	throw rpcError.unauthorized();
 }
 
-export async function isFullyAuthorized(
-	context: Context,
-	websiteId: string
-): Promise<boolean> {
-	try {
-		const workspace = await withWorkspace(context, {
-			websiteId,
-		});
-		return !workspace.isPublicAccess;
-	} catch {
-		return false;
-	}
+export function hasApiKeyOrgAccess(
+	workspace: Pick<Workspace, "organizationId">,
+	context: Pick<Context, "apiKey">
+): boolean {
+	return (
+		!!context.apiKey &&
+		context.apiKey.organizationId === workspace.organizationId
+	);
 }
 
 export const withWebsiteRead = os.middleware(
