@@ -8,6 +8,7 @@ import {
 	resolveDatePreset,
 } from "../../lib/date-presets";
 import { QueryBuilders } from "../../query/builders";
+import { suggestQueryTypes } from "../../query";
 import type { Filter, QueryRequest } from "../../query/types";
 
 export {
@@ -61,9 +62,7 @@ export function buildBatchQueryRequests(
 	for (const q of items) {
 		const resolvedType = resolveQueryType(q.type);
 		if (!(resolvedType in QueryBuilders)) {
-			const hint = Object.keys(QueryBuilders)
-				.filter((k) => k.includes(q.type.replace("top_", "")))
-				.slice(0, 3);
+			const hint = suggestQueryTypes(q.type.replace(/^top_/, ""));
 			const message = hint.length
 				? `Unknown type: ${q.type}. Did you mean: ${hint.join(", ")}?`
 				: `Unknown type: ${q.type}. Use the capabilities tool to see valid types.`;
@@ -72,6 +71,11 @@ export function buildBatchQueryRequests(
 		q.type = resolvedType;
 		let from = q.from;
 		let to = q.to;
+		if (!q.preset && Boolean(from) !== Boolean(to)) {
+			return {
+				error: `Both 'from' and 'to' are required when one is provided. Got from=${q.from ?? "(unset)"}, to=${q.to ?? "(unset)"}. Use a 'preset' (e.g. last_7d) or pass both dates as YYYY-MM-DD.`,
+			};
+		}
 		const preset = q.preset ?? (from && to ? undefined : "last_7d");
 		if (preset && MCP_DATE_PRESETS.includes(preset as DatePreset)) {
 			const resolved = resolveDatePreset(preset as DatePreset, timezone);

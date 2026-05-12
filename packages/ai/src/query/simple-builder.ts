@@ -148,9 +148,15 @@ export function escapeLikePattern(value: string): string {
 	return value.replace(/\\/g, "\\\\").replace(/[%_]/g, "\\$&");
 }
 
+function listAllowed(values: Iterable<string>): string {
+	return Array.from(values).sort().join(", ");
+}
+
 function validateGroupByField(field: string): void {
 	if (!ALLOWED_GROUPBY_FIELDS.has(field)) {
-		throw new Error(`Grouping by '${field}' is not permitted.`);
+		throw new Error(
+			`Grouping by '${field}' is not permitted. Allowed groupBy fields: ${listAllowed(ALLOWED_GROUPBY_FIELDS)}.`
+		);
 	}
 }
 
@@ -160,7 +166,9 @@ function validateOrderByField(orderBy: string): void {
 	const match = orderBy.match(ORDER_BY_REGEX);
 	const field = match?.[1];
 	if (!(field && ALLOWED_ORDERBY_FIELDS.has(field))) {
-		throw new Error(`Ordering by '${orderBy}' is not permitted.`);
+		throw new Error(
+			`Ordering by '${orderBy}' is not permitted. Use '<field> ASC|DESC' where field is one of: ${listAllowed(ALLOWED_ORDERBY_FIELDS)}.`
+		);
 	}
 }
 
@@ -257,7 +265,13 @@ export class SimpleQueryBuilder {
 		if (
 			!(isGloballyAllowed || this.config.allowedFilters?.includes(filter.field))
 		) {
-			throw new Error(`Filter on field '${filter.field}' is not permitted.`);
+			const allowed = new Set<string>(GLOBAL_ALLOWED_FILTERS);
+			for (const f of this.config.allowedFilters ?? []) {
+				allowed.add(f);
+			}
+			throw new Error(
+				`Filter on field '${filter.field}' is not permitted. Allowed fields for this query: ${listAllowed(allowed)}.`
+			);
 		}
 
 		const key = `f${index}`;

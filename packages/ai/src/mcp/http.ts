@@ -2,12 +2,15 @@ import { hasKeyScope } from "@databuddy/api-keys/resolve";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 import type { AnySchema } from "@modelcontextprotocol/sdk/server/zod-compat.js";
+import type { ToolAnnotations } from "@modelcontextprotocol/sdk/types.js";
 import { captureError, mergeWideEvent } from "../lib/tracing";
 import type {
 	McpRequestContext,
+	McpToolMetadata,
 	RegisteredMcpTool,
 } from "../ai/mcp/define-tool";
 import { createMcpTools } from "../ai/mcp/tools";
+import { GUIDE_MARKDOWN, GUIDE_URI, MCP_INSTRUCTIONS } from "./guide";
 
 const DEFAULT_MCP_SERVER_NAME = "databuddy";
 const DEFAULT_MCP_SERVER_VERSION = "1.0.0";
@@ -73,8 +76,13 @@ export async function handleDatabuddyMcpRequest(
 			name: options.serverName ?? DEFAULT_MCP_SERVER_NAME,
 			version: options.serverVersion ?? DEFAULT_MCP_SERVER_VERSION,
 		},
-		{ capabilities: { tools: {} } }
+		{
+			capabilities: { tools: {}, resources: {} },
+			instructions: MCP_INSTRUCTIONS,
+		}
 	);
+
+	registerGuideResource(server);
 
 	for (const tool of createMcpTools(options)) {
 		if (apiKeyCanCallTool(options.apiKey, tool)) {
@@ -122,8 +130,42 @@ function registerTool(server: McpServer, tool: RegisteredMcpTool): void {
 			...(tool.outputSchema && {
 				outputSchema: toMcpSchema(tool.outputSchema),
 			}),
+			annotations: deriveAnnotations(tool.metadata),
 		},
 		tool.handler
+	);
+}
+
+function deriveAnnotations(metadata: McpToolMetadata): ToolAnnotations {
+	const isRead = metadata.access.kind === "read";
+	const requiresConfirmation = metadata.access.confirmation === "required";
+	return {
+		readOnlyHint: isRead,
+		destructiveHint: !isRead && requiresConfirmation,
+		idempotentHint: isRead,
+		openWorldHint: true,
+	};
+}
+
+function registerGuideResource(server: McpServer): void {
+	server.registerResource(
+		"databuddy_guide",
+		GUIDE_URI,
+		{
+			title: "Databuddy MCP guide",
+			description:
+				"Workflow tips, query conventions, and known footguns. Read after the session-start instructions when you want more depth.",
+			mimeType: "text/markdown",
+		},
+		(uri) => ({
+			contents: [
+				{
+					uri: uri.href,
+					mimeType: "text/markdown",
+					text: GUIDE_MARKDOWN,
+				},
+			],
+		})
 	);
 }
 

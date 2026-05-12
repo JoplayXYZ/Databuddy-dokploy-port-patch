@@ -40,6 +40,16 @@ const QuerySchema = z.object({
 	timezone: z.string().optional(),
 });
 
+export function suggestQueryTypes(input: string, limit = 5): string[] {
+	const lower = input.toLowerCase();
+	const all = Object.keys(QueryBuilders);
+	const prefixMatches = all.filter((t) => t.toLowerCase().startsWith(lower));
+	const substringMatches = all.filter(
+		(t) => !prefixMatches.includes(t) && t.toLowerCase().includes(lower)
+	);
+	return [...prefixMatches, ...substringMatches].slice(0, limit);
+}
+
 function createBuilder(
 	request: QueryRequest,
 	websiteDomain?: string | null,
@@ -48,7 +58,11 @@ function createBuilder(
 	const validated = QuerySchema.parse(request) as QueryRequest;
 	const config = QueryBuilders[validated.type];
 	if (!config) {
-		throw new Error(`Unknown query type: ${validated.type}`);
+		const suggestions = suggestQueryTypes(validated.type);
+		const hint = suggestions.length
+			? ` Did you mean: ${suggestions.join(", ")}?`
+			: " Call the 'capabilities' tool with include=['queryTypes'] to see all available types.";
+		throw new Error(`Unknown query type: ${validated.type}.${hint}`);
 	}
 	return new SimpleQueryBuilder(
 		config,
