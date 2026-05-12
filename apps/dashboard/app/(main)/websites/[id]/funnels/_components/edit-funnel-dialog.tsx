@@ -11,7 +11,7 @@ import type {
 	FunnelFilter,
 	FunnelStep,
 } from "@/types/funnels";
-import { filterOptions } from "@/lib/filter-options";
+import { goalFunnelFilterOptions } from "@/lib/filter-options";
 import {
 	DragDropContext,
 	Draggable,
@@ -529,7 +529,7 @@ export function EditFunnelDialog({
 												{formData.filters.map((filter, index) => (
 													<FilterRow
 														field={filter.field}
-														fieldOptions={filterOptions}
+														fieldOptions={goalFunnelFilterOptions}
 														key={`filter-${index}`}
 														onFieldChange={(value) =>
 															updateFilter(index, "field", value)
