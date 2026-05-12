@@ -18,6 +18,8 @@ export interface DatabuddyMcpHttpOptions extends McpRequestContext {
 	serverVersion?: string;
 }
 
+const UNAUTH_BODY_PARSE_CAP = 4096;
+
 export async function createMcpUnauthorizedResponse(
 	request: Request
 ): Promise<Response> {
@@ -31,7 +33,7 @@ export async function createMcpUnauthorizedResponse(
 				message:
 					"Authentication required. Use x-api-key or Authorization: Bearer with a key that has read:data scope.",
 			},
-			id: await readJsonRpcId(request),
+			id: shouldReadUnauthId(request) ? await readJsonRpcId(request) : null,
 		},
 		{
 			status: 401,
@@ -40,6 +42,20 @@ export async function createMcpUnauthorizedResponse(
 					'Bearer realm="databuddy", error="invalid_token", error_description="API key required (x-api-key or Authorization: Bearer)"',
 			},
 		}
+	);
+}
+
+function shouldReadUnauthId(request: Request): boolean {
+	const contentType = request.headers.get("content-type") ?? "";
+	if (!contentType.toLowerCase().includes("application/json")) {
+		return false;
+	}
+	const length = Number.parseInt(
+		request.headers.get("content-length") ?? "",
+		10
+	);
+	return (
+		Number.isFinite(length) && length > 0 && length <= UNAUTH_BODY_PARSE_CAP
 	);
 }
 
