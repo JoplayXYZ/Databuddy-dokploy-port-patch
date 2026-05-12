@@ -21,6 +21,18 @@ const FORBIDDEN_WEBHOOK_HEADERS = new Set([
 ]);
 
 const CRLF_PATTERN = /[\r\n]/;
+const SLACK_WEBHOOK_HOST = "hooks.slack.com";
+
+function isAllowedSlackWebhook(url: string): boolean {
+	try {
+		const parsed = new URL(url);
+		return (
+			parsed.protocol === "https:" && parsed.hostname === SLACK_WEBHOOK_HOST
+		);
+	} catch {
+		return false;
+	}
+}
 
 function sanitizeWebhookHeaders(
 	raw: unknown
@@ -52,6 +64,9 @@ export function buildAlarmNotificationConfig(destinations: AlarmDestination[]) {
 		const cfg = (dest.config ?? {}) as Record<string, unknown>;
 
 		if (dest.type === "slack") {
+			if (!isAllowedSlackWebhook(dest.identifier)) {
+				continue;
+			}
 			clientConfig.slack = { webhookUrl: dest.identifier };
 			channels.push("slack");
 		} else if (dest.type === "webhook") {
