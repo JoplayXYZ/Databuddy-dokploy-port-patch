@@ -62,7 +62,7 @@ export const agentTelemetryRoute = new Elysia({
 	prefix: "/v1/agent-telemetry",
 }).post(
 	"/",
-	async function reportAgentInstall({ body, set }) {
+	async function reportAgentInstall({ body, set, request }) {
 		mergeWideEvent({
 			agent_telemetry: true,
 			agent_telemetry_website_id: body.websiteId,
@@ -86,7 +86,26 @@ export const agentTelemetryRoute = new Elysia({
 			mergeWideEvent({ agent_telemetry_duration_ms: body.durationMs });
 		}
 
-		// Rate limit: 10 requests per hour per websiteId
+		// Rate limit by client IP first to stop an attacker from spreading load
+		// across many valid websiteIds, then by websiteId for tenant-fair use.
+		const clientIp =
+			request.headers.get("cf-connecting-ip") ||
+			request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+			request.headers.get("x-real-ip") ||
+			"unknown";
+		const ipRl = await ratelimit(`agent-telemetry:ip:${clientIp}`, 30, 3600);
+		if (!ipRl.success) {
+			mergeWideEvent({ agent_telemetry_rejected: "rate_limit_ip" });
+			set.status = 429;
+			for (const [key, value] of Object.entries(getRateLimitHeaders(ipRl))) {
+				set.headers[key] = value;
+			}
+			return {
+				success: false,
+				error: "Rate limit exceeded. Try again later.",
+			};
+		}
+
 		const rl = await ratelimit(`agent-telemetry:${body.websiteId}`, 10, 3600);
 		const rlHeaders = getRateLimitHeaders(rl);
 		for (const [key, value] of Object.entries(rlHeaders)) {
