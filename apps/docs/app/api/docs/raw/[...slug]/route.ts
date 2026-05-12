@@ -2,19 +2,37 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import matter from "gray-matter";
 
+function isUnsafeSegment(segment: string): boolean {
+	return (
+		segment.length === 0 ||
+		segment.includes("..") ||
+		segment.includes("\0") ||
+		segment.includes("/") ||
+		segment.includes("\\")
+	);
+}
+
 export async function GET(
 	_request: Request,
 	{ params }: { params: Promise<{ slug: string[] }> }
 ) {
 	const { slug } = await params;
+	if (slug.some(isUnsafeSegment)) {
+		return new Response("Not found", { status: 404 });
+	}
 	const slugPath = slug.join("/");
-	const basePath = path.join(process.cwd(), "content/docs");
+	const basePath = path.resolve(process.cwd(), "content/docs");
 	const candidates = [
 		path.join(basePath, `${slugPath}.mdx`),
 		path.join(basePath, slugPath, "index.mdx"),
 	];
+	const prefix = basePath + path.sep;
 
 	for (const filePath of candidates) {
+		const resolved = path.resolve(filePath);
+		if (!resolved.startsWith(prefix)) {
+			continue;
+		}
 		try {
 			const content = await fs.readFile(filePath, "utf-8");
 			const { content: markdown, data } = matter(content);
