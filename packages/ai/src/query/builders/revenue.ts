@@ -1,6 +1,96 @@
 import { Analytics } from "../../types/tables";
 import type { Filter, SimpleQueryConfig, TimeUnit } from "../types";
 
+const REVENUE_FILTER_COLUMNS: Record<string, string> = {
+	country: "country",
+	region: "region",
+	city: "city",
+	browser_name: "browser_name",
+	device_type: "device_type",
+	os_name: "os_name",
+	utm_source: "utm_source",
+	utm_medium: "utm_medium",
+	utm_campaign: "utm_campaign",
+	referrer: "referrer_domain",
+	path: "entry_path",
+	provider: "provider",
+	type: "type",
+};
+
+function escapeRevenueLikeValue(value: string): string {
+	return value.replace(/\\/g, "\\\\").replace(/%/g, "\\%").replace(/_/g, "\\_");
+}
+
+function buildRevenueFilterConditions(filters?: Filter[]): {
+	conditions: string[];
+	params: Record<string, Filter["value"]>;
+} {
+	if (!filters?.length) {
+		return { conditions: [], params: {} };
+	}
+
+	const params: Record<string, Filter["value"]> = {};
+	const conditions: string[] = [];
+
+	filters.forEach((filter, i) => {
+		if (!filter || filter.having) {
+			return;
+		}
+		const column = REVENUE_FILTER_COLUMNS[filter.field];
+		if (!column) {
+			return;
+		}
+
+		const key = `rf${i}`;
+		const op = filter.op;
+
+		if (op === "in" || op === "not_in") {
+			const values = Array.isArray(filter.value)
+				? filter.value
+				: [filter.value];
+			if (values.length === 0) {
+				return;
+			}
+			params[key] = values.map((v) => String(v));
+			conditions.push(
+				`${column} ${op === "in" ? "IN" : "NOT IN"} {${key}:Array(String)}`
+			);
+			return;
+		}
+
+		if (op === "contains" || op === "not_contains") {
+			params[key] = `%${escapeRevenueLikeValue(String(filter.value))}%`;
+			conditions.push(
+				`${column} ${op === "contains" ? "LIKE" : "NOT LIKE"} {${key}:String}`
+			);
+			return;
+		}
+
+		if (op === "starts_with") {
+			params[key] = `${escapeRevenueLikeValue(String(filter.value))}%`;
+			conditions.push(`${column} LIKE {${key}:String}`);
+			return;
+		}
+
+		params[key] = String(filter.value);
+		conditions.push(`${column} ${op === "ne" ? "!=" : "="} {${key}:String}`);
+	});
+
+	return { conditions, params };
+}
+
+function buildRevenueWhereClause(
+	filters?: Filter[],
+	extraConditions: string[] = []
+): { whereClause: string; params: Record<string, Filter["value"]> } {
+	const { conditions, params } = buildRevenueFilterConditions(filters);
+	const all = [...extraConditions, ...conditions];
+	return {
+		whereClause: all.length ? ` WHERE ${all.join(" AND ")}` : "",
+		params,
+	};
+}
+
 const ATTRIBUTION_CTE = `
 	pi_dedup AS (
 		SELECT amount, toUnixTimestamp(created) as ts
@@ -123,68 +213,95 @@ const ATTRIBUTION_CTE = `
 
 export const RevenueBuilders: Record<string, SimpleQueryConfig> = {
 	revenue_overview: {
-		customSql: (websiteId: string, startDate: string, endDate: string) => ({
-			sql: `
-				WITH ${ATTRIBUTION_CTE}
-				SELECT 
-					sumIf(amount, type != 'refund') as total_revenue,
-					countIf(type != 'refund') as total_transactions,
-					sumIf(amount, type = 'refund') as refund_amount,
-					countIf(type = 'refund') as refund_count,
-					sumIf(amount, type = 'subscription') as subscription_revenue,
-					countIf(type = 'subscription') as subscription_count,
-					sumIf(amount, type = 'sale') as sale_revenue,
-					countIf(type = 'sale') as sale_count,
-					uniq(r_customer_id) as unique_customers,
-					countIf(is_attributed = 1 AND type != 'refund') as attributed_transactions,
-					sumIf(amount, is_attributed = 1 AND type != 'refund') as attributed_revenue
-				FROM revenue_attributed
-			`,
-			params: { websiteId, startDate, endDate },
-		}),
+		customSql: (
+			websiteId: string,
+			startDate: string,
+			endDate: string,
+			filters?: Filter[]
+		) => {
+			const { whereClause, params: filterParams } =
+				buildRevenueWhereClause(filters);
+			return {
+				sql: `
+					WITH ${ATTRIBUTION_CTE}
+					SELECT
+						sumIf(amount, type != 'refund') as total_revenue,
+						countIf(type != 'refund') as total_transactions,
+						sumIf(amount, type = 'refund') as refund_amount,
+						countIf(type = 'refund') as refund_count,
+						sumIf(amount, type = 'subscription') as subscription_revenue,
+						countIf(type = 'subscription') as subscription_count,
+						sumIf(amount, type = 'sale') as sale_revenue,
+						countIf(type = 'sale') as sale_count,
+						uniq(r_customer_id) as unique_customers,
+						countIf(is_attributed = 1 AND type != 'refund') as attributed_transactions,
+						sumIf(amount, is_attributed = 1 AND type != 'refund') as attributed_revenue
+					FROM revenue_attributed${whereClause}
+				`,
+				params: { websiteId, startDate, endDate, ...filterParams },
+			};
+		},
 		timeField: "created",
 		customizable: false,
 	},
 
 	revenue_time_series: {
-		customSql: (websiteId: string, startDate: string, endDate: string) => ({
-			sql: `
-				WITH ${ATTRIBUTION_CTE}
-				SELECT 
-					toDate(created) as date,
-					sumIf(amount, type != 'refund') as revenue,
-					countIf(type != 'refund') as transactions,
-					uniq(r_customer_id) as customers,
-					sumIf(amount, type = 'refund') as refund_amount,
-					countIf(type = 'refund') as refund_count,
-					sumIf(amount, is_attributed = 1 AND type != 'refund') as attributed_revenue,
-					countIf(is_attributed = 1 AND type != 'refund') as attributed_transactions
-				FROM revenue_attributed
-				GROUP BY date
-				ORDER BY date ASC
-			`,
-			params: { websiteId, startDate, endDate },
-		}),
+		customSql: (
+			websiteId: string,
+			startDate: string,
+			endDate: string,
+			filters?: Filter[]
+		) => {
+			const { whereClause, params: filterParams } =
+				buildRevenueWhereClause(filters);
+			return {
+				sql: `
+					WITH ${ATTRIBUTION_CTE}
+					SELECT
+						toDate(created) as date,
+						sumIf(amount, type != 'refund') as revenue,
+						countIf(type != 'refund') as transactions,
+						uniq(r_customer_id) as customers,
+						sumIf(amount, type = 'refund') as refund_amount,
+						countIf(type = 'refund') as refund_count,
+						sumIf(amount, is_attributed = 1 AND type != 'refund') as attributed_revenue,
+						countIf(is_attributed = 1 AND type != 'refund') as attributed_transactions
+					FROM revenue_attributed${whereClause}
+					GROUP BY date
+					ORDER BY date ASC
+				`,
+				params: { websiteId, startDate, endDate, ...filterParams },
+			};
+		},
 		timeField: "created",
 		customizable: false,
 	},
 
 	revenue_by_provider: {
-		customSql: (websiteId: string, startDate: string, endDate: string) => ({
-			sql: `
-				WITH ${ATTRIBUTION_CTE}
-				SELECT 
-					provider as name,
-					sumIf(amount, type != 'refund') as revenue,
-					countIf(type != 'refund') as transactions,
-					uniq(r_customer_id) as customers,
-					ROUND((sumIf(amount, type != 'refund') / nullIf(SUM(sumIf(amount, type != 'refund')) OVER(), 0)) * 100, 2) as percentage
-				FROM revenue_attributed
-				GROUP BY provider
-				ORDER BY revenue DESC
-			`,
-			params: { websiteId, startDate, endDate },
-		}),
+		customSql: (
+			websiteId: string,
+			startDate: string,
+			endDate: string,
+			filters?: Filter[]
+		) => {
+			const { whereClause, params: filterParams } =
+				buildRevenueWhereClause(filters);
+			return {
+				sql: `
+					WITH ${ATTRIBUTION_CTE}
+					SELECT
+						provider as name,
+						sumIf(amount, type != 'refund') as revenue,
+						countIf(type != 'refund') as transactions,
+						uniq(r_customer_id) as customers,
+						ROUND((sumIf(amount, type != 'refund') / nullIf(SUM(sumIf(amount, type != 'refund')) OVER(), 0)) * 100, 2) as percentage
+					FROM revenue_attributed${whereClause}
+					GROUP BY provider
+					ORDER BY revenue DESC
+				`,
+				params: { websiteId, startDate, endDate, ...filterParams },
+			};
+		},
 		timeField: "created",
 		customizable: false,
 	},
@@ -194,27 +311,29 @@ export const RevenueBuilders: Record<string, SimpleQueryConfig> = {
 			websiteId: string,
 			startDate: string,
 			endDate: string,
-			_filters?: Filter[],
+			filters?: Filter[],
 			_granularity?: TimeUnit,
 			_limit?: number
 		) => {
 			const limit = _limit ?? 50;
+			const { whereClause, params: filterParams } =
+				buildRevenueWhereClause(filters);
 			return {
 				sql: `
 					WITH ${ATTRIBUTION_CTE}
-					SELECT 
+					SELECT
 						coalesce(product_name, 'Unknown') as name,
 						product_id,
 						sumIf(amount, type != 'refund') as revenue,
 						countIf(type != 'refund') as transactions,
 						uniq(r_customer_id) as customers,
 						ROUND((sumIf(amount, type != 'refund') / nullIf(SUM(sumIf(amount, type != 'refund')) OVER(), 0)) * 100, 2) as percentage
-					FROM revenue_attributed
+					FROM revenue_attributed${whereClause}
 					GROUP BY product_name, product_id
 					ORDER BY revenue DESC
 					LIMIT {limit:UInt32}
 				`,
-				params: { websiteId, startDate, endDate, limit },
+				params: { websiteId, startDate, endDate, limit, ...filterParams },
 			};
 		},
 		timeField: "created",
@@ -222,21 +341,30 @@ export const RevenueBuilders: Record<string, SimpleQueryConfig> = {
 	},
 
 	revenue_attribution_overview: {
-		customSql: (websiteId: string, startDate: string, endDate: string) => ({
-			sql: `
-				WITH ${ATTRIBUTION_CTE}
-				SELECT 
-					CASE WHEN is_attributed = 1 THEN 'Attributed' ELSE 'Unattributed' END as name,
-					sumIf(amount, type != 'refund') as revenue,
-					countIf(type != 'refund') as transactions,
-					uniq(r_customer_id) as customers,
-					ROUND((sumIf(amount, type != 'refund') / nullIf(SUM(sumIf(amount, type != 'refund')) OVER(), 0)) * 100, 2) as percentage
-				FROM revenue_attributed
-				GROUP BY is_attributed
-				ORDER BY revenue DESC
-			`,
-			params: { websiteId, startDate, endDate },
-		}),
+		customSql: (
+			websiteId: string,
+			startDate: string,
+			endDate: string,
+			filters?: Filter[]
+		) => {
+			const { whereClause, params: filterParams } =
+				buildRevenueWhereClause(filters);
+			return {
+				sql: `
+					WITH ${ATTRIBUTION_CTE}
+					SELECT
+						CASE WHEN is_attributed = 1 THEN 'Attributed' ELSE 'Unattributed' END as name,
+						sumIf(amount, type != 'refund') as revenue,
+						countIf(type != 'refund') as transactions,
+						uniq(r_customer_id) as customers,
+						ROUND((sumIf(amount, type != 'refund') / nullIf(SUM(sumIf(amount, type != 'refund')) OVER(), 0)) * 100, 2) as percentage
+					FROM revenue_attributed${whereClause}
+					GROUP BY is_attributed
+					ORDER BY revenue DESC
+				`,
+				params: { websiteId, startDate, endDate, ...filterParams },
+			};
+		},
 		timeField: "created",
 		customizable: false,
 	},
@@ -246,30 +374,32 @@ export const RevenueBuilders: Record<string, SimpleQueryConfig> = {
 			websiteId: string,
 			startDate: string,
 			endDate: string,
-			_filters?: Filter[],
+			filters?: Filter[],
 			_granularity?: TimeUnit,
 			_limit?: number
 		) => {
 			const limit = _limit ?? 20;
+			const { whereClause, params: filterParams } =
+				buildRevenueWhereClause(filters);
 			return {
 				sql: `
 					WITH ${ATTRIBUTION_CTE}
-					SELECT 
-						CASE 
+					SELECT
+						CASE
 							WHEN is_attributed = 0 THEN 'Unattributed'
 							WHEN country = '' OR country IS NULL THEN 'Unknown'
-							ELSE country 
+							ELSE country
 						END as name,
 						sumIf(amount, type != 'refund') as revenue,
 						countIf(type != 'refund') as transactions,
 						uniq(r_customer_id) as customers,
 						ROUND((sumIf(amount, type != 'refund') / nullIf(SUM(sumIf(amount, type != 'refund')) OVER(), 0)) * 100, 2) as percentage
-					FROM revenue_attributed
+					FROM revenue_attributed${whereClause}
 					GROUP BY name
 					ORDER BY revenue DESC
 					LIMIT {limit:UInt32}
 				`,
-				params: { websiteId, startDate, endDate, limit },
+				params: { websiteId, startDate, endDate, limit, ...filterParams },
 			};
 		},
 		timeField: "created",
@@ -285,31 +415,33 @@ export const RevenueBuilders: Record<string, SimpleQueryConfig> = {
 			websiteId: string,
 			startDate: string,
 			endDate: string,
-			_filters?: Filter[],
+			filters?: Filter[],
 			_granularity?: TimeUnit,
 			_limit?: number
 		) => {
 			const limit = _limit ?? 20;
+			const { whereClause, params: filterParams } =
+				buildRevenueWhereClause(filters);
 			return {
 				sql: `
 					WITH ${ATTRIBUTION_CTE}
-					SELECT 
-						CASE 
+					SELECT
+						CASE
 							WHEN is_attributed = 0 THEN 'Unattributed'
 							WHEN region = '' OR region IS NULL THEN 'Unknown'
-							ELSE region 
+							ELSE region
 						END as name,
 						country,
 						sumIf(amount, type != 'refund') as revenue,
 						countIf(type != 'refund') as transactions,
 						uniq(r_customer_id) as customers,
 						ROUND((sumIf(amount, type != 'refund') / nullIf(SUM(sumIf(amount, type != 'refund')) OVER(), 0)) * 100, 2) as percentage
-					FROM revenue_attributed
+					FROM revenue_attributed${whereClause}
 					GROUP BY name, country
 					ORDER BY revenue DESC
 					LIMIT {limit:UInt32}
 				`,
-				params: { websiteId, startDate, endDate, limit },
+				params: { websiteId, startDate, endDate, limit, ...filterParams },
 			};
 		},
 		timeField: "created",
@@ -324,31 +456,33 @@ export const RevenueBuilders: Record<string, SimpleQueryConfig> = {
 			websiteId: string,
 			startDate: string,
 			endDate: string,
-			_filters?: Filter[],
+			filters?: Filter[],
 			_granularity?: TimeUnit,
 			_limit?: number
 		) => {
 			const limit = _limit ?? 20;
+			const { whereClause, params: filterParams } =
+				buildRevenueWhereClause(filters);
 			return {
 				sql: `
 					WITH ${ATTRIBUTION_CTE}
-					SELECT 
-						CASE 
+					SELECT
+						CASE
 							WHEN is_attributed = 0 THEN 'Unattributed'
 							WHEN city = '' OR city IS NULL THEN 'Unknown'
-							ELSE city 
+							ELSE city
 						END as name,
 						country,
 						sumIf(amount, type != 'refund') as revenue,
 						countIf(type != 'refund') as transactions,
 						uniq(r_customer_id) as customers,
 						ROUND((sumIf(amount, type != 'refund') / nullIf(SUM(sumIf(amount, type != 'refund')) OVER(), 0)) * 100, 2) as percentage
-					FROM revenue_attributed
+					FROM revenue_attributed${whereClause}
 					GROUP BY name, country
 					ORDER BY revenue DESC
 					LIMIT {limit:UInt32}
 				`,
-				params: { websiteId, startDate, endDate, limit },
+				params: { websiteId, startDate, endDate, limit, ...filterParams },
 			};
 		},
 		timeField: "created",
@@ -363,30 +497,32 @@ export const RevenueBuilders: Record<string, SimpleQueryConfig> = {
 			websiteId: string,
 			startDate: string,
 			endDate: string,
-			_filters?: Filter[],
+			filters?: Filter[],
 			_granularity?: TimeUnit,
 			_limit?: number
 		) => {
 			const limit = _limit ?? 10;
+			const { whereClause, params: filterParams } =
+				buildRevenueWhereClause(filters);
 			return {
 				sql: `
 					WITH ${ATTRIBUTION_CTE}
-					SELECT 
-						CASE 
+					SELECT
+						CASE
 							WHEN is_attributed = 0 THEN 'Unattributed'
 							WHEN browser_name = '' OR browser_name IS NULL THEN 'Unknown'
-							ELSE browser_name 
+							ELSE browser_name
 						END as name,
 						sumIf(amount, type != 'refund') as revenue,
 						countIf(type != 'refund') as transactions,
 						uniq(r_customer_id) as customers,
 						ROUND((sumIf(amount, type != 'refund') / nullIf(SUM(sumIf(amount, type != 'refund')) OVER(), 0)) * 100, 2) as percentage
-					FROM revenue_attributed
+					FROM revenue_attributed${whereClause}
 					GROUP BY name
 					ORDER BY revenue DESC
 					LIMIT {limit:UInt32}
 				`,
-				params: { websiteId, startDate, endDate, limit },
+				params: { websiteId, startDate, endDate, limit, ...filterParams },
 			};
 		},
 		timeField: "created",
@@ -398,30 +534,32 @@ export const RevenueBuilders: Record<string, SimpleQueryConfig> = {
 			websiteId: string,
 			startDate: string,
 			endDate: string,
-			_filters?: Filter[],
+			filters?: Filter[],
 			_granularity?: TimeUnit,
 			_limit?: number
 		) => {
 			const limit = _limit ?? 10;
+			const { whereClause, params: filterParams } =
+				buildRevenueWhereClause(filters);
 			return {
 				sql: `
 					WITH ${ATTRIBUTION_CTE}
-					SELECT 
-						CASE 
+					SELECT
+						CASE
 							WHEN is_attributed = 0 THEN 'Unattributed'
 							WHEN device_type = '' OR device_type IS NULL THEN 'Unknown'
-							ELSE device_type 
+							ELSE device_type
 						END as name,
 						sumIf(amount, type != 'refund') as revenue,
 						countIf(type != 'refund') as transactions,
 						uniq(r_customer_id) as customers,
 						ROUND((sumIf(amount, type != 'refund') / nullIf(SUM(sumIf(amount, type != 'refund')) OVER(), 0)) * 100, 2) as percentage
-					FROM revenue_attributed
+					FROM revenue_attributed${whereClause}
 					GROUP BY name
 					ORDER BY revenue DESC
 					LIMIT {limit:UInt32}
 				`,
-				params: { websiteId, startDate, endDate, limit },
+				params: { websiteId, startDate, endDate, limit, ...filterParams },
 			};
 		},
 		timeField: "created",
@@ -433,30 +571,32 @@ export const RevenueBuilders: Record<string, SimpleQueryConfig> = {
 			websiteId: string,
 			startDate: string,
 			endDate: string,
-			_filters?: Filter[],
+			filters?: Filter[],
 			_granularity?: TimeUnit,
 			_limit?: number
 		) => {
 			const limit = _limit ?? 10;
+			const { whereClause, params: filterParams } =
+				buildRevenueWhereClause(filters);
 			return {
 				sql: `
 					WITH ${ATTRIBUTION_CTE}
-					SELECT 
-						CASE 
+					SELECT
+						CASE
 							WHEN is_attributed = 0 THEN 'Unattributed'
 							WHEN os_name = '' OR os_name IS NULL THEN 'Unknown'
-							ELSE os_name 
+							ELSE os_name
 						END as name,
 						sumIf(amount, type != 'refund') as revenue,
 						countIf(type != 'refund') as transactions,
 						uniq(r_customer_id) as customers,
 						ROUND((sumIf(amount, type != 'refund') / nullIf(SUM(sumIf(amount, type != 'refund')) OVER(), 0)) * 100, 2) as percentage
-					FROM revenue_attributed
+					FROM revenue_attributed${whereClause}
 					GROUP BY name
 					ORDER BY revenue DESC
 					LIMIT {limit:UInt32}
 				`,
-				params: { websiteId, startDate, endDate, limit },
+				params: { websiteId, startDate, endDate, limit, ...filterParams },
 			};
 		},
 		timeField: "created",
@@ -468,27 +608,29 @@ export const RevenueBuilders: Record<string, SimpleQueryConfig> = {
 			websiteId: string,
 			startDate: string,
 			endDate: string,
-			_filters?: Filter[],
+			filters?: Filter[],
 			_granularity?: TimeUnit,
 			_limit?: number
 		) => {
 			const limit = _limit ?? 20;
+			const { whereClause, params: filterParams } =
+				buildRevenueWhereClause(filters);
 			return {
 				sql: `
 					WITH ${ATTRIBUTION_CTE},
 					referrer_agg AS (
-						SELECT 
-							CASE 
+						SELECT
+							CASE
 								WHEN is_attributed = 0 THEN 'Unattributed'
 								WHEN referrer_domain = '' OR referrer_domain IS NULL THEN 'Direct'
-								ELSE referrer_domain 
+								ELSE referrer_domain
 							END as referrer_name,
 							amount,
 							type,
 							r_customer_id
-						FROM revenue_attributed
+						FROM revenue_attributed${whereClause}
 					)
-					SELECT 
+					SELECT
 						referrer_name as name,
 						sumIf(amount, type != 'refund') as revenue,
 						countIf(type != 'refund') as transactions,
@@ -499,7 +641,7 @@ export const RevenueBuilders: Record<string, SimpleQueryConfig> = {
 					ORDER BY revenue DESC
 					LIMIT {limit:UInt32}
 				`,
-				params: { websiteId, startDate, endDate, limit },
+				params: { websiteId, startDate, endDate, limit, ...filterParams },
 			};
 		},
 		timeField: "created",
@@ -511,30 +653,32 @@ export const RevenueBuilders: Record<string, SimpleQueryConfig> = {
 			websiteId: string,
 			startDate: string,
 			endDate: string,
-			_filters?: Filter[],
+			filters?: Filter[],
 			_granularity?: TimeUnit,
 			_limit?: number
 		) => {
 			const limit = _limit ?? 20;
+			const { whereClause, params: filterParams } =
+				buildRevenueWhereClause(filters);
 			return {
 				sql: `
 					WITH ${ATTRIBUTION_CTE}
-					SELECT 
-						CASE 
+					SELECT
+						CASE
 							WHEN is_attributed = 0 THEN 'Unattributed'
 							WHEN utm_source = '' OR utm_source IS NULL THEN 'None'
-							ELSE utm_source 
+							ELSE utm_source
 						END as name,
 						sumIf(amount, type != 'refund') as revenue,
 						countIf(type != 'refund') as transactions,
 						uniq(r_customer_id) as customers,
 						ROUND((sumIf(amount, type != 'refund') / nullIf(SUM(sumIf(amount, type != 'refund')) OVER(), 0)) * 100, 2) as percentage
-					FROM revenue_attributed
+					FROM revenue_attributed${whereClause}
 					GROUP BY name
 					ORDER BY revenue DESC
 					LIMIT {limit:UInt32}
 				`,
-				params: { websiteId, startDate, endDate, limit },
+				params: { websiteId, startDate, endDate, limit, ...filterParams },
 			};
 		},
 		timeField: "created",
@@ -546,30 +690,32 @@ export const RevenueBuilders: Record<string, SimpleQueryConfig> = {
 			websiteId: string,
 			startDate: string,
 			endDate: string,
-			_filters?: Filter[],
+			filters?: Filter[],
 			_granularity?: TimeUnit,
 			_limit?: number
 		) => {
 			const limit = _limit ?? 20;
+			const { whereClause, params: filterParams } =
+				buildRevenueWhereClause(filters);
 			return {
 				sql: `
 					WITH ${ATTRIBUTION_CTE}
-					SELECT 
-						CASE 
+					SELECT
+						CASE
 							WHEN is_attributed = 0 THEN 'Unattributed'
 							WHEN utm_medium = '' OR utm_medium IS NULL THEN 'None'
-							ELSE utm_medium 
+							ELSE utm_medium
 						END as name,
 						sumIf(amount, type != 'refund') as revenue,
 						countIf(type != 'refund') as transactions,
 						uniq(r_customer_id) as customers,
 						ROUND((sumIf(amount, type != 'refund') / nullIf(SUM(sumIf(amount, type != 'refund')) OVER(), 0)) * 100, 2) as percentage
-					FROM revenue_attributed
+					FROM revenue_attributed${whereClause}
 					GROUP BY name
 					ORDER BY revenue DESC
 					LIMIT {limit:UInt32}
 				`,
-				params: { websiteId, startDate, endDate, limit },
+				params: { websiteId, startDate, endDate, limit, ...filterParams },
 			};
 		},
 		timeField: "created",
@@ -581,30 +727,32 @@ export const RevenueBuilders: Record<string, SimpleQueryConfig> = {
 			websiteId: string,
 			startDate: string,
 			endDate: string,
-			_filters?: Filter[],
+			filters?: Filter[],
 			_granularity?: TimeUnit,
 			_limit?: number
 		) => {
 			const limit = _limit ?? 20;
+			const { whereClause, params: filterParams } =
+				buildRevenueWhereClause(filters);
 			return {
 				sql: `
 					WITH ${ATTRIBUTION_CTE}
-					SELECT 
-						CASE 
+					SELECT
+						CASE
 							WHEN is_attributed = 0 THEN 'Unattributed'
 							WHEN utm_campaign = '' OR utm_campaign IS NULL THEN 'None'
-							ELSE utm_campaign 
+							ELSE utm_campaign
 						END as name,
 						sumIf(amount, type != 'refund') as revenue,
 						countIf(type != 'refund') as transactions,
 						uniq(r_customer_id) as customers,
 						ROUND((sumIf(amount, type != 'refund') / nullIf(SUM(sumIf(amount, type != 'refund')) OVER(), 0)) * 100, 2) as percentage
-					FROM revenue_attributed
+					FROM revenue_attributed${whereClause}
 					GROUP BY name
 					ORDER BY revenue DESC
 					LIMIT {limit:UInt32}
 				`,
-				params: { websiteId, startDate, endDate, limit },
+				params: { websiteId, startDate, endDate, limit, ...filterParams },
 			};
 		},
 		timeField: "created",
@@ -616,30 +764,32 @@ export const RevenueBuilders: Record<string, SimpleQueryConfig> = {
 			websiteId: string,
 			startDate: string,
 			endDate: string,
-			_filters?: Filter[],
+			filters?: Filter[],
 			_granularity?: TimeUnit,
 			_limit?: number
 		) => {
 			const limit = _limit ?? 20;
+			const { whereClause, params: filterParams } =
+				buildRevenueWhereClause(filters);
 			return {
 				sql: `
 					WITH ${ATTRIBUTION_CTE}
-					SELECT 
-						CASE 
+					SELECT
+						CASE
 							WHEN is_attributed = 0 THEN 'Unattributed'
 							WHEN entry_path = '' OR entry_path IS NULL THEN 'Unknown'
-							ELSE entry_path 
+							ELSE entry_path
 						END as name,
 						sumIf(amount, type != 'refund') as revenue,
 						countIf(type != 'refund') as transactions,
 						uniq(r_customer_id) as customers,
 						ROUND((sumIf(amount, type != 'refund') / nullIf(SUM(sumIf(amount, type != 'refund')) OVER(), 0)) * 100, 2) as percentage
-					FROM revenue_attributed
+					FROM revenue_attributed${whereClause}
 					GROUP BY name
 					ORDER BY revenue DESC
 					LIMIT {limit:UInt32}
 				`,
-				params: { websiteId, startDate, endDate, limit },
+				params: { websiteId, startDate, endDate, limit, ...filterParams },
 			};
 		},
 		timeField: "created",
@@ -651,15 +801,19 @@ export const RevenueBuilders: Record<string, SimpleQueryConfig> = {
 			websiteId: string,
 			startDate: string,
 			endDate: string,
-			_filters?: Filter[],
+			filters?: Filter[],
 			_granularity?: TimeUnit,
 			_limit?: number
 		) => {
 			const limit = _limit ?? 50;
+			const { whereClause, params: filterParams } = buildRevenueWhereClause(
+				filters,
+				["type != 'refund'"]
+			);
 			return {
 				sql: `
 					WITH ${ATTRIBUTION_CTE}
-					SELECT 
+					SELECT
 						transaction_id,
 						provider,
 						type,
@@ -674,12 +828,11 @@ export const RevenueBuilders: Record<string, SimpleQueryConfig> = {
 						CASE WHEN is_attributed = 0 THEN 'Unattributed' ELSE coalesce(nullIf(referrer_domain, ''), 'Direct') END as referrer,
 						CASE WHEN is_attributed = 0 THEN 'Unattributed' ELSE coalesce(nullIf(utm_source, ''), 'None') END as utm_source,
 						CASE WHEN is_attributed = 0 THEN 'Unattributed' ELSE coalesce(nullIf(utm_campaign, ''), 'None') END as utm_campaign
-					FROM revenue_attributed
-					WHERE type != 'refund'
+					FROM revenue_attributed${whereClause}
 					ORDER BY created DESC
 					LIMIT {limit:UInt32}
 				`,
-				params: { websiteId, startDate, endDate, limit },
+				params: { websiteId, startDate, endDate, limit, ...filterParams },
 			};
 		},
 		timeField: "created",
