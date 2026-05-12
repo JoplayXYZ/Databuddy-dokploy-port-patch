@@ -10,6 +10,15 @@ export interface ChatMessageMetadata {
 }
 
 export type MessageDataParts = Record<string, unknown> & {
+	aiComponent?: {
+		type: string;
+		[key: string]: unknown;
+	};
+	usage?: {
+		inputTokens: number;
+		outputTokens: number;
+		totalTokens?: number;
+	};
 	toolChoice?: string;
 	agentChoice?: string;
 };
