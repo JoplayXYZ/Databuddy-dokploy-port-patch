@@ -135,6 +135,17 @@ export function createSlackMemoryUserId(run: SlackAgentRun): string {
 	return safeId(["slack", run.teamId ?? "team", run.userId].join("-"));
 }
 
+/**
+ * Strip the prompt-frame delimiter characters from user-supplied Slack text so
+ * a Slack message can't forge `<slack_follow_up>` or `<slack_latest_message>`
+ * blocks that the downstream tool router parses with raw indexOf. The escape
+ * is one-way (not reversible), which is fine because the tags are control
+ * framing rather than content we need to render back.
+ */
+function escapePromptFrame(value: string): string {
+	return value.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
 export function formatSlackAgentInput(run: SlackAgentRun): string {
 	const followUps = run.followUpMessages ?? [];
 	const context = formatSlackMessageContext(run);
@@ -145,7 +156,7 @@ export function formatSlackAgentInput(run: SlackAgentRun): string {
 			`author: ${formatSlackUser(run.userId)}`,
 			`author_memory_scope: ${createSlackMemoryUserId(run)}`,
 			"text:",
-			run.text,
+			escapePromptFrame(run.text),
 			"</slack_latest_message>",
 		].join("\n");
 	}
@@ -162,7 +173,7 @@ export function formatSlackAgentInput(run: SlackAgentRun): string {
 			`author: ${author}`,
 			`author_memory_scope: ${memoryScope}`,
 			"text:",
-			followUp.text,
+			escapePromptFrame(followUp.text),
 			"</slack_follow_up>",
 		].join("\n");
 	});
