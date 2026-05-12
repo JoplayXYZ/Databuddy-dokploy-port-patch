@@ -1,19 +1,5 @@
 import type { Insight, InsightMetric, InsightType } from "@/lib/insight-types";
 
-const METRIC_LABEL_REPLACEMENTS: Array<[RegExp, string]> = [
-	[/\bINP\b/i, "Interaction delay"],
-	[/\bLCP\b/i, "Load speed"],
-	[/\bFCP\b/i, "First visual load"],
-	[/\bTTFB\b/i, "Server response"],
-	[/\bCLS\b/i, "Layout stability"],
-	[/\bp75\b/i, ""],
-	[/\bpageviews?\b/i, "Page views"],
-	[/\bsessions?\b/i, "Sessions"],
-	[/\bvisitors?\b/i, "Visitors"],
-	[/\bbounce rate\b/i, "Bounce rate"],
-	[/\berror rate\b/i, "Error rate"],
-];
-
 const DEFAULT_PRIMARY_ACTION_LABEL = "Open analytics";
 
 const PRIMARY_ACTION_LABELS: Partial<Record<InsightType, string>> = {
@@ -38,13 +24,8 @@ const PRIMARY_ACTION_LABELS: Partial<Record<InsightType, string>> = {
 	vitals_degraded: "Review speed",
 };
 
-export interface InsightEvidenceMetric extends InsightMetric {
-	displayLabel: string;
-	rawLabel: string;
-}
-
 export interface InsightCardViewModel {
-	evidence: InsightEvidenceMetric[];
+	evidence: InsightMetric[];
 	headline: string;
 	metaLabel: string;
 	nextStep: string;
@@ -52,25 +33,9 @@ export interface InsightCardViewModel {
 	whyItMatters: string;
 }
 
-export function humanizeInsightMetricLabel(label: string): string {
-	let next = label.trim();
-
-	for (const [pattern, replacement] of METRIC_LABEL_REPLACEMENTS) {
-		next = next.replace(pattern, replacement);
-	}
-
-	return next.replace(/\s+/g, " ").trim() || label;
-}
-
 export function toInsightCardViewModel(insight: Insight): InsightCardViewModel {
-	const evidence = (insight.metrics ?? []).map((metric) => ({
-		...metric,
-		displayLabel: humanizeInsightMetricLabel(metric.label),
-		rawLabel: metric.label,
-	}));
-
 	return {
-		evidence,
+		evidence: insight.metrics ?? [],
 		headline: insight.title,
 		metaLabel: insight.websiteName ?? insight.websiteDomain,
 		nextStep: insight.suggestion,

@@ -1,9 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import type { Insight } from "@/lib/insight-types";
-import {
-	humanizeInsightMetricLabel,
-	toInsightCardViewModel,
-} from "./insight-card-view-model";
+import { toInsightCardViewModel } from "./insight-card-view-model";
 
 const baseInsight: Insight = {
 	id: "insight_1",
@@ -15,30 +12,23 @@ const baseInsight: Insight = {
 	websiteName: "Marketing",
 	websiteDomain: "databuddy.cc",
 	title: "Interactions got slower",
-	description: "Visitors are waiting longer after clicking key controls.",	suggestion: "Profile homepage JavaScript during real sessions.",	metrics: [
-		{ label: "INP p75", current: 104, previous: 96, format: "duration_ms" },
+	description: "Visitors are waiting longer after clicking key controls.",
+	suggestion: "Profile homepage JavaScript during real sessions.",
+	metrics: [
+		{ label: "Interaction delay", current: 104, previous: 96, format: "duration_ms" },
 	],
 	changePercent: 8.3,
 	link: "/websites/web_1",
 };
 
 describe("insight card view model", () => {
-	it("humanizes technical metric labels", () => {
-		expect(humanizeInsightMetricLabel("INP p75")).toBe("Interaction delay");
-		expect(humanizeInsightMetricLabel("LCP p75")).toBe("Load speed");
-		expect(humanizeInsightMetricLabel("TTFB p75")).toBe("Server response");
-	});
-
-	it("keeps raw metric labels as evidence metadata", () => {
+	it("uses LLM-provided metric labels unchanged", () => {
 		const view = toInsightCardViewModel(baseInsight);
 
 		expect(view.headline).toBe("Interactions got slower");
 		expect(view.metaLabel).toBe("Marketing");
 		expect(view.primaryActionLabel).toBe("Review speed");
-		expect(view.evidence[0]).toMatchObject({
-			displayLabel: "Interaction delay",
-			rawLabel: "INP p75",
-		});
+		expect(view.evidence[0]?.label).toBe("Interaction delay");
 	});
 
 	it("falls back to domain and default action when needed", () => {

@@ -7,18 +7,6 @@ import type { InsightMetric } from "@/lib/insight-types";
 import { cn } from "@/lib/utils";
 import { ArrowDownIcon, ArrowUpIcon } from "@databuddy/ui/icons";
 
-function getMetricLabel(metric: InsightMetric) {
-	return "displayLabel" in metric && typeof metric.displayLabel === "string"
-		? metric.displayLabel
-		: metric.label;
-}
-
-function getRawMetricLabel(metric: InsightMetric) {
-	return "rawLabel" in metric && typeof metric.rawLabel === "string"
-		? metric.rawLabel
-		: metric.label;
-}
-
 function MetricItem({ metric }: { metric: InsightMetric }) {
 	const change = computeMetricChange(metric);
 	const formatted = formatMetric(metric.current, metric.format);
@@ -28,12 +16,12 @@ function MetricItem({ metric }: { metric: InsightMetric }) {
 	return (
 		<div
 			className="inline-flex min-w-0 max-w-full items-center gap-2 rounded-full border border-border/60 bg-background px-2.5 py-1.5 text-xs"
-			title={getRawMetricLabel(metric)}
+			title={metric.label}
 		>
-			<span className="truncate text-muted-foreground">
-				{getMetricLabel(metric)}
+			<span className="truncate text-muted-foreground">{metric.label}</span>
+			<span className="font-medium text-foreground tabular-nums">
+				{formatted}
 			</span>
-			<span className="font-medium text-foreground tabular-nums">{formatted}</span>
 			{hasPrevious && change !== null && change !== 0 && (
 				<span
 					className={cn(
