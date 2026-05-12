@@ -115,18 +115,17 @@ function refreshAgentContextSnapshot(
 	snapshotRefreshes.set(key, work);
 }
 
-export const ensureAgentCreditsAvailableCached = cacheable(
-	async (billingCustomerId: string | null) => {
-		const { ensureAgentCreditsAvailable } = await import("./execution");
-		return ensureAgentCreditsAvailable(billingCustomerId);
-	},
-	{
-		expireInSec: 30,
-		prefix: "agent:credits",
-		staleTime: 10,
-		staleWhileRevalidate: true,
-	}
-);
+/**
+ * Agent credit availability is checked fresh on every call. Caching a positive
+ * decision would let a principal fan out paid streams in the cache window and
+ * exceed quota, since usage is only billed after the stream completes.
+ */
+export async function ensureAgentCreditsAvailableCached(
+	billingCustomerId: string | null
+): Promise<boolean> {
+	const { ensureAgentCreditsAvailable } = await import("./execution");
+	return ensureAgentCreditsAvailable(billingCustomerId);
+}
 
 export async function checkWebsiteReadPermissionCached(
 	userId: string,
