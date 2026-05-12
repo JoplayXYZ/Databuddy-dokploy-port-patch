@@ -1,5 +1,5 @@
 import { Analytics } from "../../types/tables";
-import type { SimpleQueryConfig } from "../types";
+import type { CustomSqlFn, SimpleQueryConfig } from "../types";
 
 const VITALS_SESSION_DIMENSIONS_CTE = `
 	session_dimensions AS (
@@ -31,20 +31,66 @@ const VITALS_P50_METRICS = `
 	COUNT(*) as samples
 `;
 
-/**
- * Web Vitals query builders
- * Uses web_vitals_spans table (EAV format: metric_name + metric_value per row)
- *
- * Metrics: LCP, FCP, CLS, INP, TTFB, FPS
- *
- * Thresholds (p75):
- * - LCP: good < 2500ms, poor > 4000ms
- * - FCP: good < 1800ms, poor > 3000ms
- * - CLS: good < 0.1, poor > 0.25
- * - INP: good < 200ms, poor > 500ms
- * - TTFB: good < 800ms, poor > 1800ms
- * - FPS: good > 55, poor < 30
- */
+interface VitalsByDimensionConfig {
+	defaultLimit: number;
+	extraWhere: string;
+	groupBy: string;
+	metrics?: string;
+	selectName: string;
+}
+
+function vitalsByDimension(config: VitalsByDimensionConfig): CustomSqlFn {
+	const metrics = config.metrics ?? VITALS_P50_METRICS;
+	return ({
+		websiteId,
+		startDate,
+		endDate,
+		filterConditions,
+		filterParams,
+		limit,
+	}) => {
+		const effectiveLimit = limit ?? config.defaultLimit;
+		const filterClause = filterConditions?.length
+			? `AND ${filterConditions.join(" AND ")}`
+			: "";
+		return {
+			sql: `
+				WITH ${VITALS_SESSION_DIMENSIONS_CTE}
+				SELECT
+					${config.selectName},
+					${metrics}
+				FROM ${Analytics.web_vitals_spans} wv
+				INNER JOIN session_dimensions sd ON wv.session_id = sd.session_id AND wv.client_id = sd.client_id
+				WHERE
+					wv.client_id = {websiteId:String}
+					AND wv.timestamp >= toDateTime({startDate:String})
+					AND wv.timestamp <= toDateTime(concat({endDate:String}, ' 23:59:59'))
+					AND ${config.extraWhere}
+					${filterClause}
+				GROUP BY ${config.groupBy}
+				ORDER BY samples DESC
+				LIMIT {limit:UInt32}
+			`,
+			params: {
+				websiteId,
+				startDate,
+				endDate,
+				limit: effectiveLimit,
+				...filterParams,
+			},
+		};
+	};
+}
+
+const VITALS_PAGE_METRICS = `
+	wv.metric_name as metric_name,
+	quantileTDigest(0.50)(wv.metric_value) as p50,
+	quantileTDigest(0.75)(wv.metric_value) as p75,
+	quantileTDigest(0.90)(wv.metric_value) as p90,
+	quantileTDigest(0.95)(wv.metric_value) as p95,
+	quantileTDigest(0.99)(wv.metric_value) as p99,
+	count() as samples
+`;
 
 export const VitalsBuilders: Record<string, SimpleQueryConfig> = {
 	vitals_overview: {
@@ -106,179 +152,66 @@ export const VitalsBuilders: Record<string, SimpleQueryConfig> = {
 	},
 
 	vitals_by_page: {
-		customSql: (ctx) => {
-			const { websiteId, startDate, endDate, filterConditions, filterParams } =
-				ctx;
-			const limit = ctx.limit ?? 50;
-			const filterClause = filterConditions?.length
-				? `AND ${filterConditions.join(" AND ")}`
-				: "";
-			return {
-				sql: `
-					WITH ${VITALS_SESSION_DIMENSIONS_CTE}
-					SELECT
-						decodeURLComponent(
-							CASE WHEN trimRight(path(wv.path), '/') = ''
-							THEN '/'
-							ELSE trimRight(path(wv.path), '/')
-							END
-						) as page,
-						wv.metric_name as metric_name,
-						quantileTDigest(0.50)(wv.metric_value) as p50,
-						quantileTDigest(0.75)(wv.metric_value) as p75,
-						quantileTDigest(0.90)(wv.metric_value) as p90,
-						quantileTDigest(0.95)(wv.metric_value) as p95,
-						quantileTDigest(0.99)(wv.metric_value) as p99,
-						count() as samples
-					FROM ${Analytics.web_vitals_spans} wv
-					INNER JOIN session_dimensions sd ON wv.session_id = sd.session_id AND wv.client_id = sd.client_id
-					WHERE
-						wv.client_id = {websiteId:String}
-						AND wv.timestamp >= toDateTime({startDate:String})
-						AND wv.timestamp <= toDateTime(concat({endDate:String}, ' 23:59:59'))
-						AND wv.path != ''
-						${filterClause}
-					GROUP BY page, metric_name
-					ORDER BY samples DESC
-					LIMIT {limit:UInt32}
-				`,
-				params: { websiteId, startDate, endDate, limit, ...filterParams },
-			};
-		},
+		customSql: vitalsByDimension({
+			selectName: `decodeURLComponent(
+				CASE WHEN trimRight(path(wv.path), '/') = ''
+				THEN '/'
+				ELSE trimRight(path(wv.path), '/')
+				END
+			) as page`,
+			metrics: VITALS_PAGE_METRICS,
+			groupBy: "page, metric_name",
+			extraWhere: "wv.path != ''",
+			defaultLimit: 50,
+		}),
 		timeField: "timestamp",
 		customizable: true,
 	},
 
 	vitals_by_country: {
-		customSql: (ctx) => {
-			const { websiteId, startDate, endDate, filterConditions, filterParams } =
-				ctx;
-			const limit = ctx.limit ?? 100;
-			const filterClause = filterConditions?.length
-				? `AND ${filterConditions.join(" AND ")}`
-				: "";
-			return {
-				sql: `
-					WITH ${VITALS_SESSION_DIMENSIONS_CTE}
-					SELECT
-						sd.country as name,
-						${VITALS_P50_METRICS}
-					FROM ${Analytics.web_vitals_spans} wv
-					INNER JOIN session_dimensions sd ON wv.session_id = sd.session_id AND wv.client_id = sd.client_id
-					WHERE
-						wv.client_id = {websiteId:String}
-						AND wv.timestamp >= toDateTime({startDate:String})
-						AND wv.timestamp <= toDateTime(concat({endDate:String}, ' 23:59:59'))
-						AND ifNull(sd.country, '') != ''
-						${filterClause}
-					GROUP BY sd.country
-					ORDER BY samples DESC
-					LIMIT {limit:UInt32}
-				`,
-				params: { websiteId, startDate, endDate, limit, ...filterParams },
-			};
-		},
+		customSql: vitalsByDimension({
+			selectName: "sd.country as name",
+			groupBy: "sd.country",
+			extraWhere: "ifNull(sd.country, '') != ''",
+			defaultLimit: 100,
+		}),
 		timeField: "timestamp",
 		customizable: true,
 		plugins: { normalizeGeo: true, deduplicateGeo: true },
 	},
 
 	vitals_by_browser: {
-		customSql: (ctx) => {
-			const { websiteId, startDate, endDate, filterConditions, filterParams } =
-				ctx;
-			const limit = ctx.limit ?? 100;
-			const filterClause = filterConditions?.length
-				? `AND ${filterConditions.join(" AND ")}`
-				: "";
-			return {
-				sql: `
-					WITH ${VITALS_SESSION_DIMENSIONS_CTE}
-					SELECT
-						sd.browser_name as name,
-						${VITALS_P50_METRICS}
-					FROM ${Analytics.web_vitals_spans} wv
-					INNER JOIN session_dimensions sd ON wv.session_id = sd.session_id AND wv.client_id = sd.client_id
-					WHERE
-						wv.client_id = {websiteId:String}
-						AND wv.timestamp >= toDateTime({startDate:String})
-						AND wv.timestamp <= toDateTime(concat({endDate:String}, ' 23:59:59'))
-						AND ifNull(sd.browser_name, '') != ''
-						${filterClause}
-					GROUP BY sd.browser_name
-					ORDER BY samples DESC
-					LIMIT {limit:UInt32}
-				`,
-				params: { websiteId, startDate, endDate, limit, ...filterParams },
-			};
-		},
+		customSql: vitalsByDimension({
+			selectName: "sd.browser_name as name",
+			groupBy: "sd.browser_name",
+			extraWhere: "ifNull(sd.browser_name, '') != ''",
+			defaultLimit: 100,
+		}),
 		timeField: "timestamp",
 		customizable: true,
 	},
 
 	vitals_by_region: {
-		customSql: (ctx) => {
-			const { websiteId, startDate, endDate, filterConditions, filterParams } =
-				ctx;
-			const limit = ctx.limit ?? 100;
-			const filterClause = filterConditions?.length
-				? `AND ${filterConditions.join(" AND ")}`
-				: "";
-			return {
-				sql: `
-					WITH ${VITALS_SESSION_DIMENSIONS_CTE}
-					SELECT
-						CONCAT(ifNull(sd.region, ''), ', ', ifNull(sd.country, '')) as name,
-						${VITALS_P50_METRICS}
-					FROM ${Analytics.web_vitals_spans} wv
-					INNER JOIN session_dimensions sd ON wv.session_id = sd.session_id AND wv.client_id = sd.client_id
-					WHERE
-						wv.client_id = {websiteId:String}
-						AND wv.timestamp >= toDateTime({startDate:String})
-						AND wv.timestamp <= toDateTime(concat({endDate:String}, ' 23:59:59'))
-						AND ifNull(sd.region, '') != ''
-						${filterClause}
-					GROUP BY sd.region, sd.country
-					ORDER BY samples DESC
-					LIMIT {limit:UInt32}
-				`,
-				params: { websiteId, startDate, endDate, limit, ...filterParams },
-			};
-		},
+		customSql: vitalsByDimension({
+			selectName:
+				"CONCAT(ifNull(sd.region, ''), ', ', ifNull(sd.country, '')) as name",
+			groupBy: "sd.region, sd.country",
+			extraWhere: "ifNull(sd.region, '') != ''",
+			defaultLimit: 100,
+		}),
 		timeField: "timestamp",
 		customizable: true,
 		plugins: { normalizeGeo: true, deduplicateGeo: true },
 	},
 
 	vitals_by_city: {
-		customSql: (ctx) => {
-			const { websiteId, startDate, endDate, filterConditions, filterParams } =
-				ctx;
-			const limit = ctx.limit ?? 100;
-			const filterClause = filterConditions?.length
-				? `AND ${filterConditions.join(" AND ")}`
-				: "";
-			return {
-				sql: `
-					WITH ${VITALS_SESSION_DIMENSIONS_CTE}
-					SELECT
-						CONCAT(ifNull(sd.city, ''), ', ', ifNull(sd.country, '')) as name,
-						${VITALS_P50_METRICS}
-					FROM ${Analytics.web_vitals_spans} wv
-					INNER JOIN session_dimensions sd ON wv.session_id = sd.session_id AND wv.client_id = sd.client_id
-					WHERE
-						wv.client_id = {websiteId:String}
-						AND wv.timestamp >= toDateTime({startDate:String})
-						AND wv.timestamp <= toDateTime(concat({endDate:String}, ' 23:59:59'))
-						AND ifNull(sd.city, '') != ''
-						${filterClause}
-					GROUP BY sd.city, sd.country
-					ORDER BY samples DESC
-					LIMIT {limit:UInt32}
-				`,
-				params: { websiteId, startDate, endDate, limit, ...filterParams },
-			};
-		},
+		customSql: vitalsByDimension({
+			selectName:
+				"CONCAT(ifNull(sd.city, ''), ', ', ifNull(sd.country, '')) as name",
+			groupBy: "sd.city, sd.country",
+			extraWhere: "ifNull(sd.city, '') != ''",
+			defaultLimit: 100,
+		}),
 		timeField: "timestamp",
 		customizable: true,
 		plugins: { normalizeGeo: true, deduplicateGeo: true },
