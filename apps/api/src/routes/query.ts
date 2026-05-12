@@ -302,21 +302,33 @@ function createAuthFailedResponse(requestId: string): Response {
 	);
 }
 
+function clientIpForQuery(request: Request): string {
+	return (
+		request.headers.get("cf-connecting-ip") ||
+		request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+		request.headers.get("x-real-ip") ||
+		"unknown"
+	);
+}
+
 async function enforceQueryRateLimit(
 	ctx: AuthContext,
 	endpoint: "compile" | "execute" | "custom",
 	limit: number,
-	requestId: string
+	requestId: string,
+	request: Request
 ): Promise<Response | null> {
 	const principal = ctx.apiKey
 		? `apikey:${ctx.apiKey.id}`
 		: ctx.user
 			? `user:${ctx.user.id}`
-			: null;
-	if (!principal) {
-		return null;
-	}
-	const rl = await ratelimit(`query:${endpoint}:${principal}`, limit, 60);
+			: `anon:${clientIpForQuery(request)}`;
+	const effectiveLimit = ctx.isAuthenticated ? limit : Math.min(limit, 60);
+	const rl = await ratelimit(
+		`query:${endpoint}:${principal}`,
+		effectiveLimit,
+		60
+	);
 	if (rl.success) {
 		return null;
 	}
@@ -1049,17 +1061,20 @@ export const query = new Elysia({ prefix: "/v1/query" })
 			body,
 			query: q,
 			auth: ctx,
+			request,
 		}: {
 			body: CompileRequestType;
 			query: { website_id?: string; timezone?: string };
 			auth: AuthContext;
+			request: Request;
 		}) => {
 			const requestId = generateRequestId();
 			const rateLimited = await enforceQueryRateLimit(
 				ctx,
 				"compile",
 				300,
-				requestId
+				requestId,
+				request
 			);
 			if (rateLimited) {
 				return rateLimited;
@@ -1105,6 +1120,7 @@ export const query = new Elysia({ prefix: "/v1/query" })
 			body,
 			query: q,
 			auth: ctx,
+			request,
 		}: {
 			body: DynamicQueryRequestType | DynamicQueryRequestType[];
 			query: {
@@ -1115,6 +1131,7 @@ export const query = new Elysia({ prefix: "/v1/query" })
 				timezone?: string;
 			};
 			auth: AuthContext;
+			request: Request;
 		}) =>
 			(async () => {
 				const requestId = generateRequestId();
@@ -1123,7 +1140,8 @@ export const query = new Elysia({ prefix: "/v1/query" })
 					ctx,
 					"execute",
 					120,
-					requestId
+					requestId,
+					request
 				);
 				if (rateLimited) {
 					return rateLimited;
@@ -1270,10 +1288,12 @@ export const query = new Elysia({ prefix: "/v1/query" })
 			body,
 			query: q,
 			auth: ctx,
+			request,
 		}: {
 			body: CustomQueryRequest;
 			query: { website_id?: string };
 			auth: AuthContext;
+			request: Request;
 		}) =>
 			(async () => {
 				const requestId = generateRequestId();
@@ -1281,7 +1301,8 @@ export const query = new Elysia({ prefix: "/v1/query" })
 					ctx,
 					"custom",
 					60,
-					requestId
+					requestId,
+					request
 				);
 				if (rateLimited) {
 					return rateLimited;
