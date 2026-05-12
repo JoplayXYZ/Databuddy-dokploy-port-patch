@@ -1,6 +1,6 @@
 {
   "title": "SDK Reference",
-  "description": "Complete SDK documentation for React, Nuxt, Vue, Node.js, Swift, and vanilla JavaScript",
+  "description": "SDK documentation by runtime: browser, server, feature flags, and utilities",
   "icon": "Code",
   "pages": [
     "index",
@@ -10,7 +10,6 @@
     "vue",
     "vanilla-js",
     "node",
-    "swift",
     "tracker",
     "feature-flags",
     "server-flags",

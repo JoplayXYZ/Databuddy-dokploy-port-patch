@@ -7,11 +7,12 @@ import {
 	CompassIcon,
 	DatabaseIcon,
 	FileTextIcon,
+	FlagIcon,
+	GearIcon,
 	GaugeIcon,
 	GlobeSimpleIcon,
 	Grid2x2Icon,
 	IdBadgeIcon,
-	KeyIcon,
 	LightbulbIcon,
 	LockIcon,
 	DownloadSimpleIcon,
@@ -20,6 +21,8 @@ import {
 	PackageIcon,
 	PlugIcon,
 	ShieldCheckIcon,
+	StackIcon,
+	WrenchIcon,
 } from "@databuddy/ui/icons";
 
 type SidebarIcon = React.ComponentType<{
@@ -173,17 +176,23 @@ export const contents: SidebarSection[] = [
 		Icon: CodeIcon,
 		list: [
 			{
-				title: "SDK Reference",
+				title: "SDKs",
+				group: true,
+			},
+			{
+				title: "Overview",
+				href: "/docs/sdk",
 				icon: PackageIcon,
+			},
+			{
+				title: "Configuration",
+				href: "/docs/sdk/configuration",
+				icon: GearIcon,
+			},
+			{
+				title: "Web SDKs",
+				icon: GlobeSimpleIcon,
 				children: [
-					{
-						title: "Overview",
-						href: "/docs/sdk",
-					},
-					{
-						title: "Configuration",
-						href: "/docs/sdk/configuration",
-					},
 					{
 						title: "React / Next.js",
 						href: "/docs/sdk/react",
@@ -200,21 +209,39 @@ export const contents: SidebarSection[] = [
 						title: "Vanilla JavaScript",
 						href: "/docs/sdk/vanilla-js",
 					},
+				],
+			},
+			{
+				title: "Server SDKs",
+				icon: DatabaseIcon,
+				children: [
 					{
 						title: "Node.js",
 						href: "/docs/sdk/node",
 					},
+				],
+			},
+			{
+				title: "Feature Flags",
+				icon: FlagIcon,
+				children: [
 					{
-						title: "Tracker Helpers",
-						href: "/docs/sdk/tracker",
-					},
-					{
-						title: "Feature Flags",
+						title: "Client Flags",
 						href: "/docs/sdk/feature-flags",
 					},
 					{
 						title: "Server Flags",
 						href: "/docs/sdk/server-flags",
+					},
+				],
+			},
+			{
+				title: "SDK Utilities",
+				icon: WrenchIcon,
+				children: [
+					{
+						title: "Tracker Helpers",
+						href: "/docs/sdk/tracker",
 					},
 					{
 						title: "DevTools",
@@ -223,8 +250,12 @@ export const contents: SidebarSection[] = [
 				],
 			},
 			{
+				title: "HTTP API",
+				group: true,
+			},
+			{
 				title: "API Reference",
-				icon: DatabaseIcon,
+				icon: StackIcon,
 				children: [
 					{
 						title: "API Playground",
@@ -238,6 +269,10 @@ export const contents: SidebarSection[] = [
 					{
 						title: "Authentication",
 						href: "/docs/api/authentication",
+					},
+					{
+						title: "API Keys",
+						href: "/docs/api-keys",
 					},
 					{
 						title: "Analytics Queries",
@@ -264,11 +299,6 @@ export const contents: SidebarSection[] = [
 						href: "/docs/api/rate-limits",
 					},
 				],
-			},
-			{
-				title: "API Keys",
-				href: "/docs/api-keys",
-				icon: KeyIcon,
 			},
 		],
 	},
