@@ -28,20 +28,15 @@
     "@databuddy/validation": "workspace:*",
     "@orpc/server": "^1.14.0",
     "@types/jszip": "^3.4.1",
-    "ai": "^6.0.0",
     "autumn-js": "catalog:",
     "dayjs": "^1.11.19",
     "evlog": "catalog:",
     "jszip": "^3.10.1",
     "keypal": "0.2.0",
     "nanoid": "^5.1.6",
-    "pg": "^8.16.3",
-    "redis": "^5.10.0",
-    "superjson": "^2.2.6",
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@types/pg": "^8.16.0",
     "bullmq": "^5.66.5",
     "typescript": "^5.9.3"
   }

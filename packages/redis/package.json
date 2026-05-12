@@ -24,9 +24,7 @@
   },
   "dependencies": {
     "bullmq": "^5.66.5",
-    "ioredis": "^5.8.2",
-    "superjson": "catalog:",
-    "zod": "catalog:"
+    "ioredis": "^5.8.2"
   },
   "devDependencies": {
     "@types/node": "^20.11.19",
