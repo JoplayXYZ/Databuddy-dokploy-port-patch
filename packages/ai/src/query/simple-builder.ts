@@ -148,6 +148,10 @@ export function escapeLikePattern(value: string): string {
 	return value.replace(/\\/g, "\\\\").replace(/[%_]/g, "\\$&");
 }
 
+export function appendFilterClause(conditions: string[] | undefined): string {
+	return conditions?.length ? `AND ${conditions.join(" AND ")}` : "";
+}
+
 function listAllowed(values: Iterable<string>): string {
 	return Array.from(values).sort().join(", ");
 }

@@ -1,4 +1,5 @@
 import { Analytics } from "../../types/tables";
+import { appendFilterClause } from "../simple-builder";
 import type { CustomSqlFn, SimpleQueryConfig } from "../types";
 
 const VITALS_SESSION_DIMENSIONS_CTE = `
@@ -50,9 +51,7 @@ function vitalsByDimension(config: VitalsByDimensionConfig): CustomSqlFn {
 		limit,
 	}) => {
 		const effectiveLimit = limit ?? config.defaultLimit;
-		const filterClause = filterConditions?.length
-			? `AND ${filterConditions.join(" AND ")}`
-			: "";
+		const filterClause = appendFilterClause(filterConditions);
 		return {
 			sql: `
 				WITH ${VITALS_SESSION_DIMENSIONS_CTE}

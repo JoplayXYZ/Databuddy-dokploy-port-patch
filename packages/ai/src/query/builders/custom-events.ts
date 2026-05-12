@@ -1,4 +1,5 @@
 import { Analytics } from "../../types/tables";
+import { appendFilterClause } from "../simple-builder";
 import type { Filter, SimpleQueryConfig } from "../types";
 
 function projectWhereClause(
@@ -47,13 +48,11 @@ export const CustomEventsBuilders: Record<string, SimpleQueryConfig> = {
 				filterParams,
 			} = ctx;
 			const limit = ctx.limit ?? 10_000;
-			const combinedWhereClause = filterConditions?.length
-				? `AND ${filterConditions.join(" AND ")}`
-				: "";
+			const filterClause = appendFilterClause(filterConditions);
 
 			return {
 				sql: `
-					SELECT 
+					SELECT
 						event_name as name,
 						COUNT(*) as total_events,
 						COUNT(DISTINCT anonymous_id) as unique_users,
@@ -63,12 +62,12 @@ export const CustomEventsBuilders: Record<string, SimpleQueryConfig> = {
 						countIf(properties != '{}' AND isValidJSON(properties)) as events_with_properties,
 						ROUND((COUNT(DISTINCT anonymous_id) / SUM(COUNT(DISTINCT anonymous_id)) OVER()) * 100, 2) as percentage
 					FROM ${Analytics.custom_events}
-					WHERE 
+					WHERE
 						${projectWhereClause(filterParams)}
 						AND timestamp >= toDateTime({startDate:String})
 						AND timestamp <= toDateTime(concat({endDate:String}, ' 23:59:59'))
 						AND event_name != ''
-						${combinedWhereClause}
+						${filterClause}
 					GROUP BY event_name
 					ORDER BY unique_users DESC, total_events DESC
 					LIMIT {limit:UInt32}
@@ -170,25 +169,23 @@ export const CustomEventsBuilders: Record<string, SimpleQueryConfig> = {
 				filterParams,
 			} = ctx;
 			const limit = ctx.limit ?? 50;
-			const combinedWhereClause = filterConditions?.length
-				? `AND ${filterConditions.join(" AND ")}`
-				: "";
+			const filterClause = appendFilterClause(filterConditions);
 
 			return {
 				sql: `
-					SELECT 
+					SELECT
 						path as name,
 						COUNT(*) as total_events,
 						COUNT(DISTINCT event_name) as unique_event_types,
 						COUNT(DISTINCT anonymous_id) as unique_users
 					FROM ${Analytics.custom_events}
-					WHERE 
+					WHERE
 						${projectWhereClause(filterParams)}
 						AND timestamp >= toDateTime({startDate:String})
 						AND timestamp <= toDateTime(concat({endDate:String}, ' 23:59:59'))
 						AND event_name != ''
 						AND path IS NOT NULL AND path != ''
-						${combinedWhereClause}
+						${filterClause}
 					GROUP BY path
 					ORDER BY total_events DESC
 					LIMIT {limit:UInt32}
@@ -217,13 +214,11 @@ export const CustomEventsBuilders: Record<string, SimpleQueryConfig> = {
 				filterParams,
 			} = ctx;
 			const limit = ctx.limit ?? 1000;
-			const combinedWhereClause = filterConditions?.length
-				? `AND ${filterConditions.join(" AND ")}`
-				: "";
+			const filterClause = appendFilterClause(filterConditions);
 
 			return {
 				sql: `
-					SELECT 
+					SELECT
 						toDate(timestamp) as date,
 						COUNT(*) as total_events,
 						COUNT(DISTINCT event_name) as unique_event_types,
@@ -231,12 +226,12 @@ export const CustomEventsBuilders: Record<string, SimpleQueryConfig> = {
 						COUNT(DISTINCT session_id) as unique_sessions,
 						COUNT(DISTINCT path) as unique_pages
 					FROM ${Analytics.custom_events}
-					WHERE 
+					WHERE
 						${projectWhereClause(filterParams)}
 						AND timestamp >= toDateTime({startDate:String})
 						AND timestamp <= toDateTime(concat({endDate:String}, ' 23:59:59'))
 						AND event_name != ''
-						${combinedWhereClause}
+						${filterClause}
 					GROUP BY toDate(timestamp)
 					ORDER BY date ASC
 					LIMIT {limit:UInt32}
@@ -264,23 +259,21 @@ export const CustomEventsBuilders: Record<string, SimpleQueryConfig> = {
 				filterParams,
 			} = ctx;
 			const limit = ctx.limit ?? 10_000;
-			const combinedWhereClause = filterConditions?.length
-				? `AND ${filterConditions.join(" AND ")}`
-				: "";
+			const filterClause = appendFilterClause(filterConditions);
 
 			return {
 				sql: `
-					SELECT 
+					SELECT
 						toDate(timestamp) as date,
 						event_name,
 						COUNT(*) as total_events
 					FROM ${Analytics.custom_events}
-					WHERE 
+					WHERE
 						${projectWhereClause(filterParams)}
 						AND timestamp >= toDateTime({startDate:String})
 						AND timestamp <= toDateTime(concat({endDate:String}, ' 23:59:59'))
 						AND event_name != ''
-						${combinedWhereClause}
+						${filterClause}
 					GROUP BY toDate(timestamp), event_name
 					ORDER BY date ASC, total_events DESC
 					LIMIT {limit:UInt32}
@@ -307,25 +300,23 @@ export const CustomEventsBuilders: Record<string, SimpleQueryConfig> = {
 				filterConditions,
 				filterParams,
 			} = ctx;
-			const combinedWhereClause = filterConditions?.length
-				? `AND ${filterConditions.join(" AND ")}`
-				: "";
+			const filterClause = appendFilterClause(filterConditions);
 
 			return {
 				sql: `
-					SELECT 
+					SELECT
 						COUNT(*) as total_events,
 						COUNT(DISTINCT event_name) as unique_event_types,
 						COUNT(DISTINCT anonymous_id) as unique_users,
 						COUNT(DISTINCT session_id) as unique_sessions,
 						COUNT(DISTINCT path) as unique_pages
 					FROM ${Analytics.custom_events}
-					WHERE 
+					WHERE
 						${projectWhereClause(filterParams)}
 						AND timestamp >= toDateTime({startDate:String})
 						AND timestamp <= toDateTime(concat({endDate:String}, ' 23:59:59'))
 						AND event_name != ''
-						${combinedWhereClause}
+						${filterClause}
 				`,
 				params: {
 					projectId,
@@ -415,13 +406,11 @@ export const CustomEventsBuilders: Record<string, SimpleQueryConfig> = {
 			} = ctx;
 			const limit = ctx.limit ?? 50;
 			const offset = ctx.offset ?? 0;
-			const combinedWhereClause = filterConditions?.length
-				? `AND ${filterConditions.join(" AND ")}`
-				: "";
+			const filterClause = appendFilterClause(filterConditions);
 
 			return {
 				sql: `
-					SELECT 
+					SELECT
 						event_name,
 						namespace,
 						path,
@@ -431,12 +420,12 @@ export const CustomEventsBuilders: Record<string, SimpleQueryConfig> = {
 						session_id,
 						timestamp
 					FROM ${Analytics.custom_events}
-					WHERE 
+					WHERE
 						${projectWhereClause(filterParams)}
 						AND timestamp >= toDateTime({startDate:String})
 						AND timestamp <= toDateTime(concat({endDate:String}, ' 23:59:59'))
 						AND event_name != ''
-						${combinedWhereClause}
+						${filterClause}
 					ORDER BY timestamp DESC
 					LIMIT {limit:UInt32}
 					OFFSET {offset:UInt32}
@@ -781,25 +770,23 @@ export const CustomEventsBuilders: Record<string, SimpleQueryConfig> = {
 				filterParams,
 			} = ctx;
 			const limit = ctx.limit ?? 200;
-			const combinedWhereClause = filterConditions?.length
-				? `AND ${filterConditions.join(" AND ")}`
-				: "";
+			const filterClause = appendFilterClause(filterConditions);
 
 			return {
 				sql: `
 					WITH events_summary AS (
-						SELECT 
+						SELECT
 							event_name,
 							COUNT(*) as total_events,
 							COUNT(DISTINCT anonymous_id) as unique_users,
 							COUNT(DISTINCT session_id) as unique_sessions
 						FROM ${Analytics.custom_events}
-						WHERE 
+						WHERE
 							${projectWhereClause(filterParams)}
 							AND timestamp >= toDateTime({startDate:String})
 							AND timestamp <= toDateTime(concat({endDate:String}, ' 23:59:59'))
 							AND event_name != ''
-							${combinedWhereClause}
+							${filterClause}
 						GROUP BY event_name
 					),
 					property_data AS (
@@ -820,7 +807,7 @@ export const CustomEventsBuilders: Record<string, SimpleQueryConfig> = {
 								AND event_name != ''
 								AND properties != '{}'
 								AND isValidJSON(properties)
-								${combinedWhereClause}
+								${filterClause}
 						)
 					),
 					value_counts AS (

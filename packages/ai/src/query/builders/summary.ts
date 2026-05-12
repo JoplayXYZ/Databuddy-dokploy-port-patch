@@ -1,4 +1,5 @@
 import { Analytics } from "../../types/tables";
+import { appendFilterClause } from "../simple-builder";
 import type { SimpleQueryConfig } from "../types";
 
 export const SummaryBuilders: Record<string, SimpleQueryConfig> = {
@@ -65,9 +66,7 @@ export const SummaryBuilders: Record<string, SimpleQueryConfig> = {
 				helpers,
 			} = ctx;
 			const tz = timezone || "UTC";
-			const filterClause = filterConditions?.length
-				? `AND ${filterConditions.join(" AND ")}`
-				: "";
+			const filterClause = appendFilterClause(filterConditions);
 
 			const sessionAttributionCTE = helpers?.sessionAttributionCTE
 				? `${helpers.sessionAttributionCTE("time")},`
@@ -250,9 +249,7 @@ export const SummaryBuilders: Record<string, SimpleQueryConfig> = {
 			} = ctx;
 			const tz = timezone || "UTC";
 			const isHourly = granularity === "hour" || granularity === "hourly";
-			const filterClause = filterConditions?.length
-				? `AND ${filterConditions.join(" AND ")}`
-				: "";
+			const filterClause = appendFilterClause(filterConditions);
 			const dateFilter = `time >= toDateTime({startDate:String}) AND time <= toDateTime(concat({endDate:String}, ' 23:59:59'))`;
 			const timeBucketFn = isHourly ? "toStartOfHour" : "toDate";
 			const dateFormat = isHourly

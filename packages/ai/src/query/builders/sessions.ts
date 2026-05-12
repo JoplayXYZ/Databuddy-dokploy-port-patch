@@ -1,4 +1,5 @@
 import { Analytics } from "../../types/tables";
+import { appendFilterClause } from "../simple-builder";
 import type { SimpleQueryConfig } from "../types";
 
 const DATE_ONLY_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -270,9 +271,7 @@ export const SessionsBuilders: Record<string, SimpleQueryConfig> = {
 				ctx;
 			const limit = ctx.limit ?? 25;
 			const offset = ctx.offset ?? 0;
-			const sessionFilterClause = filterConditions?.length
-				? `AND ${filterConditions.join(" AND ")}`
-				: "";
+			const filterClause = appendFilterClause(filterConditions);
 
 			return {
 				sql: `
@@ -293,7 +292,7 @@ export const SessionsBuilders: Record<string, SimpleQueryConfig> = {
         client_id = {websiteId:String}
         AND time >= toDateTime({startDate:String})
         AND time <= toDateTime({endDate:String})
-        ${sessionFilterClause}
+        ${filterClause}
       GROUP BY session_id
       ORDER BY first_visit DESC
       LIMIT {limit:Int32} OFFSET {offset:Int32}
