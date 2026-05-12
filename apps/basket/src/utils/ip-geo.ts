@@ -11,9 +11,9 @@ import { createError, EvlogError, log } from "evlog";
 import { useLogger } from "evlog/elysia";
 
 if (!process.env.IP_HASH_SALT && process.env.NODE_ENV === "production") {
-	log.warn({
-		message: "IP_HASH_SALT is not set — IP hashes will use an insecure default",
-	});
+	throw new Error(
+		"IP_HASH_SALT must be set in production. The fallback salt is public in the open-source repo, so leaving it unset lets anyone reverse 'anonymized' IPs via a precomputed table."
+	);
 }
 
 interface GeoIPReader extends Reader {
