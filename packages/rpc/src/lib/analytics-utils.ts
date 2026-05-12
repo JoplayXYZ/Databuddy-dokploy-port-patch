@@ -197,13 +197,13 @@ const buildFilterSQL = (
 			continue;
 		}
 
-		// Preserve historical behavior: if value is an array, treat it as IN/NOT IN.
-		// (Even if the operator isn't "in", the old code defaulted to NOT IN.)
 		if (Array.isArray(value)) {
+			if (value.length === 0) {
+				continue;
+			}
+			const negate = operator === "not_in" || operator === "not_equals";
 			params[key] = value;
-			parts.push(
-				`${field} ${operator === "in" ? "IN" : "NOT IN"} {${key}:Array(String)}`
-			);
+			parts.push(`${field} ${negate ? "NOT IN" : "IN"} {${key}:Array(String)}`);
 			continue;
 		}
 
@@ -211,37 +211,31 @@ const buildFilterSQL = (
 			continue;
 		}
 
-		switch (operator) {
-			default: {
-				const escaped = escapeClickhouseString(value);
+		const escaped = escapeClickhouseString(value);
 
-				if (operator === "contains" || operator === "not_contains") {
-					params[key] = `%${escaped}%`;
-					parts.push(
-						`${field} ${operator === "contains" ? "LIKE" : "NOT LIKE"} {${key}:String}`
-					);
-					break;
-				}
-
-				if (operator === "starts_with") {
-					params[key] = `${escaped}%`;
-					parts.push(`${field} LIKE {${key}:String}`);
-					break;
-				}
-
-				if (operator === "ends_with") {
-					params[key] = `%${escaped}`;
-					parts.push(`${field} LIKE {${key}:String}`);
-					break;
-				}
-
-				params[key] = escaped;
-				parts.push(
-					`${field} ${operator === "equals" ? "=" : "!="} {${key}:String}`
-				);
-				break;
-			}
+		if (operator === "contains" || operator === "not_contains") {
+			params[key] = `%${escaped}%`;
+			parts.push(
+				`${field} ${operator === "contains" ? "LIKE" : "NOT LIKE"} {${key}:String}`
+			);
+			continue;
 		}
+
+		if (operator === "starts_with") {
+			params[key] = `${escaped}%`;
+			parts.push(`${field} LIKE {${key}:String}`);
+			continue;
+		}
+
+		if (operator === "ends_with") {
+			params[key] = `%${escaped}`;
+			parts.push(`${field} LIKE {${key}:String}`);
+			continue;
+		}
+
+		const isNegative = operator === "not_equals" || operator === "not_in";
+		params[key] = escaped;
+		parts.push(`${field} ${isNegative ? "!=" : "="} {${key}:String}`);
 	}
 
 	return parts.length > 0 ? ` AND ${parts.join(" AND ")}` : "";

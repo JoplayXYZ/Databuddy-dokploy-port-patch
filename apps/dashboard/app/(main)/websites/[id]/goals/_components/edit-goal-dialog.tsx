@@ -341,7 +341,11 @@ export function EditGoalDialog({
 														operator={filter.operator || "equals"}
 														operatorOptions={goalFunnelOperatorOptions}
 														suggestions={getSuggestions(filter.field)}
-														value={(filter.value as string) || ""}
+														value={
+															Array.isArray(filter.value)
+																? filter.value.join(", ")
+																: (filter.value ?? "")
+														}
 													/>
 												))}
 											</div>
