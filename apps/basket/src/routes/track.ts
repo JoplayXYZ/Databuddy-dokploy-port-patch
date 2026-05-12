@@ -12,6 +12,7 @@ import {
 } from "@lib/api-key";
 import { checkAutumnUsage } from "@lib/billing";
 import { insertCustomEvents } from "@lib/event-service";
+import { ratelimit } from "@databuddy/redis/rate-limit";
 import { getWebsiteSecuritySettings } from "@lib/request-validation";
 import { summarizeRejectedBody } from "@lib/rejection-summary";
 import {
@@ -244,6 +245,21 @@ export const trackRoute = new Elysia().post(
 				websiteId: auth.websiteId,
 				count: events.length,
 			});
+
+			const rateLimitPrincipal = auth.apiKey
+				? `track:apikey:${auth.apiKey.id}`
+				: `track:website:${auth.websiteId ?? "unknown"}:${
+						request.headers.get("cf-connecting-ip") ||
+						request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+						request.headers.get("x-real-ip") ||
+						"anon"
+					}`;
+			const rl = await ratelimit(rateLimitPrincipal, 600, 60);
+			if (!rl.success) {
+				log.set({ rejected: "rate_limit" });
+				captureRejectedBody();
+				throw basketErrors.trackRateLimited();
+			}
 
 			const billingUserId = auth.organizationId
 				? await resolveApiKeyOwnerId(auth.organizationId)

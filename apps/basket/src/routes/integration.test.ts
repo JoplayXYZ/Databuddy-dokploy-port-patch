@@ -136,6 +136,13 @@ vi.mock("@lib/billing", () => ({
 	checkAutumnUsage: vi.fn(() => Promise.resolve({ allowed: true })),
 }));
 
+vi.mock("@databuddy/redis/rate-limit", () => ({
+	ratelimit: vi.fn(() =>
+		Promise.resolve({ success: true, limit: 600, remaining: 599, reset: 60 })
+	),
+	getRateLimitHeaders: vi.fn(() => ({})),
+}));
+
 vi.mock("@lib/api-key", () => ({
 	getApiKeyFromHeader: mockGetApiKeyFromHeader,
 	hasKeyScope: mockHasKeyScope,
