@@ -2,7 +2,7 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { NoticeBanner } from "@/app/(main)/websites/_components/notice-banner";
 import {
@@ -11,8 +11,14 @@ import {
 	type Website,
 } from "@/hooks/use-websites";
 import { orpc } from "@/lib/orpc";
+import { Button, Card, Input } from "@databuddy/ui";
 import { LockIcon, PlusIcon, XMarkIcon as XIcon } from "@databuddy/ui/icons";
-import { Badge, Button, Card, Input } from "@databuddy/ui";
+import {
+	areSecuritySettingsEqual,
+	createSecuritySettingsPayload,
+	normalizeSecurityTag,
+	readSecuritySettings,
+} from "./security-settings";
 
 const ipv4Regex =
 	/^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
@@ -83,15 +89,18 @@ function TagList({
 	return (
 		<div className="flex flex-wrap gap-2">
 			{values.map((value) => (
-				<Badge
-					className="cursor-pointer gap-1 px-2 py-0.5 text-xs hover:bg-destructive hover:text-destructive-foreground"
+				<Button
+					aria-label={`Remove ${value}`}
+					className="h-6 gap-1 rounded-full px-2 text-xs hover:bg-destructive hover:text-destructive-foreground"
 					key={value}
 					onClick={() => onRemove(value)}
-					variant="muted"
+					size="sm"
+					type="button"
+					variant="secondary"
 				>
 					{value}
-					<XIcon className="size-2.5" />
-				</Badge>
+					<XIcon aria-hidden="true" className="size-2.5" />
+				</Button>
 			))}
 		</div>
 	);
@@ -116,25 +125,25 @@ function TagInput({
 	const [error, setError] = useState<string | null>(null);
 
 	const handleAdd = () => {
-		const trimmed = draft.trim();
-		if (!trimmed) {
+		const value = normalizeSecurityTag(draft);
+		if (!value) {
 			return;
 		}
 
-		if (values.includes(trimmed)) {
+		if (values.some((item) => normalizeSecurityTag(item) === value)) {
 			setError("This value already exists");
 			return;
 		}
 
 		if (validate) {
-			const result = validate(trimmed);
+			const result = validate(value);
 			if (!result.success) {
 				setError(result.error ?? "Invalid value");
 				return;
 			}
 		}
 
-		onAdd(trimmed);
+		onAdd(value);
 		setDraft("");
 		setError(null);
 	};
@@ -152,6 +161,7 @@ function TagInput({
 			<div className="flex gap-2">
 				<Input
 					aria-invalid={error ? "true" : "false"}
+					aria-label={`New ${label}`}
 					className="h-8 text-sm"
 					onChange={(e) => {
 						setDraft(e.target.value);
@@ -164,16 +174,21 @@ function TagInput({
 					value={draft}
 				/>
 				<Button
+					aria-label={`Add ${label}`}
 					className="size-8 p-0"
 					disabled={!draft.trim()}
 					onClick={handleAdd}
 					type="button"
 					variant="secondary"
 				>
-					<PlusIcon className="size-4" />
+					<PlusIcon aria-hidden="true" className="size-4" />
 				</Button>
 			</div>
-			{error && <p className="text-destructive text-xs">{error}</p>}
+			{error && (
+				<p className="text-destructive text-xs" role="alert">
+					{error}
+				</p>
+			)}
 		</div>
 	);
 }
@@ -186,31 +201,27 @@ export default function SecurityPage() {
 
 	const [allowedOrigins, setAllowedOrigins] = useState<string[]>([]);
 	const [allowedIps, setAllowedIps] = useState<string[]>([]);
-	const [hasChanges, setHasChanges] = useState(false);
+	const savedSettings = useMemo(
+		() => readSecuritySettings(websiteData?.settings),
+		[websiteData?.settings]
+	);
+	const draftSettings = useMemo(
+		() => ({ allowedIps, allowedOrigins }),
+		[allowedIps, allowedOrigins]
+	);
+	const hasChanges = !areSecuritySettingsEqual(savedSettings, draftSettings);
 
 	const updateMutation = useMutation({
 		...orpc.websites.updateSettings.mutationOptions(),
 		onSuccess: (updatedWebsite: Website) => {
 			updateWebsiteCache(queryClient, updatedWebsite);
-			setHasChanges(false);
 		},
 	});
 
 	const initializeSettings = useCallback(() => {
-		const website = websiteData as Website & { settings?: unknown };
-		if (website?.settings) {
-			const settings = website.settings as {
-				allowedOrigins?: string[];
-				allowedIps?: string[];
-			};
-			setAllowedOrigins(settings.allowedOrigins ?? []);
-			setAllowedIps(settings.allowedIps ?? []);
-		} else {
-			setAllowedOrigins([]);
-			setAllowedIps([]);
-		}
-		setHasChanges(false);
-	}, [websiteData]);
+		setAllowedOrigins(savedSettings.allowedOrigins);
+		setAllowedIps(savedSettings.allowedIps);
+	}, [savedSettings]);
 
 	useEffect(() => {
 		if (websiteData) {
@@ -223,57 +234,38 @@ export default function SecurityPage() {
 			return;
 		}
 
-		const website = websiteData as Website & { settings?: unknown };
-		const currentSettings =
-			(website?.settings as {
-				allowedOrigins?: string[];
-				allowedIps?: string[];
-			}) ?? {};
-
-		const newSettings = {
-			allowedOrigins: allowedOrigins.length > 0 ? allowedOrigins : undefined,
-			allowedIps: allowedIps.length > 0 ? allowedIps : undefined,
-		};
-
-		const originsChanged =
-			JSON.stringify(currentSettings.allowedOrigins ?? []) !==
-			JSON.stringify(allowedOrigins);
-		const ipsChanged =
-			JSON.stringify(currentSettings.allowedIps ?? []) !==
-			JSON.stringify(allowedIps);
-
-		if (originsChanged || ipsChanged) {
-			toast.promise(
-				updateMutation.mutateAsync({ id: websiteId, settings: newSettings }),
-				{
-					loading: "Updating security settings...",
-					success: "Security settings updated",
-					error: "Failed to update security settings",
-				}
-			);
-		} else {
+		if (!hasChanges) {
 			toast.info("No changes to save");
+			return;
 		}
-	}, [websiteData, websiteId, allowedOrigins, allowedIps, updateMutation]);
+
+		toast.promise(
+			updateMutation.mutateAsync({
+				id: websiteId,
+				settings: createSecuritySettingsPayload(draftSettings),
+			}),
+			{
+				loading: "Updating security settings...",
+				success: "Security settings updated",
+				error: "Failed to update security settings",
+			}
+		);
+	}, [websiteData, websiteId, draftSettings, hasChanges, updateMutation]);
 
 	const handleOriginAdd = useCallback((value: string) => {
 		setAllowedOrigins((prev) => [...prev, value]);
-		setHasChanges(true);
 	}, []);
 
 	const handleOriginRemove = useCallback((value: string) => {
 		setAllowedOrigins((prev) => prev.filter((v) => v !== value));
-		setHasChanges(true);
 	}, []);
 
 	const handleIpAdd = useCallback((value: string) => {
 		setAllowedIps((prev) => [...prev, value]);
-		setHasChanges(true);
 	}, []);
 
 	const handleIpRemove = useCallback((value: string) => {
 		setAllowedIps((prev) => prev.filter((v) => v !== value));
-		setHasChanges(true);
 	}, []);
 
 	if (!websiteData) {

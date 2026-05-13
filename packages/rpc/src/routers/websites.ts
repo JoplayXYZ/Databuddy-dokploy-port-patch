@@ -26,6 +26,7 @@ import {
 	generateExport,
 	validateExportDateRange,
 } from "../services/export-service";
+import { mergeWebsiteSecuritySettings } from "./website-settings";
 
 interface MiniChartDataPoint {
 	date: string;
@@ -728,33 +729,19 @@ export const websitesRouter = {
 				permissions: ["update"],
 			});
 
-			const currentSettings = website.settings ?? {};
+			if (input.settings === undefined) {
+				return website;
+			}
 
-			const newSettings = {
-				...currentSettings,
-				...(input.settings?.allowedOrigins !== undefined && {
-					allowedOrigins:
-						input.settings.allowedOrigins.length > 0
-							? input.settings.allowedOrigins
-							: undefined,
-				}),
-				...(input.settings?.allowedIps !== undefined && {
-					allowedIps:
-						input.settings.allowedIps.length > 0
-							? input.settings.allowedIps
-							: undefined,
-				}),
-			};
-
-			const cleanedSettings = Object.fromEntries(
-				Object.entries(newSettings).filter(([_, v]) => v !== undefined)
+			const nextSettings = mergeWebsiteSecuritySettings(
+				website.settings,
+				input.settings
 			);
 
 			let updatedWebsite: Website;
 			try {
 				updatedWebsite = await websiteService.updateById(input.id, {
-					settings:
-						Object.keys(cleanedSettings).length > 0 ? cleanedSettings : null,
+					settings: nextSettings,
 				});
 			} catch (error) {
 				handleServiceError(error);
