@@ -13,11 +13,12 @@ Conventions:
 - Website ref: websiteId, websiteName, or websiteDomain — any one works.
 - Dates: a preset OR both from+to (YYYY-MM-DD). Defaults to last_7d. Passing only one of from/to is rejected.
 - Filters: 'field' is the column name in the schema. Errors list allowed fields and suggest close matches on typos.
+- Errors: errors_by_type groups by JS class (TypeError, …); error_types groups by error message. Both include count + affected users.
 - Mutations (create/update/delete flag, link, folder, memory): preview with confirmed=false, then confirm with the user before confirmed=true.
 
 Workflow shortcuts (MCP prompts):
 - weekly_report — structured weekly digest for a website.
-- triage_errors — error_summary → error_types → errors_by_page → recent_errors, prioritized by user impact.
+- triage_errors — error_summary → errors_by_type → errors_by_page → recent_errors, prioritized by user impact.
 - funnel_health — list_funnels + per-step analytics, surfaces biggest drop-offs.
 - flag_rollout_check — audit active flags for stale or risky rollouts.
 
@@ -39,7 +40,7 @@ A longer reference for callers who want more than the session-start instructions
 User-invoked workflows. Each builds a ready-to-send message; the agent then drives the tool calls.
 
 - \`weekly_report\` — traffic, top pages, top referrers, error health, one item to investigate.
-- \`triage_errors\` — error_summary → error_types → errors_by_page → recent_errors for the top group.
+- \`triage_errors\` — error_summary → errors_by_type → errors_by_page → recent_errors for the top class.
 - \`funnel_health\` — list_funnels + per-funnel analytics, biggest drop-offs surfaced.
 - \`flag_rollout_check\` — list_flags + staleness/risk audit, recommends actions but no mutations.
 
@@ -94,7 +95,8 @@ Always preview with \`confirmed=false\`, get explicit user approval, then run wi
 
 ## Worth knowing
 
-- \`error_type\` is the JS error **class** (\`Error\`, \`TypeError\`, …), not the message. Search error text with a filter on \`message\`.
+- Two error-grouping queries with similar names: \`errors_by_type\` groups by JS **class** (\`TypeError\`, …) — use this when triaging. \`error_types\` groups by error **message** string. Both return \`count\` and \`users\`.
+- \`error_type\` (filter field) is the JS class. Search error text with a filter on \`message\`.
 - Custom events: filter \`event_name\`, \`property_key\`, \`property_value\` — don't query the raw \`properties\` JSON.
 - \`recent_errors\` stack traces are capped at 1500 chars on the server.
 - Tool annotations reflect mutation kind: \`readOnlyHint\` for analytics queries, \`destructiveHint\` for delete/uninstall.

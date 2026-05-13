@@ -126,13 +126,15 @@ const QUERY_TYPE_DESCRIPTIONS: Record<string, string> = {
 	timezone: "Visitor distribution by timezone.",
 	language: "Visitor distribution by browser language setting.",
 	recent_errors:
-		"Most recent JavaScript errors with timestamps, messages, and stack traces.",
-	error_types: "Error counts grouped by error type/name.",
+		"Recent JS errors with full context: message, stack (capped at 1500 chars), path, error_type, browser, OS, device, country. For aggregates use error_summary / errors_by_type / errors_by_page.",
+	error_types:
+		"Top error MESSAGES with count, affected users, and last_seen. Group key is the message string. For grouping by JS class (TypeError, ReferenceError, …) use errors_by_type.",
 	error_trends: "Error counts over time to identify spikes and trends.",
 	errors_by_page: "Error counts grouped by the page where they occurred.",
 	error_frequency: "Error frequency and recurrence patterns.",
 	error_chart_data: "Error counts formatted for time-series chart display.",
-	errors_by_type: "Errors grouped and counted by error type classification.",
+	errors_by_type:
+		"Errors grouped by JS error class (TypeError, ReferenceError, …) with count, affected users, and sessions. For grouping by error message use error_types.",
 	slow_pages: "Slowest loading pages ranked by load time.",
 	performance_by_browser: "Page load performance metrics grouped by browser.",
 	performance_by_country: "Page load performance metrics grouped by country.",

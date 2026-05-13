@@ -28,10 +28,9 @@ function scopeLine(website: string | undefined, period?: string): string {
 	const websiteLine = website
 		? `Scope: website = ${website}.`
 		: "Scope: confirm websiteName/Domain/Id with list_websites first if more than one is accessible.";
-	if (period === undefined) {
-		return websiteLine;
-	}
-	return `${websiteLine}\nDate range: preset = ${period ?? "last_7d"}.`;
+	return period
+		? `${websiteLine}\nDate range: preset = ${period}.`
+		: websiteLine;
 }
 
 const DATABUDDY_PROMPTS: PromptDef[] = [
@@ -45,17 +44,15 @@ const DATABUDDY_PROMPTS: PromptDef[] = [
 
 ${scopeLine(args.website, args.period)}
 
-Batch one get_data call covering:
-- summary_metrics (sessions, visitors, pageviews, bounce_rate)
-- top_pages (limit 5)
-- top_referrers (limit 5)
-- error_summary
+Two parallel calls:
+- get_data batch: summary_metrics, top_pages (limit 5), top_referrers (limit 5), error_summary, errors_by_type (limit 3).
+- compare_metric with metrics=['visitors','sessions','pageviews','bounce_rate'] for week-over-week deltas (and top_movers dimension='pages' if a deeper traffic shift matters).
 
-Then summarize in this order:
-1. Headline metric movement vs prior period (use compare_metric if direction is unclear).
-2. Top 3 traffic drivers (pages or referrers) with sessions and trend arrow.
-3. Error health: total errors, top 1 error type, affected sessions.
-4. One actionable item worth investigating this week — pick the largest unexplained delta.
+Summarize in this order:
+1. Headline movement: each summary metric vs prior period, using compare_metric's headline strings.
+2. Top 3 traffic drivers (pages or referrers) with absolute sessions. Note any from top_movers that surged or dropped >20%.
+3. Error health: total errors, error rate, top 1 error class from errors_by_type with affected users.
+4. One actionable item worth investigating this week — pick the largest unexplained delta or the highest-impact error.
 
 Format the digest as short bullets. Skip empty sections. Never fabricate metrics that didn't return data.`,
 	},
@@ -63,22 +60,24 @@ Format the digest as short bullets. Skip empty sections. Never fabricate metrics
 		name: "triage_errors",
 		title: "Triage recent errors",
 		description:
-			"Walk through error_summary → error_types → errors_by_page → recent_errors for the top group, then prioritize by user impact.",
+			"Walk through error_summary → errors_by_type → errors_by_page → recent_errors for the top class, then prioritize by user impact.",
 		args: { website: websiteArg, period: periodArg },
 		body: (args) => `Triage recent JavaScript errors.
 
 ${scopeLine(args.website, args.period)}
 
-Steps:
-1. get_data error_summary — capture total errors, error rate, affected users.
-2. get_data error_types (limit 10) — identify top groups by count.
-3. get_data errors_by_page (limit 10) — identify hot pages.
-4. For the top 1-2 error types, get_data recent_errors with limit=5 and filter on message contains the type signature. Stack traces are truncated at 1500 chars — don't ask for limit > 20.
+Steps (batch as much as you can into one get_data call with queries[]):
+1. error_summary — total errors, error rate, affected users, affected sessions.
+2. errors_by_type (limit 10) — top JS error classes (TypeError, ReferenceError, …) with users + sessions. Each row's 'name' is the error_type field.
+3. errors_by_page (limit 10) — pages where errors concentrate.
+4. For the top 1–2 classes, recent_errors with limit=10 and filter [{field:'error_type', op:'eq', value:'<class>'}]. To drill into a specific message instead, filter [{field:'message', op:'contains', value:'<text>'}]. Stack traces are server-capped at 1500 chars.
 
-Output a prioritized list, sorted by affected_users × error_count:
-- Error type or message excerpt
+Sort findings by impact = users × count (use errors_by_type's 'users' and 'count' columns directly — no extra calls needed).
+
+For each priority, output:
+- Error class + a representative message excerpt
 - Affected users / total occurrences
-- Pages with the most occurrences
+- Top 1–2 pages with the most occurrences
 - Likely root cause guess (1 line) and next investigation step
 
 Skip the noise: AbortError, ResizeObserver loop limit, browser-extension stacks. Flag them but don't lead with them.`,
@@ -95,16 +94,16 @@ ${scopeLine(args.website, args.period)}
 
 Steps:
 1. list_funnels — enumerate active funnels (skip archived).
-2. For each funnel, get_funnel_analytics. Capture overall conversion rate and the per-step drop-off.
-3. compare_metric on overall conversion if the user asked about a change vs prior period.
+2. For each funnel, get_funnel_analytics for the current window. Capture overall conversion and per-step drop-off.
+3. If the user asked about a change vs prior period, call get_funnel_analytics again with from/to set to the immediately preceding window and diff the overall conversion. (compare_metric does NOT support funnel conversion — it only handles summary metrics.)
 
 Output table, one row per funnel:
 - Funnel name
-- Overall conversion
+- Overall conversion (and Δ vs prior period if computed)
 - Worst step (biggest absolute drop) — name + drop %
-- Status: healthy (>X), watch, leaking — define X relative to the funnel's own historical baseline if available, otherwise <2% absolute conversion is "leaking".
+- Status: healthy, watch, leaking — use the funnel's own historical baseline if available, otherwise <2% absolute conversion is "leaking".
 
-End with 1-3 concrete next steps (which step to investigate, which user segment to drill into).`,
+End with 1–3 concrete next steps (which step to investigate, which segment to drill into).`,
 	},
 	{
 		name: "flag_rollout_check",
@@ -117,8 +116,8 @@ End with 1-3 concrete next steps (which step to investigate, which user segment 
 ${scopeLine(args.website)}
 
 Steps:
-1. list_flags — capture every active flag and its config.
-2. For each active flag, note: type (boolean/rollout/multivariant), status, rolloutPercentage, number of rules, last update time.
+1. list_flags with status='active' — skip archived/inactive in one call.
+2. For each flag, note: type (boolean/rollout/multivariant), rolloutPercentage, number of rules, last update time.
 
 Surface, in order:
 - Stale flags: status=active and not updated in >30 days, especially rollouts at 100%. Candidates for cleanup.
