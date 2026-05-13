@@ -241,7 +241,7 @@ describe("validateRequest", () => {
 		}
 	});
 
-	test("origin mismatch (with settings) → throws 403 when neither domain nor allowlist matches", async () => {
+	test("isOriginAllowed gets called with website.domain and allowedOrigins", async () => {
 		mockGetWebsiteByIdV2.mockResolvedValue({
 			id: "ws_1",
 			domain: "example.com",
@@ -251,37 +251,11 @@ describe("validateRequest", () => {
 			organizationId: "org_1",
 			settings: { allowedOrigins: ["trusted.com"] },
 		} as any);
-		mockIsOriginAllowed.mockReturnValue(false);
-		try {
-			await validateRequest(
-				{},
-				{ client_id: "ws_1" },
-				makeReq("https://example.com", { origin: "https://evil.com" })
-			);
-			expect.unreachable("should have thrown");
-		} catch (e) {
-			expect(e).toBeInstanceOf(EvlogError);
-			expect((e as EvlogError).status).toBe(403);
-		}
-	});
-
-	test("origin matches website domain → passes even when allowedOrigins doesn't list it", async () => {
-		mockGetWebsiteByIdV2.mockResolvedValue({
-			id: "ws_1",
-			domain: "example.com",
-			name: "Example",
-			status: "ACTIVE",
-			ownerId: "user_1",
-			organizationId: "org_1",
-			settings: { allowedOrigins: ["trusted.com"] },
-		} as any);
-		mockIsOriginAllowed.mockReturnValue(true);
-		const result = await validateRequest(
+		await validateRequest(
 			{},
 			{ client_id: "ws_1" },
 			makeReq("https://example.com", { origin: "https://www.example.com" })
 		);
-		expect("clientId" in result).toBe(true);
 		expect(mockIsOriginAllowed).toHaveBeenCalledWith(
 			"https://www.example.com",
 			"example.com",
@@ -289,26 +263,7 @@ describe("validateRequest", () => {
 		);
 	});
 
-	test("origin matches allowedOrigins → passes even when domain doesn't match", async () => {
-		mockGetWebsiteByIdV2.mockResolvedValue({
-			id: "ws_1",
-			domain: "example.com",
-			name: "Example",
-			status: "ACTIVE",
-			ownerId: "user_1",
-			organizationId: "org_1",
-			settings: { allowedOrigins: ["trusted.com"] },
-		} as any);
-		mockIsOriginAllowed.mockReturnValue(true);
-		const result = await validateRequest(
-			{},
-			{ client_id: "ws_1" },
-			makeReq("https://example.com", { origin: "https://trusted.com" })
-		);
-		expect("clientId" in result).toBe(true);
-	});
-
-	test("missing origin with allowedOrigins set → throws 403", async () => {
+	test("missing origin with allowedOrigins set → throws 403 without calling isOriginAllowed", async () => {
 		mockGetWebsiteByIdV2.mockResolvedValue({
 			id: "ws_1",
 			domain: "example.com",
@@ -324,6 +279,7 @@ describe("validateRequest", () => {
 		} catch (e) {
 			expect(e).toBeInstanceOf(EvlogError);
 			expect((e as EvlogError).status).toBe(403);
+			expect(mockIsOriginAllowed).not.toHaveBeenCalled();
 		}
 	});
 

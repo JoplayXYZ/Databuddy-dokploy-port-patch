@@ -10,7 +10,13 @@ import type { Website } from "@databuddy/db/schema";
 import { cacheNamespaces } from "@databuddy/redis/cache-invalidation";
 import { cacheable } from "@databuddy/redis/cacheable";
 import { captureError, record } from "@lib/tracing";
+import { isValidOriginFromSettings } from "@utils/origin-ip-validation";
 import { createError, EvlogError } from "evlog";
+
+export {
+	isValidIpFromSettings,
+	isValidOriginFromSettings,
+} from "@utils/origin-ip-validation";
 
 type WebsiteWithOwner = Website & {
 	ownerId: string | null;
@@ -205,13 +211,6 @@ const getWebsiteByIdWithOwnerCached = cacheable(
 	}
 );
 
-import { isValidOriginFromSettings as isAllowedOriginSetting } from "@utils/origin-ip-validation";
-
-export {
-	isValidIpFromSettings,
-	isValidOriginFromSettings,
-} from "@utils/origin-ip-validation";
-
 export function isOriginAllowed(
 	origin: string,
 	websiteDomain: string,
@@ -221,7 +220,7 @@ export function isOriginAllowed(
 		return true;
 	}
 	if (allowedOrigins?.length) {
-		return isAllowedOriginSetting(origin, allowedOrigins);
+		return isValidOriginFromSettings(origin, allowedOrigins);
 	}
 	return false;
 }
