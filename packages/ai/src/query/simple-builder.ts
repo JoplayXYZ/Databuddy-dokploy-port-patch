@@ -444,10 +444,6 @@ export class SimpleQueryBuilder {
 		return sql.replace(/\{websiteDomain\}/g, this.websiteDomain);
 	}
 
-	private formatDateTime(dateStr: string): string {
-		return normalizeClickHouseDateTime(dateStr);
-	}
-
 	private finalizeCompiledQuery(
 		sql: string,
 		params: Record<string, Filter["value"]>
@@ -539,8 +535,8 @@ export class SimpleQueryBuilder {
 
 			const result = this.config.customSql({
 				websiteId: this.request.projectId,
-				startDate: this.formatDateTime(this.request.from),
-				endDate: this.formatDateTime(this.request.to),
+				startDate: normalizeClickHouseDateTime(this.request.from),
+				endDate: normalizeClickHouseDateTime(this.request.to),
 				filters: this.request.filters,
 				granularity: this.request.timeUnit,
 				limit: this.request.limit,
@@ -567,8 +563,8 @@ export class SimpleQueryBuilder {
 	private buildStandardQuery(): CompiledQuery {
 		const params: Record<string, Filter["value"]> = {
 			websiteId: this.request.projectId,
-			from: this.formatDateTime(this.request.from),
-			to: this.formatDateTime(this.request.to),
+			from: normalizeClickHouseDateTime(this.request.from),
+			to: normalizeClickHouseDateTime(this.request.to),
 		};
 
 		if (this.config.timeBucket?.timezone && this.request.timezone) {

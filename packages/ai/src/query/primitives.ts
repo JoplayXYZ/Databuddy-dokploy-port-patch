@@ -1,25 +1,3 @@
-export type AggregateFn =
-	| "count"
-	| "countIf"
-	| "sum"
-	| "sumIf"
-	| "avg"
-	| "avgIf"
-	| "uniq"
-	| "uniqIf"
-	| "median"
-	| "medianIf"
-	| "min"
-	| "minIf"
-	| "max"
-	| "maxIf"
-	| "any"
-	| "argMin"
-	| "argMax"
-	| "groupArray"
-	| "quantile"
-	| "quantileIf";
-
 export type Granularity = "minute" | "hour" | "day" | "week" | "month";
 
 export type TimeUnit = Granularity | "hourly" | "daily";

@@ -1,9 +1,4 @@
-import type {
-	AggregateFn,
-	AliasedExpression,
-	Granularity,
-	SqlExpression,
-} from "./primitives";
+import type { AliasedExpression, Granularity } from "./primitives";
 
 export type QueryFieldType =
 	| "string"
@@ -75,52 +70,7 @@ export interface Filter {
 	value: string | number | (string | number)[];
 }
 
-export interface ColumnField {
-	alias?: string;
-	source: string;
-	type: "column";
-}
-
-export interface AggregateField {
-	alias: string;
-	condition?: string;
-	fn: AggregateFn;
-	source?: string;
-	type: "aggregate";
-}
-
-export interface ExpressionField {
-	alias: string;
-	expression: string | SqlExpression;
-	type: "expression";
-}
-
-export interface WindowField {
-	alias: string;
-	fn: AggregateFn;
-	over: {
-		partitionBy?: string[];
-		orderBy?: string;
-	};
-	source?: string;
-	type: "window";
-}
-
-export interface ComputedField {
-	alias: string;
-	inputs: string[];
-	metric: "bounceRate" | "percentageOfTotal" | "pagesPerSession";
-	type: "computed";
-}
-
-export type FieldDefinition =
-	| ColumnField
-	| AggregateField
-	| ExpressionField
-	| WindowField
-	| ComputedField;
-
-export type ConfigField = string | FieldDefinition | AliasedExpression;
+export type ConfigField = string | AliasedExpression;
 
 export interface CTEDefinition {
 	fields: ConfigField[];
