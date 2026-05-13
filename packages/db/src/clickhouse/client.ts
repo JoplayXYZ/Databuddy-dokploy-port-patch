@@ -85,7 +85,7 @@ export const TABLE_NAMES = {
 };
 
 export const CLICKHOUSE_OPTIONS: NodeClickHouseClientConfigOptions = {
-	max_open_connections: 30,
+	max_open_connections: 64,
 	request_timeout: 30_000,
 	keep_alive: {
 		enabled: true,
@@ -95,6 +95,19 @@ export const CLICKHOUSE_OPTIONS: NodeClickHouseClientConfigOptions = {
 		request: true,
 		response: true,
 	},
+};
+
+const READ_DEFAULT_SETTINGS: Record<string, string | number> = {
+	max_threads: 4,
+	max_memory_usage: 4_000_000_000,
+	max_execution_time: 15,
+	max_result_rows: 100_000,
+	result_overflow_mode: "break",
+	use_query_cache: 1,
+	query_cache_min_query_runs: 2,
+	query_cache_ttl: 60,
+	query_cache_share_between_users: 0,
+	query_cache_nondeterministic_function_handling: "throw",
 };
 
 const baseClient = createClient({
@@ -188,6 +201,7 @@ async function chQueryWithMeta<T extends Record<string, any>>(
 ): Promise<ResponseJSON<T>> {
 	const json = await traced("ch.query", async () => {
 		const settings: Record<string, string | number> = {
+			...READ_DEFAULT_SETTINGS,
 			...(options?.readonly && { readonly: "1" }),
 			...options?.clickhouse_settings,
 		};

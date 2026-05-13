@@ -1,5 +1,5 @@
 import { chQuery } from "@databuddy/db/clickhouse";
-import { mergeWideEvent, record } from "../lib/tracing";
+import { captureError, mergeWideEvent, record } from "../lib/tracing";
 import { QueryBuilders } from "./builders";
 import { SimpleQueryBuilder } from "./simple-builder";
 import type { QueryRequest, SimpleQueryConfig } from "./types";
@@ -195,7 +195,17 @@ export function executeBatch(
 					};
 				}
 				return { unionCount: 1, singleCount: 0 };
-			} catch {
+			} catch (error) {
+				captureError(error, {
+					operation: "batch_union",
+					batch_types: groupItems.map((g) => g.req.type).join(","),
+					batch_size: groupItems.length,
+				});
+				mergeWideEvent({
+					batch_union_fallback: 1,
+					batch_union_error:
+						error instanceof Error ? error.message : "Union query failed",
+				});
 				for (const { index, req } of groupItems) {
 					results[index] = await runSingle(req, opts);
 				}
