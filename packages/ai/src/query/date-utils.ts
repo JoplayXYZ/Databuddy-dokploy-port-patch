@@ -62,11 +62,6 @@ export function normalizeClickHouseDateTime(
 	return value.replace("T", " ");
 }
 
-/**
- * Pads a date-only ("YYYY-MM-DD") value to a full DateTime string. Used
- * right before a value is bound to a {X:DateTime} parameter — CH's
- * DateTime binding requires the full "YYYY-MM-DD HH:MM:SS" form.
- */
 export function padToClickHouseDateTime(value: string): string {
 	return DATE_ONLY_RE.test(value) ? `${value} 00:00:00` : value;
 }

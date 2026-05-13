@@ -42,7 +42,6 @@ function buildParams({
 		additionalParams as Record<string, string>
 	);
 
-	// Use appropriate ID based on context
 	if (linkId) {
 		params.set("link_id", linkId);
 	} else if (scheduleId) {
@@ -110,8 +109,7 @@ async function fetchDynamicQuery(
 ): Promise<DynamicQueryResponse | BatchQueryResponse> {
 	const timezone = guessTimezone();
 
-	// Support both old string API (websiteId) and new options object
-	const options: FetchOptions =
+const options: FetchOptions =
 		typeof idOrOptions === "string" ? { websiteId: idOrOptions } : idOrOptions;
 
 	const params = buildParams({
@@ -200,41 +198,21 @@ export function useDynamicQuery<
 			queryData.parameters.length > 0,
 	});
 
-	const processedData = useMemo(
-		() =>
-			query.data?.data.reduce(
-				(acc, result) => {
-					if (result.success) {
-						acc[result.parameter] = result.data;
-					}
-					return acc;
-				},
-				{} as Record<string, any>
-			) || {},
-		[query.data]
-	);
-
-	const errors = useMemo(
-		() =>
-			query.data?.data
-				.filter((result) => !result.success)
-				.map((result) => ({
-					parameter: result.parameter,
-					error: result.error,
-				})) || [],
-		[query.data]
-	);
+	const processedData = useMemo(() => {
+		const acc: Record<string, any> = {};
+		for (const result of query.data?.data ?? []) {
+			if (result.success) {
+				acc[result.parameter] = result.data;
+			}
+		}
+		return acc as TData;
+	}, [query.data]);
 
 	return {
-		data: processedData as TData,
-		meta: query.data?.meta,
-		errors,
+		data: processedData,
 		isLoading: query.isLoading || query.isFetching || query.isPending,
 		isError: query.isError,
 		error: query.error,
-		refetch: query.refetch,
-		isFetching: query.isFetching,
-		isPending: query.isPending,
 	};
 }
 
@@ -251,8 +229,7 @@ export function useBatchDynamicQuery(
 	queries: DynamicQueryRequest[],
 	options?: Partial<UseQueryOptions<BatchQueryResponse>>
 ) {
-	// Support both old string API (websiteId) and new options object
-	const queryOptions: BatchQueryOptions =
+const queryOptions: BatchQueryOptions =
 		typeof idOrOptions === "string" ? { websiteId: idOrOptions } : idOrOptions;
 
 	const effectiveId =
