@@ -205,10 +205,26 @@ const getWebsiteByIdWithOwnerCached = cacheable(
 	}
 );
 
+import { isValidOriginFromSettings as isAllowedOriginSetting } from "@utils/origin-ip-validation";
+
 export {
-	isValidOriginFromSettings,
 	isValidIpFromSettings,
+	isValidOriginFromSettings,
 } from "@utils/origin-ip-validation";
+
+export function isOriginAllowed(
+	origin: string,
+	websiteDomain: string,
+	allowedOrigins?: string[]
+): boolean {
+	if (isValidOrigin(origin, websiteDomain)) {
+		return true;
+	}
+	if (allowedOrigins?.length) {
+		return isAllowedOriginSetting(origin, allowedOrigins);
+	}
+	return false;
+}
 
 export function getWebsiteByIdV2(id: string): Promise<WebsiteWithOwner | null> {
 	return record("getWebsiteByIdV2", async () => {
