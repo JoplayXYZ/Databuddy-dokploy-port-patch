@@ -35,7 +35,6 @@ import {
 } from "@/lib/ai-components/message-parts";
 import { isAbortError } from "@/lib/is-abort-error";
 import { formatToolLabel } from "@/lib/tool-display";
-import { cn } from "@/lib/utils";
 import { AgentErrorMessage } from "./agent-error-message";
 import { ArrowsClockwiseIcon, CheckIcon, CopyIcon } from "@databuddy/ui/icons";
 import { Button } from "@databuddy/ui";
@@ -432,6 +431,31 @@ export function AgentMessages() {
 				const messageKey = message.id || `msg-${index}`;
 				const shouldAnimateUserBubble =
 					message.role === "user" && !persistedUserMessageIds.has(messageKey);
+				const content = (
+					<MessageContent className={isAssistant ? "w-full" : undefined}>
+						{groupedParts.map((part, partIndex) =>
+							renderMessagePart(
+								part,
+								partIndex,
+								messageKey,
+								isLastMessage,
+								isStreaming,
+								message.role
+							)
+						)}
+
+						{showActions ? (
+							<AssistantActions
+								canRegenerate={!hasError}
+								isLast={isLastMessage}
+								message={message}
+								onRegenerate={() => {
+									regenerate().catch(() => undefined);
+								}}
+							/>
+						) : null}
+					</MessageContent>
+				);
 
 				return (
 					<Message
@@ -441,43 +465,10 @@ export function AgentMessages() {
 					>
 						{message.role === "user" ? (
 							<UserMessageBubble animate={shouldAnimateUserBubble}>
-								<MessageContent className={cn(isAssistant && "w-full")}>
-									{groupedParts.map((part, partIndex) =>
-										renderMessagePart(
-											part,
-											partIndex,
-											messageKey,
-											isLastMessage,
-											isStreaming,
-											message.role
-										)
-									)}
-								</MessageContent>
+								{content}
 							</UserMessageBubble>
 						) : (
-							<MessageContent className={cn(isAssistant && "w-full")}>
-								{groupedParts.map((part, partIndex) =>
-									renderMessagePart(
-										part,
-										partIndex,
-										messageKey,
-										isLastMessage,
-										isStreaming,
-										message.role
-									)
-								)}
-
-								{showActions ? (
-									<AssistantActions
-										canRegenerate={!hasError}
-										isLast={isLastMessage}
-										message={message}
-										onRegenerate={() => {
-											regenerate().catch(() => undefined);
-										}}
-									/>
-								) : null}
-							</MessageContent>
+							content
 						)}
 					</Message>
 				);
