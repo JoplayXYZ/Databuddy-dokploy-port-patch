@@ -190,4 +190,19 @@ describe("Slack thread reply relevance", () => {
 			source: "fallback",
 		});
 	});
+
+	it("falls back conservatively for longer unmentioned replies when the model is unavailable", async () => {
+		await expect(
+			decideWithThread("databuddy is gonna make qais mad", [
+				{
+					text: "I can explain the metric if someone asks.",
+					userId: "UBOT",
+				},
+			])
+		).resolves.toMatchObject({
+			reason: "ambiguous",
+			shouldReply: false,
+			source: "fallback",
+		});
+	});
 });
