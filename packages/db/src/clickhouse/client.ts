@@ -189,7 +189,7 @@ export interface ChQueryOptions {
 	readonly?: boolean;
 }
 
-async function chQueryWithMeta<T extends Record<string, any>>(
+async function chQueryWithMeta<T>(
 	query: string,
 	params?: Record<string, unknown>,
 	options?: ChQueryOptions
@@ -222,7 +222,7 @@ async function chQueryWithMeta<T extends Record<string, any>>(
 	return {
 		...json,
 		data: json.data.map((item) => {
-			const out: Record<string, unknown> = { ...item };
+			const out = { ...item } as Record<string, unknown>;
 			for (const key of intColumns) {
 				const v = out[key];
 				if (v !== null && v !== undefined && v !== "") {
@@ -234,7 +234,7 @@ async function chQueryWithMeta<T extends Record<string, any>>(
 	};
 }
 
-export function chQuery<T extends Record<string, any>>(
+export function chQuery<T>(
 	query: string,
 	params?: Record<string, unknown>,
 	options?: ChQueryOptions

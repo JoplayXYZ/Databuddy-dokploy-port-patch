@@ -428,16 +428,14 @@ export class SimpleQueryBuilder {
 		if (!this.websiteDomain) {
 			return sql
 				.replace(/domain\(referrer\) != '\{websiteDomain\}'/g, "1=1")
-				.replace(/NOT domain\(referrer\) ILIKE '%.{websiteDomain}'/g, "1=1")
+				.replace(/NOT domain\(referrer\) ILIKE '%\.\{websiteDomain\}'/g, "1=1")
 				.replace(
 					/domain\(referrer\) NOT IN \('localhost', '127\.0\.0\.1'\)/g,
 					"1=1"
 				)
 				.replace(/\{websiteDomain\}/g, "__databuddy_no_domain__");
 		}
-		return sql
-			.replace(/\{websiteDomain\}/g, this.websiteDomain)
-			.replace(/%.{websiteDomain}/g, `%.${this.websiteDomain}`);
+		return sql.replace(/\{websiteDomain\}/g, this.websiteDomain);
 	}
 
 	private formatDateTime(dateStr: string): string {
@@ -894,7 +892,7 @@ export class SimpleQueryBuilder {
 
 	async execute(): Promise<Record<string, unknown>[]> {
 		const { sql, params } = this.compile();
-		const rawData = await chQuery(sql, params);
+		const rawData = await chQuery<Record<string, unknown>>(sql, params);
 		return applyPlugins(rawData, this.config, this.websiteDomain);
 	}
 }
