@@ -552,6 +552,7 @@ const HINTS: readonly string[] = [
 	"compare_metric accepts 'metrics' (array) to batch multiple metrics in a single pair of DB queries",
 	"detect_anomalies runs BOTH z-score (spikes) and week-over-week (gradual drops) by default; use method='wow' for trend-only",
 	"top_movers supports minDeltaPercent to drop small changes, and direction='up'|'down'|'both'",
+	"compare_around_event diffs metrics, errors_by_type, and top_pages across a date boundary (e.g. deploy day). Pass eventDate=YYYY-MM-DD; surfaces new error classes that only appeared after.",
 	"list_insights supports 'ids' for direct drill-down and 'fields' to slim the response",
 	"Workspace mutations use confirmed=false for preview and confirmed=true only after explicit user approval.",
 	"Custom events discovery: get_data type=custom_events lists event names with counts. Then filter [{field:'event_name',op:'eq',value:'…'}] or [{field:'property_key',op:'eq',value:'…'}].",
