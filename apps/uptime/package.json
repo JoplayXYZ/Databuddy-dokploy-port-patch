@@ -20,5 +20,5 @@
     "evlog": "catalog:",
     "kafkajs": "^2.2.4"
   },
-  "packageManager": "bun@1.3.4"
+  "packageManager": "bun@1.3.14"
 }

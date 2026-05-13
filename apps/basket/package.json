@@ -31,8 +31,8 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "bun-types": "^1.3.4",
+    "bun-types": "catalog:",
     "vitest": "^4.1.4"
   },
-  "packageManager": "bun@1.3.0"
+  "packageManager": "bun@1.3.14"
 }

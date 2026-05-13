@@ -22,7 +22,7 @@ Keep additions **minimal**: one bullet, a new `rg` hint, or a routing note—eno
 - Dashboard Playwright webServer commands run under CI PATH from setup-bun; avoid `bash -lc` because login shells can drop Bun from PATH. Build dist-only workspace packages such as `@databuddy/sdk` and `@databuddy/devtools` before starting the API/dashboard. Client `NEXT_PUBLIC_*` flags must use direct env access so Next can inline them. `readBooleanEnv` only treats the literal string `"true"` as enabled, so CI E2E booleans must use `"true"`/`"false"`, not `"1"`/`"0"`.
 - `apps/api`: Elysia API on port `3001`
 - `apps/slack`: Slack agent adapter; Slack installs must resolve through org-scoped DB integration records, not a single env bot token/default website. Agent calls must use an encrypted per-integration Databuddy API key secret as a normal bearer token, never a global internal secret.
-- Slack OAuth lives in `apps/api`, but slash commands/events require `apps/slack` to be running too; local `bun run dev:dashboard` includes Slack, and the Slack package scripts read the root `.env`.
+- Slack OAuth lives in `apps/api`, but slash commands/events require `apps/slack` to be running too; local `bun run dev:dashboard` runs dashboard + API only, so use `bun run dev:slack` when working on Slack. The Slack package scripts read the root `.env`.
 - Slack routing is organization-scoped: OAuth binds a Slack workspace to a Databuddy organization, app mentions from the installed workspace auto-bind channels including Slack Connect, and `/bind` is now a manual fallback for unknown/unapproved channels. DMs/assistant threads work after workspace install. Analytics questions should go through app mentions/DMs using MCP-style website discovery inside the installed organization, never by fanning out across the message sender's user memberships. Slack emits evlog events under `apps/slack/.evlog/logs` in development/`SLACK_EVLOG_FS=1`; Axiom uses `AXIOM_TOKEN` with `SLACK_AXIOM_DATASET` defaulting to `slack`; and reactions need the `reactions:write` bot scope. Remote manifest updates need `SLACK_APP_ID` plus a Slack app configuration token in `SLACK_APP_CONFIG_TOKEN`; trust Slack API errors over token-prefix guesses.
 - Slack scope changes require reinstalling/reauthorizing the workspace; updating the local/remote manifest alone does not grant newly-added bot scopes to an existing installation.
 - Slack agent billing flows through an org-scoped automation API key; existing keys may have `userId: null`, so the agent billing resolver must fall back to the organization owner when an API key has `organizationId`.
@@ -66,6 +66,7 @@ Read [codebase-map.md](./references/codebase-map.md) when you need deeper routin
 ## Repo Conventions
 
 - Package manager: `bun`
+- When running `bun install --lockfile-only`, preserve lockfile sync for pre-existing `package.json` changes instead of reverting them as unrelated.
 - Task runner: `turbo`
 - Formatting/linting: `bun run format`, `bun run lint`
 - Lefthook's `no-secrets` guard intentionally ignores the exact `.env.example` template; real `.env`, `.env.*`, key, and credential files should still be blocked.
