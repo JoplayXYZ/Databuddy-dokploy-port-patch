@@ -577,7 +577,9 @@ export function WebsiteTrackingSetupTab({ websiteId }: TrackingSetupTabProps) {
 								<CodeBlock
 									code={nodeCode}
 									copied={copiedBlockId === "node-code"}
-									onCopy={() => handleCopy(nodeCode, "node-code", "Code copied!")}
+									onCopy={() =>
+										handleCopy(nodeCode, "node-code", "Code copied!")
+									}
 								/>
 							</div>
 
