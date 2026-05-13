@@ -2,6 +2,7 @@
 
 import type { LocationData } from "@/types/website";
 import { useMemo } from "react";
+import { ChartErrorBoundary } from "@/components/chart-error-boundary";
 import { CountryFlag } from "@/components/icon";
 import { MapComponent } from "@/components/analytics/map-component";
 import { formatNumber } from "@/lib/formatters";
@@ -72,11 +73,13 @@ export function GeoMapSection({ countries, isLoading }: GeoMapSectionProps) {
 				style={{ minHeight: 350 }}
 			>
 				<div className="relative flex-1 max-lg:aspect-video lg:min-h-0 [&>div]:rounded-none [&>div]:border-0">
-					<MapComponent
-						height="100%"
-						isLoading={false}
-						locationData={locationData}
-					/>
+					<ChartErrorBoundary fallbackClassName="h-full w-full">
+						<MapComponent
+							height="100%"
+							isLoading={false}
+							locationData={locationData}
+						/>
+					</ChartErrorBoundary>
 				</div>
 
 				<div className="absolute right-2 bottom-2 z-1 w-44 overflow-hidden rounded border border-border/60 bg-card shadow-sm">
