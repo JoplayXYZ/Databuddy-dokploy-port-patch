@@ -2,10 +2,11 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 
 type PromptRegistration = Parameters<McpServer["registerPrompt"]>;
+type PromptArgs = Record<string, string | undefined>;
 
 interface PromptDef {
 	args?: Record<string, z.ZodTypeAny>;
-	body: (args: Record<string, string | undefined>) => string;
+	body: (args: PromptArgs) => string;
 	description: string;
 	name: string;
 	title: string;
@@ -23,14 +24,14 @@ const periodArg = z
 	.optional()
 	.describe("Date range preset. Defaults to last_7d.");
 
-function whichWebsite(website: string | undefined): string {
-	return website
+function scopeLine(website: string | undefined, period?: string): string {
+	const websiteLine = website
 		? `Scope: website = ${website}.`
 		: "Scope: confirm websiteName/Domain/Id with list_websites first if more than one is accessible.";
-}
-
-function whichPeriod(period: string | undefined): string {
-	return `Date range: preset = ${period ?? "last_7d"}.`;
+	if (period === undefined) {
+		return websiteLine;
+	}
+	return `${websiteLine}\nDate range: preset = ${period ?? "last_7d"}.`;
 }
 
 const DATABUDDY_PROMPTS: PromptDef[] = [
@@ -42,8 +43,7 @@ const DATABUDDY_PROMPTS: PromptDef[] = [
 		args: { website: websiteArg, period: periodArg },
 		body: (args) => `Build a weekly analytics digest.
 
-${whichWebsite(args.website)}
-${whichPeriod(args.period)}
+${scopeLine(args.website, args.period)}
 
 Batch one get_data call covering:
 - summary_metrics (sessions, visitors, pageviews, bounce_rate)
@@ -67,8 +67,7 @@ Format the digest as short bullets. Skip empty sections. Never fabricate metrics
 		args: { website: websiteArg, period: periodArg },
 		body: (args) => `Triage recent JavaScript errors.
 
-${whichWebsite(args.website)}
-${whichPeriod(args.period)}
+${scopeLine(args.website, args.period)}
 
 Steps:
 1. get_data error_summary — capture total errors, error rate, affected users.
@@ -92,8 +91,7 @@ Skip the noise: AbortError, ResizeObserver loop limit, browser-extension stacks.
 		args: { website: websiteArg, period: periodArg },
 		body: (args) => `Audit funnel health.
 
-${whichWebsite(args.website)}
-${whichPeriod(args.period)}
+${scopeLine(args.website, args.period)}
 
 Steps:
 1. list_funnels — enumerate active funnels (skip archived).
@@ -116,7 +114,7 @@ End with 1-3 concrete next steps (which step to investigate, which user segment 
 		args: { website: websiteArg },
 		body: (args) => `Review feature flag rollout state.
 
-${whichWebsite(args.website)}
+${scopeLine(args.website)}
 
 Steps:
 1. list_flags — capture every active flag and its config.
@@ -141,14 +139,11 @@ export function registerDatabuddyPrompts(server: McpServer): void {
 			argsSchema: prompt.args,
 		} as unknown as PromptRegistration[1];
 
-		const callback = ((args: Record<string, string | undefined>) => ({
+		const callback = ((args: PromptArgs) => ({
 			messages: [
 				{
 					role: "user" as const,
-					content: {
-						type: "text" as const,
-						text: prompt.body(args),
-					},
+					content: { type: "text" as const, text: prompt.body(args) },
 				},
 			],
 		})) as unknown as PromptRegistration[2];

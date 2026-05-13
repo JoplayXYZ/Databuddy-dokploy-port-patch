@@ -140,14 +140,10 @@ function registerTool(server: McpServer, tool: RegisteredMcpTool): void {
 }
 
 function titleFromName(name: string): string {
-	const words = name.split("_").filter(Boolean);
-	if (words.length === 0) {
-		return name;
-	}
-	const head = words[0] ?? "";
-	return [head.charAt(0).toUpperCase() + head.slice(1), ...words.slice(1)].join(
-		" "
-	);
+	// MCP tool names are validated against /^[a-z][a-z0-9_]*$/ in defineMcpTool,
+	// so split always returns at least one non-empty leading-alpha word.
+	const [head, ...rest] = name.split("_");
+	return [head.charAt(0).toUpperCase() + head.slice(1), ...rest].join(" ");
 }
 
 function deriveAnnotations(metadata: McpToolMetadata): ToolAnnotations {
