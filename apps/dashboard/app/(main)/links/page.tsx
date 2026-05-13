@@ -11,7 +11,7 @@ import {
 } from "@/hooks/use-links";
 import { useFlags } from "@databuddy/sdk/react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { DeepLinkSheet } from "./_components/deep-link-sheet";
 import { LinkFolderSheet } from "./_components/link-folder-sheet";
@@ -41,6 +41,14 @@ import { Badge, Button, Card, EmptyState } from "@databuddy/ui";
 import { DeleteDialog, DropdownMenu } from "@databuddy/ui/client";
 
 export default function LinksPage() {
+	return (
+		<Suspense fallback={null}>
+			<LinksPageContent />
+		</Suspense>
+	);
+}
+
+function LinksPageContent() {
 	const router = useRouter();
 	const pathname = usePathname();
 	const searchParams = useSearchParams();
