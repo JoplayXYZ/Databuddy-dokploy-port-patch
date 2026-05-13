@@ -560,8 +560,8 @@ describe("SimpleQueryBuilder.compile", () => {
 			}
 		);
 
-		expect(sql).toContain("parseDateTimeBestEffort({from:String}");
-		expect(sql).toContain("parseDateTimeBestEffort({to:String}");
+		expect(sql).toContain("{from:DateTime}");
+		expect(sql).toContain("{to:DateTime}");
 		expect(sql).not.toContain("concat({to:String}, ' 23:59:59')");
 		expect(params.from).toBe("2026-04-27 12:00:00");
 		expect(params.to).toBe("2026-04-27 13:28:59");
@@ -572,7 +572,7 @@ describe("SimpleQueryBuilder.compile", () => {
 		const { sql, params } = compile();
 
 		expect(sql).not.toContain("concat({to:String}, ' 23:59:59')");
-		expect(params.from).toBe("2026-04-01");
+		expect(params.from).toBe("2026-04-01 00:00:00");
 		expect(params.to).toBe("2026-04-11 23:59:59");
 	});
 
@@ -598,8 +598,8 @@ describe("SimpleQueryBuilder.compile", () => {
 			}
 		);
 
-		expect(sql).toContain("parseDateTimeBestEffort({startDate:String}");
-		expect(sql).toContain("parseDateTimeBestEffort({endDate:String}");
+		expect(sql).toContain("{startDate:DateTime}");
+		expect(sql).toContain("{endDate:DateTime}");
 		expect(params.startDate).toBe("2026-04-27 12:00:00");
 		expect(params.endDate).toBe("2026-04-27 13:28:59");
 	});

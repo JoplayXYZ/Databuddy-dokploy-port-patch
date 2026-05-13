@@ -1,6 +1,9 @@
 import { chQuery } from "@databuddy/db/clickhouse";
 import { domainSchema } from "@databuddy/validation";
-import { normalizeClickHouseDateTime } from "./date-utils";
+import {
+	normalizeClickHouseDateTime,
+	padToClickHouseDateTime,
+} from "./date-utils";
 import type { Granularity } from "./expressions";
 import {
 	compileConfigField,
@@ -148,11 +151,14 @@ function orgScopeRegex(field: string): RegExp {
 	return regex;
 }
 
-function parseDateExpression(paramName: string, withTimezone = false): string {
-	const param = `{${paramName}:String}`;
-	return withTimezone
-		? `parseDateTimeBestEffort(${param}, {timezone:String})`
-		: `parseDateTimeBestEffort(${param})`;
+function dateBindingExpression(
+	paramName: string,
+	withTimezone = false
+): string {
+	if (withTimezone) {
+		return `parseDateTimeBestEffort({${paramName}:String}, {timezone:String})`;
+	}
+	return `{${paramName}:DateTime}`;
 }
 
 function normalizeReferrerValue(value: string, forLikeSearch = false): string {
@@ -463,18 +469,21 @@ export class SimpleQueryBuilder {
 			}
 		};
 
-		let finalSql = sql.replace(END_OF_DAY_WITH_TZ_REGEX, (_match, paramName) => {
-			promoteToEndOfDay(paramName);
-			return parseDateExpression(paramName, true);
-		});
+		let finalSql = sql.replace(
+			END_OF_DAY_WITH_TZ_REGEX,
+			(_match, paramName) => {
+				promoteToEndOfDay(paramName);
+				return dateBindingExpression(paramName, true);
+			}
+		);
 
 		finalSql = finalSql.replace(END_OF_DAY_REGEX, (_match, paramName) => {
 			promoteToEndOfDay(paramName);
-			return parseDateExpression(paramName);
+			return dateBindingExpression(paramName);
 		});
 
 		finalSql = finalSql.replace(TO_DATE_TIME_REGEX, (_match, paramName) =>
-			parseDateExpression(paramName)
+			dateBindingExpression(paramName)
 		);
 
 		if (finalSql.includes("{timezone:String}") && !finalParams.timezone) {
@@ -490,6 +499,13 @@ export class SimpleQueryBuilder {
 					orgScopeRegex(field),
 					"$1 IN {websiteIds:Array(String)}"
 				);
+			}
+		}
+
+		for (const key of DATE_PARAM_NAMES) {
+			const value = finalParams[key];
+			if (typeof value === "string") {
+				finalParams[key] = padToClickHouseDateTime(value);
 			}
 		}
 
