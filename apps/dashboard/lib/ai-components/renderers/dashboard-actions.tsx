@@ -41,52 +41,29 @@ function ActionButton({
 	action,
 	href,
 	onNavigate,
-	primary,
 }: {
 	action: DashboardAction;
 	href: string;
 	onNavigate: () => void;
-	primary: boolean;
 }) {
 	const button = (
 		<Button
-			className={cn(
-				"h-7 min-w-0 max-w-full justify-start gap-1.5 px-2 text-xs",
-				primary &&
-					"bg-foreground text-background hover:bg-foreground/90 active:bg-foreground/80"
-			)}
+			className="h-7 min-w-0 max-w-full justify-start gap-1.5 px-2 text-xs"
 			onClick={onNavigate}
 			size="sm"
 			type="button"
-			variant={primary ? "secondary" : "ghost"}
+			variant="secondary"
 		>
-			{primary ? (
-				<CompassIcon
-					aria-hidden
-					className="size-3.5 shrink-0"
-					weight="duotone"
-				/>
-			) : null}
 			<span className="truncate">{action.label}</span>
 			{action.filters && action.filters.length > 0 ? (
-				<span
-					className={cn(
-						"inline-flex shrink-0 items-center gap-1 rounded border px-1 py-0.5 font-normal text-[10px]",
-						primary
-							? "border-background/15 bg-background/10 text-background/75"
-							: "border-border/60 bg-background/60 text-muted-foreground"
-					)}
-				>
+				<span className="inline-flex shrink-0 items-center gap-1 rounded border border-border/60 bg-background/60 px-1 py-0.5 font-normal text-[10px] text-muted-foreground">
 					<FilterIcon className="size-2.5" weight="duotone" />
 					{action.filters.length}
 				</span>
 			) : null}
 			<ArrowRightIcon
 				aria-hidden
-				className={cn(
-					"size-3.5 shrink-0",
-					primary ? "text-background/75" : "text-muted-foreground"
-				)}
+				className="size-3.5 shrink-0 text-muted-foreground"
 			/>
 		</Button>
 	);
@@ -155,7 +132,7 @@ export function DashboardActionsRenderer({
 					<span aria-hidden className="h-4 w-px bg-border/70" />
 				</>
 			) : null}
-			{resolvedActions.map(({ action, href }, index) => (
+			{resolvedActions.map(({ action, href }) => (
 				<ActionButton
 					action={action}
 					href={href}
@@ -166,7 +143,6 @@ export function DashboardActionsRenderer({
 						}
 						router.push(href);
 					}}
-					primary={index === 0}
 				/>
 			))}
 		</div>
