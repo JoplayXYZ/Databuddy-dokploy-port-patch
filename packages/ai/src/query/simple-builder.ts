@@ -904,7 +904,13 @@ export class SimpleQueryBuilder {
 
 	async execute(): Promise<Record<string, unknown>[]> {
 		const { sql, params } = this.compile();
-		const rawData = await chQuery<Record<string, unknown>>(sql, params);
+		const rawData = await chQuery<Record<string, unknown>>(
+			sql,
+			params,
+			this.config.noCache
+				? { clickhouse_settings: { use_query_cache: 0 } }
+				: undefined
+		);
 		return applyPlugins(rawData, this.config, this.websiteDomain);
 	}
 }

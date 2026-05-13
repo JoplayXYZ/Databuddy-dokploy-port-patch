@@ -71,4 +71,86 @@ describe("batch-executor schema signatures", () => {
 	it("region and city share a signature now that meta matches their SQL", () => {
 		expect(areQueriesCompatible("region", "city")).toBe(true);
 	});
+
+	it("every realtime builder opts out of the ClickHouse query cache", () => {
+		const realtimeTypes = Object.entries(QueryBuilders)
+			.filter(([, config]) => config.meta?.category === "Realtime")
+			.map(([type]) => type);
+		expect(realtimeTypes.length).toBeGreaterThan(0);
+		for (const type of realtimeTypes) {
+			expect(QueryBuilders[type]?.noCache).toBe(true);
+		}
+	});
+});
+
+describe("extractOuterSelectColumns", () => {
+	it("returns top-level projection on simple SELECT", () => {
+		expect(extractOuterSelectColumns("SELECT a, b FROM t")).toEqual(["a", "b"]);
+	});
+
+	it("ignores subquery projections in FROM", () => {
+		expect(
+			extractOuterSelectColumns(
+				"SELECT outer_a, outer_b FROM (SELECT inner_a, inner_b FROM t)"
+			)
+		).toEqual(["outer_a", "outer_b"]);
+	});
+
+	it("handles CTE WITH clauses", () => {
+		expect(
+			extractOuterSelectColumns(
+				"WITH c AS (SELECT x FROM s) SELECT a, b FROM c"
+			)
+		).toEqual(["a", "b"]);
+	});
+
+	it("strips aliases", () => {
+		expect(
+			extractOuterSelectColumns("SELECT count() AS total, max(x) AS m FROM t")
+		).toEqual(["total", "m"]);
+	});
+
+	it("does not treat FROM inside string literals as the projection end", () => {
+		expect(
+			extractOuterSelectColumns("SELECT 'x FROM y' AS s, b FROM t")
+		).toEqual(["s", "b"]);
+	});
+
+	it("does not treat SELECT/FROM inside line comments as keywords", () => {
+		expect(
+			extractOuterSelectColumns("SELECT a -- FROM commented\n, b FROM t")
+		).toEqual(["a", "b"]);
+	});
+
+	it("does not treat SELECT/FROM inside block comments as keywords", () => {
+		expect(
+			extractOuterSelectColumns(
+				"SELECT a /* FROM commented out */, b FROM t"
+			)
+		).toEqual(["a", "b"]);
+	});
+
+	it("does not split on commas inside string literals", () => {
+		expect(
+			extractOuterSelectColumns("SELECT 'a, b' AS s, c FROM t")
+		).toEqual(["s", "c"]);
+	});
+
+	it("treats quoted identifiers as identifiers, not keywords", () => {
+		expect(
+			extractOuterSelectColumns('SELECT "FROM" AS f, b FROM t')
+		).toEqual(["f", "b"]);
+	});
+
+	it("handles nested function calls without breaking on parens", () => {
+		expect(
+			extractOuterSelectColumns(
+				"SELECT count(if(x=1,1,0)) AS hits, avg(y) AS m FROM t"
+			)
+		).toEqual(["hits", "m"]);
+	});
+
+	it("returns empty list when no SELECT/FROM at depth zero", () => {
+		expect(extractOuterSelectColumns("DELETE FROM t WHERE x = 1")).toEqual([]);
+	});
 });

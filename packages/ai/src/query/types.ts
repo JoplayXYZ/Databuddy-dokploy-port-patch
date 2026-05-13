@@ -143,6 +143,7 @@ export interface SimpleQueryConfig {
 	idField?: string;
 	limit?: number;
 	meta?: QueryBuilderMeta;
+	noCache?: boolean;
 	orderBy?: string;
 	plugins?: QueryPlugins;
 	requiredFilters?: string[];

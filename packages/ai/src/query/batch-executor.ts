@@ -24,6 +24,64 @@ const FROM_KEYWORD = "FROM";
 const WORD_BOUNDARY_BEFORE = /[\s(,]/;
 const WORD_BOUNDARY_AFTER = /\s/;
 
+/**
+ * Replace string literals, quoted identifiers, and SQL comments with spaces of
+ * the same length so byte offsets line up with the original. The result is
+ * used only for structural scanning (keyword/paren/comma detection); columns
+ * are sliced from the original SQL so identifiers stay intact.
+ */
+export function maskSqlNoise(sql: string): string {
+	const out = new Array<string>(sql.length);
+	let i = 0;
+	while (i < sql.length) {
+		const ch = sql[i];
+		const next = sql[i + 1];
+		if (ch === "-" && next === "-") {
+			while (i < sql.length && sql[i] !== "\n") {
+				out[i++] = " ";
+			}
+			continue;
+		}
+		if (ch === "/" && next === "*") {
+			out[i++] = " ";
+			out[i++] = " ";
+			while (i < sql.length && !(sql[i] === "*" && sql[i + 1] === "/")) {
+				out[i++] = " ";
+			}
+			if (i < sql.length) {
+				out[i++] = " ";
+				out[i++] = " ";
+			}
+			continue;
+		}
+		if (ch === "'" || ch === '"' || ch === "`") {
+			const quote = ch;
+			out[i++] = " ";
+			while (i < sql.length) {
+				if (sql[i] === "\\" && i + 1 < sql.length) {
+					out[i++] = " ";
+					out[i++] = " ";
+					continue;
+				}
+				if (sql[i] === quote && sql[i + 1] === quote) {
+					out[i++] = " ";
+					out[i++] = " ";
+					continue;
+				}
+				if (sql[i] === quote) {
+					out[i++] = " ";
+					break;
+				}
+				out[i++] = " ";
+			}
+			continue;
+		}
+		out[i] = ch ?? "";
+		i++;
+	}
+	return out.join("");
+}
+
 function isKeywordAt(sql: string, idx: number, keyword: string): boolean {
 	if (sql.slice(idx, idx + keyword.length) !== keyword) {
 		return false;
@@ -38,10 +96,11 @@ function isKeywordAt(sql: string, idx: number, keyword: string): boolean {
 }
 
 function findOuterProjectionRange(sql: string): [number, number] | null {
+	const masked = maskSqlNoise(sql);
 	let depth = 0;
 	let outerSelect = -1;
-	for (let i = 0; i < sql.length; i++) {
-		const ch = sql[i];
+	for (let i = 0; i < masked.length; i++) {
+		const ch = masked[i];
 		if (ch === "(") {
 			depth++;
 			continue;
@@ -53,12 +112,12 @@ function findOuterProjectionRange(sql: string): [number, number] | null {
 		if (depth !== 0) {
 			continue;
 		}
-		if (isKeywordAt(sql, i, SELECT_KEYWORD)) {
+		if (isKeywordAt(masked, i, SELECT_KEYWORD)) {
 			outerSelect = i;
 			i += SELECT_KEYWORD.length - 1;
 			continue;
 		}
-		if (outerSelect !== -1 && isKeywordAt(sql, i, FROM_KEYWORD)) {
+		if (outerSelect !== -1 && isKeywordAt(masked, i, FROM_KEYWORD)) {
 			return [outerSelect + SELECT_KEYWORD.length, i];
 		}
 	}
@@ -70,32 +129,32 @@ export function extractOuterSelectColumns(sql: string): string[] {
 	if (!range) {
 		return [];
 	}
-	const body = sql.slice(range[0], range[1]);
+	const masked = maskSqlNoise(sql);
 	const parts: string[] = [];
 	let depth = 0;
-	let current = "";
-	for (const char of body) {
-		if (char === "(") {
+	let start = range[0];
+	for (let i = range[0]; i < range[1]; i++) {
+		const ch = masked[i];
+		if (ch === "(") {
 			depth++;
-		} else if (char === ")") {
+		} else if (ch === ")") {
 			depth--;
-		} else if (char === "," && depth === 0) {
-			parts.push(current.trim());
-			current = "";
-			continue;
+		} else if (ch === "," && depth === 0) {
+			parts.push(masked.slice(start, i).trim());
+			start = i + 1;
 		}
-		current += char;
 	}
-	if (current.trim()) {
-		parts.push(current.trim());
+	const tail = masked.slice(start, range[1]).trim();
+	if (tail) {
+		parts.push(tail);
 	}
 	return parts.map((part) => {
 		const aliasMatch = part.match(ALIAS_REGEX);
 		if (aliasMatch?.[1]) {
 			return aliasMatch[1];
 		}
-		const tail = part.split(TAIL_SPLIT_REGEX).pop() ?? part;
-		return tail.replace(QUOTE_STRIP_REGEX, "");
+		const lastToken = part.split(TAIL_SPLIT_REGEX).pop() ?? part;
+		return lastToken.replace(QUOTE_STRIP_REGEX, "");
 	});
 }
 
@@ -289,8 +348,17 @@ export function executeBatch(
 
 			try {
 				const { sql, params, indices } = buildUnionQuery(groupItems, opts);
+				const groupNoCache = groupItems.some(
+					({ req }) => QueryBuilders[req.type]?.noCache
+				);
 				const rawRows = await record("chUnionQuery", () =>
-					chQuery(sql, params)
+					chQuery(
+						sql,
+						params,
+						groupNoCache
+							? { clickhouse_settings: { use_query_cache: 0 } }
+							: undefined
+					)
 				);
 
 				mergeWideEvent({

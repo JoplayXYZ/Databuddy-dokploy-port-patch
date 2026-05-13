@@ -45,6 +45,7 @@ export const RealtimeBuilders: Record<string, SimpleQueryConfig> = {
 		limit: 10,
 		timeField: "time",
 		skipDateFilter: true,
+		noCache: true,
 		customizable: false,
 	},
 
@@ -101,6 +102,7 @@ export const RealtimeBuilders: Record<string, SimpleQueryConfig> = {
 		},
 		timeField: "time",
 		skipDateFilter: true,
+		noCache: true,
 		customizable: false,
 		plugins: { deduplicateReferrers: true, parseReferrers: true },
 	},
@@ -142,6 +144,7 @@ export const RealtimeBuilders: Record<string, SimpleQueryConfig> = {
 		limit: 50,
 		timeField: "time",
 		skipDateFilter: true,
+		noCache: true,
 		customizable: false,
 		plugins: { normalizeGeo: true, deduplicateGeo: true },
 	},
@@ -189,6 +192,7 @@ export const RealtimeBuilders: Record<string, SimpleQueryConfig> = {
 		limit: 30,
 		timeField: "time",
 		skipDateFilter: true,
+		noCache: true,
 		customizable: false,
 	},
 
@@ -248,6 +252,7 @@ export const RealtimeBuilders: Record<string, SimpleQueryConfig> = {
 		limit: 30,
 		timeField: "time",
 		skipDateFilter: true,
+		noCache: true,
 		customizable: false,
 	},
 
@@ -323,6 +328,7 @@ export const RealtimeBuilders: Record<string, SimpleQueryConfig> = {
 		},
 		timeField: "time",
 		skipDateFilter: true,
+		noCache: true,
 		customizable: false,
 	},
 
@@ -383,6 +389,7 @@ export const RealtimeBuilders: Record<string, SimpleQueryConfig> = {
 		},
 		timeField: "time",
 		skipDateFilter: true,
+		noCache: true,
 		customizable: false,
 	},
 };

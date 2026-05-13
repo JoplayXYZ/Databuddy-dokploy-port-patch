@@ -396,6 +396,17 @@ describe("SimpleQueryBuilder.compile", () => {
 		);
 	});
 
+	function whereClauseOf(sql: string): string {
+		const whereIdx = sql.indexOf("WHERE");
+		expect(whereIdx).toBeGreaterThanOrEqual(0);
+		const groupIdx = sql.indexOf("GROUP BY", whereIdx);
+		const orderIdx = sql.indexOf("ORDER BY", whereIdx);
+		const limitIdx = sql.indexOf("LIMIT", whereIdx);
+		const candidates = [groupIdx, orderIdx, limitIdx].filter((i) => i >= 0);
+		const endIdx = candidates.length ? Math.min(...candidates) : sql.length;
+		return sql.slice(whereIdx, endIdx);
+	}
+
 	it("skips having filters from the outer WHERE clause", () => {
 		const filters: Filter[] = [
 			{ field: "country", op: "eq", value: "US" },
@@ -404,7 +415,7 @@ describe("SimpleQueryBuilder.compile", () => {
 
 		const { sql, params } = compile({}, { filters });
 
-		const whereClause = sql.slice(sql.indexOf("WHERE"), sql.indexOf("GROUP BY"));
+		const whereClause = whereClauseOf(sql);
 		expect(whereClause).toContain("country = {f0:String}");
 		expect(whereClause).not.toMatch(/\bpath\b/);
 		expect(sql).toMatch(/HAVING[\s\S]*path[\s\S]*\{f\d+:String\}/);
@@ -419,7 +430,7 @@ describe("SimpleQueryBuilder.compile", () => {
 
 		const { sql } = compile({}, { filters });
 
-		const whereClause = sql.slice(sql.indexOf("WHERE"), sql.indexOf("GROUP BY"));
+		const whereClause = whereClauseOf(sql);
 		expect(whereClause).toContain("country = {f0:String}");
 		expect(whereClause).not.toMatch(/\bpath\b/);
 	});

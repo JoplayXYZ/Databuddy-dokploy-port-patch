@@ -363,6 +363,7 @@ export const SummaryBuilders: Record<string, SimpleQueryConfig> = {
 		],
 		timeField: "time",
 		skipDateFilter: true,
+		noCache: true,
 		customizable: false,
 	},
 };
