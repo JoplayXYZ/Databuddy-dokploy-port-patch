@@ -3,14 +3,14 @@ export const GUIDE_URI = "databuddy://guide";
 export const MCP_INSTRUCTIONS = `Databuddy: product analytics, errors, web vitals, feature flags, links.
 
 Pick the right tool:
-- get_data — typed analytics queries (top_pages, recent_errors, error_summary, …). Batch 2-10 with queries[].
+- get_data — typed analytics queries (top_pages, recent_errors, errors_by_type, …). Batch 2-10 with queries[].
 - summarize_insights / compare_metric / top_movers / detect_anomalies — pre-built insight wrappers; prefer over ask for known shapes.
-- ask — open-ended NL question. Slower, needs AI_GATEWAY_API_KEY. Reuse conversationId for follow-ups.
+- ask — open-ended NL question. Slower; only registered when the server has an AI gateway configured. Reuse conversationId for follow-ups.
 - capabilities — tool catalog and query types (filter by category to slim).
 - get_schema — ClickHouse columns. Use when a field name is uncertain.
 
 Conventions:
-- Website ref: websiteId, websiteName, or websiteDomain — any one works.
+- Website ref: any tool that needs a website accepts websiteId, websiteName, or websiteDomain — pass one.
 - Dates: a preset OR both from+to (YYYY-MM-DD). Defaults to last_7d. Passing only one of from/to is rejected.
 - Filters: 'field' is the column name in the schema. Errors list allowed fields and suggest close matches on typos.
 - Errors: errors_by_type groups by JS class (TypeError, …); error_types groups by error message. Both include count + affected users.
@@ -97,7 +97,7 @@ Always preview with \`confirmed=false\`, get explicit user approval, then run wi
 
 - Two error-grouping queries with similar names: \`errors_by_type\` groups by JS **class** (\`TypeError\`, …) — use this when triaging. \`error_types\` groups by error **message** string. Both return \`count\` and \`users\`.
 - \`error_type\` (filter field) is the JS class. Search error text with a filter on \`message\`.
-- Custom events: filter \`event_name\`, \`property_key\`, \`property_value\` — don't query the raw \`properties\` JSON.
+- Custom events discovery: \`get_data type=custom_events\` enumerates event names with counts. Then filter \`event_name\`, \`property_key\`, \`property_value\` — don't query the raw \`properties\` JSON.
 - \`recent_errors\` stack traces are capped at 1500 chars on the server.
 - Tool annotations reflect mutation kind: \`readOnlyHint\` for analytics queries, \`destructiveHint\` for delete/uninstall.
 - The whole MCP catalog is namespaced — when in doubt, call \`capabilities\` to see what's available.

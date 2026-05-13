@@ -10,6 +10,27 @@ import {
 import { QueryBuilders } from "../../query/builders";
 import { suggestQueryTypes } from "../../query";
 import type { Filter, QueryRequest } from "../../query/types";
+import { z } from "zod";
+
+export const FilterSchema = z.object({
+	field: z.string(),
+	op: z.enum([
+		"eq",
+		"ne",
+		"contains",
+		"not_contains",
+		"starts_with",
+		"in",
+		"not_in",
+	]),
+	value: z.union([
+		z.string(),
+		z.number(),
+		z.array(z.union([z.string(), z.number()])),
+	]),
+	target: z.string().optional(),
+	having: z.boolean().optional(),
+}) satisfies z.ZodType<Filter>;
 
 export {
 	MCP_DATE_PRESETS,

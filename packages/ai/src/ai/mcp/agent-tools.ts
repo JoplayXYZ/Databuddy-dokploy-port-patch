@@ -5,7 +5,7 @@ import { z } from "zod";
 import { getAccessibleWebsites } from "../../lib/accessible-websites";
 import { getWebsiteDomain } from "../../lib/website-utils";
 import { executeBatch, executeQuery } from "../../query";
-import type { Filter, QueryRequest } from "../../query/types";
+import type { QueryRequest } from "../../query/types";
 import { createAnnotationTools } from "../tools/annotations";
 import { createFlagTools } from "../tools/flags";
 import { createFunnelTools } from "../tools/funnels";
@@ -13,7 +13,11 @@ import { createGoalTools } from "../tools/goals";
 import { createLinksTools } from "../tools/links";
 import { createMemoryTools } from "../tools/memory";
 import { executeAgentSqlForWebsite } from "../tools/execute-sql-query";
-import { buildBatchQueryRequests, MCP_DATE_PRESETS } from "./mcp-utils";
+import {
+	buildBatchQueryRequests,
+	FilterSchema,
+	MCP_DATE_PRESETS,
+} from "./mcp-utils";
 import { createMcpProfileTools } from "./profile-tools";
 import {
 	createSlackConversationTools,
@@ -27,26 +31,6 @@ export interface McpAgentContext {
 	requestHeaders: Headers;
 	userId: string | null;
 }
-
-const FilterSchema = z.object({
-	field: z.string(),
-	op: z.enum([
-		"eq",
-		"ne",
-		"contains",
-		"not_contains",
-		"starts_with",
-		"in",
-		"not_in",
-	]),
-	value: z.union([
-		z.string(),
-		z.number(),
-		z.array(z.union([z.string(), z.number()])),
-	]),
-	target: z.string().optional(),
-	having: z.boolean().optional(),
-}) satisfies z.ZodType<Filter>;
 
 function getContext(ctx: unknown): McpAgentContext {
 	if (!ctx || typeof ctx !== "object" || !("requestHeaders" in ctx)) {

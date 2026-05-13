@@ -39,6 +39,7 @@ import {
 import { INSIGHT_TOOL_FACTORIES } from "./insights-tools";
 import {
 	buildBatchQueryRequests,
+	FilterSchema,
 	getFilteredQueryTypeDescriptions,
 	getQueryTypeDescriptions,
 	getQueryTypeDetails,
@@ -63,25 +64,17 @@ const GATEWAY_AUTH_ERROR_RE = /Unauthenticated|AI Gateway|AI_GATEWAY_API_KEY/i;
 
 const TIME_UNIT = ["minute", "hour", "day", "week", "month"] as const;
 
-const FilterSchema = z.object({
-	field: z.string(),
-	op: z.enum([
-		"eq",
-		"ne",
-		"contains",
-		"not_contains",
-		"starts_with",
-		"in",
-		"not_in",
-	]),
-	value: z.union([
-		z.string(),
-		z.number(),
-		z.array(z.union([z.string(), z.number()])),
-	]),
-	target: z.string().optional(),
-	having: z.boolean().optional(),
-});
+const WebsiteSelectorSchema = {
+	websiteId: z.string().optional().describe("Website ID from list_websites"),
+	websiteName: z
+		.string()
+		.optional()
+		.describe("Website name. Alternative to websiteId."),
+	websiteDomain: z
+		.string()
+		.optional()
+		.describe("Website domain. Alternative to websiteId."),
+} as const;
 
 const QueryItemSchema = z.object({
 	type: z.string(),
@@ -169,7 +162,7 @@ function writeMetadata(scopes: string[]): Partial<McpToolMetadata> {
 	};
 }
 
-function validateDate(value: string | undefined, field: string): void {
+function assertValidDate(value: string | undefined, field: string): void {
 	if (value && !dayjs(value).isValid()) {
 		throw new McpToolError("invalid_input", `${field} must be a valid date`);
 	}
@@ -190,11 +183,6 @@ function createChartContext(input: {
 		},
 		...(input.metrics ? { metrics: input.metrics } : {}),
 	};
-}
-
-function parseFlagRules(value: unknown): z.infer<typeof FlagRuleSchema>[] {
-	const result = z.array(FlagRuleSchema).safeParse(value);
-	return result.success ? result.data : [];
 }
 
 function asRecord(value: unknown): Record<string, unknown> {
@@ -253,16 +241,6 @@ const askTool = defineMcpTool(
 		ratelimit: { limit: 10, windowSec: 60 },
 	},
 	async (input, ctx) => {
-		if (!isAiGatewayConfigured) {
-			throw new McpToolError(
-				"internal",
-				"AI gateway is not configured on this server.",
-				{
-					hint: "Set AI_GATEWAY_API_KEY on the API process and restart. Meanwhile, use summarize_insights, compare_metric, top_movers, or get_data directly.",
-				}
-			);
-		}
-
 		const conversationId = input.conversationId ?? crypto.randomUUID();
 		const priorMessages = await getConversationHistory(
 			conversationId,
@@ -318,7 +296,7 @@ const listWebsitesTool = defineMcpTool(
 	{
 		name: "list_websites",
 		description:
-			"List websites the caller can access. Use first to discover websiteIds before any tool that needs one.",
+			"List websites the caller can access. Use only when the user hasn't named one — every other tool accepts websiteId, websiteName, or websiteDomain.",
 		inputSchema: z.object({}),
 		outputSchema: z.object({
 			websites: z.array(WebsiteSummarySchema),
@@ -347,18 +325,7 @@ const getDataTool = defineMcpTool(
 		description:
 			"Run analytics queries against a website. Single: type + preset/from/to. Batch: queries[] (2-10). Defaults to last_7d. Call capabilities for the query-type catalog and get_schema for column names. Filter/groupBy errors list allowed fields.",
 		inputSchema: z.object({
-			websiteId: z
-				.string()
-				.optional()
-				.describe("Website ID from list_websites"),
-			websiteName: z
-				.string()
-				.optional()
-				.describe("Website name. Alternative to websiteId."),
-			websiteDomain: z
-				.string()
-				.optional()
-				.describe("Website domain. Alternative to websiteId."),
+			...WebsiteSelectorSchema,
 			type: z
 				.string()
 				.optional()
@@ -512,7 +479,7 @@ const getSchemaTool = defineMcpTool(
 	{
 		name: "get_schema",
 		description:
-			"Return the ClickHouse analytics schema. Filter by section ('events','errors','vitals','outgoing') and toggle examples/guidelines to slim the payload. Use only when writing custom SQL.",
+			"Return the ClickHouse analytics schema (column names + types). Use when an unknown field name shows up in a filter rejection or when composing a custom query. Filter by section and toggle examples/guidelines to slim.",
 		inputSchema: z.object({
 			sections: z
 				.array(z.enum(SCHEMA_SECTIONS))
@@ -576,20 +543,18 @@ const CAPABILITY_DEFAULTS: readonly CapabilitySection[] = [
 
 const HINTS: readonly string[] = [
 	"For a deeper reference (workflow + footguns), read the databuddy://guide MCP resource",
-	"get_data accepts websiteId, websiteName, or websiteDomain — no need to call list_websites first if you know the name or domain",
+	"Every tool that takes a website accepts websiteId, websiteName, or websiteDomain — pass one. No need to call list_websites first if you already know the name or domain.",
 	"get_data batch: pass queries array (2-10 items, each with type + preset or from/to). Single: type + preset OR from+to. Defaults to last_7d.",
 	"capabilities is filterable: include=['hints'] for just hints, category='errors' to filter queryTypes, detail='full' for allowedFilters",
 	"get_schema is sectionable: sections=['events'] + includeExamples=false for the smallest useful payload",
-	"ask requires AI_GATEWAY_API_KEY on the API process; use summarize_insights/compare_metric/get_data as direct alternatives",
+	"Errors: errors_by_type groups by JS class (TypeError, …); error_types groups by error message. Both return count + users. Use errors_by_type for triage.",
 	"summarize_insights with no websiteId returns ORG-WIDE counts + per-site breakdown. Set includeDetail=true for description/suggestion on top priorities.",
 	"compare_metric accepts 'metrics' (array) to batch multiple metrics in a single pair of DB queries",
 	"detect_anomalies runs BOTH z-score (spikes) and week-over-week (gradual drops) by default; use method='wow' for trend-only",
 	"top_movers supports minDeltaPercent to drop small changes, and direction='up'|'down'|'both'",
 	"list_insights supports 'ids' for direct drill-down and 'fields' to slim the response",
 	"Workspace mutations use confirmed=false for preview and confirmed=true only after explicit user approval.",
-	"Feature flags: use list_flags first, then create_flag, update_flag, or add_users_to_flag for targeting changes.",
-	"Custom events: filter by event name with [{field:'event_name',op:'eq',value:'your-event'}]",
-	"Custom events: filter by property key with [{field:'property_key',op:'eq',value:'your-key'}] for property_top_values/distribution",
+	"Custom events discovery: get_data type=custom_events lists event names with counts. Then filter [{field:'event_name',op:'eq',value:'…'}] or [{field:'property_key',op:'eq',value:'…'}].",
 ];
 
 const capabilitiesTool = defineMcpTool(
@@ -689,7 +654,7 @@ const listFunnelsTool = defineMcpTool(
 		description:
 			"List funnels for a website with their steps and filters. Use before get_funnel_analytics or to enumerate available funnels.",
 		inputSchema: z.object({
-			websiteId: z.string().describe("Website ID from list_websites"),
+			...WebsiteSelectorSchema,
 		}),
 		outputSchema: z.object({
 			funnels: z.array(z.record(z.string(), z.unknown())),
@@ -699,11 +664,11 @@ const listFunnelsTool = defineMcpTool(
 		resolveWebsite: true,
 		ratelimit: { limit: 60, windowSec: 60 },
 	},
-	async (input, ctx) => {
+	async (_input, ctx) => {
 		const result = await callRPCProcedure(
 			"funnels",
 			"list",
-			{ websiteId: input.websiteId },
+			{ websiteId: ctx.websiteId },
 			buildRpcContext(ctx)
 		);
 		const funnels = Array.isArray(result) ? result : [];
@@ -724,8 +689,8 @@ const getFunnelAnalyticsTool = defineMcpTool(
 		description:
 			"Return per-step conversion, drop-off, and timing for one funnel. Use after list_funnels to analyze a specific funnelId.",
 		inputSchema: z.object({
+			...WebsiteSelectorSchema,
 			funnelId: z.string().describe("Funnel ID from list_funnels"),
-			websiteId: z.string().describe("Website ID from list_websites"),
 			from: z
 				.string()
 				.optional()
@@ -741,18 +706,14 @@ const getFunnelAnalyticsTool = defineMcpTool(
 		ratelimit: { limit: 60, windowSec: 60 },
 	},
 	async (input, ctx) => {
-		if (input.from && !dayjs(input.from).isValid()) {
-			throw new McpToolError("invalid_input", "from must be YYYY-MM-DD");
-		}
-		if (input.to && !dayjs(input.to).isValid()) {
-			throw new McpToolError("invalid_input", "to must be YYYY-MM-DD");
-		}
+		assertValidDate(input.from, "from");
+		assertValidDate(input.to, "to");
 		return await callRPCProcedure(
 			"funnels",
 			"getAnalytics",
 			{
 				funnelId: input.funnelId,
-				websiteId: input.websiteId,
+				websiteId: ctx.websiteId,
 				startDate: input.from,
 				endDate: input.to,
 			},
@@ -767,12 +728,7 @@ const createFunnelTool = defineMcpTool(
 		description:
 			"Create a funnel for a website. Call with confirmed=false for preview, then confirmed=true after explicit user approval.",
 		inputSchema: z.object({
-			websiteId: z
-				.string()
-				.optional()
-				.describe("Website ID from list_websites"),
-			websiteName: z.string().optional(),
-			websiteDomain: z.string().optional(),
+			...WebsiteSelectorSchema,
 			name: z.string().min(1).max(100),
 			description: z.string().optional(),
 			steps: z.array(FunnelStepSchema).min(2).max(10),
@@ -824,60 +780,13 @@ const createFunnelTool = defineMcpTool(
 	}
 );
 
-const summarizeFunnelsTool = defineMcpTool(
-	{
-		name: "summarize_funnels",
-		description:
-			"Summarize funnel definitions (names, ids, active state, step counts, targets). Use to discover funnelIds before get_funnel_analytics. Not for conversion data — that's get_funnel_analytics.",
-		inputSchema: z.object({
-			websiteId: z
-				.string()
-				.optional()
-				.describe("Website ID from list_websites"),
-			websiteName: z.string().optional(),
-			websiteDomain: z.string().optional(),
-		}),
-		outputSchema: z.object({
-			funnels: z.array(z.record(z.string(), z.unknown())),
-			count: z.number(),
-		}),
-		resolveWebsite: true,
-		ratelimit: { limit: 60, windowSec: 60 },
-	},
-	async (_input, ctx) => {
-		const result = await callRPCProcedure(
-			"funnels",
-			"list",
-			{ websiteId: ctx.websiteId },
-			buildRpcContext(ctx)
-		);
-		const funnels = Array.isArray(result) ? result : [];
-		return {
-			funnels: funnels.map((funnel) => {
-				const row = asRecord(funnel);
-				const steps = Array.isArray(row.steps) ? row.steps : [];
-				return {
-					id: row.id,
-					name: row.name,
-					description: row.description,
-					isActive: row.isActive,
-					stepCount: steps.length,
-					steps,
-					updatedAt: row.updatedAt,
-				};
-			}),
-			count: funnels.length,
-		};
-	}
-);
-
 const listGoalsTool = defineMcpTool(
 	{
 		name: "list_goals",
 		description:
 			"List conversion goals for a website with their type, target, and filters. Use before get_goal_analytics.",
 		inputSchema: z.object({
-			websiteId: z.string().describe("Website ID from list_websites"),
+			...WebsiteSelectorSchema,
 		}),
 		outputSchema: z.object({
 			goals: z.array(z.record(z.string(), z.unknown())),
@@ -887,11 +796,11 @@ const listGoalsTool = defineMcpTool(
 		resolveWebsite: true,
 		ratelimit: { limit: 60, windowSec: 60 },
 	},
-	async (input, ctx) => {
+	async (_input, ctx) => {
 		const result = await callRPCProcedure(
 			"goals",
 			"list",
-			{ websiteId: input.websiteId },
+			{ websiteId: ctx.websiteId },
 			buildRpcContext(ctx)
 		);
 		const goals = Array.isArray(result) ? result : [];
@@ -912,8 +821,8 @@ const getGoalAnalyticsTool = defineMcpTool(
 		description:
 			"Return entered/completed counts and conversion rate for one goalId. Use after list_goals.",
 		inputSchema: z.object({
+			...WebsiteSelectorSchema,
 			goalId: z.string().describe("Goal ID from list_goals"),
-			websiteId: z.string().describe("Website ID from list_websites"),
 			from: z
 				.string()
 				.optional()
@@ -929,18 +838,14 @@ const getGoalAnalyticsTool = defineMcpTool(
 		ratelimit: { limit: 60, windowSec: 60 },
 	},
 	async (input, ctx) => {
-		if (input.from && !dayjs(input.from).isValid()) {
-			throw new McpToolError("invalid_input", "from must be YYYY-MM-DD");
-		}
-		if (input.to && !dayjs(input.to).isValid()) {
-			throw new McpToolError("invalid_input", "to must be YYYY-MM-DD");
-		}
+		assertValidDate(input.from, "from");
+		assertValidDate(input.to, "to");
 		return await callRPCProcedure(
 			"goals",
 			"getAnalytics",
 			{
 				goalId: input.goalId,
-				websiteId: input.websiteId,
+				websiteId: ctx.websiteId,
 				startDate: input.from,
 				endDate: input.to,
 			},
@@ -955,12 +860,7 @@ const createGoalTool = defineMcpTool(
 		description:
 			"Create a conversion goal. Call with confirmed=false for preview, then confirmed=true after explicit user approval.",
 		inputSchema: z.object({
-			websiteId: z
-				.string()
-				.optional()
-				.describe("Website ID from list_websites"),
-			websiteName: z.string().optional(),
-			websiteDomain: z.string().optional(),
+			...WebsiteSelectorSchema,
 			type: z.enum(["PAGE_VIEW", "EVENT", "CUSTOM"]),
 			target: z.string().min(1),
 			name: z.string().min(1).max(100),
@@ -1020,7 +920,7 @@ const listLinkFoldersTool = defineMcpTool(
 		description:
 			"List existing short-link folders for the website organization, including link counts. Use this before assigning a link to a folder.",
 		inputSchema: z.object({
-			websiteId: z.string().describe("Website ID from list_websites"),
+			...WebsiteSelectorSchema,
 		}),
 		outputSchema: z.object({
 			folders: z.array(LinkFolderWithUsageSchema),
@@ -1031,8 +931,8 @@ const listLinkFoldersTool = defineMcpTool(
 		resolveWebsite: true,
 		ratelimit: { limit: 60, windowSec: 60 },
 	},
-	async (input, ctx) => {
-		const orgId = await getOrganizationId(input.websiteId);
+	async (_input, ctx) => {
+		const orgId = await getOrganizationId(getResolvedWebsiteId(ctx));
 		if (orgId instanceof Error) {
 			throw new McpToolError("not_found", orgId.message);
 		}
@@ -1061,7 +961,7 @@ const listLinksTool = defineMcpTool(
 		description:
 			"List short links and existing folders for the website's organization. Use to enumerate all links before referencing one or choosing where a new link should go.",
 		inputSchema: z.object({
-			websiteId: z.string().describe("Website ID from list_websites"),
+			...WebsiteSelectorSchema,
 		}),
 		outputSchema: z.object({
 			links: z.array(LinkRowOutputSchema),
@@ -1073,8 +973,8 @@ const listLinksTool = defineMcpTool(
 		resolveWebsite: true,
 		ratelimit: { limit: 60, windowSec: 60 },
 	},
-	async (input, ctx) => {
-		const orgId = await getOrganizationId(input.websiteId);
+	async (_input, ctx) => {
+		const orgId = await getOrganizationId(getResolvedWebsiteId(ctx));
 		if (orgId instanceof Error) {
 			throw new McpToolError("not_found", orgId.message);
 		}
@@ -1107,7 +1007,7 @@ const searchLinksTool = defineMcpTool(
 		description:
 			"Find short links matching a substring on name, slug, target URL, or external ID. Use when you know part of a link identifier.",
 		inputSchema: z.object({
-			websiteId: z.string().describe("Website ID from list_websites"),
+			...WebsiteSelectorSchema,
 			query: z
 				.string()
 				.min(1)
@@ -1131,7 +1031,7 @@ const searchLinksTool = defineMcpTool(
 		ratelimit: { limit: 60, windowSec: 60 },
 	},
 	async (input, ctx) => {
-		const orgId = await getOrganizationId(input.websiteId);
+		const orgId = await getOrganizationId(getResolvedWebsiteId(ctx));
 		if (orgId instanceof Error) {
 			throw new McpToolError("not_found", orgId.message);
 		}
@@ -1169,12 +1069,7 @@ const createLinkTool = defineMcpTool(
 		description:
 			"Create a short link for the website organization. Call with confirmed=false for preview first.",
 		inputSchema: z.object({
-			websiteId: z
-				.string()
-				.optional()
-				.describe("Website ID from list_websites"),
-			websiteName: z.string().optional(),
-			websiteDomain: z.string().optional(),
+			...WebsiteSelectorSchema,
 			name: z.string().min(1).max(255),
 			targetUrl: z.string().url(),
 			slug: z
@@ -1199,7 +1094,7 @@ const createLinkTool = defineMcpTool(
 		ratelimit: { limit: 20, windowSec: 60 },
 	},
 	async (input, ctx) => {
-		validateDate(input.expiresAt, "expiresAt");
+		assertValidDate(input.expiresAt, "expiresAt");
 		const orgId = await getOrganizationId(getResolvedWebsiteId(ctx));
 		if (orgId instanceof Error) {
 			throw new McpToolError("not_found", orgId.message);
@@ -1270,12 +1165,7 @@ const listAnnotationsTool = defineMcpTool(
 		description:
 			"List chart annotations for a website over a date range. Defaults to the last 30 days.",
 		inputSchema: z.object({
-			websiteId: z
-				.string()
-				.optional()
-				.describe("Website ID from list_websites"),
-			websiteName: z.string().optional(),
-			websiteDomain: z.string().optional(),
+			...WebsiteSelectorSchema,
 			from: z.string().optional(),
 			to: z.string().optional(),
 			granularity: z.enum(["hourly", "daily", "weekly", "monthly"]).optional(),
@@ -1290,8 +1180,8 @@ const listAnnotationsTool = defineMcpTool(
 		ratelimit: { limit: 60, windowSec: 60 },
 	},
 	async (input, ctx) => {
-		validateDate(input.from, "from");
-		validateDate(input.to, "to");
+		assertValidDate(input.from, "from");
+		assertValidDate(input.to, "to");
 		const result = await callRPCProcedure(
 			"annotations",
 			"list",
@@ -1313,12 +1203,7 @@ const createAnnotationTool = defineMcpTool(
 		description:
 			"Create a chart annotation. Call with confirmed=false for preview before writing.",
 		inputSchema: z.object({
-			websiteId: z
-				.string()
-				.optional()
-				.describe("Website ID from list_websites"),
-			websiteName: z.string().optional(),
-			websiteDomain: z.string().optional(),
+			...WebsiteSelectorSchema,
 			chartContext: ChartContextSchema.optional(),
 			annotationType: z.enum(["point", "line", "range"]),
 			xValue: z.string(),
@@ -1336,8 +1221,8 @@ const createAnnotationTool = defineMcpTool(
 		ratelimit: { limit: 20, windowSec: 60 },
 	},
 	async (input, ctx) => {
-		validateDate(input.xValue, "xValue");
-		validateDate(input.xEndValue, "xEndValue");
+		assertValidDate(input.xValue, "xValue");
+		assertValidDate(input.xEndValue, "xEndValue");
 		if (input.annotationType === "range" && !input.xEndValue) {
 			throw new McpToolError(
 				"invalid_input",
@@ -1402,12 +1287,7 @@ const listFlagsTool = defineMcpTool(
 		description:
 			"List feature flags for a website. Use before updating flag rollout, rules, or status.",
 		inputSchema: z.object({
-			websiteId: z
-				.string()
-				.optional()
-				.describe("Website ID from list_websites"),
-			websiteName: z.string().optional(),
-			websiteDomain: z.string().optional(),
+			...WebsiteSelectorSchema,
 			status: FlagStatusSchema.optional(),
 		}),
 		outputSchema: z.object({
@@ -1435,12 +1315,7 @@ const createFlagTool = defineMcpTool(
 		description:
 			"Create a feature flag. Defaults to inactive boolean flag until explicitly configured.",
 		inputSchema: z.object({
-			websiteId: z
-				.string()
-				.optional()
-				.describe("Website ID from list_websites"),
-			websiteName: z.string().optional(),
-			websiteDomain: z.string().optional(),
+			...WebsiteSelectorSchema,
 			key: z
 				.string()
 				.min(1)
@@ -1581,12 +1456,7 @@ const addUsersToFlagTool = defineMcpTool(
 		description:
 			"Add user IDs or emails to a feature flag targeting rule. Appends by default, replaces when mode=replace.",
 		inputSchema: z.object({
-			websiteId: z
-				.string()
-				.optional()
-				.describe("Website ID from list_websites"),
-			websiteName: z.string().optional(),
-			websiteDomain: z.string().optional(),
+			...WebsiteSelectorSchema,
 			flagId: z.string(),
 			users: z.array(z.string().min(1)).min(1).max(500),
 			matchBy: z.enum(["email", "user_id"]).optional().default("email"),
@@ -1610,7 +1480,8 @@ const addUsersToFlagTool = defineMcpTool(
 				buildRpcContext(ctx)
 			)
 		);
-		const currentRules = parseFlagRules(currentFlag.rules);
+		const currentRules =
+			z.array(FlagRuleSchema).safeParse(currentFlag.rules).data ?? [];
 		const nextRule = createFlagUserRule(input.matchBy, uniqueUsers);
 		const nextRules =
 			input.mode === "replace" ? [nextRule] : [...currentRules, nextRule];
@@ -1778,7 +1649,7 @@ const forgetMemoryTool = defineMcpTool(
 );
 
 const TOOL_REGISTRY = createToolRegistry([
-	askTool,
+	...(isAiGatewayConfigured ? [askTool] : []),
 	listWebsitesTool,
 	getDataTool,
 	getSchemaTool,
@@ -1786,7 +1657,6 @@ const TOOL_REGISTRY = createToolRegistry([
 	listFunnelsTool,
 	getFunnelAnalyticsTool,
 	createFunnelTool,
-	summarizeFunnelsTool,
 	listGoalsTool,
 	getGoalAnalyticsTool,
 	createGoalTool,
