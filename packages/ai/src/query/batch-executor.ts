@@ -16,11 +16,84 @@ interface BatchOptions {
 	websiteDomain?: string | null;
 }
 
-function getSchemaSignature(config: SimpleQueryConfig): string | null {
-	const fields = config.meta?.output_fields;
-	return fields?.length
-		? fields.map((f) => `${f.name}:${f.type}`).join(",")
-		: null;
+const ALIAS_REGEX = /\s+as\s+([\w]+)\s*$/i;
+const TAIL_SPLIT_REGEX = /[\s.]/;
+const QUOTE_STRIP_REGEX = /[`"']/g;
+
+function extractLastSelectColumns(sql: string): string[] {
+	const lastSelectIdx = sql.lastIndexOf("SELECT");
+	const fromIdx = sql.indexOf("FROM", lastSelectIdx);
+	if (lastSelectIdx === -1 || fromIdx === -1) {
+		return [];
+	}
+	const body = sql.slice(lastSelectIdx + "SELECT".length, fromIdx);
+	const parts: string[] = [];
+	let depth = 0;
+	let current = "";
+	for (const char of body) {
+		if (char === "(") {
+			depth++;
+		} else if (char === ")") {
+			depth--;
+		} else if (char === "," && depth === 0) {
+			parts.push(current.trim());
+			current = "";
+			continue;
+		}
+		current += char;
+	}
+	if (current.trim()) {
+		parts.push(current.trim());
+	}
+	return parts.map((part) => {
+		const aliasMatch = part.match(ALIAS_REGEX);
+		if (aliasMatch?.[1]) {
+			return aliasMatch[1];
+		}
+		const tail = part.split(TAIL_SPLIT_REGEX).pop() ?? part;
+		return tail.replace(QUOTE_STRIP_REGEX, "");
+	});
+}
+
+const signatureCache = new Map<string, string | null>();
+
+function probeSignature(
+	type: string,
+	config: SimpleQueryConfig
+): string | null {
+	if (signatureCache.has(type)) {
+		return signatureCache.get(type) ?? null;
+	}
+
+	let signature: string | null = null;
+	try {
+		const builder = new SimpleQueryBuilder(config, {
+			projectId: "__signature_probe__",
+			type,
+			from: "2026-01-01",
+			to: "2026-01-02",
+			timeUnit: "day",
+			filters: (config.requiredFilters ?? []).map((field) => ({
+				field,
+				op: "eq",
+				value: "__probe__",
+			})),
+		});
+		const columns = extractLastSelectColumns(builder.compile().sql);
+		signature = columns.length ? columns.join(",") : null;
+	} catch {
+		signature = null;
+	}
+
+	signatureCache.set(type, signature);
+	return signature;
+}
+
+function getSchemaSignature(
+	type: string,
+	config: SimpleQueryConfig
+): string | null {
+	return probeSignature(type, config);
 }
 
 function runSingle(
@@ -77,7 +150,7 @@ function groupBySchema(
 			continue;
 		}
 
-		const sig = getSchemaSignature(config) || `__solo_${req.type}`;
+		const sig = getSchemaSignature(req.type, config) || `__solo_${req.type}`;
 		const list = groups.get(sig) || [];
 		list.push({ index: i, req });
 		groups.set(sig, list);
@@ -235,19 +308,22 @@ export function areQueriesCompatible(type1: string, type2: string): boolean {
 	if (!(c1 && c2)) {
 		return false;
 	}
-	const [s1, s2] = [getSchemaSignature(c1), getSchemaSignature(c2)];
+	const [s1, s2] = [
+		getSchemaSignature(type1, c1),
+		getSchemaSignature(type2, c2),
+	];
 	return Boolean(s1 && s2 && s1 === s2);
 }
 
 export function getCompatibleQueries(type: string): string[] {
 	const config = QueryBuilders[type];
-	const sig = config ? getSchemaSignature(config) : null;
+	const sig = config ? getSchemaSignature(type, config) : null;
 	if (!sig) {
 		return [];
 	}
 
 	return Object.entries(QueryBuilders)
-		.filter(([t, c]) => t !== type && getSchemaSignature(c) === sig)
+		.filter(([t, c]) => t !== type && getSchemaSignature(t, c) === sig)
 		.map(([t]) => t);
 }
 
@@ -255,7 +331,7 @@ export function getSchemaGroups(): Map<string, string[]> {
 	const groups = new Map<string, string[]>();
 
 	for (const [type, config] of Object.entries(QueryBuilders)) {
-		const sig = getSchemaSignature(config);
+		const sig = getSchemaSignature(type, config);
 		if (!sig) {
 			continue;
 		}
