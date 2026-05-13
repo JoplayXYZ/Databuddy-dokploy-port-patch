@@ -4,7 +4,6 @@ import {
 	normalizeClickHouseDateTime,
 	padToClickHouseDateTime,
 } from "./date-utils";
-import type { Granularity } from "./expressions";
 import {
 	compileConfigField,
 	Expressions,
@@ -17,6 +16,7 @@ import type {
 	ConfigField,
 	CTEDefinition,
 	Filter,
+	Granularity,
 	QueryRequest,
 	SimpleQueryConfig,
 	TimeBucketConfig,

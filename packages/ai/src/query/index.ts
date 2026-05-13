@@ -2,11 +2,7 @@
 import { z } from "zod";
 import { QueryBuilders } from "./builders";
 import { SimpleQueryBuilder } from "./simple-builder";
-import {
-	FilterOperators,
-	type QueryRequest,
-	TimeGranularity,
-} from "./types";
+import type { FilterOperators, QueryRequest, TimeGranularity } from "./types";
 
 const FILTER_OPS = [
 	"eq",
@@ -26,7 +22,11 @@ const TIME_UNITS = [
 	"month",
 	"hourly",
 	"daily",
-] as const satisfies readonly (keyof typeof TimeGranularity | "hourly" | "daily")[];
+] as const satisfies readonly (
+	| keyof typeof TimeGranularity
+	| "hourly"
+	| "daily"
+)[];
 
 const filterOpEnum = z.enum(FILTER_OPS);
 const timeUnitEnum = z.enum(TIME_UNITS);

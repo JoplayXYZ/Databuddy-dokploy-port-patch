@@ -3,12 +3,7 @@ import type {
 	Granularity,
 	SqlExpression,
 	TimeUnit,
-} from "./primitives";
-export type {
-	AliasedExpression,
-	Granularity,
-	SqlExpression,
-} from "./primitives";
+} from "./types";
 
 function expr(sql: string): SqlExpression {
 	return sql as SqlExpression;

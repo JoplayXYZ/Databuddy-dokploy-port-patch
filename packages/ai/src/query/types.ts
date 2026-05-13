@@ -1,4 +1,11 @@
-import type { AliasedExpression, Granularity } from "./primitives";
+export type Granularity = "minute" | "hour" | "day" | "week" | "month";
+
+export type SqlExpression = string & { readonly __brand: "SqlExpression" };
+
+export interface AliasedExpression {
+	readonly alias: string;
+	readonly expression: SqlExpression;
+}
 
 export type QueryFieldType =
 	| "string"
@@ -60,7 +67,7 @@ export const TimeGranularity = {
 } as const;
 
 export type FilterOperator = keyof typeof FilterOperators;
-export type TimeUnit = keyof typeof TimeGranularity | "hourly" | "daily";
+export type TimeUnit = Granularity | "hourly" | "daily";
 
 export interface Filter {
 	field: string;
