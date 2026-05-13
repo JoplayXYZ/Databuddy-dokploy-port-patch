@@ -144,6 +144,7 @@ export const LinkShortenerBuilders: Record<string, SimpleQueryConfig> = {
 		customizable: false,
 	},
 
+	// SQL output only; parseReferrers plugin adds source/domain/referrer_type/parsed_referrer at runtime.
 	link_top_referrers: {
 		meta: {
 			title: "Link Top Referrers",
@@ -162,24 +163,6 @@ export const LinkShortenerBuilders: Record<string, SimpleQueryConfig> = {
 					type: "string",
 					label: "Referrer",
 					description: "The referring source URL",
-				},
-				{
-					name: "source",
-					type: "string",
-					label: "Source",
-					description: "Alias for the canonical raw referrer value",
-				},
-				{
-					name: "domain",
-					type: "string",
-					label: "Domain",
-					description: "The parsed referring domain",
-				},
-				{
-					name: "referrer_type",
-					type: "string",
-					label: "Referrer Type",
-					description: "The parsed source category",
 				},
 				{
 					name: "clicks",
@@ -207,6 +190,7 @@ export const LinkShortenerBuilders: Record<string, SimpleQueryConfig> = {
 		plugins: { deduplicateReferrers: true, parseReferrers: true },
 	},
 
+	// SQL output only; normalizeGeo plugin adds country_code/country_name at runtime.
 	link_top_countries: {
 		meta: {
 			title: "Link Top Countries",
@@ -221,16 +205,10 @@ export const LinkShortenerBuilders: Record<string, SimpleQueryConfig> = {
 					description: "The country name",
 				},
 				{
-					name: "country_code",
+					name: "country",
 					type: "string",
-					label: "Country Code",
-					description: "The country code",
-				},
-				{
-					name: "country_name",
-					type: "string",
-					label: "Country Name",
-					description: "The country name (same as name for countries)",
+					label: "Country",
+					description: "Raw country value from the query",
 				},
 				{
 					name: "clicks",
@@ -258,6 +236,7 @@ export const LinkShortenerBuilders: Record<string, SimpleQueryConfig> = {
 		plugins: { normalizeGeo: true },
 	},
 
+	// SQL output only; normalizeGeo plugin adds country_code/country_name at runtime.
 	link_top_regions: {
 		meta: {
 			title: "Link Top Regions",
@@ -272,16 +251,10 @@ export const LinkShortenerBuilders: Record<string, SimpleQueryConfig> = {
 					description: "The region name",
 				},
 				{
-					name: "country_code",
+					name: "country",
 					type: "string",
-					label: "Country Code",
-					description: "The country code",
-				},
-				{
-					name: "country_name",
-					type: "string",
-					label: "Country Name",
-					description: "The country name",
+					label: "Country",
+					description: "Raw country value from the query",
 				},
 				{
 					name: "clicks",
@@ -309,6 +282,7 @@ export const LinkShortenerBuilders: Record<string, SimpleQueryConfig> = {
 		plugins: { normalizeGeo: true },
 	},
 
+	// SQL output only; normalizeGeo plugin adds country_code/country_name at runtime.
 	link_top_cities: {
 		meta: {
 			title: "Link Top Cities",
@@ -323,16 +297,10 @@ export const LinkShortenerBuilders: Record<string, SimpleQueryConfig> = {
 					description: "The city name",
 				},
 				{
-					name: "country_code",
+					name: "country",
 					type: "string",
-					label: "Country Code",
-					description: "The country code",
-				},
-				{
-					name: "country_name",
-					type: "string",
-					label: "Country Name",
-					description: "The country name",
+					label: "Country",
+					description: "Raw country value from the query",
 				},
 				{
 					name: "clicks",

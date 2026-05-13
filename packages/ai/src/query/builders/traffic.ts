@@ -3,6 +3,7 @@ import { Expressions } from "../expressions";
 import type { SimpleQueryConfig } from "../types";
 
 export const TrafficBuilders: Record<string, SimpleQueryConfig> = {
+	// SQL output only; parseReferrers plugin adds referrer/source/domain/referrer_type/parsed_referrer at runtime.
 	top_referrers: {
 		meta: {
 			title: "Top Referrers",
@@ -16,30 +17,6 @@ export const TrafficBuilders: Record<string, SimpleQueryConfig> = {
 					type: "string",
 					label: "Referrer Domain",
 					description: "The referring domain or website",
-				},
-				{
-					name: "referrer",
-					type: "string",
-					label: "Referrer",
-					description: "Canonical raw referrer value",
-				},
-				{
-					name: "source",
-					type: "string",
-					label: "Source",
-					description: "Alias for the canonical raw referrer value",
-				},
-				{
-					name: "domain",
-					type: "string",
-					label: "Domain",
-					description: "Parsed referring domain",
-				},
-				{
-					name: "referrer_type",
-					type: "string",
-					label: "Referrer Type",
-					description: "Parsed source category",
 				},
 				{
 					name: "pageviews",
@@ -411,6 +388,7 @@ export const TrafficBuilders: Record<string, SimpleQueryConfig> = {
 		customizable: true,
 	},
 
+	// SQL output only; parseReferrers plugin adds referrer/source/domain/referrer_type/parsed_referrer at runtime.
 	traffic_sources: {
 		meta: {
 			title: "Traffic Sources",
@@ -424,30 +402,6 @@ export const TrafficBuilders: Record<string, SimpleQueryConfig> = {
 					type: "string",
 					label: "Source",
 					description: "The traffic source name or referrer domain",
-				},
-				{
-					name: "referrer",
-					type: "string",
-					label: "Referrer",
-					description: "Canonical raw referrer value",
-				},
-				{
-					name: "source",
-					type: "string",
-					label: "Source",
-					description: "Alias for the canonical raw referrer value",
-				},
-				{
-					name: "domain",
-					type: "string",
-					label: "Domain",
-					description: "Parsed referring domain",
-				},
-				{
-					name: "referrer_type",
-					type: "string",
-					label: "Referrer Type",
-					description: "Parsed source category",
 				},
 				{
 					name: "pageviews",

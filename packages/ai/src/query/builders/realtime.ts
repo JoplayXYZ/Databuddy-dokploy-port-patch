@@ -17,16 +17,16 @@ export const RealtimeBuilders: Record<string, SimpleQueryConfig> = {
 					description: "Page path",
 				},
 				{
-					name: "visitors",
-					type: "number",
-					label: "Active Visitors",
-					description: "Unique visitors on this page in the last 5 minutes",
-				},
-				{
 					name: "pageviews",
 					type: "number",
 					label: "Pageviews",
 					description: "Total pageviews in the last 5 minutes",
+				},
+				{
+					name: "visitors",
+					type: "number",
+					label: "Active Visitors",
+					description: "Unique visitors on this page in the last 5 minutes",
 				},
 			],
 			default_visualization: "table",
@@ -57,41 +57,16 @@ export const RealtimeBuilders: Record<string, SimpleQueryConfig> = {
 			tags: ["realtime", "referrers", "live", "sources"],
 			output_fields: [
 				{
-					name: "name",
+					name: "anonymous_id",
 					type: "string",
-					label: "Source",
-					description: "Parsed display name for the referrer",
+					label: "Anonymous ID",
+					description: "Anonymous visitor identifier",
 				},
 				{
 					name: "referrer",
 					type: "string",
 					label: "Referrer",
-					description: "Canonical raw referrer value",
-				},
-				{
-					name: "source",
-					type: "string",
-					label: "Source",
-					description: "Alias for the canonical raw referrer value",
-				},
-				{
-					name: "domain",
-					type: "string",
-					label: "Domain",
-					description: "Parsed referring domain",
-				},
-				{
-					name: "referrer_type",
-					type: "string",
-					label: "Referrer Type",
-					description: "Parsed source category",
-				},
-				{
-					name: "visitors",
-					type: "number",
-					label: "Active Visitors",
-					description:
-						"Unique visitors from this referrer in the last 5 minutes",
+					description: "Referrer domain or 'Direct'",
 				},
 			],
 			default_visualization: "table",
@@ -138,7 +113,7 @@ export const RealtimeBuilders: Record<string, SimpleQueryConfig> = {
 			tags: ["realtime", "countries", "geography", "live"],
 			output_fields: [
 				{
-					name: "country",
+					name: "name",
 					type: "string",
 					label: "Country",
 					description: "Country code",
@@ -148,18 +123,6 @@ export const RealtimeBuilders: Record<string, SimpleQueryConfig> = {
 					type: "number",
 					label: "Active Visitors",
 					description: "Unique visitors from this country",
-				},
-				{
-					name: "latitude",
-					type: "number",
-					label: "Latitude",
-					description: "Country centroid latitude",
-				},
-				{
-					name: "longitude",
-					type: "number",
-					label: "Longitude",
-					description: "Country centroid longitude",
 				},
 			],
 			default_visualization: "table",
