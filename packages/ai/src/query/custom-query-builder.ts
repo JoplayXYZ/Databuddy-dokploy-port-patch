@@ -292,9 +292,9 @@ function buildSQL(
 		end_date: endDate,
 	};
 
+	const usedAliases = new Set<string>();
 	const selectExpressions = config.selects.map((select: CustomQuerySelect) => {
 		const sqlExpr = aggregateToSQL(select.aggregate, select.field);
-
 		const autoAlias = `${select.aggregate}_${select.field === "*" ? "all" : select.field}`;
 
 		let alias = autoAlias;
@@ -308,14 +308,14 @@ function buildSQL(
 			alias = select.alias;
 		}
 
+		usedAliases.add(alias);
 		return `${sqlExpr} AS ${alias}`;
 	});
 
-	if (config.groupBy && config.groupBy.length > 0) {
-		for (const field of config.groupBy) {
-			if (!selectExpressions.some((expr: string) => expr.includes(field))) {
-				selectExpressions.unshift(field);
-			}
+	for (const field of config.groupBy ?? []) {
+		if (!usedAliases.has(field)) {
+			selectExpressions.unshift(field);
+			usedAliases.add(field);
 		}
 	}
 
