@@ -299,35 +299,19 @@ export function useBatchDynamicQuery(
 		}
 
 		return query.data.results.map((result) => {
-			const processedResult = {
-				queryId: result.queryId,
-				success: false,
-				data: {} as Record<string, any>,
-				errors: [] as Array<{ parameter: string; error?: string }>,
-				meta: result.meta,
-				rawResult: result,
-			};
+			const data: Record<string, any> = {};
+			let success = false;
 
 			if (result.data && Array.isArray(result.data)) {
 				for (const paramResult of result.data) {
 					if (paramResult.success && paramResult.data) {
-						processedResult.data[paramResult.parameter] = paramResult.data;
-						processedResult.success = true;
-					} else {
-						processedResult.errors.push({
-							parameter: paramResult.parameter,
-							error: paramResult.error,
-						});
+						data[paramResult.parameter] = paramResult.data;
+						success = true;
 					}
 				}
-			} else {
-				processedResult.errors.push({
-					parameter: "query",
-					error: "No data array found in response",
-				});
 			}
 
-			return processedResult;
+			return { queryId: result.queryId, success, data };
 		});
 	}, [query.data]);
 
@@ -337,36 +321,13 @@ export function useBatchDynamicQuery(
 			if (!result?.success) {
 				return [];
 			}
-			const data = result.data[parameter];
-			return data || [];
-		},
-		[processedResults]
-	);
-
-	const hasDataForQuery = useCallback(
-		(queryId: string, parameter: string) => {
-			const result = processedResults.find((r) => r.queryId === queryId);
-			return (
-				result?.success &&
-				result.data[parameter] &&
-				Array.isArray(result.data[parameter]) &&
-				result.data[parameter].length > 0
-			);
-		},
-		[processedResults]
-	);
-
-	const getErrorsForQuery = useCallback(
-		(queryId: string) => {
-			const result = processedResults.find((r) => r.queryId === queryId);
-			return result?.errors || [];
+			return result.data[parameter] || [];
 		},
 		[processedResults]
 	);
 
 	return {
 		results: processedResults,
-		meta: query.data?.meta,
 		isLoading: query.isLoading || query.isFetching || query.isPending,
 		isError: query.isError,
 		error: query.error,
@@ -374,16 +335,5 @@ export function useBatchDynamicQuery(
 		isFetching: query.isFetching,
 		isPending: query.isPending,
 		getDataForQuery,
-		hasDataForQuery,
-		getErrorsForQuery,
-		debugInfo: {
-			queryCount: queries.length,
-			successfulQueries: processedResults.filter((r) => r.success).length,
-			failedQueries: processedResults.filter((r) => !r.success).length,
-			totalParameters: processedResults.reduce(
-				(sum, r) => sum + Object.keys(r.data).length,
-				0
-			),
-		},
 	};
 }
