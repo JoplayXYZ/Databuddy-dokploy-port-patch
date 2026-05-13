@@ -5,7 +5,7 @@ import {
 } from "@databuddy/ai/agent";
 import type { SlackAgentRun } from "@/agent/agent-client";
 
-const MODEL_TIMEOUT_MS = 2500;
+const MODEL_TIMEOUT_MS = 6000;
 const MAX_NORMALIZED_WORDS = 3;
 
 export type SlackThreadReplyDecisionSource = "fallback" | "model";

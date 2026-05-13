@@ -322,8 +322,10 @@ const NO_TOOL_CHAT_PATTERN =
 	/\b(hi|hello|hey|thanks|thank you|lol|nice|cool|ok|okay|nah that's wrong|that's wrong|nope|shut up)\b|^\s*(damn|lol|nice|thanks)[.!?\s]*$/i;
 const THREAD_REFERENCE_PATTERN =
 	/\b(above|that|this thread|which one|what first|where do we .*first|poke first|prioriti[sz]e|what'?s the call|do you agree|who said|who asked|recap|from earlier|from above)\b/i;
-const FRESH_ANALYTICS_PATTERN =
-	/\b(fresh|current|latest|live|now|metrics?|analytics|top pages?|last \d+|last week|last month|pull|rerun|check)\b/i;
+const ANALYTICS_REQUEST_PATTERN =
+	/\b(analytics?|metrics?|traffic|visitors?|sessions?|page\s*views?|pageviews?|top pages?|pages?|referrers?|sources?|campaigns?|conversions?|events?|errors?|vitals?|performance|uptime|revenue|transactions?|llm|latency|bounce|countries|country|regions?|cities|devices?|browsers?|operating systems?|utm|fresh|current|latest|live|rerun|last \d+|last week|last month|today|yesterday)\b/i;
+const NON_ANALYTICS_TOOL_PATTERN =
+	/\b(remember|memory|forget|profile|profiles|flag|flags|feature flag|feature flags|funnel|funnels|goal|goals|annotation|annotations|link|links|short link|short links|create|update|delete|archive|enable|disable|rollout|target|folder|folders|navigate|open|go to|take me)\b/i;
 const COPY_ONLY_PATTERN = /\b(exact copy|copy only)\b/i;
 const SLACK_FOLLOW_UP_OPEN_TAG = "<slack_follow_up";
 const SLACK_FOLLOW_UP_CLOSE_TAG = "</slack_follow_up>";
@@ -434,7 +436,7 @@ function getSlackBlockText(block: string): string | undefined {
 		: undefined;
 }
 
-function selectActiveToolsForQuestion(options: {
+export function selectActiveToolsForQuestion(options: {
 	question: string;
 	source: "dashboard" | "mcp" | "slack";
 }): string[] | undefined {
@@ -443,8 +445,10 @@ function selectActiveToolsForQuestion(options: {
 			? latestSlackText(options.question)
 			: options.question
 	).toLowerCase();
+	const hasAnalyticsRequest = ANALYTICS_REQUEST_PATTERN.test(text);
+	const hasNonAnalyticsToolRequest = NON_ANALYTICS_TOOL_PATTERN.test(text);
 	if (options.source === "slack") {
-		if (FRESH_ANALYTICS_PATTERN.test(text)) {
+		if (hasAnalyticsRequest && !hasNonAnalyticsToolRequest) {
 			return THREAD_REFERENCE_PATTERN.test(text)
 				? ["slack_read_current_thread", ...ANALYTICS_ACTIVE_TOOLS]
 				: ANALYTICS_ACTIVE_TOOLS;
@@ -460,10 +464,14 @@ function selectActiveToolsForQuestion(options: {
 		}
 	}
 
-	if (NO_TOOL_CHAT_PATTERN.test(text) && !FRESH_ANALYTICS_PATTERN.test(text)) {
+	if (
+		NO_TOOL_CHAT_PATTERN.test(text) &&
+		!hasAnalyticsRequest &&
+		!hasNonAnalyticsToolRequest
+	) {
 		return [];
 	}
-	if (FRESH_ANALYTICS_PATTERN.test(text)) {
+	if (hasAnalyticsRequest && !hasNonAnalyticsToolRequest) {
 		return ANALYTICS_ACTIVE_TOOLS;
 	}
 
