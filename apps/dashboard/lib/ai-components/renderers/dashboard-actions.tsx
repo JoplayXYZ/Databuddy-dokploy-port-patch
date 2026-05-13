@@ -2,32 +2,18 @@
 
 import { useSetAtom } from "jotai";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import type { BaseComponentProps } from "@/lib/ai-components/types";
-import {
-	buildDashboardActionHref,
-	type DashboardActionParams,
-	type DashboardActionTarget,
-} from "@/lib/dashboard-navigation-actions";
+import type {
+	BaseComponentProps,
+	DashboardActionInput,
+} from "@/lib/ai-components/types";
+import { buildDashboardActionHref } from "@/lib/dashboard-navigation-actions";
 import { cn } from "@/lib/utils";
 import { dynamicQueryFiltersAtom } from "@/stores/jotai/filterAtoms";
-import type { DynamicQueryFilter } from "@/types/api";
 import { ArrowRightIcon, CompassIcon, FilterIcon } from "@databuddy/ui/icons";
 import { Button, Tooltip } from "@databuddy/ui";
 
-export interface DashboardAction {
-	description?: string;
-	eventName?: string;
-	filters?: DynamicQueryFilter[];
-	href?: string;
-	label: string;
-	params?: DashboardActionParams;
-	preserveAnalyticsContext?: boolean;
-	target?: DashboardActionTarget;
-	websiteId?: string;
-}
-
 export interface DashboardActionsProps extends BaseComponentProps {
-	actions: DashboardAction[];
+	actions: DashboardActionInput[];
 	title?: string;
 	websiteId?: string;
 }
@@ -42,7 +28,7 @@ function ActionButton({
 	href,
 	onNavigate,
 }: {
-	action: DashboardAction;
+	action: DashboardActionInput;
 	href: string;
 	onNavigate: () => void;
 }) {
@@ -102,7 +88,7 @@ export function DashboardActionsRenderer({
 			}),
 		}))
 		.filter(
-			(item): item is { action: DashboardAction; href: string } =>
+			(item): item is { action: DashboardActionInput; href: string } =>
 				typeof item.href === "string"
 		);
 

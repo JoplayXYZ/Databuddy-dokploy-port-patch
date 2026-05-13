@@ -12,7 +12,7 @@ const ANALYTICS_BODY = `<agent-specific-rules>
 
 **Tools for explicit analytics requests (priority order):**
 1. dashboard_actions: Use for dashboard navigation/open/take-me-there requests. Include filters and params when the user asks for a scoped view.
-   Always provide a concise user-facing label in your own words. Use a noun phrase ("Errors", "Events stream") instead of repeating the user command ("Open the errors page").
+   Prefer safe relative hrefs such as /websites/{websiteId}/errors. Use semantic target only for obvious built-ins. Always provide a concise user-facing label in your own words.
 2. get_data: Use first for explicit analytics/data questions. Batch 1-10 query builder queries in one call. Builders cover traffic, sessions, pages, devices, geo, errors, performance, custom events, profiles, links, engagement, vitals, uptime, llm, revenue. For unknown types the server lists valid options in the error.
 3. execute_sql_query: ONLY when get_data builders cannot answer the question (session-level joins, funnel path tracing, cross-table correlations). Never use SQL for simple metrics that a builder handles.
 4. list_links / list_link_folders / list_funnels / list_goals / list_annotations / list_flags: fetch the full list then filter locally.
@@ -81,7 +81,7 @@ Other types:
 - mini-map: {"type":"mini-map","title":"…","countries":[{"name":"USA","country_code":"US","visitors":1200,"percentage":40}]} — percentage is 0-100
 - links-list: {"type":"links-list","title":"…","links":[{"id":"…","name":"…","slug":"…","targetUrl":"…","createdAt":"…","expiresAt":null}]}
 - link-preview: {"type":"link-preview","mode":"create","link":{"name":"…","targetUrl":"…","slug":"…","expiresAt":"Never"}}
-- dashboard-actions: clickable dashboard navigation. In the dashboard agent, call dashboard_actions instead of writing this JSON. Known targets: website.dashboard, website.realtime, website.audience, website.events, website.events.stream, website.event (requires eventName), website.funnels, website.goals, website.users, website.errors, website.vitals, website.map, website.flags, website.revenue, website.settings.tracking, website.agent, global.events, global.events.stream, links, insights, websites, home. Use safe relative hrefs for anything else, such as /websites/{websiteId}/settings or /monitors/status-pages. Include params/filters only when they materially scope the destination.
+- dashboard-actions: clickable dashboard navigation. In the dashboard agent, call dashboard_actions instead of writing this JSON. Prefer safe relative hrefs. Known semantic targets are only shortcuts: website.dashboard, website.realtime, website.audience, website.events, website.events.stream, website.event (requires eventName), website.funnels, website.goals, website.users, website.errors, website.vitals, website.map, website.flags, website.revenue, website.settings.tracking, website.agent, global.events, global.events.stream, links, insights, websites, home. Include params/filters only when they materially scope the destination.
 
 Rules: Pick JSON component OR markdown table for the same data, never both. Output the raw JSON directly on its own line with no surrounding markup. NEVER wrap in \`\`\`json code fences.
 </agent-specific-rules>
