@@ -2,27 +2,46 @@
 import { z } from "zod";
 import { QueryBuilders } from "./builders";
 import { SimpleQueryBuilder } from "./simple-builder";
-import type { QueryRequest } from "./types";
+import {
+	FilterOperators,
+	type QueryRequest,
+	TimeGranularity,
+} from "./types";
+
+const FILTER_OPS = [
+	"eq",
+	"ne",
+	"contains",
+	"not_contains",
+	"starts_with",
+	"in",
+	"not_in",
+] as const satisfies readonly (keyof typeof FilterOperators)[];
+
+const TIME_UNITS = [
+	"minute",
+	"hour",
+	"day",
+	"week",
+	"month",
+	"hourly",
+	"daily",
+] as const satisfies readonly (keyof typeof TimeGranularity | "hourly" | "daily")[];
+
+const filterOpEnum = z.enum(FILTER_OPS);
+const timeUnitEnum = z.enum(TIME_UNITS);
 
 const QuerySchema = z.object({
 	projectId: z.string(),
 	type: z.string(),
 	from: z.string(),
 	to: z.string(),
-	timeUnit: z.enum(["minute", "hour", "day", "week", "month"]).default("day"),
+	timeUnit: timeUnitEnum.default("day"),
 	filters: z
 		.array(
 			z.object({
 				field: z.string(),
-				op: z.enum([
-					"eq",
-					"ne",
-					"contains",
-					"not_contains",
-					"starts_with",
-					"in",
-					"not_in",
-				]),
+				op: filterOpEnum,
 				value: z.union([
 					z.string(),
 					z.number(),
