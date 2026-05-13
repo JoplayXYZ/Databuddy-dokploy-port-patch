@@ -97,12 +97,15 @@ export const CLICKHOUSE_OPTIONS: NodeClickHouseClientConfigOptions = {
 	},
 };
 
+// `use_query_cache=1` requires `result_overflow_mode='throw'` (CH refuses to
+// cache partial results from `break` mode). Leave the field unset so CH uses
+// its default `throw`, and keep `max_result_rows` as a hard safety cap —
+// every dashboard builder already applies its own LIMIT.
 const READ_DEFAULT_SETTINGS: Record<string, string | number> = {
 	max_threads: 4,
 	max_memory_usage: 4_000_000_000,
 	max_execution_time: 15,
 	max_result_rows: 100_000,
-	result_overflow_mode: "break",
 	use_query_cache: 1,
 	query_cache_min_query_runs: 2,
 	query_cache_ttl: 60,
