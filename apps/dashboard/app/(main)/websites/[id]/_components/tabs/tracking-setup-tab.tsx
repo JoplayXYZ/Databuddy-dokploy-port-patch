@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { useAtom } from "jotai";
 import { useMemo, useState } from "react";
@@ -23,6 +24,7 @@ import {
 	COPY_SUCCESS_TIMEOUT,
 } from "../constants/settings-constants";
 import {
+	generateNodeCode,
 	generateNpmCode,
 	generateScriptTag,
 	generateVueCode,
@@ -163,6 +165,39 @@ const INSTALL_COMMANDS = {
 	pnpm: "pnpm add @databuddy/sdk",
 };
 
+function PackageInstallTabs({
+	copiedBlockId,
+	onCopy,
+	prefix,
+}: {
+	copiedBlockId: string | null;
+	onCopy: (code: string, blockId: string, message: string) => void;
+	prefix: string;
+}) {
+	return (
+		<Tabs className="w-full" defaultValue="bun">
+			<Tabs.List className="max-w-full overflow-x-auto">
+				{Object.keys(INSTALL_COMMANDS).map((manager) => (
+					<Tabs.Tab className="text-xs" key={manager} value={manager}>
+						{manager}
+					</Tabs.Tab>
+				))}
+			</Tabs.List>
+			{Object.entries(INSTALL_COMMANDS).map(([manager, command]) => (
+				<Tabs.Panel className="mt-3" key={manager} value={manager}>
+					<CodeBlock
+						code={command}
+						copied={copiedBlockId === `${prefix}-${manager}-install`}
+						onCopy={() =>
+							onCopy(command, `${prefix}-${manager}-install`, "Command copied!")
+						}
+					/>
+				</Tabs.Panel>
+			))}
+		</Tabs>
+	);
+}
+
 const TROUBLESHOOTING_ITEMS = [
 	{
 		title: "Localhost events are disabled",
@@ -249,6 +284,7 @@ export function WebsiteTrackingSetupTab({ websiteId }: TrackingSetupTabProps) {
 		? generateScriptTag(websiteId, trackingOptions, activeVersionedScript)
 		: null;
 	const npmCode = generateNpmCode(websiteId, trackingOptions);
+	const nodeCode = generateNodeCode(websiteId);
 	const vueCode = generateVueCode(websiteId, trackingOptions);
 
 	const activeCode =
@@ -328,7 +364,7 @@ export function WebsiteTrackingSetupTab({ websiteId }: TrackingSetupTabProps) {
 				<Card.Content className="p-5">
 					<Tabs className="w-full" defaultValue="script">
 						<div className="flex items-center justify-between gap-4">
-							<Tabs.List>
+							<Tabs.List className="max-w-full overflow-x-auto">
 								<Tabs.Tab value="script">
 									<CodeIcon className="size-3.5" weight="duotone" />
 									Script Tag
@@ -340,6 +376,10 @@ export function WebsiteTrackingSetupTab({ websiteId }: TrackingSetupTabProps) {
 								<Tabs.Tab value="vue">
 									<VueLogo className="size-3.5" />
 									Vue
+								</Tabs.Tab>
+								<Tabs.Tab value="node">
+									<PackageIcon className="size-3.5" weight="duotone" />
+									Node.js
 								</Tabs.Tab>
 							</Tabs.List>
 
@@ -458,40 +498,11 @@ export function WebsiteTrackingSetupTab({ websiteId }: TrackingSetupTabProps) {
 								<p className="text-muted-foreground text-sm">
 									Install the SDK:
 								</p>
-								<Tabs className="w-full" defaultValue="bun">
-									<Tabs.List>
-										{Object.keys(INSTALL_COMMANDS).map((manager) => (
-											<Tabs.Tab
-												className="text-xs"
-												key={manager}
-												value={manager}
-											>
-												{manager}
-											</Tabs.Tab>
-										))}
-									</Tabs.List>
-									{Object.entries(INSTALL_COMMANDS).map(
-										([manager, command]) => (
-											<Tabs.Panel
-												className="mt-3"
-												key={manager}
-												value={manager}
-											>
-												<CodeBlock
-													code={command}
-													copied={copiedBlockId === `react-${manager}-install`}
-													onCopy={() =>
-														handleCopy(
-															command,
-															`react-${manager}-install`,
-															"Command copied!"
-														)
-													}
-												/>
-											</Tabs.Panel>
-										)
-									)}
-								</Tabs>
+								<PackageInstallTabs
+									copiedBlockId={copiedBlockId}
+									onCopy={handleCopy}
+									prefix="react"
+								/>
 							</div>
 
 							<div className="space-y-3">
@@ -513,40 +524,11 @@ export function WebsiteTrackingSetupTab({ websiteId }: TrackingSetupTabProps) {
 								<p className="text-muted-foreground text-sm">
 									Install the SDK:
 								</p>
-								<Tabs className="w-full" defaultValue="bun">
-									<Tabs.List>
-										{Object.keys(INSTALL_COMMANDS).map((manager) => (
-											<Tabs.Tab
-												className="text-xs"
-												key={manager}
-												value={manager}
-											>
-												{manager}
-											</Tabs.Tab>
-										))}
-									</Tabs.List>
-									{Object.entries(INSTALL_COMMANDS).map(
-										([manager, command]) => (
-											<Tabs.Panel
-												className="mt-3"
-												key={manager}
-												value={manager}
-											>
-												<CodeBlock
-													code={command}
-													copied={copiedBlockId === `vue-${manager}-install`}
-													onCopy={() =>
-														handleCopy(
-															command,
-															`vue-${manager}-install`,
-															"Command copied!"
-														)
-													}
-												/>
-											</Tabs.Panel>
-										)
-									)}
-								</Tabs>
+								<PackageInstallTabs
+									copiedBlockId={copiedBlockId}
+									onCopy={handleCopy}
+									prefix="vue"
+								/>
 							</div>
 
 							<div className="space-y-3">
@@ -559,6 +541,57 @@ export function WebsiteTrackingSetupTab({ websiteId }: TrackingSetupTabProps) {
 									onCopy={() => handleCopy(vueCode, "vue-code", "Code copied!")}
 								/>
 							</div>
+						</Tabs.Panel>
+
+						<Tabs.Panel className="mt-4 space-y-4" value="node">
+							<div className="space-y-3">
+								<p className="text-muted-foreground text-sm">
+									Install the SDK in your backend:
+								</p>
+								<PackageInstallTabs
+									copiedBlockId={copiedBlockId}
+									onCopy={handleCopy}
+									prefix="node"
+								/>
+							</div>
+
+							<div className="rounded-lg border border-border/60 bg-accent/40 p-3 text-muted-foreground text-sm">
+								Use a Databuddy API key for server-side events. Create one in{" "}
+								<Link
+									className="font-medium text-foreground underline underline-offset-4"
+									href="/organizations/settings#api-keys"
+								>
+									Organization Settings → API Keys
+								</Link>
+								, then set it as{" "}
+								<code className="rounded bg-background px-1.5 py-0.5 font-mono text-xs">
+									DATABUDDY_API_KEY
+								</code>
+								.
+							</div>
+
+							<div className="space-y-3">
+								<p className="text-muted-foreground text-sm">
+									Track server-side events:
+								</p>
+								<CodeBlock
+									code={nodeCode}
+									copied={copiedBlockId === "node-code"}
+									onCopy={() =>
+										handleCopy(nodeCode, "node-code", "Code copied!")
+									}
+								/>
+							</div>
+
+							<a
+								className="inline-flex items-center gap-1.5 text-muted-foreground text-sm transition-colors hover:text-foreground"
+								href="https://www.databuddy.cc/docs/sdk/node"
+								rel="noreferrer"
+								target="_blank"
+							>
+								<BookOpenIcon className="size-3.5" weight="duotone" />
+								Read the Node SDK docs
+							</a>
 						</Tabs.Panel>
 					</Tabs>
 				</Card.Content>

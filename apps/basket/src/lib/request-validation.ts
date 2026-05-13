@@ -1,8 +1,7 @@
 import {
 	getWebsiteByIdV2,
+	isOriginAllowed,
 	isValidIpFromSettings,
-	isValidOrigin,
-	isValidOriginFromSettings,
 } from "@hooks/auth";
 import { checkAutumnUsage } from "@lib/billing";
 import { logBlockedTraffic } from "@lib/blocked-traffic";
@@ -152,47 +151,21 @@ export function validateRequest(
 		const allowedOrigins = securitySettings?.allowedOrigins;
 		const allowedIps = securitySettings?.allowedIps;
 
-		if (allowedOrigins && allowedOrigins.length > 0) {
-			if (!origin) {
-				logBlockedTraffic(
-					request,
-					body,
-					query,
-					"origin_missing",
-					"Security Check",
-					undefined,
-					clientId
-				);
-				log.set({
-					validation: { failed: true, reason: "origin_missing" },
-				});
-				throw basketErrors.ingestOriginNotAuthorized();
-			}
-			if (
-				!(await record("isValidOriginFromSettings", () =>
-					isValidOriginFromSettings(origin, allowedOrigins)
-				))
-			) {
-				logBlockedTraffic(
-					request,
-					body,
-					query,
-					"origin_not_authorized",
-					"Security Check",
-					undefined,
-					clientId
-				);
-				log.set({
-					validation: { failed: true, reason: "origin_not_authorized", origin },
-				});
-				throw basketErrors.ingestOriginNotAuthorized();
-			}
-		} else if (
-			origin &&
-			!(await record("isValidOrigin", () =>
-				isValidOrigin(origin, website.domain)
-			))
-		) {
+		if (allowedOrigins?.length && !origin) {
+			logBlockedTraffic(
+				request,
+				body,
+				query,
+				"origin_missing",
+				"Security Check",
+				undefined,
+				clientId
+			);
+			log.set({ validation: { failed: true, reason: "origin_missing" } });
+			throw basketErrors.ingestOriginNotAuthorized();
+		}
+
+		if (origin && !isOriginAllowed(origin, website.domain, allowedOrigins)) {
 			logBlockedTraffic(
 				request,
 				body,

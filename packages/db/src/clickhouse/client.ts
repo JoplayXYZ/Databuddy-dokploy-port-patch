@@ -85,7 +85,7 @@ export const TABLE_NAMES = {
 };
 
 export const CLICKHOUSE_OPTIONS: NodeClickHouseClientConfigOptions = {
-	max_open_connections: 30,
+	max_open_connections: 64,
 	request_timeout: 30_000,
 	keep_alive: {
 		enabled: true,
@@ -96,6 +96,33 @@ export const CLICKHOUSE_OPTIONS: NodeClickHouseClientConfigOptions = {
 		response: true,
 	},
 };
+
+const READ_DEFAULT_SETTINGS: Record<string, string | number> = {
+	max_threads: 4,
+	max_memory_usage: 4_000_000_000,
+	max_execution_time: 15,
+	max_result_rows: 100_000,
+	use_query_cache: 1,
+	query_cache_min_query_runs: 2,
+	query_cache_ttl: 60,
+	query_cache_share_between_users: 0,
+	query_cache_nondeterministic_function_handling: "ignore",
+};
+
+function assertCacheCompatibleSettings(
+	settings: Record<string, string | number>
+): void {
+	const cacheOn =
+		settings.use_query_cache !== undefined &&
+		String(settings.use_query_cache) !== "0";
+	if (cacheOn && settings.result_overflow_mode === "break") {
+		throw new Error(
+			"ClickHouse settings conflict: use_query_cache=1 is incompatible with result_overflow_mode='break'. Drop result_overflow_mode or pass use_query_cache=0."
+		);
+	}
+}
+
+assertCacheCompatibleSettings(READ_DEFAULT_SETTINGS);
 
 const baseClient = createClient({
 	url: process.env.CLICKHOUSE_URL,
@@ -181,16 +208,18 @@ export interface ChQueryOptions {
 	readonly?: boolean;
 }
 
-async function chQueryWithMeta<T extends Record<string, any>>(
+async function chQueryWithMeta<T>(
 	query: string,
 	params?: Record<string, unknown>,
 	options?: ChQueryOptions
 ): Promise<ResponseJSON<T>> {
 	const json = await traced("ch.query", async () => {
 		const settings: Record<string, string | number> = {
+			...READ_DEFAULT_SETTINGS,
 			...(options?.readonly && { readonly: "1" }),
 			...options?.clickhouse_settings,
 		};
+		assertCacheCompatibleSettings(settings);
 		const res = await clickHouse.query({
 			query,
 			query_params: params,
@@ -213,7 +242,7 @@ async function chQueryWithMeta<T extends Record<string, any>>(
 	return {
 		...json,
 		data: json.data.map((item) => {
-			const out: Record<string, unknown> = { ...item };
+			const out = { ...item } as Record<string, unknown>;
 			for (const key of intColumns) {
 				const v = out[key];
 				if (v !== null && v !== undefined && v !== "") {
@@ -225,7 +254,7 @@ async function chQueryWithMeta<T extends Record<string, any>>(
 	};
 }
 
-export function chQuery<T extends Record<string, any>>(
+export function chQuery<T>(
 	query: string,
 	params?: Record<string, unknown>,
 	options?: ChQueryOptions

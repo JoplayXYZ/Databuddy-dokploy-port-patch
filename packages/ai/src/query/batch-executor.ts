@@ -1,5 +1,5 @@
 import { chQuery } from "@databuddy/db/clickhouse";
-import { mergeWideEvent, record } from "../lib/tracing";
+import { captureError, mergeWideEvent, record } from "../lib/tracing";
 import { QueryBuilders } from "./builders";
 import { SimpleQueryBuilder } from "./simple-builder";
 import type { QueryRequest, SimpleQueryConfig } from "./types";
@@ -16,11 +16,187 @@ interface BatchOptions {
 	websiteDomain?: string | null;
 }
 
-function getSchemaSignature(config: SimpleQueryConfig): string | null {
-	const fields = config.meta?.output_fields;
-	return fields?.length
-		? fields.map((f) => `${f.name}:${f.type}`).join(",")
-		: null;
+const ALIAS_REGEX = /\s+as\s+([\w]+)\s*$/i;
+const TAIL_SPLIT_REGEX = /[\s.]/;
+const QUOTE_STRIP_REGEX = /[`"']/g;
+const SELECT_KEYWORD = "SELECT";
+const FROM_KEYWORD = "FROM";
+const WORD_BOUNDARY_BEFORE = /[\s(,]/;
+const WORD_BOUNDARY_AFTER = /\s/;
+
+/**
+ * Replace string literals, quoted identifiers, and SQL comments with spaces of
+ * the same length so byte offsets line up with the original. The result is
+ * used only for structural scanning (keyword/paren/comma detection); columns
+ * are sliced from the original SQL so identifiers stay intact.
+ */
+export function maskSqlNoise(sql: string): string {
+	const out = new Array<string>(sql.length);
+	let i = 0;
+	while (i < sql.length) {
+		const ch = sql[i];
+		const next = sql[i + 1];
+		if (ch === "-" && next === "-") {
+			while (i < sql.length && sql[i] !== "\n") {
+				out[i++] = " ";
+			}
+			continue;
+		}
+		if (ch === "/" && next === "*") {
+			out[i++] = " ";
+			out[i++] = " ";
+			while (i < sql.length && !(sql[i] === "*" && sql[i + 1] === "/")) {
+				out[i++] = " ";
+			}
+			if (i < sql.length) {
+				out[i++] = " ";
+				out[i++] = " ";
+			}
+			continue;
+		}
+		if (ch === "'" || ch === '"' || ch === "`") {
+			const quote = ch;
+			out[i++] = " ";
+			while (i < sql.length) {
+				if (sql[i] === "\\" && i + 1 < sql.length) {
+					out[i++] = " ";
+					out[i++] = " ";
+					continue;
+				}
+				if (sql[i] === quote && sql[i + 1] === quote) {
+					out[i++] = " ";
+					out[i++] = " ";
+					continue;
+				}
+				if (sql[i] === quote) {
+					out[i++] = " ";
+					break;
+				}
+				out[i++] = " ";
+			}
+			continue;
+		}
+		out[i] = ch ?? "";
+		i++;
+	}
+	return out.join("");
+}
+
+function isKeywordAt(sql: string, idx: number, keyword: string): boolean {
+	if (sql.slice(idx, idx + keyword.length) !== keyword) {
+		return false;
+	}
+	const before = idx === 0 ? " " : sql[idx - 1];
+	const after = sql[idx + keyword.length] ?? " ";
+	return (
+		before !== undefined &&
+		WORD_BOUNDARY_BEFORE.test(before) &&
+		WORD_BOUNDARY_AFTER.test(after)
+	);
+}
+
+function findOuterProjectionRange(sql: string): [number, number] | null {
+	const masked = maskSqlNoise(sql);
+	let depth = 0;
+	let outerSelect = -1;
+	for (let i = 0; i < masked.length; i++) {
+		const ch = masked[i];
+		if (ch === "(") {
+			depth++;
+			continue;
+		}
+		if (ch === ")") {
+			depth--;
+			continue;
+		}
+		if (depth !== 0) {
+			continue;
+		}
+		if (isKeywordAt(masked, i, SELECT_KEYWORD)) {
+			outerSelect = i;
+			i += SELECT_KEYWORD.length - 1;
+			continue;
+		}
+		if (outerSelect !== -1 && isKeywordAt(masked, i, FROM_KEYWORD)) {
+			return [outerSelect + SELECT_KEYWORD.length, i];
+		}
+	}
+	return null;
+}
+
+export function extractOuterSelectColumns(sql: string): string[] {
+	const range = findOuterProjectionRange(sql);
+	if (!range) {
+		return [];
+	}
+	const masked = maskSqlNoise(sql);
+	const parts: string[] = [];
+	let depth = 0;
+	let start = range[0];
+	for (let i = range[0]; i < range[1]; i++) {
+		const ch = masked[i];
+		if (ch === "(") {
+			depth++;
+		} else if (ch === ")") {
+			depth--;
+		} else if (ch === "," && depth === 0) {
+			parts.push(masked.slice(start, i).trim());
+			start = i + 1;
+		}
+	}
+	const tail = masked.slice(start, range[1]).trim();
+	if (tail) {
+		parts.push(tail);
+	}
+	return parts.map((part) => {
+		const aliasMatch = part.match(ALIAS_REGEX);
+		if (aliasMatch?.[1]) {
+			return aliasMatch[1];
+		}
+		const lastToken = part.split(TAIL_SPLIT_REGEX).pop() ?? part;
+		return lastToken.replace(QUOTE_STRIP_REGEX, "");
+	});
+}
+
+const signatureCache = new Map<string, string | null>();
+
+function probeSignature(
+	type: string,
+	config: SimpleQueryConfig
+): string | null {
+	if (signatureCache.has(type)) {
+		return signatureCache.get(type) ?? null;
+	}
+
+	let signature: string | null = null;
+	try {
+		const builder = new SimpleQueryBuilder(config, {
+			projectId: "__signature_probe__",
+			type,
+			from: "2026-01-01",
+			to: "2026-01-02",
+			timeUnit: "day",
+			filters: (config.requiredFilters ?? []).map((field) => ({
+				field,
+				op: "eq",
+				value: "__probe__",
+			})),
+		});
+		const columns = extractOuterSelectColumns(builder.compile().sql);
+		signature = columns.length ? columns.join(",") : null;
+	} catch {
+		signature = null;
+	}
+
+	signatureCache.set(type, signature);
+	return signature;
+}
+
+function getSchemaSignature(
+	type: string,
+	config: SimpleQueryConfig
+): string | null {
+	return probeSignature(type, config);
 }
 
 function runSingle(
@@ -77,7 +253,7 @@ function groupBySchema(
 			continue;
 		}
 
-		const sig = getSchemaSignature(config) || `__solo_${req.type}`;
+		const sig = getSchemaSignature(req.type, config) || `__solo_${req.type}`;
 		const list = groups.get(sig) || [];
 		list.push({ index: i, req });
 		groups.set(sig, list);
@@ -86,7 +262,7 @@ function groupBySchema(
 	return groups;
 }
 
-function buildUnionQuery(
+export function buildUnionQuery(
 	items: { index: number; req: BatchRequest }[],
 	opts?: BatchOptions
 ) {
@@ -172,8 +348,17 @@ export function executeBatch(
 
 			try {
 				const { sql, params, indices } = buildUnionQuery(groupItems, opts);
+				const groupNoCache = groupItems.some(
+					({ req }) => QueryBuilders[req.type]?.noCache
+				);
 				const rawRows = await record("chUnionQuery", () =>
-					chQuery(sql, params)
+					chQuery(
+						sql,
+						params,
+						groupNoCache
+							? { clickhouse_settings: { use_query_cache: 0 } }
+							: undefined
+					)
 				);
 
 				mergeWideEvent({
@@ -195,7 +380,17 @@ export function executeBatch(
 					};
 				}
 				return { unionCount: 1, singleCount: 0 };
-			} catch {
+			} catch (error) {
+				captureError(error, {
+					operation: "batch_union",
+					batch_types: groupItems.map((g) => g.req.type).join(","),
+					batch_size: groupItems.length,
+				});
+				mergeWideEvent({
+					batch_union_fallback: 1,
+					batch_union_error:
+						error instanceof Error ? error.message : "Union query failed",
+				});
 				for (const { index, req } of groupItems) {
 					results[index] = await runSingle(req, opts);
 				}
@@ -225,19 +420,22 @@ export function areQueriesCompatible(type1: string, type2: string): boolean {
 	if (!(c1 && c2)) {
 		return false;
 	}
-	const [s1, s2] = [getSchemaSignature(c1), getSchemaSignature(c2)];
+	const [s1, s2] = [
+		getSchemaSignature(type1, c1),
+		getSchemaSignature(type2, c2),
+	];
 	return Boolean(s1 && s2 && s1 === s2);
 }
 
 export function getCompatibleQueries(type: string): string[] {
 	const config = QueryBuilders[type];
-	const sig = config ? getSchemaSignature(config) : null;
+	const sig = config ? getSchemaSignature(type, config) : null;
 	if (!sig) {
 		return [];
 	}
 
 	return Object.entries(QueryBuilders)
-		.filter(([t, c]) => t !== type && getSchemaSignature(c) === sig)
+		.filter(([t, c]) => t !== type && getSchemaSignature(t, c) === sig)
 		.map(([t]) => t);
 }
 
@@ -245,7 +443,7 @@ export function getSchemaGroups(): Map<string, string[]> {
 	const groups = new Map<string, string[]>();
 
 	for (const [type, config] of Object.entries(QueryBuilders)) {
-		const sig = getSchemaSignature(config);
+		const sig = getSchemaSignature(type, config);
 		if (!sig) {
 			continue;
 		}

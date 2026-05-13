@@ -828,7 +828,7 @@ const summarizeFunnelsTool = defineMcpTool(
 	{
 		name: "summarize_funnels",
 		description:
-			"Summarize funnel definitions for a website: names, ids, active state, step counts, and targets.",
+			"Summarize funnel definitions (names, ids, active state, step counts, targets). Use to discover funnelIds before get_funnel_analytics. Not for conversion data — that's get_funnel_analytics.",
 		inputSchema: z.object({
 			websiteId: z
 				.string()

@@ -154,8 +154,7 @@ vi.mock("@lib/api-key", () => ({
 vi.mock("@hooks/auth", () => ({
 	getWebsiteByIdV2: mockGetWebsiteByIdV2,
 	resolveApiKeyOwnerId: mockResolveApiKeyOwnerId,
-	isValidOrigin: vi.fn(() => true),
-	isValidOriginFromSettings: vi.fn(() => true),
+	isOriginAllowed: vi.fn(() => true),
 	isValidIpFromSettings: vi.fn(() => true),
 }));
 

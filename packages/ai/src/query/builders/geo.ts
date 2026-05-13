@@ -71,6 +71,12 @@ export const GeoBuilders: Record<string, SimpleQueryConfig> = {
 					description: "Region or state name",
 				},
 				{
+					name: "country",
+					type: "string",
+					label: "Country",
+					description: "Country containing this region",
+				},
+				{
 					name: "pageviews",
 					type: "number",
 					label: "Pageviews",
@@ -156,6 +162,12 @@ export const GeoBuilders: Record<string, SimpleQueryConfig> = {
 					type: "string",
 					label: "City",
 					description: "City name",
+				},
+				{
+					name: "country",
+					type: "string",
+					label: "Country",
+					description: "Country containing this city",
 				},
 				{
 					name: "pageviews",

@@ -396,6 +396,45 @@ describe("SimpleQueryBuilder.compile", () => {
 		);
 	});
 
+	function whereClauseOf(sql: string): string {
+		const whereIdx = sql.indexOf("WHERE");
+		expect(whereIdx).toBeGreaterThanOrEqual(0);
+		const groupIdx = sql.indexOf("GROUP BY", whereIdx);
+		const orderIdx = sql.indexOf("ORDER BY", whereIdx);
+		const limitIdx = sql.indexOf("LIMIT", whereIdx);
+		const candidates = [groupIdx, orderIdx, limitIdx].filter((i) => i >= 0);
+		const endIdx = candidates.length ? Math.min(...candidates) : sql.length;
+		return sql.slice(whereIdx, endIdx);
+	}
+
+	it("skips having filters from the outer WHERE clause", () => {
+		const filters: Filter[] = [
+			{ field: "country", op: "eq", value: "US" },
+			{ field: "path", op: "eq", value: "/checkout", having: true },
+		];
+
+		const { sql, params } = compile({}, { filters });
+
+		const whereClause = whereClauseOf(sql);
+		expect(whereClause).toContain("country = {f0:String}");
+		expect(whereClause).not.toMatch(/\bpath\b/);
+		expect(sql).toMatch(/HAVING[\s\S]*path[\s\S]*\{f\d+:String\}/);
+		expect(params.f0).toBe("US");
+	});
+
+	it("skips target-scoped filters from the outer WHERE clause", () => {
+		const filters: Filter[] = [
+			{ field: "country", op: "eq", value: "US" },
+			{ field: "path", op: "eq", value: "/checkout", target: "my_cte" },
+		];
+
+		const { sql } = compile({}, { filters });
+
+		const whereClause = whereClauseOf(sql);
+		expect(whereClause).toContain("country = {f0:String}");
+		expect(whereClause).not.toMatch(/\bpath\b/);
+	});
+
 	it("allows a configured required filter when present", () => {
 		const filters: Filter[] = [
 			{ field: "session_id", op: "eq", value: "session-1" },
@@ -535,8 +574,8 @@ describe("SimpleQueryBuilder.compile", () => {
 			}
 		);
 
-		expect(sql).toContain("parseDateTimeBestEffort({from:String}");
-		expect(sql).toContain("parseDateTimeBestEffort({to:String}");
+		expect(sql).toContain("{from:DateTime}");
+		expect(sql).toContain("{to:DateTime}");
 		expect(sql).not.toContain("concat({to:String}, ' 23:59:59')");
 		expect(params.from).toBe("2026-04-27 12:00:00");
 		expect(params.to).toBe("2026-04-27 13:28:59");
@@ -547,7 +586,7 @@ describe("SimpleQueryBuilder.compile", () => {
 		const { sql, params } = compile();
 
 		expect(sql).not.toContain("concat({to:String}, ' 23:59:59')");
-		expect(params.from).toBe("2026-04-01");
+		expect(params.from).toBe("2026-04-01 00:00:00");
 		expect(params.to).toBe("2026-04-11 23:59:59");
 	});
 
@@ -573,8 +612,8 @@ describe("SimpleQueryBuilder.compile", () => {
 			}
 		);
 
-		expect(sql).toContain("parseDateTimeBestEffort({startDate:String}");
-		expect(sql).toContain("parseDateTimeBestEffort({endDate:String}");
+		expect(sql).toContain("{startDate:DateTime}");
+		expect(sql).toContain("{endDate:DateTime}");
 		expect(params.startDate).toBe("2026-04-27 12:00:00");
 		expect(params.endDate).toBe("2026-04-27 13:28:59");
 	});

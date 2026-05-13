@@ -1,9 +1,11 @@
-import type {
-	AggregateFn,
-	AliasedExpression,
-	Granularity,
-	SqlExpression,
-} from "./primitives";
+export type Granularity = "minute" | "hour" | "day" | "week" | "month";
+
+export type SqlExpression = string & { readonly __brand: "SqlExpression" };
+
+export interface AliasedExpression {
+	readonly alias: string;
+	readonly expression: SqlExpression;
+}
 
 export type QueryFieldType =
 	| "string"
@@ -65,7 +67,7 @@ export const TimeGranularity = {
 } as const;
 
 export type FilterOperator = keyof typeof FilterOperators;
-export type TimeUnit = keyof typeof TimeGranularity | "hourly" | "daily";
+export type TimeUnit = Granularity | "hourly" | "daily";
 
 export interface Filter {
 	field: string;
@@ -75,52 +77,7 @@ export interface Filter {
 	value: string | number | (string | number)[];
 }
 
-export interface ColumnField {
-	alias?: string;
-	source: string;
-	type: "column";
-}
-
-export interface AggregateField {
-	alias: string;
-	condition?: string;
-	fn: AggregateFn;
-	source?: string;
-	type: "aggregate";
-}
-
-export interface ExpressionField {
-	alias: string;
-	expression: string | SqlExpression;
-	type: "expression";
-}
-
-export interface WindowField {
-	alias: string;
-	fn: AggregateFn;
-	over: {
-		partitionBy?: string[];
-		orderBy?: string;
-	};
-	source?: string;
-	type: "window";
-}
-
-export interface ComputedField {
-	alias: string;
-	inputs: string[];
-	metric: "bounceRate" | "percentageOfTotal" | "pagesPerSession";
-	type: "computed";
-}
-
-export type FieldDefinition =
-	| ColumnField
-	| AggregateField
-	| ExpressionField
-	| WindowField
-	| ComputedField;
-
-export type ConfigField = string | FieldDefinition | AliasedExpression;
+export type ConfigField = string | AliasedExpression;
 
 export interface CTEDefinition {
 	fields: ConfigField[];
@@ -186,6 +143,7 @@ export interface SimpleQueryConfig {
 	idField?: string;
 	limit?: number;
 	meta?: QueryBuilderMeta;
+	noCache?: boolean;
 	orderBy?: string;
 	plugins?: QueryPlugins;
 	requiredFilters?: string[];

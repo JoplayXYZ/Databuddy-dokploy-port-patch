@@ -17,16 +17,16 @@ export const RealtimeBuilders: Record<string, SimpleQueryConfig> = {
 					description: "Page path",
 				},
 				{
-					name: "visitors",
-					type: "number",
-					label: "Active Visitors",
-					description: "Unique visitors on this page in the last 5 minutes",
-				},
-				{
 					name: "pageviews",
 					type: "number",
 					label: "Pageviews",
 					description: "Total pageviews in the last 5 minutes",
+				},
+				{
+					name: "visitors",
+					type: "number",
+					label: "Active Visitors",
+					description: "Unique visitors on this page in the last 5 minutes",
 				},
 			],
 			default_visualization: "table",
@@ -45,6 +45,7 @@ export const RealtimeBuilders: Record<string, SimpleQueryConfig> = {
 		limit: 10,
 		timeField: "time",
 		skipDateFilter: true,
+		noCache: true,
 		customizable: false,
 	},
 
@@ -57,34 +58,10 @@ export const RealtimeBuilders: Record<string, SimpleQueryConfig> = {
 			tags: ["realtime", "referrers", "live", "sources"],
 			output_fields: [
 				{
-					name: "name",
-					type: "string",
-					label: "Source",
-					description: "Parsed display name for the referrer",
-				},
-				{
 					name: "referrer",
 					type: "string",
 					label: "Referrer",
-					description: "Canonical raw referrer value",
-				},
-				{
-					name: "source",
-					type: "string",
-					label: "Source",
-					description: "Alias for the canonical raw referrer value",
-				},
-				{
-					name: "domain",
-					type: "string",
-					label: "Domain",
-					description: "Parsed referring domain",
-				},
-				{
-					name: "referrer_type",
-					type: "string",
-					label: "Referrer Type",
-					description: "Parsed source category",
+					description: "Referrer domain or 'Direct'",
 				},
 				{
 					name: "visitors",
@@ -125,6 +102,7 @@ export const RealtimeBuilders: Record<string, SimpleQueryConfig> = {
 		},
 		timeField: "time",
 		skipDateFilter: true,
+		noCache: true,
 		customizable: false,
 		plugins: { deduplicateReferrers: true, parseReferrers: true },
 	},
@@ -138,7 +116,7 @@ export const RealtimeBuilders: Record<string, SimpleQueryConfig> = {
 			tags: ["realtime", "countries", "geography", "live"],
 			output_fields: [
 				{
-					name: "country",
+					name: "name",
 					type: "string",
 					label: "Country",
 					description: "Country code",
@@ -148,18 +126,6 @@ export const RealtimeBuilders: Record<string, SimpleQueryConfig> = {
 					type: "number",
 					label: "Active Visitors",
 					description: "Unique visitors from this country",
-				},
-				{
-					name: "latitude",
-					type: "number",
-					label: "Latitude",
-					description: "Country centroid latitude",
-				},
-				{
-					name: "longitude",
-					type: "number",
-					label: "Longitude",
-					description: "Country centroid longitude",
 				},
 			],
 			default_visualization: "table",
@@ -178,6 +144,7 @@ export const RealtimeBuilders: Record<string, SimpleQueryConfig> = {
 		limit: 50,
 		timeField: "time",
 		skipDateFilter: true,
+		noCache: true,
 		customizable: false,
 		plugins: { normalizeGeo: true, deduplicateGeo: true },
 	},
@@ -225,6 +192,7 @@ export const RealtimeBuilders: Record<string, SimpleQueryConfig> = {
 		limit: 30,
 		timeField: "time",
 		skipDateFilter: true,
+		noCache: true,
 		customizable: false,
 	},
 
@@ -284,6 +252,7 @@ export const RealtimeBuilders: Record<string, SimpleQueryConfig> = {
 		limit: 30,
 		timeField: "time",
 		skipDateFilter: true,
+		noCache: true,
 		customizable: false,
 	},
 
@@ -359,6 +328,7 @@ export const RealtimeBuilders: Record<string, SimpleQueryConfig> = {
 		},
 		timeField: "time",
 		skipDateFilter: true,
+		noCache: true,
 		customizable: false,
 	},
 
@@ -419,6 +389,7 @@ export const RealtimeBuilders: Record<string, SimpleQueryConfig> = {
 		},
 		timeField: "time",
 		skipDateFilter: true,
+		noCache: true,
 		customizable: false,
 	},
 };

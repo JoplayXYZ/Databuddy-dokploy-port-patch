@@ -29,7 +29,7 @@ export function normalizeClickHouseDateTime(
 	const value = input.trim();
 	const doubleTime = value.match(DOUBLE_TIME_END_RE);
 	if (doubleTime?.[1]) {
-		return normalizeClickHouseDateTime(doubleTime[1]);
+		return normalizeClickHouseDateTime(doubleTime[1], options);
 	}
 
 	if (DATE_ONLY_RE.test(value)) {
@@ -60,4 +60,8 @@ export function normalizeClickHouseDateTime(
 	}
 
 	return value.replace("T", " ");
+}
+
+export function padToClickHouseDateTime(value: string): string {
+	return DATE_ONLY_RE.test(value) ? `${value} 00:00:00` : value;
 }
