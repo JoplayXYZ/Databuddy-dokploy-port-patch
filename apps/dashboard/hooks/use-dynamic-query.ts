@@ -21,51 +21,51 @@ export const batchDynamicQueryKeys = {
 	byWebsite: (websiteId: string) => ["batch-dynamic-query", websiteId] as const,
 };
 
-interface BuildParamsOptions {
-	additionalParams?: Record<string, string | number>;
-	dateRange?: DateRange;
+interface QueryTarget {
 	linkId?: string;
 	organizationId?: string;
 	scheduleId?: string;
 	websiteId?: string;
 }
 
-function buildParams({
-	websiteId,
-	scheduleId,
-	linkId,
-	organizationId,
-	dateRange,
-	additionalParams,
-}: BuildParamsOptions): URLSearchParams {
-	const params = new URLSearchParams(
-		additionalParams as Record<string, string>
-	);
+const TARGET_PARAM: Record<keyof QueryTarget, string> = {
+	linkId: "link_id",
+	scheduleId: "schedule_id",
+	websiteId: "website_id",
+	organizationId: "organization_id",
+};
 
-	if (linkId) {
-		params.set("link_id", linkId);
-	} else if (scheduleId) {
-		params.set("schedule_id", scheduleId);
-	} else if (websiteId) {
-		params.set("website_id", websiteId);
-	} else if (organizationId) {
-		params.set("organization_id", organizationId);
+function buildParams(
+	target: QueryTarget,
+	dateRange: DateRange,
+	timezone: string
+): URLSearchParams {
+	const params = new URLSearchParams({ timezone });
+
+	for (const key of [
+		"linkId",
+		"scheduleId",
+		"websiteId",
+		"organizationId",
+	] as const) {
+		const value = target[key];
+		if (value) {
+			params.set(TARGET_PARAM[key], value);
+			break;
+		}
 	}
 
-	if (dateRange?.start_date) {
+	if (dateRange.start_date) {
 		params.append("start_date", dateRange.start_date);
 	}
-
-	if (dateRange?.end_date) {
+	if (dateRange.end_date) {
 		params.append("end_date", dateRange.end_date);
 	}
-
-	if (dateRange?.granularity) {
+	if (dateRange.granularity) {
 		params.append("granularity", dateRange.granularity);
 	}
 
 	params.append("_t", Date.now().toString());
-
 	return params;
 }
 
@@ -83,66 +83,48 @@ const defaultQueryOptions = {
 	},
 	networkMode: "online" as const,
 	refetchIntervalInBackground: false,
-	placeholderData: undefined,
 };
 
-function transformFilters(filters?: DynamicQueryRequest["filters"]) {
-	return filters?.map(({ field, operator, value }) => ({
-		field,
-		op: operator,
-		value,
-	}));
-}
-
-interface FetchOptions {
-	linkId?: string;
-	organizationId?: string;
-	scheduleId?: string;
-	websiteId?: string;
-}
-
-async function fetchDynamicQuery(
-	idOrOptions: string | FetchOptions,
+function buildRequest(
+	query: DynamicQueryRequest,
 	dateRange: DateRange,
-	queryData: DynamicQueryRequest | DynamicQueryRequest[],
-	signal?: AbortSignal
-): Promise<DynamicQueryResponse | BatchQueryResponse> {
-	const timezone = guessTimezone();
-
-const options: FetchOptions =
-		typeof idOrOptions === "string" ? { websiteId: idOrOptions } : idOrOptions;
-
-	const params = buildParams({
-		websiteId: options.websiteId,
-		scheduleId: options.scheduleId,
-		linkId: options.linkId,
-		organizationId: options.organizationId,
-		dateRange,
-		additionalParams: { timezone },
-	});
-	const url = `${API_BASE_URL}/v1/query?${params}`;
-
-	const buildQuery = (query: DynamicQueryRequest) => ({
+	timezone: string
+) {
+	return {
 		...query,
 		startDate: dateRange.start_date,
 		endDate: dateRange.end_date,
 		timeZone: timezone,
 		limit: query.limit || 100,
 		page: query.page || 1,
-		filters: transformFilters(query.filters),
+		filters: query.filters?.map(({ field, operator, value }) => ({
+			field,
+			op: operator,
+			value,
+		})),
 		granularity: query.granularity || dateRange.granularity || "daily",
-		groupBy: query.groupBy,
-	});
+	};
+}
+
+async function fetchDynamicQuery(
+	idOrOptions: string | QueryTarget,
+	dateRange: DateRange,
+	queryData: DynamicQueryRequest | DynamicQueryRequest[],
+	signal?: AbortSignal
+): Promise<DynamicQueryResponse | BatchQueryResponse> {
+	const timezone = guessTimezone();
+	const target: QueryTarget =
+		typeof idOrOptions === "string" ? { websiteId: idOrOptions } : idOrOptions;
+
+	const url = `${API_BASE_URL}/v1/query?${buildParams(target, dateRange, timezone)}`;
 
 	const requestBody = Array.isArray(queryData)
-		? queryData.map(buildQuery)
-		: buildQuery(queryData);
+		? queryData.map((q) => buildRequest(q, dateRange, timezone))
+		: buildRequest(queryData, dateRange, timezone);
 
 	const response = await fetch(url, {
 		method: "POST",
-		headers: {
-			"Content-Type": "application/json",
-		},
+		headers: { "Content-Type": "application/json" },
 		credentials: "include",
 		signal,
 		body: JSON.stringify(requestBody),
@@ -155,11 +137,9 @@ const options: FetchOptions =
 	}
 
 	const data = await response.json();
-
 	if (!data.success) {
 		throw new Error(data.error || "Failed to fetch dynamic query data");
 	}
-
 	return data;
 }
 
@@ -216,48 +196,35 @@ export function useDynamicQuery<
 	};
 }
 
-interface BatchQueryOptions {
-	linkId?: string;
-	organizationId?: string;
-	scheduleId?: string;
-	websiteId?: string;
-}
-
 export function useBatchDynamicQuery(
-	idOrOptions: string | BatchQueryOptions,
+	idOrOptions: string | QueryTarget,
 	dateRange: DateRange,
 	queries: DynamicQueryRequest[],
 	options?: Partial<UseQueryOptions<BatchQueryResponse>>
 ) {
-const queryOptions: BatchQueryOptions =
+	const target: QueryTarget =
 		typeof idOrOptions === "string" ? { websiteId: idOrOptions } : idOrOptions;
-
-	const effectiveId =
-		queryOptions.websiteId ||
-		queryOptions.scheduleId ||
-		queryOptions.linkId ||
-		queryOptions.organizationId;
 
 	const fetchData = useCallback(
 		async ({ signal }: { signal?: AbortSignal }) => {
 			const result = await fetchDynamicQuery(
-				queryOptions,
+				target,
 				dateRange,
 				queries,
 				signal
 			);
 			return result as BatchQueryResponse;
 		},
-		[queryOptions, dateRange, queries]
+		[target, dateRange, queries]
 	);
 
 	const query = useQuery({
 		queryKey: [
 			"batch-dynamic-query",
-			queryOptions.websiteId,
-			queryOptions.scheduleId,
-			queryOptions.linkId,
-			queryOptions.organizationId,
+			target.websiteId,
+			target.scheduleId,
+			target.linkId,
+			target.organizationId,
 			dateRange.start_date,
 			dateRange.end_date,
 			dateRange.granularity,
@@ -267,7 +234,13 @@ const queryOptions: BatchQueryOptions =
 		queryFn: fetchData,
 		...defaultQueryOptions,
 		...options,
-		enabled: options?.enabled !== false && !!effectiveId && queries.length > 0,
+		enabled:
+			options?.enabled !== false &&
+			(!!target.websiteId ||
+				!!target.scheduleId ||
+				!!target.linkId ||
+				!!target.organizationId) &&
+			queries.length > 0,
 	});
 
 	const processedResults = useMemo(() => {
