@@ -24,6 +24,14 @@ import {
 } from "./_components/use-filtered-monitors";
 
 export default function MonitorsPage() {
+	return (
+		<Suspense fallback={null}>
+			<MonitorsPageContent />
+		</Suspense>
+	);
+}
+
+function MonitorsPageContent() {
 	const router = useRouter();
 	const pathname = usePathname();
 	const searchParams = useSearchParams();

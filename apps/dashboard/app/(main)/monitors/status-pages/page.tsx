@@ -29,6 +29,14 @@ import {
 } from "../_components/use-filtered-status-pages";
 
 export default function StatusPagesListPage() {
+	return (
+		<Suspense fallback={null}>
+			<StatusPagesListPageContent />
+		</Suspense>
+	);
+}
+
+function StatusPagesListPageContent() {
 	const router = useRouter();
 	const pathname = usePathname();
 	const searchParams = useSearchParams();
