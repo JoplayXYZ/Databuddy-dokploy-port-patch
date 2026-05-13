@@ -34,10 +34,48 @@ const WEB_VITALS_METRICS = `
 	COUNT(*) as measurements
 `;
 
+const PERFORMANCE_BREAKDOWN_FIELDS = [
+	{ name: "name", type: "string" as const, label: "Name" },
+	{ name: "visitors", type: "number" as const, label: "Visitors" },
+	{ name: "avg_load_time", type: "number" as const, label: "Avg Load Time" },
+	{ name: "p50_load_time", type: "number" as const, label: "p50 Load Time" },
+	{ name: "avg_ttfb", type: "number" as const, label: "Avg TTFB" },
+	{
+		name: "avg_dom_ready_time",
+		type: "number" as const,
+		label: "Avg DOM Ready",
+	},
+	{ name: "avg_render_time", type: "number" as const, label: "Avg Render" },
+	{ name: "pageviews", type: "number" as const, label: "Pageviews" },
+];
+
+const WEB_VITALS_BREAKDOWN_FIELDS = [
+	{ name: "name", type: "string" as const, label: "Name" },
+	{ name: "visitors", type: "number" as const, label: "Visitors" },
+	{ name: "avg_fcp", type: "number" as const, label: "Avg FCP" },
+	{ name: "p50_fcp", type: "number" as const, label: "p50 FCP" },
+	{ name: "avg_lcp", type: "number" as const, label: "Avg LCP" },
+	{ name: "p50_lcp", type: "number" as const, label: "p50 LCP" },
+	{ name: "avg_cls", type: "number" as const, label: "Avg CLS" },
+	{ name: "p50_cls", type: "number" as const, label: "p50 CLS" },
+	{ name: "avg_inp", type: "number" as const, label: "Avg INP" },
+	{ name: "avg_ttfb", type: "number" as const, label: "Avg TTFB" },
+	{ name: "measurements", type: "number" as const, label: "Measurements" },
+];
+
 // Load-time metrics come from events; web vitals live in web_vitals_spans as EAV rows
 // (one row per metric_name/metric_value pair), which is why the vitals queries pivot.
 export const PerformanceBuilders: Record<string, SimpleQueryConfig> = {
 	slow_pages: {
+		meta: {
+			title: "Slow Pages",
+			description: "Pages ranked by p50 load time.",
+			category: "Performance",
+			tags: ["performance", "page", "load-time"],
+			output_fields: PERFORMANCE_BREAKDOWN_FIELDS,
+			default_visualization: "table",
+			version: "1.0",
+		},
 		table: Analytics.events,
 		fields: [
 			"decodeURLComponent(CASE WHEN trimRight(path(path), '/') = '' THEN '/' ELSE trimRight(path(path), '/') END) as name",
@@ -59,6 +97,15 @@ export const PerformanceBuilders: Record<string, SimpleQueryConfig> = {
 		customizable: true,
 	},
 	performance_by_browser: {
+		meta: {
+			title: "Performance by Browser",
+			description: "Load-time performance broken down by browser.",
+			category: "Performance",
+			tags: ["performance", "browser"],
+			output_fields: PERFORMANCE_BREAKDOWN_FIELDS,
+			default_visualization: "table",
+			version: "1.0",
+		},
 		table: Analytics.events,
 		fields: [
 			"browser_name as name",
@@ -83,6 +130,15 @@ export const PerformanceBuilders: Record<string, SimpleQueryConfig> = {
 	},
 
 	performance_by_country: {
+		meta: {
+			title: "Performance by Country",
+			description: "Load-time performance broken down by country.",
+			category: "Performance",
+			tags: ["performance", "country", "geo"],
+			output_fields: PERFORMANCE_BREAKDOWN_FIELDS,
+			default_visualization: "table",
+			version: "1.0",
+		},
 		table: Analytics.events,
 		fields: [
 			"country as name",
@@ -104,6 +160,15 @@ export const PerformanceBuilders: Record<string, SimpleQueryConfig> = {
 	},
 
 	performance_by_os: {
+		meta: {
+			title: "Performance by OS",
+			description: "Load-time performance broken down by operating system.",
+			category: "Performance",
+			tags: ["performance", "os"],
+			output_fields: PERFORMANCE_BREAKDOWN_FIELDS,
+			default_visualization: "table",
+			version: "1.0",
+		},
 		table: Analytics.events,
 		fields: [
 			"os_name as name",
@@ -124,6 +189,15 @@ export const PerformanceBuilders: Record<string, SimpleQueryConfig> = {
 	},
 
 	performance_by_region: {
+		meta: {
+			title: "Performance by Region",
+			description: "Load-time performance broken down by region.",
+			category: "Performance",
+			tags: ["performance", "region", "geo"],
+			output_fields: PERFORMANCE_BREAKDOWN_FIELDS,
+			default_visualization: "table",
+			version: "1.0",
+		},
 		table: Analytics.events,
 		fields: [
 			"CONCAT(region, ', ', country) as name",
@@ -144,6 +218,24 @@ export const PerformanceBuilders: Record<string, SimpleQueryConfig> = {
 	},
 
 	performance_time_series: {
+		meta: {
+			title: "Performance Time Series",
+			description: "Daily load-time performance trends.",
+			category: "Performance",
+			tags: ["performance", "time-series"],
+			output_fields: [
+				{ name: "date", type: "string", label: "Date" },
+				{ name: "avg_load_time", type: "number", label: "Avg Load Time" },
+				{ name: "p50_load_time", type: "number", label: "p50 Load Time" },
+				{ name: "avg_ttfb", type: "number", label: "Avg TTFB" },
+				{ name: "avg_dom_ready_time", type: "number", label: "Avg DOM Ready" },
+				{ name: "avg_render_time", type: "number", label: "Avg Render" },
+				{ name: "pageviews", type: "number", label: "Pageviews" },
+			],
+			default_visualization: "timeseries",
+			supports_granularity: ["hour", "day"],
+			version: "1.0",
+		},
 		table: Analytics.events,
 		fields: [
 			"toDate(time) as date",
@@ -162,6 +254,21 @@ export const PerformanceBuilders: Record<string, SimpleQueryConfig> = {
 	},
 
 	load_time_performance: {
+		meta: {
+			title: "Load Time Performance",
+			description: "Daily average and p50 load times.",
+			category: "Performance",
+			tags: ["performance", "load-time", "time-series"],
+			output_fields: [
+				{ name: "date", type: "string", label: "Date" },
+				{ name: "avg_load_time", type: "number", label: "Avg Load Time" },
+				{ name: "p50_load_time", type: "number", label: "p50 Load Time" },
+				{ name: "pageviews", type: "number", label: "Pageviews" },
+			],
+			default_visualization: "timeseries",
+			supports_granularity: ["hour", "day"],
+			version: "1.0",
+		},
 		table: Analytics.events,
 		fields: [
 			"toDate(time) as date",
@@ -177,6 +284,15 @@ export const PerformanceBuilders: Record<string, SimpleQueryConfig> = {
 	},
 
 	web_vitals_by_page: {
+		meta: {
+			title: "Web Vitals by Page",
+			description: "Average and p50 Core Web Vitals per page.",
+			category: "Performance",
+			tags: ["vitals", "performance", "page"],
+			output_fields: WEB_VITALS_BREAKDOWN_FIELDS,
+			default_visualization: "table",
+			version: "1.0",
+		},
 		customSql: (ctx) => {
 			const { websiteId, startDate, endDate } = ctx;
 			const limit = ctx.limit ?? 100;
@@ -212,6 +328,15 @@ export const PerformanceBuilders: Record<string, SimpleQueryConfig> = {
 	},
 
 	web_vitals_by_browser: {
+		meta: {
+			title: "Web Vitals by Browser",
+			description: "Average and p50 Core Web Vitals per browser.",
+			category: "Performance",
+			tags: ["vitals", "performance", "browser"],
+			output_fields: WEB_VITALS_BREAKDOWN_FIELDS,
+			default_visualization: "table",
+			version: "1.0",
+		},
 		customSql: (ctx) => {
 			const { websiteId, startDate, endDate } = ctx;
 			const limit = ctx.limit ?? 100;
@@ -240,6 +365,15 @@ export const PerformanceBuilders: Record<string, SimpleQueryConfig> = {
 	},
 
 	web_vitals_by_country: {
+		meta: {
+			title: "Web Vitals by Country",
+			description: "Average and p50 Core Web Vitals per country.",
+			category: "Performance",
+			tags: ["vitals", "performance", "country", "geo"],
+			output_fields: WEB_VITALS_BREAKDOWN_FIELDS,
+			default_visualization: "table",
+			version: "1.0",
+		},
 		customSql: (ctx) => {
 			const { websiteId, startDate, endDate } = ctx;
 			const limit = ctx.limit ?? 100;
@@ -269,6 +403,15 @@ export const PerformanceBuilders: Record<string, SimpleQueryConfig> = {
 	},
 
 	web_vitals_by_os: {
+		meta: {
+			title: "Web Vitals by OS",
+			description: "Average and p50 Core Web Vitals per operating system.",
+			category: "Performance",
+			tags: ["vitals", "performance", "os"],
+			output_fields: WEB_VITALS_BREAKDOWN_FIELDS,
+			default_visualization: "table",
+			version: "1.0",
+		},
 		customSql: (ctx) => {
 			const { websiteId, startDate, endDate } = ctx;
 			const limit = ctx.limit ?? 100;
@@ -297,6 +440,15 @@ export const PerformanceBuilders: Record<string, SimpleQueryConfig> = {
 	},
 
 	web_vitals_by_region: {
+		meta: {
+			title: "Web Vitals by Region",
+			description: "Average and p50 Core Web Vitals per region.",
+			category: "Performance",
+			tags: ["vitals", "performance", "region", "geo"],
+			output_fields: WEB_VITALS_BREAKDOWN_FIELDS,
+			default_visualization: "table",
+			version: "1.0",
+		},
 		customSql: (ctx) => {
 			const { websiteId, startDate, endDate } = ctx;
 			const limit = ctx.limit ?? 100;
@@ -326,6 +478,29 @@ export const PerformanceBuilders: Record<string, SimpleQueryConfig> = {
 	},
 
 	web_vitals_time_series: {
+		meta: {
+			title: "Web Vitals Time Series",
+			description: "Daily averages and p50s for each Core Web Vital metric.",
+			category: "Performance",
+			tags: ["vitals", "performance", "time-series"],
+			output_fields: [
+				{ name: "date", type: "string", label: "Date" },
+				{ name: "avg_fcp", type: "number", label: "Avg FCP" },
+				{ name: "p50_fcp", type: "number", label: "p50 FCP" },
+				{ name: "avg_lcp", type: "number", label: "Avg LCP" },
+				{ name: "p50_lcp", type: "number", label: "p50 LCP" },
+				{ name: "avg_cls", type: "number", label: "Avg CLS" },
+				{ name: "p50_cls", type: "number", label: "p50 CLS" },
+				{ name: "avg_inp", type: "number", label: "Avg INP" },
+				{ name: "p50_inp", type: "number", label: "p50 INP" },
+				{ name: "avg_ttfb", type: "number", label: "Avg TTFB" },
+				{ name: "p50_ttfb", type: "number", label: "p50 TTFB" },
+				{ name: "measurements", type: "number", label: "Measurements" },
+			],
+			default_visualization: "timeseries",
+			supports_granularity: ["hour", "day"],
+			version: "1.0",
+		},
 		customSql: (ctx) => {
 			const { websiteId, startDate, endDate } = ctx;
 			return {

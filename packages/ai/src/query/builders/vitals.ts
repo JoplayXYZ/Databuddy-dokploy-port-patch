@@ -91,8 +91,37 @@ const VITALS_PAGE_METRICS = `
 	count() as samples
 `;
 
+const VITALS_P50_FIELDS = [
+	{ name: "name", type: "string" as const, label: "Name" },
+	{ name: "visitors", type: "number" as const, label: "Visitors" },
+	{ name: "p50_lcp", type: "number" as const, label: "p50 LCP" },
+	{ name: "p50_fcp", type: "number" as const, label: "p50 FCP" },
+	{ name: "p50_cls", type: "number" as const, label: "p50 CLS" },
+	{ name: "p50_inp", type: "number" as const, label: "p50 INP" },
+	{ name: "p50_ttfb", type: "number" as const, label: "p50 TTFB" },
+	{ name: "samples", type: "number" as const, label: "Samples" },
+];
+
 export const VitalsBuilders: Record<string, SimpleQueryConfig> = {
 	vitals_overview: {
+		meta: {
+			title: "Vitals Overview",
+			description: "Percentile distribution per Core Web Vital metric.",
+			category: "Performance",
+			tags: ["vitals", "performance", "overview"],
+			output_fields: [
+				{ name: "metric_name", type: "string", label: "Metric" },
+				{ name: "p50", type: "number", label: "p50" },
+				{ name: "p75", type: "number", label: "p75" },
+				{ name: "p90", type: "number", label: "p90" },
+				{ name: "p95", type: "number", label: "p95" },
+				{ name: "p99", type: "number", label: "p99" },
+				{ name: "avg_value", type: "number", label: "Average" },
+				{ name: "samples", type: "number", label: "Samples" },
+			],
+			default_visualization: "metric",
+			version: "1.0",
+		},
 		customSql: (ctx) => {
 			const { websiteId, startDate, endDate } = ctx;
 			return {
@@ -122,6 +151,25 @@ export const VitalsBuilders: Record<string, SimpleQueryConfig> = {
 	},
 
 	vitals_time_series: {
+		meta: {
+			title: "Vitals Time Series",
+			description: "Daily percentile distribution per Core Web Vital metric.",
+			category: "Performance",
+			tags: ["vitals", "performance", "time-series"],
+			output_fields: [
+				{ name: "date", type: "string", label: "Date" },
+				{ name: "metric_name", type: "string", label: "Metric" },
+				{ name: "p50", type: "number", label: "p50" },
+				{ name: "p75", type: "number", label: "p75" },
+				{ name: "p90", type: "number", label: "p90" },
+				{ name: "p95", type: "number", label: "p95" },
+				{ name: "p99", type: "number", label: "p99" },
+				{ name: "samples", type: "number", label: "Samples" },
+			],
+			default_visualization: "timeseries",
+			supports_granularity: ["hour", "day"],
+			version: "1.0",
+		},
 		customSql: (ctx) => {
 			const { websiteId, startDate, endDate } = ctx;
 			return {
@@ -151,6 +199,25 @@ export const VitalsBuilders: Record<string, SimpleQueryConfig> = {
 	},
 
 	vitals_by_page: {
+		meta: {
+			title: "Vitals by Page",
+			description:
+				"Percentile distribution per Core Web Vital, broken down by page.",
+			category: "Performance",
+			tags: ["vitals", "performance", "page"],
+			output_fields: [
+				{ name: "page", type: "string", label: "Page" },
+				{ name: "metric_name", type: "string", label: "Metric" },
+				{ name: "p50", type: "number", label: "p50" },
+				{ name: "p75", type: "number", label: "p75" },
+				{ name: "p90", type: "number", label: "p90" },
+				{ name: "p95", type: "number", label: "p95" },
+				{ name: "p99", type: "number", label: "p99" },
+				{ name: "samples", type: "number", label: "Samples" },
+			],
+			default_visualization: "table",
+			version: "1.0",
+		},
 		customSql: vitalsByDimension({
 			selectName: `decodeURLComponent(
 				CASE WHEN trimRight(path(wv.path), '/') = ''
@@ -168,6 +235,15 @@ export const VitalsBuilders: Record<string, SimpleQueryConfig> = {
 	},
 
 	vitals_by_country: {
+		meta: {
+			title: "Vitals by Country",
+			description: "p50 Core Web Vitals per country.",
+			category: "Performance",
+			tags: ["vitals", "performance", "country", "geo"],
+			output_fields: VITALS_P50_FIELDS,
+			default_visualization: "table",
+			version: "1.0",
+		},
 		customSql: vitalsByDimension({
 			selectName: "sd.country as name",
 			groupBy: "sd.country",
@@ -180,6 +256,15 @@ export const VitalsBuilders: Record<string, SimpleQueryConfig> = {
 	},
 
 	vitals_by_browser: {
+		meta: {
+			title: "Vitals by Browser",
+			description: "p50 Core Web Vitals per browser.",
+			category: "Performance",
+			tags: ["vitals", "performance", "browser"],
+			output_fields: VITALS_P50_FIELDS,
+			default_visualization: "table",
+			version: "1.0",
+		},
 		customSql: vitalsByDimension({
 			selectName: "sd.browser_name as name",
 			groupBy: "sd.browser_name",
@@ -191,6 +276,15 @@ export const VitalsBuilders: Record<string, SimpleQueryConfig> = {
 	},
 
 	vitals_by_region: {
+		meta: {
+			title: "Vitals by Region",
+			description: "p50 Core Web Vitals per region.",
+			category: "Performance",
+			tags: ["vitals", "performance", "region", "geo"],
+			output_fields: VITALS_P50_FIELDS,
+			default_visualization: "table",
+			version: "1.0",
+		},
 		customSql: vitalsByDimension({
 			selectName:
 				"CONCAT(ifNull(sd.region, ''), ', ', ifNull(sd.country, '')) as name",
@@ -204,6 +298,15 @@ export const VitalsBuilders: Record<string, SimpleQueryConfig> = {
 	},
 
 	vitals_by_city: {
+		meta: {
+			title: "Vitals by City",
+			description: "p50 Core Web Vitals per city.",
+			category: "Performance",
+			tags: ["vitals", "performance", "city", "geo"],
+			output_fields: VITALS_P50_FIELDS,
+			default_visualization: "table",
+			version: "1.0",
+		},
 		customSql: vitalsByDimension({
 			selectName:
 				"CONCAT(ifNull(sd.city, ''), ', ', ifNull(sd.country, '')) as name",
@@ -217,6 +320,20 @@ export const VitalsBuilders: Record<string, SimpleQueryConfig> = {
 	},
 
 	performance_overview: {
+		meta: {
+			title: "Performance Overview",
+			description:
+				"Average load, DOM ready, and render times across pageviews.",
+			category: "Performance",
+			tags: ["performance", "overview"],
+			output_fields: [
+				{ name: "avg_load_time", type: "number", label: "Avg Load Time" },
+				{ name: "avg_dom_ready_time", type: "number", label: "Avg DOM Ready" },
+				{ name: "avg_render_time", type: "number", label: "Avg Render" },
+			],
+			default_visualization: "metric",
+			version: "1.0",
+		},
 		customSql: (ctx) => {
 			const { websiteId, startDate, endDate } = ctx;
 			return {
