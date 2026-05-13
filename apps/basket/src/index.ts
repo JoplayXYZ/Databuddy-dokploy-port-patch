@@ -7,7 +7,6 @@ import {
 } from "@lib/evlog-basket";
 import { shutdownPostgres } from "@databuddy/db";
 import { clickHouse } from "@databuddy/db/clickhouse";
-import { resolveKafkaSsl } from "@databuddy/shared/kafka-tls";
 import { disconnect, disposeRuntime, runPromise } from "@lib/producer";
 import { Kafka } from "kafkajs";
 import {
@@ -137,21 +136,19 @@ const app = new Elysia()
 				if (!broker) {
 					throw new Error("not configured");
 				}
-				const hasCreds = Boolean(
-					process.env.REDPANDA_USER && process.env.REDPANDA_PASSWORD
-				);
 				const kafka = new Kafka({
 					clientId: "health",
 					brokers: [broker],
 					connectionTimeout: 5000,
-					...(hasCreds && {
-						sasl: {
-							mechanism: "scram-sha-256",
-							username: process.env.REDPANDA_USER as string,
-							password: process.env.REDPANDA_PASSWORD as string,
-						},
-						ssl: resolveKafkaSsl(true),
-					}),
+					...(process.env.REDPANDA_USER &&
+						process.env.REDPANDA_PASSWORD && {
+							sasl: {
+								mechanism: "scram-sha-256",
+								username: process.env.REDPANDA_USER,
+								password: process.env.REDPANDA_PASSWORD,
+							},
+							ssl: false,
+						}),
 				});
 				const admin = kafka.admin();
 				try {

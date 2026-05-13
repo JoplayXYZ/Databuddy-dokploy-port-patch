@@ -1,7 +1,6 @@
 import type { ClickHouseClient } from "@clickhouse/client";
 import { clickHouse, TABLE_NAMES } from "@databuddy/db/clickhouse";
 import { readBooleanEnv } from "@databuddy/env/boolean";
-import { resolveKafkaSsl } from "@databuddy/shared/kafka-tls";
 import { captureError, record } from "@lib/tracing";
 import { Data, Effect, Layer, ManagedRuntime, Ref, Schedule } from "effect";
 import { createError } from "evlog";
@@ -482,7 +481,6 @@ function initializeKafka(config: ProducerConfig): Producer | null {
 			username: config.username,
 			password: config.password,
 		},
-		ssl: resolveKafkaSsl(true),
 	}).producer({
 		allowAutoTopicCreation: true,
 		retry: {
