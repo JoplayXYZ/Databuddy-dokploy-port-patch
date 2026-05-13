@@ -396,6 +396,31 @@ describe("SimpleQueryBuilder.compile", () => {
 		);
 	});
 
+	it("skips having filters from the outer WHERE clause", () => {
+		const filters: Filter[] = [
+			{ field: "country", op: "eq", value: "US" },
+			{ field: "path", op: "eq", value: "/checkout", having: true },
+		];
+
+		const { sql, params } = compile({}, { filters });
+
+		expect(sql).toContain("country = {f0:String}");
+		expect(sql).not.toContain("path = {f1:String}");
+		expect(params.f0).toBe("US");
+	});
+
+	it("skips target-scoped filters from the outer WHERE clause", () => {
+		const filters: Filter[] = [
+			{ field: "country", op: "eq", value: "US" },
+			{ field: "path", op: "eq", value: "/checkout", target: "my_cte" },
+		];
+
+		const { sql } = compile({}, { filters });
+
+		expect(sql).toContain("country = {f0:String}");
+		expect(sql).not.toContain("path = ");
+	});
+
 	it("allows a configured required filter when present", () => {
 		const filters: Filter[] = [
 			{ field: "session_id", op: "eq", value: "session-1" },

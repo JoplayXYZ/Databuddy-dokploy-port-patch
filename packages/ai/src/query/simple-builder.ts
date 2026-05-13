@@ -836,7 +836,7 @@ export class SimpleQueryBuilder {
 		if (this.request.filters) {
 			for (let i = 0; i < this.request.filters.length; i++) {
 				const filter = this.request.filters[i];
-				if (!filter) {
+				if (!filter || filter.target || filter.having) {
 					continue;
 				}
 				const { clause, params: filterParams } = this.buildFilter(filter, i);
