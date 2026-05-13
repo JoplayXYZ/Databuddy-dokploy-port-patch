@@ -1,46 +1,14 @@
 import { describe, expect, it } from "vitest";
 import {
 	areQueriesCompatible,
+	extractOuterSelectColumns,
 	getCompatibleQueries,
 	getSchemaGroups,
 } from "./batch-executor";
 import { QueryBuilders } from "./builders";
 import { SimpleQueryBuilder } from "./simple-builder";
 
-function lastSelectColumns(sql: string): string[] {
-	const lastSelectIdx = sql.lastIndexOf("SELECT");
-	const fromIdx = sql.indexOf("FROM", lastSelectIdx);
-	if (lastSelectIdx === -1 || fromIdx === -1) {
-		return [];
-	}
-	const body = sql.slice(lastSelectIdx + "SELECT".length, fromIdx);
-	const parts: string[] = [];
-	let depth = 0;
-	let current = "";
-	for (const char of body) {
-		if (char === "(") {
-			depth++;
-		} else if (char === ")") {
-			depth--;
-		} else if (char === "," && depth === 0) {
-			parts.push(current.trim());
-			current = "";
-			continue;
-		}
-		current += char;
-	}
-	if (current.trim()) {
-		parts.push(current.trim());
-	}
-	return parts.map((part) => {
-		const aliasMatch = part.match(/\s+as\s+([\w]+)\s*$/i);
-		if (aliasMatch?.[1]) {
-			return aliasMatch[1];
-		}
-		const tail = part.split(/[\s.]/).pop() ?? part;
-		return tail.replace(/[`"']/g, "");
-	});
-}
+const lastSelectColumns = extractOuterSelectColumns;
 
 function compileSql(type: string): string {
 	const config = QueryBuilders[type];

@@ -19,14 +19,58 @@ interface BatchOptions {
 const ALIAS_REGEX = /\s+as\s+([\w]+)\s*$/i;
 const TAIL_SPLIT_REGEX = /[\s.]/;
 const QUOTE_STRIP_REGEX = /[`"']/g;
+const SELECT_KEYWORD = "SELECT";
+const FROM_KEYWORD = "FROM";
+const WORD_BOUNDARY_BEFORE = /[\s(,]/;
+const WORD_BOUNDARY_AFTER = /\s/;
 
-function extractLastSelectColumns(sql: string): string[] {
-	const lastSelectIdx = sql.lastIndexOf("SELECT");
-	const fromIdx = sql.indexOf("FROM", lastSelectIdx);
-	if (lastSelectIdx === -1 || fromIdx === -1) {
+function isKeywordAt(sql: string, idx: number, keyword: string): boolean {
+	if (sql.slice(idx, idx + keyword.length) !== keyword) {
+		return false;
+	}
+	const before = idx === 0 ? " " : sql[idx - 1];
+	const after = sql[idx + keyword.length] ?? " ";
+	return (
+		before !== undefined &&
+		WORD_BOUNDARY_BEFORE.test(before) &&
+		WORD_BOUNDARY_AFTER.test(after)
+	);
+}
+
+function findOuterProjectionRange(sql: string): [number, number] | null {
+	let depth = 0;
+	let outerSelect = -1;
+	for (let i = 0; i < sql.length; i++) {
+		const ch = sql[i];
+		if (ch === "(") {
+			depth++;
+			continue;
+		}
+		if (ch === ")") {
+			depth--;
+			continue;
+		}
+		if (depth !== 0) {
+			continue;
+		}
+		if (isKeywordAt(sql, i, SELECT_KEYWORD)) {
+			outerSelect = i;
+			i += SELECT_KEYWORD.length - 1;
+			continue;
+		}
+		if (outerSelect !== -1 && isKeywordAt(sql, i, FROM_KEYWORD)) {
+			return [outerSelect + SELECT_KEYWORD.length, i];
+		}
+	}
+	return null;
+}
+
+export function extractOuterSelectColumns(sql: string): string[] {
+	const range = findOuterProjectionRange(sql);
+	if (!range) {
 		return [];
 	}
-	const body = sql.slice(lastSelectIdx + "SELECT".length, fromIdx);
+	const body = sql.slice(range[0], range[1]);
 	const parts: string[] = [];
 	let depth = 0;
 	let current = "";
@@ -79,7 +123,7 @@ function probeSignature(
 				value: "__probe__",
 			})),
 		});
-		const columns = extractLastSelectColumns(builder.compile().sql);
+		const columns = extractOuterSelectColumns(builder.compile().sql);
 		signature = columns.length ? columns.join(",") : null;
 	} catch {
 		signature = null;

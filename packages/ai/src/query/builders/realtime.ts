@@ -57,16 +57,17 @@ export const RealtimeBuilders: Record<string, SimpleQueryConfig> = {
 			tags: ["realtime", "referrers", "live", "sources"],
 			output_fields: [
 				{
-					name: "anonymous_id",
-					type: "string",
-					label: "Anonymous ID",
-					description: "Anonymous visitor identifier",
-				},
-				{
 					name: "referrer",
 					type: "string",
 					label: "Referrer",
 					description: "Referrer domain or 'Direct'",
+				},
+				{
+					name: "visitors",
+					type: "number",
+					label: "Active Visitors",
+					description:
+						"Unique visitors from this referrer in the last 5 minutes",
 				},
 			],
 			default_visualization: "table",
