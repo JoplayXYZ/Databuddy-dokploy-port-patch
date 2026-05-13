@@ -120,6 +120,34 @@ const REFERRER_MAPPINGS: Record<string, string> = {
 const DATE_PARAM_NAMES = new Set(["from", "to", "startDate", "endDate"]);
 const DATE_PARAM_PATTERN = "from|to|startDate|endDate";
 
+const END_OF_DAY_WITH_TZ_REGEX = new RegExp(
+	`parseDateTimeBestEffort\\(concat\\(\\{(${DATE_PARAM_PATTERN}):String\\}, ' 23:59:59'\\), \\{timezone:String\\}\\)`,
+	"g"
+);
+const END_OF_DAY_REGEX = new RegExp(
+	`toDateTime\\(concat\\(\\{(${DATE_PARAM_PATTERN}):String\\}, ' 23:59:59'\\)\\)`,
+	"g"
+);
+const TO_DATE_TIME_REGEX = new RegExp(
+	`toDateTime\\(\\{(${DATE_PARAM_PATTERN}):String\\}\\)`,
+	"g"
+);
+
+const ORG_SCOPE_ID_FIELDS = ["client_id", "website_id", "owner_id"] as const;
+const orgScopeRegexCache = new Map<string, RegExp>();
+function orgScopeRegex(field: string): RegExp {
+	let regex = orgScopeRegexCache.get(field);
+	if (!regex) {
+		const escaped = field.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+		regex = new RegExp(
+			`((?:\\b\\w+\\.)?${escaped})\\s*=\\s*\\{websiteId:String\\}`,
+			"g"
+		);
+		orgScopeRegexCache.set(field, regex);
+	}
+	return regex;
+}
+
 function parseDateExpression(paramName: string, withTimezone = false): string {
 	const param = `{${paramName}:String}`;
 	return withTimezone
@@ -428,41 +456,27 @@ export class SimpleQueryBuilder {
 			}
 		}
 
-		let finalSql = sql.replace(
-			new RegExp(
-				`parseDateTimeBestEffort\\(concat\\(\\{(${DATE_PARAM_PATTERN}):String\\}, ' 23:59:59'\\), \\{timezone:String\\}\\)`,
-				"g"
-			),
-			(_match, paramName: string) => {
-				const value = finalParams[paramName];
-				if (typeof value === "string") {
-					finalParams[paramName] = normalizeClickHouseDateTime(value, {
-						endOfDay: true,
-					});
-				}
-				return parseDateExpression(paramName, true);
+		const promoteToEndOfDay = (paramName: string): void => {
+			const value = finalParams[paramName];
+			if (typeof value === "string") {
+				finalParams[paramName] = normalizeClickHouseDateTime(value, {
+					endOfDay: true,
+				});
 			}
-		);
+		};
 
-		finalSql = finalSql.replace(
-			new RegExp(
-				`toDateTime\\(concat\\(\\{(${DATE_PARAM_PATTERN}):String\\}, ' 23:59:59'\\)\\)`,
-				"g"
-			),
-			(_match, paramName: string) => {
-				const value = finalParams[paramName];
-				if (typeof value === "string") {
-					finalParams[paramName] = normalizeClickHouseDateTime(value, {
-						endOfDay: true,
-					});
-				}
-				return parseDateExpression(paramName);
-			}
-		);
+		let finalSql = sql.replace(END_OF_DAY_WITH_TZ_REGEX, (_match, paramName) => {
+			promoteToEndOfDay(paramName);
+			return parseDateExpression(paramName, true);
+		});
 
-		finalSql = finalSql.replace(
-			new RegExp(`toDateTime\\(\\{(${DATE_PARAM_PATTERN}):String\\}\\)`, "g"),
-			(_match, paramName: string) => parseDateExpression(paramName)
+		finalSql = finalSql.replace(END_OF_DAY_REGEX, (_match, paramName) => {
+			promoteToEndOfDay(paramName);
+			return parseDateExpression(paramName);
+		});
+
+		finalSql = finalSql.replace(TO_DATE_TIME_REGEX, (_match, paramName) =>
+			parseDateExpression(paramName)
 		);
 
 		if (finalSql.includes("{timezone:String}") && !finalParams.timezone) {
@@ -471,19 +485,11 @@ export class SimpleQueryBuilder {
 
 		if (this.isOrganizationScope()) {
 			finalParams.websiteIds = this.request.organizationWebsiteIds ?? [];
-			const idFields = new Set([
-				"client_id",
-				"website_id",
-				"owner_id",
-				this.getIdField(),
-			]);
+			const idFields = new Set<string>(ORG_SCOPE_ID_FIELDS);
+			idFields.add(this.getIdField());
 			for (const field of idFields) {
-				const escaped = field.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 				finalSql = finalSql.replace(
-					new RegExp(
-						`((?:\\b\\w+\\.)?${escaped})\\s*=\\s*\\{websiteId:String\\}`,
-						"g"
-					),
+					orgScopeRegex(field),
 					"$1 IN {websiteIds:Array(String)}"
 				);
 			}
