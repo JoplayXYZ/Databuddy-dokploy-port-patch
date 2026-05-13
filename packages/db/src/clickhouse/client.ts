@@ -103,6 +103,10 @@ const READ_DEFAULT_SETTINGS: Record<string, string | number> = {
 	max_execution_time: 15,
 	max_result_rows: 100_000,
 	result_overflow_mode: "break",
+	use_query_cache: 1,
+	query_cache_min_query_runs: 2,
+	query_cache_ttl: 60,
+	query_cache_share_between_users: 0,
 };
 
 const baseClient = createClient({
