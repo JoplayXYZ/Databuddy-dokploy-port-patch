@@ -97,10 +97,6 @@ export const CLICKHOUSE_OPTIONS: NodeClickHouseClientConfigOptions = {
 	},
 };
 
-// `use_query_cache=1` requires `result_overflow_mode='throw'` (CH refuses to
-// cache partial results from `break` mode). Leave the field unset so CH uses
-// its default `throw`, and keep `max_result_rows` as a hard safety cap —
-// every dashboard builder already applies its own LIMIT.
 const READ_DEFAULT_SETTINGS: Record<string, string | number> = {
 	max_threads: 4,
 	max_memory_usage: 4_000_000_000,
@@ -110,7 +106,23 @@ const READ_DEFAULT_SETTINGS: Record<string, string | number> = {
 	query_cache_min_query_runs: 2,
 	query_cache_ttl: 60,
 	query_cache_share_between_users: 0,
+	query_cache_nondeterministic_function_handling: "ignore",
 };
+
+function assertCacheCompatibleSettings(
+	settings: Record<string, string | number>
+): void {
+	const cacheOn =
+		settings.use_query_cache !== undefined &&
+		String(settings.use_query_cache) !== "0";
+	if (cacheOn && settings.result_overflow_mode === "break") {
+		throw new Error(
+			"ClickHouse settings conflict: use_query_cache=1 is incompatible with result_overflow_mode='break'. Drop result_overflow_mode or pass use_query_cache=0."
+		);
+	}
+}
+
+assertCacheCompatibleSettings(READ_DEFAULT_SETTINGS);
 
 const baseClient = createClient({
 	url: process.env.CLICKHOUSE_URL,
@@ -207,6 +219,7 @@ async function chQueryWithMeta<T>(
 			...(options?.readonly && { readonly: "1" }),
 			...options?.clickhouse_settings,
 		};
+		assertCacheCompatibleSettings(settings);
 		const res = await clickHouse.query({
 			query,
 			query_params: params,

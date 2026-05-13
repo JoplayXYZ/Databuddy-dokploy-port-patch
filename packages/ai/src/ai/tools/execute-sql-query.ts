@@ -60,6 +60,7 @@ export async function executeAgentSqlForWebsite({
 			max_result_rows: 100_000,
 			max_result_bytes: 50_000_000,
 			result_overflow_mode: "break",
+			use_query_cache: 0,
 		}
 	);
 
