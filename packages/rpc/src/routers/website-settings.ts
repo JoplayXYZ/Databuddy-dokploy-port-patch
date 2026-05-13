@@ -8,11 +8,14 @@ function setList(
 	key: keyof WebsiteSecuritySettings,
 	value: string[] | undefined
 ) {
-	if (value && value.length > 0) {
-		settings[key] = value;
+	if (value === undefined) {
 		return;
 	}
-	delete settings[key];
+	if (value.length === 0) {
+		delete settings[key];
+		return;
+	}
+	settings[key] = value;
 }
 
 function hasOwnSetting(
@@ -30,7 +33,7 @@ export function mergeWebsiteSecuritySettings(
 	const hasIps = hasOwnSetting(patch, "allowedIps");
 
 	if (!(hasOrigins || hasIps)) {
-		return null;
+		return current ?? null;
 	}
 
 	const next: WebsiteSecuritySettings = { ...(current ?? {}) };
