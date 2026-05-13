@@ -28,12 +28,11 @@ import {
 } from "@/components/ai-elements/tool";
 import { useChat, useChatLoading } from "@/contexts/chat-context";
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
+import { parseContentSegments } from "@/lib/ai-components";
 import {
-	parseContentSegments,
-	type RawComponentInput,
-} from "@/lib/ai-components";
-import { getAIComponentInputFromPart } from "@/lib/ai-components/message-parts";
-import { validateComponentJSON } from "@/lib/ai-components/schemas";
+	getAIComponentInputFromPart,
+	getAIComponentInputFromToolOutput,
+} from "@/lib/ai-components/message-parts";
 import { isAbortError } from "@/lib/is-abort-error";
 import { formatToolLabel } from "@/lib/tool-display";
 import { cn } from "@/lib/utils";
@@ -149,16 +148,6 @@ function getToolStatus(tool: ToolMessagePart, isActive: boolean): ToolStatus {
 		return "error";
 	}
 	return "complete";
-}
-
-function getAIComponentInputFromToolOutput(
-	tool: ToolMessagePart
-): RawComponentInput | null {
-	if (getToolName(tool) !== "dashboard_actions" || tool.output == null) {
-		return null;
-	}
-	const validation = validateComponentJSON(tool.output);
-	return validation.valid ? (tool.output as RawComponentInput) : null;
 }
 
 function InspectableToolStep({
