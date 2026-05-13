@@ -159,7 +159,7 @@ function groupBySchema(
 	return groups;
 }
 
-function buildUnionQuery(
+export function buildUnionQuery(
 	items: { index: number; req: BatchRequest }[],
 	opts?: BatchOptions
 ) {
