@@ -404,8 +404,10 @@ describe("SimpleQueryBuilder.compile", () => {
 
 		const { sql, params } = compile({}, { filters });
 
-		expect(sql).toContain("country = {f0:String}");
-		expect(sql).not.toContain("path = {f1:String}");
+		const whereClause = sql.slice(sql.indexOf("WHERE"), sql.indexOf("GROUP BY"));
+		expect(whereClause).toContain("country = {f0:String}");
+		expect(whereClause).not.toMatch(/\bpath\b/);
+		expect(sql).toMatch(/HAVING[\s\S]*path[\s\S]*\{f\d+:String\}/);
 		expect(params.f0).toBe("US");
 	});
 
@@ -417,8 +419,9 @@ describe("SimpleQueryBuilder.compile", () => {
 
 		const { sql } = compile({}, { filters });
 
-		expect(sql).toContain("country = {f0:String}");
-		expect(sql).not.toContain("path = ");
+		const whereClause = sql.slice(sql.indexOf("WHERE"), sql.indexOf("GROUP BY"));
+		expect(whereClause).toContain("country = {f0:String}");
+		expect(whereClause).not.toMatch(/\bpath\b/);
 	});
 
 	it("allows a configured required filter when present", () => {
