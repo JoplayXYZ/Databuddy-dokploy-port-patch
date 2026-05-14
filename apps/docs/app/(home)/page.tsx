@@ -7,7 +7,6 @@ import { Description } from "@/components/landing/description";
 import FAQ from "@/components/landing/faq";
 import { GridCards } from "@/components/landing/grid-cards";
 import Hero from "@/components/landing/hero";
-import { HomeInsightsShowcase } from "@/components/landing/home-insights-showcase";
 import { MidPageCta } from "@/components/landing/mid-page-cta";
 import Section from "@/components/landing/section";
 import Testimonials from "@/components/landing/testimonials";
@@ -54,14 +53,6 @@ export default async function HomePage() {
 			<div className="overflow-hidden">
 				<Section className="overflow-hidden" customPaddings id="hero">
 					<Hero demoEmbedBaseUrl={demoEmbedBaseUrl} />
-				</Section>
-
-				<Section
-					className="border-border/70 border-y"
-					customPaddings
-					id="home-insights"
-				>
-					<HomeInsightsShowcase />
 				</Section>
 
 				<Section
