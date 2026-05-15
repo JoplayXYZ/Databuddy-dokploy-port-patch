@@ -78,10 +78,10 @@ services:
     image: ghcr.io/databuddy-analytics/databuddy-api:${IMAGE_TAG:?Set IMAGE_TAG to a release tag, for example v1.0.0}
     container_name: databuddy-api
     ports:
-      - "${API_PORT:-3001}:3001"
+      - "${API_PORT:-3021}:3021"
     environment:
       NODE_ENV: production
-      PORT: "3001"
+      PORT: "3021"
       DATABASE_URL: ${DATABASE_URL:?Set DATABASE_URL in your environment}
       DB_POOL_MAX: ${DB_POOL_MAX:-10}
       SERVICE_NAME: databuddy-api
