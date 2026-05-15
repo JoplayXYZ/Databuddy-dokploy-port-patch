@@ -150,6 +150,12 @@ export function validateRequest(
 		const securitySettings = getWebsiteSecuritySettings(website.settings);
 		const allowedOrigins = securitySettings?.allowedOrigins;
 		const allowedIps = securitySettings?.allowedIps;
+		const blockedAlertContext = {
+			organizationId: website.organizationId,
+			ownerId: website.ownerId,
+			websiteDomain: website.domain,
+			websiteName: website.name,
+		};
 
 		if (allowedOrigins?.length && !origin) {
 			logBlockedTraffic(
@@ -159,9 +165,17 @@ export function validateRequest(
 				"origin_missing",
 				"Security Check",
 				undefined,
-				clientId
+				clientId,
+				blockedAlertContext
 			);
-			log.set({ validation: { failed: true, reason: "origin_missing" } });
+			log.set({
+				validation: {
+					failed: true,
+					reason: "origin_missing",
+					expectedDomain: website.domain,
+					allowedOrigins,
+				},
+			});
 			throw basketErrors.ingestOriginNotAuthorized();
 		}
 
@@ -173,10 +187,17 @@ export function validateRequest(
 				"origin_not_authorized",
 				"Security Check",
 				undefined,
-				clientId
+				clientId,
+				blockedAlertContext
 			);
 			log.set({
-				validation: { failed: true, reason: "origin_not_authorized", origin },
+				validation: {
+					failed: true,
+					reason: "origin_not_authorized",
+					origin,
+					expectedDomain: website.domain,
+					allowedOrigins,
+				},
 			});
 			throw basketErrors.ingestOriginNotAuthorized();
 		}
@@ -197,7 +218,8 @@ export function validateRequest(
 					"ip_not_authorized",
 					"Security Check",
 					undefined,
-					clientId
+					clientId,
+					blockedAlertContext
 				);
 				log.set({ validation: { failed: true, reason: "ip_not_authorized" } });
 				throw basketErrors.ingestIpNotAuthorized();

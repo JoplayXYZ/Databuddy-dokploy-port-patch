@@ -219,13 +219,14 @@ describe("buildBasketErrorPayload", () => {
 		expect(typeof payload.error).toBe("string");
 	});
 
-	test("404 EvlogError → exposes message even in production", () => {
+	test("4xx EvlogError → exposes message even in production", () => {
 		const original = process.env.NODE_ENV;
 		process.env.NODE_ENV = "production";
 		try {
-			const err = createError({ message: "Not found", status: 404 });
+			const err = createError({ message: "Origin not authorized", status: 403 });
 			const { payload } = buildBasketErrorPayload(err);
-			expect(payload.error).toBe("Not found");
+			expect(payload.error).toBe("Origin not authorized");
+			expect(payload.message).toBe("Origin not authorized");
 		} finally {
 			process.env.NODE_ENV = original;
 		}

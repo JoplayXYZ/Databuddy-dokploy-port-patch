@@ -2,10 +2,12 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import { useAtom, useSetAtom } from "jotai";
+import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
 import { parseAsBoolean, parseAsString, useQueryState } from "nuqs";
 import { useEffect, useMemo } from "react";
 import { toast } from "sonner";
+import { NoticeBanner } from "@/app/(main)/websites/_components/notice-banner";
 import { LiveUserIndicator } from "@/components/analytics";
 import { TopBar } from "@/components/layout/top-bar";
 import { WebsiteErrorState } from "@/components/website-error-state";
@@ -33,7 +35,7 @@ import { FiltersSection } from "./_components/filters/filters-section";
 import { SavedFiltersToolbar } from "./_components/filters/saved-filters-toolbar";
 import { WebsiteTrackingSetupTab } from "./_components/tabs/tracking-setup-tab";
 import { useTrackingSetup } from "./hooks/use-tracking-setup";
-import { ArrowClockwiseIcon } from "@databuddy/ui/icons";
+import { ArrowClockwiseIcon, WarningCircleIcon } from "@databuddy/ui/icons";
 import { Button } from "@databuddy/ui";
 
 const ROUTES_WITHOUT_ANALYTICS_TOOLBAR = new Set([
@@ -129,7 +131,7 @@ export default function WebsiteLayout({ children }: WebsiteLayoutProps) {
 		error: websiteError,
 	} = useWebsite(websiteId);
 
-	const { isTrackingSetup, isTrackingSetupLoading } =
+	const { isTrackingSetup, isTrackingSetupLoading, trackingIssue } =
 		useTrackingSetup(websiteId);
 
 	const isToolbarLoading =
@@ -143,6 +145,8 @@ export default function WebsiteLayout({ children }: WebsiteLayoutProps) {
 		!(isDemoRoute || isTrackingSetupLoading) &&
 		websiteData &&
 		isTrackingSetup === false;
+	const showTrackingIssue =
+		!(isDemoRoute || isTrackingSetupLoading) && trackingIssue;
 
 	const handleRefresh = async () => {
 		setIsRefreshing(true);
@@ -170,7 +174,13 @@ export default function WebsiteLayout({ children }: WebsiteLayoutProps) {
 	}
 
 	if (!isWebsiteLoading && isWebsiteError) {
-		return <WebsiteErrorState error={websiteError} websiteId={websiteId} />;
+		return (
+			<WebsiteErrorState
+				error={websiteError}
+				isDemoRoute={isDemoRoute}
+				websiteId={websiteId}
+			/>
+		);
 	}
 
 	return (
@@ -224,6 +234,30 @@ export default function WebsiteLayout({ children }: WebsiteLayoutProps) {
 				</div>
 			) : (
 				<div className="min-h-0 flex-1 overflow-y-auto overscroll-none">
+					{showTrackingIssue && trackingIssue ? (
+						<div className="p-4 pb-0">
+							<NoticeBanner
+								description={trackingIssue.message}
+								icon={<WarningCircleIcon className="text-amber-500" />}
+								title="Tracking requests are being blocked"
+							>
+								<div className="flex flex-wrap items-center gap-2">
+									{trackingIssue.type === "origin_not_authorized" ? (
+										<Button asChild size="sm" variant="secondary">
+											<Link href={`/websites/${websiteId}/settings/general`}>
+												Update domain
+											</Link>
+										</Button>
+									) : null}
+									<Button asChild size="sm" variant="ghost">
+										<Link href={`/websites/${websiteId}/settings/security`}>
+											Security settings
+										</Link>
+									</Button>
+								</div>
+							</NoticeBanner>
+						</div>
+					) : null}
 					{showTrackingSetup ? (
 						<div className="p-4">
 							<WebsiteTrackingSetupTab websiteId={websiteId} />

@@ -227,7 +227,7 @@ export function buildBasketErrorPayload(
 	const statusCode =
 		parsed.status >= 400 && parsed.status < 600 ? parsed.status : 500;
 	const safeClientError =
-		isDevelopment || statusCode === 404
+		isDevelopment || (statusCode >= 400 && statusCode < 500)
 			? errorMessage
 			: "An internal server error occurred";
 	const exposeStructured =
