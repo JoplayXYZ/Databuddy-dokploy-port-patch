@@ -286,7 +286,7 @@ function TrafficTrendsRechartsPlot({
 		curveAdjustment: Chart.isStepCurve(chartStepType) ? 0 : 1,
 	});
 
-	const handleMouseDown = (e: { activeLabel?: string }) => {
+	const handleMouseDown = (e: { activeLabel?: string | number }) => {
 		if (!e?.activeLabel) {
 			return;
 		}
@@ -296,14 +296,14 @@ function TrafficTrendsRechartsPlot({
 		setRefAreaRight(null);
 	};
 
-	const handleMouseMove = (e: { activeLabel?: string }) => {
+	const handleMouseMove = (e: { activeLabel?: string | number }) => {
 		if (!(refAreaLeft && e?.activeLabel)) {
 			return;
 		}
 		setRefAreaRight(e.activeLabel);
 	};
 
-	const handleMouseUp = (e: { activeLabel?: string }) => {
+	const handleMouseUp = (e: { activeLabel?: string | number }) => {
 		setIsDragging((wasDragging) => {
 			if (wasDragging) {
 				setTimeout(() => setSuppressTooltip(false), 150);
