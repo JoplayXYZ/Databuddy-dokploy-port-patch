@@ -30,7 +30,7 @@ services:
   dashboard:
     build:
       context: .
-      dockerfile: dashboard.dockerfile
+      dockerfile: dashboard.Dockerfile
     container_name: databuddy-dashboard
     ports:
       - "3023:3000"
