@@ -83,6 +83,7 @@ beforeEach(async () => {
 
 afterAll(() => {
 	Date.now = realDateNow;
+	mock.restore();
 });
 
 describe("cacheable", () => {
@@ -854,6 +855,27 @@ describe("cacheable", () => {
 			);
 
 			await expect(cached()).rejects.toThrow("Database error");
+		});
+
+		it("does not cache failed function results", async () => {
+			let attempt = 0;
+			const original = mock(async () => {
+				attempt += 1;
+				if (attempt === 1) {
+					throw new Error("temporary failure");
+				}
+				return { planId: "pro" };
+			});
+			const cached = cacheable(original, {
+				expireInSec: 60,
+				prefix: "fn-err-retry",
+			});
+
+			await expect(cached()).rejects.toThrow("temporary failure");
+			await expect(cached()).resolves.toEqual({ planId: "pro" });
+
+			expect(original).toHaveBeenCalledTimes(2);
+			expect(mockSetex).toHaveBeenCalledTimes(1);
 		});
 
 		it("propagates errors when redis is unavailable (fn called directly)", async () => {

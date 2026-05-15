@@ -2,6 +2,13 @@ import { db } from "@databuddy/db";
 import { chQuery } from "@databuddy/db/clickhouse";
 import { cacheable } from "@databuddy/redis";
 import {
+	ACTIONABLE_TRACKING_BLOCK_REASONS,
+	getTrackingBlockOriginHost,
+	isActionableTrackingBlockReason,
+	isIgnoredTrackingBlockOrigin,
+	type ActionableTrackingBlockReason,
+} from "@databuddy/shared/tracking-blocks";
+import {
 	DuplicateDomainError,
 	ValidationError,
 	type Website,
@@ -59,9 +66,95 @@ function handleServiceError(error: unknown): never {
 	throw rpcError.internal("Website operation failed");
 }
 
+const TRACKING_HEALTH_WINDOW_HOURS = 24;
+const TRACKING_ISSUE_MIN_BLOCKS = 3;
+const TRACKING_ISSUE_TYPES = ACTIONABLE_TRACKING_BLOCK_REASONS;
+
+type TrackingIssueType = ActionableTrackingBlockReason;
+type TrackingIssueSeverity = "critical" | "warning";
+
 interface EventsCheckResult {
 	error: string | null;
 	hasEvents: boolean;
+	recentEvents: number;
+}
+
+interface BlockedTrackingIssueRow {
+	count: number;
+	issueType: string;
+	lastSeen: string | null;
+	origin: string | null;
+}
+
+interface TrackingIssue {
+	count: number;
+	expectedDomain: string | null;
+	fix: string;
+	lastSeen: string | null;
+	message: string;
+	origin: string | null;
+	severity: TrackingIssueSeverity;
+	type: TrackingIssueType;
+}
+
+function buildTrackingIssue(
+	row: BlockedTrackingIssueRow,
+	websiteDomain: string | null,
+	recentEvents: number
+): TrackingIssue | null {
+	if (!isActionableTrackingBlockReason(row.issueType)) {
+		return null;
+	}
+
+	const severity: TrackingIssueSeverity =
+		recentEvents === 0 ? "critical" : "warning";
+	const originHost = getTrackingBlockOriginHost(row.origin);
+	const expectedDomain = websiteDomain || null;
+
+	if (row.issueType === "origin_not_authorized") {
+		const source = originHost ? ` from ${originHost}` : "";
+		const expected = expectedDomain ? ` (${expectedDomain})` : "";
+		const fix = originHost
+			? `Update the website domain to ${originHost}, or add ${originHost} under Security → Allowed Origins if this is an additional trusted domain.`
+			: "Update the website domain or add the trusted origin under Security → Allowed Origins.";
+
+		return {
+			count: row.count,
+			expectedDomain,
+			fix,
+			lastSeen: row.lastSeen,
+			message: `Recent tracking requests${source} are being blocked because they do not match the configured domain${expected}.`,
+			origin: row.origin || null,
+			severity,
+			type: row.issueType,
+		};
+	}
+
+	if (row.issueType === "origin_missing") {
+		return {
+			count: row.count,
+			expectedDomain,
+			fix: "Browser requests must include an allowed Origin. For server-side events, use the /track API with an API key instead of the browser ingest endpoint.",
+			lastSeen: row.lastSeen,
+			message:
+				"Recent tracking requests are missing an Origin header and are blocked by the website origin allowlist.",
+			origin: null,
+			severity,
+			type: row.issueType,
+		};
+	}
+
+	return {
+		count: row.count,
+		expectedDomain,
+		fix: "Update the website IP allowlist or remove the restriction if browser traffic should be accepted from dynamic client IPs.",
+		lastSeen: row.lastSeen,
+		message:
+			"Recent tracking requests are being blocked by this website's IP allowlist.",
+		origin: row.origin || null,
+		severity,
+		type: row.issueType,
+	};
 }
 
 async function getTrackingEventsStatus(
@@ -69,8 +162,12 @@ async function getTrackingEventsStatus(
 ): Promise<EventsCheckResult> {
 	try {
 		const trackingCheckResult = await Promise.race([
-			chQuery<{ count: number }>(
-				`SELECT COUNT(*) as count FROM analytics.events WHERE client_id = {websiteId:String} AND event_name = 'screen_view' LIMIT 1`,
+			chQuery<{ count: number; recentCount: number }>(
+				`SELECT
+					countIf(event_name = 'screen_view') AS count,
+					countIf(event_name = 'screen_view' AND time >= now() - INTERVAL ${TRACKING_HEALTH_WINDOW_HOURS} HOUR) AS recentCount
+				FROM analytics.events
+				PREWHERE client_id = {websiteId:String}`,
 				{ websiteId }
 			),
 			new Promise<never>((_, reject) =>
@@ -78,24 +175,80 @@ async function getTrackingEventsStatus(
 			),
 		]);
 
+		const row = trackingCheckResult[0];
 		return {
-			hasEvents: (trackingCheckResult[0]?.count ?? 0) > 0,
+			hasEvents: (row?.count ?? 0) > 0,
+			recentEvents: row?.recentCount ?? 0,
 			error: null,
 		};
 	} catch (error) {
 		const message =
 			error instanceof Error ? error.message : "Unknown error checking events";
 		logger.error({ websiteId }, `Error checking tracking events: ${message}`);
-		return { hasEvents: false, error: message };
+		return { hasEvents: false, recentEvents: 0, error: message };
 	}
 }
 
-const buildStatusMessage = (hasEvents: boolean, eventsError: string | null) => {
-	if (hasEvents) {
+async function getRecentBlockedTrackingIssue(
+	websiteId: string
+): Promise<BlockedTrackingIssueRow | null> {
+	try {
+		const rows = await Promise.race([
+			chQuery<BlockedTrackingIssueRow>(
+				`SELECT
+					block_reason AS issueType,
+					ifNull(origin, '') AS origin,
+					count() AS count,
+					toString(max(timestamp)) AS lastSeen
+				FROM analytics.blocked_traffic
+				PREWHERE timestamp >= now() - INTERVAL ${TRACKING_HEALTH_WINDOW_HOURS} HOUR
+				WHERE client_id = {websiteId:String}
+					AND block_reason IN {issueTypes:Array(String)}
+				GROUP BY issueType, origin
+				HAVING count >= {minBlocks:UInt32}
+				ORDER BY count DESC, lastSeen DESC
+				LIMIT 20`,
+				{
+					issueTypes: [...TRACKING_ISSUE_TYPES],
+					minBlocks: TRACKING_ISSUE_MIN_BLOCKS,
+					websiteId,
+				}
+			),
+			new Promise<never>((_, reject) =>
+				setTimeout(() => reject(new Error("ClickHouse query timeout")), 10_000)
+			),
+		]);
+
+		return (
+			rows.find((row) => !isIgnoredTrackingBlockOrigin(row.origin)) ?? null
+		);
+	} catch (error) {
+		const message =
+			error instanceof Error
+				? error.message
+				: "Unknown error checking blocked traffic";
+		logger.error({ websiteId }, `Error checking blocked traffic: ${message}`);
+		return null;
+	}
+}
+
+const buildStatusMessage = (
+	status: EventsCheckResult,
+	issue: TrackingIssue | null
+) => {
+	if (issue?.severity === "critical") {
+		return issue.message;
+	}
+
+	if (status.hasEvents && issue) {
+		return "Tracking is receiving events, but some recent requests are blocked by security settings.";
+	}
+
+	if (status.hasEvents) {
 		return "Tracking is active and receiving events.";
 	}
 
-	if (eventsError) {
+	if (status.error) {
 		return "Unable to check events. Try again shortly.";
 	}
 
@@ -177,6 +330,26 @@ const listWithChartsOutputSchema = z.object({
 });
 
 const successOutputSchema = z.object({ success: z.literal(true) });
+
+const trackingIssueOutputSchema = z.object({
+	count: z.number(),
+	expectedDomain: z.string().nullable(),
+	fix: z.string(),
+	lastSeen: z.string().nullable(),
+	message: z.string(),
+	origin: z.string().nullable(),
+	severity: z.enum(["critical", "warning"]),
+	type: z.enum(TRACKING_ISSUE_TYPES),
+});
+
+const trackingSetupOutputSchema = z.object({
+	tracking_setup: z.boolean(),
+	integration_type: z.string().nullable(),
+	has_events: z.boolean(),
+	recent_events: z.number(),
+	status_message: z.string(),
+	tracking_issue: trackingIssueOutputSchema.nullable(),
+});
 
 export type WebsiteOutput = z.infer<typeof websiteOutputSchema>;
 
@@ -694,22 +867,32 @@ export const websitesRouter = {
 			tags: ["Websites"],
 		})
 		.input(z.object({ websiteId: z.string() }))
-		.output(z.record(z.string(), z.unknown()))
+		.output(trackingSetupOutputSchema)
 		.handler(async ({ context, input }) => {
-			await withWorkspace(context, {
+			const { website } = await withWorkspace(context, {
 				websiteId: input.websiteId,
 				permissions: ["read"],
 			});
 
-			const { hasEvents, error: eventsError } = await getTrackingEventsStatus(
-				input.websiteId
-			);
+			const [eventsStatus, blockedIssueRow] = await Promise.all([
+				getTrackingEventsStatus(input.websiteId),
+				getRecentBlockedTrackingIssue(input.websiteId),
+			]);
+			const trackingIssue = blockedIssueRow
+				? buildTrackingIssue(
+						blockedIssueRow,
+						website?.domain ?? null,
+						eventsStatus.recentEvents
+					)
+				: null;
 
 			return {
-				tracking_setup: hasEvents,
-				integration_type: hasEvents ? "manual" : null,
-				has_events: hasEvents,
-				status_message: buildStatusMessage(hasEvents, eventsError),
+				tracking_setup: eventsStatus.hasEvents,
+				integration_type: eventsStatus.hasEvents ? "manual" : null,
+				has_events: eventsStatus.hasEvents,
+				recent_events: eventsStatus.recentEvents,
+				status_message: buildStatusMessage(eventsStatus, trackingIssue),
+				tracking_issue: trackingIssue,
 			};
 		}),
 

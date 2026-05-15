@@ -102,6 +102,13 @@ export interface PlanCapabilities {
 	limits: Record<GatedFeatureId, FeatureLimit>;
 }
 
+export function normalizePlanId(planId: PlanId | string | null): PlanId {
+	const normalized = (planId ?? PLAN_IDS.FREE).toLowerCase();
+	return PLAN_HIERARCHY.includes(normalized as PlanId)
+		? (normalized as PlanId)
+		: PLAN_IDS.FREE;
+}
+
 export const PLAN_CAPABILITIES: Record<PlanId, PlanCapabilities> = {
 	[PLAN_IDS.FREE]: {
 		features: PLAN_FEATURES[PLAN_IDS.FREE],
@@ -188,16 +195,16 @@ export function isPlanFeatureEnabled(
 	planId: PlanId | string | null,
 	feature: GatedFeatureId
 ): boolean {
-	const plan = (planId ?? PLAN_IDS.FREE) as PlanId;
-	return PLAN_FEATURES[plan]?.[feature] ?? false;
+	const plan = normalizePlanId(planId);
+	return PLAN_FEATURES[plan][feature];
 }
 
 export function getPlanFeatureLimit(
 	planId: PlanId | string | null,
 	feature: GatedFeatureId
 ): FeatureLimit {
-	const plan = (planId ?? PLAN_IDS.FREE) as PlanId;
-	return PLAN_FEATURE_LIMITS[plan]?.[feature] ?? false;
+	const plan = normalizePlanId(planId);
+	return PLAN_FEATURE_LIMITS[plan][feature];
 }
 
 export function isFeatureAvailable(
@@ -227,12 +234,15 @@ export function getNextPlanForFeature(
 	currentPlan: PlanId | string | null,
 	feature: GatedFeatureId
 ): PlanId | null {
-	const plan = (currentPlan ?? PLAN_IDS.FREE) as PlanId;
+	const plan = normalizePlanId(currentPlan);
 	const currentIndex = PLAN_HIERARCHY.indexOf(plan);
 	const currentLimit = PLAN_FEATURE_LIMITS[plan][feature];
 
 	for (let i = currentIndex + 1; i < PLAN_HIERARCHY.length; i++) {
 		const nextPlan = PLAN_HIERARCHY[i];
+		if (!nextPlan) {
+			continue;
+		}
 		const nextLimit = PLAN_FEATURE_LIMITS[nextPlan][feature];
 
 		if (nextLimit === "unlimited") {
@@ -267,6 +277,5 @@ export function getMinimumPlanForFeature(
 export function getPlanCapabilities(
 	planId: PlanId | string | null
 ): PlanCapabilities {
-	const plan = (planId ?? PLAN_IDS.FREE) as PlanId;
-	return PLAN_CAPABILITIES[plan] ?? PLAN_CAPABILITIES[PLAN_IDS.FREE];
+	return PLAN_CAPABILITIES[normalizePlanId(planId)];
 }

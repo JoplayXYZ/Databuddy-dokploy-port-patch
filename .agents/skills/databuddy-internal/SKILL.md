@@ -18,6 +18,7 @@ Keep additions **minimal**: one bullet, a new `rg` hint, or a routing note—eno
 ## Quick Map
 
 - Prod infrastructure repo is local at `/Users/iza/Documents/GitHub/databuddy-infra` (`databuddy-analytics/infra`); ClickHouse cluster inventory is `clickhouse/ansible/inventory.yml`, not `/Users/iza/Dev/Databuddy/infra` or `DatabuddyOPS`.
+- Never use production/customer data as tests, fixtures, snapshots, examples, or copied output. Tests must use placeholders/mocks only (example.com, example IDs). If production ClickHouse is queried for investigation, summarize anonymized aggregates and do not paste customer domains, client IDs, emails, or other identifiers into code or responses.
 - `apps/dashboard`: Next.js app on port `3000` (per-website **agent** chat: `@ai-sdk/react` `useChat` via `contexts/chat-context.tsx` — not the separate `chat-sdk` package; overlapping sends while streaming are queued client-side to mirror a “queue latest” strategy.)
 - Dashboard Playwright webServer commands run under CI PATH from setup-bun; avoid `bash -lc` because login shells can drop Bun from PATH. Build dist-only workspace packages such as `@databuddy/sdk` and `@databuddy/devtools` before starting the API/dashboard. Client `NEXT_PUBLIC_*` flags must use direct env access so Next can inline them. `readBooleanEnv` only treats the literal string `"true"` as enabled, so CI E2E booleans must use `"true"`/`"false"`, not `"1"`/`"0"`.
 - `apps/api`: Elysia API on port `3001`
@@ -105,6 +106,7 @@ Read [codebase-map.md](./references/codebase-map.md) when you need deeper routin
 - Flags list rows (`app/(main)/websites/[id]/flags/_components/flags-list.tsx`) are clickable containers with nested controls; mark nested controls with `data-row-interactive="true"` and have the row ignore those targets instead of relying on broad cell-level `stopPropagation`.
 - Never put interactive controls inside another `<button>` on dashboard rows. If a row has actions/menus, make the main row content a sibling `Button` and keep action buttons as separate siblings; do not use a `div` with click/key handlers as a fake button.
 - For data loading and mutations, inspect `apps/dashboard/lib/orpc.ts` and the corresponding hooks/components
+- Public/demo analytics data still flows through `apps/api/src/routes/query.ts`; public website access is controlled by per-query-builder `publicAccess`, not only oRPC metadata.
 - Many changes require matching edits in `packages/rpc`
 
 ### API and RPC work

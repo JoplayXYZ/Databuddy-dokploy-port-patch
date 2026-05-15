@@ -1,4 +1,9 @@
-import { db, eq, withTransaction } from "@databuddy/db";
+import {
+	db,
+	eq,
+	normalizeEmailNotificationSettings,
+	withTransaction,
+} from "@databuddy/db";
 import { chQuery } from "@databuddy/db/clickhouse";
 import { uptimeSchedules } from "@databuddy/db/schema";
 import { config } from "@databuddy/env/app";
@@ -154,6 +159,27 @@ const claimTransition = (scheduleId: string, currentStatus: number) =>
 		catch: (cause) => new TransitionClaimError({ cause }),
 	});
 
+async function getOrganizationEmailSettings(organizationId: string) {
+	const row = await db.query.organization.findFirst({
+		where: { id: organizationId },
+		columns: { emailNotifications: true },
+	});
+	return normalizeEmailNotificationSettings(row?.emailNotifications);
+}
+
+function filterUptimeEmailDestinations(
+	alarm: LinkedAlarm,
+	emailsEnabled: boolean
+): LinkedAlarm {
+	if (emailsEnabled) {
+		return alarm;
+	}
+	return {
+		...alarm,
+		destinations: alarm.destinations.filter((dest) => dest.type !== "email"),
+	};
+}
+
 const sendToAlarm = (
 	alarm: LinkedAlarm,
 	payload: Parameters<NotificationClient["send"]>[0]
@@ -241,6 +267,16 @@ const handleTransition = (options: {
 			return { alarms_fired: 0, transition_kind: kind };
 		}
 
+		const emailSettings = yield* Effect.tryPromise(() =>
+			getOrganizationEmailSettings(options.schedule.organizationId)
+		).pipe(
+			Effect.orElseSucceed(() => normalizeEmailNotificationSettings(null))
+		);
+		const emailsEnabled =
+			kind === "down"
+				? emailSettings.uptime.downEmails
+				: emailSettings.uptime.recoveryEmails;
+
 		const siteLabel = buildSiteLabel(options.schedule);
 		const dashboardUrl = `${config.urls.dashboard}/monitors/${options.schedule.id}`;
 
@@ -270,7 +306,9 @@ const handleTransition = (options: {
 			},
 		};
 
-		const sendable = linkedAlarms.filter((a) => a.destinations.length > 0);
+		const sendable = linkedAlarms
+			.map((alarm) => filterUptimeEmailDestinations(alarm, emailsEnabled))
+			.filter((alarm) => alarm.destinations.length > 0);
 
 		const results = yield* Effect.all(
 			sendable.map((alarm) =>

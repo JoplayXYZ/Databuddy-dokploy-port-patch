@@ -94,12 +94,27 @@ async function enforceWebsiteSecurity(
 	const allowedIps = settings?.allowedIps;
 
 	if (allowedOrigins?.length && !origin) {
-		log.set({ auth: { ok: false, reason: "origin_missing" } });
+		log.set({
+			auth: {
+				ok: false,
+				reason: "origin_missing",
+				expectedDomain: website.domain,
+				allowedOrigins,
+			},
+		});
 		throw basketErrors.ingestOriginNotAuthorized();
 	}
 
 	if (origin && !isOriginAllowed(origin, website.domain, allowedOrigins)) {
-		log.set({ auth: { ok: false, reason: "origin_not_authorized", origin } });
+		log.set({
+			auth: {
+				ok: false,
+				reason: "origin_not_authorized",
+				origin,
+				expectedDomain: website.domain,
+				allowedOrigins,
+			},
+		});
 		throw basketErrors.ingestOriginNotAuthorized();
 	}
 

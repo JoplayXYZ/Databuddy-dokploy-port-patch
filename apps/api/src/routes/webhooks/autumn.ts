@@ -1,5 +1,13 @@
 import { randomUUID } from "node:crypto";
-import { db } from "@databuddy/db";
+import {
+	and,
+	db,
+	eq,
+	gt,
+	normalizeEmailNotificationSettings,
+	sql,
+	withTransaction,
+} from "@databuddy/db";
 import { usageAlertLog } from "@databuddy/db/schema";
 import { render, UsageAlertEmail, UsageLimitEmail } from "@databuddy/email";
 import { config } from "@databuddy/env/app";
@@ -72,6 +80,14 @@ interface WebhookResult {
 	success: boolean;
 }
 
+async function getOrganizationEmailSettings(customerId: string) {
+	const row = await db.query.organization.findFirst({
+		where: { id: customerId },
+		columns: { emailNotifications: true },
+	});
+	return normalizeEmailNotificationSettings(row?.emailNotifications);
+}
+
 const getUserData = cacheable(
 	async (
 		customerId: string
@@ -94,16 +110,7 @@ function formatFeatureId(id: string): string {
 	return id.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-async function wasRecentlySent(userId: string, key: string): Promise<boolean> {
-	const since = new Date(Date.now() - COOLDOWN_MS);
-	const row = await db.query.usageAlertLog.findFirst({
-		where: { userId, featureId: key, createdAt: { gt: since } },
-		columns: { id: true },
-	});
-	return Boolean(row);
-}
-
-async function sendAlertEmail(opts: {
+export async function sendAlertEmail(opts: {
 	customerId: string;
 	cooldownKey: string;
 	alertType: string;
@@ -113,13 +120,6 @@ async function sendAlertEmail(opts: {
 	const log = useLogger();
 	const { customerId, cooldownKey, alertType, subject, react } = opts;
 
-	if (await wasRecentlySent(customerId, cooldownKey)) {
-		log.info("Skipping alert - sent recently", {
-			autumn: { customerId, cooldownKey },
-		});
-		return { success: true, message: "Already sent recently" };
-	}
-
 	const { email } = await getUserData(customerId);
 	if (!email) {
 		log.warn("No email for customer", {
@@ -128,33 +128,59 @@ async function sendAlertEmail(opts: {
 		return { success: false, message: "No email found" };
 	}
 
-	const html = await render(react);
-	const result = await resend.emails.send({
-		from: config.email.alertsFrom,
-		to: email,
-		subject,
-		html,
-	});
+	return withTransaction(async (tx) => {
+		await tx.execute(
+			sql`SELECT pg_advisory_xact_lock(hashtextextended(${`usage-alert:${customerId}:${cooldownKey}`}, 0))`
+		);
 
-	if (result.error) {
-		log.error(new Error(result.error.message), {
-			autumn: { customerId, resend: result.error },
+		const since = new Date(Date.now() - COOLDOWN_MS);
+		const [recent] = await tx
+			.select({ id: usageAlertLog.id })
+			.from(usageAlertLog)
+			.where(
+				and(
+					eq(usageAlertLog.userId, customerId),
+					eq(usageAlertLog.featureId, cooldownKey),
+					gt(usageAlertLog.createdAt, since)
+				)
+			)
+			.limit(1);
+
+		if (recent) {
+			log.info("Skipping alert - sent recently", {
+				autumn: { customerId, cooldownKey },
+			});
+			return { success: true, message: "Already sent recently" };
+		}
+
+		const html = await render(react);
+		const result = await resend.emails.send({
+			from: config.email.alertsFrom,
+			to: email,
+			subject,
+			html,
 		});
-		return { success: false, message: result.error.message };
-	}
 
-	await db.insert(usageAlertLog).values({
-		id: randomUUID(),
-		userId: customerId,
-		featureId: cooldownKey,
-		alertType,
-		emailSentTo: email,
-	});
+		if (result.error) {
+			log.error(new Error(result.error.message), {
+				autumn: { customerId, resend: result.error },
+			});
+			return { success: false, message: result.error.message };
+		}
 
-	log.info("Alert email sent", {
-		autumn: { customerId, cooldownKey, emailId: result.data?.id },
+		await tx.insert(usageAlertLog).values({
+			id: randomUUID(),
+			userId: customerId,
+			featureId: cooldownKey,
+			alertType,
+			emailSentTo: email,
+		});
+
+		log.info("Alert email sent", {
+			autumn: { customerId, cooldownKey, emailId: result.data?.id },
+		});
+		return { success: true, message: "Email sent" };
 	});
-	return { success: true, message: "Email sent" };
 }
 
 async function invalidatePlanCaches(customerId: string | null): Promise<void> {
@@ -207,8 +233,12 @@ function handleLimitReached(
 	});
 }
 
-function handleUsageAlert(data: UsageAlertData): Promise<WebhookResult> {
+async function handleUsageAlert(data: UsageAlertData): Promise<WebhookResult> {
 	const { customer_id, feature_id, usage_alert } = data;
+	const settings = await getOrganizationEmailSettings(customer_id);
+	if (!settings.billing.usageWarnings) {
+		return { success: true, message: "Usage warning emails disabled" };
+	}
 	const featureName = formatFeatureId(feature_id);
 	const isPercentage =
 		usage_alert.threshold_type === "usage_percentage_threshold";

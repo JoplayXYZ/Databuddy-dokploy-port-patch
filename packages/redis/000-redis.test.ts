@@ -23,7 +23,7 @@ mock.module("ioredis", () => ({
 
 process.env.REDIS_URL = "redis://test-host:6379";
 
-const { getRedisCache } = await import("./redis");
+const { getRedisCache } = await import("./redis.ts");
 getRedisCache();
 
 describe("redis", () => {

@@ -1,4 +1,8 @@
-import { db } from "@databuddy/db";
+import {
+	db,
+	normalizeEmailNotificationSettings,
+	type OrganizationEmailNotificationSettings,
+} from "@databuddy/db";
 import {
 	buildAnomalyNotificationPayload,
 	NotificationClient,
@@ -58,6 +62,20 @@ const timeSeriesPointSchema = z.object({
 	hour: z.string(),
 	count: z.number(),
 });
+
+function anomalyEmailEnabled(
+	metric: string,
+	organizationSettings: OrganizationEmailNotificationSettings | null | undefined
+): boolean {
+	const settings = normalizeEmailNotificationSettings(organizationSettings);
+	if (metric === "errors") {
+		return settings.anomalies.errorEmails;
+	}
+	if (metric === "custom_events") {
+		return settings.anomalies.customEventEmails;
+	}
+	return settings.anomalies.trafficEmails;
+}
 
 export const anomaliesRouter = {
 	detect: protectedProcedure
@@ -160,6 +178,11 @@ export const anomaliesRouter = {
 			const clientId = workspace.website.id;
 			const orgId = workspace.organizationId;
 
+			const org = await db.query.organization.findFirst({
+				where: { id: orgId },
+				columns: { emailNotifications: true },
+			});
+
 			const detected = await detectAnomalies(clientId);
 
 			if (detected.length === 0) {
@@ -210,9 +233,14 @@ export const anomaliesRouter = {
 						eventName: anomaly.eventName,
 					});
 
-					const { clientConfig, channels } = toNotificationConfig(
-						alarm.destinations
+					const emailEnabled = anomalyEmailEnabled(
+						anomaly.metric,
+						org?.emailNotifications
 					);
+					const destinations = emailEnabled
+						? alarm.destinations
+						: alarm.destinations.filter((dest) => dest.type !== "email");
+					const { clientConfig, channels } = toNotificationConfig(destinations);
 					if (channels.length === 0) {
 						continue;
 					}
