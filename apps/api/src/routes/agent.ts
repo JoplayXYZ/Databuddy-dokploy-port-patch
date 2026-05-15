@@ -997,7 +997,7 @@ export const agent = new Elysia({ prefix: "/v1/agent" })
 						originalMessages: validation.data,
 						onFinish: async ({ messages }) => {
 							try {
-								await clearActiveStream(body.websiteId, chatId);
+								await clearActiveStream(body.websiteId, chatId, streamId);
 							} catch {}
 							if (!persistedUserId) {
 								return;
