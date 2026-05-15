@@ -287,12 +287,12 @@ function TrafficTrendsRechartsPlot({
 	});
 
 	const handleMouseDown = (e: { activeLabel?: string | number }) => {
-		if (!e?.activeLabel) {
-			return;
-		}
+		if (!e?.activeLabel) return;
+	
 		setIsDragging(true);
 		setSuppressTooltip(true);
-		setRefAreaLeft(e.activeLabel);
+	
+		setRefAreaLeft(String(e.activeLabel));
 		setRefAreaRight(null);
 	};
 
