@@ -292,7 +292,7 @@ function TrafficTrendsRechartsPlot({
 		setIsDragging(true);
 		setSuppressTooltip(true);
 	
-		setRefAreaLeft(String(e.activeLabel));
+		setRefAreaRight(String(e.activeLabel));
 		setRefAreaRight(null);
 	};
 
@@ -300,7 +300,7 @@ function TrafficTrendsRechartsPlot({
 		if (!(refAreaLeft && e?.activeLabel)) {
 			return;
 		}
-		setRefAreaRight(e.activeLabel);
+		setRefAreaRight(String(e.activeLabel));
 	};
 
 	const handleMouseUp = (e: { activeLabel?: string | number }) => {
