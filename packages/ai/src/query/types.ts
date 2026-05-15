@@ -146,6 +146,7 @@ export interface SimpleQueryConfig {
 	noCache?: boolean;
 	orderBy?: string;
 	plugins?: QueryPlugins;
+	publicAccess?: boolean;
 	requiredFilters?: string[];
 	skipDateFilter?: boolean;
 	table?: string;

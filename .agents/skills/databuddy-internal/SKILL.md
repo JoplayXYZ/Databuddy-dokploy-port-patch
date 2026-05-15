@@ -106,6 +106,7 @@ Read [codebase-map.md](./references/codebase-map.md) when you need deeper routin
 - Flags list rows (`app/(main)/websites/[id]/flags/_components/flags-list.tsx`) are clickable containers with nested controls; mark nested controls with `data-row-interactive="true"` and have the row ignore those targets instead of relying on broad cell-level `stopPropagation`.
 - Never put interactive controls inside another `<button>` on dashboard rows. If a row has actions/menus, make the main row content a sibling `Button` and keep action buttons as separate siblings; do not use a `div` with click/key handlers as a fake button.
 - For data loading and mutations, inspect `apps/dashboard/lib/orpc.ts` and the corresponding hooks/components
+- Public/demo analytics data still flows through `apps/api/src/routes/query.ts`; public website access is controlled by per-query-builder `publicAccess`, not only oRPC metadata.
 - Many changes require matching edits in `packages/rpc`
 
 ### API and RPC work

@@ -30,6 +30,7 @@ import type { Filter, QueryRequest } from "@databuddy/ai/query/types";
 import { Elysia, t } from "elysia";
 import { getAccessibleWebsites } from "../lib/accessible-websites";
 import { resolveDatePreset } from "../lib/date-presets";
+import { isPublicQueryAccess } from "../lib/public-query-access";
 import { mergeWideEvent } from "../lib/tracing";
 import { getCachedWebsiteDomain, getWebsiteDomain } from "../lib/website-utils";
 import {
@@ -411,45 +412,15 @@ async function getOrganizationWebsiteIds(
 	return websites.map((website) => website.id);
 }
 
-// Keep this in sync with the public/demo overview dashboard query set.
-const PUBLIC_OVERVIEW_QUERY_TYPES = new Set([
-	"summary_metrics",
-	"today_metrics",
-	"active_stats",
-	"events_by_date",
-	"traffic_sources",
-	"top_pages",
-	"entry_pages",
-	"exit_pages",
-	"page_time_analysis",
-	"top_referrers",
-	"utm_sources",
-	"utm_mediums",
-	"utm_campaigns",
-	"country",
-	"region",
-	"city",
-	"device_types",
-	"browser_name",
-	"browsers",
-	"os_name",
-	"operating_systems",
-	"outbound_links",
-	"outbound_domains",
-	"realtime_pages",
-	"realtime_referrers",
-	"realtime_countries",
-	"realtime_cities",
-	"realtime_sessions",
-	"realtime_velocity",
-]);
-
 const FEATURE_GATED_QUERY_TYPES: Record<string, GatedFeatureId> = {
 	recent_errors: GATED_FEATURES.ERROR_TRACKING,
 	error_types: GATED_FEATURES.ERROR_TRACKING,
 	errors_by_page: GATED_FEATURES.ERROR_TRACKING,
 	error_summary: GATED_FEATURES.ERROR_TRACKING,
 	error_chart_data: GATED_FEATURES.ERROR_TRACKING,
+	error_trends: GATED_FEATURES.ERROR_TRACKING,
+	error_frequency: GATED_FEATURES.ERROR_TRACKING,
+	errors_by_type: GATED_FEATURES.ERROR_TRACKING,
 };
 
 async function enforceFeatureGatesForQueryTypes(
@@ -491,13 +462,6 @@ function extractQueryTypes(
 	);
 }
 
-function isOverviewOnlyAccess(queryTypes: string[]): boolean {
-	return (
-		queryTypes.length > 0 &&
-		queryTypes.every((t) => PUBLIC_OVERVIEW_QUERY_TYPES.has(t))
-	);
-}
-
 async function verifyWebsiteAccess(
 	ctx: AuthContext,
 	websiteId: string,
@@ -515,8 +479,8 @@ async function verifyWebsiteAccess(
 		return false;
 	}
 
-	if (website.isPublic && isOverviewOnlyAccess(queryTypes)) {
-		mergeWideEvent({ access_result: "public_overview" });
+	if (website.isPublic && isPublicQueryAccess(queryTypes)) {
+		mergeWideEvent({ access_result: "public_query" });
 		return true;
 	}
 
@@ -1100,6 +1064,7 @@ export const query = new Elysia({ prefix: "/v1/query" })
 					allowedFilters: cfg.allowedFilters ?? DEFAULT_ALLOWED_FILTERS,
 					customizable: cfg.customizable,
 					defaultLimit: cfg.limit,
+					publicAccess: cfg.publicAccess === true,
 					...(includeMeta && { meta: cfg.meta }),
 				},
 			])
