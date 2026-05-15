@@ -411,6 +411,7 @@ async function getOrganizationWebsiteIds(
 	return websites.map((website) => website.id);
 }
 
+// Keep this in sync with the public/demo overview dashboard query set.
 const PUBLIC_OVERVIEW_QUERY_TYPES = new Set([
 	"summary_metrics",
 	"today_metrics",
@@ -418,13 +419,23 @@ const PUBLIC_OVERVIEW_QUERY_TYPES = new Set([
 	"events_by_date",
 	"traffic_sources",
 	"top_pages",
+	"entry_pages",
+	"exit_pages",
+	"page_time_analysis",
 	"top_referrers",
+	"utm_sources",
+	"utm_mediums",
+	"utm_campaigns",
 	"country",
 	"region",
 	"city",
 	"device_types",
 	"browser_name",
+	"browsers",
 	"os_name",
+	"operating_systems",
+	"outbound_links",
+	"outbound_domains",
 	"realtime_pages",
 	"realtime_referrers",
 	"realtime_countries",
