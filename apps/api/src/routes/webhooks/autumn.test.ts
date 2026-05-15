@@ -21,11 +21,15 @@ vi.mock("@databuddy/db", () => ({
 	db: {
 		query: {
 			member: { findMany: vi.fn(async () => []) },
+			organization: { findFirst: vi.fn(async () => null) },
 			user: { findFirst: vi.fn(async () => state.userRow) },
 		},
 	},
 	eq: (field: unknown, value: unknown) => ({ field, op: "eq", value }),
 	gt: (field: unknown, value: unknown) => ({ field, op: "gt", value }),
+	normalizeEmailNotificationSettings: () => ({
+		billing: { usageWarnings: true },
+	}),
 	sql: (strings: TemplateStringsArray, ...values: unknown[]) => ({
 		strings: Array.from(strings),
 		values,

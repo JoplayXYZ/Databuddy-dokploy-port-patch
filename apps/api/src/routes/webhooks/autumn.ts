@@ -1,5 +1,13 @@
 import { randomUUID } from "node:crypto";
-import { and, db, eq, gt, sql, withTransaction } from "@databuddy/db";
+import {
+	and,
+	db,
+	eq,
+	gt,
+	normalizeEmailNotificationSettings,
+	sql,
+	withTransaction,
+} from "@databuddy/db";
 import { usageAlertLog } from "@databuddy/db/schema";
 import { render, UsageAlertEmail, UsageLimitEmail } from "@databuddy/email";
 import { config } from "@databuddy/env/app";
@@ -70,6 +78,14 @@ interface RawAutumnEvent {
 interface WebhookResult {
 	message: string;
 	success: boolean;
+}
+
+async function getOrganizationEmailSettings(customerId: string) {
+	const row = await db.query.organization.findFirst({
+		where: { id: customerId },
+		columns: { emailNotifications: true },
+	});
+	return normalizeEmailNotificationSettings(row?.emailNotifications);
 }
 
 const getUserData = cacheable(
@@ -217,8 +233,12 @@ function handleLimitReached(
 	});
 }
 
-function handleUsageAlert(data: UsageAlertData): Promise<WebhookResult> {
+async function handleUsageAlert(data: UsageAlertData): Promise<WebhookResult> {
 	const { customer_id, feature_id, usage_alert } = data;
+	const settings = await getOrganizationEmailSettings(customer_id);
+	if (!settings.billing.usageWarnings) {
+		return { success: true, message: "Usage warning emails disabled" };
+	}
 	const featureName = formatFeatureId(feature_id);
 	const isPercentage =
 		usage_alert.threshold_type === "usage_percentage_threshold";
